@@ -92,16 +92,16 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_core.c$UNDERSCORE_F$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11800_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11802_$1=p$11800_$1;
-final dc.dynamic o7205$1=vec$11802_$1;
-late final dc.dynamic seq$11803_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9107_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9109_$1=p$9107_$1;
+final dc.dynamic o7205$1=vec$9109_$1;
+late final dc.dynamic seq$9110_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11803_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9110_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11803_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9110_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic options$1=seq$11803_$1;
+final dc.dynamic options$1=seq$9110_$1;
 final dc.dynamic arg$7=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "make-c-formula", )), ));
 final dc.dynamic arg$6=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), ));
 final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "quote", )), )), (Ukddmlcoc_core.list.$_invoke$1(body$1, )), ));
@@ -341,7 +341,7 @@ $if_$6=((Ukddmlcoc_core.ISeqable.extensions((o7205$6 as dc.dynamic), ) as Ukddml
 final dc.dynamic $4=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_$6, ));
 final dc.dynamic $9=(Ukddmlcoc_core.list.$_invoke$1($4, ));
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "let", )), ));
-final dc.dynamic o7205$7=(Ukddmlcoc_core.concat.$_invoke$4((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "c__11813__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(f_c$1, )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-value__11814__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(f_new_value$1, )), ));
+final dc.dynamic o7205$7=(Ukddmlcoc_core.concat.$_invoke$4((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "c__9120__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(f_c$1, )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-value__9121__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(f_new_value$1, )), ));
 late final dc.dynamic $if_$7;
 if((o7205$7 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$7=((o7205$7 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -350,7 +350,7 @@ $if_$7=((Ukddmlcoc_core.ISeqable.extensions((o7205$7 as dc.dynamic), ) as Ukddml
 }
 final dc.dynamic $5=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_$7, ));
 final dc.dynamic $7=(Ukddmlcoc_core.list.$_invoke$1($5, ));
-final dc.dynamic o7205$8=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "call-c-reset-next!", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "c__11813__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-value__11814__auto__", )), )), ));
+final dc.dynamic o7205$8=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "call-c-reset-next!", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "c__9120__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-value__9121__auto__", )), )), ));
 late final dc.dynamic $if_$8;
 if((o7205$8 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$8=((o7205$8 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -419,16 +419,16 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_core.cF$PLUS_$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11777_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11779_$1=p$11777_$1;
-final dc.dynamic o7205$1=vec$11779_$1;
-late final dc.dynamic seq$11780_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9084_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9086_$1=p$9084_$1;
+final dc.dynamic o7205$1=vec$9086_$1;
+late final dc.dynamic seq$9087_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11780_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9087_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11780_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9087_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic options$1=seq$11780_$1;
+final dc.dynamic options$1=seq$9087_$1;
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "make-c-formula", )), ));
 final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), ));
 final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "quote", )), )), (Ukddmlcoc_core.list.$_invoke$1(body$1, )), ));
@@ -476,16 +476,16 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_core.cF$PLUS_n$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11783_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11785_$1=p$11783_$1;
-final dc.dynamic o7205$1=vec$11785_$1;
-late final dc.dynamic seq$11786_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9090_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9092_$1=p$9090_$1;
+final dc.dynamic o7205$1=vec$9092_$1;
+late final dc.dynamic seq$9093_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11786_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9093_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11786_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9093_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic options$1=seq$11786_$1;
+final dc.dynamic options$1=seq$9093_$1;
 final dc.dynamic arg$9=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "make-c-formula", )), ));
 final dc.dynamic arg$8=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), ));
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "quote", )), ));
@@ -553,16 +553,16 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_core.cF$UNDERSCORE_$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11795_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11797_$1=p$11795_$1;
-final dc.dynamic o7205$1=vec$11797_$1;
-late final dc.dynamic seq$11798_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9102_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9104_$1=p$9102_$1;
+final dc.dynamic o7205$1=vec$9104_$1;
+late final dc.dynamic seq$9105_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11798_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9105_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11798_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9105_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic options$1=seq$11798_$1;
+final dc.dynamic options$1=seq$9105_$1;
 final dc.dynamic arg$7=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "make-c-formula", )), ));
 final dc.dynamic arg$6=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), ));
 final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "quote", )), )), (Ukddmlcoc_core.list.$_invoke$1(body$1, )), ));
@@ -1124,9 +1124,9 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_core.c_fn_var$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11770_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11772_$1=p$11770_$1;
-final dc.dynamic c$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11772_$1, 0, null, ));
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9077_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9079_$1=p$9077_$1;
+final dc.dynamic c$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9079_$1, 0, null, ));
 final dc.dynamic arg$7=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "fn", )), ));
 final dc.dynamic o7205$1=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1(c$1, )), ));
 late final dc.dynamic $if_$1;
@@ -1210,16 +1210,16 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_core.c_formula$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11806_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11808_$1=p$11806_$1;
-final dc.dynamic o7205$1=vec$11808_$1;
-late final dc.dynamic seq$11809_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9113_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9115_$1=p$9113_$1;
+final dc.dynamic o7205$1=vec$9115_$1;
+late final dc.dynamic seq$9116_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11809_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9116_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11809_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9116_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic kvs$1=seq$11809_$1;
+final dc.dynamic kvs$1=seq$9116_$1;
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.core", "make-c-formula", )), ));
 final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), ));
 final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "quote", )), )), (Ukddmlcoc_core.list.$_invoke$1(body$1, )), ));

@@ -195,7 +195,7 @@
   (when (and where what)
     (let [options (merge {:me? false :wocd? true}
                     (apply hash-map options))]
-      (binding [*depender* (if (:wocd? options) nil *depender*)]
+      (binding [*depender* nil #_ (if (:wocd? options) nil *depender*)] ;; todo un-HHACK!!!!!!!!!!!
         (or (and (:me? options)
               (fm-navig-eq? what where)
               where)
@@ -233,8 +233,7 @@
                           } (apply hash-map options))]
       ;;(println :fm-navig-opts options)
       ;(println :T)
-      (binding [*depender* (if (:wocd? options) nil *depender*)]
-
+      (binding [*depender* nil] ;; todo un-HHACK!!! (if (:wocd? options) nil *depender*)]
         (when (any-ref? where)
           ;(println :f)
           (or (and (:me? options)
