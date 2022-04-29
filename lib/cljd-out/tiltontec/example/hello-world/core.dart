@@ -1,17 +1,17 @@
-import "cljd-world.dart" as Ukddmlcotc_world;
 import "package:flutter/src/widgets/framework.dart" as fsw_framework;
 import "dart:core" as dc;
-import "../cljd/string.dart" as Ukddmlcoc_string;
-import "cell/base.dart" as Ukddmlcotc_base;
+import "core.dart" as Ukddmlcotehw_core;
+import "../../../cljd/string.dart" as Ukddmlcoc_string;
+import "../../cell/base.dart" as Ukddmlcotc_base;
 import "package:flutter/src/widgets/preferred_size.dart" as fsw_preferred_size;
 import "package:flutter/src/material/colors.dart" as fsm_colors;
 import "package:flutter/src/material/theme_data.dart" as fsm_theme_data;
 import "package:flutter/painting.dart" as f_painting;
-import "cell/core.dart" as Ukddmlcotc_core;
+import "../../cell/core.dart" as Ukddmlcotc_core;
 import "package:flutter/material.dart" as f_material;
-import "mx-flutter/core.dart" as Ukddmlcotmf_core;
-import "../cljd/core.dart" as Ukddmlcoc_core;
-import "model/core.dart" as Ukddmlcotm_core;
+import "../../mx-flutter/core.dart" as Ukddmlcotmf_core;
+import "../../../cljd/core.dart" as Ukddmlcoc_core;
+import "../../model/core.dart" as Ukddmlcotm_core;
 
 // BEGIN make-app
 dc.dynamic make_app(){
@@ -347,7 +347,7 @@ return f_material.ThemeData(primarySwatch: cast$1, );
 }, ));
 return (Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.mx-flutter.core", "MaterialApp", 943223309, ), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$9469_$9470_$AUTO_$1, ){
 return f_material.MaterialApp(title: (Ukddmlcotm_core.mget(p1$9469_$9470_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), ) as dc.String), theme: (Ukddmlcotm_core.mget(p1$9469_$9470_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), ) as fsm_theme_data.ThemeData?), home: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$9469_$9470_$AUTO_$1, ), ), ) as fsw_framework.Widget?), );
-}, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), $60, const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), "Hunt for Teal mxFlutter", const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), [$59, ], ));
+}, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), $60, const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), "Hunt for Red mxFlutter", const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), [$59, ], ));
 }
 
 // END make-app

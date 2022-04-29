@@ -1,4 +1,4 @@
-(ns tiltontec.mx-cljd-world
+(ns tiltontec.example.counter
   (:require
     [clojure.string :as string]
     [tiltontec.cell.base :refer [ia-type unbound *depender*] :as cty]
@@ -51,13 +51,40 @@
                                       (when-let [^State state (:state-ref (meta me))]
                                         (.setState state (fn [] (do))))))}
             ;; a custom builder is the best I can think of to make the Dart context
-            ;; available to someone codeing a Matrix widget
+            ;; available to someone coding a Matrix widget
             {:builder (fn [me ctx]
-                        (prn :custom-builder!)
                         (Text. (str (mget me :z-count))
                           :style (.headline4 (.textTheme (Theme/of ctx)))))
              #_#_ :style (TextStyle.
                            :color m.Colors/red
                            :fontSize 32.0)}
-            (str (mget me :z-count))))))))
+            (str (mget me :z-count)))
+          (tiltontec.model.core/make :type ::Text
+            :name :z-counter-x2
+            :zx2 (cF+ [:obs (fn-obs (prn :zx2!!!!!!!!!-old-new old new (meta me))
+                              (when-let [^State state (:state-ref (meta me))]
+                                ;; (prn :BINGO-z-counter!! state)
+                                (.setState state (fn [] (do)))))]
+                   ;;(prn :zx2-runs!!!!!! @*depender*)
+                   (let [zc (md/fm-navig :z-counter me
+                              :me? false
+                              :inside? false :must? false :up? true)]
+                     (assert zc)
+                     (let [zx1 (md/md-get-ex zc :z-count)]
+                       ;;(prn :zx2-sees!!! zx1)
+                       (* 2 (md/md-get-ex zc :z-count)))))
+            ;; todo when we get to multi-kids, use keys to make efficient since we do not manipulate DOM
+            :kids (md/cFkids
+                    (str "Computio " (mget me :zx2)))
+            :fx-gen #(do ;; (prn :ocode-text-gen-called!!!!!)
+                         (let [r# (reify :extends StatefulWidget
+                                    (createState [this]
+                                      (util/rmap-meta-setf [:state-ref %]
+                                        (reify :extends State
+                                          (build [this ctx]
+                                            ;;(prn :ocode-OK-build-is-running-with-me (meta %))
+                                            (Text. (first (md-kids %))
+                                              :style (mget % :style)))))))]
+                           ;;(prn :gennedtesxt!! (meta %))
+                           r#))))))))
 

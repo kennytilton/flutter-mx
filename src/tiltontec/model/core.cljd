@@ -43,10 +43,6 @@
 (defn md-get-ex [me slot]
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (when (not= slot :kids)
-    (prn :md-get-ex  slot (any-ref? me) @me)
-    (prn :md-get-ex-slot?  slot @(md-cell me slot) )
-    (prn :md-get-ex-depender?  slot @*depender* ))
   (when (any-ref? me)
     (if-let [c (md-cell me slot)]
       (c-get c)
