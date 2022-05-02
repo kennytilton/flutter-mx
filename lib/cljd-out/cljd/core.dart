@@ -4842,12 +4842,44 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 
 // END Eduction
 
+// BEGIN EqualsEquivMixin
+abstract class EqualsEquivMixin extends dc.Object {
+
+dc.bool operator ==(dc.Object y$1, ){
+final Ukddmlcoc_core.EqualsEquivMixin o7366$1=this;
+final dc.Object other7367$1=y$1;
+if((o7366$1 is Ukddmlcoc_core.IEquiv$iface)){
+return ((o7366$1 as Ukddmlcoc_core.IEquiv$iface).$_equiv$1(other7367$1, ));
+}
+return ((Ukddmlcoc_core.IEquiv.extensions(o7366$1, ) as Ukddmlcoc_core.IEquiv$ext).$_equiv$1(o7366$1, other7367$1, ));
+}
+
+dc.int get hashCode{
+final Ukddmlcoc_core.EqualsEquivMixin o7428$1=this;
+if((o7428$1 is Ukddmlcoc_core.IHash$iface)){
+return ((o7428$1 as Ukddmlcoc_core.IHash$iface).$_hash$0());
+}
+return ((Ukddmlcoc_core.IHash.extensions(o7428$1, ) as Ukddmlcoc_core.IHash$ext).$_hash$0(o7428$1, ));
+}
+}
+
+// END EqualsEquivMixin
+
 // BEGIN EquivSequentialHashMixin
 abstract class EquivSequentialHashMixin extends dc.Object implements Ukddmlcoc_core.ISequential$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface {
 late dc.int $UNDERSCORE_$UNDERSCORE_hash;
 
-dc.dynamic $_equiv$1(dc.dynamic y$1, ){
+dc.bool operator ==(dc.Object y$1, ){
 return Ukddmlcoc_core.$_equiv_sequential(this, y$1, );
+}
+
+dc.int get hashCode{
+final Ukddmlcoc_core.EquivSequentialHashMixin o7428$1=this;
+return (o7428$1.$_hash$0());
+}
+
+dc.dynamic $_equiv$1(dc.dynamic y$2, ){
+return Ukddmlcoc_core.$_equiv_sequential(this, y$2, );
 }
 
 dc.dynamic $_hash$0(){
@@ -12290,7 +12322,7 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 // END IteratorSeq
 
 // BEGIN Keyword
-class Keyword extends dc.Object with Ukddmlcoc_core.ToStringMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IHash$iface, Ukddmlcoc_core.INamed$iface, dc.Comparable<Ukddmlcoc_core.Keyword> {
+class Keyword extends dc.Object with Ukddmlcoc_core.ToStringMixin, Ukddmlcoc_core.EqualsEquivMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IHash$iface, Ukddmlcoc_core.INamed$iface, dc.Comparable<Ukddmlcoc_core.Keyword> {
 final dc.String? ns;
 final dc.String name;
 final dc.int $UNDERSCORE_hash;
@@ -12371,16 +12403,6 @@ return (name.compareTo(y$1.name, ));
 return nsc$1;
 }
 return (name.compareTo(y$1.name, ));
-}
-
-dc.int get hashCode{
-return $UNDERSCORE_hash;
-}
-
-dc.bool operator ==(dc.Object other$3, ){
-final Ukddmlcoc_core.Keyword o7366$1=this;
-final dc.Object other7367$1=other$3;
-return (o7366$1.$_equiv$1(other7367$1, ));
 }
 
 dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
@@ -12634,7 +12656,7 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 // END PVIterator
 
 // BEGIN PersistentHashMap
-class PersistentHashMap<K, V> extends dc.Object with d_collection.MapMixin<K, V>, Ukddmlcoc_core.ToStringMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IAssociative$iface, Ukddmlcoc_core.IWithMeta$iface, Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.ICollection$iface, Ukddmlcoc_core.IEmptyableCollection$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface, Ukddmlcoc_core.ISeqable$iface, Ukddmlcoc_core.ICounted$iface, Ukddmlcoc_core.ILookup$iface, Ukddmlcoc_core.IFind$iface, Ukddmlcoc_core.IMap$iface, Ukddmlcoc_core.IKVReduce$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IEditableCollection$iface {
+class PersistentHashMap<K, V> extends dc.Object with Ukddmlcoc_core.EqualsEquivMixin, d_collection.MapMixin<K, V>, Ukddmlcoc_core.ToStringMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IAssociative$iface, Ukddmlcoc_core.IWithMeta$iface, Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.ICollection$iface, Ukddmlcoc_core.IEmptyableCollection$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface, Ukddmlcoc_core.ISeqable$iface, Ukddmlcoc_core.ICounted$iface, Ukddmlcoc_core.ILookup$iface, Ukddmlcoc_core.IFind$iface, Ukddmlcoc_core.IMap$iface, Ukddmlcoc_core.IKVReduce$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IEditableCollection$iface {
 final meta;
 final Ukddmlcoc_core.BitmapNode root;
 dc.int $UNDERSCORE_$UNDERSCORE_hash;
@@ -12945,7 +12967,7 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 // END PersistentHashMap
 
 // BEGIN PersistentHashSet
-class PersistentHashSet<E> extends dc.Object with d_collection.SetMixin<E>, Ukddmlcoc_core.ToStringMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IWithMeta$iface, Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.ICollection$iface, Ukddmlcoc_core.IEmptyableCollection$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface, Ukddmlcoc_core.ISeqable$iface, Ukddmlcoc_core.ICounted$iface, Ukddmlcoc_core.ILookup$iface, Ukddmlcoc_core.ISet$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IEditableCollection$iface {
+class PersistentHashSet<E> extends dc.Object with Ukddmlcoc_core.EqualsEquivMixin, d_collection.SetMixin<E>, Ukddmlcoc_core.ToStringMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IWithMeta$iface, Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.ICollection$iface, Ukddmlcoc_core.IEmptyableCollection$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface, Ukddmlcoc_core.ISeqable$iface, Ukddmlcoc_core.ICounted$iface, Ukddmlcoc_core.ILookup$iface, Ukddmlcoc_core.ISet$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IEditableCollection$iface {
 final meta;
 final Ukddmlcoc_core.PersistentHashMap<E, E> hm;
 dc.int $UNDERSCORE_$UNDERSCORE_hash;
@@ -17067,7 +17089,7 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 // END SubVec
 
 // BEGIN Symbol
-class Symbol extends dc.Object with Ukddmlcoc_core.ToStringMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface, Ukddmlcoc_core.INamed$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface, dc.Comparable<Ukddmlcoc_core.Symbol> {
+class Symbol extends dc.Object with Ukddmlcoc_core.ToStringMixin, Ukddmlcoc_core.EqualsEquivMixin implements Ukddmlcoc_core.IPrint$iface, Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface, Ukddmlcoc_core.INamed$iface, Ukddmlcoc_core.IFn$iface, Ukddmlcoc_core.IEquiv$iface, Ukddmlcoc_core.IHash$iface, dc.Comparable<Ukddmlcoc_core.Symbol> {
 final dc.String? ns;
 final dc.String name;
 final meta;
@@ -21044,8 +21066,9 @@ final dc.dynamic $4=Ukddmlcoc_core.with_meta(arg$1, $2, );
 fl$1[1]=$4;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$1, );
 final dc.dynamic extmap$1=Ukddmlcoc_core.with_meta(arg$2, $1, );
-final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(37, (Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IRecord", )), ));
-fl$4[1]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IEquiv", ));
+final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(38, (Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "EqualsEquivMixin", )), ));
+fl$4[1]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IRecord", ));
+fl$4[2]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IEquiv", ));
 late final dc.dynamic $if_$11;
 if((Ukddmlcoc_core.gensym is dc.Function)){
 $if_$11=(Ukddmlcoc_core.gensym as dc.Function)("this", );
@@ -21157,8 +21180,8 @@ $if_$19=((o7205$21 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$19=((Ukddmlcoc_core.ISeqable.extensions((o7205$21 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$21 as dc.dynamic), ));
 }
-fl$4[2]=$if_$19;
-fl$4[3]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IMap", ));
+fl$4[3]=$if_$19;
+fl$4[4]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IMap", ));
 final dc.dynamic arg$41=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-dissoc", )), ));
 final dc.dynamic o7205$22=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8679__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "k__8680__auto__", )), )), ));
 late final dc.dynamic $if_$20;
@@ -21278,8 +21301,8 @@ $if_$32=((o7205$34 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$32=((Ukddmlcoc_core.ISeqable.extensions((o7205$34 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$34 as dc.dynamic), ));
 }
-fl$4[4]=$if_$32;
-fl$4[5]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ISeqable", ));
+fl$4[5]=$if_$32;
+fl$4[6]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ISeqable", ));
 final dc.dynamic arg$44=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-seq", )), ));
 final dc.dynamic o7205$35=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8682__auto__", )), )), ));
 late final dc.dynamic $if_$33;
@@ -21326,8 +21349,8 @@ $if_$37=((o7205$39 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$37=((Ukddmlcoc_core.ISeqable.extensions((o7205$39 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$39 as dc.dynamic), ));
 }
-fl$4[6]=$if_$37;
-fl$4[7]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IAssociative", ));
+fl$4[7]=$if_$37;
+fl$4[8]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IAssociative", ));
 late final dc.dynamic v$1;
 if((Ukddmlcoc_core.gensym is dc.Function)){
 v$1=(Ukddmlcoc_core.gensym as dc.Function)("val", );
@@ -21393,8 +21416,8 @@ $if_$42=((o7205$44 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$42=((Ukddmlcoc_core.ISeqable.extensions((o7205$44 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$44 as dc.dynamic), ));
 }
-fl$4[8]=$if_$42;
-fl$4[9]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ILookup", ));
+fl$4[9]=$if_$42;
+fl$4[10]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ILookup", ));
 final dc.dynamic arg$57=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-contains-key?", )), ));
 final dc.dynamic o7205$45=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "o__8685__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(key$1, )), ));
 late final dc.dynamic $if_$43;
@@ -21448,7 +21471,7 @@ $if_$47=((o7205$50 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$47=((Ukddmlcoc_core.ISeqable.extensions((o7205$50 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$50 as dc.dynamic), ));
 }
-fl$4[10]=$if_$47;
+fl$4[11]=$if_$47;
 final dc.dynamic arg$58=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-lookup", )), ));
 final dc.dynamic o7205$51=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "o__8686__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(key$1, )), ));
 late final dc.dynamic $if_$48;
@@ -21474,7 +21497,7 @@ $if_$50=((o7205$53 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$50=((Ukddmlcoc_core.ISeqable.extensions((o7205$53 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$53 as dc.dynamic), ));
 }
-fl$4[11]=$if_$50;
+fl$4[12]=$if_$50;
 final dc.dynamic arg$62=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-lookup", )), ));
 final dc.dynamic o7205$54=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "o__8687__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(key$1, )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "not-found__8688__auto__", )), )), ));
 late final dc.dynamic $if_$51;
@@ -21515,8 +21538,8 @@ $if_$54=((o7205$57 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$54=((Ukddmlcoc_core.ISeqable.extensions((o7205$57 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$57 as dc.dynamic), ));
 }
-fl$4[12]=$if_$54;
-fl$4[13]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ICounted", ));
+fl$4[13]=$if_$54;
+fl$4[14]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ICounted", ));
 final dc.dynamic arg$64=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-count", )), ));
 final dc.dynamic o7205$58=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8689__auto__", )), )), ));
 late final dc.dynamic $if_$55;
@@ -21559,8 +21582,8 @@ $if_$58=((o7205$61 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$58=((Ukddmlcoc_core.ISeqable.extensions((o7205$61 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$61 as dc.dynamic), ));
 }
-fl$4[14]=$if_$58;
-fl$4[15]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ICollection", ));
+fl$4[15]=$if_$58;
+fl$4[16]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ICollection", ));
 final dc.dynamic arg$70=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-conj", )), ));
 final dc.dynamic o7205$62=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8690__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "o__8691__auto__", )), )), ));
 late final dc.dynamic $if_$59;
@@ -21655,8 +21678,8 @@ $if_$69=((o7205$72 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$69=((Ukddmlcoc_core.ISeqable.extensions((o7205$72 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$72 as dc.dynamic), ));
 }
-fl$4[16]=$if_$69;
-fl$4[17]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IWithMeta", ));
+fl$4[17]=$if_$69;
+fl$4[18]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IWithMeta", ));
 late final dc.dynamic meta$1;
 if((Ukddmlcoc_core.gensym is dc.Function)){
 meta$1=(Ukddmlcoc_core.gensym as dc.Function)("meta", );
@@ -21690,8 +21713,8 @@ $if_$72=((o7205$75 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$72=((Ukddmlcoc_core.ISeqable.extensions((o7205$75 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$75 as dc.dynamic), ));
 }
-fl$4[18]=$if_$72;
-fl$4[19]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IMeta", ));
+fl$4[19]=$if_$72;
+fl$4[20]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IMeta", ));
 final dc.dynamic arg$72=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-meta", )), ));
 final dc.dynamic o7205$76=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "o__8693__auto__", )), )), ));
 late final dc.dynamic $if_$73;
@@ -21709,8 +21732,8 @@ $if_$74=((o7205$77 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$74=((Ukddmlcoc_core.ISeqable.extensions((o7205$77 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$77 as dc.dynamic), ));
 }
-fl$4[20]=$if_$74;
-fl$4[21]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IKVReduce", ));
+fl$4[21]=$if_$74;
+fl$4[22]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IKVReduce", ));
 final dc.dynamic arg$76=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-kv-reduce", )), ));
 final dc.dynamic o7205$78=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8694__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "f__8695__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "init__8696__auto__", )), )), ));
 late final dc.dynamic $if_$75;
@@ -21773,7 +21796,7 @@ $if_$81=((o7205$84 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$81=((Ukddmlcoc_core.ISeqable.extensions((o7205$84 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$84 as dc.dynamic), ));
 }
-fl$4[22]=$if_$81;
+fl$4[23]=$if_$81;
 final dc.dynamic arg$77=(Ukddmlcoc_core.symbol.$_invoke$2("\$lib:d_collection", "MapMixin", ));
 final dc.List<dc.dynamic> fl$16=(dc.List<dc.dynamic>.filled(4, const Ukddmlcoc_core.Keyword(null, "mixin", 2105145522, ), ));
 fl$16[1]=true;
@@ -21784,7 +21807,7 @@ final Ukddmlcoc_core.PersistentList $121=Ukddmlcoc_core.$_list_lit(fl$17, );
 fl$16[3]=$121;
 final Ukddmlcoc_core.PersistentHashMap $120=Ukddmlcoc_core.$_map_lit(fl$16, );
 final dc.dynamic $122=Ukddmlcoc_core.with_meta(arg$77, $120, );
-fl$4[23]=$122;
+fl$4[24]=$122;
 late final dc.dynamic coll$1;
 if((Ukddmlcoc_core.gensym is dc.Function)){
 coll$1=(Ukddmlcoc_core.gensym as dc.Function)("coll", );
@@ -21855,7 +21878,7 @@ $if_$87=((o7205$89 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$87=((Ukddmlcoc_core.ISeqable.extensions((o7205$89 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$89 as dc.dynamic), ));
 }
-fl$4[24]=$if_$87;
+fl$4[25]=$if_$87;
 late final dc.dynamic coll$2;
 if((Ukddmlcoc_core.gensym is dc.Function)){
 coll$2=(Ukddmlcoc_core.gensym as dc.Function)("coll", );
@@ -21965,7 +21988,7 @@ $if_$94=((o7205$96 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$94=((Ukddmlcoc_core.ISeqable.extensions((o7205$96 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$96 as dc.dynamic), ));
 }
-fl$4[25]=$if_$94;
+fl$4[26]=$if_$94;
 late final dc.dynamic coll$3;
 if((Ukddmlcoc_core.gensym is dc.Function)){
 coll$3=(Ukddmlcoc_core.gensym as dc.Function)("coll", );
@@ -22034,7 +22057,7 @@ $if_$100=((o7205$101 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$100=((Ukddmlcoc_core.ISeqable.extensions((o7205$101 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$101 as dc.dynamic), ));
 }
-fl$4[26]=$if_$100;
+fl$4[27]=$if_$100;
 final dc.dynamic arg$95=(Ukddmlcoc_core.list.$_invoke$1("[]", ));
 final dc.dynamic o7205$102=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8701__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "k__8702__auto__", )), )), ));
 late final dc.dynamic $if_$101;
@@ -22060,7 +22083,7 @@ $if_$103=((o7205$104 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$103=((Ukddmlcoc_core.ISeqable.extensions((o7205$104 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$104 as dc.dynamic), ));
 }
-fl$4[27]=$if_$103;
+fl$4[28]=$if_$103;
 final dc.dynamic arg$97=(Ukddmlcoc_core.list.$_invoke$1("[]=", ));
 final dc.dynamic o7205$105=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8703__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "key__8704__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "val__8705__auto__", )), )), ));
 late final dc.dynamic $if_$104;
@@ -22095,7 +22118,7 @@ $if_$107=((o7205$108 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$107=((Ukddmlcoc_core.ISeqable.extensions((o7205$108 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$108 as dc.dynamic), ));
 }
-fl$4[28]=$if_$107;
+fl$4[29]=$if_$107;
 final dc.dynamic arg$99=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "remove", )), ));
 final dc.dynamic o7205$109=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8706__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "val__8707__auto__", )), )), ));
 late final dc.dynamic $if_$108;
@@ -22130,7 +22153,7 @@ $if_$111=((o7205$112 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$111=((Ukddmlcoc_core.ISeqable.extensions((o7205$112 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$112 as dc.dynamic), ));
 }
-fl$4[29]=$if_$111;
+fl$4[30]=$if_$111;
 final dc.dynamic arg$101=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "clear", )), ));
 final dc.dynamic o7205$113=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8708__auto__", )), )), ));
 late final dc.dynamic $if_$112;
@@ -22165,7 +22188,7 @@ $if_$115=((o7205$116 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$115=((Ukddmlcoc_core.ISeqable.extensions((o7205$116 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$116 as dc.dynamic), ));
 }
-fl$4[30]=$if_$115;
+fl$4[31]=$if_$115;
 final dc.dynamic arg$102=(Ukddmlcoc_core.symbol.$_invoke$2(null, "cast", ));
 final dc.List<dc.dynamic> fl$25=(dc.List<dc.dynamic>.filled(4, const Ukddmlcoc_core.Keyword(null, "tag", 2780644040, ), ));
 final dc.List<dc.dynamic> fl$26=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "type-params", 3003227952, ), ));
@@ -22230,8 +22253,8 @@ $if_$118=((o7205$119 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$118=((Ukddmlcoc_core.ISeqable.extensions((o7205$119 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$119 as dc.dynamic), ));
 }
-fl$4[31]=$if_$118;
-fl$4[32]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IHash", ));
+fl$4[32]=$if_$118;
+fl$4[33]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IHash", ));
 final dc.dynamic arg$111=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-hash", )), ));
 final dc.dynamic o7205$120=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "coll__8710__auto__", )), )), ));
 late final dc.dynamic $if_$119;
@@ -22295,14 +22318,14 @@ $if_$123=((o7205$124 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$123=((Ukddmlcoc_core.ISeqable.extensions((o7205$124 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$124 as dc.dynamic), ));
 }
-fl$4[33]=$if_$123;
+fl$4[34]=$if_$123;
 final dc.dynamic arg$112=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "ToStringMixin", ));
 final dc.List<dc.dynamic> fl$34=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "mixin", 2105145522, ), ));
 fl$34[1]=true;
 final Ukddmlcoc_core.PersistentHashMap $200=Ukddmlcoc_core.$_map_lit(fl$34, );
 final dc.dynamic $201=Ukddmlcoc_core.with_meta(arg$112, $200, );
-fl$4[34]=$201;
-fl$4[35]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IPrint", ));
+fl$4[35]=$201;
+fl$4[36]=(Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "IPrint", ));
 final dc.dynamic arg$113=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "-print", )), ));
 final dc.dynamic o7205$125=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "o__8711__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "sink__8712__auto__", )), )), ));
 late final dc.dynamic $if_$124;
@@ -22328,7 +22351,7 @@ $if_$126=((o7205$127 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$126=((Ukddmlcoc_core.ISeqable.extensions((o7205$127 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$127 as dc.dynamic), ));
 }
-fl$4[36]=$if_$126;
+fl$4[37]=$if_$126;
 final Ukddmlcoc_core.PersistentVector record_body$1=Ukddmlcoc_core.vec(fl$4, );
 late final dc.dynamic m$1;
 if((Ukddmlcoc_core.gensym is dc.Function)){

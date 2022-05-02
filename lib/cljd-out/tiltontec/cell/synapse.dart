@@ -27,18 +27,18 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_synapse.cSyn$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11712_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11714_$1=p$11712_$1;
-final dc.dynamic synapse_id$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11714_$1, 0, null, ));
-final dc.dynamic vec$11717_$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11714_$1, 1, null, ));
-final dc.dynamic o7205$1=vec$11717_$1;
-late final dc.dynamic seq$11718_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9248_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9250_$1=p$9248_$1;
+final dc.dynamic synapse_id$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9250_$1, 0, null, ));
+final dc.dynamic vec$9253_$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9250_$1, 1, null, ));
+final dc.dynamic o7205$1=vec$9253_$1;
+late final dc.dynamic seq$9254_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11718_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9254_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11718_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9254_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic closure_bindings$1=seq$11718_$1;
+final dc.dynamic closure_bindings$1=seq$9254_$1;
 final dc.dynamic arg$14=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.synapse", "call-with-synapse", )), ));
 final dc.dynamic arg$13=(Ukddmlcoc_core.list.$_invoke$1(synapse_id$1, ));
 final dc.dynamic arg$12=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "fn*", )), ));
@@ -200,9 +200,9 @@ $if_$2=false;
 }
 return $if_$2;
 }(), (Ukddmlcoc_core.str.$_invoke$3("You attempted to create synapse ", synapse_id$1, " outside a Cell formula. Synapses serve containing Cells.", )));
-return Ukddmlcoc_core.some((dc.dynamic p1$11699_$SHARP_$1, ){
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(synapse_id$1, (const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ).$_invoke$1(Ukddmlcoc_core.deref(p1$11699_$SHARP_$1, ), )), ))){
-return p1$11699_$SHARP_$1;
+return Ukddmlcoc_core.some((dc.dynamic p1$9235_$SHARP_$1, ){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(synapse_id$1, (const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ).$_invoke$1(Ukddmlcoc_core.deref(p1$9235_$SHARP_$1, ), )), ))){
+return p1$9235_$SHARP_$1;
 }
 return null;
 }, Ukddmlcotc_base.c_synapses(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
@@ -229,20 +229,20 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotc_synapse.with_synapse$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11704_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11706_$1=p$11704_$1;
-final dc.dynamic synapse_id$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11706_$1, 0, null, ));
-final dc.dynamic vec$11709_$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11706_$1, 1, null, ));
-final dc.dynamic o7205$1=vec$11709_$1;
-late final dc.dynamic seq$11710_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$9240_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$9242_$1=p$9240_$1;
+final dc.dynamic synapse_id$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9242_$1, 0, null, ));
+final dc.dynamic vec$9245_$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9242_$1, 1, null, ));
+final dc.dynamic o7205$1=vec$9245_$1;
+late final dc.dynamic seq$9246_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11710_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$9246_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11710_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$9246_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic closure_bindings$1=seq$11710_$1;
+final dc.dynamic closure_bindings$1=seq$9246_$1;
 final dc.dynamic arg$24=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "let", )), ));
-final dc.dynamic arg$23=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "existing-syn__11700__auto__", )), ));
+final dc.dynamic arg$23=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "existing-syn__9236__auto__", )), ));
 final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.synapse", "existing-syn", )), )), (Ukddmlcoc_core.list.$_invoke$1(synapse_id$1, )), ));
 late final dc.dynamic $if_$1;
 if((o7205$2 is Ukddmlcoc_core.ISeqable$iface)){
@@ -251,11 +251,11 @@ $if_$1=((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 $if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$2 as dc.dynamic), ));
 }
 final dc.dynamic $21=(Ukddmlcoc_core.list.$_invoke$1($if_$1, ));
-final dc.dynamic arg$22=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "synapse__11701__auto__", )), ));
+final dc.dynamic arg$22=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "synapse__9237__auto__", )), ));
 final dc.dynamic arg$18=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "or", )), ));
-final dc.dynamic arg$17=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "existing-syn__11700__auto__", )), ));
+final dc.dynamic arg$17=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "existing-syn__9236__auto__", )), ));
 final dc.dynamic arg$16=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "let", )), ));
-final dc.dynamic arg$13=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__11702__auto__", )), ));
+final dc.dynamic arg$13=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__9238__auto__", )), ));
 final dc.dynamic arg$12=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "let", )), ));
 final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1(closure_bindings$1, ));
 late final dc.dynamic $if_$2;
@@ -353,7 +353,7 @@ $if_$11=((o7205$12 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 $if_$11=((Ukddmlcoc_core.ISeqable.extensions((o7205$12 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$12 as dc.dynamic), ));
 }
 final dc.dynamic $11=(Ukddmlcoc_core.list.$_invoke$1($if_$11, ));
-final dc.dynamic o7205$13=(Ukddmlcoc_core.concat.$_invoke$3(arg$14, $11, (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__11702__auto__", )), )), ));
+final dc.dynamic o7205$13=(Ukddmlcoc_core.concat.$_invoke$3(arg$14, $11, (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__9238__auto__", )), )), ));
 late final dc.dynamic $if_$12;
 if((o7205$13 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$12=((o7205$13 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -369,7 +369,7 @@ $if_$13=((o7205$14 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 $if_$13=((Ukddmlcoc_core.ISeqable.extensions((o7205$14 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$14 as dc.dynamic), ));
 }
 final dc.dynamic $15=(Ukddmlcoc_core.list.$_invoke$1($if_$13, ));
-final dc.dynamic o7205$15=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.evaluate", "record-dependency", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__11702__auto__", )), )), ));
+final dc.dynamic o7205$15=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.evaluate", "record-dependency", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__9238__auto__", )), )), ));
 late final dc.dynamic $if_$14;
 if((o7205$15 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$14=((o7205$15 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -377,7 +377,7 @@ $if_$14=((o7205$15 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 $if_$14=((Ukddmlcoc_core.ISeqable.extensions((o7205$15 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$15 as dc.dynamic), ));
 }
 final dc.dynamic $14=(Ukddmlcoc_core.list.$_invoke$1($if_$14, ));
-final dc.dynamic o7205$16=(Ukddmlcoc_core.concat.$_invoke$5(arg$16, $16, $15, $14, (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__11702__auto__", )), )), ));
+final dc.dynamic o7205$16=(Ukddmlcoc_core.concat.$_invoke$5(arg$16, $16, $15, $14, (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new-syn__9238__auto__", )), )), ));
 late final dc.dynamic $if_$15;
 if((o7205$16 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$15=((o7205$16 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -393,10 +393,10 @@ $if_$16=((o7205$17 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 $if_$16=((Ukddmlcoc_core.ISeqable.extensions((o7205$17 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$17 as dc.dynamic), ));
 }
 final dc.dynamic $20=(Ukddmlcoc_core.list.$_invoke$1($if_$16, ));
-final dc.dynamic arg$21=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "value__11703__auto__", )), ));
+final dc.dynamic arg$21=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "value__9239__auto__", )), ));
 final dc.dynamic arg$20=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.integrity", "with-integrity", )), ));
 final dc.dynamic arg$19=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.list.$_invoke$0()), ));
-final dc.dynamic o7205$18=(Ukddmlcoc_core.concat.$_invoke$4((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.evaluate", "ensure-value-is-current", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "synapse__11701__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), )), ));
+final dc.dynamic o7205$18=(Ukddmlcoc_core.concat.$_invoke$4((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.evaluate", "ensure-value-is-current", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "synapse__9237__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), )), ));
 late final dc.dynamic $if_$17;
 if((o7205$18 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$17=((o7205$18 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -421,7 +421,7 @@ $if_$19=((Ukddmlcoc_core.ISeqable.extensions((o7205$20 as dc.dynamic), ) as Ukdd
 }
 final dc.dynamic $22=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_$19, ));
 final dc.dynamic $24=(Ukddmlcoc_core.list.$_invoke$1($22, ));
-final dc.dynamic o7205$21=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.evaluate", "record-dependency", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "synapse__11701__auto__", )), )), ));
+final dc.dynamic o7205$21=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.evaluate", "record-dependency", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "synapse__9237__auto__", )), )), ));
 late final dc.dynamic $if_$20;
 if((o7205$21 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$20=((o7205$21 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -429,7 +429,7 @@ $if_$20=((o7205$21 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 $if_$20=((Ukddmlcoc_core.ISeqable.extensions((o7205$21 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$21 as dc.dynamic), ));
 }
 final dc.dynamic $23=(Ukddmlcoc_core.list.$_invoke$1($if_$20, ));
-final dc.dynamic o7205$22=(Ukddmlcoc_core.concat.$_invoke$4(arg$24, $24, $23, (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "value__11703__auto__", )), )), ));
+final dc.dynamic o7205$22=(Ukddmlcoc_core.concat.$_invoke$4(arg$24, $24, $23, (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "value__9239__auto__", )), )), ));
 if((o7205$22 is Ukddmlcoc_core.ISeqable$iface)){
 return ((o7205$22 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }

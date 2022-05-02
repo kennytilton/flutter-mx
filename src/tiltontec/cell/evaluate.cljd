@@ -1,6 +1,6 @@
 (ns tiltontec.cell.evaluate
   (:require
-    [clojure.string :as cljstr]
+    [clojure.string :as str]
     [tiltontec.util.base :refer [wtrx trx prog1]]
     [tiltontec.util.core
      :refer [any-ref? rmap-setf err rmap-meta-setf set-ify difference]]
@@ -8,7 +8,7 @@
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? ia-type
              c-model mdead? c-valid? c-useds c-ref? md-ref?
-             c-state +pulse+ c-pulse-observed
+             c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
@@ -59,7 +59,6 @@
     (cond
       (c-unbound? c)
       (do
-        (trx :unbound!!! c-slot)
         (err "evic> unbound slot %s of model %s"
           (c-slot c) (c-model c)))
 
@@ -81,7 +80,8 @@
     ;; --- above we had valid values so did not care. now... -------
     (when-let [md (c-model c)]
       (mdead? (c-model c)))
-    (err (cljstr/join " " "evic> model" (c-model c) "of cell" c "is dead"))
+
+    (err (str/join " " ["evic> model: " (c-model c) "of cell" c "is dead"]))
 
     ;; --- no more early exits  -------------------
     (or (not (c-valid? c))
@@ -189,11 +189,11 @@
             *call-stack* (cons c *call-stack*)
             *defer-changes* true]
     ;; this seems totally OK (assert (= c (first *call-stack*)) "callstack binding NG")
-    (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
+    #_ (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
     ;; remove asserts ^^ to get this to fure
     (when (not= c *depender*)
-      (prn :not=!!!! @c :depender @*depender*)
-      (prn :call-stack (map deref *call-stack*)))
+      (prn :not=!!!!-input (cinfo c) :depender (cinfo *depender*))
+      (prn :call-stack (map cinfo *call-stack*)))
 
     (unlink-from-used c :pre-rule-clear)
     (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (ia-type @c)))

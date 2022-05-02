@@ -172,6 +172,13 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-valid? [rc]
   (= :valid (c-value-state rc)))
 
+(defn cinfo [c]
+  (cond
+    (nil? c) :null-c
+    (not (any-ref? c)) :not-atom-c
+    (not (c-ref? c)) :not-cell-c
+    :else ((juxt c-slot c-state) c)))
+
 ;; --- dependency maintenance --------------------------------
 
 (defn caller-ensure [used new-caller]

@@ -70,16 +70,7 @@ return ((Ukddmlcotc_evaluate.c_get(a$1, ) as dc.num)/2);
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$1, );
 }
 }, ));
-final dc.List<dc.dynamic> fl$8=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "+", )), ));
-fl$8[1]=1;
-final dc.List<dc.dynamic> fl$9=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
-fl$9[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "b", ));
-final Ukddmlcoc_core.PersistentList $7=Ukddmlcoc_core.$_list_lit(fl$9, );
-fl$8[2]=$7;
-final Ukddmlcoc_core.PersistentList $6=Ukddmlcoc_core.$_list_lit(fl$8, );
-final dc.List<dc.dynamic> fl$7=(dc.List<dc.dynamic>.filled(1, $6, ));
-final Ukddmlcoc_core.PersistentList $8=Ukddmlcoc_core.$_list_lit(fl$7, );
-final dc.dynamic c$1=(Ukddmlcotc_core.make_c_formula.$_invoke$6(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $8, const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
+final dc.dynamic c$1=(Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
 final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$2, );
 final dc.dynamic cell$2=slot_c$SHARP_$2;
 final dc.dynamic slot_name$2=Ukddmlcotc_base.c_slot(slot_c$SHARP_$2, );
@@ -95,16 +86,16 @@ $if_$1=false;
 }
 return $if_$1;
 }(), (){
-final dc.List<dc.dynamic> fl$10=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$10[1]=21;
-final dc.List<dc.dynamic> fl$11=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
-fl$11[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "b", ));
-final Ukddmlcoc_core.PersistentList $10=Ukddmlcoc_core.$_list_lit(fl$11, );
-fl$10[2]=$10;
-final Ukddmlcoc_core.PersistentList $9=Ukddmlcoc_core.$_list_lit(fl$10, );
-final dc.String $11=(Ukddmlcoc_core.pr_str.$_invoke$1($9, ));
-final dc.String $12=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $11, ));
-return $12;
+final dc.List<dc.dynamic> fl$7=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$7[1]=21;
+final dc.List<dc.dynamic> fl$8=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
+fl$8[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "b", ));
+final Ukddmlcoc_core.PersistentList $7=Ukddmlcoc_core.$_list_lit(fl$8, );
+fl$7[2]=$7;
+final Ukddmlcoc_core.PersistentList $6=Ukddmlcoc_core.$_list_lit(fl$7, );
+final dc.String $8=(Ukddmlcoc_core.pr_str.$_invoke$1($6, ));
+final dc.String $9=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $8, ));
+return $9;
 }());
 assert((){
 late final dc.bool $if_$2;
@@ -115,16 +106,16 @@ $if_$2=false;
 }
 return $if_$2;
 }(), (){
-final dc.List<dc.dynamic> fl$12=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$12[1]=22;
-final dc.List<dc.dynamic> fl$13=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
-fl$13[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $14=Ukddmlcoc_core.$_list_lit(fl$13, );
-fl$12[2]=$14;
-final Ukddmlcoc_core.PersistentList $13=Ukddmlcoc_core.$_list_lit(fl$12, );
-final dc.String $15=(Ukddmlcoc_core.pr_str.$_invoke$1($13, ));
-final dc.String $16=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $15, ));
-return $16;
+final dc.List<dc.dynamic> fl$9=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$9[1]=22;
+final dc.List<dc.dynamic> fl$10=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
+fl$10[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $11=Ukddmlcoc_core.$_list_lit(fl$10, );
+fl$9[2]=$11;
+final Ukddmlcoc_core.PersistentList $10=Ukddmlcoc_core.$_list_lit(fl$9, );
+final dc.String $12=(Ukddmlcoc_core.pr_str.$_invoke$1($10, ));
+final dc.String $13=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $12, ));
+return $13;
 }());
 Ukddmlcotc_core.c_reset$BANG_(b$1, 42, );
 assert((){
@@ -136,16 +127,16 @@ $if_$3=false;
 }
 return $if_$3;
 }(), (){
-final dc.List<dc.dynamic> fl$14=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$14[1]=42;
-final dc.List<dc.dynamic> fl$15=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
-fl$15[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "b", ));
-final Ukddmlcoc_core.PersistentList $18=Ukddmlcoc_core.$_list_lit(fl$15, );
-fl$14[2]=$18;
-final Ukddmlcoc_core.PersistentList $17=Ukddmlcoc_core.$_list_lit(fl$14, );
-final dc.String $19=(Ukddmlcoc_core.pr_str.$_invoke$1($17, ));
-final dc.String $20=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $19, ));
-return $20;
+final dc.List<dc.dynamic> fl$11=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$11[1]=42;
+final dc.List<dc.dynamic> fl$12=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
+fl$12[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "b", ));
+final Ukddmlcoc_core.PersistentList $15=Ukddmlcoc_core.$_list_lit(fl$12, );
+fl$11[2]=$15;
+final Ukddmlcoc_core.PersistentList $14=Ukddmlcoc_core.$_list_lit(fl$11, );
+final dc.String $16=(Ukddmlcoc_core.pr_str.$_invoke$1($14, ));
+final dc.String $17=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $16, ));
+return $17;
 }());
 assert((){
 late final dc.bool $if_$4;
@@ -156,16 +147,16 @@ $if_$4=false;
 }
 return $if_$4;
 }(), (){
-final dc.List<dc.dynamic> fl$16=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$16[1]=43;
-final dc.List<dc.dynamic> fl$17=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
-fl$17[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $22=Ukddmlcoc_core.$_list_lit(fl$17, );
-fl$16[2]=$22;
-final Ukddmlcoc_core.PersistentList $21=Ukddmlcoc_core.$_list_lit(fl$16, );
-final dc.String $23=(Ukddmlcoc_core.pr_str.$_invoke$1($21, ));
-final dc.String $24=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $23, ));
-return $24;
+final dc.List<dc.dynamic> fl$13=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$13[1]=43;
+final dc.List<dc.dynamic> fl$14=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-get", )), ));
+fl$14[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $19=Ukddmlcoc_core.$_list_lit(fl$14, );
+fl$13[2]=$19;
+final Ukddmlcoc_core.PersistentList $18=Ukddmlcoc_core.$_list_lit(fl$13, );
+final dc.String $20=(Ukddmlcoc_core.pr_str.$_invoke$1($18, ));
+final dc.String $21=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $20, ));
+return $21;
 }());
 return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "t-cFn-OK", 2320831486, ), ));
 }
@@ -734,13 +725,7 @@ return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "t-eph-
 
 // BEGIN test-cF
 dc.dynamic test_cF(){
-final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "+", )), ));
-fl$2[1]=40;
-fl$2[2]=2;
-final Ukddmlcoc_core.PersistentList $1=Ukddmlcoc_core.$_list_lit(fl$2, );
-final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(1, $1, ));
-final Ukddmlcoc_core.PersistentList $2=Ukddmlcoc_core.$_list_lit(fl$1, );
-final dc.dynamic c$1=(Ukddmlcotc_core.make_c_formula.$_invoke$6(const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $2, const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$1, ){
+final dc.dynamic c$1=(Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$1, ){
 final dc.dynamic me$1=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
@@ -756,16 +741,16 @@ $if_$1=false;
 }
 return $if_$1;
 }(), (){
-final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$3[1]=const Ukddmlcoc_core.Keyword("tiltontec.cell.base", "c-formula", 3605123231, );
-final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "ia-type", )), ));
-fl$4[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $4=Ukddmlcoc_core.$_list_lit(fl$4, );
-fl$3[2]=$4;
-final Ukddmlcoc_core.PersistentList $3=Ukddmlcoc_core.$_list_lit(fl$3, );
-final dc.String $5=(Ukddmlcoc_core.pr_str.$_invoke$1($3, ));
-final dc.String $6=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $5, ));
-return $6;
+final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$1[1]=const Ukddmlcoc_core.Keyword("tiltontec.cell.base", "c-formula", 3605123231, );
+final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "ia-type", )), ));
+fl$2[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $2=Ukddmlcoc_core.$_list_lit(fl$2, );
+fl$1[2]=$2;
+final Ukddmlcoc_core.PersistentList $1=Ukddmlcoc_core.$_list_lit(fl$1, );
+final dc.String $3=(Ukddmlcoc_core.pr_str.$_invoke$1($1, ));
+final dc.String $4=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $3, ));
+return $4;
 }());
 assert((){
 late final dc.bool $if_$2;
@@ -776,15 +761,15 @@ $if_$2=false;
 }
 return $if_$2;
 }(), (){
-final dc.List<dc.dynamic> fl$5=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "fn?", )), ));
-final dc.List<dc.dynamic> fl$6=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-rule", )), ));
-fl$6[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $8=Ukddmlcoc_core.$_list_lit(fl$6, );
-fl$5[1]=$8;
-final Ukddmlcoc_core.PersistentList $7=Ukddmlcoc_core.$_list_lit(fl$5, );
-final dc.String $9=(Ukddmlcoc_core.pr_str.$_invoke$1($7, ));
-final dc.String $10=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $9, ));
-return $10;
+final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "fn?", )), ));
+final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-rule", )), ));
+fl$4[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $6=Ukddmlcoc_core.$_list_lit(fl$4, );
+fl$3[1]=$6;
+final Ukddmlcoc_core.PersistentList $5=Ukddmlcoc_core.$_list_lit(fl$3, );
+final dc.String $7=(Ukddmlcoc_core.pr_str.$_invoke$1($5, ));
+final dc.String $8=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $7, ));
+return $8;
 }());
 assert((){
 late final dc.bool $if_$3;
@@ -795,16 +780,16 @@ $if_$3=false;
 }
 return $if_$3;
 }(), (){
-final dc.List<dc.dynamic> fl$7=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-final dc.List<dc.dynamic> fl$8=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-value", )), ));
-fl$8[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $12=Ukddmlcoc_core.$_list_lit(fl$8, );
-fl$7[1]=$12;
-fl$7[2]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "unbound", ));
-final Ukddmlcoc_core.PersistentList $11=Ukddmlcoc_core.$_list_lit(fl$7, );
-final dc.String $13=(Ukddmlcoc_core.pr_str.$_invoke$1($11, ));
-final dc.String $14=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $13, ));
-return $14;
+final dc.List<dc.dynamic> fl$5=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+final dc.List<dc.dynamic> fl$6=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-value", )), ));
+fl$6[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $10=Ukddmlcoc_core.$_list_lit(fl$6, );
+fl$5[1]=$10;
+fl$5[2]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "unbound", ));
+final Ukddmlcoc_core.PersistentList $9=Ukddmlcoc_core.$_list_lit(fl$5, );
+final dc.String $11=(Ukddmlcoc_core.pr_str.$_invoke$1($9, ));
+final dc.String $12=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $11, ));
+return $12;
 }());
 assert((){
 late final dc.bool $if_$4;
@@ -815,16 +800,16 @@ $if_$4=false;
 }
 return $if_$4;
 }(), (){
-final dc.List<dc.dynamic> fl$9=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-final dc.List<dc.dynamic> fl$10=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-value-state", )), ));
-fl$10[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $16=Ukddmlcoc_core.$_list_lit(fl$10, );
-fl$9[1]=$16;
-fl$9[2]=const Ukddmlcoc_core.Keyword(null, "unbound", 3562008572, );
-final Ukddmlcoc_core.PersistentList $15=Ukddmlcoc_core.$_list_lit(fl$9, );
-final dc.String $17=(Ukddmlcoc_core.pr_str.$_invoke$1($15, ));
-final dc.String $18=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $17, ));
-return $18;
+final dc.List<dc.dynamic> fl$7=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+final dc.List<dc.dynamic> fl$8=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-value-state", )), ));
+fl$8[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $14=Ukddmlcoc_core.$_list_lit(fl$8, );
+fl$7[1]=$14;
+fl$7[2]=const Ukddmlcoc_core.Keyword(null, "unbound", 3562008572, );
+final Ukddmlcoc_core.PersistentList $13=Ukddmlcoc_core.$_list_lit(fl$7, );
+final dc.String $15=(Ukddmlcoc_core.pr_str.$_invoke$1($13, ));
+final dc.String $16=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $15, ));
+return $16;
 }());
 assert((){
 late final dc.bool $if_$5;
@@ -835,16 +820,16 @@ $if_$5=false;
 }
 return $if_$5;
 }(), (){
-final dc.List<dc.dynamic> fl$11=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$11[1]=Ukddmlcoc_core.$_EMPTY_SET;
-final dc.List<dc.dynamic> fl$12=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-callers", )), ));
-fl$12[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $20=Ukddmlcoc_core.$_list_lit(fl$12, );
-fl$11[2]=$20;
-final Ukddmlcoc_core.PersistentList $19=Ukddmlcoc_core.$_list_lit(fl$11, );
-final dc.String $21=(Ukddmlcoc_core.pr_str.$_invoke$1($19, ));
-final dc.String $22=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $21, ));
-return $22;
+final dc.List<dc.dynamic> fl$9=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$9[1]=Ukddmlcoc_core.$_EMPTY_SET;
+final dc.List<dc.dynamic> fl$10=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-callers", )), ));
+fl$10[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $18=Ukddmlcoc_core.$_list_lit(fl$10, );
+fl$9[2]=$18;
+final Ukddmlcoc_core.PersistentList $17=Ukddmlcoc_core.$_list_lit(fl$9, );
+final dc.String $19=(Ukddmlcoc_core.pr_str.$_invoke$1($17, ));
+final dc.String $20=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $19, ));
+return $20;
 }());
 assert((){
 late final dc.bool $if_$6;
@@ -855,16 +840,16 @@ $if_$6=false;
 }
 return $if_$6;
 }(), (){
-final dc.List<dc.dynamic> fl$13=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$13[1]=Ukddmlcoc_core.$_EMPTY_SET;
-final dc.List<dc.dynamic> fl$14=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-useds", )), ));
-fl$14[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $24=Ukddmlcoc_core.$_list_lit(fl$14, );
-fl$13[2]=$24;
-final Ukddmlcoc_core.PersistentList $23=Ukddmlcoc_core.$_list_lit(fl$13, );
-final dc.String $25=(Ukddmlcoc_core.pr_str.$_invoke$1($23, ));
-final dc.String $26=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $25, ));
-return $26;
+final dc.List<dc.dynamic> fl$11=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$11[1]=Ukddmlcoc_core.$_EMPTY_SET;
+final dc.List<dc.dynamic> fl$12=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-useds", )), ));
+fl$12[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $22=Ukddmlcoc_core.$_list_lit(fl$12, );
+fl$11[2]=$22;
+final Ukddmlcoc_core.PersistentList $21=Ukddmlcoc_core.$_list_lit(fl$11, );
+final dc.String $23=(Ukddmlcoc_core.pr_str.$_invoke$1($21, ));
+final dc.String $24=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $23, ));
+return $24;
 }());
 assert((){
 final dc.dynamic test$1=Ukddmlcotc_base.c_input$QMARK_(c$1, );
@@ -882,15 +867,15 @@ $if_$8=false;
 }
 return $if_$8;
 }(), (){
-final dc.List<dc.dynamic> fl$15=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "not", )), ));
-final dc.List<dc.dynamic> fl$16=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-input?", )), ));
-fl$16[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $28=Ukddmlcoc_core.$_list_lit(fl$16, );
-fl$15[1]=$28;
-final Ukddmlcoc_core.PersistentList $27=Ukddmlcoc_core.$_list_lit(fl$15, );
-final dc.String $29=(Ukddmlcoc_core.pr_str.$_invoke$1($27, ));
-final dc.String $30=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $29, ));
-return $30;
+final dc.List<dc.dynamic> fl$13=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "not", )), ));
+final dc.List<dc.dynamic> fl$14=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-input?", )), ));
+fl$14[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $26=Ukddmlcoc_core.$_list_lit(fl$14, );
+fl$13[1]=$26;
+final Ukddmlcoc_core.PersistentList $25=Ukddmlcoc_core.$_list_lit(fl$13, );
+final dc.String $27=(Ukddmlcoc_core.pr_str.$_invoke$1($25, ));
+final dc.String $28=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $27, ));
+return $28;
 }());
 assert((){
 late final dc.bool $if_$9;
@@ -901,15 +886,15 @@ $if_$9=false;
 }
 return $if_$9;
 }(), (){
-final dc.List<dc.dynamic> fl$17=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "nil?", )), ));
-final dc.List<dc.dynamic> fl$18=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-model", )), ));
-fl$18[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
-final Ukddmlcoc_core.PersistentList $32=Ukddmlcoc_core.$_list_lit(fl$18, );
-fl$17[1]=$32;
-final Ukddmlcoc_core.PersistentList $31=Ukddmlcoc_core.$_list_lit(fl$17, );
-final dc.String $33=(Ukddmlcoc_core.pr_str.$_invoke$1($31, ));
-final dc.String $34=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $33, ));
-return $34;
+final dc.List<dc.dynamic> fl$15=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "nil?", )), ));
+final dc.List<dc.dynamic> fl$16=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "c-model", )), ));
+fl$16[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
+final Ukddmlcoc_core.PersistentList $30=Ukddmlcoc_core.$_list_lit(fl$16, );
+fl$15[1]=$30;
+final Ukddmlcoc_core.PersistentList $29=Ukddmlcoc_core.$_list_lit(fl$15, );
+final dc.String $31=(Ukddmlcoc_core.pr_str.$_invoke$1($29, ));
+final dc.String $32=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $31, ));
+return $32;
 }());
 return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "test-cF-OK", 3639149876, ), ));
 }
