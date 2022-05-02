@@ -17,57 +17,57 @@ import "../mx-flutter/core.dart" as Ukddmlcotmf_core;
 import "../../cljd/core.dart" as Ukddmlcoc_core;
 import "../model/core.dart" as Ukddmlcotm_core;
 
-// BEGIN Reify$55
-class Reify$55 extends f_widgets.StatefulWidget implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
+// BEGIN Reify$61
+class Reify$61 extends f_widgets.StatefulWidget implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
 final meta$2;
-final p1$9528_$SHARP_$1;
+final p1$10129_$SHARP_$1;
 
-Reify$55(this.meta$2, this.p1$9528_$SHARP_$1, ):super();
+Reify$61(this.meta$2, this.p1$10129_$SHARP_$1, ):super();
 
 dc.dynamic $_meta$0(){
 return meta$2;
 }
 
 dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$2, ){
-return Ukddmlcote_counter.Reify$55((m$2054_$AUTO_$2 as dc.dynamic), (p1$9528_$SHARP_$1 as dc.dynamic), );
+return Ukddmlcote_counter.Reify$61((m$2054_$AUTO_$2 as dc.dynamic), (p1$10129_$SHARP_$1 as dc.dynamic), );
 }
 
 fsw_framework.State<fsw_framework.StatefulWidget> createState(){
 final dc.List<dc.dynamic> fl$18=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "state-ref", 3244709061, ), ));
-fl$18[1]=p1$9528_$SHARP_$1;
+fl$18[1]=p1$10129_$SHARP_$1;
 final Ukddmlcoc_core.PersistentVector $20=Ukddmlcoc_core.$_vec_owning(fl$18, );
-return Ukddmlcotu_core.rmap_meta_setf($20, Ukddmlcote_counter.Reify$56(null, p1$9528_$SHARP_$1, ), );
+return Ukddmlcotu_core.rmap_meta_setf($20, Ukddmlcote_counter.Reify$62(null, p1$10129_$SHARP_$1, ), );
 }
 }
 
-// END Reify$55
+// END Reify$61
 
-// BEGIN Reify$56
-class Reify$56 extends f_material.State implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
+// BEGIN Reify$62
+class Reify$62 extends f_material.State implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
 final meta$1;
-final p1$9528_$SHARP_$1;
+final p1$10129_$SHARP_$1;
 
-Reify$56(this.meta$1, this.p1$9528_$SHARP_$1, ):super();
+Reify$62(this.meta$1, this.p1$10129_$SHARP_$1, ):super();
 
 dc.dynamic $_meta$0(){
 return meta$1;
 }
 
 dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcote_counter.Reify$56((m$2054_$AUTO_$1 as dc.dynamic), (p1$9528_$SHARP_$1 as dc.dynamic), );
+return Ukddmlcote_counter.Reify$62((m$2054_$AUTO_$1 as dc.dynamic), (p1$10129_$SHARP_$1 as dc.dynamic), );
 }
 
 fsw_framework.Widget build(fsw_framework.BuildContext ctx$2, ){
-return f_widgets.Text((Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$9528_$SHARP_$1, ), ) as dc.String), style: (Ukddmlcotm_core.mget(p1$9528_$SHARP_$1, const Ukddmlcoc_core.Keyword(null, "style", 996261352, ), ) as fsp_text_style.TextStyle?), );
+return f_widgets.Text((Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$10129_$SHARP_$1, ), ) as dc.String), style: (Ukddmlcotm_core.mget(p1$10129_$SHARP_$1, const Ukddmlcoc_core.Keyword(null, "style", 996261352, ), ) as fsp_text_style.TextStyle?), );
 }
 }
 
-// END Reify$56
+// END Reify$62
 
 // BEGIN make-app
 dc.dynamic make_app(){
-return (Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.mx-flutter.core", "MaterialApp", 943223309, ), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$9469_$9470_$AUTO_$1, ){
-return f_material.MaterialApp(title: (Ukddmlcotm_core.mget(p1$9469_$9470_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), ) as dc.String), theme: (Ukddmlcotm_core.mget(p1$9469_$9470_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), ) as fsm_theme_data.ThemeData?), home: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$9469_$9470_$AUTO_$1, ), ), ) as fsw_framework.Widget?), );
+return (Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.mx-flutter.core", "MaterialApp", 943223309, ), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$10070_$10071_$AUTO_$1, ){
+return f_material.MaterialApp(title: (Ukddmlcotm_core.mget(p1$10070_$10071_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), ) as dc.String), theme: (Ukddmlcotm_core.mget(p1$10070_$10071_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), ) as fsm_theme_data.ThemeData?), home: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$10070_$10071_$AUTO_$1, ), ), ) as fsw_framework.Widget?), );
 }, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), (Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$1, ){
 final dc.dynamic me$1=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
@@ -180,8 +180,8 @@ $if_$8=false;
 }
 return $if_$8;
 }(), (Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", (Ukddmlcoc_core.pr_str.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "*par*", )), )), )));
-final Ukddmlcotmf_core.TTText this9460$1=Ukddmlcotmf_core.TTText();
-final dc.dynamic $6=(this9460$1.parts$0());
+final Ukddmlcotmf_core.TTText this10061$1=Ukddmlcotmf_core.TTText();
+final dc.dynamic $6=(this10061$1.parts$0());
 final dc.dynamic $24=(Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.mx-flutter.core", "Text", 2882473250, ), const Ukddmlcoc_core.Keyword(null, "dart-type", 11867594, ), $6, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), (Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$5, ){
 final dc.dynamic me$5=Ukddmlcotc_base.c_model(slot_c$SHARP_$5, );
 final dc.dynamic cell$5=slot_c$SHARP_$5;
@@ -215,8 +215,8 @@ return (Ukddmlcoc_core.doall.$_invoke$1((Ukddmlcoc_core.remove.$_invoke$2(Ukddml
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$5, );
 }
 }, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), Ukddmlcotmf_core.TextEx_gen_ex, const Ukddmlcoc_core.Keyword(null, "style", 996261352, ), [f_painting.TextStyle(color: f_material.Colors.black, fontSize: 18.0, ), ], ));
-final Ukddmlcotmf_core.TTText this9460$2=Ukddmlcotmf_core.TTText();
-final dc.dynamic $8=(this9460$2.parts$0());
+final Ukddmlcotmf_core.TTText this10061$2=Ukddmlcotmf_core.TTText();
+final dc.dynamic $8=(this10061$2.parts$0());
 final dc.dynamic $23=(Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.mx-flutter.core", "Text", 2882473250, ), const Ukddmlcoc_core.Keyword(null, "dart-type", 11867594, ), $8, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), (Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$6, ){
 final dc.dynamic me$6=Ukddmlcotc_base.c_model(slot_c$SHARP_$6, );
 final dc.dynamic cell$6=slot_c$SHARP_$6;
@@ -386,8 +386,8 @@ return (Ukddmlcoc_core.doall.$_invoke$1((Ukddmlcoc_core.remove.$_invoke$2(Ukddml
 } finally {
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$7, );
 }
-}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), [(dc.dynamic p1$9528_$SHARP_$1, ){
-final dc.dynamic r$SHARP_$1=Ukddmlcote_counter.Reify$55(null, p1$9528_$SHARP_$1, );
+}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), [(dc.dynamic p1$10129_$SHARP_$1, ){
+final dc.dynamic r$SHARP_$1=Ukddmlcote_counter.Reify$61(null, p1$10129_$SHARP_$1, );
 return r$SHARP_$1;
 }, ], ));
 final dc.dynamic $25=(Ukddmlcoc_core.list.$_invoke$3($24, $23, $22, ));
@@ -397,9 +397,9 @@ return (Ukddmlcoc_core.doall.$_invoke$1($27, ));
 } finally {
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$4, );
 }
-}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$9481_$9482_$AUTO_$1, ){
-final fsr_flex.MainAxisAlignment mainAxisAlignment$1=(Ukddmlcotm_core.mget(p1$9481_$9482_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "mainAxisAlignment", 2807631147, ), ) as fsr_flex.MainAxisAlignment);
-final dc.dynamic castable$1=(Ukddmlcoc_core.mapv.$_invoke$2(Ukddmlcotmf_core.render_fx, Ukddmlcotm_core.md_kids(p1$9481_$9482_$AUTO_$1, ), ));
+}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$10082_$10083_$AUTO_$1, ){
+final fsr_flex.MainAxisAlignment mainAxisAlignment$1=(Ukddmlcotm_core.mget(p1$10082_$10083_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "mainAxisAlignment", 2807631147, ), ) as fsr_flex.MainAxisAlignment);
+final dc.dynamic castable$1=(Ukddmlcoc_core.mapv.$_invoke$2(Ukddmlcotmf_core.render_fx, Ukddmlcotm_core.md_kids(p1$10082_$10083_$AUTO_$1, ), ));
 late final dc.List<fsw_framework.Widget> casted$1;
 if((castable$1 is dc.List<fsw_framework.Widget>)){
 casted$1=castable$1;
@@ -411,14 +411,14 @@ return f_material.Column(mainAxisAlignment: mainAxisAlignment$1, children: caste
 } finally {
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$3, );
 }
-}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$9487_$9488_$AUTO_$1, ){
-return f_material.Center(child: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$9487_$9488_$AUTO_$1, ), ), ) as fsw_framework.Widget?), );
+}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$10088_$10089_$AUTO_$1, ){
+return f_material.Center(child: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$10088_$10089_$AUTO_$1, ), ), ) as fsw_framework.Widget?), );
 }, )), )), ), )), ));
 } finally {
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$2, );
 }
-}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$9475_$9476_$AUTO_$1, ){
-return f_material.Scaffold(appBar: (Ukddmlcotm_core.mget(p1$9475_$9476_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "appBar", 811449783, ), ) as fsw_preferred_size.PreferredSizeWidget?), body: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$9475_$9476_$AUTO_$1, ), ), ) as fsw_framework.Widget?), floatingActionButton: (Ukddmlcotm_core.mget(p1$9475_$9476_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "floatingActionButton", 2660567720, ), ) as fsw_framework.Widget?), );
+}, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), (dc.dynamic p1$10076_$10077_$AUTO_$1, ){
+return f_material.Scaffold(appBar: (Ukddmlcotm_core.mget(p1$10076_$10077_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "appBar", 811449783, ), ) as fsw_preferred_size.PreferredSizeWidget?), body: (Ukddmlcotmf_core.render_fx(Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(p1$10076_$10077_$AUTO_$1, ), ), ) as fsw_framework.Widget?), floatingActionButton: (Ukddmlcotm_core.mget(p1$10076_$10077_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "floatingActionButton", 2660567720, ), ) as fsw_framework.Widget?), );
 }, const Ukddmlcoc_core.Keyword(null, "appBar", 811449783, ), f_material.AppBar(title: f_widgets.Text("mxFlutter  Home Page", ), ), const Ukddmlcoc_core.Keyword(null, "floatingActionButton", 2660567720, ), [(Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$9, ){
 final dc.dynamic me$12=Ukddmlcotc_base.c_model(slot_c$SHARP_$9, );
 final dc.dynamic cell$9=slot_c$SHARP_$9;

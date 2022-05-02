@@ -13,7 +13,7 @@
              c-rule c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
              c-synaptic? caller-drop c-md-name
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot
+             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
              *depender* *not-to-be*
              *c-prop-depth* md-slot-owning? c-lazy] :as cty]
     [tiltontec.cell.observer :refer [c-observe]]
@@ -37,11 +37,21 @@
 
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
-    (assert *depender*)
-    (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
-    (rmap-setf [:useds *depender*]
-      (conj (c-useds *depender*) used))
-    (caller-ensure used *depender*)))
+    (let [deep (first *call-stack*)]
+      (assert deep "reco-dep no first callstack")
+      (when (not= *depender* deep)
+        (prn :DEEP-NOT-first-cs!!!!!!!!!!! *depender* deep))
+      (rmap-setf [:useds deep]
+        (conj (c-useds deep) used))
+      (prn :new-dependency-of (cinfo deep) :on (cinfo used))
+      (caller-ensure used deep))
+
+    ;(assert *depender*)
+    ;;; (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
+    ;(rmap-setf [:useds *depender*]
+    ;  (conj (c-useds *depender*) used))
+    ;(caller-ensure used *depender*)
+    ))
 
 (declare calculate-and-set)
 
@@ -122,7 +132,7 @@
                  (with-integrity ()
                    (let [prior-value (c-value c)]
                      #_(println :cget-to-evic (c-slot c) (ia-type (c-model c)))
-                     (when (and *depender* (not= :kids (c-slot *depender*)))
+                     #_ (when (and *depender* (not= :kids (c-slot *depender*)))
                        (prn :c-get-sees-depender
                          (str "asker= "
                          (c-slot *depender*) "/"
@@ -142,7 +152,7 @@
                          (c-observe c prior-value :cget)
                          (ephemeral-reset c)))))
                  (when *depender*
-                   (when (and *depender* (not= :kids (c-slot *depender*)))
+                   #_ (when (and *depender* (not= :kids (c-slot *depender*)))
                      (prn :c-get-records-dependency
                        :askee (c-slot c) (ia-type (c-model c))
                        (str "asker= "

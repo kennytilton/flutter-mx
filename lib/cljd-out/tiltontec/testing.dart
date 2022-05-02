@@ -103,7 +103,7 @@ final dc.String $8=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $7, ));
 return $8;
 }());
 final dc.dynamic coll7265$1=callbacks$1;
-dc.Null f7266$1(dc.dynamic acc$9449_$1, dc.dynamic cb$1, ){
+dc.Null f7266$1(dc.dynamic acc$10050_$1, dc.dynamic cb$1, ){
 Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "before?", 575860121, ), Ukddmlcoc_core.deref(Ukddmlcotu_core.$STAR_bam$STAR_, ), );
 if((cb$1 is dc.Function)){
 (cb$1 as dc.Function)(n$1, );
