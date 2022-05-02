@@ -188,9 +188,8 @@
   (binding [*depender* c
             *call-stack* (cons c *call-stack*)
             *defer-changes* true]
-    ;(prn :calc-n-depender (= *depender* c) (c-slot *depender*)(c-slot c))
-    (assert (= c (first *call-stack*)) "callstack binding NG")
-    ;; (assert (= c *depender*) "c to *depender* binding failed")
+    ;; this seems totally OK (assert (= c (first *call-stack*)) "callstack binding NG")
+    (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
     ;; remove asserts ^^ to get this to fure
     (when (not= c *depender*)
       (prn :not=!!!! @c :depender @*depender*)

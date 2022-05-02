@@ -124,7 +124,7 @@ return y$1;
 }, ));
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "warm-up", 3108259404, ), Ukddmlcotc_evaluate.c_get(z$1, ), );
 final dc.dynamic coll7265$1=(Ukddmlcoc_core.range.$_invoke$1(max$1, ));
-dc.Null f7266$1(dc.dynamic acc$9266_$1, dc.dynamic n$1, ){
+dc.Null f7266$1(dc.dynamic acc$11730_$1, dc.dynamic n$1, ){
 Ukddmlcotc_core.c_reset$BANG_(x$1, n$1, );
 return null;
 }
@@ -299,11 +299,11 @@ final dc.dynamic me$1=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
-final dc.dynamic existing_syn$9209_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "delta-x", 1388763291, ), );
-final dc.dynamic or$7123_$AUTO_$1=existing_syn$9209_$AUTO_$1;
-late final dc.dynamic synapse$9210_$AUTO_$1;
+final dc.dynamic existing_syn$11673_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "delta-x", 1388763291, ), );
+final dc.dynamic or$7123_$AUTO_$1=existing_syn$11673_$AUTO_$1;
+late final dc.dynamic synapse$11674_$AUTO_$1;
 if(((or$7123_$AUTO_$1!=false)&&(or$7123_$AUTO_$1!=null))){
-synapse$9210_$AUTO_$1=or$7123_$AUTO_$1;
+synapse$11674_$AUTO_$1=or$7123_$AUTO_$1;
 }else{
 final Ukddmlcoc_core.Atom prior$1=(Ukddmlcoc_core.atom.$_invoke$1(null, ));
 final dc.dynamic arg$1=(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ).$_invoke$1(Ukddmlcoc_core.deref(Ukddmlcotc_base.$STAR_depender$STAR_, ), ));
@@ -365,7 +365,7 @@ fl$28[3]=$30;
 final Ukddmlcoc_core.PersistentList $26=Ukddmlcoc_core.$_list_lit(fl$28, );
 final dc.List<dc.dynamic> fl$27=(dc.List<dc.dynamic>.filled(1, $26, ));
 final Ukddmlcoc_core.PersistentList $41=Ukddmlcoc_core.$_list_lit(fl$27, );
-final dc.dynamic new_syn$9211_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "delta-x", 1388763291, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "delta-x", 1388763291, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $41, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
+final dc.dynamic new_syn$11675_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "delta-x", 1388763291, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "delta-x", 1388763291, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $41, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
 final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$2, );
 final dc.dynamic cell$2=slot_c$SHARP_$2;
 final dc.dynamic slot_name$2=Ukddmlcotc_base.c_slot(slot_c$SHARP_$2, );
@@ -393,7 +393,7 @@ final dc.List<dc.dynamic> fl$44=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_c
 fl$44[1]=Ukddmlcotc_base.$STAR_depender$STAR_;
 final Ukddmlcoc_core.PersistentVector $42=Ukddmlcoc_core.$_vec_owning(fl$44, );
 final dc.dynamic coll7250$1=Ukddmlcotc_base.c_synapses(Ukddmlcotc_base.$STAR_depender$STAR_, );
-final dc.dynamic o7251$1=new_syn$9211_$AUTO_$1;
+final dc.dynamic o7251$1=new_syn$11675_$AUTO_$1;
 late final dc.dynamic $if_$2;
 if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
 $if_$2=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc.dynamic), ));
@@ -401,14 +401,14 @@ $if_$2=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc
 $if_$2=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), (o7251$1 as dc.dynamic), ));
 }
 Ukddmlcotu_core.rmap_setf($42, $if_$2, );
-Ukddmlcotc_evaluate.record_dependency(new_syn$9211_$AUTO_$1, );
-synapse$9210_$AUTO_$1=new_syn$9211_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(new_syn$11675_$AUTO_$1, );
+synapse$11674_$AUTO_$1=new_syn$11675_$AUTO_$1;
 }
-final dc.dynamic value$9212_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
-return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$9210_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
+final dc.dynamic value$11676_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
+return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$11674_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
 }, );
-Ukddmlcotc_evaluate.record_dependency(synapse$9210_$AUTO_$1, );
-final dc.dynamic temp$7110_$AUTO_$2=value$9212_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(synapse$11674_$AUTO_$1, );
+final dc.dynamic temp$7110_$AUTO_$2=value$11676_$AUTO_$1;
 if(((temp$7110_$AUTO_$2!=false)&&(temp$7110_$AUTO_$2!=null))){
 final dc.dynamic d$1=temp$7110_$AUTO_$2;
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "delta", 3796384865, ), d$1, );
@@ -694,11 +694,11 @@ final dc.dynamic me$1=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
-final dc.dynamic existing_syn$9209_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "even-x", 697118228, ), );
-final dc.dynamic or$7123_$AUTO_$1=existing_syn$9209_$AUTO_$1;
-late final dc.dynamic synapse$9210_$AUTO_$1;
+final dc.dynamic existing_syn$11673_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "even-x", 697118228, ), );
+final dc.dynamic or$7123_$AUTO_$1=existing_syn$11673_$AUTO_$1;
+late final dc.dynamic synapse$11674_$AUTO_$1;
 if(((or$7123_$AUTO_$1!=false)&&(or$7123_$AUTO_$1!=null))){
-synapse$9210_$AUTO_$1=or$7123_$AUTO_$1;
+synapse$11674_$AUTO_$1=or$7123_$AUTO_$1;
 }else{
 final dc.dynamic arg$1=(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ).$_invoke$1(Ukddmlcoc_core.deref(Ukddmlcotc_base.$STAR_depender$STAR_, ), ));
 final dc.List<dc.dynamic> fl$22=(dc.List<dc.dynamic>.filled(5, (Ukddmlcoc_core.symbol.$_invoke$2(null, "when-let", )), ));
@@ -735,7 +735,7 @@ fl$22[4]=$25;
 final Ukddmlcoc_core.PersistentList $20=Ukddmlcoc_core.$_list_lit(fl$22, );
 final dc.List<dc.dynamic> fl$21=(dc.List<dc.dynamic>.filled(1, $20, ));
 final Ukddmlcoc_core.PersistentList $29=Ukddmlcoc_core.$_list_lit(fl$21, );
-final dc.dynamic new_syn$9211_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "even-x", 697118228, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "even-x", 697118228, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $29, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
+final dc.dynamic new_syn$11675_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "even-x", 697118228, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "even-x", 697118228, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $29, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
 final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$2, );
 final dc.dynamic cell$2=slot_c$SHARP_$2;
 final dc.dynamic slot_name$2=Ukddmlcotc_base.c_slot(slot_c$SHARP_$2, );
@@ -758,7 +758,7 @@ final dc.List<dc.dynamic> fl$33=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_c
 fl$33[1]=Ukddmlcotc_base.$STAR_depender$STAR_;
 final Ukddmlcoc_core.PersistentVector $30=Ukddmlcoc_core.$_vec_owning(fl$33, );
 final dc.dynamic coll7250$1=Ukddmlcotc_base.c_synapses(Ukddmlcotc_base.$STAR_depender$STAR_, );
-final dc.dynamic o7251$1=new_syn$9211_$AUTO_$1;
+final dc.dynamic o7251$1=new_syn$11675_$AUTO_$1;
 late final dc.dynamic $if_$1;
 if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
 $if_$1=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc.dynamic), ));
@@ -766,14 +766,14 @@ $if_$1=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc
 $if_$1=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), (o7251$1 as dc.dynamic), ));
 }
 Ukddmlcotu_core.rmap_setf($30, $if_$1, );
-Ukddmlcotc_evaluate.record_dependency(new_syn$9211_$AUTO_$1, );
-synapse$9210_$AUTO_$1=new_syn$9211_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(new_syn$11675_$AUTO_$1, );
+synapse$11674_$AUTO_$1=new_syn$11675_$AUTO_$1;
 }
-final dc.dynamic value$9212_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
-return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$9210_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
+final dc.dynamic value$11676_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
+return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$11674_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
 }, );
-Ukddmlcotc_evaluate.record_dependency(synapse$9210_$AUTO_$1, );
-final dc.dynamic temp$7110_$AUTO_$2=value$9212_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(synapse$11674_$AUTO_$1, );
+final dc.dynamic temp$7110_$AUTO_$2=value$11676_$AUTO_$1;
 if(((temp$7110_$AUTO_$2!=false)&&(temp$7110_$AUTO_$2!=null))){
 final dc.dynamic x$3=temp$7110_$AUTO_$2;
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "x-see-x", 3732611212, ), x$3, );
@@ -803,7 +803,7 @@ return null;
 }, ));
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "warm-up", 3108259404, ), Ukddmlcotc_evaluate.c_get(z$1, ), );
 final dc.dynamic coll7265$1=(Ukddmlcoc_core.range.$_invoke$1(max$1, ));
-dc.Null f7266$1(dc.dynamic acc$9267_$1, dc.dynamic n$1, ){
+dc.Null f7266$1(dc.dynamic acc$11731_$1, dc.dynamic n$1, ){
 Ukddmlcotc_core.c_reset$BANG_(x$1, n$1, );
 return null;
 }
@@ -994,11 +994,11 @@ final dc.dynamic me$1=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
-final dc.dynamic existing_syn$9209_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "grouper", 4035960143, ), );
-final dc.dynamic or$7123_$AUTO_$1=existing_syn$9209_$AUTO_$1;
-late final dc.dynamic synapse$9210_$AUTO_$1;
+final dc.dynamic existing_syn$11673_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "grouper", 4035960143, ), );
+final dc.dynamic or$7123_$AUTO_$1=existing_syn$11673_$AUTO_$1;
+late final dc.dynamic synapse$11674_$AUTO_$1;
 if(((or$7123_$AUTO_$1!=false)&&(or$7123_$AUTO_$1!=null))){
-synapse$9210_$AUTO_$1=or$7123_$AUTO_$1;
+synapse$11674_$AUTO_$1=or$7123_$AUTO_$1;
 }else{
 final Ukddmlcoc_core.Atom buffer$1=(Ukddmlcoc_core.atom.$_invoke$1(Ukddmlcoc_core.$_EMPTY_VECTOR, ));
 final dc.dynamic arg$1=(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ).$_invoke$1(Ukddmlcoc_core.deref(Ukddmlcotc_base.$STAR_depender$STAR_, ), ));
@@ -1060,7 +1060,7 @@ fl$28[3]=$30;
 final Ukddmlcoc_core.PersistentList $26=Ukddmlcoc_core.$_list_lit(fl$28, );
 final dc.List<dc.dynamic> fl$27=(dc.List<dc.dynamic>.filled(1, $26, ));
 final Ukddmlcoc_core.PersistentList $42=Ukddmlcoc_core.$_list_lit(fl$27, );
-final dc.dynamic new_syn$9211_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "grouper", 4035960143, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "grouper", 4035960143, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $42, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
+final dc.dynamic new_syn$11675_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "grouper", 4035960143, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "grouper", 4035960143, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $42, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
 final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$2, );
 final dc.dynamic cell$2=slot_c$SHARP_$2;
 final dc.dynamic slot_name$2=Ukddmlcotc_base.c_slot(slot_c$SHARP_$2, );
@@ -1093,7 +1093,7 @@ final dc.List<dc.dynamic> fl$45=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_c
 fl$45[1]=Ukddmlcotc_base.$STAR_depender$STAR_;
 final Ukddmlcoc_core.PersistentVector $43=Ukddmlcoc_core.$_vec_owning(fl$45, );
 final dc.dynamic coll7250$1=Ukddmlcotc_base.c_synapses(Ukddmlcotc_base.$STAR_depender$STAR_, );
-final dc.dynamic o7251$1=new_syn$9211_$AUTO_$1;
+final dc.dynamic o7251$1=new_syn$11675_$AUTO_$1;
 late final dc.dynamic $if_$1;
 if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
 $if_$1=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc.dynamic), ));
@@ -1101,14 +1101,14 @@ $if_$1=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc
 $if_$1=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), (o7251$1 as dc.dynamic), ));
 }
 Ukddmlcotu_core.rmap_setf($43, $if_$1, );
-Ukddmlcotc_evaluate.record_dependency(new_syn$9211_$AUTO_$1, );
-synapse$9210_$AUTO_$1=new_syn$9211_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(new_syn$11675_$AUTO_$1, );
+synapse$11674_$AUTO_$1=new_syn$11675_$AUTO_$1;
 }
-final dc.dynamic value$9212_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
-return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$9210_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
+final dc.dynamic value$11676_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
+return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$11674_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
 }, );
-Ukddmlcotc_evaluate.record_dependency(synapse$9210_$AUTO_$1, );
-final dc.dynamic temp$7110_$AUTO_$2=value$9212_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(synapse$11674_$AUTO_$1, );
+final dc.dynamic temp$7110_$AUTO_$2=value$11676_$AUTO_$1;
 if(((temp$7110_$AUTO_$2!=false)&&(temp$7110_$AUTO_$2!=null))){
 final dc.dynamic g$1=temp$7110_$AUTO_$2;
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "new-g", 4227218517, ), g$1, );
@@ -1146,7 +1146,7 @@ return null;
 }, ));
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "warm-up", 3108259404, ), Ukddmlcotc_evaluate.c_get(y$1, ), );
 final dc.dynamic coll7265$1=(Ukddmlcoc_core.range.$_invoke$1(10, ));
-dc.Null f7266$1(dc.dynamic acc$9269_$1, dc.dynamic n$1, ){
+dc.Null f7266$1(dc.dynamic acc$11733_$1, dc.dynamic n$1, ){
 Ukddmlcotc_core.c_reset$BANG_(x$1, n$1, );
 return null;
 }
@@ -1305,11 +1305,11 @@ final dc.dynamic me$1=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
-final dc.dynamic existing_syn$9209_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "sensitivity-x", 2809979612, ), );
-final dc.dynamic or$7123_$AUTO_$1=existing_syn$9209_$AUTO_$1;
-late final dc.dynamic synapse$9210_$AUTO_$1;
+final dc.dynamic existing_syn$11673_$AUTO_$1=Ukddmlcotc_synapse.existing_syn(const Ukddmlcoc_core.Keyword(null, "sensitivity-x", 2809979612, ), );
+final dc.dynamic or$7123_$AUTO_$1=existing_syn$11673_$AUTO_$1;
+late final dc.dynamic synapse$11674_$AUTO_$1;
 if(((or$7123_$AUTO_$1!=false)&&(or$7123_$AUTO_$1!=null))){
-synapse$9210_$AUTO_$1=or$7123_$AUTO_$1;
+synapse$11674_$AUTO_$1=or$7123_$AUTO_$1;
 }else{
 final dc.int sensitivity$1=3;
 final Ukddmlcoc_core.Atom reported$1=(Ukddmlcoc_core.atom.$_invoke$1(null, ));
@@ -1373,7 +1373,7 @@ fl$29[3]=$31;
 final Ukddmlcoc_core.PersistentList $27=Ukddmlcoc_core.$_list_lit(fl$29, );
 final dc.List<dc.dynamic> fl$28=(dc.List<dc.dynamic>.filled(1, $27, ));
 final Ukddmlcoc_core.PersistentList $43=Ukddmlcoc_core.$_list_lit(fl$28, );
-final dc.dynamic new_syn$9211_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "sensitivity-x", 2809979612, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "sensitivity-x", 2809979612, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $43, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
+final dc.dynamic new_syn$11675_$AUTO_$1=(Ukddmlcotc_core.make_c_formula.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "model", 174982973, ), arg$1, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), const Ukddmlcoc_core.Keyword(null, "sensitivity-x", 2809979612, ), const Ukddmlcoc_core.Keyword(null, "synapse-id", 2880698600, ), const Ukddmlcoc_core.Keyword(null, "sensitivity-x", 2809979612, ), const Ukddmlcoc_core.Keyword(null, "code", 1085824150, ), $43, const Ukddmlcoc_core.Keyword(null, "synaptic?", 4282136749, ), [true, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
 final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$2, );
 final dc.dynamic cell$2=slot_c$SHARP_$2;
 final dc.dynamic slot_name$2=Ukddmlcotc_base.c_slot(slot_c$SHARP_$2, );
@@ -1403,7 +1403,7 @@ final dc.List<dc.dynamic> fl$47=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_c
 fl$47[1]=Ukddmlcotc_base.$STAR_depender$STAR_;
 final Ukddmlcoc_core.PersistentVector $44=Ukddmlcoc_core.$_vec_owning(fl$47, );
 final dc.dynamic coll7250$1=Ukddmlcotc_base.c_synapses(Ukddmlcotc_base.$STAR_depender$STAR_, );
-final dc.dynamic o7251$1=new_syn$9211_$AUTO_$1;
+final dc.dynamic o7251$1=new_syn$11675_$AUTO_$1;
 late final dc.dynamic $if_$2;
 if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
 $if_$2=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc.dynamic), ));
@@ -1411,14 +1411,14 @@ $if_$2=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc
 $if_$2=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), (o7251$1 as dc.dynamic), ));
 }
 Ukddmlcotu_core.rmap_setf($44, $if_$2, );
-Ukddmlcotc_evaluate.record_dependency(new_syn$9211_$AUTO_$1, );
-synapse$9210_$AUTO_$1=new_syn$9211_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(new_syn$11675_$AUTO_$1, );
+synapse$11674_$AUTO_$1=new_syn$11675_$AUTO_$1;
 }
-final dc.dynamic value$9212_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
-return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$9210_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
+final dc.dynamic value$11676_$AUTO_$1=Ukddmlcotc_integrity.call_with_integrity(null, null, (dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
+return Ukddmlcotc_evaluate.ensure_value_is_current(synapse$11674_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "synapse", 4007513329, ), Ukddmlcotc_base.$STAR_depender$STAR_, );
 }, );
-Ukddmlcotc_evaluate.record_dependency(synapse$9210_$AUTO_$1, );
-final dc.dynamic temp$7110_$AUTO_$2=value$9212_$AUTO_$1;
+Ukddmlcotc_evaluate.record_dependency(synapse$11674_$AUTO_$1, );
+final dc.dynamic temp$7110_$AUTO_$2=value$11676_$AUTO_$1;
 if(((temp$7110_$AUTO_$2!=false)&&(temp$7110_$AUTO_$2!=null))){
 final dc.dynamic changed_x$1=temp$7110_$AUTO_$2;
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "changed", 1577433296, ), changed_x$1, );
@@ -1559,7 +1559,7 @@ final dc.int max$1=5;
 Ukddmlcotc_core.c_reset$BANG_(x$1, -1, );
 reset_runs$1();
 final dc.dynamic coll7265$1=(Ukddmlcoc_core.range.$_invoke$1(max$1, ));
-dc.Null f7266$1(dc.dynamic acc$9268_$1, dc.dynamic n$1, ){
+dc.Null f7266$1(dc.dynamic acc$11732_$1, dc.dynamic n$1, ){
 Ukddmlcotc_core.c_reset$BANG_(x$1, n$1, );
 return null;
 }
