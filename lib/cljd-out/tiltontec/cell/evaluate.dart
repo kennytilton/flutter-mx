@@ -369,6 +369,7 @@ return true;
 
 // BEGIN calculate-and-link
 dc.dynamic calculate_and_link(dc.dynamic c$1, ){
+Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "calculating", 310087491, ), Ukddmlcotc_base.cinfo(c$1, ), );
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(6, (Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), ));
 fl$1[1]=c$1;
 fl$1[2]=(Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*call-stack*", ));
@@ -378,10 +379,20 @@ fl$1[5]=true;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$1, );
 final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
 try {
-if((Ukddmlcoc_core.not$EQ_.$_invoke$2(c$1, Ukddmlcotc_base.$STAR_depender$STAR_, ))){
-Ukddmlcoc_core.prn.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "not=!!!!-input", 3276150672, ), Ukddmlcotc_base.cinfo(c$1, ), const Ukddmlcoc_core.Keyword(null, "depender", 138061214, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
-Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "call-stack", 714560811, ), (Ukddmlcoc_core.map.$_invoke$2(Ukddmlcotc_base.cinfo, Ukddmlcotc_base.$STAR_call_stack$STAR_, )), );
+assert((){
+late final dc.bool $if_$1;
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(c$1, Ukddmlcoc_core.first(Ukddmlcotc_base.$STAR_call_stack$STAR_, ), ))){
+$if_$1=true;
 }else{
+$if_$1=false;
+}
+return $if_$1;
+}(), "callstack binding FAIL!!!");
+Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "call-stack-happens-to-be", 1876558962, ), (Ukddmlcoc_core.map.$_invoke$2(Ukddmlcotc_base.cinfo, Ukddmlcotc_base.$STAR_call_stack$STAR_, )), );
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(c$1, Ukddmlcotc_base.$STAR_depender$STAR_, ))){
+Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "depender-binding-correct!!!", 2793385217, ), Ukddmlcotc_base.cinfo(c$1, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
+}else{
+Ukddmlcoc_core.prn.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "FAIL-bind-input-c", 1315764445, ), Ukddmlcotc_base.cinfo(c$1, ), const Ukddmlcoc_core.Keyword(null, "not-bound-depender-instead-is", 1758948324, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
 }
 if((Ukddmlcotc_evaluate.unlink_from_used is dc.Function)){
 (Ukddmlcotc_evaluate.unlink_from_used as dc.Function)(c$1, const Ukddmlcoc_core.Keyword(null, "pre-rule-clear", 690358453, ), );
@@ -392,13 +403,13 @@ Ukddmlcoc_core.IFn.extensions(Ukddmlcotc_evaluate.unlink_from_used, ).$_invoke$2
 }
 assert((){
 final dc.dynamic test$1=Ukddmlcotc_base.c_rule(c$1, );
-late final dc.bool $if_$1;
+late final dc.bool $if_$2;
 if(((test$1!=false)&&(test$1!=null))){
-$if_$1=true;
+$if_$2=true;
 }else{
-$if_$1=false;
+$if_$2=false;
 }
-return $if_$1;
+return $if_$2;
 }(), (Ukddmlcoc_core.str.$_invoke$3("No rule in %s type %s", (const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ).$_invoke$1(c$1, )), Ukddmlcotc_base.ia_type(Ukddmlcoc_core.deref(c$1, ), ), )));
 final dc.dynamic f$1=Ukddmlcotc_base.c_rule(c$1, );
 late final dc.dynamic raw_value$1;
@@ -415,13 +426,13 @@ if(((and$7082_$AUTO_$1!=false)&&(and$7082_$AUTO_$1!=null))){
 final dc.bool and$7082_$AUTO_$2=Ukddmlcoc_core.vector$QMARK_(raw_value$1, );
 if(and$7082_$AUTO_$2){
 final dc.dynamic o7419$1=raw_value$1;
-late final dc.dynamic $if_$2;
+late final dc.dynamic $if_$3;
 if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
-$if_$2=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+$if_$3=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
 }else{
-$if_$2=((Ukddmlcoc_core.IMeta.extensions(o7419$1, ) as Ukddmlcoc_core.IMeta$ext).$_meta$0(o7419$1, ));
+$if_$3=((Ukddmlcoc_core.IMeta.extensions(o7419$1, ) as Ukddmlcoc_core.IMeta$ext).$_meta$0(o7419$1, ));
 }
-prop_code$QMARK_$1=Ukddmlcoc_core.contains$QMARK_($if_$2, const Ukddmlcoc_core.Keyword(null, "propagate", 679618737, ), );
+prop_code$QMARK_$1=Ukddmlcoc_core.contains$QMARK_($if_$3, const Ukddmlcoc_core.Keyword(null, "propagate", 679618737, ), );
 }else{
 prop_code$QMARK_$1=and$7082_$AUTO_$2;
 }
@@ -431,13 +442,13 @@ prop_code$QMARK_$1=and$7082_$AUTO_$1;
 if(((prop_code$QMARK_$1!=false)&&(prop_code$QMARK_$1!=null))){
 final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, Ukddmlcoc_core.first(raw_value$1, ), ));
 final dc.dynamic o7419$2=raw_value$1;
-late final dc.dynamic $if_$3;
+late final dc.dynamic $if_$4;
 if((o7419$2 is Ukddmlcoc_core.IMeta$iface)){
-$if_$3=((o7419$2 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+$if_$4=((o7419$2 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
 }else{
-$if_$3=((Ukddmlcoc_core.IMeta.extensions(o7419$2, ) as Ukddmlcoc_core.IMeta$ext).$_meta$0(o7419$2, ));
+$if_$4=((Ukddmlcoc_core.IMeta.extensions(o7419$2, ) as Ukddmlcoc_core.IMeta$ext).$_meta$0(o7419$2, ));
 }
-final dc.dynamic $2=(const Ukddmlcoc_core.Keyword(null, "propagate", 679618737, ).$_invoke$1($if_$3, ));
+final dc.dynamic $2=(const Ukddmlcoc_core.Keyword(null, "propagate", 679618737, ).$_invoke$1($if_$4, ));
 fl$2[1]=$2;
 return Ukddmlcoc_core.$_vec_owning(fl$2, );
 }
@@ -1114,24 +1125,24 @@ final dc.dynamic test$1=Ukddmlcotc_base.c_optimized_away$QMARK_(used$1, );
 if(((test$1!=false)&&(test$1!=null))){
 return null;
 }
-final dc.dynamic deep$1=Ukddmlcoc_core.first(Ukddmlcotc_base.$STAR_call_stack$STAR_, );
+final dc.dynamic cs_top$1=Ukddmlcoc_core.first(Ukddmlcotc_base.$STAR_call_stack$STAR_, );
 assert((){
 late final dc.bool $if_$1;
-if(((deep$1!=false)&&(deep$1!=null))){
+if(((cs_top$1!=false)&&(cs_top$1!=null))){
 $if_$1=true;
 }else{
 $if_$1=false;
 }
 return $if_$1;
-}(), "reco-dep no first callstack");
-if((Ukddmlcoc_core.not$EQ_.$_invoke$2(Ukddmlcotc_base.$STAR_depender$STAR_, deep$1, ))){
-Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "DEEP-NOT-first-cs!!!!!!!!!!!", 3105228816, ), Ukddmlcotc_base.$STAR_depender$STAR_, deep$1, );
+}(), "record-dependency> error: no first callstack");
+if((Ukddmlcoc_core.not$EQ_.$_invoke$2(Ukddmlcotc_base.$STAR_depender$STAR_, cs_top$1, ))){
+Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "*depender*-binding-NOT-first-cs-top!!", 846041396, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), Ukddmlcotc_base.cinfo(cs_top$1, ), );
 }else{
 }
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "useds", 2468229164, ), ));
-fl$1[1]=deep$1;
+fl$1[1]=cs_top$1;
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
-final dc.dynamic coll7250$1=Ukddmlcotc_base.c_useds(deep$1, );
+final dc.dynamic coll7250$1=Ukddmlcotc_base.c_useds(cs_top$1, );
 final dc.dynamic o7251$1=used$1;
 late final dc.dynamic $if_$2;
 if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
@@ -1140,8 +1151,8 @@ $if_$2=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc
 $if_$2=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), (o7251$1 as dc.dynamic), ));
 }
 Ukddmlcotu_core.rmap_setf($1, $if_$2, );
-Ukddmlcoc_core.prn.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "new-dependency-of", 414818129, ), Ukddmlcotc_base.cinfo(deep$1, ), const Ukddmlcoc_core.Keyword(null, "on", 3621113931, ), Ukddmlcotc_base.cinfo(used$1, ), );
-return Ukddmlcotc_base.caller_ensure(used$1, deep$1, );
+Ukddmlcoc_core.prn.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "recording-dependency-of", 74439786, ), Ukddmlcotc_base.cinfo(cs_top$1, ), const Ukddmlcoc_core.Keyword(null, "on", 3621113931, ), Ukddmlcotc_base.cinfo(used$1, ), );
+return Ukddmlcotc_base.caller_ensure(used$1, cs_top$1, );
 }
 
 // END record-dependency

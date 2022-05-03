@@ -22,10 +22,10 @@
     ))
 
 (defn make-app []
-  (fx/MaterialApp {}
+  (fx/MaterialApp {:name :mat-app}
     {:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData. :primarySwatch m.Colors/blue))}
-    (fx/Scaffold {}
+    (fx/Scaffold {:name :scaff}
       {:appBar               (AppBar.
                                :title (Text. "mxFlutter  Home Page"))
        :floatingActionButton (cF (FloatingActionButton.
@@ -39,9 +39,10 @@
                                                   nil))
                                    :tooltip "Increment"
                                    :child (Icon. Icons/add :color Colors/black)))}
-      (fx/Center {} {}
-        (fx/Column {} {:mainAxisAlignment MainAxisAlignment/center}
-          (fx/Text {} {:style (TextStyle.
+      (fx/Center {:name :center-widget} {}
+        (fx/Column {:name :ctr-column}
+          {:mainAxisAlignment MainAxisAlignment/center}
+          (fx/Text {:name :you-have} {:style (TextStyle.
                                 :color m.Colors/black
                                 :fontSize 18.0)}
             "You have clicked the button so many times:")
@@ -61,7 +62,7 @@
             (str (mget me :z-count)))
           (tiltontec.model.core/make :type ::Text
             :name :z-counter-x2
-            :zx2 (cF+ [:obs (fn-obs (prn :zx2!!!!!!!!!-old-new old new (meta me))
+            :zx2 (cF+ [:obs (fn-obs (prn :zx2-observes-!!-old-new old new (meta me))
                               (when-let [^State state (:state-ref (meta me))]
                                 ;; (prn :BINGO-z-counter!! state)
                                 (.setState state (fn [] (do)))))]
@@ -75,7 +76,7 @@
                        (* 2 (md/md-get-ex zc :z-count)))))
             ;; todo when we get to multi-kids, use keys to make efficient since we do not manipulate DOM
             :kids (md/cFkids
-                    (str "Computio " (mget me :zx2)))
+                    (str "Button click X 2 " (mget me :zx2)))
             :fx-gen #(do ;; (prn :ocode-text-gen-called!!!!!)
                          (let [r# (reify :extends StatefulWidget
                                     (createState [this]

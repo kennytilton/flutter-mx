@@ -292,10 +292,18 @@ fl$1[3]=true;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$1, );
 final dc.dynamic options$2=(Ukddmlcoc_core.merge.$_invoke$2($1, (Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.hash_map, options$1, )), ));
 final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), ));
-fl$2[1]=null;
+final dc.dynamic test$1=(const Ukddmlcoc_core.Keyword(null, "wocd?", 2892902823, ).$_invoke$1(options$2, ));
+late final dc.dynamic $if_$2;
+if(((test$1!=false)&&(test$1!=null))){
+$if_$2=null;
+}else{
+$if_$2=Ukddmlcotc_base.$STAR_depender$STAR_;
+}
+fl$2[1]=$if_$2;
 final Ukddmlcoc_core.PersistentHashMap $2=Ukddmlcoc_core.$_map_lit(fl$2, );
 final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($2, );
 try {
+Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "*depender*-now", 706618653, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
 final dc.dynamic and$7082_$AUTO_$2=(const Ukddmlcoc_core.Keyword(null, "me?", 3311563368, ).$_invoke$1(options$2, ));
 late final dc.dynamic or$7123_$AUTO_$1;
 if(((and$7082_$AUTO_$2!=false)&&(and$7082_$AUTO_$2!=null))){
@@ -322,8 +330,8 @@ or$7123_$AUTO_$2=null;
 if(((or$7123_$AUTO_$2!=false)&&(or$7123_$AUTO_$2!=null))){
 return or$7123_$AUTO_$2;
 }
-final dc.dynamic test$1=(const Ukddmlcoc_core.Keyword(null, "must?", 2975132378, ).$_invoke$1(options$2, ));
-if(((test$1!=false)&&(test$1!=null))){
+final dc.dynamic test$2=(const Ukddmlcoc_core.Keyword(null, "must?", 2975132378, ).$_invoke$1(options$2, ));
+if(((test$2!=false)&&(test$2!=null))){
 return (Ukddmlcotu_core.err.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "fasc-must-failed", 327300810, ), what$1, where$1, options$2, ));
 }
 return null;
@@ -498,12 +506,20 @@ fl$1[7]=true;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$1, );
 final dc.dynamic options$2=(Ukddmlcoc_core.merge.$_invoke$2($1, (Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.hash_map, options$1, )), ));
 final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), ));
-fl$2[1]=null;
+final dc.dynamic test$1=(const Ukddmlcoc_core.Keyword(null, "wocd?", 2892902823, ).$_invoke$1(options$2, ));
+late final dc.dynamic $if_$2;
+if(((test$1!=false)&&(test$1!=null))){
+$if_$2=null;
+}else{
+$if_$2=Ukddmlcotc_base.$STAR_depender$STAR_;
+}
+fl$2[1]=$if_$2;
 final Ukddmlcoc_core.PersistentHashMap $2=Ukddmlcoc_core.$_map_lit(fl$2, );
 final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($2, );
 try {
-final dc.dynamic test$1=Ukddmlcotu_core.any_ref$QMARK_(where$1, );
-if(((test$1!=false)&&(test$1!=null))){
+Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "navig-*depender*-now", 2993872446, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
+final dc.dynamic test$2=Ukddmlcotu_core.any_ref$QMARK_(where$1, );
+if(((test$2!=false)&&(test$2!=null))){
 final dc.dynamic and$7082_$AUTO_$3=(const Ukddmlcoc_core.Keyword(null, "me?", 3311563368, ).$_invoke$1(options$2, ));
 late final dc.dynamic or$7123_$AUTO_$1;
 if(((and$7082_$AUTO_$3!=false)&&(and$7082_$AUTO_$3!=null))){
@@ -562,8 +578,8 @@ or$7123_$AUTO_$3=and$7082_$AUTO_$6;
 if(((or$7123_$AUTO_$3!=false)&&(or$7123_$AUTO_$3!=null))){
 return or$7123_$AUTO_$3;
 }
-final dc.dynamic test$2=(const Ukddmlcoc_core.Keyword(null, "must?", 2975132378, ).$_invoke$1(options$2, ));
-if(((test$2!=false)&&(test$2!=null))){
+final dc.dynamic test$3=(const Ukddmlcoc_core.Keyword(null, "must?", 2975132378, ).$_invoke$1(options$2, ));
+if(((test$3!=false)&&(test$3!=null))){
 return (Ukddmlcotu_core.err.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "fm-navig-must-failed", 4211332826, ), what$1, where$1, options$2, ));
 }
 return null;

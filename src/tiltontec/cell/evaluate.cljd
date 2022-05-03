@@ -37,14 +37,14 @@
 
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
-    (let [deep (first *call-stack*)]
-      (assert deep "reco-dep no first callstack")
-      (when (not= *depender* deep)
-        (prn :DEEP-NOT-first-cs!!!!!!!!!!! *depender* deep))
-      (rmap-setf [:useds deep]
-        (conj (c-useds deep) used))
-      (prn :new-dependency-of (cinfo deep) :on (cinfo used))
-      (caller-ensure used deep))
+    (let [cs-top (first *call-stack*)]
+      (assert cs-top "record-dependency> error: no first callstack")
+      (when (not= *depender* cs-top)
+        (prn :*depender*-binding-NOT-first-cs-top!! (cinfo *depender*) (cinfo cs-top)))
+      (rmap-setf [:useds cs-top]
+        (conj (c-useds cs-top) used))
+      (prn :recording-dependency-of (cinfo cs-top) :on (cinfo used))
+      (caller-ensure used cs-top))
 
     ;(assert *depender*)
     ;;; (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
@@ -193,24 +193,33 @@
   determined anew.
 
   * Well, we also look to see if a synaptic cell has attached a
-  propagaion code to a vector used to wrap the raw value, which we then unpack."
+  propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
+  (prn :calculating (cinfo c))
   (binding [*depender* c
             *call-stack* (cons c *call-stack*)
             *defer-changes* true]
-    ;; this seems totally OK (assert (= c (first *call-stack*)) "callstack binding NG")
+
+    ;; this binding seems always to be OK:
+    (assert (= c (first *call-stack*)) "callstack binding FAIL!!!")
+    (prn :call-stack-happens-to-be (map cinfo *call-stack*))
+
+    (if (= c *depender*)
+      ;; this next will always succeed for the "kids" slot
+      (prn :depender-binding-correct!!! (cinfo c)(cinfo *depender*))
+      ;; this will appear when :zx2 (:z-count times 2) fires during app initial display, when
+      ;; things are force evaluated to get them going; it will not appear when we click
+      ;; on the (+) button.
+      (prn :FAIL-bind-input-c (cinfo c) :not-bound-depender-instead-is (cinfo *depender*)))
+
+    ;; un-comment this next to fail on app launch, before it ever gets going
+    ;; leave it commented to see the same binding start working when we click the (+)
     #_ (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
-    ;; remove asserts ^^ to get this to fure
-    (when (not= c *depender*)
-      (prn :not=!!!!-input (cinfo c) :depender (cinfo *depender*))
-      (prn :call-stack (map cinfo *call-stack*)))
 
     (unlink-from-used c :pre-rule-clear)
     (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (ia-type @c)))
 
-    ;(prn :calc-n-depender-before (c-slot *depender*)(c-slot c))
     (let [raw-value ((c-rule c) c)
-          ;_ (prn :calc-n-depender-after (c-slot *depender*)(c-slot c))
           prop-code? (and (c-synaptic? c)
                        (vector? raw-value)
                        (contains? (meta raw-value) :propagate))]

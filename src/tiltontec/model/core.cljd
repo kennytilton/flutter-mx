@@ -13,7 +13,7 @@
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
-             c-synaptic? caller-drop
+             c-synaptic? caller-drop cinfo
              c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
              *depender* *not-to-be*
              *c-prop-depth* md-slot-owning? c-lazy] :as cty]
@@ -195,7 +195,8 @@
   (when (and where what)
     (let [options (merge {:me? false :wocd? true}
                     (apply hash-map options))]
-      (binding [*depender* nil #_ (if (:wocd? options) nil *depender*)] ;; todo un-HHACK!!!!!!!!!!!
+      (binding [*depender* (if (:wocd? options) nil *depender*)]
+        (prn :*depender*-now (cinfo *depender*))
         (or (and (:me? options)
               (fm-navig-eq? what where)
               where)
@@ -233,7 +234,8 @@
                           } (apply hash-map options))]
       ;;(println :fm-navig-opts options)
       ;(println :T)
-      (binding [*depender* nil] ;; todo un-HHACK!!! (if (:wocd? options) nil *depender*)]
+      (binding [*depender* (if (:wocd? options) nil *depender*)]
+        (prn :navig-*depender*-now (cinfo *depender*))
         (when (any-ref? where)
           ;(println :f)
           (or (and (:me? options)
