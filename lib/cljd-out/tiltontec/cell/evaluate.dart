@@ -1124,24 +1124,20 @@ final dc.dynamic test$1=Ukddmlcotc_base.c_optimized_away$QMARK_(used$1, );
 if(((test$1!=false)&&(test$1!=null))){
 return null;
 }
-final dc.dynamic cs_top$1=Ukddmlcoc_core.first(Ukddmlcotc_base.$STAR_call_stack$STAR_, );
 assert((){
 late final dc.bool $if_$1;
-if(((cs_top$1!=false)&&(cs_top$1!=null))){
+if(((Ukddmlcotc_base.$STAR_depender$STAR_!=false)&&(Ukddmlcotc_base.$STAR_depender$STAR_!=null))){
 $if_$1=true;
 }else{
 $if_$1=false;
 }
 return $if_$1;
-}(), "record-dependency> error: no first callstack");
-if((Ukddmlcoc_core.not$EQ_.$_invoke$2(Ukddmlcotc_base.$STAR_depender$STAR_, cs_top$1, ))){
-Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "*depender*-binding-NOT-first-cs-top!!", 846041396, ), Ukddmlcotc_base.cinfo(Ukddmlcotc_base.$STAR_depender$STAR_, ), Ukddmlcotc_base.cinfo(cs_top$1, ), );
-}else{
-}
+}(), (Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", (Ukddmlcoc_core.pr_str.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "*depender*", )), )), )));
+Ukddmlcotu_base.call_trc.$_invoke$6(null, const Ukddmlcoc_core.Keyword(null, "reco-dep!!!", 3605197457, ), const Ukddmlcoc_core.Keyword(null, "used", 3322500580, ), Ukddmlcotc_base.c_slot(used$1, ), const Ukddmlcoc_core.Keyword(null, "caller", 516496776, ), Ukddmlcotc_base.c_slot(Ukddmlcotc_base.$STAR_depender$STAR_, ), );
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "useds", 2468229164, ), ));
-fl$1[1]=cs_top$1;
+fl$1[1]=Ukddmlcotc_base.$STAR_depender$STAR_;
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
-final dc.dynamic coll7250$1=Ukddmlcotc_base.c_useds(cs_top$1, );
+final dc.dynamic coll7250$1=Ukddmlcotc_base.c_useds(Ukddmlcotc_base.$STAR_depender$STAR_, );
 final dc.dynamic o7251$1=used$1;
 late final dc.dynamic $if_$2;
 if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
@@ -1150,8 +1146,7 @@ $if_$2=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1((o7251$1 as dc
 $if_$2=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), (o7251$1 as dc.dynamic), ));
 }
 Ukddmlcotu_core.rmap_setf($1, $if_$2, );
-Ukddmlcoc_core.prn.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "recording-dependency-of", 74439786, ), Ukddmlcotc_base.cinfo(cs_top$1, ), const Ukddmlcoc_core.Keyword(null, "on", 3621113931, ), Ukddmlcotc_base.cinfo(used$1, ), );
-return Ukddmlcotc_base.caller_ensure(used$1, cs_top$1, );
+return Ukddmlcotc_base.caller_ensure(used$1, Ukddmlcotc_base.$STAR_depender$STAR_, );
 }
 
 // END record-dependency

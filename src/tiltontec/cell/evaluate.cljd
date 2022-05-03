@@ -37,21 +37,11 @@
 
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
-    (let [cs-top (first *call-stack*)]
-      (assert cs-top "record-dependency> error: no first callstack")
-      (when (not= *depender* cs-top)
-        (prn :*depender*-binding-NOT-first-cs-top!! (cinfo *depender*) (cinfo cs-top)))
-      (rmap-setf [:useds cs-top]
-        (conj (c-useds cs-top) used))
-      (prn :recording-dependency-of (cinfo cs-top) :on (cinfo used))
-      (caller-ensure used cs-top))
-
-    ;(assert *depender*)
-    ;;; (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
-    ;(rmap-setf [:useds *depender*]
-    ;  (conj (c-useds *depender*) used))
-    ;(caller-ensure used *depender*)
-    ))
+    (assert *depender*)
+    (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
+    (rmap-setf [:useds *depender*]
+      (conj (c-useds *depender*) used))
+    (caller-ensure used *depender*)))
 
 (declare calculate-and-set)
 
