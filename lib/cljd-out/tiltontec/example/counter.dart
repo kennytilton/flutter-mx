@@ -17,44 +17,44 @@ import "../mx-flutter/core.dart" as Ukddmlcotmf_core;
 import "../../cljd/core.dart" as Ukddmlcoc_core;
 import "../model/core.dart" as Ukddmlcotm_core;
 
-// BEGIN Reify$59
-class Reify$59 extends f_widgets.StatefulWidget implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
+// BEGIN Reify$55
+class Reify$55 extends f_widgets.StatefulWidget implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
 final meta$2;
 final fx$1;
 
-Reify$59(this.meta$2, this.fx$1, ):super();
+Reify$55(this.meta$2, this.fx$1, ):super();
 
 dc.dynamic $_meta$0(){
 return meta$2;
 }
 
 dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$2, ){
-return Ukddmlcote_counter.Reify$59((m$2054_$AUTO_$2 as dc.dynamic), (fx$1 as dc.dynamic), );
+return Ukddmlcote_counter.Reify$55((m$2054_$AUTO_$2 as dc.dynamic), (fx$1 as dc.dynamic), );
 }
 
 fsw_framework.State<fsw_framework.StatefulWidget> createState(){
 final dc.List<dc.dynamic> fl$13=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "state-ref", 3244709061, ), ));
 fl$13[1]=fx$1;
 final Ukddmlcoc_core.PersistentVector $15=Ukddmlcoc_core.$_vec_owning(fl$13, );
-return Ukddmlcotu_core.rmap_meta_setf($15, Ukddmlcote_counter.Reify$60(null, fx$1, ), );
+return Ukddmlcotu_core.rmap_meta_setf($15, Ukddmlcote_counter.Reify$56(null, fx$1, ), );
 }
 }
 
-// END Reify$59
+// END Reify$55
 
-// BEGIN Reify$60
-class Reify$60 extends f_material.State implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
+// BEGIN Reify$56
+class Reify$56 extends f_material.State implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
 final meta$1;
 final fx$1;
 
-Reify$60(this.meta$1, this.fx$1, ):super();
+Reify$56(this.meta$1, this.fx$1, ):super();
 
 dc.dynamic $_meta$0(){
 return meta$1;
 }
 
 dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcote_counter.Reify$60((m$2054_$AUTO_$1 as dc.dynamic), (fx$1 as dc.dynamic), );
+return Ukddmlcote_counter.Reify$56((m$2054_$AUTO_$1 as dc.dynamic), (fx$1 as dc.dynamic), );
 }
 
 fsw_framework.Widget build(fsw_framework.BuildContext ctx$2, ){
@@ -63,7 +63,7 @@ return f_widgets.Text((Ukddmlcoc_core.first(Ukddmlcotm_core.md_kids(fx$1, ), ) a
 }
 }
 
-// END Reify$60
+// END Reify$56
 
 // BEGIN make-app
 dc.dynamic make_app(){
@@ -330,7 +330,7 @@ return $if_$16;
 final dc.dynamic zc$1=Ukddmlcotm_core.mget(other$9354_$AUTO_$1, const Ukddmlcoc_core.Keyword(null, "z-count", 931406605, ), );
 return (2*(zc$1 as dc.num));
 }, ));
-final dc.dynamic $17=(Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.example.counter", "Text", 913793136, ), const Ukddmlcoc_core.Keyword(null, "name", 2249783175, ), const Ukddmlcoc_core.Keyword(null, "z-counter-x2", 3794842751, ), const Ukddmlcoc_core.Keyword(null, "zx2", 2848108927, ), $16, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), (Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$8, ){
+final dc.dynamic $17=(Ukddmlcotm_core.make.$_invoke_more$10(const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ), const Ukddmlcoc_core.Keyword("tiltontec.example.counter", "Text", 913793136, ), const Ukddmlcoc_core.Keyword(null, "name", 2249783175, ), const Ukddmlcoc_core.Keyword(null, "z-counter-x2", 3794842751, ), const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), $16, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), (Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$8, ){
 final dc.dynamic me$11=Ukddmlcotc_base.c_model(slot_c$SHARP_$8, );
 final dc.dynamic cell$8=slot_c$SHARP_$8;
 final dc.dynamic slot_name$8=Ukddmlcotc_base.c_slot(slot_c$SHARP_$8, );
@@ -358,13 +358,13 @@ $if_$18=false;
 }
 return $if_$18;
 }(), (Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", (Ukddmlcoc_core.pr_str.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "*par*", )), )), )));
-return (Ukddmlcoc_core.doall.$_invoke$1((Ukddmlcoc_core.remove.$_invoke$2(Ukddmlcoc_core.nil$QMARK_, Ukddmlcoc_core.flatten((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.str.$_invoke$2("Button click times two = ", Ukddmlcotm_core.mget(me$11, const Ukddmlcoc_core.Keyword(null, "zx2", 2848108927, ), ), )), )), ), )), ));
+return (Ukddmlcoc_core.doall.$_invoke$1((Ukddmlcoc_core.remove.$_invoke$2(Ukddmlcoc_core.nil$QMARK_, Ukddmlcoc_core.flatten((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.str.$_invoke$2("Button click times two = ", Ukddmlcotm_core.mget(me$11, const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), ), )), )), ), )), ));
 } finally {
 Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$7, );
 }
 }, )), const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), [(dc.dynamic fx$1, ){
 Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "zx2-fx-gen-entry", 199993439, ), );
-final dc.dynamic rfy$1=Ukddmlcote_counter.Reify$59(null, fx$1, );
+final dc.dynamic rfy$1=Ukddmlcote_counter.Reify$55(null, fx$1, );
 Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "zx2-fx-gen-exit", 592699646, ), );
 return rfy$1;
 }, ], ));
