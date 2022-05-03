@@ -229,13 +229,10 @@
 (defn fm-navig [what where & options]
   ;;(println :fm-navig-entry (if (any-ref? where) [(:tag @where)(:class @where)] where) (any-ref? where))
   (when (and where what (any-ref? where))
-    ;(println :w)
     (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
                           } (apply hash-map options))]
       ;;(println :fm-navig-opts options)
-      ;(println :T)
       (binding [*depender* (if (:wocd? options) nil *depender*)]
-        (prn :navig-*depender*-now (cinfo *depender*))
         (when (any-ref? where)
           ;(println :f)
           (or (and (:me? options)
@@ -245,7 +242,7 @@
             (and (:inside? options)
               (if-let [kids (md-get where :kids)]
                 (do
-                  (trx nil :inside-kids!!! (:name @where))
+                  ;(trx nil :inside-kids!!! (:name @where))
                   (if-let [netkids (remove #{(:skip options)} kids)]
                     (do
                       (some #(fm-navig what %
@@ -279,11 +276,22 @@
   (fm-navig #(= name (md-get % :name))
     where :me? false :up? true :inside? false))
 
+;(md/fm-navig :z-counter me
+;  :me? false
+;  :inside? false :must? false :up? true)
+
 (defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (fm-navig #(= name# (md-get % :name))
          ~me-ref :me? false :up? true :inside? false))))
+
+(defmacro fmuv [slot name & [me]]
+  (let [me-ref (or me 'me)]
+    `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
+                    ~me-ref :me? false :up? true :inside? false)]
+       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~slot))
+       (mget other# ~slot))))
 
 (defn mxu-find-id
   "Search up the matrix from node 'where' looking for element with given id"

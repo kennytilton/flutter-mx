@@ -4,7 +4,7 @@
     [tiltontec.cell.base :refer [ia-type unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cI]]
-    [tiltontec.model.core :refer [make mget md-kids cFkids] :as md]
+    [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
      :refer [render-fx MaterialApp Center TTText]]
     ["package:flutter/widgets.dart"
@@ -55,37 +55,30 @@
             ;; available to someone coding a Matrix widget
             {:builder (fn [me ctx]
                         (Text. (str (mget me :z-count))
-                          :style (.headline4 (.textTheme (Theme/of ctx)))))
-             #_#_ :style (TextStyle.
-                           :color m.Colors/red
-                           :fontSize 32.0)}
+                          :style (.headline4 (.textTheme (Theme/of ctx)))))}
             (str (mget me :z-count)))
           (tiltontec.model.core/make :type ::Text
             :name :z-counter-x2
-            :zx2 (cF+ [:obs (fn-obs (prn :zx2-observes-!!-old-new old new (meta me))
+            :zx2 (cF+ [:obs (fn-obs
+                              (prn :zx2-observes-!!-old-new old new (meta me))
                               (when-let [^State state (:state-ref (meta me))]
-                                ;; (prn :BINGO-z-counter!! state)
                                 (.setState state (fn [] (do)))))]
-                   ;;(prn :zx2-runs!!!!!! @*depender*)
-                   (let [zc (md/fm-navig :z-counter me
-                              :me? false
-                              :inside? false :must? false :up? true)]
-                     (assert zc)
-                     (let [zx1 (md/md-get-ex zc :z-count)]
-                       ;;(prn :zx2-sees!!! zx1)
-                       (* 2 (md/md-get-ex zc :z-count)))))
+                   (let [zc (md/fmuv :z-count :z-counter)]
+                     (* 2 zc)))
             ;; todo when we get to multi-kids, use keys to make efficient since we do not manipulate DOM
             :kids (md/cFkids
-                    (str "Button click X 2 " (mget me :zx2)))
-            :fx-gen #(do ;; (prn :ocode-text-gen-called!!!!!)
-                         (let [r# (reify :extends StatefulWidget
+                    (str "Button click times two = " (mget me :zx2)))
+            :fx-gen (fn [fx]
+                      (do
+                        (prn :zx2-fx-gen-entry)
+                        (let [rfy (reify :extends StatefulWidget
                                     (createState [this]
-                                      (util/rmap-meta-setf [:state-ref %]
+                                      (util/rmap-meta-setf [:state-ref fx]
                                         (reify :extends State
                                           (build [this ctx]
-                                            ;;(prn :ocode-OK-build-is-running-with-me (meta %))
-                                            (Text. (first (md-kids %))
-                                              :style (mget % :style)))))))]
-                           ;;(prn :gennedtesxt!! (meta %))
-                           r#))))))))
+                                            (prn :zx2-build)
+                                            (Text. (first (md-kids fx))
+                                              :style (mget fx :style)))))))]
+                          (prn :zx2-fx-gen-exit)
+                          rfy)))))))))
 
