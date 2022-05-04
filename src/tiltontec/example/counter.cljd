@@ -57,28 +57,20 @@
                         (Text. (str (mget me :z-count))
                           :style (.headline4 (.textTheme (Theme/of ctx)))))}
             (str (mget me :z-count)))
-          (tiltontec.model.core/make :type ::Text
-            :name :z-counter-x2
-            :value (cF+ [:obs (fn-obs
-                                (prn :zx2-observes-!!-old-new old new (meta me))
-                                (when-let [^State state (:state-ref (meta me))]
-                                  (.setState state (fn [] (do)))))]
-                     (let [zc (md/fmuv :z-count :z-counter)]
-                       (* 2 zc)))
-            ;; todo when we get to multi-kids, use keys to make efficient since we do not manipulate DOM
-            :kids (md/cFkids
-                    (str "Button click times two = " (mget me :value)))
-            :fx-gen (fn [fx]
-                      (do
-                        (prn :zx2-fx-gen-entry)
-                        (let [rfy (reify :extends StatefulWidget
-                                    (createState [this]
-                                      (util/rmap-meta-setf [:state-ref fx]
-                                        (reify :extends State
-                                          (build [this ctx]
-                                            (prn :zx2-build)
-                                            (Text. (first (md-kids fx))
-                                              :style (mget fx :style)))))))]
-                          (prn :zx2-fx-gen-exit)
-                          rfy)))))))))
+          (fx/Text
+            {:name :z-counter-x2
+             :value (cF+ [:obs (fn-obs
+                                 (when-let [^State state (:state-ref (meta me))]
+                                   (.setState state (fn [] (do)))))]
+                      (* 4 (md/fmuv :value :z-counter-x2)))}
+            {}
+            (str "Button click times eight = " (mget me :value)))
+          (fx/Text
+            {:name :z-counter-x2
+             :value (cF+ [:obs (fn-obs
+                                 (when-let [^State state (:state-ref (meta me))]
+                                   (.setState state (fn [] (do)))))]
+                      (* 4 (md/fmuv :value :z-counter-x2)))}
+            {}
+            (str "Button click times eight = " (mget me :value))))))))
 

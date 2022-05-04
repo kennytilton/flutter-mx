@@ -41,16 +41,7 @@
       (prn :rfx-sees-no-fx-gen!!! fx))
     (gen fx)))
 
-(defn statefully [me dart-obj]
-  (reify :extends w/StatefulWidget
-    (createState [this]
-      (util/rmap-meta-setf [:state-ref me]
-        (reify :extends w/State
-          (build [this ctx]
-            (prn :OK-build-is-running-with-me (meta me))
-            dart-obj))))))
-
-(defn statefully-ex [me builder]
+(defn statefully [me builder]
   (reify :extends w/StatefulWidget
     (createState [this]
       (util/rmap-meta-setf [:state-ref me]
@@ -59,7 +50,7 @@
             (builder me ctx)))))))
 
 (defn TextEx-gen-ex [me]
-  (statefully-ex me
+  (statefully me
     (fn [me ctx]
       (if-let [builder (mget me :builder)]
         (builder me ctx)
