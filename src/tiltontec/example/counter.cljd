@@ -58,11 +58,11 @@
                           :style (.headline4 (.textTheme (Theme/of ctx)))))}
             (str (mget me :z-count)))
           (fx/Text
-            {:name :z-counter-x2
+            {:name :z-counter-x4
              :value (cF+ [:obs (fn-obs
                                  (when-let [^State state (:state-ref (meta me))]
                                    (.setState state (fn [] (do)))))]
-                      (* 4 (md/fmuv :value :z-counter-x2)))}
+                      (* 2 (md/fmuv :value :z-counter-x2)))}
             {}
             (str "Button click times eight = " (mget me :value)))
           (fx/Text
@@ -70,7 +70,7 @@
              :value (cF+ [:obs (fn-obs
                                  (when-let [^State state (:state-ref (meta me))]
                                    (.setState state (fn [] (do)))))]
-                      (* 4 (md/fmuv :value :z-counter-x2)))}
+                      (* 2 (md/fmuv :z-count :z-counter)))}
             {}
             (str "Button click times eight = " (mget me :value))))))))
 
