@@ -105,8 +105,8 @@ cast$1=((Ukddmlcoc_core.IFn.extensions(key$1, ).$_invoke$2(key$1, arg$1, 0, )) a
 final dc.num $1=(1+cast$1);
 return (Ukddmlcoc_core.swap$BANG_.$_invoke$4(run$1, Ukddmlcoc_core.assoc, key$1, $1, ));
 }
-dc.dynamic logrun$1(dc.dynamic p1$9133_$SHARP_$1, ){
-return logit$1(run$1, p1$9133_$SHARP_$1, );
+dc.dynamic logrun$1(dc.dynamic p1$9625_$SHARP_$1, ){
+return logit$1(run$1, p1$9625_$SHARP_$1, );
 }
 dc.dynamic cr$1(dc.dynamic c$1, ){
 return Ukddmlcotc_evaluate.c_get(c$1, );
@@ -720,10 +720,10 @@ coll7265$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 coll7265$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-dc.Null f7266$1(dc.dynamic acc$9134_$1, dc.dynamic p$9135_$1, ){
-final dc.dynamic vec$9136_$1=p$9135_$1;
-final dc.dynamic k$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9136_$1, 0, null, ));
-final dc.dynamic v$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9136_$1, 1, null, ));
+dc.Null f7266$1(dc.dynamic acc$9626_$1, dc.dynamic p$9627_$1, ){
+final dc.dynamic vec$9628_$1=p$9627_$1;
+final dc.dynamic k$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9628_$1, 0, null, ));
+final dc.dynamic v$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$9628_$1, 1, null, ));
 Ukddmlcotu_base.call_trc.$_invoke$4(null, const Ukddmlcoc_core.Keyword(null, "obschk", 3971016189, ), k$1, v$1, );
 assert((){
 final dc.bool and$7082_$AUTO_$1=Ukddmlcoc_core.keyword$QMARK_(k$1, );
@@ -778,10 +778,10 @@ coll7265$2=((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 coll7265$2=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$2 as dc.dynamic), ));
 }
-dc.Null f7266$2(dc.dynamic acc$9139_$1, dc.dynamic p$9140_$1, ){
-final dc.dynamic vec$9141_$1=p$9140_$1;
-final dc.dynamic k$2=(Ukddmlcoc_core.nth.$_invoke$3(vec$9141_$1, 0, null, ));
-final dc.dynamic v$2=(Ukddmlcoc_core.nth.$_invoke$3(vec$9141_$1, 1, null, ));
+dc.Null f7266$2(dc.dynamic acc$9631_$1, dc.dynamic p$9632_$1, ){
+final dc.dynamic vec$9633_$1=p$9632_$1;
+final dc.dynamic k$2=(Ukddmlcoc_core.nth.$_invoke$3(vec$9633_$1, 0, null, ));
+final dc.dynamic v$2=(Ukddmlcoc_core.nth.$_invoke$3(vec$9633_$1, 1, null, ));
 Ukddmlcotu_base.call_trc.$_invoke$4(null, const Ukddmlcoc_core.Keyword(null, "runchk", 1500110447, ), k$2, v$2, );
 assert((){
 final dc.bool and$7082_$AUTO_$2=Ukddmlcoc_core.keyword$QMARK_(k$2, );
@@ -868,10 +868,10 @@ coll7265$3=((o7205$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 coll7265$3=((Ukddmlcoc_core.ISeqable.extensions((o7205$3 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$3 as dc.dynamic), ));
 }
-dc.Null f7266$3(dc.dynamic acc$9144_$1, dc.dynamic p$9145_$1, ){
-final dc.dynamic vec$9146_$1=p$9145_$1;
-final dc.dynamic k$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9146_$1, 0, null, ));
-final dc.dynamic v$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9146_$1, 1, null, ));
+dc.Null f7266$3(dc.dynamic acc$9636_$1, dc.dynamic p$9637_$1, ){
+final dc.dynamic vec$9638_$1=p$9637_$1;
+final dc.dynamic k$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9638_$1, 0, null, ));
+final dc.dynamic v$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9638_$1, 1, null, ));
 assert((){
 final dc.bool and$7082_$AUTO_$3=Ukddmlcoc_core.keyword$QMARK_(k$3, );
 late final dc.bool $if_$26;
@@ -998,12 +998,6 @@ return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "pentag
 // BEGIN run-tests
 dc.dynamic run_tests(){
 Ukddmlcott_evaluate.test_input();
-Ukddmlcott_evaluate.t_formula();
-Ukddmlcott_evaluate.t_formula_2();
-Ukddmlcott_evaluate.t_formula_22();
-Ukddmlcott_evaluate.pentagram_of_death();
-Ukddmlcott_evaluate.t_cell_unchanged_test();
-Ukddmlcott_evaluate.opti_away();
 return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "test.evaluate-tests-OK", 3013594644, ), ));
 }
 
