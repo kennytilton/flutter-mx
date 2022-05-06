@@ -22,10 +22,10 @@
     ))
 
 (defn make-app []
-  (fx/material-app {:name :mat-app}
+  (material-app {:name :mat-app}
     {:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData. :primarySwatch m.Colors/blue))}
-    (fx/scaffold {:name :scaff}
+    (scaffold {:name :scaff}
       {:appBar               (AppBar.
                                :title (Text. "mxFlutter  Home Page"))
        :floatingActionButton (cF (FloatingActionButton.
@@ -39,38 +39,29 @@
                                                   nil))
                                    :tooltip "Increment"
                                    :child (Icon. Icons/add :color Colors/black)))}
-      (fx/center {:name :center-widget} {}
-        (fx/column {:name :ctr-column}
+      (center {:name :center-widget} {}
+        (column {:name :ctr-column}
           {:mainAxisAlignment MainAxisAlignment/center}
-          (fx/text {:name :you-have} {:style (TextStyle.
+          (text {:name :you-have} {:style (TextStyle.
                                                :color m.Colors/black
                                                :fontSize 18.0)}
             "You have clicked the button so many times:")
-          (fx/text {:name    :z-counter
-                    :z-count (cI 0
-                               :obs (fn-obs
-                                      (when-let [^State state (:state-ref (meta me))]
-                                        (.setState state (fn [] (do))))))}
+          (text {:name    :z-counter
+                    :z-count (cI 0)}
             ;; a custom builder is the best I can think of to make the Dart context
             ;; available to someone coding a Matrix widget
             {:builder (fn [me ctx]
                         (Text. (str (mget me :z-count))
                           :style (.headline4 (.textTheme (Theme/of ctx)))))}
             (str (mget me :z-count)))
-          (fx/text
+          (text
             {:name :z-counter-x4
-             :value (cF+ [:obs (fn-obs
-                                 (when-let [^State state (:state-ref (meta me))]
-                                   (.setState state (fn [] (do)))))]
-                      (* 2 (md/fmuv :value :z-counter-x2)))}
+             :value (cF (* 4 (md/fmuv :value :z-counter-x2)))}
             {}
             (str "Button click times eight = " (mget me :value)))
-          (fx/text
+          (text
             {:name :z-counter-x2
-             :value (cF+ [:obs (fn-obs
-                                 (when-let [^State state (:state-ref (meta me))]
-                                   (.setState state (fn [] (do)))))]
-                      (* 2 (md/fmuv :z-count :z-counter)))}
+             :value (cF (* 2 (md/fmuv :z-count :z-counter)))}
             {}
-            (str "Button click times eight = " (mget me :value))))))))
+            (str "Button click times two = " (mget me :value))))))))
 

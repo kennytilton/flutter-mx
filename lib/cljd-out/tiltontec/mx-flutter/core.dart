@@ -151,6 +151,21 @@ return Ukddmlcoc_core.$_vec_owning(fl$1, );
 }
 
 dc.dynamic observe$5(dc.dynamic slot$1, dc.dynamic me$1, dc.dynamic new_value$1, dc.dynamic prior_value$1, dc.dynamic cell$1, ){
+Ukddmlcoc_core.prn.$_invoke$6(const Ukddmlcoc_core.Keyword(null, "FXText-observing!!!", 4143858423, ), Ukddmlcoc_core.keys(Ukddmlcoc_core.deref(me$1, ), ), slot$1, new_value$1, prior_value$1, Ukddmlcotc_base.cinfo(cell$1, ), );
+final dc.dynamic o7419$1=me$1;
+late final dc.dynamic $if_$1;
+if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
+$if_$1=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+}else{
+$if_$1=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
+}
+final dc.dynamic temp$7110_$AUTO_$1=(const Ukddmlcoc_core.Keyword(null, "state-ref", 3244709061, ).$_invoke$1($if_$1, ));
+if(((temp$7110_$AUTO_$1!=false)&&(temp$7110_$AUTO_$1!=null))){
+final f_widgets.State state$1=(temp$7110_$AUTO_$1 as f_widgets.State);
+return (state$1.setState((){
+return null;
+}, ));
+}
 return null;
 }
 
@@ -214,46 +229,46 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 
 // END PDartWidget$iprot
 
-// BEGIN Reify$63
-class Reify$63 extends f_widgets.StatefulWidget implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
+// BEGIN Reify$57
+class Reify$57 extends f_widgets.StatefulWidget implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
 final meta$2;
 final builder$1;
 final me$1;
 
-Reify$63(this.meta$2, this.builder$1, this.me$1, ):super();
+Reify$57(this.meta$2, this.builder$1, this.me$1, ):super();
 
 dc.dynamic $_meta$0(){
 return meta$2;
 }
 
 dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$2, ){
-return Ukddmlcotmf_core.Reify$63((m$2054_$AUTO_$2 as dc.dynamic), (builder$1 as dc.dynamic), (me$1 as dc.dynamic), );
+return Ukddmlcotmf_core.Reify$57((m$2054_$AUTO_$2 as dc.dynamic), (builder$1 as dc.dynamic), (me$1 as dc.dynamic), );
 }
 
 fsw_framework.State<fsw_framework.StatefulWidget> createState(){
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "state-ref", 3244709061, ), ));
 fl$1[1]=me$1;
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
-return Ukddmlcotu_core.rmap_meta_setf($1, Ukddmlcotmf_core.Reify$64(null, builder$1, me$1, ), );
+return Ukddmlcotu_core.rmap_meta_setf($1, Ukddmlcotmf_core.Reify$58(null, builder$1, me$1, ), );
 }
 }
 
-// END Reify$63
+// END Reify$57
 
-// BEGIN Reify$64
-class Reify$64 extends f_widgets.State implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
+// BEGIN Reify$58
+class Reify$58 extends f_widgets.State implements Ukddmlcoc_core.IMeta$iface, Ukddmlcoc_core.IWithMeta$iface {
 final meta$1;
 final builder$1;
 final me$1;
 
-Reify$64(this.meta$1, this.builder$1, this.me$1, ):super();
+Reify$58(this.meta$1, this.builder$1, this.me$1, ):super();
 
 dc.dynamic $_meta$0(){
 return meta$1;
 }
 
 dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcotmf_core.Reify$64((m$2054_$AUTO_$1 as dc.dynamic), (builder$1 as dc.dynamic), (me$1 as dc.dynamic), );
+return Ukddmlcotmf_core.Reify$58((m$2054_$AUTO_$1 as dc.dynamic), (builder$1 as dc.dynamic), (me$1 as dc.dynamic), );
 }
 
 fsw_framework.Widget build(fsw_framework.BuildContext ctx$1, ){
@@ -267,7 +282,7 @@ return (Ukddmlcoc_core.IFn.extensions(builder$1, ).$_invoke$2(builder$1, me$1, c
 }
 }
 
-// END Reify$64
+// END Reify$58
 
 // BEGIN TPart
 class TPart extends dc.Object implements Ukddmlcotmf_core.PDartWidget$iface {
@@ -351,7 +366,7 @@ $if_$2=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddml
 final dc.dynamic $13=(Ukddmlcoc_core.list.$_invoke$1($if_$2, ));
 final dc.dynamic arg$6=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), ));
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "fn*", )), ));
-final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11132__11133__auto__", )), )), ));
+final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9768__9769__auto__", )), )), ));
 late final dc.dynamic $if_$3;
 if((o7205$3 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$3=((o7205$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -364,7 +379,7 @@ final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_
 final dc.dynamic arg$3=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "child", 1160621984, ), ));
 final dc.dynamic arg$2=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.mx-flutter.core", "render-fx", )), ));
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "first", )), ));
-final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11132__11133__auto__", )), )), ));
+final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9768__9769__auto__", )), )), ));
 late final dc.dynamic $if_$4;
 if((o7205$4 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$4=((o7205$4 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -476,7 +491,7 @@ $if_$2=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddml
 final dc.dynamic $13=(Ukddmlcoc_core.list.$_invoke$1($if_$2, ));
 final dc.dynamic arg$7=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), ));
 final dc.dynamic arg$6=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "fn*", )), ));
-final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11129__11130__auto__", )), )), ));
+final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9765__9766__auto__", )), )), ));
 late final dc.dynamic $if_$3;
 if((o7205$3 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$3=((o7205$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -487,7 +502,7 @@ final dc.dynamic $1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_
 final dc.dynamic $6=(Ukddmlcoc_core.list.$_invoke$1($1, ));
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("\$lib:f_material", "Column.", )), ));
 final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "mainAxisAlignment", 2807631147, ), ));
-final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11129__11130__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "mainAxisAlignment", 2807631147, ), )), ));
+final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9765__9766__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "mainAxisAlignment", 2807631147, ), )), ));
 late final dc.dynamic $if_$4;
 if((o7205$4 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$4=((o7205$4 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -498,7 +513,7 @@ final dc.dynamic $4=(Ukddmlcoc_core.list.$_invoke$1($if_$4, ));
 final dc.dynamic arg$3=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "children", 697663074, ), ));
 final dc.dynamic arg$2=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "mapv", )), ));
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.mx-flutter.core", "render-fx", )), ));
-final dc.dynamic o7205$5=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11129__11130__auto__", )), )), ));
+final dc.dynamic o7205$5=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9765__9766__auto__", )), )), ));
 late final dc.dynamic $if_$5;
 if((o7205$5 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$5=((o7205$5 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -593,7 +608,7 @@ $if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddml
 final dc.dynamic $16=(Ukddmlcoc_core.list.$_invoke$1($if_$1, ));
 final dc.dynamic arg$9=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), ));
 final dc.dynamic arg$7=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "fn*", )), ));
-final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11123__11124__auto__", )), )), ));
+final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9759__9760__auto__", )), )), ));
 late final dc.dynamic $if_$2;
 if((o7205$2 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$2=((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -604,7 +619,7 @@ final dc.dynamic $1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_
 final dc.dynamic $8=(Ukddmlcoc_core.list.$_invoke$1($1, ));
 final dc.dynamic arg$6=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("\$lib:f_material", "MaterialApp.", )), ));
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), ));
-final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11123__11124__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), )), ));
+final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9759__9760__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "title", 3035382670, ), )), ));
 late final dc.dynamic $if_$3;
 if((o7205$3 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$3=((o7205$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -613,7 +628,7 @@ $if_$3=((Ukddmlcoc_core.ISeqable.extensions((o7205$3 as dc.dynamic), ) as Ukddml
 }
 final dc.dynamic $6=(Ukddmlcoc_core.list.$_invoke$1($if_$3, ));
 final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), ));
-final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11123__11124__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), )), ));
+final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9759__9760__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "theme", 1149204467, ), )), ));
 late final dc.dynamic $if_$4;
 if((o7205$4 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$4=((o7205$4 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -624,7 +639,7 @@ final dc.dynamic $5=(Ukddmlcoc_core.list.$_invoke$1($if_$4, ));
 final dc.dynamic arg$3=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "home", 2635448847, ), ));
 final dc.dynamic arg$2=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.mx-flutter.core", "render-fx", )), ));
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "first", )), ));
-final dc.dynamic o7205$5=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11123__11124__auto__", )), )), ));
+final dc.dynamic o7205$5=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9759__9760__auto__", )), )), ));
 late final dc.dynamic $if_$5;
 if((o7205$5 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$5=((o7205$5 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -783,7 +798,7 @@ $if_$2=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddml
 final dc.dynamic $15=(Ukddmlcoc_core.list.$_invoke$1($if_$2, ));
 final dc.dynamic arg$8=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "fx-gen", 1906583000, ), ));
 final dc.dynamic arg$7=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "fn*", )), ));
-final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11126__11127__auto__", )), )), ));
+final dc.dynamic o7205$3=(Ukddmlcoc_core.concat.$_invoke$1((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9762__9763__auto__", )), )), ));
 late final dc.dynamic $if_$3;
 if((o7205$3 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$3=((o7205$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -794,7 +809,7 @@ final dc.dynamic $1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_
 final dc.dynamic $8=(Ukddmlcoc_core.list.$_invoke$1($1, ));
 final dc.dynamic arg$6=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("\$lib:f_material", "Scaffold.", )), ));
 final dc.dynamic arg$5=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "appBar", 811449783, ), ));
-final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11126__11127__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "appBar", 811449783, ), )), ));
+final dc.dynamic o7205$4=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9762__9763__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "appBar", 811449783, ), )), ));
 late final dc.dynamic $if_$4;
 if((o7205$4 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$4=((o7205$4 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -805,7 +820,7 @@ final dc.dynamic $6=(Ukddmlcoc_core.list.$_invoke$1($if_$4, ));
 final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "body", 423165565, ), ));
 final dc.dynamic arg$2=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.mx-flutter.core", "render-fx", )), ));
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "first", )), ));
-final dc.dynamic o7205$5=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11126__11127__auto__", )), )), ));
+final dc.dynamic o7205$5=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "md-kids", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9762__9763__auto__", )), )), ));
 late final dc.dynamic $if_$5;
 if((o7205$5 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$5=((o7205$5 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -830,7 +845,7 @@ $if_$7=((Ukddmlcoc_core.ISeqable.extensions((o7205$7 as dc.dynamic), ) as Ukddml
 }
 final dc.dynamic $5=(Ukddmlcoc_core.list.$_invoke$1($if_$7, ));
 final dc.dynamic arg$3=(Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "floatingActionButton", 2660567720, ), ));
-final dc.dynamic o7205$8=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__11126__11127__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "floatingActionButton", 2660567720, ), )), ));
+final dc.dynamic o7205$8=(Ukddmlcoc_core.concat.$_invoke$3((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("md", "mget", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "p1__9762__9763__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "floatingActionButton", 2660567720, ), )), ));
 late final dc.dynamic $if_$8;
 if((o7205$8 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$8=((o7205$8 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -887,7 +902,7 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 
 // BEGIN statefully
 dc.dynamic statefully(dc.dynamic me$1, dc.dynamic builder$1, ){
-return Ukddmlcotmf_core.Reify$63(null, builder$1, me$1, );
+return Ukddmlcotmf_core.Reify$57(null, builder$1, me$1, );
 }
 
 // END statefully

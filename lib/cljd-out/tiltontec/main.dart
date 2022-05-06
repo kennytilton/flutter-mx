@@ -14,8 +14,7 @@ import "../cljd/core.dart" as Ukddmlcoc_core;
 
 // BEGIN main
 dc.dynamic main(){
-f_material.runApp((Ukddmlcotmf_core.render_fx(Ukddmlcote_counter.make_app(), ) as fsw_framework.Widget), );
-return Ukddmlcot_testing.run_tests();
+return f_material.runApp((Ukddmlcotmf_core.render_fx(Ukddmlcote_counter.make_app(), ) as fsw_framework.Widget), );
 }
 
 // END main

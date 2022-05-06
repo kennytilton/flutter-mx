@@ -53,7 +53,9 @@
     [:child :style])
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_(prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))))
+    (prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
+    (when-let [^State state (:state-ref (meta me))]
+      (.setState state (fn [] (do))))))
 
 (deftype FXCenter []
   :extends FXDartWidget

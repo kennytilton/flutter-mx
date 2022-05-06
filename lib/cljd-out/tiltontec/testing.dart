@@ -12,8 +12,15 @@ import "../cljd/core.dart" as Ukddmlcoc_core;
 
 // BEGIN run-tests
 dc.dynamic run_tests(){
+Ukddmlcottc_core.run_tests();
+Ukddmlcotth_cells.run_tests();
+Ukddmlcott_evaluate.run_tests();
+Ukddmlcott_observer.run_tests();
+Ukddmlcott_integrity.run_tests();
+Ukddmlcottl_cells.run_tests();
+Ukddmlcottm_core.run_tests();
 Ukddmlcottf_kids.run_tests();
-return (Ukddmlcoc_core.prn.$_invoke$1("testing-OK-except-kids-queiescing", ));
+return (Ukddmlcoc_core.prn.$_invoke$1("testing-OK", ));
 }
 
 // END run-tests
