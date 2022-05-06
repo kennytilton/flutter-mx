@@ -154,12 +154,73 @@ const MXImplementer():super();
 // END MXImplementer
 
 // BEGIN Model
-class Model extends Ukddmlcotc_base.MXImplementer {
+class Model extends Ukddmlcotc_base.MXImplementer implements Ukddmlcotc_base.PObserver$iface {
 
 Model():super();
+
+dc.dynamic observe$5(dc.dynamic slot$1, dc.dynamic me$1, dc.dynamic new_value$1, dc.dynamic prior_value$1, dc.dynamic cell$1, ){
+late final dc.dynamic $if_$1;
+if((Ukddmlcotc_base.cinfo is dc.Function)){
+$if_$1=(Ukddmlcotc_base.cinfo as dc.Function)(cell$1, );
+}else if((Ukddmlcotc_base.cinfo is Ukddmlcoc_core.IFn$iface)){
+$if_$1=((Ukddmlcotc_base.cinfo as Ukddmlcoc_core.IFn$iface).$_invoke$1(cell$1, ));
+}else{
+$if_$1=(Ukddmlcoc_core.IFn.extensions(Ukddmlcotc_base.cinfo, ).$_invoke$1(Ukddmlcotc_base.cinfo, cell$1, ));
+}
+return (Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "Model-not-observing", 425225563, ), $if_$1, ));
+}
+
+dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 }
 
 // END Model
+
+// BEGIN PObserver
+var PObserver=Ukddmlcotc_base.PObserver$iprot();
+
+// END PObserver
+
+// BEGIN PObserver$ext
+abstract class PObserver$ext extends dc.Object {
+
+dc.dynamic observe$5(dc.dynamic $this_$1, dc.dynamic slot$2, dc.dynamic me$2, dc.dynamic new_value$2, dc.dynamic prior_value$2, dc.dynamic cell$2, ){
+return null;
+}
+}
+
+// END PObserver$ext
+
+// BEGIN PObserver$iface
+abstract class PObserver$iface extends dc.Object {
+
+dc.dynamic observe$5(dc.dynamic slot$1, dc.dynamic me$1, dc.dynamic new_value$1, dc.dynamic prior_value$1, dc.dynamic cell$1, ){
+return null;
+}
+}
+
+// END PObserver$iface
+
+// BEGIN PObserver$iprot
+class PObserver$iprot extends dc.Object implements Ukddmlcoc_core.IProtocol {
+
+const PObserver$iprot():super();
+
+dc.dynamic satisfies(dc.dynamic x$1, ){
+final dc.bool or$7123_$AUTO_$1=(x$1 is Ukddmlcotc_base.PObserver$iface);
+if(or$7123_$AUTO_$1){
+return or$7123_$AUTO_$1;
+}
+return false;
+}
+
+dc.dynamic extensions(dc.dynamic x$2, ){
+throw dc.Exception((("No extension of protocol PObserver found for type "+(x$2.runtimeType.toString()))+"."), );
+}
+
+dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
+}
+
+// END PObserver$iprot
 
 // BEGIN c-assert
 Ukddmlcoc_core.IFn$iface c_assert=Ukddmlcotc_base.c_assert$ifn(null, );
@@ -787,6 +848,45 @@ return false;
 
 // END mdead?
 
+// BEGIN minfo
+dc.dynamic minfo(dc.dynamic md$1, ){
+if((null==(md$1 as dc.dynamic))){
+return const Ukddmlcoc_core.Keyword(null, "null-md", 1288175864, );
+}
+final dc.dynamic test$1=Ukddmlcotu_core.atom$QMARK_(md$1, );
+late final dc.bool $if_$1;
+if(((test$1!=false)&&(test$1!=null))){
+$if_$1=false;
+}else{
+$if_$1=true;
+}
+if($if_$1){
+return const Ukddmlcoc_core.Keyword(null, "not-atom-md", 245117247, );
+}
+final dc.dynamic test$2=Ukddmlcotc_base.md_ref$QMARK_(md$1, );
+late final dc.bool $if_$2;
+if(((test$2!=false)&&(test$2!=null))){
+$if_$2=false;
+}else{
+$if_$2=true;
+}
+if($if_$2){
+return const Ukddmlcoc_core.Keyword(null, "atom-not-md-c", 2939140220, );
+}
+final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, (const Ukddmlcoc_core.Keyword(null, "name", 2249783175, ).$_invoke$1(Ukddmlcoc_core.deref(md$1, ), )), ));
+final dc.dynamic o7419$1=md$1;
+late final dc.dynamic $if_$3;
+if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
+$if_$3=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+}else{
+$if_$3=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
+}
+fl$1[1]=$if_$3;
+return Ukddmlcoc_core.$_vec_owning(fl$1, );
+}
+
+// END minfo
+
 // BEGIN mx-type
 dc.dynamic mx_type(dc.dynamic it$1, ){
 final dc.dynamic o7419$1=it$1;
@@ -804,6 +904,16 @@ return null;
 }
 
 // END mx-type
+
+// BEGIN observe
+dc.dynamic observe(dc.dynamic $this_$2, dc.dynamic slot$3, dc.dynamic me$3, dc.dynamic new_value$3, dc.dynamic prior_value$3, dc.dynamic cell$3, ){
+if(($this_$2 is Ukddmlcotc_base.PObserver$iface)){
+return (($this_$2 as Ukddmlcotc_base.PObserver$iface).observe$5((slot$3 as dc.dynamic), (me$3 as dc.dynamic), (new_value$3 as dc.dynamic), (prior_value$3 as dc.dynamic), (cell$3 as dc.dynamic), ));
+}
+return ((Ukddmlcotc_base.PObserver.extensions(($this_$2 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5(($this_$2 as dc.dynamic), (slot$3 as dc.dynamic), (me$3 as dc.dynamic), (new_value$3 as dc.dynamic), (prior_value$3 as dc.dynamic), (cell$3 as dc.dynamic), ));
+}
+
+// END observe
 
 // BEGIN pcell
 dc.dynamic pcell(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic tag$1, dc.dynamic c$1, ){
@@ -916,12 +1026,12 @@ return $if_$1;
 // BEGIN unlink-from-callers
 dc.dynamic unlink_from_callers(dc.dynamic c$1, ){
 Ukddmlcoc_core.LazySeq(null, ((){
-dc.dynamic iter$11370_$1(dc.dynamic coll$11371_$2, ){
-dc.dynamic coll$11371_$1=coll$11371_$2;
+dc.dynamic iter$10199_$1(dc.dynamic coll$10200_$2, ){
+dc.dynamic coll$10200_$1=coll$10200_$2;
 do {
-if(((coll$11371_$1!=false)&&(coll$11371_$1!=null))){
-if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$11371_$1, )){
-final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$11371_$1, );
+if(((coll$10200_$1!=false)&&(coll$10200_$1!=null))){
+if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$10200_$1, )){
+final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$10200_$1, );
 final dc.dynamic coll7285$3=c$7899_$AUTO_$2;
 late final dc.int size$7900_$AUTO_$2;
 if((coll7285$3 is Ukddmlcoc_core.ICounted$iface)){
@@ -962,18 +1072,18 @@ return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7898_$AUTO_$2, ), Ukdd
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-return iter$11370_$1(Ukddmlcoc_core.chunk_next(coll$11371_$1, ), );
+return iter$10199_$1(Ukddmlcoc_core.chunk_next(coll$10200_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-coll$11371_$1=Ukddmlcoc_core.chunk_next(coll$11371_$1, );
+coll$10200_$1=Ukddmlcoc_core.chunk_next(coll$10200_$1, );
 continue;
 }
-final dc.dynamic caller$4=Ukddmlcoc_core.first(coll$11371_$1, );
+final dc.dynamic caller$4=Ukddmlcoc_core.first(coll$10200_$1, );
 return Ukddmlcoc_core.cons(Ukddmlcotc_base.caller_drop(c$1, caller$4, ), Ukddmlcoc_core.LazySeq(null, ((){
-return iter$11370_$1(Ukddmlcoc_core.next(coll$11371_$1, ), );
+return iter$10199_$1(Ukddmlcoc_core.next(coll$10200_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 return null;
@@ -986,7 +1096,7 @@ $if_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-return iter$11370_$1($if_$1, );
+return iter$10199_$1($if_$1, );
 } as dc.dynamic), null, -1, );
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "callers", 2360236984, ), ));
 fl$1[1]=c$1;

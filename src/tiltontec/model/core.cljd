@@ -7,7 +7,7 @@
     [tiltontec.cell.base
      :refer [without-c-dependency model
              cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input?  mx-type
+             c-unbound? c-input? mx-type
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
@@ -97,26 +97,31 @@
   (rmap-setf [slot me] new-value))
 
 (defn make [& arg-list]
-  ;; (prn :make-entry (count arg-list) (first arg-list))
+  (prn :make-entry (count arg-list) (first arg-list))
   (cond
     (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (do
       ;;(println :md-making (nth arg-list 1))
+      (prn :make-entry-even (count arg-list) arg-list)
 
       (let [iargs (apply hash-map arg-list)
             me (atom
-                 (merge {:par *par*}
-                   (->> arg-list
-                     (partition 2)
-                     (filter (fn [[slot v]]
-                               (not (= :mx-type slot))))
-                     (map (fn [[k v]]
-                            (vector k (if (c-ref? v)
-                                        unbound
-                                        v))))
-                     (into {})))
-                 :meta {:state :nascent
+                 (let [mdmap (merge {:par *par*}
+                               (->> arg-list
+                                 (partition 2)
+                                 (filter (fn [[slot v]]
+                                           (prn :make-sees-arg-k slot)
+                                           (not (= :mx-type slot))))
+                                 (map (fn [[k v]]
+                                        (prn :make-got-k k)
+                                        (vector k (if (c-ref? v)
+                                                    unbound
+                                                    v))))
+                                 (into {})))]
+                   (prn :mdmap-keys (keys mdmap))
+                   mdmap)
+                 :meta {:state   :nascent
                         :mx-type (:mx-type iargs (cty/Model.))})]
         (assert (meta me))
         #_(when-not (:par @me)
@@ -126,8 +131,10 @@
           (->> arg-list
             (partition 2)
             (filter (fn [[slot v]]
-                      ;; (prn :installing-cz slot v)
-                      (md-install-cell me slot v)))
+                      ;; todo we need :cell nil dont we
+                      (when-not (some #{slot} [:par :mx-type :not-to-be])
+                        (prn :md-make-installing-cz slot v)
+                        (md-install-cell me slot v))))
             (map vec)
             (into {})))
 
@@ -179,7 +186,7 @@
     (str "poss not ref " (string? poss)))
   ;; (println :fm-navig-eq? (fn? seek) (keyword? seek))
   (cond
-    (not (atom? poss))                                   ;; string child of html label?
+    (not (atom? poss))                                      ;; string child of html label?
     (do (println :fm-navig-eq?bailnotref poss)
         false)
 
@@ -190,7 +197,7 @@
                       (or (= seek (:name @poss))
                         ;; search for types will have to be converted to function tests
                         ;; with explicit types coded
-                        #_ (= (mx-type poss) seek)))
+                        #_(= (mx-type poss) seek)))
     :else (do (trx :fm-navig-eq?-else-pplain=! seek)
               (= seek poss))))
 
@@ -311,14 +318,14 @@
 
 (defn fmi-w-class [where class]
   (fm-navig #(when (atom? %)
-           (= class (md-get % :class)))
+               (= class (md-get % :class)))
     where :inside? true :up? false))
 
 (defn mxi-find
   "Search matrix below node 'where' for node with property and value"
   [where property value]
   (fm-navig #(when (atom? %)
-           (= value (md-get % property)))
+               (= value (md-get % property)))
     where :inside? true :up? false))
 
 (defn fmo [me id-name]

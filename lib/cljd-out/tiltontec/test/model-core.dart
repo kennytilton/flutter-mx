@@ -26,43 +26,81 @@ return (Ukddmlcoc_core.vector.$_invoke$1((Ukddmlcotm_core.make.$_invoke$6(const 
 return null;
 }, )), ));
 assert((){
+final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(1, const Ukddmlcoc_core.Keyword(null, "mx-type", 3172713989, ), ));
+final Ukddmlcoc_core.PersistentHashSet $1=Ukddmlcoc_core.$set_(fl$1, );
+final dc.dynamic $2=Ukddmlcoc_core.some($1, Ukddmlcoc_core.keys(Ukddmlcoc_core.deref(u$1, ), ), );
 late final dc.bool $if_$1;
-if((null==((const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ).$_invoke$1(Ukddmlcoc_core.deref(u$1, ), )) as dc.dynamic))){
-$if_$1=true;
-}else{
+if((($2!=false)&&($2!=null))){
 $if_$1=false;
+}else{
+$if_$1=true;
 }
-return $if_$1;
+late final dc.bool $if_$2;
+if($if_$1){
+$if_$2=true;
+}else{
+$if_$2=false;
+}
+return $if_$2;
 }(), (){
-final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "nil?", )), ));
-final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), ));
-final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("clojure.core", "deref", )), ));
-fl$3[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
-final Ukddmlcoc_core.PersistentList $3=Ukddmlcoc_core.$_list_lit(fl$3, );
-fl$2[1]=$3;
-final Ukddmlcoc_core.PersistentList $2=Ukddmlcoc_core.$_list_lit(fl$2, );
-fl$1[1]=$2;
-final Ukddmlcoc_core.PersistentList $1=Ukddmlcoc_core.$_list_lit(fl$1, );
-final dc.String $4=(Ukddmlcoc_core.pr_str.$_invoke$1($1, ));
-final dc.String $5=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $4, ));
-return $5;
+final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "not", )), ));
+final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "some", )), ));
+final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(1, const Ukddmlcoc_core.Keyword(null, "mx-type", 3172713989, ), ));
+final Ukddmlcoc_core.PersistentHashSet $5=Ukddmlcoc_core.$set_(fl$4, );
+fl$3[1]=$5;
+final dc.List<dc.dynamic> fl$5=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "keys", )), ));
+final dc.List<dc.dynamic> fl$6=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("clojure.core", "deref", )), ));
+fl$6[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
+final Ukddmlcoc_core.PersistentList $7=Ukddmlcoc_core.$_list_lit(fl$6, );
+fl$5[1]=$7;
+final Ukddmlcoc_core.PersistentList $6=Ukddmlcoc_core.$_list_lit(fl$5, );
+fl$3[2]=$6;
+final Ukddmlcoc_core.PersistentList $4=Ukddmlcoc_core.$_list_lit(fl$3, );
+fl$2[1]=$4;
+final Ukddmlcoc_core.PersistentList $3=Ukddmlcoc_core.$_list_lit(fl$2, );
+final dc.String $8=(Ukddmlcoc_core.pr_str.$_invoke$1($3, ));
+final dc.String $9=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $8, ));
+return $9;
+}());
+Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "u-keys", 3495267884, ), Ukddmlcoc_core.keys(Ukddmlcoc_core.deref(u$1, ), ), );
+assert((){
+late final dc.bool $if_$3;
+if((null==((const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ).$_invoke$1(Ukddmlcoc_core.deref(u$1, ), )) as dc.dynamic))){
+$if_$3=true;
+}else{
+$if_$3=false;
+}
+return $if_$3;
+}(), (){
+final dc.List<dc.dynamic> fl$7=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "nil?", )), ));
+final dc.List<dc.dynamic> fl$8=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), ));
+final dc.List<dc.dynamic> fl$9=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("clojure.core", "deref", )), ));
+fl$9[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
+final Ukddmlcoc_core.PersistentList $12=Ukddmlcoc_core.$_list_lit(fl$9, );
+fl$8[1]=$12;
+final Ukddmlcoc_core.PersistentList $11=Ukddmlcoc_core.$_list_lit(fl$8, );
+fl$7[1]=$11;
+final Ukddmlcoc_core.PersistentList $10=Ukddmlcoc_core.$_list_lit(fl$7, );
+final dc.String $13=(Ukddmlcoc_core.pr_str.$_invoke$1($10, ));
+final dc.String $14=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $13, ));
+return $14;
 }());
 final dc.dynamic o7419$1=u$1;
-late final dc.dynamic $if_$2;
+late final dc.dynamic $if_$4;
 if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
-$if_$2=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+$if_$4=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
 }else{
-$if_$2=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
+$if_$4=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
 }
-final dc.dynamic $6=(const Ukddmlcoc_core.Keyword(null, "cz", 2026281567, ).$_invoke$1($if_$2, ));
+final dc.dynamic $15=(const Ukddmlcoc_core.Keyword(null, "cz", 2026281567, ).$_invoke$1($if_$4, ));
 final dc.dynamic o7419$2=u$1;
-late final dc.dynamic $if_$3;
+late final dc.dynamic $if_$5;
 if((o7419$2 is Ukddmlcoc_core.IMeta$iface)){
-$if_$3=((o7419$2 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+$if_$5=((o7419$2 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
 }else{
-$if_$3=((Ukddmlcoc_core.IMeta.extensions((o7419$2 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$2 as dc.dynamic), ));
+$if_$5=((Ukddmlcoc_core.IMeta.extensions((o7419$2 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$2 as dc.dynamic), ));
 }
-Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "u-cells", 3529446025, ), $6, $if_$3, );
+Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "u-cells", 3529446025, ), $15, $if_$5, );
 final dc.dynamic kc$1=Ukddmlcotm_base.md_cell(u$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
 final dc.dynamic kon$1=Ukddmlcotm_base.md_cell(u$1, const Ukddmlcoc_core.Keyword(null, "kon", 425341392, ), );
 Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "resetting-cell", 2210697534, ), kon$1, );
@@ -75,51 +113,51 @@ cast$1=(((coll7285$1 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
 }else{
 cast$1=(((Ukddmlcoc_core.ICounted.extensions((coll7285$1 as dc.dynamic), ) as Ukddmlcoc_core.ICounted$ext).$_count$0((coll7285$1 as dc.dynamic), )) as dc.int);
 }
-final dc.bool $7=(Ukddmlcoc_core.$EQ_.$_invoke$2(1, cast$1, ));
-late final dc.bool $if_$4;
-if($7){
-$if_$4=true;
+final dc.bool $16=(Ukddmlcoc_core.$EQ_.$_invoke$2(1, cast$1, ));
+late final dc.bool $if_$6;
+if($16){
+$if_$6=true;
 }else{
-$if_$4=false;
+$if_$6=false;
 }
-return $if_$4;
+return $if_$6;
 }(), (){
-final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
-fl$4[1]=1;
-final dc.List<dc.dynamic> fl$5=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "count", )), ));
-final dc.List<dc.dynamic> fl$6=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), ));
-final dc.List<dc.dynamic> fl$7=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("clojure.core", "deref", )), ));
-fl$7[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
-final Ukddmlcoc_core.PersistentList $11=Ukddmlcoc_core.$_list_lit(fl$7, );
-fl$6[1]=$11;
-final Ukddmlcoc_core.PersistentList $10=Ukddmlcoc_core.$_list_lit(fl$6, );
-fl$5[1]=$10;
-final Ukddmlcoc_core.PersistentList $9=Ukddmlcoc_core.$_list_lit(fl$5, );
-fl$4[2]=$9;
-final Ukddmlcoc_core.PersistentList $8=Ukddmlcoc_core.$_list_lit(fl$4, );
-final dc.String $12=(Ukddmlcoc_core.pr_str.$_invoke$1($8, ));
-final dc.String $13=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $12, ));
-return $13;
+final dc.List<dc.dynamic> fl$10=(dc.List<dc.dynamic>.filled(3, (Ukddmlcoc_core.symbol.$_invoke$2(null, "=", )), ));
+fl$10[1]=1;
+final dc.List<dc.dynamic> fl$11=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "count", )), ));
+final dc.List<dc.dynamic> fl$12=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), ));
+final dc.List<dc.dynamic> fl$13=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("clojure.core", "deref", )), ));
+fl$13[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
+final Ukddmlcoc_core.PersistentList $20=Ukddmlcoc_core.$_list_lit(fl$13, );
+fl$12[1]=$20;
+final Ukddmlcoc_core.PersistentList $19=Ukddmlcoc_core.$_list_lit(fl$12, );
+fl$11[1]=$19;
+final Ukddmlcoc_core.PersistentList $18=Ukddmlcoc_core.$_list_lit(fl$11, );
+fl$10[2]=$18;
+final Ukddmlcoc_core.PersistentList $17=Ukddmlcoc_core.$_list_lit(fl$10, );
+final dc.String $21=(Ukddmlcoc_core.pr_str.$_invoke$1($17, ));
+final dc.String $22=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $21, ));
+return $22;
 }());
 assert((){
 final dc.dynamic test$2=(Ukddmlcotm_core.fm_navig.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "konzo", 1207119544, ), u$1, const Ukddmlcoc_core.Keyword(null, "inside?", 4210313368, ), true, ));
-late final dc.bool $if_$5;
+late final dc.bool $if_$7;
 if(((test$2!=false)&&(test$2!=null))){
-$if_$5=true;
+$if_$7=true;
 }else{
-$if_$5=false;
+$if_$7=false;
 }
-return $if_$5;
+return $if_$7;
 }(), (){
-final dc.List<dc.dynamic> fl$8=(dc.List<dc.dynamic>.filled(5, (Ukddmlcoc_core.symbol.$_invoke$2("md", "fm-navig", )), ));
-fl$8[1]=const Ukddmlcoc_core.Keyword(null, "konzo", 1207119544, );
-fl$8[2]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
-fl$8[3]=const Ukddmlcoc_core.Keyword(null, "inside?", 4210313368, );
-fl$8[4]=true;
-final Ukddmlcoc_core.PersistentList $14=Ukddmlcoc_core.$_list_lit(fl$8, );
-final dc.String $15=(Ukddmlcoc_core.pr_str.$_invoke$1($14, ));
-final dc.String $16=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $15, ));
-return $16;
+final dc.List<dc.dynamic> fl$14=(dc.List<dc.dynamic>.filled(5, (Ukddmlcoc_core.symbol.$_invoke$2("md", "fm-navig", )), ));
+fl$14[1]=const Ukddmlcoc_core.Keyword(null, "konzo", 1207119544, );
+fl$14[2]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "u", ));
+fl$14[3]=const Ukddmlcoc_core.Keyword(null, "inside?", 4210313368, );
+fl$14[4]=true;
+final Ukddmlcoc_core.PersistentList $23=Ukddmlcoc_core.$_list_lit(fl$14, );
+final dc.String $24=(Ukddmlcoc_core.pr_str.$_invoke$1($23, ));
+final dc.String $25=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $24, ));
+return $25;
 }());
 }
 
@@ -939,17 +977,6 @@ return $5;
 dc.dynamic run_tests(){
 Ukddmlcottm_core.fm_0();
 Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "fm-0", 451245982, ), const Ukddmlcoc_core.Keyword(null, "ok", 3864193843, ), );
-Ukddmlcottm_core.fm_2();
-Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "fm-2", 3329648370, ), const Ukddmlcoc_core.Keyword(null, "ok", 3864193843, ), );
-Ukddmlcottm_core.fm_3();
-Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "fm-3", 4027164475, ), const Ukddmlcoc_core.Keyword(null, "ok", 3864193843, ), );
-Ukddmlcottm_core.fm_3x();
-Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "fm-3x", 4013367766, ), const Ukddmlcoc_core.Keyword(null, "ok", 3864193843, ), );
-Ukddmlcottm_core.fm_picker();
-Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "fm-picker", 2732351255, ), const Ukddmlcoc_core.Keyword(null, "ok", 3864193843, ), );
-Ukddmlcottm_core.mm_typed();
-Ukddmlcoc_core.prn.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "fm-mm-typed", 2733581353, ), const Ukddmlcoc_core.Keyword(null, "ok", 3864193843, ), );
-Ukddmlcottm_core.mm_opti_1();
 return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "model-core-OK", 2209760036, ), ));
 }
 

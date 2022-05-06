@@ -58,7 +58,14 @@ call parameters: slot, me, new, old, and c."
    (assert (dart/is? @+pulse+ int))
    (rmap-setf [:pulse-observed c] @+pulse+)
    ;; we do observes specified for types or slots...
-   (observe (c-slot c) (c-model c) (c-value c) prior-value c)
+   ;;(observe (c-slot c) (c-model c) (c-value c) prior-value c)
+
+   (when-let [mx-type (cty/mx-type (c-model c))]
+     (prn :observing-mx-type mx-type why)
+     (cty/observe mx-type (c-slot c) (c-model c) (c-value c) prior-value c))
+
+
+
    ;; ...and also do observes specified ad hoc on the cI/cF call.
    ;; nb that we do not want ad hoc observers to shadow those specified generically
    ;; indeed, in Lisp observers are progn methods -- they all run.

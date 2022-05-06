@@ -80,10 +80,26 @@ final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_co
 fl$4[1]=c$2;
 final Ukddmlcoc_core.PersistentVector $8=Ukddmlcoc_core.$_vec_owning(fl$4, );
 Ukddmlcotu_core.rmap_setf($8, Ukddmlcoc_core.deref(Ukddmlcotc_base.$PLUS_pulse$PLUS_, ), );
-Ukddmlcotc_observer.observe(Ukddmlcotc_base.c_slot(c$2, ), Ukddmlcotc_base.c_model(c$2, ), Ukddmlcotc_base.c_value(c$2, ), prior_value$1, c$2, );
-final dc.dynamic temp$7110_$AUTO_$1=(const Ukddmlcoc_core.Keyword(null, "obs", 999449665, ).$_invoke$1(Ukddmlcoc_core.deref(c$2, ), ));
+final dc.dynamic temp$7110_$AUTO_$1=Ukddmlcotc_base.mx_type(Ukddmlcotc_base.c_model(c$2, ), );
 if(((temp$7110_$AUTO_$1!=false)&&(temp$7110_$AUTO_$1!=null))){
-final dc.dynamic cell_observer$1=temp$7110_$AUTO_$1;
+final dc.dynamic mx_type$1=temp$7110_$AUTO_$1;
+Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "observing-mx-type", 1610316318, ), mx_type$1, why$2, );
+final dc.dynamic this10175$1=mx_type$1;
+final dc.dynamic slot10176$1=Ukddmlcotc_base.c_slot(c$2, );
+final dc.dynamic me10177$1=Ukddmlcotc_base.c_model(c$2, );
+final dc.dynamic new_value10178$1=Ukddmlcotc_base.c_value(c$2, );
+final dc.dynamic prior_value10179$1=prior_value$1;
+final dc.dynamic cell10180$1=c$2;
+if((this10175$1 is Ukddmlcotc_base.PObserver$iface)){
+(this10175$1 as Ukddmlcotc_base.PObserver$iface).observe$5((slot10176$1 as dc.dynamic), (me10177$1 as dc.dynamic), (new_value10178$1 as dc.dynamic), (prior_value10179$1 as dc.dynamic), (cell10180$1 as dc.dynamic), );
+}else{
+(Ukddmlcotc_base.PObserver.extensions((this10175$1 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this10175$1 as dc.dynamic), (slot10176$1 as dc.dynamic), (me10177$1 as dc.dynamic), (new_value10178$1 as dc.dynamic), (prior_value10179$1 as dc.dynamic), (cell10180$1 as dc.dynamic), );
+}
+}else{
+}
+final dc.dynamic temp$7110_$AUTO_$2=(const Ukddmlcoc_core.Keyword(null, "obs", 999449665, ).$_invoke$1(Ukddmlcoc_core.deref(c$2, ), ));
+if(((temp$7110_$AUTO_$2!=false)&&(temp$7110_$AUTO_$2!=null))){
+final dc.dynamic cell_observer$1=temp$7110_$AUTO_$2;
 final dc.dynamic arg$3=Ukddmlcotc_base.c_slot(c$2, );
 final dc.dynamic arg$2=Ukddmlcotc_base.c_model(c$2, );
 final dc.dynamic arg$1=Ukddmlcotc_base.c_value(c$2, );

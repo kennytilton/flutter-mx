@@ -317,9 +317,9 @@ final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
 Ukddmlcotu_base.call_trc.$_invoke$2(null, const Ukddmlcoc_core.Keyword(null, "bingo", 3833510852, ), );
 Ukddmlcoc_core.swap$BANG_.$_invoke$2(crun$1, Ukddmlcoc_core.inc, );
-final dc.String result$11290_$AUTO_$1=(Ukddmlcoc_core.str.$_invoke$2("Hi ", Ukddmlcotc_evaluate.c_get(b$1, ), ));
+final dc.String result$8781_$AUTO_$1=(Ukddmlcoc_core.str.$_invoke$2("Hi ", Ukddmlcotc_evaluate.c_get(b$1, ), ));
 Ukddmlcotu_base.call_trc.$_invoke$3(null, const Ukddmlcoc_core.Keyword(null, "cellread!!", 2800551982, ), Ukddmlcoc_core.deref(b$1, ), );
-return result$11290_$AUTO_$1;
+return result$8781_$AUTO_$1;
 }, ], ));
 assert((){
 final dc.dynamic test$1=Ukddmlcotc_base.c_rule(c$3, );

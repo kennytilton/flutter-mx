@@ -7,7 +7,6 @@ import "../cell/evaluate.dart" as Ukddmlcotc_evaluate;
 import "../cell/integrity.dart" as Ukddmlcotc_integrity;
 import "macros.dart" as Ukddmlcotm_macros;
 import "../cell/core.dart" as Ukddmlcotc_core;
-import "../cell/observer.dart" as Ukddmlcotc_observer;
 import "../../cljd/core.dart" as Ukddmlcoc_core;
 
 // BEGIN md-awaken
@@ -27,12 +26,12 @@ fl$1[1]=me$1;
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
 Ukddmlcotu_core.rmap_meta_setf($1, const Ukddmlcoc_core.Keyword(null, "awakening", 4238760111, ), );
 Ukddmlcoc_core.doall.$_invoke$1(Ukddmlcoc_core.LazySeq(null, ((){
-dc.dynamic iter$11751_$1(dc.dynamic coll$11752_$2, ){
-dc.dynamic coll$11752_$1=coll$11752_$2;
+dc.dynamic iter$10827_$1(dc.dynamic coll$10828_$2, ){
+dc.dynamic coll$10828_$1=coll$10828_$2;
 do {
-if(((coll$11752_$1!=false)&&(coll$11752_$1!=null))){
-if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$11752_$1, )){
-final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$11752_$1, );
+if(((coll$10828_$1!=false)&&(coll$10828_$1!=null))){
+if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$10828_$1, )){
+final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$10828_$1, );
 final dc.dynamic coll7285$3=c$7899_$AUTO_$2;
 late final dc.int size$7900_$AUTO_$2;
 if((coll7285$3 is Ukddmlcoc_core.ICounted$iface)){
@@ -62,27 +61,37 @@ temp$7110_$AUTO_$3=((slot$3 as Ukddmlcoc_core.IFn$iface).$_invoke$2(arg$5, const
 }else{
 temp$7110_$AUTO_$3=(Ukddmlcoc_core.IFn.extensions(slot$3, ).$_invoke$2(slot$3, arg$5, const Ukddmlcoc_core.Keyword(null, "not-found", 2699446952, ), ));
 }
-late final dc.dynamic $if_$7;
+late final dc.dynamic $if_$4;
 if(((temp$7110_$AUTO_$3!=false)&&(temp$7110_$AUTO_$3!=null))){
 final dc.dynamic c$3=temp$7110_$AUTO_$3;
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(c$3, const Ukddmlcoc_core.Keyword(null, "not-found", 2699446952, ), ))){
+Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "md-awaken-blind-obs", 3344225086, ), slot$3, Ukddmlcotc_base.cinfo(me$1, ), );
+final dc.dynamic this10175$3=Ukddmlcotc_base.mx_type(me$1, );
+final dc.dynamic slot10176$3=slot$3;
+final dc.dynamic me10177$3=me$1;
 final dc.dynamic arg$6=Ukddmlcoc_core.deref(me$1, );
-late final dc.dynamic $if_$6;
+late final dc.dynamic new_value10178$3;
 if((slot$3 is dc.Function)){
-$if_$6=(slot$3 as dc.Function)(arg$6, );
+new_value10178$3=(slot$3 as dc.Function)(arg$6, );
 }else if((slot$3 is Ukddmlcoc_core.IFn$iface)){
-$if_$6=((slot$3 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$6, ));
+new_value10178$3=((slot$3 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$6, ));
 }else{
-$if_$6=(Ukddmlcoc_core.IFn.extensions(slot$3, ).$_invoke$1(slot$3, arg$6, ));
+new_value10178$3=(Ukddmlcoc_core.IFn.extensions(slot$3, ).$_invoke$1(slot$3, arg$6, ));
 }
-$if_$7=Ukddmlcotc_observer.observe(slot$3, me$1, $if_$6, Ukddmlcotc_base.unbound, null, );
+final dc.dynamic prior_value10179$3=Ukddmlcotc_base.unbound;
+final dc.Null cell10180$3=null;
+if((this10175$3 is Ukddmlcotc_base.PObserver$iface)){
+$if_$4=((this10175$3 as Ukddmlcotc_base.PObserver$iface).observe$5(slot10176$3, (me10177$3 as dc.dynamic), new_value10178$3, (prior_value10179$3 as dc.dynamic), cell10180$3, ));
 }else{
-$if_$7=Ukddmlcotc_evaluate.c_awaken(c$3, );
+$if_$4=((Ukddmlcotc_base.PObserver.extensions((this10175$3 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this10175$3 as dc.dynamic), slot10176$3, (me10177$3 as dc.dynamic), new_value10178$3, (prior_value10179$3 as dc.dynamic), cell10180$3, ));
 }
 }else{
-$if_$7=null;
+$if_$4=Ukddmlcotc_evaluate.c_awaken(c$3, );
 }
-final dc.dynamic or$7123_$AUTO_$2=Ukddmlcoc_core.chunk_append(buf$7898_$AUTO_$2, $if_$7, );
+}else{
+$if_$4=null;
+}
+final dc.dynamic or$7123_$AUTO_$2=Ukddmlcoc_core.chunk_append(buf$7898_$AUTO_$2, $if_$4, );
 if(((or$7123_$AUTO_$2!=false)&&(or$7123_$AUTO_$2!=null))){
 exit$7901_$AUTO_$2=or$7123_$AUTO_$2;
 }else{
@@ -102,16 +111,16 @@ return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7898_$AUTO_$2, ), Ukdd
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-return iter$11751_$1(Ukddmlcoc_core.chunk_next(coll$11752_$1, ), );
+return iter$10827_$1(Ukddmlcoc_core.chunk_next(coll$10828_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-coll$11752_$1=Ukddmlcoc_core.chunk_next(coll$11752_$1, );
+coll$10828_$1=Ukddmlcoc_core.chunk_next(coll$10828_$1, );
 continue;
 }
-final dc.dynamic slot$4=Ukddmlcoc_core.first(coll$11752_$1, );
+final dc.dynamic slot$4=Ukddmlcoc_core.first(coll$10828_$1, );
 final dc.dynamic arg$7=Ukddmlcotm_base.md_cz(me$1, );
 late final dc.dynamic temp$7110_$AUTO_$4;
 if((slot$4 is dc.Function)){
@@ -121,41 +130,51 @@ temp$7110_$AUTO_$4=((slot$4 as Ukddmlcoc_core.IFn$iface).$_invoke$2(arg$7, const
 }else{
 temp$7110_$AUTO_$4=(Ukddmlcoc_core.IFn.extensions(slot$4, ).$_invoke$2(slot$4, arg$7, const Ukddmlcoc_core.Keyword(null, "not-found", 2699446952, ), ));
 }
-late final dc.dynamic $if_$9;
+late final dc.dynamic $if_$5;
 if(((temp$7110_$AUTO_$4!=false)&&(temp$7110_$AUTO_$4!=null))){
 final dc.dynamic c$4=temp$7110_$AUTO_$4;
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(c$4, const Ukddmlcoc_core.Keyword(null, "not-found", 2699446952, ), ))){
+Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "md-awaken-blind-obs", 3344225086, ), slot$4, Ukddmlcotc_base.cinfo(me$1, ), );
+final dc.dynamic this10175$4=Ukddmlcotc_base.mx_type(me$1, );
+final dc.dynamic slot10176$4=slot$4;
+final dc.dynamic me10177$4=me$1;
 final dc.dynamic arg$8=Ukddmlcoc_core.deref(me$1, );
-late final dc.dynamic $if_$8;
+late final dc.dynamic new_value10178$4;
 if((slot$4 is dc.Function)){
-$if_$8=(slot$4 as dc.Function)(arg$8, );
+new_value10178$4=(slot$4 as dc.Function)(arg$8, );
 }else if((slot$4 is Ukddmlcoc_core.IFn$iface)){
-$if_$8=((slot$4 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$8, ));
+new_value10178$4=((slot$4 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$8, ));
 }else{
-$if_$8=(Ukddmlcoc_core.IFn.extensions(slot$4, ).$_invoke$1(slot$4, arg$8, ));
+new_value10178$4=(Ukddmlcoc_core.IFn.extensions(slot$4, ).$_invoke$1(slot$4, arg$8, ));
 }
-$if_$9=Ukddmlcotc_observer.observe(slot$4, me$1, $if_$8, Ukddmlcotc_base.unbound, null, );
+final dc.dynamic prior_value10179$4=Ukddmlcotc_base.unbound;
+final dc.Null cell10180$4=null;
+if((this10175$4 is Ukddmlcotc_base.PObserver$iface)){
+$if_$5=((this10175$4 as Ukddmlcotc_base.PObserver$iface).observe$5((slot10176$4 as dc.dynamic), (me10177$4 as dc.dynamic), new_value10178$4, (prior_value10179$4 as dc.dynamic), cell10180$4, ));
 }else{
-$if_$9=Ukddmlcotc_evaluate.c_awaken(c$4, );
+$if_$5=((Ukddmlcotc_base.PObserver.extensions((this10175$4 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this10175$4 as dc.dynamic), (slot10176$4 as dc.dynamic), (me10177$4 as dc.dynamic), new_value10178$4, (prior_value10179$4 as dc.dynamic), cell10180$4, ));
 }
 }else{
-$if_$9=null;
+$if_$5=Ukddmlcotc_evaluate.c_awaken(c$4, );
 }
-return Ukddmlcoc_core.cons($if_$9, Ukddmlcoc_core.LazySeq(null, ((){
-return iter$11751_$1(Ukddmlcoc_core.next(coll$11752_$1, ), );
+}else{
+$if_$5=null;
+}
+return Ukddmlcoc_core.cons($if_$5, Ukddmlcoc_core.LazySeq(null, ((){
+return iter$10827_$1(Ukddmlcoc_core.next(coll$10828_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 return null;
 } while(true);
 }
 final dc.dynamic o7205$1=Ukddmlcoc_core.keys(Ukddmlcoc_core.deref(me$1, ), );
-late final dc.dynamic $if_$10;
+late final dc.dynamic $if_$6;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$10=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+$if_$6=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$10=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+$if_$6=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-return iter$11751_$1($if_$10, );
+return iter$10827_$1($if_$6, );
 } as dc.dynamic), null, -1, ), );
 final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "state", 1750323599, ), ));
 fl$2[1]=me$1;

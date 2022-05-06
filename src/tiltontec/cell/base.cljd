@@ -114,10 +114,18 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;(derive ::cell ::object)
 ;(derive ::c-formula ::cell)
 
+(defprotocol PObserver
+  (observe [this slot me new-value prior-value cell]))
+
 (deftype MXImplementer [])
 
+(declare cinfo)
+
 (deftype Model []
-  :extends MXImplementer)
+  :extends MXImplementer
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (prn :Model-not-observing (cinfo cell))))
 
 (defn mx-type [it]
   (when-let [m (meta it)]
@@ -186,6 +194,13 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (c-ref? c)) :not-cell-c
     :else ((juxt c-slot c-md-name) c)))
 
+(defn minfo [md]
+  (cond
+    (nil? md) :null-md
+    (not (atom? md)) :not-atom-md
+    (not (md-ref? md)) :atom-not-md-c
+    :else [(:name @md) (meta md)]))
+
 ;; --- dependency maintenance --------------------------------
 
 (defn caller-ensure [used new-caller]
@@ -204,7 +219,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-slots [c k]
   (assert (c-ref? c))
-  ;; todo why the set conversion?
+  ;; set conversion as convenience to test code
   (set (map c-slot (k @c))))
 
 ;; --- defmodel rizing ---------------------

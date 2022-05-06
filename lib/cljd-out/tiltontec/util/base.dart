@@ -50,10 +50,10 @@ fl$1[1]=(1+(Ukddmlcotu_base.$STAR_trxdepth$STAR_ as dc.num));
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$1, );
 final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
 try {
-final dc.dynamic num$COLON_$LT_$EQ_11299$1=lo$1;
-final dc.dynamic num$COLON_$LT_$EQ_11300$1=Ukddmlcotu_base.$STAR_trxdepth$STAR_;
-final dc.dynamic num$COLON_$LT_$EQ_11301$1=hi$1;
-final dc.bool $2=(((num$COLON_$LT_$EQ_11299$1 as dc.num)<=(num$COLON_$LT_$EQ_11300$1 as dc.num))&&((num$COLON_$LT_$EQ_11300$1 as dc.num)<=(num$COLON_$LT_$EQ_11301$1 as dc.num)));
+final dc.dynamic num$COLON_$LT_$EQ_8790$1=lo$1;
+final dc.dynamic num$COLON_$LT_$EQ_8791$1=Ukddmlcotu_base.$STAR_trxdepth$STAR_;
+final dc.dynamic num$COLON_$LT_$EQ_8792$1=hi$1;
+final dc.bool $2=(((num$COLON_$LT_$EQ_8790$1 as dc.num)<=(num$COLON_$LT_$EQ_8791$1 as dc.num))&&((num$COLON_$LT_$EQ_8791$1 as dc.num)<=(num$COLON_$LT_$EQ_8792$1 as dc.num)));
 if($2){
 Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcotu_base.call_trc, trxargs$1, );
 }else if(((Ukddmlcotu_base.$STAR_trxdepth$STAR_ as dc.num)>(hi$1 as dc.num))){
@@ -279,7 +279,7 @@ return Ukddmlcotu_base.prog1$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 
 dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic body$1, ){
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "let", )), ));
-final dc.dynamic o7205$1=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "result__11307__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(Ukddmlcoc_core.first(body$1, ), )), ));
+final dc.dynamic o7205$1=(Ukddmlcoc_core.concat.$_invoke$2((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "result__8798__auto__", )), )), (Ukddmlcoc_core.list.$_invoke$1(Ukddmlcoc_core.first(body$1, ), )), ));
 late final dc.dynamic $if_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
 $if_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
@@ -288,7 +288,7 @@ $if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddml
 }
 final dc.dynamic $1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_$1, ));
 final dc.dynamic $2=(Ukddmlcoc_core.list.$_invoke$1($1, ));
-final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$4(arg$1, $2, Ukddmlcoc_core.rest(body$1, ), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "result__11307__auto__", )), )), ));
+final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$4(arg$1, $2, Ukddmlcoc_core.rest(body$1, ), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "result__8798__auto__", )), )), ));
 if((o7205$2 is Ukddmlcoc_core.ISeqable$iface)){
 return ((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }
@@ -394,22 +394,22 @@ dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
 return Ukddmlcotu_base.wtrx$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
 }
 
-dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$11302_$1, dc.dynamic body$1, ){
-final dc.dynamic vec$11304_$1=p$11302_$1;
-final dc.dynamic o7205$1=vec$11304_$1;
-late final dc.dynamic seq$11305_$1;
+dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic p$8793_$1, dc.dynamic body$1, ){
+final dc.dynamic vec$8795_$1=p$8793_$1;
+final dc.dynamic o7205$1=vec$8795_$1;
+late final dc.dynamic seq$8796_$1;
 if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-seq$11305_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+seq$8796_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$11305_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+seq$8796_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-final dc.dynamic first$11306_$1=Ukddmlcoc_core.first(seq$11305_$1, );
-final dc.dynamic seq$11305_$2=Ukddmlcoc_core.next(seq$11305_$1, );
-final dc.dynamic lo$1=first$11306_$1;
-final dc.dynamic first$11306_$2=Ukddmlcoc_core.first(seq$11305_$2, );
-final dc.dynamic seq$11305_$3=Ukddmlcoc_core.next(seq$11305_$2, );
-final dc.dynamic hi$1=first$11306_$2;
-final dc.dynamic trxargs$1=seq$11305_$3;
+final dc.dynamic first$8797_$1=Ukddmlcoc_core.first(seq$8796_$1, );
+final dc.dynamic seq$8796_$2=Ukddmlcoc_core.next(seq$8796_$1, );
+final dc.dynamic lo$1=first$8797_$1;
+final dc.dynamic first$8797_$2=Ukddmlcoc_core.first(seq$8796_$2, );
+final dc.dynamic seq$8796_$3=Ukddmlcoc_core.next(seq$8796_$2, );
+final dc.dynamic hi$1=first$8797_$2;
+final dc.dynamic trxargs$1=seq$8796_$3;
 final dc.dynamic arg$4=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.util.base", "call-wtrx", )), ));
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "fn", )), ));
 final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$0());

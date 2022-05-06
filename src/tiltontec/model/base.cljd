@@ -5,7 +5,7 @@
     [tiltontec.util.core :refer [type-of err rmap-setf rmap-meta-setf]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type
+             c-unbound? c-input? mx-type observe
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed c-assert
              *call-stack* *defer-changes* unbound
@@ -15,9 +15,9 @@
              c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
              *depender* *not-to-be*
              *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+
     [tiltontec.cell.integrity :refer [with-integrity]]
-    [tiltontec.cell.observer
-     :refer [observe]]
+
     [tiltontec.cell.core
      :refer [cF cF+ c-reset-next! cFonce cFn cI c-reset! make-cell]]
 
@@ -77,7 +77,8 @@
                     (keys (md-cz me))
                     (:kids (md-cz me) :hunh))
                   )
-            (observe slot me (slot @me) unbound nil))
+            (prn :md-awaken-blind-obs slot (cty/cinfo me))
+            (observe (mx-type me) slot me (slot @me) unbound nil))
           :else (c-awaken c)))))
   (rmap-meta-setf [:state me] :awake)
   me)
