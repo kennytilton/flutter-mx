@@ -1,0 +1,159 @@
+(ns tiltontec.mx-flutter.core
+  (:require ["package:flutter/material.dart" :as m
+             :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
+                     FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+            ["package:flutter/widgets.dart" :as w
+             :refer [Text Center Column State StatefulWidget StatelessWidget]]
+            ["package:flutter/painting.dart" :as p
+             :refer [TextStyle]]
+            [tiltontec.cell.base :refer [mx-type unbound PObserver observe] :as cty]
+            ;;[tiltontec.cell.observer :refer [PObserver]]
+            [tiltontec.util.core :as util
+             :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
+            [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]))
+
+(defprotocol PDartWidget
+  (parts [this] "eg, Scaffold [:appBar :body :floatingActionButton ...]")
+  (parts-ex [this count] "Test"))
+
+(deftype TPart []
+  PDartWidget
+  (parts [this]
+    [:no-parts])
+  (parts-ex [this count]
+    [:no-parts (* 2 count)]))
+
+(deftype FXDartWidget []
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+             (prn :FXDartWidget-fall-thru slot (keys @me)))
+  PDartWidget
+  (parts [this]
+    [:no-parts]))
+
+(deftype FXMaterialApp []
+  ;;:type-only true
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (prn :FXMatapp-observing!!!)))
+
+(deftype FXScaffold []
+  ;;:type-only true
+  :extends FXDartWidget
+  PDartWidget
+  (parts [this]
+    [:appBar :body :actionButton]))
+
+(deftype FXText []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child :style])
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))))
+
+(deftype FXCenter []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child]))
+
+(deftype FXColumn []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:children]))
+
+;;; ----------------------------------------------------
+
+(defn render-fx [fx]
+  (let [gen (mget fx :fx-gen)]
+    (when-not gen
+      (prn :rfx-sees-no-fx-gen!!! fx))
+    (gen fx)))
+
+(defn statefully [me builder]
+  (reify :extends w/StatefulWidget
+    (createState [this]
+      (util/rmap-meta-setf [:state-ref me]
+        (reify :extends w/State
+          (build [this ctx]
+            (builder me ctx)))))))
+
+(defn TextEx-gen-ex [me]
+  (statefully me
+    (fn [me ctx]
+      (if-let [builder (mget me :builder)]
+        (builder me ctx)
+        (w/Text. (first (md/md-kids me))
+          :style (tiltontec.model.core/mget me :style))))))
+
+(defmacro text [custom-props fx-props & kids]
+  ;; todo: enforce only one kid
+  `(tiltontec.model.core/make
+     :mx-type (tiltontec.mx-flutter.core/FXText.)
+     ;;:dart-type (parts (tiltontec.mx-flutter.core/FXText.))
+     :kids (tiltontec.model.core/cFkids ~@kids)
+     :fx-gen TextEx-gen-ex
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
+(defmacro material-app [custom-props fx-props & kids]
+  `(tiltontec.model.core/make
+     :mx-type (tiltontec.mx-flutter.core/FXMaterialApp.)
+     :fx-gen #(m/MaterialApp.
+                :title (mget % :title)
+                :theme (mget % :theme)
+                :home (render-fx (first (md-kids %))))
+     :kids (tiltontec.model.core/cFkids ~@kids)
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
+;(def *widget-spec* (atom nil))
+;
+;(defn load-widget-spec [type spec]
+;  (swap! *widget-spec* assoc type spec))
+;
+;(defn load-widget-specs []
+;  (load-widget-spec ::Scaffold
+;    {:parts [:appBar :body :floatingActionButton]}))
+
+(defmacro scaffold [custom-props fx-props & kids]
+  `(make :mx-type (tiltontec.mx-flutter.core/FXScaffold.)
+     :kids (cFkids ~@kids)
+     :fx-gen #(m/Scaffold.
+                :appBar (mget % :appBar)
+                :body (render-fx (first (md/md-kids %)))
+                :floatingActionButton (mget % :floatingActionButton))
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
+(defmacro column [custom-props fx-props & kids]
+  `(make :mx-type (tiltontec.mx-flutter.core/FXColumn.)
+     :kids (tiltontec.model.core/cFkids ~@kids)
+     :fx-gen #(m/Column.
+                :mainAxisAlignment (tiltontec.model.core/mget % :mainAxisAlignment)
+                :children (mapv render-fx (tiltontec.model.core/md-kids %)))
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
+(defmacro center [custom-props fx-props & kids]
+  ;; todo: enforce only one kid
+  `(tiltontec.model.core/make
+     :mx-type (tiltontec.mx-flutter.core/FXCenter.)
+     :kids (tiltontec.model.core/cFkids ~@kids)
+     :fx-gen #(m/Center.
+                :child (render-fx (first (tiltontec.model.core/md-kids %))))
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
