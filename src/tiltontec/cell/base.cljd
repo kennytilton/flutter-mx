@@ -3,7 +3,7 @@
     [tiltontec.util.base :as utb
      :refer [def-rmap-slots]]
     [tiltontec.util.core
-     :refer [cl-find set-ify any-ref? err ia-ref
+     :refer [cl-find set-ify atom? err ia-ref
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf
              wtrx-test]
@@ -114,19 +114,35 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;(derive ::cell ::object)
 ;(derive ::c-formula ::cell)
 
-(defn ia-type [it]
-  (when-let [m (meta it)]
-    (:type m)))
+(defprotocol PObserver
+  (observe [this slot me new prior c]))
 
-(defn ia-type? [it typ]
-  ;; todo check this
-  (= (ia-type it) typ))
+(defprotocol PCell
+  (awaken [this c] "eg, Scaffold [:appBar :body :floatingActionButton ...]"))
+
+#_
+        (deftype TScaffold []
+          ;;:type-only true
+          TDartWidget
+          (parts [this]
+            [:appBar :body :actionButton]))
+
+(deftype MXImplementer [])
+
+(deftype Model []
+  :extends MXImplementer)
+
+
+
+(defn mx-type [it]
+  (when-let [m (meta it)]
+    (:mx-type m)))
 
 (defn c-formula? [c]
-  (ia-type? c ::c-formula))
+  (dart/is? (mx-type c) CellFormula))
 
 (defn c-ref? [x]
-  (some #{(ia-type x)} [::cell ::c-formula]))
+  (dart/is? x Cell))
 
 (utb/def-rmap-slots c-
   me slot state input? rule pulse pulse-last-changed pulse-observed
@@ -134,7 +150,7 @@ rule to get once behavior or just when fm-traversing to find someone"
   lazy synapses synaptic?)
 
 (defn c-value [c]
-  (assert (any-ref? c))
+  (assert (atom? c))
   (cond
     (and (c-ref? c)
       (map? @c)) (:value @c)
@@ -175,7 +191,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn cinfo [c]
   (cond
     (nil? c) :null-c
-    (not (any-ref? c)) :not-atom-c
+    (not (atom? c)) :not-atom-c
     (not (c-ref? c)) :not-cell-c
     :else ((juxt c-slot c-md-name) c)))
 
@@ -204,8 +220,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn md-ref? [x]
   ;;(trx :md-ref?-sees x)
-  (and (any-ref? x)))
-;; hhack (ia-type? x ::model)
+  (dart/is? (mx-type x) Model))
 
 
 ;; --- mdead? ---

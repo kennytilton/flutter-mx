@@ -5,7 +5,7 @@
     [tiltontec.cell.base
      :refer [without-c-dependency
              cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? ia-type?
+             c-unbound? c-input?
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
@@ -162,12 +162,12 @@
 
 (defn mm-typed []
   (let [me (md/make
-             :type ::typetest
+             :mx-type (md/Family.)
              :x2 (cI 2)
              :age (cF (* (md-get me :x2)
                         21)))]
     (assert (= 42 (md-get me :age)))
-    (assert (ia-type? me ::typetest))))
+    (assert (dart/is? (mx-type me) mdFamily))))
 
 (defn mm-opti-1 []
   (let [me (md/make

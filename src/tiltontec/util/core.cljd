@@ -41,14 +41,17 @@
 (defn ia-ref [x]
   (atom x))
 
-(defn any-ref? [x]
+(defn atom? [x]
+  (dart/is? x cljd.core/Atom))
+
+(defn atom? [x]
   (dart/is? x cljd.core/Atom))
 
 (defn rmap-setf [[slot ref] new-value]
-  (assert (any-ref? ref)
+  (assert (atom? ref)
     (pln "model.util.core/rmap-setf> slot:" slot
       "new-value:" new-value
-      "failed assertion any-ref? on ref:" ref))
+      "failed assertion atom? on ref:" ref))
   (assert (map? @ref)
     (pln "model.util.core/rmap-setf> slot:" slot
       "new-value:" new-value

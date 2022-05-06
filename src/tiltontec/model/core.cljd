@@ -3,11 +3,11 @@
     [tiltontec.util.base
      :refer [trx prog1 *trx?* def-rmap-slots]]
     [tiltontec.util.core
-     :refer [difference any-ref? type-of err rmap-setf rmap-meta-setf pln]]
+     :refer [difference atom? type-of err rmap-setf rmap-meta-setf pln]]
     [tiltontec.cell.base
      :refer [without-c-dependency model
              cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? ia-type? ia-type
+             c-unbound? c-input?  ia-type
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
@@ -35,7 +35,7 @@
 (defn md-get [me slot]
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (when (any-ref? me)
+  (when (atom? me)
     (if-let [c (md-cell me slot)]
       (c-get c)
       (slot @me))))
@@ -43,7 +43,7 @@
 (defn md-get-ex [me slot]
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (when (any-ref? me)
+  (when (atom? me)
     (if-let [c (md-cell me slot)]
       (c-get c)
       (slot @me))))
@@ -157,28 +157,32 @@
         (doseq [k lostks]
           (not-to-be k))))))
 
+(deftype Family []
+  :extends cty/->Model
+  cty/PObserver
+  (observe [this slot me new prior c]
+    (error :type-family-observe-NYI slot me new)))
+
 (defn make-family [& arg-list]
   ;; todo avoid repeated register
-  (observer-register [:kids ::family]
-    fm-kids-observe)
   (cond
     ;; a bit sketchy: if arg-list is odd we assume they started with a type
     ;; todo make better
     (odd? (count arg-list)) (apply make :type arg-list)
     :else
     (apply make
-      :type ::family
+      :mx-type (Family.)
       ;; no way to override default fm-not-to-be
       ;; todo make better
       :not-to-be fm-not-to-be
       arg-list)))
 
 (defn fm-navig-eq? [seek poss]
-  (assert (or (any-ref? poss) (string? poss))
+  (assert (or (atom? poss) (string? poss))
     (str "poss not ref " (string? poss)))
   ;; (println :fm-navig-eq? (fn? seek) (keyword? seek))
   (cond
-    (not (any-ref? poss))                                   ;; string child of html label?
+    (not (atom? poss))                                   ;; string child of html label?
     (do (println :fm-navig-eq?bailnotref poss)
         false)
 
@@ -227,13 +231,13 @@
           (recur (rest sibs)))))))
 
 (defn fm-navig [what where & options]
-  ;;(println :fm-navig-entry (if (any-ref? where) [(:tag @where)(:class @where)] where) (any-ref? where))
-  (when (and where what (any-ref? where))
+  ;;(println :fm-navig-entry (if (atom? where) [(:tag @where)(:class @where)] where) (atom? where))
+  (when (and where what (atom? where))
     (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
                           } (apply hash-map options))]
       ;;(println :fm-navig-opts options)
       (binding [*depender* (if (:wocd? options) nil *depender*)]
-        (when (any-ref? where)
+        (when (atom? where)
           ;(println :f)
           (or (and (:me? options)
                 (fm-navig-eq? what where)
@@ -307,14 +311,14 @@
           (= type (ia-type visited))) me))
 
 (defn fmi-w-class [where class]
-  (fm-navig #(when (any-ref? %)
+  (fm-navig #(when (atom? %)
            (= class (md-get % :class)))
     where :inside? true :up? false))
 
 (defn mxi-find
   "Search matrix below node 'where' for node with property and value"
   [where property value]
-  (fm-navig #(when (any-ref? %)
+  (fm-navig #(when (atom? %)
            (= value (md-get % property)))
     where :inside? true :up? false))
 
@@ -335,7 +339,7 @@
 (defmacro the-kids [& tree]
   `(binding [*par* ~'me]
      (assert *par*)
-     ;;(println :bingo-par (any-ref? *par*))
+     ;;(println :bingo-par (atom? *par*))
      (doall (remove nil? (flatten (list ~@tree))))))
 
 (defmacro cFkids [& tree]

@@ -4,7 +4,7 @@
     [tiltontec.util.base :as ub
      :refer [def-rmap-slots rmap-setf trx prog1 *trx?*]]
     [tiltontec.util.core
-     :refer [cl-find set-ify any-ref? err ia-ref
+     :refer [cl-find set-ify atom? err ia-ref
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf
              wtrx-test]
@@ -12,7 +12,7 @@
     [tiltontec.cell.base
      :refer [without-c-dependency ia-type cells-init
              c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? unbound ia-type?
+             c-unbound? c-input? unbound
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
@@ -34,8 +34,8 @@
 
 (defn test-input []
   (let [c (cI 42 :slot :bingo)]
-    (assert (= (ia-type c) ::cty/cell))
-    (assert (ia-type? c ::cty/cell))
+    (assert (dart/is? (mx-type c) cty/Cell))
+    (assert (c-ref? c))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))
     (assert (c-input? c))
@@ -47,7 +47,7 @@
 
 (defn t-formula []
   (let [c (cF (+ 40 2))]
-    (assert (ia-type? c ::cty/c-formula))
+    (assert (dart/is? (mx-type c) cty/CellFormula))
     (assert (= (c-value-state c) :unbound))
     (assert (= #{} (c-callers c)))
     (assert (= #{} (c-useds c)))

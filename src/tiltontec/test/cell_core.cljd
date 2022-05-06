@@ -4,7 +4,7 @@
     [tiltontec.util.base :as ub
      :refer [def-rmap-slots trx prog1]]
     [tiltontec.util.core
-     :refer [cl-find set-ify any-ref? err ia-ref
+     :refer [cl-find set-ify atom? err ia-ref
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf
              wtrx-test]
@@ -77,7 +77,7 @@
   (let [c (make-cell
             :slot :mol
             :value 42)]
-    (assert (= ::cty/cell (ia-type c)))
+    (assert (dart/is? (ia-type c) cty/Cell) ;; (= ::cty/cell (ia-type c)))
     (assert (= (c-value c) 42))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))

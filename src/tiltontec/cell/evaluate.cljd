@@ -3,10 +3,10 @@
     [clojure.string :as str]
     [tiltontec.util.base :refer [wtrx trx prog1]]
     [tiltontec.util.core
-     :refer [any-ref? rmap-setf err rmap-meta-setf set-ify difference]]
+     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? ia-type
+             c-unbound? c-input? mx-type
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes*
@@ -115,13 +115,13 @@
 
   [c]
   #_(when (= (c-slot c) :title)
-      (println :cget-entry (c-slot c) (ia-type (c-model c))
+      (println :cget-entry (c-slot c) (mx-type (c-model c))
         (if *depender* (c-slot *depender*) :nodepender)))
   (cond
     (c-ref? c) (prog1
                  (with-integrity ()
                    (let [prior-value (c-value c)]
-                     #_(println :cget-to-evic (c-slot c) (ia-type (c-model c)))
+                     #_(println :cget-to-evic (c-slot c) (mx-type (c-model c)))
                      #_ (when (and *depender* (not= :kids (c-slot *depender*)))
                        (prn :c-get-sees-depender
                          (str "asker= "
@@ -144,12 +144,12 @@
                  (when *depender*
                    #_ (when (and *depender* (not= :kids (c-slot *depender*)))
                      (prn :c-get-records-dependency
-                       :askee (c-slot c) (ia-type (c-model c))
+                       :askee (c-slot c) (mx-type (c-model c))
                        (str "asker= "
                          (c-slot *depender*) "/"
                          (c-md-name *depender*))))
                    (record-dependency c)))
-    (any-ref? c) @c
+    (atom? c) @c
     :else c))
 
 (defn cget [c]
@@ -207,7 +207,7 @@
     #_ (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
 
     (unlink-from-used c :pre-rule-clear)
-    (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (ia-type @c)))
+    (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
 
     (let [raw-value ((c-rule c) c)
           prop-code? (and (c-synaptic? c)
@@ -220,33 +220,7 @@
 
 ;;; --- awakening ------------------------------------
 
-(defn c-awaken [c]
-  ;(prn :c-awaken-sees @c (ia-type c))
-  (case (ia-type c)
-    ::cty/c-formula
-    (binding [*depender* nil]
-      (when-not (c-current? c)
-        (calculate-and-set c :fn-c-awaken nil)))
 
-    ::cty/cell
-    (do
-      (assert (c-input? c))
-      (when (> @+pulse+ (c-pulse-observed c))               ;; safeguard against double-call
-        (when-let [me (c-me c)]
-          (rmap-setf [(c-slot c) me] (c-value c)))
-        (c-observe c :cell-awaken)
-        (ephemeral-reset c)))
-
-    ;; else
-    (do
-
-      (cond
-        (coll? c) (doseq [ce c]
-                    (c-awaken ce))
-        :else
-        (println :c-awaken-fall-thru (if (any-ref? c)
-                                       [:ref-of (ia-type c) @c]
-                                       [:unref c (ia-type c)]))))))
 ;; ------------------------------------------------------------
 
 (declare c-absorb-value
@@ -256,7 +230,7 @@
 
 (defn md-slot-value-store [me slot value]
   (assert me)
-  (assert (any-ref? me))
+  (assert (atom? me))
   ;(trx :mdsv-store slot (flz value))
   (rmap-setf [slot me] value))
 

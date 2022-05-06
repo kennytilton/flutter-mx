@@ -4,8 +4,8 @@
      :refer [trx prog1]]
     [tiltontec.cell.base
      :refer [without-c-dependency c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? ia-type?
-             ia-type cells-init c-callers c-useds
+             c-unbound? c-input?
+             mx-type cells-init c-callers c-useds
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
@@ -29,7 +29,7 @@
                 :obs (fn-obs
                        (reset! bingo true))]
             (+ 40 2))]
-    (assert (ia-type? c ::cty/c-formula))
+    (assert (dart/is? (mx-type c) cty/->CellFormula))
     (assert (= (c-value-state c) :unbound))
     (assert (= #{} (c-callers c)))
     (assert (= #{} (c-useds c)))
@@ -46,7 +46,7 @@
 (defn test-input []
   (let [c (cI 42 :slot :bingo2
             :obs (fn-obs (reset! bingo2 true)))]
-    (assert (ia-type? c ::cty/cell))
+    (assert (dart/is? (mx-type c) cty/->Cell))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))
     (assert (c-input? c))

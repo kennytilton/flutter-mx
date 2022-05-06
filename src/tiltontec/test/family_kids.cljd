@@ -5,7 +5,7 @@
     [tiltontec.util.core :refer [type-of err]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? ia-type?
+             c-unbound? c-input?
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
@@ -21,7 +21,7 @@
     [tiltontec.cell.core
      :refer [cF cF+ c-reset-next! cFonce cFn
              cI c-reset! make-cell make-c-formula]]
-    [tiltontec.cell.evaluate :refer [c-get c-awaken]]
+    [tiltontec.cell.evaluate :refer [c-get ]]
     [tiltontec.model.base :refer [md-cz md-cell]]
     [tiltontec.model.core
      :refer [the-kids mdv! md-get  fm! make md-reset!]
@@ -39,7 +39,7 @@
                                          (let [par (:par @me)]
                                            (let [ee (md-get par :ee)]
                                              (* 14 ee))))))))))]
-    (assert (ia-type? f ::md/family))
+    (assert (dart/is? (mx-type? f) ::md/family))
     (assert (empty? (md-get f :kids)))
 
     (do
