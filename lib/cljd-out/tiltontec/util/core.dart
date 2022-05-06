@@ -18,12 +18,12 @@ set $STAR_plnk_keys$STAR_(dc.dynamic v) => Ukddmlcoc_core.set_dynamic_binding$BA
 
 // END *plnk-keys*
 
-// BEGIN any-ref?
-dc.dynamic any_ref$QMARK_(dc.dynamic x$1, ){
+// BEGIN atom?
+dc.dynamic atom$QMARK_(dc.dynamic x$1, ){
 return (x$1 is Ukddmlcoc_core.Atom);
 }
 
-// END any-ref?
+// END atom?
 
 // BEGIN cl-find
 dc.dynamic cl_find(dc.dynamic sought$1, dc.dynamic coll$1, ){
@@ -202,20 +202,13 @@ if(((test$1!=false)&&(test$1!=null))){
 return null;
 }
 final dc.dynamic val$1=Ukddmlcoc_core.first(Ukddmlcoc_core.deref(q$1, ), );
-Ukddmlcoc_core.swap$BANG_.$_invoke$2(q$1, (dc.dynamic p1$8822_$SHARP_$1, ){
-return Ukddmlcoc_core.vec(Ukddmlcoc_core.rest(p1$8822_$SHARP_$1, ), );
+Ukddmlcoc_core.swap$BANG_.$_invoke$2(q$1, (dc.dynamic p1$11331_$SHARP_$1, ){
+return Ukddmlcoc_core.vec(Ukddmlcoc_core.rest(p1$11331_$SHARP_$1, ), );
 }, );
 return val$1;
 }
 
 // END fifo-pop
-
-// BEGIN ia-ref
-dc.dynamic ia_ref(dc.dynamic x$1, ){
-return (Ukddmlcoc_core.atom.$_invoke$1(x$1, ));
-}
-
-// END ia-ref
 
 // BEGIN make-fifo-queue
 dc.dynamic make_fifo_queue(){
@@ -305,10 +298,10 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 // END plnk$ifn
 
 // BEGIN rmap-meta-setf
-dc.dynamic rmap_meta_setf(dc.dynamic p$8817_$1, dc.dynamic new_value$1, ){
-final dc.dynamic vec$8818_$1=p$8817_$1;
-final dc.dynamic slot$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$8818_$1, 0, null, ));
-final dc.dynamic ref$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$8818_$1, 1, null, ));
+dc.dynamic rmap_meta_setf(dc.dynamic p$11326_$1, dc.dynamic new_value$1, ){
+final dc.dynamic vec$11327_$1=p$11326_$1;
+final dc.dynamic slot$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11327_$1, 0, null, ));
+final dc.dynamic ref$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11327_$1, 1, null, ));
 assert((){
 final dc.dynamic o7419$1=ref$1;
 late final dc.dynamic $if_$1;
@@ -339,12 +332,12 @@ return new_value$1;
 // END rmap-meta-setf
 
 // BEGIN rmap-setf
-dc.dynamic rmap_setf(dc.dynamic p$8813_$1, dc.dynamic new_value$1, ){
-final dc.dynamic vec$8814_$1=p$8813_$1;
-final dc.dynamic slot$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$8814_$1, 0, null, ));
-final dc.dynamic ref$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$8814_$1, 1, null, ));
+dc.dynamic rmap_setf(dc.dynamic p$11322_$1, dc.dynamic new_value$1, ){
+final dc.dynamic vec$11323_$1=p$11322_$1;
+final dc.dynamic slot$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11323_$1, 0, null, ));
+final dc.dynamic ref$1=(Ukddmlcoc_core.nth.$_invoke$3(vec$11323_$1, 1, null, ));
 assert((){
-final dc.dynamic test$1=Ukddmlcotu_core.any_ref$QMARK_(ref$1, );
+final dc.dynamic test$1=Ukddmlcotu_core.atom$QMARK_(ref$1, );
 late final dc.bool $if_$1;
 if(((test$1!=false)&&(test$1!=null))){
 $if_$1=true;
@@ -355,11 +348,11 @@ return $if_$1;
 }(), (){
 late final dc.dynamic $if_$2;
 if((Ukddmlcotu_core.pln is dc.Function)){
-$if_$2=(Ukddmlcotu_core.pln as dc.Function)("model.util.core/rmap-setf> slot:", slot$1, "new-value:", new_value$1, "failed assertion any-ref? on ref:", ref$1, );
+$if_$2=(Ukddmlcotu_core.pln as dc.Function)("model.util.core/rmap-setf> slot:", slot$1, "new-value:", new_value$1, "failed assertion atom? on ref:", ref$1, );
 }else if((Ukddmlcotu_core.pln is Ukddmlcoc_core.IFn$iface)){
-$if_$2=((Ukddmlcotu_core.pln as Ukddmlcoc_core.IFn$iface).$_invoke$6("model.util.core/rmap-setf> slot:", slot$1, "new-value:", new_value$1, "failed assertion any-ref? on ref:", ref$1, ));
+$if_$2=((Ukddmlcotu_core.pln as Ukddmlcoc_core.IFn$iface).$_invoke$6("model.util.core/rmap-setf> slot:", slot$1, "new-value:", new_value$1, "failed assertion atom? on ref:", ref$1, ));
 }else{
-$if_$2=(Ukddmlcoc_core.IFn.extensions(Ukddmlcotu_core.pln, ).$_invoke$6(Ukddmlcotu_core.pln, "model.util.core/rmap-setf> slot:", slot$1, "new-value:", new_value$1, "failed assertion any-ref? on ref:", ref$1, ));
+$if_$2=(Ukddmlcoc_core.IFn.extensions(Ukddmlcotu_core.pln, ).$_invoke$6(Ukddmlcotu_core.pln, "model.util.core/rmap-setf> slot:", slot$1, "new-value:", new_value$1, "failed assertion atom? on ref:", ref$1, ));
 }
 return $if_$2;
 }());

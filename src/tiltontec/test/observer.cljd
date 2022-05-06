@@ -29,7 +29,7 @@
                 :obs (fn-obs
                        (reset! bingo true))]
             (+ 40 2))]
-    (assert (dart/is? (mx-type c) cty/->CellFormula))
+    (assert (dart/is? (mx-type c) cty/CellFormula))
     (assert (= (c-value-state c) :unbound))
     (assert (= #{} (c-callers c)))
     (assert (= #{} (c-useds c)))
@@ -46,7 +46,7 @@
 (defn test-input []
   (let [c (cI 42 :slot :bingo2
             :obs (fn-obs (reset! bingo2 true)))]
-    (assert (dart/is? (mx-type c) cty/->Cell))
+    (assert (dart/is? (mx-type c) cty/Cell))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))
     (assert (c-input? c))

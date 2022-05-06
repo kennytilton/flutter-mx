@@ -220,6 +220,32 @@
 
 ;;; --- awakening ------------------------------------
 
+(defn c-awaken [c]
+  ;(prn :c-awaken-sees @c (mx-type c))
+  (cond
+    (c-formula? c)
+    (binding [*depender* nil]
+      (when-not (c-current? c)
+        (calculate-and-set c :fn-c-awaken nil)))
+
+    (c-ref? c)
+    (do
+      (assert (c-input? c))
+      (when (> @+pulse+ (c-pulse-observed c))               ;; safeguard against double-call
+        (when-let [me (c-me c)]
+          (rmap-setf [(c-slot c) me] (c-value c)))
+        (c-observe c :cell-awaken)
+        (ephemeral-reset c)))
+
+    (coll? c)
+    ;; a test function does this for standalones
+    (doseq [ce c]
+      (c-awaken ce))
+
+    :else
+    (println :c-awaken-fall-thru (if (atom? c)
+                                   [:ref-of (meta c) @c]
+                                   [:unref c]))))
 
 ;; ------------------------------------------------------------
 
@@ -439,7 +465,7 @@ then clear our record of them."
         ;; when it goes looking for a sibling relative to its position.
         (when (and prior-value
                 (c-model c)
-                (md-slot-owning? (ia-type (c-model c)) (c-slot c)))
+                (md-slot-owning? (mx-type (c-model c)) (c-slot c)))
           (when-let [ownees (difference (set-ify prior-value) (set-ify (c-value c)))]
             (doseq [ownee ownees]
               (not-to-be ownee))))

@@ -3,7 +3,7 @@
     [tiltontec.util.base :as utb
      :refer [def-rmap-slots]]
     [tiltontec.util.core
-     :refer [cl-find set-ify atom? err ia-ref
+     :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf
              wtrx-test]
@@ -114,35 +114,26 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;(derive ::cell ::object)
 ;(derive ::c-formula ::cell)
 
-(defprotocol PObserver
-  (observe [this slot me new prior c]))
-
-(defprotocol PCell
-  (awaken [this c] "eg, Scaffold [:appBar :body :floatingActionButton ...]"))
-
-#_
-        (deftype TScaffold []
-          ;;:type-only true
-          TDartWidget
-          (parts [this]
-            [:appBar :body :actionButton]))
-
 (deftype MXImplementer [])
 
 (deftype Model []
   :extends MXImplementer)
 
-
-
 (defn mx-type [it]
   (when-let [m (meta it)]
     (:mx-type m)))
 
+(deftype Cell []
+  :extends MXImplementer)
+
+(deftype CellFormula []
+  :extends Cell)
+
 (defn c-formula? [c]
   (dart/is? (mx-type c) CellFormula))
 
-(defn c-ref? [x]
-  (dart/is? x Cell))
+(defn c-ref? [c]
+  (dart/is? (mx-type c) Cell))
 
 (utb/def-rmap-slots c-
   me slot state input? rule pulse pulse-last-changed pulse-observed

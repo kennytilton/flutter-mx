@@ -4,15 +4,15 @@
     [tiltontec.util.base :as ub
      :refer [def-rmap-slots trx prog1]]
     [tiltontec.util.core
-     :refer [cl-find set-ify atom? err ia-ref
+     :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf
              wtrx-test]
      :as utc]
     [tiltontec.cell.base
-     :refer [without-c-dependency ia-type cells-init
+     :refer [without-c-dependency mx-type cells-init
              c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? unbound
+             c-unbound? c-input? unbound cinfo
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
@@ -77,7 +77,7 @@
   (let [c (make-cell
             :slot :mol
             :value 42)]
-    (assert (dart/is? (ia-type c) cty/Cell) ;; (= ::cty/cell (ia-type c)))
+    (assert (dart/is? (mx-type c) cty/Cell))
     (assert (= (c-value c) 42))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))
@@ -88,8 +88,8 @@
 
 (defn test-cI []
   (let [c (cI 42)]
-    (assert (= ::cty/cell (ia-type c)))
-    (assert (= (c-value c) 42))
+    (assert (dart/is? (mx-type c) cty/Cell))
+    (assert (= (c-value c) 42) (str "c-value is: " (c-value c) " ci " (cty/cinfo c)))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))
     (assert (c-input? c))
@@ -99,7 +99,7 @@
 
 (defn test-cI+ []
   (let [c (cI 42 :slot :cool)]
-    (assert (= ::cty/cell (ia-type c)))
+    (assert (dart/is? (mx-type c) cty/Cell))
     (assert (c-ref? c))
     (assert (= (c-value c) 42))
     (assert (= (c-value-state c) :valid))
@@ -111,7 +111,7 @@
 
 (defn test-cF []
   (let [c (cF (+ 40 2))]
-    (assert (= ::cty/c-formula (ia-type c)))
+    (assert (dart/is? (mx-type c) cty/CellFormula))
     (assert (fn? (c-rule c)))
     (assert (= (c-value c) unbound))
     (assert (= (c-value-state c) :unbound))
@@ -124,7 +124,7 @@
 (defn test-cF+ []
   (let [c (cF+ (:optimize false :slot :bingo)
             (+ 40 2))]
-    (assert (= ::cty/c-formula (ia-type c)))
+    (assert (dart/is? (mx-type c) cty/CellFormula))
     (assert (c-ref? c))
     (assert (fn? (c-rule c)))
     (assert (= (c-value c) unbound))
@@ -223,4 +223,4 @@
   (t-eph-1)
   (t-cFn)
   (t-cFonce)
-  (prn :cell-core-OK))
+  (prn "cell-core-OK"))

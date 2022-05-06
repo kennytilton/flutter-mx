@@ -26,36 +26,12 @@
      :refer [with-integrity]]
     [tiltontec.cell.evaluate :as ev
      :refer [c-get cget c-value-assume
-             record-dependency ensure-value-is-current]])
-  (:import (java.util Observer)
-           (tiltontec.cell.base PCell)))
+             record-dependency ensure-value-is-current]]))
 
 ; todo: stand-alone cells with observers should be observed when they are made
 
-(defn c-awaken [c]
-  (cty/awaken (cty/mx-type c) c))
 
-(deftype Cell []
-  :extends cty/MXImplementer
-  ;;:type-only true
-  PCell
-  (awaken [this c]
-    (assert (cty/c-input? c))
-    (when (> @+pulse+ (cty/c-pulse-observed c))               ;; safeguard against double-call
-      (when-let [me (c-me c)]
-        (rmap-setf [(c-slot c) me] (c-value c)))
-      (c-observe c :cell-awaken)
-      (ephemeral-reset c)))
-  PObserver
-  (observer [this c]))
 
-(deftype CellFormula []
-  :extends Cell
-  PCell
-  (awaken [this c]
-    (binding [cty/*depender* nil]
-      (when-not (c-current? c)
-        (calculate-and-set c :fn-c-awaken nil)))))
 
 (defn make-cell [& kvs]
   (let [options (apply hash-map kvs)]
@@ -73,7 +49,7 @@
                   :input?             true}
 
             options)
-      :meta {:mx-type Cell})))
+      :meta {:mx-type (cty/Cell.)})))
 
 (defn make-c-formula [& kvs]
   (let [options (apply hash-map kvs)
@@ -94,7 +70,7 @@
                   :input?             false}                ;; not redundant: can start with rule, continue as input
 
             options)
-      :meta {:mx-type CellFormula})))
+      :meta {:mx-type (cty/CellFormula.)})))
 
 ;;___________________ constructors _______________________________
 ;; I seem to have created a zillion of these, but I normally

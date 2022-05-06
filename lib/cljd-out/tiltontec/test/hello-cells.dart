@@ -420,7 +420,7 @@ fl$27[1]=r_response$1;
 fl$27[2]=r_loc$1;
 fl$27[3]=(const Ukddmlcoc_core.Keyword(null, "action", 1301010251, ).$_invoke$1(v$1, ));
 final Ukddmlcoc_core.PersistentVector $26=Ukddmlcoc_core.$_vec_owning(fl$27, );
-Ukddmlcotc_evaluate.c_awaken($26, );
+Ukddmlcoc_core.map.$_invoke$2(Ukddmlcotc_evaluate.c_awaken, $26, );
 assert((){
 late final dc.bool $if_$1;
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "missing", 636007088, ), (const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ).$_invoke$1(Ukddmlcoc_core.deref(r_loc$1, ), )), ))){

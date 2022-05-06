@@ -101,6 +101,66 @@ set $PLUS_stop$PLUS_(dc.dynamic v) => Ukddmlcoc_core.set_dynamic_binding$BANG_((
 
 // END +stop+
 
+// BEGIN ->Cell
+dc.dynamic $_$GT_Cell(){
+return Ukddmlcotc_base.Cell();
+}
+
+// END ->Cell
+
+// BEGIN ->CellFormula
+dc.dynamic $_$GT_CellFormula(){
+return Ukddmlcotc_base.CellFormula();
+}
+
+// END ->CellFormula
+
+// BEGIN ->MXImplementer
+dc.dynamic $_$GT_MXImplementer(){
+return Ukddmlcotc_base.MXImplementer();
+}
+
+// END ->MXImplementer
+
+// BEGIN ->Model
+dc.dynamic $_$GT_Model(){
+return Ukddmlcotc_base.Model();
+}
+
+// END ->Model
+
+// BEGIN Cell
+class Cell extends Ukddmlcotc_base.MXImplementer {
+
+Cell():super();
+}
+
+// END Cell
+
+// BEGIN CellFormula
+class CellFormula extends Ukddmlcotc_base.Cell {
+
+CellFormula():super();
+}
+
+// END CellFormula
+
+// BEGIN MXImplementer
+class MXImplementer extends dc.Object {
+
+const MXImplementer():super();
+}
+
+// END MXImplementer
+
+// BEGIN Model
+class Model extends Ukddmlcotc_base.MXImplementer {
+
+Model():super();
+}
+
+// END Model
+
 // BEGIN c-assert
 Ukddmlcoc_core.IFn$iface c_assert=Ukddmlcotc_base.c_assert$ifn(null, );
 
@@ -134,7 +194,7 @@ return (const Ukddmlcoc_core.Keyword(null, "ephemeral?", 1490396932, ).$_invoke$
 
 // BEGIN c-formula?
 dc.dynamic c_formula$QMARK_(dc.dynamic c$1, ){
-return Ukddmlcotc_base.ia_type$QMARK_(c$1, const Ukddmlcoc_core.Keyword("tiltontec.cell.base", "c-formula", 3605123231, ), );
+return (Ukddmlcotc_base.mx_type(c$1, ) is Ukddmlcotc_base.CellFormula);
 }
 
 // END c-formula?
@@ -241,13 +301,8 @@ return (const Ukddmlcoc_core.Keyword(null, "pulse-observed", 3279039537, ).$_inv
 // END c-pulse-observed
 
 // BEGIN c-ref?
-dc.dynamic c_ref$QMARK_(dc.dynamic x$1, ){
-final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(1, Ukddmlcotc_base.ia_type(x$1, ), ));
-final Ukddmlcoc_core.PersistentHashSet $2=Ukddmlcoc_core.$set_(fl$1, );
-final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword("tiltontec.cell.base", "cell", 1861696144, ), ));
-fl$2[1]=const Ukddmlcoc_core.Keyword("tiltontec.cell.base", "c-formula", 3605123231, );
-final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$2, );
-return Ukddmlcoc_core.some($2, $1, );
+dc.dynamic c_ref$QMARK_(dc.dynamic c$1, ){
+return (Ukddmlcotc_base.mx_type(c$1, ) is Ukddmlcotc_base.Cell);
 }
 
 // END c-ref?
@@ -378,7 +433,7 @@ return (Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "valid
 // BEGIN c-value
 dc.dynamic c_value(dc.dynamic c$1, ){
 assert((){
-final dc.dynamic test$1=Ukddmlcotu_core.any_ref$QMARK_(c$1, );
+final dc.dynamic test$1=Ukddmlcotu_core.atom$QMARK_(c$1, );
 late final dc.bool $if_$1;
 if(((test$1!=false)&&(test$1!=null))){
 $if_$1=true;
@@ -387,7 +442,7 @@ $if_$1=false;
 }
 return $if_$1;
 }(), (){
-final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "any-ref?", )), ));
+final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2(null, "atom?", )), ));
 fl$1[1]=(Ukddmlcoc_core.symbol.$_invoke$2(null, "c", ));
 final Ukddmlcoc_core.PersistentList $1=Ukddmlcoc_core.$_list_lit(fl$1, );
 final dc.String $2=(Ukddmlcoc_core.pr_str.$_invoke$1($1, ));
@@ -618,7 +673,7 @@ dc.dynamic cinfo(dc.dynamic c$1, ){
 if((null==(c$1 as dc.dynamic))){
 return const Ukddmlcoc_core.Keyword(null, "null-c", 4199929031, );
 }
-final dc.dynamic test$1=Ukddmlcotu_core.any_ref$QMARK_(c$1, );
+final dc.dynamic test$1=Ukddmlcotu_core.atom$QMARK_(c$1, );
 late final dc.bool $if_$1;
 if(((test$1!=false)&&(test$1!=null))){
 $if_$1=false;
@@ -700,34 +755,9 @@ dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
 
 // END cpr$ifn
 
-// BEGIN ia-type
-dc.dynamic ia_type(dc.dynamic it$1, ){
-final dc.dynamic o7419$1=it$1;
-late final dc.dynamic temp$7110_$AUTO_$1;
-if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
-temp$7110_$AUTO_$1=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
-}else{
-temp$7110_$AUTO_$1=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
-}
-if(((temp$7110_$AUTO_$1!=false)&&(temp$7110_$AUTO_$1!=null))){
-final dc.dynamic m$1=temp$7110_$AUTO_$1;
-return (const Ukddmlcoc_core.Keyword(null, "type", 3318123983, ).$_invoke$1(m$1, ));
-}
-return null;
-}
-
-// END ia-type
-
-// BEGIN ia-type?
-dc.dynamic ia_type$QMARK_(dc.dynamic it$1, dc.dynamic typ$1, ){
-return (Ukddmlcoc_core.$EQ_.$_invoke$2(Ukddmlcotc_base.ia_type(it$1, ), typ$1, ));
-}
-
-// END ia-type?
-
 // BEGIN md-ref?
 dc.dynamic md_ref$QMARK_(dc.dynamic x$1, ){
-return Ukddmlcotu_core.any_ref$QMARK_(x$1, );
+return (Ukddmlcotc_base.mx_type(x$1, ) is Ukddmlcotc_base.Model);
 }
 
 // END md-ref?
@@ -756,6 +786,24 @@ return false;
 }
 
 // END mdead?
+
+// BEGIN mx-type
+dc.dynamic mx_type(dc.dynamic it$1, ){
+final dc.dynamic o7419$1=it$1;
+late final dc.dynamic temp$7110_$AUTO_$1;
+if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
+temp$7110_$AUTO_$1=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+}else{
+temp$7110_$AUTO_$1=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
+}
+if(((temp$7110_$AUTO_$1!=false)&&(temp$7110_$AUTO_$1!=null))){
+final dc.dynamic m$1=temp$7110_$AUTO_$1;
+return (const Ukddmlcoc_core.Keyword(null, "mx-type", 3172713989, ).$_invoke$1(m$1, ));
+}
+return null;
+}
+
+// END mx-type
 
 // BEGIN pcell
 dc.dynamic pcell(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic tag$1, dc.dynamic c$1, ){
@@ -868,12 +916,12 @@ return $if_$1;
 // BEGIN unlink-from-callers
 dc.dynamic unlink_from_callers(dc.dynamic c$1, ){
 Ukddmlcoc_core.LazySeq(null, ((){
-dc.dynamic iter$8862_$1(dc.dynamic coll$8863_$2, ){
-dc.dynamic coll$8863_$1=coll$8863_$2;
+dc.dynamic iter$11370_$1(dc.dynamic coll$11371_$2, ){
+dc.dynamic coll$11371_$1=coll$11371_$2;
 do {
-if(((coll$8863_$1!=false)&&(coll$8863_$1!=null))){
-if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$8863_$1, )){
-final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$8863_$1, );
+if(((coll$11371_$1!=false)&&(coll$11371_$1!=null))){
+if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$11371_$1, )){
+final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$11371_$1, );
 final dc.dynamic coll7285$3=c$7899_$AUTO_$2;
 late final dc.int size$7900_$AUTO_$2;
 if((coll7285$3 is Ukddmlcoc_core.ICounted$iface)){
@@ -914,18 +962,18 @@ return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7898_$AUTO_$2, ), Ukdd
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-return iter$8862_$1(Ukddmlcoc_core.chunk_next(coll$8863_$1, ), );
+return iter$11370_$1(Ukddmlcoc_core.chunk_next(coll$11371_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-coll$8863_$1=Ukddmlcoc_core.chunk_next(coll$8863_$1, );
+coll$11371_$1=Ukddmlcoc_core.chunk_next(coll$11371_$1, );
 continue;
 }
-final dc.dynamic caller$4=Ukddmlcoc_core.first(coll$8863_$1, );
+final dc.dynamic caller$4=Ukddmlcoc_core.first(coll$11371_$1, );
 return Ukddmlcoc_core.cons(Ukddmlcotc_base.caller_drop(c$1, caller$4, ), Ukddmlcoc_core.LazySeq(null, ((){
-return iter$8862_$1(Ukddmlcoc_core.next(coll$8863_$1, ), );
+return iter$11370_$1(Ukddmlcoc_core.next(coll$11371_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 return null;
@@ -938,7 +986,7 @@ $if_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-return iter$8862_$1($if_$1, );
+return iter$11370_$1($if_$1, );
 } as dc.dynamic), null, -1, );
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "callers", 2360236984, ), ));
 fl$1[1]=c$1;

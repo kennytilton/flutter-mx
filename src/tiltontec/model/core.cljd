@@ -7,7 +7,7 @@
     [tiltontec.cell.base
      :refer [without-c-dependency model
              cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input?  ia-type
+             c-unbound? c-input?  mx-type
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
@@ -52,7 +52,7 @@
 
 (defn md-getx [tag me slot]
   (md-get me slot)
-  #_(wtrx [0 100 (str "md-getx " tag slot (ia-type me))]
+  #_(wtrx [0 100 (str "md-getx " tag slot (mx-type me))]
       (if-let [c (md-cell me slot)]
         (c-get c)
         (slot @me))))
@@ -76,7 +76,7 @@
       (println :reset-meta (meta me))
       (println :cz (:cz (meta me)))
       (if (contains? @me slot)
-        (err str "change not mediated by cell " slot "/" (ia-type me))
+        (err str "change not mediated by cell " slot "/" (mx-type me))
         (err str "change to slot not mediated by cell and map lacks slot "
           slot "
          ;; but has " (str (keys @me))
@@ -99,7 +99,7 @@
 (defn make [& arg-list]
   ;; (prn :make-entry (count arg-list) (first arg-list))
   (cond
-    (odd? (count arg-list)) (apply make :type arg-list)
+    (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (do
       ;;(println :md-making (nth arg-list 1))
@@ -110,14 +110,14 @@
                    (->> arg-list
                      (partition 2)
                      (filter (fn [[slot v]]
-                               (not (= :type slot))))
+                               (not (= :mx-type slot))))
                      (map (fn [[k v]]
                             (vector k (if (c-ref? v)
                                         unbound
                                         v))))
                      (into {})))
                  :meta {:state :nascent
-                        :type (:type iargs :cty/model)})]
+                        :mx-type (:mx-type iargs (cty/Model.))})]
         (assert (meta me))
         #_(when-not (:par @me)
             (println :no-par!!!! me))
@@ -158,17 +158,14 @@
           (not-to-be k))))))
 
 (deftype Family []
-  :extends cty/->Model
-  cty/PObserver
-  (observe [this slot me new prior c]
-    (error :type-family-observe-NYI slot me new)))
+  :extends cty/Model)
 
 (defn make-family [& arg-list]
   ;; todo avoid repeated register
   (cond
     ;; a bit sketchy: if arg-list is odd we assume they started with a type
     ;; todo make better
-    (odd? (count arg-list)) (apply make :type arg-list)
+    (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (apply make
       :mx-type (Family.)
@@ -189,9 +186,11 @@
     (fn? seek) (do                                          ;; (println :trying-fn)
                  (seek poss))
     (keyword? seek) (do
-                      ;; (trx :fm-navig-eq?sees seek (:name @poss) (ia-type poss))
+                      ;; (trx :fm-navig-eq?sees seek (:name @poss) (mx-type poss))
                       (or (= seek (:name @poss))
-                        (= (ia-type poss) seek)))
+                        ;; search for types will have to be converted to function tests
+                        ;; with explicit types coded
+                        #_ (= (mx-type poss) seek)))
     :else (do (trx :fm-navig-eq?-else-pplain=! seek)
               (= seek poss))))
 
@@ -305,10 +304,10 @@
 
 (defn mxu-find-type
   "Search matrix ascendants only from node 'me' for first with given tag"
-  [me type]
+  [me explicit=type-test]
   (assert me)
-  (fasc (fn [visited]
-          (= type (ia-type visited))) me))
+  ;; explicit-type-test will have to be like (fn [me] (dart/is? (mx-type me) TScaffold))
+  (fasc explicit=type-test me))
 
 (defn fmi-w-class [where class]
   (fm-navig #(when (atom? %)
