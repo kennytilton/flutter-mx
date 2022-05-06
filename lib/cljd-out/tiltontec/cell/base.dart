@@ -1018,12 +1018,12 @@ return $if_$1;
 // BEGIN unlink-from-callers
 dc.dynamic unlink_from_callers(dc.dynamic c$1, ){
 Ukddmlcoc_core.LazySeq(null, ((){
-dc.dynamic iter$14576_$1(dc.dynamic coll$14577_$2, ){
-dc.dynamic coll$14577_$1=coll$14577_$2;
+dc.dynamic iter$8878_$1(dc.dynamic coll$8879_$2, ){
+dc.dynamic coll$8879_$1=coll$8879_$2;
 do {
-if(((coll$14577_$1!=false)&&(coll$14577_$1!=null))){
-if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$14577_$1, )){
-final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$14577_$1, );
+if(((coll$8879_$1!=false)&&(coll$8879_$1!=null))){
+if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$8879_$1, )){
+final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$8879_$1, );
 final dc.dynamic coll7285$3=c$7899_$AUTO_$2;
 late final dc.int size$7900_$AUTO_$2;
 if((coll7285$3 is Ukddmlcoc_core.ICounted$iface)){
@@ -1064,18 +1064,18 @@ return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7898_$AUTO_$2, ), Ukdd
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-return iter$14576_$1(Ukddmlcoc_core.chunk_next(coll$14577_$1, ), );
+return iter$8878_$1(Ukddmlcoc_core.chunk_next(coll$8879_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-coll$14577_$1=Ukddmlcoc_core.chunk_next(coll$14577_$1, );
+coll$8879_$1=Ukddmlcoc_core.chunk_next(coll$8879_$1, );
 continue;
 }
-final dc.dynamic caller$4=Ukddmlcoc_core.first(coll$14577_$1, );
+final dc.dynamic caller$4=Ukddmlcoc_core.first(coll$8879_$1, );
 return Ukddmlcoc_core.cons(Ukddmlcotc_base.caller_drop(c$1, caller$4, ), Ukddmlcoc_core.LazySeq(null, ((){
-return iter$14576_$1(Ukddmlcoc_core.next(coll$14577_$1, ), );
+return iter$8878_$1(Ukddmlcoc_core.next(coll$8879_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 return null;
@@ -1088,7 +1088,7 @@ $if_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-return iter$14576_$1($if_$1, );
+return iter$8878_$1($if_$1, );
 } as dc.dynamic), null, -1, );
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "callers", 2360236984, ), ));
 fl$1[1]=c$1;

@@ -12,7 +12,7 @@ import "../cljd/core.dart" as Ukddmlcoc_core;
 
 // BEGIN run-tests
 dc.dynamic run_tests(){
-Ukddmlcottm_core.run_tests();
+Ukddmlcottf_kids.run_tests();
 return (Ukddmlcoc_core.prn.$_invoke$1("testing-OK-except-kids-queiescing", ));
 }
 

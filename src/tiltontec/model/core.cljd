@@ -5,7 +5,7 @@
     [tiltontec.util.core
      :refer [difference atom? type-of err rmap-setf rmap-meta-setf pln]]
     [tiltontec.cell.base
-     :refer [without-c-dependency model
+     :refer [without-c-dependency model PObserver
              cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? mx-type
              c-model mdead? c-valid? c-useds c-ref? md-ref?
@@ -97,13 +97,13 @@
   (rmap-setf [slot me] new-value))
 
 (defn make [& arg-list]
-  (prn :make-entry (count arg-list) (first arg-list))
+  ;;(prn :make-entry (count arg-list) (first arg-list))
   (cond
     (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (do
       ;;(println :md-making (nth arg-list 1))
-      (prn :make-entry-even (count arg-list) arg-list)
+      ;; (prn :make-entry-even (count arg-list) arg-list)
 
       (let [iargs (apply hash-map arg-list)
             me (atom
@@ -162,7 +162,11 @@
           (not-to-be k))))))
 
 (deftype Family []
-  :extends cty/Model)
+  :extends cty/Model
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (when (= slot :kids)
+      (fm-kids-observe slot me new-value prior-value cell))))
 
 (defn make-family [& arg-list]
   ;; todo avoid repeated register

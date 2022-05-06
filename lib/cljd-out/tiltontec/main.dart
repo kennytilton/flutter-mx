@@ -1,3 +1,4 @@
+import "package:flutter/src/widgets/framework.dart" as fsw_framework;
 import "dart:core" as dc;
 import "example/hello-world.dart" as Ukddmlcoteh_world;
 import "testing.dart" as Ukddmlcot_testing;
@@ -13,6 +14,7 @@ import "../cljd/core.dart" as Ukddmlcoc_core;
 
 // BEGIN main
 dc.dynamic main(){
+f_material.runApp((Ukddmlcotmf_core.render_fx(Ukddmlcote_counter.make_app(), ) as fsw_framework.Widget), );
 return Ukddmlcot_testing.run_tests();
 }
 

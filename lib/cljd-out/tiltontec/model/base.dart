@@ -26,12 +26,12 @@ fl$1[1]=me$1;
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
 Ukddmlcotu_core.rmap_meta_setf($1, const Ukddmlcoc_core.Keyword(null, "awakening", 4238760111, ), );
 Ukddmlcoc_core.doall.$_invoke$1(Ukddmlcoc_core.LazySeq(null, ((){
-dc.dynamic iter$14947_$1(dc.dynamic coll$14948_$2, ){
-dc.dynamic coll$14948_$1=coll$14948_$2;
+dc.dynamic iter$9612_$1(dc.dynamic coll$9613_$2, ){
+dc.dynamic coll$9613_$1=coll$9613_$2;
 do {
-if(((coll$14948_$1!=false)&&(coll$14948_$1!=null))){
-if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$14948_$1, )){
-final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$14948_$1, );
+if(((coll$9613_$1!=false)&&(coll$9613_$1!=null))){
+if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$9613_$1, )){
+final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$9613_$1, );
 final dc.dynamic coll7285$3=c$7899_$AUTO_$2;
 late final dc.int size$7900_$AUTO_$2;
 if((coll7285$3 is Ukddmlcoc_core.ICounted$iface)){
@@ -79,25 +79,24 @@ $if_$6=false;
 $if_$6=true;
 }
 if($if_$6){
-Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "md-awaken-blind-obs", 3344225086, ), slot$3, Ukddmlcotc_base.cinfo(me$1, ), );
-final dc.dynamic this14552$3=Ukddmlcotc_base.mx_type(me$1, );
-final dc.dynamic slot14553$3=slot$3;
-final dc.dynamic me14554$3=me$1;
+final dc.dynamic this8853$3=Ukddmlcotc_base.mx_type(me$1, );
+final dc.dynamic slot8854$3=slot$3;
+final dc.dynamic me8855$3=me$1;
 final dc.dynamic arg$6=Ukddmlcoc_core.deref(me$1, );
-late final dc.dynamic new_value14555$3;
+late final dc.dynamic new_value8856$3;
 if((slot$3 is dc.Function)){
-new_value14555$3=(slot$3 as dc.Function)(arg$6, );
+new_value8856$3=(slot$3 as dc.Function)(arg$6, );
 }else if((slot$3 is Ukddmlcoc_core.IFn$iface)){
-new_value14555$3=((slot$3 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$6, ));
+new_value8856$3=((slot$3 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$6, ));
 }else{
-new_value14555$3=(Ukddmlcoc_core.IFn.extensions(slot$3, ).$_invoke$1(slot$3, arg$6, ));
+new_value8856$3=(Ukddmlcoc_core.IFn.extensions(slot$3, ).$_invoke$1(slot$3, arg$6, ));
 }
-final dc.dynamic prior_value14556$3=Ukddmlcotc_base.unbound;
-final dc.Null cell14557$3=null;
-if((this14552$3 is Ukddmlcotc_base.PObserver$iface)){
-$if_$7=((this14552$3 as Ukddmlcotc_base.PObserver$iface).observe$5(slot14553$3, (me14554$3 as dc.dynamic), new_value14555$3, (prior_value14556$3 as dc.dynamic), cell14557$3, ));
+final dc.dynamic prior_value8857$3=Ukddmlcotc_base.unbound;
+final dc.Null cell8858$3=null;
+if((this8853$3 is Ukddmlcotc_base.PObserver$iface)){
+$if_$7=((this8853$3 as Ukddmlcotc_base.PObserver$iface).observe$5(slot8854$3, (me8855$3 as dc.dynamic), new_value8856$3, (prior_value8857$3 as dc.dynamic), cell8858$3, ));
 }else{
-$if_$7=((Ukddmlcotc_base.PObserver.extensions((this14552$3 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this14552$3 as dc.dynamic), slot14553$3, (me14554$3 as dc.dynamic), new_value14555$3, (prior_value14556$3 as dc.dynamic), cell14557$3, ));
+$if_$7=((Ukddmlcotc_base.PObserver.extensions((this8853$3 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this8853$3 as dc.dynamic), slot8854$3, (me8855$3 as dc.dynamic), new_value8856$3, (prior_value8857$3 as dc.dynamic), cell8858$3, ));
 }
 }else{
 $if_$7=null;
@@ -128,16 +127,16 @@ return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7898_$AUTO_$2, ), Ukdd
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-return iter$14947_$1(Ukddmlcoc_core.chunk_next(coll$14948_$1, ), );
+return iter$9612_$1(Ukddmlcoc_core.chunk_next(coll$9613_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
 return null;
 }
-coll$14948_$1=Ukddmlcoc_core.chunk_next(coll$14948_$1, );
+coll$9613_$1=Ukddmlcoc_core.chunk_next(coll$9613_$1, );
 continue;
 }
-final dc.dynamic slot$4=Ukddmlcoc_core.first(coll$14948_$1, );
+final dc.dynamic slot$4=Ukddmlcoc_core.first(coll$9613_$1, );
 final dc.dynamic arg$7=Ukddmlcotm_base.md_cz(me$1, );
 late final dc.dynamic temp$7110_$AUTO_$4;
 if((slot$4 is dc.Function)){
@@ -165,25 +164,24 @@ $if_$8=false;
 $if_$8=true;
 }
 if($if_$8){
-Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "md-awaken-blind-obs", 3344225086, ), slot$4, Ukddmlcotc_base.cinfo(me$1, ), );
-final dc.dynamic this14552$4=Ukddmlcotc_base.mx_type(me$1, );
-final dc.dynamic slot14553$4=slot$4;
-final dc.dynamic me14554$4=me$1;
+final dc.dynamic this8853$4=Ukddmlcotc_base.mx_type(me$1, );
+final dc.dynamic slot8854$4=slot$4;
+final dc.dynamic me8855$4=me$1;
 final dc.dynamic arg$8=Ukddmlcoc_core.deref(me$1, );
-late final dc.dynamic new_value14555$4;
+late final dc.dynamic new_value8856$4;
 if((slot$4 is dc.Function)){
-new_value14555$4=(slot$4 as dc.Function)(arg$8, );
+new_value8856$4=(slot$4 as dc.Function)(arg$8, );
 }else if((slot$4 is Ukddmlcoc_core.IFn$iface)){
-new_value14555$4=((slot$4 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$8, ));
+new_value8856$4=((slot$4 as Ukddmlcoc_core.IFn$iface).$_invoke$1(arg$8, ));
 }else{
-new_value14555$4=(Ukddmlcoc_core.IFn.extensions(slot$4, ).$_invoke$1(slot$4, arg$8, ));
+new_value8856$4=(Ukddmlcoc_core.IFn.extensions(slot$4, ).$_invoke$1(slot$4, arg$8, ));
 }
-final dc.dynamic prior_value14556$4=Ukddmlcotc_base.unbound;
-final dc.Null cell14557$4=null;
-if((this14552$4 is Ukddmlcotc_base.PObserver$iface)){
-$if_$9=((this14552$4 as Ukddmlcotc_base.PObserver$iface).observe$5((slot14553$4 as dc.dynamic), (me14554$4 as dc.dynamic), new_value14555$4, (prior_value14556$4 as dc.dynamic), cell14557$4, ));
+final dc.dynamic prior_value8857$4=Ukddmlcotc_base.unbound;
+final dc.Null cell8858$4=null;
+if((this8853$4 is Ukddmlcotc_base.PObserver$iface)){
+$if_$9=((this8853$4 as Ukddmlcotc_base.PObserver$iface).observe$5((slot8854$4 as dc.dynamic), (me8855$4 as dc.dynamic), new_value8856$4, (prior_value8857$4 as dc.dynamic), cell8858$4, ));
 }else{
-$if_$9=((Ukddmlcotc_base.PObserver.extensions((this14552$4 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this14552$4 as dc.dynamic), (slot14553$4 as dc.dynamic), (me14554$4 as dc.dynamic), new_value14555$4, (prior_value14556$4 as dc.dynamic), cell14557$4, ));
+$if_$9=((Ukddmlcotc_base.PObserver.extensions((this8853$4 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this8853$4 as dc.dynamic), (slot8854$4 as dc.dynamic), (me8855$4 as dc.dynamic), new_value8856$4, (prior_value8857$4 as dc.dynamic), cell8858$4, ));
 }
 }else{
 $if_$9=null;
@@ -195,7 +193,7 @@ $if_$9=Ukddmlcotc_evaluate.c_awaken(c$4, );
 $if_$9=null;
 }
 return Ukddmlcoc_core.cons($if_$9, Ukddmlcoc_core.LazySeq(null, ((){
-return iter$14947_$1(Ukddmlcoc_core.next(coll$14948_$1, ), );
+return iter$9612_$1(Ukddmlcoc_core.next(coll$9613_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 return null;
@@ -208,7 +206,7 @@ $if_$10=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
 $if_$10=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
 }
-return iter$14947_$1($if_$10, );
+return iter$9612_$1($if_$10, );
 } as dc.dynamic), null, -1, ), );
 final dc.List<dc.dynamic> fl$10=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "state", 1750323599, ), ));
 fl$10[1]=me$1;

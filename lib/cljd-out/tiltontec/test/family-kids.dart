@@ -281,7 +281,7 @@ return $35;
 // BEGIN run-tests
 dc.dynamic run_tests(){
 Ukddmlcottf_kids.k_notq2be();
-return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "family-kids-NOT!!!!-OK", 1246442629, ), ));
+return (Ukddmlcoc_core.prn.$_invoke$1(const Ukddmlcoc_core.Keyword(null, "family-kids-OK", 3506674248, ), ));
 }
 
 // END run-tests
