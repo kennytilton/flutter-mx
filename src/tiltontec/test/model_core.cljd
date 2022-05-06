@@ -40,12 +40,12 @@
                           :name :konzo
                           :kzo (cI 3))))))]
     (assert (not (some #{:mx-type} (keys @u))))
-    (prn :u-keys (keys @u))
+    ;;(prn :u-keys (keys @u))
     (assert (nil? (:kids @u)))
-    (prn :u-cells (:cz (meta u)) (meta u))
+    ;;(prn :u-cells (:cz (meta u)) (meta u))
     (let [kc (md-cell u :kids)
           kon (md-cell u :kon)]
-      (prn :resetting-cell kon)
+      ;;(prn :resetting-cell kon)
       (c-reset! kon true)
       (assert (= 1 (count (:kids @u))))
       (assert (md/fm-navig :konzo u :inside? true))
@@ -183,7 +183,6 @@
     (assert (nil? (md-cell me :age)))
     ))
 
-#_
 (defn mm-install-alive []
   (let [bct (atom 0)
         res (do ;; sync
@@ -226,7 +225,6 @@
     (assert (zero? @bct))
     ))
 
-#_
 (defn hello-model []
   (let [uni (md/make-family
               :kids (cF (the-kids
@@ -283,21 +281,21 @@
 (defn run-tests []
   (fm-0)
   (prn :fm-0 :ok)
-  ;(fm-2)
-  ;(prn :fm-2 :ok)
-  ;(fm-3)
-  ;(prn :fm-3 :ok)
-  ;(fm-3x)
-  ;(prn :fm-3x :ok)
-  ;(fm-picker)
-  ;(prn :fm-picker :ok)
-  ;(mm-typed)
-  ;(prn :fm-mm-typed :ok)
-  ;(mm-opti-1)
+  (fm-2)
+  (prn :fm-2 :ok)
+  (fm-3)
+  (prn :fm-3 :ok)
+  (fm-3x)
+  (prn :fm-3x :ok)
+  (fm-picker)
+  (prn :fm-picker :ok)
+  (mm-typed)
+  (prn :fm-mm-typed :ok)
+  (mm-opti-1)
 
-  ;(prn :fm-opti-1 :ok)
-  ;(mm-install-alive)
-  ;(prn :fm-in-alive :ok)
-  ;(hello-model)
+  (prn :fm-opti-1 :ok)
+  (mm-install-alive)
+  (prn :fm-in-alive :ok)
+  (hello-model)
   (prn :model-core-OK)
   )

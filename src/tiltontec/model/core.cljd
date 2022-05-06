@@ -111,15 +111,13 @@
                                (->> arg-list
                                  (partition 2)
                                  (filter (fn [[slot v]]
-                                           (prn :make-sees-arg-k slot)
                                            (not (= :mx-type slot))))
                                  (map (fn [[k v]]
-                                        (prn :make-got-k k)
                                         (vector k (if (c-ref? v)
                                                     unbound
                                                     v))))
                                  (into {})))]
-                   (prn :mdmap-keys (keys mdmap))
+                   ;; (prn :mdmap-keys (keys mdmap))
                    mdmap)
                  :meta {:state   :nascent
                         :mx-type (:mx-type iargs (cty/Model.))})]
@@ -131,9 +129,8 @@
           (->> arg-list
             (partition 2)
             (filter (fn [[slot v]]
-                      ;; todo we need :cell nil dont we
-                      (when-not (some #{slot} [:par :mx-type :not-to-be])
-                        (prn :md-make-installing-cz slot v)
+                      (when-not (some #{slot} [:par :name :mx-type :not-to-be])
+                        ;; (prn :md-make-installing-cz slot v)
                         (md-install-cell me slot v))))
             (map vec)
             (into {})))
