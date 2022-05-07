@@ -39,28 +39,29 @@
                                                   nil))
                                    :tooltip "Increment"
                                    :child (Icon. Icons/add :color Colors/black)))}
-      (center {:name :center-widget} {}
-        (column {:name :ctr-column}
+      (center {} {}
+        (column {}
           {:mainAxisAlignment MainAxisAlignment/center}
-          (text {:name :you-have} {:style (TextStyle.
-                                               :color m.Colors/black
-                                               :fontSize 18.0)}
+          (text {}
+            {:style (TextStyle.
+                      :color m.Colors/black
+                      :fontSize 18.0)}
             "You have clicked the button so many times:")
           (text {:name    :z-counter
-                    :z-count (cI 0)}
-            ;; a custom builder is the best I can think of to make the Dart context
-            ;; available to someone coding a Matrix widget
+                 :z-count (cI 0)}
+            ;; a custom builder can access Dart context
             {:builder (fn [me ctx]
                         (Text. (str (mget me :z-count))
                           :style (.headline4 (.textTheme (Theme/of ctx)))))}
-            (str (mget me :z-count)))
+            (mget me :z-count))
           (text
-            {:name :z-counter-x4
-             :value (cF (* 4 (md/fmuv :value :z-counter-x2)))}
-            {}
+            {:value (cF (* 4 (md/fmuv :value :z-counter-x2)))}
+            {:style (cF (TextStyle.
+                          :color m.Colors/red
+                          :fontSize (+ 8.0 (mget me :value))))}
             (str "Button click times eight = " (mget me :value)))
           (text
-            {:name :z-counter-x2
+            {:name  :z-counter-x2
              :value (cF (* 2 (md/fmuv :z-count :z-counter)))}
             {}
             (str "Button click times two = " (mget me :value))))))))
