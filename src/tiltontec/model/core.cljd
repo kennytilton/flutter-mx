@@ -291,6 +291,9 @@
 ;  :me? false
 ;  :inside? false :must? false :up? true)
 
+(defmacro my-val []
+  `(mget ~'me :value))
+
 (defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
@@ -302,6 +305,18 @@
     `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
        (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~slot))
+       (mget other# ~slot))))
+
+(defmacro fmuval [name & [slot me]]
+  (let [slot (or slot ':value)
+        me-ref (or me 'me)]
+    `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
+                    ~me-ref :me? false :up? true :inside? false)]
+
+
+       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~slot))
+       (prn :found-other other#)
+       (prn :getslot ~slot)
        (mget other# ~slot))))
 
 (defn mxu-find-id

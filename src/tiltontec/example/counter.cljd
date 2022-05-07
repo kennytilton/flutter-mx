@@ -35,7 +35,7 @@
                                                 (let [zc (md/fm-navig :z-counter me
                                                            :me? false
                                                            :inside? true :must? true :up? true)]
-                                                  (md/mswap! zc :z-count inc)
+                                                  (md/mswap! zc :value inc)
                                                   nil))
                                    :tooltip "Increment"
                                    :child (Icon. Icons/add :color Colors/black)))}
@@ -48,21 +48,22 @@
                       :fontSize 18.0)}
             "You have clicked the button so many times:")
           (text {:name    :z-counter
-                 :z-count (cI 0)}
+                 :value (cI 0)}
             ;; a custom builder can access Dart context
             {:builder (fn [me ctx]
-                        (Text. (str (mget me :z-count))
+                        (Text. (str (md/my-val))
                           :style (.headline4 (.textTheme (Theme/of ctx)))))}
-            (mget me :z-count))
+            ;; todo fix this redundancy with builder
+            (mget me :value))
           (text
-            {:value (cF (* 4 (md/fmuv :value :z-counter-x2)))}
+            {:value (cF (* 4 (md/fmuval :z-counter-x2)))}
             {:style (cF (TextStyle.
                           :color m.Colors/red
-                          :fontSize (+ 8.0 (mget me :value))))}
-            (str "Button click times eight = " (mget me :value)))
+                          :fontSize (+ 8.0 (md/my-val))))}
+            (str "Button click times eight = " (md/my-val)))
           (text
             {:name  :z-counter-x2
-             :value (cF (* 2 (md/fmuv :z-count :z-counter)))}
+             :value (cF (* 2 (md/fmuval :z-counter)))}
             {}
-            (str "Button click times two = " (mget me :value))))))))
+            (str "Button click times two = " (md/my-val))))))))
 
