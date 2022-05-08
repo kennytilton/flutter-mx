@@ -300,6 +300,13 @@
        (fm-navig #(= name# (md-get % :name))
          ~me-ref :me? false :up? true :inside? false))))
 
+(defmacro fm* [name & [me]]
+  ;; todo this needs to look for more than just name
+  (let [me-ref (or me 'me)]
+    `(let [name# ~name]
+       (fm-navig #(= name# (md-get % :name))
+         ~me-ref :me? true :up? true :inside? true))))
+
 (defmacro fmuv [slot name & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
@@ -312,11 +319,7 @@
         me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-
-
        (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~slot))
-       (prn :found-other other#)
-       (prn :getslot ~slot)
        (mget other# ~slot))))
 
 (defn mxu-find-id

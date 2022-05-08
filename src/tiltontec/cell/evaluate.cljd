@@ -188,27 +188,10 @@
   (binding [*depender* c
             *call-stack* (cons c *call-stack*)
             *defer-changes* true]
-
-    ;; this binding seems always to be OK, so this never fires:
     (assert (= c (first *call-stack*)) "callstack binding FAIL!!!")
-
-    (if (= c *depender*)
-      ;; this next will always succeed for the "kids" slot
-      (do
-        #_ (prn :depender-OK (cinfo *depender*) :callstack (map cinfo *call-stack*)))
-      ;; this will appear when :zx2 (:z-count times 2) fires during app initial display, when
-      ;; things are force-evaluated to get them going; it will not appear when we click
-      ;; on the (+) button.
-      (prn :FAIL!!!!-input-c (cinfo c) :not-the-bound (cinfo *depender*)
-        :callstack (map cinfo *call-stack*)))
-
-    ;; un-comment this next to fail on app launch, before it ever gets going
-    ;; leave it commented to see the same binding start working when we click the (+)
     (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
-
     (unlink-from-used c :pre-rule-clear)
     (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
-
     (let [raw-value ((c-rule c) c)
           prop-code? (and (c-synaptic? c)
                        (vector? raw-value)

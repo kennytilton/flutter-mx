@@ -21,7 +21,7 @@ final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.model.core", "*par*", )), ));
 fl$1[1]=me$1;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$1, );
-final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
+final dc.dynamic prev_bindings$7990_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
 try {
 assert((){
 late final dc.bool $if_$1;
@@ -51,7 +51,7 @@ final dc.dynamic $3=Ukddmlcoc_core.flatten($2, );
 final dc.dynamic $4=(Ukddmlcoc_core.remove.$_invoke$2(Ukddmlcoc_core.nil$QMARK_, $3, ));
 return (Ukddmlcoc_core.doall.$_invoke$1($4, ));
 } finally {
-Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$1, );
+Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7990_$AUTO_$1, );
 }
 }, )), ));
 assert((){
@@ -64,12 +64,12 @@ $if_$3=false;
 return $if_$3;
 }(), (Ukddmlcoc_core.str.$_invoke$1("k-notq2be bad family", )));
 assert((){
-final dc.dynamic o7205$1=Ukddmlcotm_core.md_get(f$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
+final dc.dynamic o7250$1=Ukddmlcotm_core.md_get(f$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
 late final dc.dynamic $if_$4;
-if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$4=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$1 is Ukddmlcoc_core.ISeqable$iface)){
+$if_$4=((o7250$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$4=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+$if_$4=((Ukddmlcoc_core.ISeqable.extensions((o7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$1 as dc.dynamic), ));
 }
 late final dc.bool $if_$5;
 if((($if_$4!=false)&&($if_$4!=null))){
@@ -98,12 +98,12 @@ return $8;
 }());
 Ukddmlcotm_core.md_reset$BANG_(f$1, const Ukddmlcoc_core.Keyword(null, "ee", 3906437433, ), 3, );
 assert((){
-final dc.dynamic o7205$2=Ukddmlcotm_core.md_get(f$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
+final dc.dynamic o7250$2=Ukddmlcotm_core.md_get(f$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
 late final dc.dynamic $if_$7;
-if((o7205$2 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$7=((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$2 is Ukddmlcoc_core.ISeqable$iface)){
+$if_$7=((o7250$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$7=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$2 as dc.dynamic), ));
+$if_$7=((Ukddmlcoc_core.ISeqable.extensions((o7250$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$2 as dc.dynamic), ));
 }
 late final dc.bool $if_$8;
 if((($if_$7!=false)&&($if_$7!=null))){
@@ -182,12 +182,12 @@ return $20;
 }());
 Ukddmlcotm_core.md_reset$BANG_(f$1, const Ukddmlcoc_core.Keyword(null, "ee", 3906437433, ), 0, );
 assert((){
-final dc.dynamic o7205$3=Ukddmlcotm_core.md_get(f$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
+final dc.dynamic o7250$3=Ukddmlcotm_core.md_get(f$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), );
 late final dc.dynamic $if_$13;
-if((o7205$3 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$13=((o7205$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$3 is Ukddmlcoc_core.ISeqable$iface)){
+$if_$13=((o7250$3 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$13=((Ukddmlcoc_core.ISeqable.extensions((o7205$3 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$3 as dc.dynamic), ));
+$if_$13=((Ukddmlcoc_core.ISeqable.extensions((o7250$3 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$3 as dc.dynamic), ));
 }
 late final dc.bool $if_$14;
 if((($if_$13!=false)&&($if_$13!=null))){
@@ -215,12 +215,12 @@ final dc.String $24=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $23, ));
 return $24;
 }());
 final dc.dynamic arg$1=Ukddmlcoc_core.deref(dmw$1, );
-final dc.dynamic o7419$1=dmw$1;
+final dc.dynamic o7464$1=dmw$1;
 late final dc.dynamic $if_$16;
-if((o7419$1 is Ukddmlcoc_core.IMeta$iface)){
-$if_$16=((o7419$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+if((o7464$1 is Ukddmlcoc_core.IMeta$iface)){
+$if_$16=((o7464$1 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
 }else{
-$if_$16=((Ukddmlcoc_core.IMeta.extensions((o7419$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$1 as dc.dynamic), ));
+$if_$16=((Ukddmlcoc_core.IMeta.extensions((o7464$1 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7464$1 as dc.dynamic), ));
 }
 Ukddmlcoc_core.prn.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "dmw", 2893195304, ), arg$1, const Ukddmlcoc_core.Keyword(null, "meta", 569132720, ), $if_$16, );
 assert((){
@@ -243,12 +243,12 @@ final dc.String $28=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $27, ));
 return $28;
 }());
 assert((){
-final dc.dynamic o7419$2=dmw$1;
+final dc.dynamic o7464$2=dmw$1;
 late final dc.dynamic $if_$18;
-if((o7419$2 is Ukddmlcoc_core.IMeta$iface)){
-$if_$18=((o7419$2 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
+if((o7464$2 is Ukddmlcoc_core.IMeta$iface)){
+$if_$18=((o7464$2 as Ukddmlcoc_core.IMeta$iface).$_meta$0());
 }else{
-$if_$18=((Ukddmlcoc_core.IMeta.extensions((o7419$2 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7419$2 as dc.dynamic), ));
+$if_$18=((Ukddmlcoc_core.IMeta.extensions((o7464$2 as dc.dynamic), ) as Ukddmlcoc_core.IMeta$ext).$_meta$0((o7464$2 as dc.dynamic), ));
 }
 final dc.dynamic $29=(const Ukddmlcoc_core.Keyword("tiltontec.cell.base", "state", 839314916, ).$_invoke$1($if_$18, ));
 final dc.bool $30=(Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "dead", 1188903448, ), $29, ));

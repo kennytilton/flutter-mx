@@ -21,6 +21,11 @@
      :refer [fn-obs]]
     ))
 
+;; support both :body/:child/:children and trailing :un-keyed
+;; maybe support dedicated Flutter opts for easy extension
+;; have the render work as part of protocol?
+
+
 (defn make-app []
   (material-app {:name :mat-app}
     {:title "Welcome to mxFlutter World"
@@ -30,15 +35,11 @@
                                :title (Text. "mxFlutter  Home Page"))
        :floatingActionButton (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
-                                                ;; todo ugh. navigation.
-                                                ;; todo inside is necessary because me is the scaffold
-                                                (let [zc (md/fm-navig :z-counter me
-                                                           :me? false
-                                                           :inside? true :must? true :up? true)]
-                                                  (md/mswap! zc :value inc)
-                                                  nil))
+                                                (md/mswap! (md/fm* :z-counter)
+                                                  :value inc))
                                    :tooltip "Increment"
-                                   :child (Icon. Icons/add :color Colors/black)))}
+                                   :child (Icon. Icons/add
+                                            :color Colors/black)))}
       (center {} {}
         (column {}
           {:mainAxisAlignment MainAxisAlignment/center}
@@ -46,24 +47,19 @@
             {:style (TextStyle.
                       :color m.Colors/black
                       :fontSize 18.0)}
-            "You have clicked the button so many times:")
+            "You have clicked the button this many times:")
           (text {:name    :z-counter
                  :value (cI 0)}
             ;; a custom builder can access Dart context
             {:builder (fn [me ctx]
                         (Text. (str (md/my-val))
-                          :style (.headline4 (.textTheme (Theme/of ctx)))))}
-            ;; todo fix this redundancy with builder
-            (mget me :value))
+                          :style (.headline4 (.textTheme (Theme/of ctx)))))})
           (text
-            {:value (cF (* 4 (md/fmuval :z-counter-x2)))}
-            {:style (cF (TextStyle.
-                          :color m.Colors/red
-                          :fontSize (+ 8.0 (md/my-val))))}
-            (str "Button click times eight = " (md/my-val)))
-          (text
-            {:name  :z-counter-x2
+            {:name  :zx2
              :value (cF (* 2 (md/fmuval :z-counter)))}
             {}
             (str "Button click times two = " (md/my-val))))))))
+
+
+
 

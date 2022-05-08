@@ -60,14 +60,14 @@ final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
 final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), ));
 fl$2[1]=null;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$2, );
-final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
+final dc.dynamic prev_bindings$7990_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
 try {
 final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), ));
 fl$3[1]=const Ukddmlcoc_core.Keyword(null, "bb", 2460325491, );
 Ukddmlcoc_core.$_vec_owning(fl$3, );
 return ((Ukddmlcotc_evaluate.c_get(a$1, ) as dc.num)/2);
 } finally {
-Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$1, );
+Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7990_$AUTO_$1, );
 }
 }, ));
 final dc.dynamic c$1=(Ukddmlcotc_core.make_c_formula.$_invoke$4(const Ukddmlcoc_core.Keyword(null, "value", 1949978408, ), Ukddmlcotc_base.unbound, const Ukddmlcoc_core.Keyword(null, "rule", 1345366267, ), (dc.dynamic slot_c$SHARP_$2, ){
@@ -188,14 +188,14 @@ final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
 final dc.List<dc.dynamic> fl$2=(dc.List<dc.dynamic>.filled(2, (Ukddmlcoc_core.symbol.$_invoke$2("tiltontec.cell.base", "*depender*", )), ));
 fl$2[1]=null;
 final Ukddmlcoc_core.PersistentHashMap $1=Ukddmlcoc_core.$_map_lit(fl$2, );
-final dc.dynamic prev_bindings$7945_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
+final dc.dynamic prev_bindings$7990_$AUTO_$1=Ukddmlcoc_core.push_dynamic_bindings($1, );
 try {
 final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "slot", 2880527776, ), ));
 fl$3[1]=const Ukddmlcoc_core.Keyword(null, "bb", 2460325491, );
 Ukddmlcoc_core.$_vec_owning(fl$3, );
 return ((Ukddmlcotc_evaluate.c_get(a$1, ) as dc.num)/2);
 } finally {
-Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7945_$AUTO_$1, );
+Ukddmlcoc_core.restore_dynamic_bindings(prev_bindings$7990_$AUTO_$1, );
 }
 }, ));
 Ukddmlcoc_core.println.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "bbb", 570510341, ), b$1, );
@@ -317,9 +317,9 @@ final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
 Ukddmlcotu_base.call_trc.$_invoke$2(null, const Ukddmlcoc_core.Keyword(null, "bingo", 3833510852, ), );
 Ukddmlcoc_core.swap$BANG_.$_invoke$2(crun$1, Ukddmlcoc_core.inc, );
-final dc.String result$8781_$AUTO_$1=(Ukddmlcoc_core.str.$_invoke$2("Hi ", Ukddmlcotc_evaluate.c_get(b$1, ), ));
+final dc.String result$8826_$AUTO_$1=(Ukddmlcoc_core.str.$_invoke$2("Hi ", Ukddmlcotc_evaluate.c_get(b$1, ), ));
 Ukddmlcotu_base.call_trc.$_invoke$3(null, const Ukddmlcoc_core.Keyword(null, "cellread!!", 2800551982, ), Ukddmlcoc_core.deref(b$1, ), );
-return result$8781_$AUTO_$1;
+return result$8826_$AUTO_$1;
 }, ], ));
 assert((){
 final dc.dynamic test$1=Ukddmlcotc_base.c_rule(c$3, );
@@ -1507,12 +1507,12 @@ final dc.String $11=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $10, ));
 return $11;
 }());
 assert((){
-final dc.dynamic o7205$1=Ukddmlcotu_core.fifo_data(q$1, );
+final dc.dynamic o7250$1=Ukddmlcotu_core.fifo_data(q$1, );
 late final dc.dynamic $if_$4;
-if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$4=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$1 is Ukddmlcoc_core.ISeqable$iface)){
+$if_$4=((o7250$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$4=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+$if_$4=((Ukddmlcoc_core.ISeqable.extensions((o7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$1 as dc.dynamic), ));
 }
 late final dc.bool $if_$5;
 if((($if_$4!=false)&&($if_$4!=null))){

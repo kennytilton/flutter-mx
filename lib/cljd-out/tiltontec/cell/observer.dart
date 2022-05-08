@@ -30,8 +30,8 @@ dc.dynamic $_meta$0(){
 return meta$1;
 }
 
-dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcotc_observer.c_observe$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
+dc.dynamic $_with_meta$1(dc.dynamic m$2058_$AUTO_$1, ){
+return Ukddmlcotc_observer.c_observe$ifn((m$2058_$AUTO_$1 as dc.dynamic), );
 }
 
 dc.dynamic $_invoke$2(dc.dynamic c$1, dc.dynamic why$1, ){
@@ -80,25 +80,25 @@ final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_co
 fl$4[1]=c$2;
 final Ukddmlcoc_core.PersistentVector $8=Ukddmlcoc_core.$_vec_owning(fl$4, );
 Ukddmlcotu_core.rmap_setf($8, Ukddmlcoc_core.deref(Ukddmlcotc_base.$PLUS_pulse$PLUS_, ), );
-final dc.dynamic temp$7110_$AUTO_$1=Ukddmlcotc_base.mx_type(Ukddmlcotc_base.c_model(c$2, ), );
-if(((temp$7110_$AUTO_$1!=false)&&(temp$7110_$AUTO_$1!=null))){
-final dc.dynamic mx_type$1=temp$7110_$AUTO_$1;
-final dc.dynamic this8853$1=mx_type$1;
-final dc.dynamic slot8854$1=Ukddmlcotc_base.c_slot(c$2, );
-final dc.dynamic me8855$1=Ukddmlcotc_base.c_model(c$2, );
-final dc.dynamic new_value8856$1=Ukddmlcotc_base.c_value(c$2, );
-final dc.dynamic prior_value8857$1=prior_value$1;
-final dc.dynamic cell8858$1=c$2;
-if((this8853$1 is Ukddmlcotc_base.PObserver$iface)){
-(this8853$1 as Ukddmlcotc_base.PObserver$iface).observe$5((slot8854$1 as dc.dynamic), (me8855$1 as dc.dynamic), (new_value8856$1 as dc.dynamic), (prior_value8857$1 as dc.dynamic), (cell8858$1 as dc.dynamic), );
+final dc.dynamic temp$7155_$AUTO_$1=Ukddmlcotc_base.mx_type(Ukddmlcotc_base.c_model(c$2, ), );
+if(((temp$7155_$AUTO_$1!=false)&&(temp$7155_$AUTO_$1!=null))){
+final dc.dynamic mx_type$1=temp$7155_$AUTO_$1;
+final dc.dynamic this8898$1=mx_type$1;
+final dc.dynamic slot8899$1=Ukddmlcotc_base.c_slot(c$2, );
+final dc.dynamic me8900$1=Ukddmlcotc_base.c_model(c$2, );
+final dc.dynamic new_value8901$1=Ukddmlcotc_base.c_value(c$2, );
+final dc.dynamic prior_value8902$1=prior_value$1;
+final dc.dynamic cell8903$1=c$2;
+if((this8898$1 is Ukddmlcotc_base.PObserver$iface)){
+(this8898$1 as Ukddmlcotc_base.PObserver$iface).observe$5((slot8899$1 as dc.dynamic), (me8900$1 as dc.dynamic), (new_value8901$1 as dc.dynamic), (prior_value8902$1 as dc.dynamic), (cell8903$1 as dc.dynamic), );
 }else{
-(Ukddmlcotc_base.PObserver.extensions((this8853$1 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this8853$1 as dc.dynamic), (slot8854$1 as dc.dynamic), (me8855$1 as dc.dynamic), (new_value8856$1 as dc.dynamic), (prior_value8857$1 as dc.dynamic), (cell8858$1 as dc.dynamic), );
+(Ukddmlcotc_base.PObserver.extensions((this8898$1 as dc.dynamic), ) as Ukddmlcotc_base.PObserver$ext).observe$5((this8898$1 as dc.dynamic), (slot8899$1 as dc.dynamic), (me8900$1 as dc.dynamic), (new_value8901$1 as dc.dynamic), (prior_value8902$1 as dc.dynamic), (cell8903$1 as dc.dynamic), );
 }
 }else{
 }
-final dc.dynamic temp$7110_$AUTO_$2=(const Ukddmlcoc_core.Keyword(null, "obs", 999449665, ).$_invoke$1(Ukddmlcoc_core.deref(c$2, ), ));
-if(((temp$7110_$AUTO_$2!=false)&&(temp$7110_$AUTO_$2!=null))){
-final dc.dynamic cell_observer$1=temp$7110_$AUTO_$2;
+final dc.dynamic temp$7155_$AUTO_$2=(const Ukddmlcoc_core.Keyword(null, "obs", 999449665, ).$_invoke$1(Ukddmlcoc_core.deref(c$2, ), ));
+if(((temp$7155_$AUTO_$2!=false)&&(temp$7155_$AUTO_$2!=null))){
+final dc.dynamic cell_observer$1=temp$7155_$AUTO_$2;
 final dc.dynamic arg$3=Ukddmlcotc_base.c_slot(c$2, );
 final dc.dynamic arg$2=Ukddmlcotc_base.c_model(c$2, );
 final dc.dynamic arg$1=Ukddmlcotc_base.c_value(c$2, );
@@ -133,26 +133,26 @@ dc.dynamic $_meta$0(){
 return meta$1;
 }
 
-dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcotc_observer.fn_obs$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
+dc.dynamic $_with_meta$1(dc.dynamic m$2058_$AUTO_$1, ){
+return Ukddmlcotc_observer.fn_obs$ifn((m$2058_$AUTO_$1 as dc.dynamic), );
 }
 
 dc.dynamic $_invoke$vararg(dc.dynamic $AMPERSAND_form$1, dc.dynamic $AMPERSAND_env$1, dc.dynamic body$1, ){
 final dc.dynamic arg$1=(Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2("cljd.core", "fn", )), ));
-final dc.dynamic o7205$1=(Ukddmlcoc_core.concat.$_invoke$5((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "slot", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "me", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "old", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "c", )), )), ));
+final dc.dynamic o7250$1=(Ukddmlcoc_core.concat.$_invoke$5((Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "slot", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "me", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "new", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "old", )), )), (Ukddmlcoc_core.list.$_invoke$1((Ukddmlcoc_core.symbol.$_invoke$2(null, "c", )), )), ));
 late final dc.dynamic $if_$1;
-if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$1 is Ukddmlcoc_core.ISeqable$iface)){
+$if_$1=((o7250$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+$if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$1 as dc.dynamic), ));
 }
 final dc.dynamic $1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.vector, $if_$1, ));
 final dc.dynamic $2=(Ukddmlcoc_core.list.$_invoke$1($1, ));
-final dc.dynamic o7205$2=(Ukddmlcoc_core.concat.$_invoke$3(arg$1, $2, body$1, ));
-if((o7205$2 is Ukddmlcoc_core.ISeqable$iface)){
-return ((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+final dc.dynamic o7250$2=(Ukddmlcoc_core.concat.$_invoke$3(arg$1, $2, body$1, ));
+if((o7250$2 is Ukddmlcoc_core.ISeqable$iface)){
+return ((o7250$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }
-return ((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$2 as dc.dynamic), ));
+return ((Ukddmlcoc_core.ISeqable.extensions((o7250$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$2 as dc.dynamic), ));
 }
 
 dc.dynamic noSuchMethod(i)=>super.noSuchMethod(i);
@@ -165,22 +165,22 @@ dc.dynamic observe(dc.dynamic slot_name$1, dc.dynamic me$1, dc.dynamic new_val$1
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, slot_name$1, ));
 fl$1[1]=Ukddmlcotu_base.type_cljd(me$1, );
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
-final dc.dynamic temp$7105_$AUTO_$1=Ukddmlcotc_observer.observer_get($1, );
+final dc.dynamic temp$7150_$AUTO_$1=Ukddmlcotc_observer.observer_get($1, );
 late final dc.dynamic obs$4;
-if(((temp$7105_$AUTO_$1!=false)&&(temp$7105_$AUTO_$1!=null))){
-final dc.dynamic obs$1=temp$7105_$AUTO_$1;
+if(((temp$7150_$AUTO_$1!=false)&&(temp$7150_$AUTO_$1!=null))){
+final dc.dynamic obs$1=temp$7150_$AUTO_$1;
 Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "using-slot-obs", 2692743790, ), slot_name$1, Ukddmlcotu_base.type_cljd(me$1, ), );
 obs$4=obs$1;
 }else{
-final dc.dynamic temp$7105_$AUTO_$2=Ukddmlcotc_observer.observer_get(Ukddmlcotu_base.type_cljd(me$1, ), );
-if(((temp$7105_$AUTO_$2!=false)&&(temp$7105_$AUTO_$2!=null))){
-final dc.dynamic obs$2=temp$7105_$AUTO_$2;
+final dc.dynamic temp$7150_$AUTO_$2=Ukddmlcotc_observer.observer_get(Ukddmlcotu_base.type_cljd(me$1, ), );
+if(((temp$7150_$AUTO_$2!=false)&&(temp$7150_$AUTO_$2!=null))){
+final dc.dynamic obs$2=temp$7150_$AUTO_$2;
 Ukddmlcoc_core.prn.$_invoke$3(const Ukddmlcoc_core.Keyword(null, "using-type-obs", 905353006, ), slot_name$1, Ukddmlcotu_base.type_cljd(me$1, ), );
 obs$4=obs$2;
 }else{
-final dc.dynamic temp$7105_$AUTO_$3=Ukddmlcoc_core.deref(Ukddmlcotc_observer.$PLUS_observe_default_handler$PLUS_, );
-if(((temp$7105_$AUTO_$3!=false)&&(temp$7105_$AUTO_$3!=null))){
-final dc.dynamic obs$3=temp$7105_$AUTO_$3;
+final dc.dynamic temp$7150_$AUTO_$3=Ukddmlcoc_core.deref(Ukddmlcotc_observer.$PLUS_observe_default_handler$PLUS_, );
+if(((temp$7150_$AUTO_$3!=false)&&(temp$7150_$AUTO_$3!=null))){
+final dc.dynamic obs$3=temp$7150_$AUTO_$3;
 obs$4=obs$3;
 }else if((Ukddmlcoc_core.$EQ_.$_invoke$2(slot_name$1, const Ukddmlcoc_core.Keyword(null, "kids", 2210488826, ), ))){
 obs$4=null;

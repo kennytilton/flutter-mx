@@ -26,7 +26,9 @@
 (deftype FXDartWidget []
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_(prn :FXDartWidget-fall-thru slot (keys @me)))
+    ;; (prn :FXDartWidget-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
+    (when-let [^State state (:state-ref (meta me))]
+      (.setState state (fn [] (do)))))
   PDartWidget
   (parts [this]
     [:no-parts]))
@@ -36,7 +38,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXMatapp-observing!!!)))
+    (prn :FXMatapp-NULL-observing!!!)))
 
 (deftype FXScaffold []
   ;;:type-only true
@@ -51,7 +53,7 @@
   PDartWidget
   (parts [this]
     [:child :style])
-  PObserver
+  #_ #_ PObserver
   (observe [this slot me new-value prior-value cell]
     (prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
     (when-let [^State state (:state-ref (meta me))]

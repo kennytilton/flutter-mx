@@ -5,9 +5,9 @@ import "dart:math" as d_math;
 
 // BEGIN blank?
 dc.bool blank$QMARK_(dc.dynamic s$1, ){
-final dc.bool or$7123_$AUTO_$1=(null==(s$1 as dc.String?));
-if(or$7123_$AUTO_$1){
-return or$7123_$AUTO_$1;
+final dc.bool or$7168_$AUTO_$1=(null==(s$1 as dc.String?));
+if(or$7168_$AUTO_$1){
+return or$7168_$AUTO_$1;
 }
 return (Ukddmlcoc_core.$EQ_.$_invoke$2("", Ukddmlcoc_string.trim((s$1 as dc.String?), ), ));
 }
@@ -16,12 +16,12 @@ return (Ukddmlcoc_core.$EQ_.$_invoke$2("", Ukddmlcoc_string.trim((s$1 as dc.Stri
 
 // BEGIN capitalize
 dc.String capitalize(dc.dynamic s$1, ){
-final dc.String coll7285$1=(s$1 as dc.String);
+final dc.String coll7330$1=(s$1 as dc.String);
 late final dc.int cast$1;
-if((coll7285$1 is Ukddmlcoc_core.ICounted$iface)){
-cast$1=(((coll7285$1 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
+if((coll7330$1 is Ukddmlcoc_core.ICounted$iface)){
+cast$1=(((coll7330$1 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
 }else{
-cast$1=(((Ukddmlcoc_core.ICounted.extensions(coll7285$1, ) as Ukddmlcoc_core.ICounted$ext).$_count$0(coll7285$1, )) as dc.int);
+cast$1=(((Ukddmlcoc_core.ICounted.extensions(coll7330$1, ) as Ukddmlcoc_core.ICounted$ext).$_count$0(coll7330$1, )) as dc.int);
 }
 final dc.bool $1=(cast$1<2);
 if($1){
@@ -42,30 +42,30 @@ return ((s$1 as dc.String).endsWith((substr$1 as dc.String), ));
 // BEGIN escape
 dc.String escape(dc.dynamic s$1, dc.dynamic cmap$1, ){
 final dc.StringBuffer sb$1=dc.StringBuffer();
-final dc.String coll7265$1=(s$1 as dc.String);
-void f7266$1(dc.dynamic p1$8742_$SHARP_$1, dc.dynamic p2$8741_$SHARP_$1, ){
-late final dc.dynamic temp$7105_$AUTO_$1;
+final dc.String coll7310$1=(s$1 as dc.String);
+void f7311$1(dc.dynamic p1$8787_$SHARP_$1, dc.dynamic p2$8786_$SHARP_$1, ){
+late final dc.dynamic temp$7150_$AUTO_$1;
 if((cmap$1 is dc.Function)){
-temp$7105_$AUTO_$1=(cmap$1 as dc.Function)(p2$8741_$SHARP_$1, );
+temp$7150_$AUTO_$1=(cmap$1 as dc.Function)(p2$8786_$SHARP_$1, );
 }else if((cmap$1 is Ukddmlcoc_core.IFn$iface)){
-temp$7105_$AUTO_$1=((cmap$1 as Ukddmlcoc_core.IFn$iface).$_invoke$1(p2$8741_$SHARP_$1, ));
+temp$7150_$AUTO_$1=((cmap$1 as Ukddmlcoc_core.IFn$iface).$_invoke$1(p2$8786_$SHARP_$1, ));
 }else{
-temp$7105_$AUTO_$1=(Ukddmlcoc_core.IFn.extensions(cmap$1, ).$_invoke$1(cmap$1, p2$8741_$SHARP_$1, ));
+temp$7150_$AUTO_$1=(Ukddmlcoc_core.IFn.extensions(cmap$1, ).$_invoke$1(cmap$1, p2$8786_$SHARP_$1, ));
 }
 late final dc.dynamic $if_$1;
-if(((temp$7105_$AUTO_$1!=false)&&(temp$7105_$AUTO_$1!=null))){
-final dc.dynamic replacement$1=temp$7105_$AUTO_$1;
+if(((temp$7150_$AUTO_$1!=false)&&(temp$7150_$AUTO_$1!=null))){
+final dc.dynamic replacement$1=temp$7150_$AUTO_$1;
 $if_$1=(Ukddmlcoc_core.str.$_invoke$1(replacement$1, ));
 }else{
-$if_$1=p2$8741_$SHARP_$1;
+$if_$1=p2$8786_$SHARP_$1;
 }
 return (sb$1.write($if_$1, ));
 }
-final dc.Null start7267$1=null;
-if((coll7265$1 is Ukddmlcoc_core.IReduce$iface)){
-(coll7265$1 as Ukddmlcoc_core.IReduce$iface).$_reduce$2(f7266$1, start7267$1, );
+final dc.Null start7312$1=null;
+if((coll7310$1 is Ukddmlcoc_core.IReduce$iface)){
+(coll7310$1 as Ukddmlcoc_core.IReduce$iface).$_reduce$2(f7311$1, start7312$1, );
 }else{
-(Ukddmlcoc_core.IReduce.extensions(coll7265$1, ) as Ukddmlcoc_core.IReduce$ext).$_reduce$2(coll7265$1, f7266$1, start7267$1, );
+(Ukddmlcoc_core.IReduce.extensions(coll7310$1, ) as Ukddmlcoc_core.IReduce$ext).$_reduce$2(coll7310$1, f7311$1, start7312$1, );
 }
 return (sb$1.toString());
 }
@@ -94,8 +94,8 @@ dc.dynamic $_meta$0(){
 return meta$1;
 }
 
-dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcoc_string.index_of$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
+dc.dynamic $_with_meta$1(dc.dynamic m$2058_$AUTO_$1, ){
+return Ukddmlcoc_string.index_of$ifn((m$2058_$AUTO_$1 as dc.dynamic), );
 }
 
 dc.dynamic $_invoke$2(dc.dynamic s$1, dc.dynamic value$1, ){
@@ -139,8 +139,8 @@ dc.dynamic $_meta$0(){
 return meta$1;
 }
 
-dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcoc_string.join$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
+dc.dynamic $_with_meta$1(dc.dynamic m$2058_$AUTO_$1, ){
+return Ukddmlcoc_string.join$ifn((m$2058_$AUTO_$1 as dc.dynamic), );
 }
 
 dc.dynamic $_invoke$1(dc.dynamic coll$1, ){
@@ -171,8 +171,8 @@ dc.dynamic $_meta$0(){
 return meta$1;
 }
 
-dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcoc_string.last_index_of$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
+dc.dynamic $_with_meta$1(dc.dynamic m$2058_$AUTO_$1, ){
+return Ukddmlcoc_string.last_index_of$ifn((m$2058_$AUTO_$1 as dc.dynamic), );
 }
 
 dc.dynamic $_invoke$2(dc.dynamic s$1, dc.dynamic value$1, ){
@@ -299,60 +299,60 @@ final dc.RegExp re$1=dc.RegExp("((?:[^\\\$\\\\]|\\\\.)+)|(?:\\\$([0-9]+))", );
 dc.dynamic vs$1=Ukddmlcoc_core.$_EMPTY_VECTOR;
 dc.dynamic i$1=0;
 do {
-final dc.Match? temp$7095_$AUTO_$1=(re$1.matchAsPrefix((replacement$1 as dc.String), (i$1 as dc.int), ));
-if((null==temp$7095_$AUTO_$1)){
-final dc.dynamic coll7285$1=vs$1;
+final dc.Match? temp$7140_$AUTO_$1=(re$1.matchAsPrefix((replacement$1 as dc.String), (i$1 as dc.int), ));
+if((null==temp$7140_$AUTO_$1)){
+final dc.dynamic coll7330$1=vs$1;
 late final dc.int cast$1;
-if((coll7285$1 is Ukddmlcoc_core.ICounted$iface)){
-cast$1=(((coll7285$1 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
+if((coll7330$1 is Ukddmlcoc_core.ICounted$iface)){
+cast$1=(((coll7330$1 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
 }else{
-cast$1=(((Ukddmlcoc_core.ICounted.extensions((coll7285$1 as dc.dynamic), ) as Ukddmlcoc_core.ICounted$ext).$_count$0((coll7285$1 as dc.dynamic), )) as dc.int);
+cast$1=(((Ukddmlcoc_core.ICounted.extensions((coll7330$1 as dc.dynamic), ) as Ukddmlcoc_core.ICounted$ext).$_count$0((coll7330$1 as dc.dynamic), )) as dc.int);
 }
-final dc.bool and$7082_$AUTO_$1=(Ukddmlcoc_core.$EQ_.$_invoke$2(1, cast$1, ));
+final dc.bool and$7127_$AUTO_$1=(Ukddmlcoc_core.$EQ_.$_invoke$2(1, cast$1, ));
 late final dc.bool $if_$1;
-if(and$7082_$AUTO_$1){
+if(and$7127_$AUTO_$1){
 $if_$1=(Ukddmlcoc_core.peek(vs$1, ) is dc.String);
 }else{
-$if_$1=and$7082_$AUTO_$1;
+$if_$1=and$7127_$AUTO_$1;
 }
 if($if_$1){
 return Ukddmlcoc_core.peek(vs$1, );
 }
 return (dc.dynamic m$1, ){
 final dc.StringBuffer sb$1=dc.StringBuffer();
-final dc.dynamic coll7265$1=vs$1;
-void f7266$1(dc.dynamic p1$8733_$SHARP_$1, dc.dynamic p2$8732_$SHARP_$1, ){
+final dc.dynamic coll7310$1=vs$1;
+void f7311$1(dc.dynamic p1$8778_$SHARP_$1, dc.dynamic p2$8777_$SHARP_$1, ){
 late final dc.dynamic $if_$2;
-if((p2$8732_$SHARP_$1 is dc.String)){
-$if_$2=p2$8732_$SHARP_$1;
+if((p2$8777_$SHARP_$1 is dc.String)){
+$if_$2=p2$8777_$SHARP_$1;
 }else{
-$if_$2=((m$1 as dc.Match).group((p2$8732_$SHARP_$1 as dc.int), ));
+$if_$2=((m$1 as dc.Match).group((p2$8777_$SHARP_$1 as dc.int), ));
 }
 return (sb$1.write($if_$2, ));
 }
-final dc.Null start7267$1=null;
-if((coll7265$1 is Ukddmlcoc_core.IReduce$iface)){
-(coll7265$1 as Ukddmlcoc_core.IReduce$iface).$_reduce$2(f7266$1, start7267$1, );
+final dc.Null start7312$1=null;
+if((coll7310$1 is Ukddmlcoc_core.IReduce$iface)){
+(coll7310$1 as Ukddmlcoc_core.IReduce$iface).$_reduce$2(f7311$1, start7312$1, );
 }else{
-(Ukddmlcoc_core.IReduce.extensions((coll7265$1 as dc.dynamic), ) as Ukddmlcoc_core.IReduce$ext).$_reduce$2((coll7265$1 as dc.dynamic), f7266$1, start7267$1, );
+(Ukddmlcoc_core.IReduce.extensions((coll7310$1 as dc.dynamic), ) as Ukddmlcoc_core.IReduce$ext).$_reduce$2((coll7310$1 as dc.dynamic), f7311$1, start7312$1, );
 }
 return (sb$1.toString());
 };
 }else{
-final dc.Match? m$2=temp$7095_$AUTO_$1;
-final dc.dynamic coll7250$1=vs$1;
-final dc.String? temp$7095_$AUTO_$2=((m$2 as dc.Match).group(1, ));
-late final dc.Comparable<dc.Comparable<dc.Object>> o7251$1;
-if((null==temp$7095_$AUTO_$2)){
-o7251$1=(dc.int.parse((((m$2 as dc.Match).group(2, )) as dc.String), ));
+final dc.Match? m$2=temp$7140_$AUTO_$1;
+final dc.dynamic coll7295$1=vs$1;
+final dc.String? temp$7140_$AUTO_$2=((m$2 as dc.Match).group(1, ));
+late final dc.Comparable<dc.Comparable<dc.Object>> o7296$1;
+if((null==temp$7140_$AUTO_$2)){
+o7296$1=(dc.int.parse((((m$2 as dc.Match).group(2, )) as dc.String), ));
 }else{
-final dc.String? r$1=temp$7095_$AUTO_$2;
-o7251$1=Ukddmlcoc_string.re_unquote_replacement(r$1, );
+final dc.String? r$1=temp$7140_$AUTO_$2;
+o7296$1=Ukddmlcoc_string.re_unquote_replacement(r$1, );
 }
-if((coll7250$1 is Ukddmlcoc_core.ICollection$iface)){
-vs$1=((coll7250$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1(o7251$1, ));
+if((coll7295$1 is Ukddmlcoc_core.ICollection$iface)){
+vs$1=((coll7295$1 as Ukddmlcoc_core.ICollection$iface).$_conj$1(o7296$1, ));
 }else{
-vs$1=((Ukddmlcoc_core.ICollection.extensions((coll7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7250$1 as dc.dynamic), o7251$1, ));
+vs$1=((Ukddmlcoc_core.ICollection.extensions((coll7295$1 as dc.dynamic), ) as Ukddmlcoc_core.ICollection$ext).$_conj$1((coll7295$1 as dc.dynamic), o7296$1, ));
 }
 i$1=(m$2 as dc.Match).end;
 continue;
@@ -408,8 +408,8 @@ dc.dynamic $_meta$0(){
 return meta$1;
 }
 
-dc.dynamic $_with_meta$1(dc.dynamic m$2054_$AUTO_$1, ){
-return Ukddmlcoc_string.split$ifn((m$2054_$AUTO_$1 as dc.dynamic), );
+dc.dynamic $_with_meta$1(dc.dynamic m$2058_$AUTO_$1, ){
+return Ukddmlcoc_string.split$ifn((m$2058_$AUTO_$1 as dc.dynamic), );
 }
 
 dc.dynamic $_invoke$2(dc.dynamic s$1, dc.dynamic re$1, ){
@@ -425,30 +425,30 @@ return (Ukddmlcoc_string.split.$_invoke$2(s$4, re$3, ));
 }
 dc.dynamic v$1=Ukddmlcoc_core.transient(Ukddmlcoc_core.$_EMPTY_VECTOR, );
 dc.dynamic i$1=0;
-final dc.dynamic o7205$1=(Ukddmlcoc_core.take.$_invoke$2(((limit$1 as dc.num)-1), (re$3.allMatches(s$4, )), ));
+final dc.dynamic o7250$1=(Ukddmlcoc_core.take.$_invoke$2(((limit$1 as dc.num)-1), (re$3.allMatches(s$4, )), ));
 dc.dynamic matches$1;
-if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-matches$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$1 is Ukddmlcoc_core.ISeqable$iface)){
+matches$1=((o7250$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-matches$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+matches$1=((Ukddmlcoc_core.ISeqable.extensions((o7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$1 as dc.dynamic), ));
 }
 do {
-final dc.dynamic temp$7095_$AUTO_$1=matches$1;
-if((null==(temp$7095_$AUTO_$1 as dc.dynamic))){
+final dc.dynamic temp$7140_$AUTO_$1=matches$1;
+if((null==(temp$7140_$AUTO_$1 as dc.dynamic))){
 return Ukddmlcoc_core.persistent$BANG_((Ukddmlcoc_core.conj$BANG_.$_invoke$2(v$1, (Ukddmlcoc_core.subs.$_invoke$2(s$4, i$1, )), )), );
 }
-final dc.dynamic vec$8738_$1=temp$7095_$AUTO_$1;
-final dc.dynamic o7205$2=vec$8738_$1;
-late final dc.dynamic seq$8739_$1;
-if((o7205$2 is Ukddmlcoc_core.ISeqable$iface)){
-seq$8739_$1=((o7205$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+final dc.dynamic vec$8783_$1=temp$7140_$AUTO_$1;
+final dc.dynamic o7250$2=vec$8783_$1;
+late final dc.dynamic seq$8784_$1;
+if((o7250$2 is Ukddmlcoc_core.ISeqable$iface)){
+seq$8784_$1=((o7250$2 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-seq$8739_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$2 as dc.dynamic), ));
+seq$8784_$1=((Ukddmlcoc_core.ISeqable.extensions((o7250$2 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$2 as dc.dynamic), ));
 }
-final dc.dynamic first$8740_$1=Ukddmlcoc_core.first(seq$8739_$1, );
-final dc.dynamic seq$8739_$2=Ukddmlcoc_core.next(seq$8739_$1, );
-final dc.Match m$1=(first$8740_$1 as dc.Match);
-final dc.dynamic matches$2=seq$8739_$2;
+final dc.dynamic first$8785_$1=Ukddmlcoc_core.first(seq$8784_$1, );
+final dc.dynamic seq$8784_$2=Ukddmlcoc_core.next(seq$8784_$1, );
+final dc.Match m$1=(first$8785_$1 as dc.Match);
+final dc.dynamic matches$2=seq$8784_$2;
 v$1=(Ukddmlcoc_core.conj$BANG_.$_invoke$2(v$1, (Ukddmlcoc_core.subs.$_invoke$3(s$4, i$1, m$1.start, )), ));
 i$1=m$1.end;
 matches$1=matches$2;
@@ -490,10 +490,10 @@ if((0==(index$1 as dc.dynamic))){
 return "";
 }
 final dc.String ch$1=((s$1 as dc.String)[(((index$1 as dc.num)-1) as dc.int)]);
-final dc.bool or$7123_$AUTO_$1=(Ukddmlcoc_core.$EQ_.$_invoke$2(ch$1, "\n", ));
+final dc.bool or$7168_$AUTO_$1=(Ukddmlcoc_core.$EQ_.$_invoke$2(ch$1, "\n", ));
 late final dc.bool $if_$1;
-if(or$7123_$AUTO_$1){
-$if_$1=or$7123_$AUTO_$1;
+if(or$7168_$AUTO_$1){
+$if_$1=or$7168_$AUTO_$1;
 }else{
 $if_$1=(Ukddmlcoc_core.$EQ_.$_invoke$2(ch$1, "\r", ));
 }

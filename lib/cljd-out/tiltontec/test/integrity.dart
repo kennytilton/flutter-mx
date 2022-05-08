@@ -227,87 +227,87 @@ final Ukddmlcoc_core.Atom obsd$1=(Ukddmlcoc_core.atom.$_invoke$1(Ukddmlcoc_core.
 dc.dynamic Function(dc.dynamic, dc.dynamic, dc.dynamic, dc.dynamic, dc.dynamic, ) obsr$1(dc.dynamic tag$1, ){
 return (dc.dynamic slot$1, dc.dynamic me$1, dc.dynamic $new_$1, dc.dynamic old$1, dc.dynamic c$1, ){
 final dc.dynamic o$1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.concat, (Ukddmlcoc_core.sort_by.$_invoke$2(Ukddmlcoc_core.first, Ukddmlcoc_core.LazySeq(null, ((){
-dc.dynamic iter$9195_$1(dc.dynamic coll$9196_$2, ){
-dc.dynamic coll$9196_$1=coll$9196_$2;
+dc.dynamic iter$9240_$1(dc.dynamic coll$9241_$2, ){
+dc.dynamic coll$9241_$1=coll$9241_$2;
 do {
-if(((coll$9196_$1!=false)&&(coll$9196_$1!=null))){
-if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$9196_$1, )){
-final dc.dynamic c$7899_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$9196_$1, );
-final dc.dynamic coll7285$3=c$7899_$AUTO_$2;
-late final dc.int size$7900_$AUTO_$2;
-if((coll7285$3 is Ukddmlcoc_core.ICounted$iface)){
-size$7900_$AUTO_$2=(((coll7285$3 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
+if(((coll$9241_$1!=false)&&(coll$9241_$1!=null))){
+if(Ukddmlcoc_core.chunked_seq$QMARK_(coll$9241_$1, )){
+final dc.dynamic c$7944_$AUTO_$2=Ukddmlcoc_core.chunk_first(coll$9241_$1, );
+final dc.dynamic coll7330$3=c$7944_$AUTO_$2;
+late final dc.int size$7945_$AUTO_$2;
+if((coll7330$3 is Ukddmlcoc_core.ICounted$iface)){
+size$7945_$AUTO_$2=(((coll7330$3 as Ukddmlcoc_core.ICounted$iface).$_count$0()) as dc.int);
 }else{
-size$7900_$AUTO_$2=(((Ukddmlcoc_core.ICounted.extensions((coll7285$3 as dc.dynamic), ) as Ukddmlcoc_core.ICounted$ext).$_count$0((coll7285$3 as dc.dynamic), )) as dc.int);
+size$7945_$AUTO_$2=(((Ukddmlcoc_core.ICounted.extensions((coll7330$3 as dc.dynamic), ) as Ukddmlcoc_core.ICounted$ext).$_count$0((coll7330$3 as dc.dynamic), )) as dc.int);
 }
-final Ukddmlcoc_core.ChunkBuffer buf$7898_$AUTO_$2=Ukddmlcoc_core.chunk_buffer(size$7900_$AUTO_$2, );
-late final dc.dynamic exit$7901_$AUTO_$2;
-dc.int i$7902_$AUTO_$2=0;
+final Ukddmlcoc_core.ChunkBuffer buf$7943_$AUTO_$2=Ukddmlcoc_core.chunk_buffer(size$7945_$AUTO_$2, );
+late final dc.dynamic exit$7946_$AUTO_$2;
+dc.int i$7947_$AUTO_$2=0;
 do {
-if((i$7902_$AUTO_$2<size$7900_$AUTO_$2)){
-final dc.dynamic coll7376$2=c$7899_$AUTO_$2;
-final dc.int n7377$2=i$7902_$AUTO_$2;
-late final dc.dynamic vec$9203_$1;
-if((coll7376$2 is Ukddmlcoc_core.IIndexed$iface)){
-vec$9203_$1=((coll7376$2 as Ukddmlcoc_core.IIndexed$iface).$_nth$1(n7377$2, ));
+if((i$7947_$AUTO_$2<size$7945_$AUTO_$2)){
+final dc.dynamic coll7421$2=c$7944_$AUTO_$2;
+final dc.int n7422$2=i$7947_$AUTO_$2;
+late final dc.dynamic vec$9248_$1;
+if((coll7421$2 is Ukddmlcoc_core.IIndexed$iface)){
+vec$9248_$1=((coll7421$2 as Ukddmlcoc_core.IIndexed$iface).$_nth$1(n7422$2, ));
 }else{
-vec$9203_$1=((Ukddmlcoc_core.IIndexed.extensions((coll7376$2 as dc.dynamic), ) as Ukddmlcoc_core.IIndexed$ext).$_nth$1((coll7376$2 as dc.dynamic), n7377$2, ));
+vec$9248_$1=((Ukddmlcoc_core.IIndexed.extensions((coll7421$2 as dc.dynamic), ) as Ukddmlcoc_core.IIndexed$ext).$_nth$1((coll7421$2 as dc.dynamic), n7422$2, ));
 }
-final dc.dynamic k$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9203_$1, 0, null, ));
-final dc.dynamic v$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9203_$1, 1, null, ));
+final dc.dynamic k$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9248_$1, 0, null, ));
+final dc.dynamic v$3=(Ukddmlcoc_core.nth.$_invoke$3(vec$9248_$1, 1, null, ));
 final dc.List<dc.dynamic> fl$3=(dc.List<dc.dynamic>.filled(2, k$3, ));
 fl$3[1]=Ukddmlcotc_evaluate.cget(v$3, );
 final Ukddmlcoc_core.PersistentVector $4=Ukddmlcoc_core.$_vec_owning(fl$3, );
-final dc.dynamic or$7123_$AUTO_$2=Ukddmlcoc_core.chunk_append(buf$7898_$AUTO_$2, $4, );
-if(((or$7123_$AUTO_$2!=false)&&(or$7123_$AUTO_$2!=null))){
-exit$7901_$AUTO_$2=or$7123_$AUTO_$2;
+final dc.dynamic or$7168_$AUTO_$2=Ukddmlcoc_core.chunk_append(buf$7943_$AUTO_$2, $4, );
+if(((or$7168_$AUTO_$2!=false)&&(or$7168_$AUTO_$2!=null))){
+exit$7946_$AUTO_$2=or$7168_$AUTO_$2;
 }else{
-i$7902_$AUTO_$2=(1+i$7902_$AUTO_$2);
+i$7947_$AUTO_$2=(1+i$7947_$AUTO_$2);
 continue;
 }
 }else{
-exit$7901_$AUTO_$2=null;
+exit$7946_$AUTO_$2=null;
 }
 break;
 } while(true);
-final Ukddmlcoc_core.ChunkBuffer coll7285$4=buf$7898_$AUTO_$2;
-final dc.int cast$2=((coll7285$4.$_count$0()) as dc.int);
+final Ukddmlcoc_core.ChunkBuffer coll7330$4=buf$7943_$AUTO_$2;
+final dc.int cast$2=((coll7330$4.$_count$0()) as dc.int);
 final dc.bool $5=(0<cast$2);
 if($5){
-return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7898_$AUTO_$2, ), Ukddmlcoc_core.LazySeq(null, ((){
-if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
+return Ukddmlcoc_core.chunk_cons(Ukddmlcoc_core.chunk(buf$7943_$AUTO_$2, ), Ukddmlcoc_core.LazySeq(null, ((){
+if(((exit$7946_$AUTO_$2!=false)&&(exit$7946_$AUTO_$2!=null))){
 return null;
 }
-return iter$9195_$1(Ukddmlcoc_core.chunk_next(coll$9196_$1, ), );
+return iter$9240_$1(Ukddmlcoc_core.chunk_next(coll$9241_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
-if(((exit$7901_$AUTO_$2!=false)&&(exit$7901_$AUTO_$2!=null))){
+if(((exit$7946_$AUTO_$2!=false)&&(exit$7946_$AUTO_$2!=null))){
 return null;
 }
-coll$9196_$1=Ukddmlcoc_core.chunk_next(coll$9196_$1, );
+coll$9241_$1=Ukddmlcoc_core.chunk_next(coll$9241_$1, );
 continue;
 }
-final dc.dynamic vec$9206_$1=Ukddmlcoc_core.first(coll$9196_$1, );
-final dc.dynamic k$4=(Ukddmlcoc_core.nth.$_invoke$3(vec$9206_$1, 0, null, ));
-final dc.dynamic v$4=(Ukddmlcoc_core.nth.$_invoke$3(vec$9206_$1, 1, null, ));
+final dc.dynamic vec$9251_$1=Ukddmlcoc_core.first(coll$9241_$1, );
+final dc.dynamic k$4=(Ukddmlcoc_core.nth.$_invoke$3(vec$9251_$1, 0, null, ));
+final dc.dynamic v$4=(Ukddmlcoc_core.nth.$_invoke$3(vec$9251_$1, 1, null, ));
 final dc.List<dc.dynamic> fl$4=(dc.List<dc.dynamic>.filled(2, k$4, ));
 fl$4[1]=Ukddmlcotc_evaluate.cget(v$4, );
 final Ukddmlcoc_core.PersistentVector $6=Ukddmlcoc_core.$_vec_owning(fl$4, );
 return Ukddmlcoc_core.cons($6, Ukddmlcoc_core.LazySeq(null, ((){
-return iter$9195_$1(Ukddmlcoc_core.next(coll$9196_$1, ), );
+return iter$9240_$1(Ukddmlcoc_core.next(coll$9241_$1, ), );
 } as dc.dynamic), null, -1, ), );
 }
 return null;
 } while(true);
 }
-final dc.dynamic o7205$1=Ukddmlcoc_core.deref(obs$1, );
+final dc.dynamic o7250$1=Ukddmlcoc_core.deref(obs$1, );
 late final dc.dynamic $if_$1;
-if((o7205$1 is Ukddmlcoc_core.ISeqable$iface)){
-$if_$1=((o7205$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
+if((o7250$1 is Ukddmlcoc_core.ISeqable$iface)){
+$if_$1=((o7250$1 as Ukddmlcoc_core.ISeqable$iface).$_seq$0());
 }else{
-$if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7205$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7205$1 as dc.dynamic), ));
+$if_$1=((Ukddmlcoc_core.ISeqable.extensions((o7250$1 as dc.dynamic), ) as Ukddmlcoc_core.ISeqable$ext).$_seq$0((o7250$1 as dc.dynamic), ));
 }
-return iter$9195_$1($if_$1, );
+return iter$9240_$1($if_$1, );
 } as dc.dynamic), null, -1, ), )), ));
 final dc.List<dc.dynamic> fl$5=(dc.List<dc.dynamic>.filled(1, Ukddmlcotc_evaluate.cget((const Ukddmlcoc_core.Keyword(null, "a", 4109976970, ).$_invoke$1(Ukddmlcoc_core.deref(obs$1, ), )), ), ));
 final Ukddmlcoc_core.PersistentVector $7=Ukddmlcoc_core.$_vec_owning(fl$5, );
@@ -547,11 +547,11 @@ final dc.String $52=(Ukddmlcoc_core.str.$_invoke$2("Assert failed: ", $51, ));
 return $52;
 }());
 Ukddmlcoc_core.println.$_invoke$1(Ukddmlcoc_core.deref(obsd$1, ), );
-final dc.dynamic coll7265$1=Ukddmlcoc_core.deref(obsd$1, );
-dc.Null f7266$1(dc.dynamic acc$9209_$1, dc.dynamic p$9210_$1, ){
-final dc.dynamic vec$9211_$1=p$9210_$1;
-final dc.dynamic k$5=(Ukddmlcoc_core.nth.$_invoke$3(vec$9211_$1, 0, null, ));
-final dc.dynamic v$5=(Ukddmlcoc_core.nth.$_invoke$3(vec$9211_$1, 1, null, ));
+final dc.dynamic coll7310$1=Ukddmlcoc_core.deref(obsd$1, );
+dc.Null f7311$1(dc.dynamic acc$9254_$1, dc.dynamic p$9255_$1, ){
+final dc.dynamic vec$9256_$1=p$9255_$1;
+final dc.dynamic k$5=(Ukddmlcoc_core.nth.$_invoke$3(vec$9256_$1, 0, null, ));
+final dc.dynamic v$5=(Ukddmlcoc_core.nth.$_invoke$3(vec$9256_$1, 1, null, ));
 assert((){
 final dc.dynamic test$1=(Ukddmlcoc_core.apply.$_invoke$2(Ukddmlcoc_core.$EQ_, v$5, ));
 late final dc.bool $if_$8;
@@ -572,11 +572,11 @@ return $55;
 }());
 return null;
 }
-final dc.Null start7267$1=null;
-if((coll7265$1 is Ukddmlcoc_core.IReduce$iface)){
-return ((coll7265$1 as Ukddmlcoc_core.IReduce$iface).$_reduce$2(f7266$1, start7267$1, ));
+final dc.Null start7312$1=null;
+if((coll7310$1 is Ukddmlcoc_core.IReduce$iface)){
+return ((coll7310$1 as Ukddmlcoc_core.IReduce$iface).$_reduce$2(f7311$1, start7312$1, ));
 }
-return ((Ukddmlcoc_core.IReduce.extensions((coll7265$1 as dc.dynamic), ) as Ukddmlcoc_core.IReduce$ext).$_reduce$2((coll7265$1 as dc.dynamic), f7266$1, start7267$1, ));
+return ((Ukddmlcoc_core.IReduce.extensions((coll7310$1 as dc.dynamic), ) as Ukddmlcoc_core.IReduce$ext).$_reduce$2((coll7310$1 as dc.dynamic), f7311$1, start7312$1, ));
 }
 
 // END obs-sees-current
@@ -653,34 +653,34 @@ throw dc.Exception((Ukddmlcoc_core.str.$_invoke$2("c-reset-next!> deferred chang
 }
 final dc.List<dc.dynamic> fl$5=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "c-reset-next!", 1670863618, ), ));
 fl$5[1]=(dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
-final dc.dynamic c$9071_$AUTO_$1=alarm$1;
-final dc.dynamic o7428$1=$new_$1;
+final dc.dynamic c$9116_$AUTO_$1=alarm$1;
+final dc.dynamic o7473$1=$new_$1;
 late final dc.int hash$1;
-if((o7428$1 is Ukddmlcoc_core.IHash$iface)){
-hash$1=(((o7428$1 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
+if((o7473$1 is Ukddmlcoc_core.IHash$iface)){
+hash$1=(((o7473$1 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
 }else{
-hash$1=(((Ukddmlcoc_core.IHash.extensions((o7428$1 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7428$1 as dc.dynamic), )) as dc.int);
+hash$1=(((Ukddmlcoc_core.IHash.extensions((o7473$1 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7473$1 as dc.dynamic), )) as dc.int);
 }
-late final dc.dynamic new_value$9072_$AUTO_$1;
+late final dc.dynamic new_value$9117_$AUTO_$1;
 switch(hash$1){
 case 2635448847:
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "home", 2635448847, ), $new_$1, ))){
-new_value$9072_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "off", 3049131293, );
+new_value$9117_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "off", 3049131293, );
 }else{
 continue _default;
 }
 break;
 case 683598338:
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "away", 683598338, ), $new_$1, ))){
-new_value$9072_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "on", 3621113931, );
+new_value$9117_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "on", 3621113931, );
 }else{
 continue _default;
 }
 break;
 _default: default:
-new_value$9072_$AUTO_$1=(Ukddmlcotu_core.err.$_invoke$1((Ukddmlcoc_core.str.$_invoke$2("unexpected loc ", $new_$1, )), ));
+new_value$9117_$AUTO_$1=(Ukddmlcotu_core.err.$_invoke$1((Ukddmlcoc_core.str.$_invoke$2("unexpected loc ", $new_$1, )), ));
 }
-return Ukddmlcotc_core.call_c_reset_next$BANG_(c$9071_$AUTO_$1, new_value$9072_$AUTO_$1, );
+return Ukddmlcotc_core.call_c_reset_next$BANG_(c$9116_$AUTO_$1, new_value$9117_$AUTO_$1, );
 };
 final Ukddmlcoc_core.PersistentVector $9=Ukddmlcoc_core.$_vec_owning(fl$5, );
 return Ukddmlcotc_integrity.ufb_add(const Ukddmlcoc_core.Keyword(null, "change", 3055637879, ), $9, );
@@ -689,22 +689,22 @@ final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
-final dc.dynamic test$6907_$AUTO_$1=Ukddmlcotc_evaluate.c_get(act$1, );
-final dc.dynamic o7428$2=test$6907_$AUTO_$1;
+final dc.dynamic test$6952_$AUTO_$1=Ukddmlcotc_evaluate.c_get(act$1, );
+final dc.dynamic o7473$2=test$6952_$AUTO_$1;
 late final dc.int hash$2;
-if((o7428$2 is Ukddmlcoc_core.IHash$iface)){
-hash$2=(((o7428$2 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
+if((o7473$2 is Ukddmlcoc_core.IHash$iface)){
+hash$2=(((o7473$2 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
 }else{
-hash$2=(((Ukddmlcoc_core.IHash.extensions((o7428$2 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7428$2 as dc.dynamic), )) as dc.int);
+hash$2=(((Ukddmlcoc_core.IHash.extensions((o7473$2 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7473$2 as dc.dynamic), )) as dc.int);
 }
 switch(hash$2){
 case 1370755019:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6907_$AUTO_$1, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6952_$AUTO_$1, ))){
 return const Ukddmlcoc_core.Keyword(null, "away", 683598338, );
 }
 continue _default;
 case 1318096193:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6907_$AUTO_$1, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6952_$AUTO_$1, ))){
 return const Ukddmlcoc_core.Keyword(null, "home", 2635448847, );
 }
 continue _default;
@@ -724,25 +724,25 @@ final Ukddmlcoc_core.PersistentList $28=Ukddmlcoc_core.$_list_lit(fl$17, );
 final dc.dynamic alarm_speak$1=(Ukddmlcotc_core.make_c_formula.$_invoke$8(const Ukddmlcoc_core.Keyword(null, "obs", 999449665, ), (dc.dynamic slot$2, dc.dynamic me$3, dc.dynamic $new_$2, dc.dynamic old$2, dc.dynamic c$2, ){
 assert((){
 final dc.dynamic arg$1=Ukddmlcotc_evaluate.c_get(alarm$1, );
-final dc.dynamic test$6907_$AUTO_$2=Ukddmlcotc_evaluate.c_get(act$1, );
-final dc.dynamic o7428$3=test$6907_$AUTO_$2;
+final dc.dynamic test$6952_$AUTO_$2=Ukddmlcotc_evaluate.c_get(act$1, );
+final dc.dynamic o7473$3=test$6952_$AUTO_$2;
 late final dc.int hash$3;
-if((o7428$3 is Ukddmlcoc_core.IHash$iface)){
-hash$3=(((o7428$3 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
+if((o7473$3 is Ukddmlcoc_core.IHash$iface)){
+hash$3=(((o7473$3 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
 }else{
-hash$3=(((Ukddmlcoc_core.IHash.extensions((o7428$3 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7428$3 as dc.dynamic), )) as dc.int);
+hash$3=(((Ukddmlcoc_core.IHash.extensions((o7473$3 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7473$3 as dc.dynamic), )) as dc.int);
 }
 late final dc.dynamic $case_$1;
 switch(hash$3){
 case 1318096193:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6907_$AUTO_$2, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6952_$AUTO_$2, ))){
 $case_$1=const Ukddmlcoc_core.Keyword(null, "off", 3049131293, );
 }else{
 continue _default;
 }
 break;
 case 1370755019:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6907_$AUTO_$2, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6952_$AUTO_$2, ))){
 $case_$1=const Ukddmlcoc_core.Keyword(null, "on", 3621113931, );
 }else{
 continue _default;
@@ -955,34 +955,34 @@ throw dc.Exception((Ukddmlcoc_core.str.$_invoke$2("c-reset-next!> deferred chang
 }
 final dc.List<dc.dynamic> fl$1=(dc.List<dc.dynamic>.filled(2, const Ukddmlcoc_core.Keyword(null, "c-reset-next!", 1670863618, ), ));
 fl$1[1]=(dc.dynamic opcode$1, dc.dynamic defer_info$1, ){
-final dc.dynamic c$9071_$AUTO_$1=alarm$1;
-final dc.dynamic o7428$1=$new_$1;
+final dc.dynamic c$9116_$AUTO_$1=alarm$1;
+final dc.dynamic o7473$1=$new_$1;
 late final dc.int hash$1;
-if((o7428$1 is Ukddmlcoc_core.IHash$iface)){
-hash$1=(((o7428$1 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
+if((o7473$1 is Ukddmlcoc_core.IHash$iface)){
+hash$1=(((o7473$1 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
 }else{
-hash$1=(((Ukddmlcoc_core.IHash.extensions((o7428$1 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7428$1 as dc.dynamic), )) as dc.int);
+hash$1=(((Ukddmlcoc_core.IHash.extensions((o7473$1 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7473$1 as dc.dynamic), )) as dc.int);
 }
-late final dc.dynamic new_value$9072_$AUTO_$1;
+late final dc.dynamic new_value$9117_$AUTO_$1;
 switch(hash$1){
 case 2635448847:
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "home", 2635448847, ), $new_$1, ))){
-new_value$9072_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "off", 3049131293, );
+new_value$9117_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "off", 3049131293, );
 }else{
 continue _default;
 }
 break;
 case 683598338:
 if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "away", 683598338, ), $new_$1, ))){
-new_value$9072_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "on", 3621113931, );
+new_value$9117_$AUTO_$1=const Ukddmlcoc_core.Keyword(null, "on", 3621113931, );
 }else{
 continue _default;
 }
 break;
 _default: default:
-new_value$9072_$AUTO_$1=(Ukddmlcotu_core.err.$_invoke$1((Ukddmlcoc_core.str.$_invoke$2("unexpected loc %s", $new_$1, )), ));
+new_value$9117_$AUTO_$1=(Ukddmlcotu_core.err.$_invoke$1((Ukddmlcoc_core.str.$_invoke$2("unexpected loc %s", $new_$1, )), ));
 }
-return Ukddmlcotc_core.call_c_reset_next$BANG_(c$9071_$AUTO_$1, new_value$9072_$AUTO_$1, );
+return Ukddmlcotc_core.call_c_reset_next$BANG_(c$9116_$AUTO_$1, new_value$9117_$AUTO_$1, );
 };
 final Ukddmlcoc_core.PersistentVector $1=Ukddmlcoc_core.$_vec_owning(fl$1, );
 return Ukddmlcotc_integrity.ufb_add(const Ukddmlcoc_core.Keyword(null, "change", 3055637879, ), $1, );
@@ -991,22 +991,22 @@ final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$1, );
 final dc.dynamic cell$1=slot_c$SHARP_$1;
 final dc.dynamic slot_name$1=Ukddmlcotc_base.c_slot(slot_c$SHARP_$1, );
 final dc.dynamic cache$1=Ukddmlcotc_base.c_value(slot_c$SHARP_$1, );
-final dc.dynamic test$6907_$AUTO_$1=Ukddmlcotc_evaluate.c_get(act$1, );
-final dc.dynamic o7428$2=test$6907_$AUTO_$1;
+final dc.dynamic test$6952_$AUTO_$1=Ukddmlcotc_evaluate.c_get(act$1, );
+final dc.dynamic o7473$2=test$6952_$AUTO_$1;
 late final dc.int hash$2;
-if((o7428$2 is Ukddmlcoc_core.IHash$iface)){
-hash$2=(((o7428$2 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
+if((o7473$2 is Ukddmlcoc_core.IHash$iface)){
+hash$2=(((o7473$2 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
 }else{
-hash$2=(((Ukddmlcoc_core.IHash.extensions((o7428$2 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7428$2 as dc.dynamic), )) as dc.int);
+hash$2=(((Ukddmlcoc_core.IHash.extensions((o7473$2 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7473$2 as dc.dynamic), )) as dc.int);
 }
 switch(hash$2){
 case 1370755019:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6907_$AUTO_$1, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6952_$AUTO_$1, ))){
 return const Ukddmlcoc_core.Keyword(null, "away", 683598338, );
 }
 continue _default;
 case 1318096193:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6907_$AUTO_$1, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6952_$AUTO_$1, ))){
 return const Ukddmlcoc_core.Keyword(null, "home", 2635448847, );
 }
 continue _default;
@@ -1027,25 +1027,25 @@ final dc.dynamic alarm_speak$1=(Ukddmlcotc_core.make_c_formula.$_invoke$8(const 
 Ukddmlcoc_core.prn.$_invoke$5(const Ukddmlcoc_core.Keyword(null, "alarm-speak", 2006689944, ), Ukddmlcotc_evaluate.c_get(act$1, ), const Ukddmlcoc_core.Keyword(null, "sees", 3863117067, ), Ukddmlcotc_evaluate.c_get(alarm$1, ), Ukddmlcotc_evaluate.c_get(loc$1, ), );
 assert((){
 final dc.dynamic arg$1=Ukddmlcotc_evaluate.c_get(alarm$1, );
-final dc.dynamic test$6907_$AUTO_$2=Ukddmlcotc_evaluate.c_get(act$1, );
-final dc.dynamic o7428$3=test$6907_$AUTO_$2;
+final dc.dynamic test$6952_$AUTO_$2=Ukddmlcotc_evaluate.c_get(act$1, );
+final dc.dynamic o7473$3=test$6952_$AUTO_$2;
 late final dc.int hash$3;
-if((o7428$3 is Ukddmlcoc_core.IHash$iface)){
-hash$3=(((o7428$3 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
+if((o7473$3 is Ukddmlcoc_core.IHash$iface)){
+hash$3=(((o7473$3 as Ukddmlcoc_core.IHash$iface).$_hash$0()) as dc.int);
 }else{
-hash$3=(((Ukddmlcoc_core.IHash.extensions((o7428$3 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7428$3 as dc.dynamic), )) as dc.int);
+hash$3=(((Ukddmlcoc_core.IHash.extensions((o7473$3 as dc.dynamic), ) as Ukddmlcoc_core.IHash$ext).$_hash$0((o7473$3 as dc.dynamic), )) as dc.int);
 }
 late final dc.dynamic $case_$1;
 switch(hash$3){
 case 1318096193:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6907_$AUTO_$2, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "return", 1318096193, ), test$6952_$AUTO_$2, ))){
 $case_$1=const Ukddmlcoc_core.Keyword(null, "off", 3049131293, );
 }else{
 continue _default;
 }
 break;
 case 1370755019:
-if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6907_$AUTO_$2, ))){
+if((Ukddmlcoc_core.$EQ_.$_invoke$2(const Ukddmlcoc_core.Keyword(null, "leave", 1370755019, ), test$6952_$AUTO_$2, ))){
 $case_$1=const Ukddmlcoc_core.Keyword(null, "on", 3621113931, );
 }else{
 continue _default;
@@ -1243,8 +1243,8 @@ final dc.dynamic me$2=Ukddmlcotc_base.c_model(slot_c$SHARP_$2, );
 final dc.dynamic cell$2=slot_c$SHARP_$2;
 final dc.dynamic slot_name$2=Ukddmlcotc_base.c_slot(slot_c$SHARP_$2, );
 final dc.dynamic cache$2=Ukddmlcotc_base.c_value(slot_c$SHARP_$2, );
-final dc.num or$7123_$AUTO_$1=(1+(fsia$1() as dc.num));
-return or$7123_$AUTO_$1;
+final dc.num or$7168_$AUTO_$1=(1+(fsia$1() as dc.num));
+return or$7168_$AUTO_$1;
 }, ));
 assert((){
 late final dc.bool $if_$1;
