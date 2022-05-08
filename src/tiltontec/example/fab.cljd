@@ -38,7 +38,16 @@
     (scaffold {:name :scaff}
       {:appBar               (AppBar.
                                :title (Text. "Expandable Fab"))
-       :floatingActionButton (cF (FloatingActionButton.
+       :floatingActionButton
+       #_ (expandable-fab
+         :distance 112.0
+         :children [(action-button :on-pressed #(show-action ctx 0)
+                      :icon ^:const (m/Icon m.Icons/format_size))
+                    (action-button :on-pressed #(show-action ctx 1)
+                      :icon ^:const (m/Icon m.Icons/insert_photo))
+                    (action-button :on-pressed #(show-action ctx 2)
+                      :icon ^:const (m/Icon m.Icons/videocam))])
+       (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter)
                                                   :value inc))
