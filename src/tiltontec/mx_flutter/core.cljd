@@ -14,7 +14,8 @@
 
 (defprotocol PDartWidget
   (parts [this] "eg, Scaffold [:appBar :body :floatingActionButton ...]")
-  (parts-ex [this count] "Test"))
+  (parts-ex [this count] "Test")
+  (builder [this]))
 
 (deftype TPart []
   PDartWidget
@@ -52,12 +53,7 @@
   ;;:type-only true
   PDartWidget
   (parts [this]
-    [:child :style])
-  #_#_PObserver
-          (observe [this slot me new-value prior-value cell]
-            (prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
-            (when-let [^State state (:state-ref (meta me))]
-              (.setState state (fn [] (do))))))
+    [:child :style]))
 
 (deftype FXCenter []
   :extends FXDartWidget
@@ -123,6 +119,35 @@
           (build [this ctx]
             (builder me ctx)))))))
 
+(deftype FXTextEx []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child :style])
+  (builder [this]
+    (fn [me ctx]
+      (w/Text (first (md/md-kids me))
+        :style (let [style (mget me :style)]
+                 (if (fn? style)
+                   (style me ctx)
+                   style))))))
+
+(defmacro text-ex [custom-props fx-props & kids]
+  ;; todo: enforce only one kid
+  `(tiltontec.model.core/make
+     :mx-type (tiltontec.mx-flutter.core/FXTextEx.)
+     :kids (tiltontec.model.core/cFkids ~@kids)
+     :fx-gen (fn [me]
+               (statefully me
+                 (fn [me ctx]
+                   (let [builder (or (mget me :builder)
+                                   (builder (mx-type me)))]
+                     (builder me ctx)))))
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
 (defn Text-fx-gen [me]
   (statefully me
     (fn [me ctx]
@@ -163,7 +188,7 @@
   (statefully me
     (fn [me ctx]
       (m/Scaffold.
-        :appBar (mget me :appBar) ;; todo this s/b render-fx
+        :appBar (mget me :appBar)                           ;; todo this s/b render-fx
         :body (render-fx (first (md/md-kids me)))
         :floatingActionButton
         ;; todo this too s/b render-fx
