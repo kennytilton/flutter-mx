@@ -28,7 +28,7 @@
     :decoration
     (m/BoxDecoration
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-      :color (.-shade300 m.Colors/grey))))
+      :color (.-shade300 Colors/grey))))
 
 (def action-titles ["Create Post" "Upload Photo" "Upload Video"])
 
@@ -46,12 +46,12 @@
   (m/Material
     :shape ^:const (m/CircleBorder)
     :clipBehavior m.Clip/antiAlias
-    :color m.Colors/blue
+    :color Colors/blue
     :elevation 4.0
     :child (m/IconButton
              :onPressed on-pressed
              :icon icon
-             :color m.Colors/blue)))
+             :color Colors/blue)))
 
 ;;;
 ;;; --- the app -----------------------------------------------
@@ -60,11 +60,11 @@
 (defn make-app []
   (material-app {:name :mat-app}
     {:title "Welcome to mxFlutter World"
-     :theme (cF (ThemeData. :primarySwatch m.Colors/blue))
+     :theme (cF (ThemeData :primarySwatch Colors/blue))
      :debugShowCheckedModeBanner false}
     (scaffold {:name :scaff}
-      {:appBar               (AppBar.
-                               :title (Text. "Expandable Fab"))
+      {:appBar               (AppBar
+                               :title (Text "Expandable Fab"))
        :floatingActionButton
        #_ (expandable-fab
          :distance 112.0
@@ -76,7 +76,7 @@
                       :icon ^:const (m/Icon m.Icons/videocam))])
        (cF [:callback (fn [me ctx]
                     (action-button :on-pressed #(show-action ctx 0)
-                      :icon ^:const (m/Icon m.Icons/format_size)))])
+                      :icon ^:const (m/Icon Icons/format_size)))])
 
 
        #_ (cF (FloatingActionButton.
@@ -88,7 +88,7 @@
                                             :color Colors/black)))}
       #_
       (text {} {:style (p/TextStyle.
-                         :color m.Colors/black
+                         :color Colors/black
                          :fontSize 32.0)}
         "hello, world\\n")
       (list-view-builder {}
@@ -121,7 +121,7 @@
                                           (action-button :on-pressed #(show-action ctx 2)
                                             :icon ^:const (m/Icon m.Icons/videocam))])}
       (text {} {:style (p/TextStyle.
-                         :color m.Colors/black
+                         :color Colors/black
                          :fontSize 32.0)}
         "hello, world\\n")
       #_ (m.ListView/builder
@@ -131,7 +131,7 @@
 
 #_#_
     {:title "Welcome to mxFlutter World"
-     :theme (cF (ThemeData. :primarySwatch m.Colors/blue))}
+     :theme (cF (ThemeData. :primarySwatch Colors/blue))}
     (scaffold {:name :scaff}
       {:appBar               (AppBar.
                                :title (Text. "mxFlutter  Home Page"))
@@ -147,7 +147,7 @@
           {:mainAxisAlignment MainAxisAlignment/center}
           (text {}
             {:style (TextStyle.
-                      :color m.Colors/black
+                      :color Colors/black
                       :fontSize 18.0)}
             "You have clicked the button this many times:")
           (text {:name    :z-counter

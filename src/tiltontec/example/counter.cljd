@@ -14,50 +14,52 @@
              FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
      :refer [TextStyle]]
-    ;["dart:intl" :as intl]
     [tiltontec.util.core :as util
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.observer
      :refer [fn-obs]]
     ))
 
-;; support both :body/:child/:children and trailing :un-keyed
-;; maybe support dedicated Flutter opts for easy extension
-;; have the render work as part of protocol?
-
-
 (defn make-app []
   (material-app {:name :mat-app}
     {:title "Welcome to mxFlutter World"
-     :theme (cF (ThemeData. :primarySwatch m.Colors/blue))}
-    (scaffold {:name :scaff}
-      {:appBar               (AppBar. :title (Text. "mxFlutter  Home Page"))
-       :floatingActionButton (cF (FloatingActionButton.
+     :theme (cF (ThemeData :primarySwatch Colors/blue))}
+    (scaffold {}
+      {:appBar               (AppBar :title (Text "mxFlutter  Home Page"))
+       :floatingActionButton (cF (FloatingActionButton
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
-                                   :child (Icon. Icons/add :color Colors/black)))}
+                                   :child (Icon Icons/add :color Colors/black)))}
       (center {} {}
         (column {}
           {:mainAxisAlignment MainAxisAlignment/center}
           (text {}
-            {:style (TextStyle.
-                      :color m.Colors/black
+            {:style (TextStyle
+                      :color Colors/black
                       :fontSize 18.0)}
             "You have clicked the button this many times:")
           (text {:name  :z-counter
                  :value (cI 0)}
             ;; a custom builder can access Dart context
-            {:style #_ (cF (TextStyle.
-                          :color m.Colors/green
-                          :fontSize (+ 24.0 (* 2 (md/my-val)))))
+            {:style
+             #_;; a reactive version tracking another property
+                     (cF (TextStyle.
+                           :color m.Colors/green
+                           :fontSize (+ 24.0 (* 2 (md/my-val)))))
+
+             ;; a version that needs the runtime context, done as a callback (experiemental)
              [:callback (fn [me ctx]
                           (.headline4 (.textTheme (Theme/of ctx))))]
+
+             ;; straight-up fixed value
              #_(TextStyle.
                  :color m.Colors/red
                  :fontSize 42.0)
+
+             ;; or comment out the above entirely and supply a custom builder
              #_#_:builder (fn [me ctx]
-                            (Text. (str (md/my-val))
+                            (Text (str (md/my-val))
                               :style (.headline4 (.textTheme (Theme/of ctx)))))
              }
             (str (md/my-val))
