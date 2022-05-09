@@ -43,6 +43,15 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;; --- debug stuff -----------------------------
 (def ^:dynamic *finbiz-id* 0)
 (def ^:dynamic *c-prop-depth* 0)
+(def ^:dynamic *cdbg* false)
+
+(defn cprn [& bits]
+  (when *cdbg*
+    (apply prn bits)))
+
+(defmacro with-cdbg [value & body]
+  `(binding [*cdbg* ~value]
+     ~@body))
 
 (def +c-debug+ (atom false))
 (def ^:dynamic +stop+ (atom false)) ;; emergency brake

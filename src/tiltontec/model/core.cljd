@@ -36,6 +36,9 @@
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
   (when (atom? me)
+    #_ (when (and (= slot :style)(= :z-counter (md-name me)))
+      (prn :md-get-sees!!!!!!!! slot (md-name me)
+        (cinfo (md-cell me slot))))
     (if-let [c (md-cell me slot)]
       (c-get c)
       (slot @me))))

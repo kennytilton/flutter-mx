@@ -38,7 +38,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXMatapp-NULL-observing!!! slot)))
+    #_ (prn :FXMatapp-NULL-observing!!! slot)))
 
 (deftype FXScaffold []
   ;;:type-only true
@@ -76,7 +76,7 @@
 ;;; ----------------------------------------------------
 
 (defn render-fx [fx]
-  (prn :render-fx-entry fx)
+  ;;(prn :render-fx-entry fx)
   (let [gen (mget fx :fx-gen)]
     (when-not gen
       (prn :rfx-sees-no-fx-gen!!! fx))
@@ -90,13 +90,19 @@
           (build [this ctx]
             (builder me ctx)))))))
 
-(defn TextEx-gen-ex [me]
+(defn Text-fx-gen [me]
   (statefully me
     (fn [me ctx]
+      #_ (do (prn :text-gen-meta-records-ctx!! ctx (meta me) #_ (cty/minfo me))
+             (util/rmap-meta-setf [:ctx me] ctx))
       (if-let [builder (mget me :builder)]
         (builder me ctx)
         (w/Text. (first (md/md-kids me))
-          :style (tiltontec.model.core/mget me :style))))))
+          :style (let [style (mget me :style)]
+                   (if (and (vector? style)
+                         (= :callback (first style)))
+                     ((second style) me ctx)
+                     style)))))))
 
 (defmacro text [custom-props fx-props & kids]
   ;; todo: enforce only one kid
@@ -104,7 +110,7 @@
      :mx-type (tiltontec.mx-flutter.core/FXText.)
      ;;:dart-type (parts (tiltontec.mx-flutter.core/FXText.))
      :kids (tiltontec.model.core/cFkids ~@kids)
-     :fx-gen TextEx-gen-ex
+     :fx-gen Text-fx-gen
      ~@(concat
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))

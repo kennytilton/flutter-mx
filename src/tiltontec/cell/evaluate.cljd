@@ -6,7 +6,7 @@
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type
+             c-unbound? c-input? mx-type cprn
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes*
@@ -114,19 +114,19 @@
   notices if a standalone  cell has never been observed."
 
   [c]
-  #_(when (= (c-slot c) :title)
-      (println :cget-entry (c-slot c) (mx-type (c-model c))
-        (if *depender* (c-slot *depender*) :nodepender)))
+  (when (= (c-slot c) :style)
+    (println :cget-entry (c-slot c) (c-md-name c) (mx-type (c-model c))
+      (if *depender* (c-slot *depender*) :nodepender)))
   (cond
     (c-ref? c) (prog1
                  (with-integrity ()
                    (let [prior-value (c-value c)]
                      #_(println :cget-to-evic (c-slot c) (mx-type (c-model c)))
-                     #_ (when (and *depender* (not= :kids (c-slot *depender*)))
-                       (prn :c-get-sees-depender
-                         (str "asker= "
-                         (c-slot *depender*) "/"
-                         (c-md-name *depender*))))
+                     #_(when (and *depender* (not= :kids (c-slot *depender*)))
+                         (prn :c-get-sees-depender
+                           (str "asker= "
+                             (c-slot *depender*) "/"
+                             (c-md-name *depender*))))
                      (prog1
 
                        (let [ev (ensure-value-is-current c :c-read nil)]
@@ -142,12 +142,12 @@
                          (c-observe c prior-value :cget)
                          (ephemeral-reset c)))))
                  (when *depender*
-                   #_ (when (and *depender* (not= :kids (c-slot *depender*)))
-                     (prn :c-get-records-dependency
-                       :askee (c-slot c) (mx-type (c-model c))
-                       (str "asker= "
-                         (c-slot *depender*) "/"
-                         (c-md-name *depender*))))
+                   #_(when (and *depender* (not= :kids (c-slot *depender*)))
+                       (prn :c-get-records-dependency
+                         :askee (c-slot c) (mx-type (c-model c))
+                         (str "asker= "
+                           (c-slot *depender*) "/"
+                           (c-md-name *depender*))))
                    (record-dependency c)))
     (atom? c) @c
     :else c))
@@ -161,12 +161,15 @@
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
-  (do                                                       ;; (wtrx [0 20 :cnset-entry (c-slot c)]
+  (cty/with-cdbg (and (= :style (c-slot c))
+                   (= :z-counter (c-md-name c)))
+    ;; (wtrx [0 20 :cnset-entry (c-slot c)]
     (let [[raw-value propagation-code] (calculate-and-link c)]
       ;;(trx :cn-set-sees!!!! (c-slot c) raw-value propagation-code)
+      (cprn :c-calc!!!!!!!!!!!!!!!! raw-value  (c-optimized-away? c)
+        :meta-mw (meta (c-me c)))
       (when-not (c-optimized-away? c)
         (assert (map? @c) "calc-n-set")
-
         ;; this check for optimized-away? arose because a rule using without-c-dependency
         ;; can be re-entered unnoticed since that clears *call-stack*. If re-entered, a subsequent
         ;; re-exit will be of an optimized away cell, which will have been assumed
@@ -207,9 +210,13 @@
   ;(prn :c-awaken-sees @c (mx-type c))
   (cond
     (c-formula? c)
-    (binding [*depender* nil]
-      (when-not (c-current? c)
-        (calculate-and-set c :fn-c-awaken nil)))
+    (do (when (and (= (c-slot c) :style) (= :z-counter (c-md-name c)))
+          (prn :c-awaken-sees!!!!!!!! (c-slot c) (c-md-name c)
+            (c-current? c)
+            (cinfo c)))
+        (binding [*depender* nil]
+          (when-not (c-current? c)
+            (calculate-and-set c :fn-c-awaken nil))))
 
     (c-ref? c)
     (do
@@ -268,7 +275,7 @@
           ;;
           (rmap-setf [:value c] new-value)
           (rmap-setf [::cty/state c] :awake)
-          #_(trx :new-vlue-installed (c-slot c)
+          (cprn :new-vlue-installed (c-slot c)
               new-value
               (:value c))
           ;;
@@ -349,7 +356,8 @@ then clear our record of them."
           (not (c-synaptic? c))                             ;; no slot to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
 
-    ;;(println :optimizing-away!!!! (c-slot c)(c-useds c))
+    (cty/cprn :optimizing-away!!!! (c-slot c)(c-md-name c)(cty/cinfo c))
+
     (rmap-setf [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss
     ; the cell below. hhack
     (c-observe c prior-value :opti-away)

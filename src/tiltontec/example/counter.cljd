@@ -3,7 +3,7 @@
     [clojure.string :as string]
     [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
-     :refer [cF cF+ cI]]
+     :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
      :refer [render-fx material-app center text scaffold column]]
@@ -31,15 +31,12 @@
     {:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData. :primarySwatch m.Colors/blue))}
     (scaffold {:name :scaff}
-      {:appBar               (AppBar.
-                               :title (Text. "mxFlutter  Home Page"))
+      {:appBar               (AppBar. :title (Text. "mxFlutter  Home Page"))
        :floatingActionButton (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
-                                                (md/mswap! (md/fm* :z-counter)
-                                                  :value inc))
+                                                (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
-                                   :child (Icon. Icons/add
-                                            :color Colors/black)))}
+                                   :child (Icon. Icons/add :color Colors/black)))}
       (center {} {}
         (column {}
           {:mainAxisAlignment MainAxisAlignment/center}
@@ -48,12 +45,23 @@
                       :color m.Colors/black
                       :fontSize 18.0)}
             "You have clicked the button this many times:")
-          (text {:name    :z-counter
+          (text {:name  :z-counter
                  :value (cI 0)}
             ;; a custom builder can access Dart context
-            {:builder (fn [me ctx]
-                        (Text. (str (md/my-val))
-                          :style (.headline4 (.textTheme (Theme/of ctx)))))})
+            {:style #_ (cF (TextStyle.
+                          :color m.Colors/green
+                          :fontSize (+ 24.0 (* 2 (md/my-val)))))
+             [:callback (fn [me ctx]
+                          (.headline4 (.textTheme (Theme/of ctx))))]
+             #_(TextStyle.
+                 :color m.Colors/red
+                 :fontSize 42.0)
+             #_#_:builder (fn [me ctx]
+                            (Text. (str (md/my-val))
+                              :style (.headline4 (.textTheme (Theme/of ctx)))))
+             }
+            (str (md/my-val))
+            )
           (text
             {:name  :zx2
              :value (cF (* 2 (md/fmuval :z-counter)))}

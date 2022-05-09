@@ -30,6 +30,37 @@
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 m.Colors/grey))))
 
+(def action-titles ["Create Post" "Upload Photo" "Upload Video"])
+
+#_
+(defn show-action [ctx i]
+  (m/showDialog
+    :context ctx
+    :builder (fn [ctx]
+               (m/AlertDialog
+                 :content (m/Text (action-titles i))
+                 :actions [(m/TextButton
+                             :onPressed #(-> ctx m.Navigator/of .pop)
+                             :child ^:const (m/Text "CLOSE"))]))))
+
+#_
+(defn action-button [& {:keys [on-pressed icon]}]
+  (f/widget
+    :inherits [m/Theme]
+    (m/Material
+      :shape ^:const (m/CircleBorder)
+      :clipBehavior m.Clip/antiAlias
+      :color (-> theme .-colorScheme .-secondary)
+      :elevation 4.0
+      :child (m/IconButton
+               :onPressed on-pressed
+               :icon icon
+               :color (-> theme .-colorScheme .-secondary)))))
+
+;;;
+;;; --- the app -----------------------------------------------
+;;;
+
 (defn make-app []
   (material-app {:name :mat-app}
     {:title "Welcome to mxFlutter World"
@@ -47,6 +78,9 @@
                       :icon ^:const (m/Icon m.Icons/insert_photo))
                     (action-button :on-pressed #(show-action ctx 2)
                       :icon ^:const (m/Icon m.Icons/videocam))])
+       #_ (action-button :on-pressed #(show-action ctx 0)
+         :icon ^:const (m/Icon m.Icons/format_size))
+
        (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter)
