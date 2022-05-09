@@ -32,7 +32,6 @@
 
 (def action-titles ["Create Post" "Upload Photo" "Upload Video"])
 
-#_
 (defn show-action [ctx i]
   (m/showDialog
     :context ctx
@@ -43,19 +42,16 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
-#_
 (defn action-button [& {:keys [on-pressed icon]}]
-  (f/widget
-    :inherits [m/Theme]
-    (m/Material
-      :shape ^:const (m/CircleBorder)
-      :clipBehavior m.Clip/antiAlias
-      :color (-> theme .-colorScheme .-secondary)
-      :elevation 4.0
-      :child (m/IconButton
-               :onPressed on-pressed
-               :icon icon
-               :color (-> theme .-colorScheme .-secondary)))))
+  (m/Material
+    :shape ^:const (m/CircleBorder)
+    :clipBehavior m.Clip/antiAlias
+    :color m.Colors/blue
+    :elevation 4.0
+    :child (m/IconButton
+             :onPressed #(prn :pressed!!!!!!!!!!!!!!!!!!!!)
+             :icon icon
+             :color m.Colors/blue)))
 
 ;;;
 ;;; --- the app -----------------------------------------------
@@ -78,10 +74,12 @@
                       :icon ^:const (m/Icon m.Icons/insert_photo))
                     (action-button :on-pressed #(show-action ctx 2)
                       :icon ^:const (m/Icon m.Icons/videocam))])
-       #_ (action-button :on-pressed #(show-action ctx 0)
-         :icon ^:const (m/Icon m.Icons/format_size))
+       (cF [:callback (fn [me ctx]
+                    (action-button :on-pressed #(show-action ctx 0)
+                      :icon ^:const (m/Icon m.Icons/format_size)))])
 
-       (cF (FloatingActionButton.
+
+       #_ (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter)
                                                   :value inc))

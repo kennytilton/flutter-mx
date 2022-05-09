@@ -38,7 +38,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_ (prn :FXMatapp-NULL-observing!!! slot)))
+    #_(prn :FXMatapp-NULL-observing!!! slot)))
 
 (deftype FXScaffold []
   ;;:type-only true
@@ -53,11 +53,11 @@
   PDartWidget
   (parts [this]
     [:child :style])
-  #_ #_ PObserver
-  (observe [this slot me new-value prior-value cell]
-    (prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
-    (when-let [^State state (:state-ref (meta me))]
-      (.setState state (fn [] (do))))))
+  #_#_PObserver
+          (observe [this slot me new-value prior-value cell]
+            (prn :FXText-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
+            (when-let [^State state (:state-ref (meta me))]
+              (.setState state (fn [] (do))))))
 
 (deftype FXCenter []
   :extends FXDartWidget
@@ -93,8 +93,8 @@
 (defn Text-fx-gen [me]
   (statefully me
     (fn [me ctx]
-      #_ (do (prn :text-gen-meta-records-ctx!! ctx (meta me) #_ (cty/minfo me))
-             (util/rmap-meta-setf [:ctx me] ctx))
+      #_(do (prn :text-gen-meta-records-ctx!! ctx (meta me) #_(cty/minfo me))
+            (util/rmap-meta-setf [:ctx me] ctx))
       (if-let [builder (mget me :builder)]
         (builder me ctx)
         (w/Text. (first (md/md-kids me))
@@ -127,13 +127,35 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+(defn Scaffold-fx-gen [me]
+  (statefully me
+    (fn [me ctx]
+      (m/Scaffold.
+        :appBar (mget me :appBar)
+        :body (render-fx (first (md/md-kids me)))
+        :floatingActionButton
+        (let [button# (mget me :floatingActionButton)]
+          (prn :scaffold-button!!!!! button#)
+          (if (and (vector? button#)
+                (= :callback (first button#)))
+            ((second button#) me ctx)
+            button#))))))
+
 (defmacro scaffold [custom-props fx-props & kids]
   `(make :mx-type (tiltontec.mx-flutter.core/FXScaffold.)
      :kids (cFkids ~@kids)
-     :fx-gen #(m/Scaffold.
-                :appBar (mget % :appBar)
-                :body (render-fx (first (md/md-kids %)))
-                :floatingActionButton (mget % :floatingActionButton))
+     :fx-gen Scaffold-fx-gen
+     #_ (fn [me# ctx#]
+               (m/Scaffold.
+                 :appBar (mget me# :appBar)
+                 :body (render-fx (first (md/md-kids me#)))
+                 :floatingActionButton
+                 (let [button# (mget me# :floatingActionButton)]
+                   (prn :scaffold-button!!!!! button#)
+                   (if (and (vector? button#)
+                         (= :callback (first button#)))
+                     ((second button#) me# ctx#)
+                     button#))))
      ~@(concat
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
@@ -168,10 +190,10 @@
   (observe [this slot me new-value prior-value cell]
     (prn :FXListView-builder-obs!! slot)))
 
-#_ (m.ListView/builder
-     :padding (m.EdgeInsets/symmetric :vertical 8.0)
-     :itemCount 25
-     :itemBuilder (fn [ctx i] (fake-item (odd? i))))
+#_(m.ListView/builder
+    :padding (m.EdgeInsets/symmetric :vertical 8.0)
+    :itemCount 25
+    :itemBuilder (fn [ctx i] (fake-item (odd? i))))
 
 (defmacro list-view-builder [custom-props fx-props & kids]
   ;; todo: enforce only one kid
@@ -185,7 +207,7 @@
                      (m.ListView/builder
                        :padding (mget me :padding)
                        :itemCount (mget me :itemCount)
-                       :itemBuilder (mget me :itemBuilder) #_ (fn [ctx i] (fake-item (odd? i))))))))
+                       :itemBuilder (mget me :itemBuilder) #_(fn [ctx i] (fake-item (odd? i))))))))
      ~@(concat
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
