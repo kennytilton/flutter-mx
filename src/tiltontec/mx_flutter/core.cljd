@@ -73,6 +73,39 @@
   (parts [this]
     [:children]))
 
+;;; --- ListView/builder -----------------------------------------
+
+(deftype FXListViewBuilder []
+  ;;:type-only true
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (prn :FXListViewBuilder-obs!! slot)))
+
+#_(m.ListView/builder
+    :padding (m.EdgeInsets/symmetric :vertical 8.0)
+    :itemCount 25
+    :itemBuilder (fn [ctx i] (fake-item (odd? i))))
+
+(defmacro list-view-builder [custom-props fx-props & kids]
+  ;; todo: enforce only one kid
+  `(tiltontec.model.core/make
+     :mx-type (tiltontec.mx-flutter.core/FXListViewBuilder.)
+     :fx-gen (fn [me]
+               (statefully me
+                 (fn [me ctx]
+                   (if-let [builder (mget me :builder)]
+                     (builder me ctx)
+                     (m.ListView/builder
+                       :padding (mget me :padding)
+                       :itemCount (mget me :itemCount)
+                       :itemBuilder (mget me :itemBuilder) #_(fn [ctx i] (fake-item (odd? i))))))))
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
+
+
 ;;; ----------------------------------------------------
 
 (defn render-fx [fx]
@@ -99,9 +132,8 @@
         (builder me ctx)
         (w/Text. (first (md/md-kids me))
           :style (let [style (mget me :style)]
-                   (if (and (vector? style)
-                         (= :callback (first style)))
-                     ((second style) me ctx)
+                   (if (fn? style)
+                     (style me ctx)
                      style)))))))
 
 (defmacro text [custom-props fx-props & kids]
@@ -136,10 +168,8 @@
         :floatingActionButton
         ;; todo this too s/b render-fx
         (let [button# (mget me :floatingActionButton)]
-          (prn :scaffold-button!!!!! button#)
-          (if (and (vector? button#)
-                (= :callback (first button#)))
-            ((second button#) me ctx)
+          (if (fn? button#)
+            (button# me ctx)
             button#))))))
 
 (defmacro scaffold [custom-props fx-props & kids]
@@ -167,37 +197,6 @@
      :kids (tiltontec.model.core/cFkids ~@kids)
      :fx-gen #(m/Center.
                 :child (render-fx (first (tiltontec.model.core/md-kids %))))
-     ~@(concat
-         (vec (apply concat (seq fx-props)))
-         (vec (apply concat (seq custom-props))))))
-
-;;; --- ListView/builder -----------------------------------------
-
-(deftype FXListView-builder []
-  ;;:type-only true
-  :extends FXDartWidget
-  PObserver
-  (observe [this slot me new-value prior-value cell]
-    (prn :FXListView-builder-obs!! slot)))
-
-#_(m.ListView/builder
-    :padding (m.EdgeInsets/symmetric :vertical 8.0)
-    :itemCount 25
-    :itemBuilder (fn [ctx i] (fake-item (odd? i))))
-
-(defmacro list-view-builder [custom-props fx-props & kids]
-  ;; todo: enforce only one kid
-  `(tiltontec.model.core/make
-     :mx-type (tiltontec.mx-flutter.core/FXListView-builder.)
-     :fx-gen (fn [me]
-               (statefully me
-                 (fn [me ctx]
-                   (if-let [builder (mget me :builder)]
-                     (builder me ctx)
-                     (m.ListView/builder
-                       :padding (mget me :padding)
-                       :itemCount (mget me :itemCount)
-                       :itemBuilder (mget me :itemBuilder) #_(fn [ctx i] (fake-item (odd? i))))))))
      ~@(concat
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))

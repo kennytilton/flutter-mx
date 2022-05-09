@@ -66,6 +66,9 @@
       {:appBar               (AppBar
                                :title (Text "Expandable Fab"))
        :floatingActionButton
+       (fn [me ctx]
+         (action-button :on-pressed #(show-action ctx 0)
+           :icon ^:const (m/Icon Icons/format_size)))
        #_ (expandable-fab
          :distance 112.0
          :children [(action-button :on-pressed #(show-action ctx 0)
@@ -74,10 +77,6 @@
                       :icon ^:const (m/Icon m.Icons/insert_photo))
                     (action-button :on-pressed #(show-action ctx 2)
                       :icon ^:const (m/Icon m.Icons/videocam))])
-       (cF [:callback (fn [me ctx]
-                    (action-button :on-pressed #(show-action ctx 0)
-                      :icon ^:const (m/Icon Icons/format_size)))])
-
 
        #_ (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
@@ -86,11 +85,6 @@
                                    :tooltip "Increment"
                                    :child (Icon. Icons/add
                                             :color Colors/black)))}
-      #_
-      (text {} {:style (p/TextStyle.
-                         :color Colors/black
-                         :fontSize 32.0)}
-        "hello, world\\n")
       (list-view-builder {}
         {:padding (m.EdgeInsets/symmetric :vertical 8.0)
         :itemCount 25
