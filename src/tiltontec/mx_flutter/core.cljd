@@ -131,9 +131,10 @@
   (statefully me
     (fn [me ctx]
       (m/Scaffold.
-        :appBar (mget me :appBar)
+        :appBar (mget me :appBar) ;; todo this s/b render-fx
         :body (render-fx (first (md/md-kids me)))
         :floatingActionButton
+        ;; todo this too s/b render-fx
         (let [button# (mget me :floatingActionButton)]
           (prn :scaffold-button!!!!! button#)
           (if (and (vector? button#)
@@ -145,17 +146,6 @@
   `(make :mx-type (tiltontec.mx-flutter.core/FXScaffold.)
      :kids (cFkids ~@kids)
      :fx-gen Scaffold-fx-gen
-     #_ (fn [me# ctx#]
-               (m/Scaffold.
-                 :appBar (mget me# :appBar)
-                 :body (render-fx (first (md/md-kids me#)))
-                 :floatingActionButton
-                 (let [button# (mget me# :floatingActionButton)]
-                   (prn :scaffold-button!!!!! button#)
-                   (if (and (vector? button#)
-                         (= :callback (first button#)))
-                     ((second button#) me# ctx#)
-                     button#))))
      ~@(concat
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
