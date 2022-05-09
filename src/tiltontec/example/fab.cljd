@@ -57,6 +57,15 @@
 ;;; --- the app -----------------------------------------------
 ;;;
 
+#_
+(defmacro expandable-fab [custom-props fx-props & kids]
+  `(make :mx-type (tiltontec.mx-flutter.core/FXDartWidget)
+     :kids (cFkids ~@kids)
+     :fx-gen Scaffold-fx-gen
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
+
 (defn make-app []
   (material-app {:name :mat-app}
     {:title "Welcome to mxFlutter World"
@@ -66,17 +75,18 @@
       {:appBar               (AppBar
                                :title (Text "Expandable Fab"))
        :floatingActionButton
-       (fn [me ctx]
+       ;; works
+               (fn [me ctx]
+                 (action-button :on-pressed #(show-action ctx 0)
+                   :icon ^:const (m/Icon Icons/format_size)))
+       #_ (expandable-fab {}
+         {:distance 112.0}
          (action-button :on-pressed #(show-action ctx 0)
-           :icon ^:const (m/Icon Icons/format_size)))
-       #_ (expandable-fab
-         :distance 112.0
-         :children [(action-button :on-pressed #(show-action ctx 0)
-                      :icon ^:const (m/Icon m.Icons/format_size))
-                    (action-button :on-pressed #(show-action ctx 1)
-                      :icon ^:const (m/Icon m.Icons/insert_photo))
-                    (action-button :on-pressed #(show-action ctx 2)
-                      :icon ^:const (m/Icon m.Icons/videocam))])
+           :icon ^:const (m/Icon m.Icons/format_size))
+         (action-button :on-pressed #(show-action ctx 1)
+           :icon ^:const (m/Icon m.Icons/insert_photo))
+         (action-button :on-pressed #(show-action ctx 2)
+           :icon ^:const (m/Icon m.Icons/videocam)))
 
        #_ (cF (FloatingActionButton.
                                    :onPressed (fn ^void []
