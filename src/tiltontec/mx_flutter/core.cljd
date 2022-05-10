@@ -17,12 +17,15 @@
   (parts-ex [this count] "Test")
   (builder [this]))
 
-(deftype TPart []
-  PDartWidget
-  (parts [this]
-    [:no-parts])
-  (parts-ex [this count]
-    [:no-parts (* 2 count)]))
+;(deftype TPart []
+;  PDartWidget
+;  (parts [this]
+;    [:no-parts])
+;  (parts-ex [this count]
+;    [:no-parts (* 2 count)]))
+
+;(deftype StateWTicker []
+;  :extends m/State ^:mixin m/SingleTickerProviderStateMixin)
 
 (deftype FXDartWidget []
   PObserver
@@ -116,6 +119,7 @@
     (createState [this]
       (util/rmap-meta-setf [:state-ref me]
         (reify :extends w/State
+          ^:mixin m/SingleTickerProviderStateMixin
           (build [this ctx]
             (builder me ctx)))))))
 
@@ -136,7 +140,7 @@
 (defmacro text-ex [custom-props fx-props & kids]
   ;; todo: enforce only one kid
   `(tiltontec.model.core/make
-     :mx-type (tiltontec.mx-flutter.core/FXTextEx.)
+     :mx-type (tiltontec.mx-flutter.core/FXTextEx)
      :kids (tiltontec.model.core/cFkids ~@kids)
      :fx-gen (fn [me]
                (statefully me
