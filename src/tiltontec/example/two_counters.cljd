@@ -12,8 +12,22 @@
     ["package:flutter/painting.dart"
      :refer [TextStyle]]))
 
+(defn my-flux [me]
+  (mget (md/fm* :counter-app) :flux-store))
+
+(defn my-counters [me]
+  (mget (my-flux me) :counters))
+
 (defn make-app []
-  (material-app {:name :mat-app}
+  (material-app {:name       :counter-app
+                 ; simulating a separate store, we bind a purely independent Matrix data structure that
+                 ; must be consulted for values.
+                 ;
+                 ; The alternative would be a simple mutable input (cI) property:
+                 ;   :flux (cI {:counters (cI {:left 0 :right 0})})
+                 ;
+                 :flux-store (cI {:counters {:left 0 :right 0}})
+                 }
     {:title "Two Counters"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
     (scaffold {}
@@ -21,22 +35,23 @@
       (center {} {}
         (row {}
           {:mainAxisAlignment MainAxisAlignment/center}
-          (mapv (fn [k]
-                 (expanded {}{}
-                   (column {:name :ctr-col
-                            :ctr-key k ;; may come in handy; for now of no use
-                            :value (cI 0) ;; the column maintains its own state, aka "in-place state"
-                            }
-                     {:mainAxisAlignment MainAxisAlignment/center}
-                     (text {}{} (str k))
-                     (text {}
-                       {:style (cF (TextStyle
-                                     :color (if (<= (md/fmuval :ctr-col) 3)
-                                              Colors/green Colors/red)
-                                     :fontSize 48.0))}
-                       (str (md/fmuval :ctr-col)))
-                     (elevated-button {}
-                       {:onPressed (cF (fn ^void []
-                                         (md/mswap! (md/fmu :ctr-col) :value inc)))}
-                       (text {}{} "+")))))
+          (mapv (fn [counter-key]
+                  (expanded {} {}
+                    (column {:name  :counter-col
+                             :value (cF (let [app (md/fm-navig (fn [me] (= :counter-app (mget me :name)))
+                                                    me :me? false :up? true :inside? false :wocd? true)]
+                                          (dart:core/print (str "ctr col got app!!! " app))
+                                          (get-in (mget app :flux) [:counters counter-key])))}
+                      {:mainAxisAlignment MainAxisAlignment/center}
+                      (text {} {} (str counter-key))
+                      (text {}
+                        {:style (cF (TextStyle
+                                      :color Colors/green
+                                      :fontSize 48.0))}
+                        (str (md/fmuval :counter-col)))
+                      (elevated-button {}
+                        {:onPressed (cF (fn ^void []
+                                          (md/mswap! (my-flux me) :counters
+                                            update counter-key inc)))}
+                        (text {} {} "+")))))
             [:left :right]))))))
