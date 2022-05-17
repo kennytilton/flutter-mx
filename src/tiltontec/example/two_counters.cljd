@@ -15,13 +15,33 @@
     ["package:flutter/painting.dart"
      :refer [TextStyle]]))
 
+(defn build-counter [counter-key]
+  (expanded {} {}
+    (column {:name  :counter-col
+             :value (cF (let [app (md/fm-ascendant :counter-app me :me? false)]
+                          (dprn :Column-checks-its-counter counter-key)
+                          (get-in (mget app :flux-store) [:counters counter-key])))}
+      {:mainAxisAlignment MainAxisAlignment/center}
+      (text {} {} (str/capitalize (name counter-key)))
+      (text {}
+        {:style (TextStyle
+                  :color Colors/green
+                  :fontSize 48.0)}
+        (do (dprn :building-counter!!!!!!!!!!!!! counter-key)
+            (str (md/fmuval :counter-col))))
+      (elevated-button {}
+        {:onPressed (cFnil (fn ^void []
+                             (dprn :incrementing-counter counter-key)
+                             (md/mswap! (md/fm-ascendant :counter-app me)
+                               :flux-store update-in [:counters counter-key] inc)))}
+        (text {} {} "+")))))
+
 (defn make-app []
   (material-app {:name       :counter-app
                  ; simulating a separate global store, we bind a purely independent Matrix data structure that
                  ; must be consulted for values. Pro tip: use `mswap! <the app> :flux-store update-in etc` to
                  ; increment either counter.
-                 :flux-store (cI {:counters {:left 0 :right 0}})
-                 }
+                 :flux-store (cI {:counters {:left 0 :right 0}})}
     {:title "Two Counters"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
     (scaffold {}
@@ -29,24 +49,4 @@
       (center {} {}
         (row {}
           {:mainAxisAlignment MainAxisAlignment/center}
-          (doall
-            (for [counter-key [:left :right]]
-              (expanded {} {}
-                (column {:name  :counter-col
-                         :value (cF (let [app (md/fm-ascendant :counter-app me :me? false)]
-                                      (dprn :Column-checks-its-counter counter-key)
-                                      (get-in (mget app :flux-store) [:counters counter-key])))}
-                  {:mainAxisAlignment MainAxisAlignment/center}
-                  (text {} {} (str/capitalize (name counter-key)))
-                  (text {}
-                    {:style (TextStyle
-                              :color Colors/green
-                              :fontSize 48.0)}
-                    (do (dprn :building-counter!!!!!!!!!!!!! counter-key)
-                        (str (md/fmuval :counter-col))))
-                  (elevated-button {}
-                    {:onPressed (cFnil (fn ^void []
-                                         (dprn :incrementing-counter counter-key)
-                                         (md/mswap! (md/fm-ascendant :counter-app me)
-                                           :flux-store update-in [:counters counter-key] inc)))}
-                    (text {} {} "+")))))))))))
+          (mapv #(build-counter %) [:left :right]))))))
