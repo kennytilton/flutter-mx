@@ -1,13 +1,14 @@
 (ns tiltontec.model.core
   (:require
+    [clojure.string :as str]
     [tiltontec.util.base
-     :refer [trx prog1 *trx?* def-rmap-slots]]
+     :refer [trx wtrx nowtrx prog1 dprn *trx?* *trdeep* def-rmap-slots]]
     [tiltontec.util.core
      :refer [difference atom? type-of err rmap-setf rmap-meta-setf pln]]
     [tiltontec.cell.base
      :refer [without-c-dependency model PObserver
              cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type
+             c-unbound? c-input? mx-type minfo
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
@@ -36,9 +37,9 @@
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
   (when (atom? me)
-    #_ (when (and (= slot :style)(= :z-counter (md-name me)))
-      (prn :md-get-sees!!!!!!!! slot (md-name me)
-        (cinfo (md-cell me slot))))
+    #_(when (and (= slot :style) (= :z-counter (md-name me)))
+        (prn :md-get-sees!!!!!!!! slot (md-name me)
+          (cinfo (md-cell me slot))))
     (if-let [c (md-cell me slot)]
       (c-get c)
       (slot @me))))
@@ -75,9 +76,6 @@
     (do                                                     ;; (println :gotc!)
       (c-reset! c new-value))
     (do
-      (println :reset-oops)
-      (println :reset-meta (meta me))
-      (println :cz (:cz (meta me)))
       (if (contains? @me slot)
         (err str "change not mediated by cell " slot "/" (mx-type me))
         (err str "change to slot not mediated by cell and map lacks slot "
@@ -205,22 +203,21 @@
     :else (do (trx :fm-navig-eq?-else-pplain=! seek)
               (= seek poss))))
 
-(defn fasc [what where & options]
+(defn fm-ascendant [what where & options]
   (when (and where what)
     (let [options (merge {:me? false :wocd? true}
                     (apply hash-map options))]
       (binding [*depender* (if (:wocd? options) nil *depender*)]
-        (prn :*depender*-now (cinfo *depender*))
         (or (and (:me? options)
               (fm-navig-eq? what where)
               where)
 
           (when-let [par (:par @where)]
-            (fasc what par
+            (fm-ascendant what par
               :me? true))
 
           (when (:must? options)
-            (err :fasc-must-failed what where options)))))))
+            (err :fm-ascendant-must-failed what where options)))))))
 
 (defn nextsib [mx]
   (without-c-dependency
@@ -241,41 +238,55 @@
           (recur (rest sibs)))))))
 
 (defn fm-navig [what where & options]
-  ;;(println :fm-navig-entry (if (atom? where) [(:tag @where)(:class @where)] where) (atom? where))
-  (when (and where what (atom? where))
-    (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
-                          } (apply hash-map options))]
-      ;;(println :fm-navig-opts options)
-      (binding [*depender* (if (:wocd? options) nil *depender*)]
-        (when (atom? where)
-          ;(println :f)
-          (or (and (:me? options)
-                (fm-navig-eq? what where)
-                where)
+  (wtrx (0 100 :fm-navig-entry *trdeep* options (if (md-ref? where) (minfo where)))
+    ;;(dprn :navig-options options)
+    (cond
+      (> *trdeep* 16)
+      (do (dprn :NAVIG-BAILING-at-depth *trdeep*)
+          (when (:must? options)
+            (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options])))))
 
-            (and (:inside? options)
-              (if-let [kids (md-get where :kids)]
-                (do
-                  ;(trx nil :inside-kids!!! (:name @where))
-                  (if-let [netkids (remove #{(:skip options)} kids)]
-                    (do
-                      (some #(fm-navig what %
-                               :me? true
-                               :inside? true
-                               :up? false) netkids))
-                    (trx nil :no-net-kids)))
-                (trx nil :inside-no-kids (:name @where))))
+      (and where what (atom? where))
+      (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
+                            } (apply hash-map options))]
+        ;;(println :fm-navig-opts options)
+        (binding [*depender* (if (:wocd? options) nil *depender*)]
+          (when (atom? where)
+            ;(println :f)
+            (or (and (:me? options)
+                  (fm-navig-eq? what where)
+                  where)
 
-            (and (:up? options)
-              (when-let [par (:par @where)]
-                (fm-navig what par
-                  :up? true
-                  :me? true
-                  :skip where
-                  :inside? true)))
+              (and (:inside? options)
+                (if-let [kids (md-get where :kids)]
+                  (do
+                    ;(trx nil :inside-kids!!! (:name @where))
+                    (if-let [netkids (remove #{(:skip options)} kids)]
+                      (do
+                        (some #(fm-navig what %
+                                 :me? true
+                                 :inside? true
+                                 :up? false) netkids))
+                      (trx nil :no-net-kids)))
+                  (trx nil :inside-no-kids (:name @where))))
 
-            (when (:must? options)
-              (err :fm-navig-must-failed what where options))))))))
+              (and (:up? options)
+                (if-let [par (:par @where)]
+                  (do ;; (dprn :navig-up! (minfo par))
+                      (fm-navig what par
+                        :up? true
+                        :me? true
+                        :skip where
+                        :inside? true))
+                  (do (dprn :no-up-from (minfo where))
+                      false)))
+
+              (when (:must? options)
+                (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))))))
+      :else (do (dprn :NAVIG-falls-out nil)
+                (when (:must? options)
+                  (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))
+                nil))))
 
 (defn fm! [what where]
   (fm-navig what where :me? false :inside? true :must? true :up? true))
@@ -336,7 +347,7 @@
   [me explicit=type-test]
   (assert me)
   ;; explicit-type-test will have to be like (fn [me] (dart/is? (mx-type me) TScaffold))
-  (fasc explicit=type-test me))
+  (fm-ascendant explicit=type-test me))
 
 (defn fmi-w-class [where class]
   (fm-navig #(when (atom? %)
@@ -371,7 +382,7 @@
      (doall (remove nil? (flatten (list ~@tree))))))
 
 (defmacro cFkids [& tree]
-  `(cF ;; (assert ~'me "no me for cFkids")
+  `(cF                                                      ;; (assert ~'me "no me for cFkids")
      ;;(print :cFkids-me!!! (:id (deref ~'me)))
      (the-kids ~@tree)))
 
