@@ -1,5 +1,6 @@
 (ns tiltontec.example.two-counters
   (:require
+    [clojure.string :as str]
     [tiltontec.util.base :refer [dprn]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
@@ -17,13 +18,14 @@
 (defn make-app []
   (material-app {:name       :counter-app
                  ; simulating a separate global store, we bind a purely independent Matrix data structure that
-                 ; must be consulted for values.
-                 :flux-store (cI {:counters {:left 1 :right 2}})
+                 ; must be consulted for values. Pro tip: use `mswap! <the app> :flux-store update-in etc` to
+                 ; increment either counter.
+                 :flux-store (cI {:counters {:left 0 :right 0}})
                  }
     {:title "Two Counters"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
     (scaffold {}
-      {:appBar (AppBar :title (Text "Two Counters"))}
+      {:appBar (AppBar :title (Text "Two Counters ala Flux"))}
       (center {} {}
         (row {}
           {:mainAxisAlignment MainAxisAlignment/center}
@@ -35,7 +37,7 @@
                                       (dprn :Column-checks-its-counter counter-key)
                                       (get-in (mget app :flux-store) [:counters counter-key])))}
                   {:mainAxisAlignment MainAxisAlignment/center}
-                  (text {} {} (str counter-key))
+                  (text {} {} (str/capitalize (name counter-key)))
                   (text {}
                     {:style (TextStyle
                               :color Colors/green
