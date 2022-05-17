@@ -1,0 +1,47 @@
+(ns tiltontec.example.two-counters-matrix
+  (:require
+    [clojure.string :as str]
+    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
+    [tiltontec.model.base :refer [md-cell]]
+    [tiltontec.model.core :refer [make mx-par mget  md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.mx-flutter.core :as fx
+     :refer [render-fx material-app center text row expanded elevated-button text-ex scaffold column]]
+    ["package:flutter/widgets.dart"
+     :refer [Text State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]))
+
+(defn- build-counter [counter-key]
+  (expanded {}{}
+    (column {:name :ctr-col
+             :value (cI 0) ;; the column maintains its own state, aka "in-place state"
+             }
+      {:mainAxisAlignment MainAxisAlignment/center}
+      (text {}{} (str/capitalize (name counter-key)))
+      (text {}{:style
+               ;; no luck yet connecting to Flutter themes, so...
+               (cF (TextStyle.
+                     :color (if (<= (md/fmuval :ctr-col) 3)
+                              Colors/green Colors/red)
+                     :fontSize 48.0))}
+        (str (md/fmuval :ctr-col)))
+      (elevated-button {}
+        {:onPressed (cF (fn ^void []
+                          (md/mswap! (md/fmu :ctr-col) :value inc)))}
+        (text {}{} "+")))))
+
+(defn make-app []
+  (material-app {:name :mat-app}
+    {:title "Two Counters"
+     :theme (cF (ThemeData :primarySwatch Colors/blue))}
+    (scaffold {}
+      {:appBar (AppBar :title (Text "Two Counters"))}
+      (center {} {}
+        (row {}
+          {:mainAxisAlignment MainAxisAlignment/center}
+          (mapv #(build-counter %)
+            [:left :right]))))))
