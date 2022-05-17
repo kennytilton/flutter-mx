@@ -1,8 +1,9 @@
 (ns tiltontec.example.two-counters
   (:require
-    [tiltontec.cell.base :as cty]
-    [tiltontec.cell.core :as cell :refer [cF cI]]
-    [tiltontec.model.core :refer [make mget md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.cell.base :refer [minfo] :as cty]
+    [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
+    [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
      :refer [render-fx material-app center text row expanded elevated-button text-ex scaffold column]]
     ["package:flutter/widgets.dart"
@@ -18,13 +19,15 @@
 (defn my-counters [me]
   (mget (my-flux me) :counters))
 
+(declare build-col)
+
 (defn make-app []
   (material-app {:name       :counter-app
                  ; simulating a separate store, we bind a purely independent Matrix data structure that
                  ; must be consulted for values.
                  ;
                  ; The alternative would be a simple mutable input (cI) property:
-                 ;   :flux (cI {:counters (cI {:left 0 :right 0})})
+                 ;   :flux-store (cI {:counters (cI {:left 0 :right 0})})
                  ;
                  :flux-store (cI {:counters {:left 0 :right 0}})
                  }
@@ -35,23 +38,37 @@
       (center {} {}
         (row {}
           {:mainAxisAlignment MainAxisAlignment/center}
-          (mapv (fn [counter-key]
-                  (expanded {} {}
-                    (column {:name  :counter-col
-                             :value (cF (let [app (md/fm-navig (fn [me] (= :counter-app (mget me :name)))
-                                                    me :me? false :up? true :inside? false :wocd? true)]
-                                          (dart:core/print (str "ctr col got app!!! " app))
-                                          (get-in (mget app :flux) [:counters counter-key])))}
-                      {:mainAxisAlignment MainAxisAlignment/center}
-                      (text {} {} (str counter-key))
-                      (text {}
-                        {:style (cF (TextStyle
-                                      :color Colors/green
-                                      :fontSize 48.0))}
-                        (str (md/fmuval :counter-col)))
-                      (elevated-button {}
-                        {:onPressed (cF (fn ^void []
-                                          (md/mswap! (my-flux me) :counters
-                                            update counter-key inc)))}
-                        (text {} {} "+")))))
-            [:left :right]))))))
+          (build-col :right)
+          (build-col :left)
+          )))))
+
+(defn build-col [counter-key]
+  (expanded {} {}
+    (column {:name  :counter-col
+             :value (cFnil (let [app (md/fm-navig (fn [me] (= :counter-app (mget me :name)))
+                                       me :me? false :up? true :inside? false :wocd? true)]
+                             (dprn :col-navig-app counter-key (cty/minfo app))
+                             (dprn :col-navig-counter-key counter-key)
+                             (dprn :col-navig-flux (mget app :flux-store))
+                             (dprn :col-navig-val
+                               (get-in (mget app :flux-store) [:counters counter-key]))
+                             (get-in (mget app :flux-store) [:counters counter-key])))}
+      {:mainAxisAlignment MainAxisAlignment/center}
+      (text {} {} (str "boom" counter-key))
+      (text {} {} (str counter-key))
+      (text {}
+        {:style (TextStyle
+                  :color Colors/green
+                  :fontSize 48.0)}
+        (do (try
+              (dprn :counter-val!! counter-key (mget (mx-par me) :value))
+              (catch Exception e
+                (dprn :Exception!!!!!!!!!!!!!!!! e)))
+            (str (mget (mx-par me) :value))
+            #_ "styled"
+            #_ (str (md/fmuval :counter-col))))
+      (elevated-button {}
+        {:onPressed (cFnil (fn ^void []
+                             (md/mswap! (my-flux me) :counters
+                               update counter-key inc)))}
+        (text {} {} "+")))))

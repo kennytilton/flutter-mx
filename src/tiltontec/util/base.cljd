@@ -37,7 +37,8 @@
 
 (def ^:dynamic *trc-ensure* nil)
 (def ^:dynamic *trx-path-id* nil)
-(def ^:dynamic *trxdepth* 0)
+(def ^:dynamic *trdeep* 0)
+(def ^:dynamic *txran* 0)
 (def last-trc (atom 0)) ;; s/b universal time
 
 (defn call-trc$ [s bits]
@@ -48,7 +49,7 @@
   ;; (break) ;; uncomment to escape loop
   (when *trx?*
     (when s
-      (let [path (apply str (repeat *trxdepth* "."))]
+      (let [path (apply str (repeat *trdeep* "."))]
         (println path (call-trc$ s os))))))
 
 (defmacro trx [label & vals]
@@ -56,20 +57,62 @@
                 (str label))
      ~@vals))
 
+;(defn call-wtrx [fn lo hi trxargs]
+;  (binding [*trdeep* (inc *trdeep*)]
+;    (cond
+;      (<= lo *trdeep* hi)
+;      (apply call-trc trxargs)
+;      (> *trdeep* hi)
+;      (throw (Exception.
+;               (str "wtrx exceeded max depth " hi ":"
+;                 (apply call-trc$ (first trxargs)
+;                   (rest trxargs))))))
+;    (fn)))
+;
+;(defmacro wtrx [[lo hi & trxargs] & body]
+;  `(call-wtrx (fn [] ~@body) ~lo ~hi (list ~@trxargs)))
+
+;;;----------------------------------------
+
+
+(defn dprn [& bits]
+  (when-not (nil? (first bits))
+    (dart:core/print (str/join " - " (list* :DPR
+                                       *trdeep*
+                                       (apply str (repeat *trdeep* "."))
+                                       bits)))))
+
 (defn call-wtrx [fn lo hi trxargs]
-  (binding [*trxdepth* (inc *trxdepth*)]
-    (cond
-      (<= lo *trxdepth* hi)
-      (apply call-trc trxargs)
-      (> *trxdepth* hi)
-      (throw (Exception.
-               (str "wtrx exceeded max depth " hi ":"
-                 (apply call-trc$ (first trxargs)
-                   (rest trxargs))))))
-    (fn)))
+  #_ (dprn :call-wtrx-depth-entry *trdeep* *txran*)
+  (let [orig-depth *trdeep*
+        new-depth (+ 1 orig-depth)
+        new-ran (rand-int 999)]
+    (binding [*trdeep* new-depth
+              *txran* new-ran]
+      (dprn :WTRX (first trxargs)
+        (if (= *trdeep* new-depth) :ok :BADDEPTH!!!!) [:orig orig-depth] [:new new-depth]
+        [:bound *trdeep*] [:rans (if (= *txran* new-ran) :ok :RAND_BAD_TOO!!!!!!!!!!!!!!!)] :info (rest trxargs))
+
+      (assert (= *txran* new-ran))
+      (assert (= *trdeep* new-depth)) ;; bindingfail #1 happens on slot name :zq3 but not :zq, starting value at unbound (the symbol)
+
+      (cond
+        (<= lo *trdeep* hi)
+        (apply call-trc trxargs)
+        (> *trdeep* hi)
+        (throw (Exception.
+                 (str "wtrx exceeded max depth " hi ":"
+                   (apply call-trc$ (first trxargs)
+                     (rest trxargs))))))
+      (fn))))
 
 (defmacro wtrx [[lo hi & trxargs] & body]
   `(call-wtrx (fn [] ~@body) ~lo ~hi (list ~@trxargs)))
+
+(defmacro prog1 [& body]
+  `(let [result# ~(first body)]
+     ~@(rest body)
+     result#))
 
 (defmacro prog1 [& body]
   `(let [result# ~(first body)]
