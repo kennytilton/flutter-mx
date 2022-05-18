@@ -6,30 +6,27 @@
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [mget] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [render-fx material-app scaffold  center text]]
+     :refer [render-fx material-app scaffold center text]]
     ;; State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m :refer [AppBar Colors Text ThemeData]]
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
 
 (defn make-app []
-  (material-app {}
+  (material-app
     {:title "Hunt for Teal mxFlutter"
      :theme (cF (ThemeData :primarySwatch
                   (let [ttl (mget me :title)]
                     (cond
-                      (string/includes? ttl "Red") Colors/red
-                      (string/includes? ttl "Blue") Colors/blue
-                      (string/includes? ttl "Green") Colors/green
                       (string/includes? ttl "Teal") Colors/teal
                       (string/includes? ttl "Yellow") Colors/yellow
-                      :else Colors/white))))}
-    (scaffold {}
+                      :else Colors/blue))))}
+    (scaffold
       ;; todo arrange for awaken/quiesce on stray edges
-      {:appBar               (AppBar
-                               :title (m/Text "Welcome to mxFlutter"))}
-      (center {} {}
-        (text {} {:style (TextStyle
-                              :color Colors/black
-                              :fontSize 32.0)}
+      {:appBar (AppBar
+                 :title (m/Text "Welcome to mxFlutter"))}
+      (center
+        (text {:style (TextStyle
+                        :color Colors/black
+                        :fontSize 32.0)}
           "hello, world\\n")))))
 

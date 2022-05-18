@@ -6,6 +6,7 @@
              :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
+            [tiltontec.util.base :refer [dprn]]
             [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe] :as cty]
     ;;[tiltontec.cell.observer :refer [PObserver]]
             [tiltontec.util.core :as util
@@ -43,56 +44,128 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_(prn :FXMatapp-NULL-observing!!! slot)))
+    #_(prn :FXMatapp-NULL-observing!!! slot))
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m/MaterialApp
+        :title (mget me :title)
+        :theme (mget me :theme)
+        :home (render-fx (first (md-kids me)))))))
 
 (deftype FXScaffold []
   ;;:type-only true
   :extends FXDartWidget
   PDartWidget
   (parts [this]
-    [:appBar :body :actionButton]))
-
-(deftype FXText []
-  :extends FXDartWidget
-  ;;:type-only true
-  PDartWidget
-  (parts [this]
-    [:child :style]))
+    [:appBar :body :actionButton])
+  (builder [this]
+    (fn [me ctx]
+      (m/Scaffold
+        :appBar (mget me :appBar)                           ;; todo this s/b render-fx
+        :body (render-fx (first (md/md-kids me)))
+        :floatingActionButton
+        ;; todo this too s/b render-fx
+        (let [button# (mget me :floatingActionButton)]
+          (if (fn? button#)
+            (button# me ctx)
+            button#))))))
 
 (deftype FXCenter []
   :extends FXDartWidget
   ;;:type-only true
   PDartWidget
   (parts [this]
-    [:child]))
+    [:child])
+  (builder [this]
+    (fn [me ctx]
+      (dprn (str "Center Type REBUILDING " (cty/minfo me)))
+      (m/Center
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
 
 (deftype FXExpanded []
   :extends FXDartWidget
   ;;:type-only true
   PDartWidget
   (parts [this]
-    [:child]))
+    [:child])
+  (builder [this]
+    (fn [me ctx]
+      (m/Expanded
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
 
 (deftype FXColumn []
   :extends FXDartWidget
   ;;:type-only true
   PDartWidget
   (parts [this]
-    [:children]))
+    [:children])
+  (builder [this]
+    (fn [me ctx]
+      (dprn :the-theme!!!!!! (-> (Theme/of ctx) .textTheme))
+      (dprn (str "Column Type REBUILDING " (cty/minfo me)))
+      (m/Column.
+        :mainAxisAlignment (md/mget me :mainAxisAlignment)
+        :children (mapv render-fx (md/md-kids me))))))
 
 (deftype FXRow []
   :extends FXDartWidget
   ;;:type-only true
   PDartWidget
   (parts [this]
-    [:children]))
+    [:children])
+  (builder [this]
+    (fn [me ctx]
+      (m/Row
+        :mainAxisAlignment (tiltontec.model.core/mget me :mainAxisAlignment)
+        :children (mapv render-fx (tiltontec.model.core/md-kids me))))))
 
 (deftype FXElevatedButton []
   :extends FXDartWidget
   ;;:type-only true
   PDartWidget
   (parts [this]
-    [:child]))
+    [:child])
+  (builder [this]
+    (fn [me ctx]
+      (m/ElevatedButton
+        :onPressed (mget me :onPressed)
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+;;; --- GridView/counter -------------------------------------
+
+(deftype FXGridViewCount []
+  ;;:type-only true
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (prn :FXGridViewCount-obs-IGNORE!! slot)))
+
+;; (m.GridView/count
+;                     :crossAxisCount 2
+;                     :children (map
+;                                (fn [i] (m/Center :child (m/Text (str "Item " i) :style (-> theme .textTheme .headline3))))
+;                                (range 100)))))))))
+
+(defmacro grid-view-count [custom-props fx-props & kids]
+  ;; todo: enforce only one kid
+  `(tiltontec.model.core/make
+     :mx-type (tiltontec.mx-flutter.core/FXGridViewCount)
+     :fx-gen (fn [me]
+               (statefully me
+                 (fn [me ctx]
+                   (dprn :chking-builder)
+                   (if-let [builder (mget me :builder)]
+                     (builder me ctx)
+                     (do
+                       (dprn :fx-gen-gview (count (md-kids me)) (cty/minfo me))
+                       (m.GridView/count
+                         :crossAxisCount (mget me :crossAxisCount)
+                         :children (mapv render-fx (md-kids me))))))))
+     :kids (tiltontec.model.core/cFkids ~@kids)
+     ~@(concat
+         (vec (apply concat (seq fx-props)))
+         (vec (apply concat (seq custom-props))))))
 
 ;;; --- ListView/builder -----------------------------------------
 
@@ -102,11 +175,6 @@
   PObserver
   (observe [this slot me new-value prior-value cell]
     (prn :FXListViewBuilder-obs!! slot)))
-
-#_(m.ListView/builder
-    :padding (m.EdgeInsets/symmetric :vertical 8.0)
-    :itemCount 25
-    :itemBuilder (fn [ctx i] (fake-item (odd? i))))
 
 (defmacro list-view-builder [custom-props fx-props & kids]
   ;; todo: enforce only one kid
@@ -143,7 +211,7 @@
           (build [this ctx]
             (builder me ctx)))))))
 
-(deftype FXTextEx []
+(deftype FXText []
   :extends FXDartWidget
   ;;:type-only true
   PDartWidget
@@ -151,54 +219,111 @@
     [:child :style])
   (builder [this]
     (fn [me ctx]
-      (dart:core/print (str "FXTextEx REBUILDING " (cty/minfo me)))
+      (dart:core/print (str "FXText Type REBUILDING " (cty/minfo me)))
       (w/Text (first (md/md-kids me))
         :style (let [style (mget me :style)]
                  (if (fn? style)
                    (style me ctx)
                    style))))))
 
-(defmacro text-ex [custom-props fx-props & kids]
+(defn make-fx [mx-type fx-props custom-props cFkids-form]
+  (apply tiltontec.model.core/make
+    :mx-type mx-type
+    :fx-prop-keys (keys fx-props)
+    :kids cFkids-form
+    :fx-gen (fn [me]
+              (statefully me
+                (fn [me ctx]
+                  (dprn "GEN" mx-type)
+                  (let [builder (or (mget me :builder)
+                                  (builder mx-type))]
+                    (builder me ctx)))))
+    (concat
+      (vec (apply concat (seq fx-props)))
+      (vec (apply concat (seq custom-props))))))
+
+; todo fix hard-coded renderer in make-fx
+; todo get hard-coded type out so textpp can be generalized
+
+(defmacro text [& vargs]
   ;; todo: enforce only one kid
-  `(tiltontec.model.core/make
-     :mx-type (tiltontec.mx-flutter.core/FXTextEx)
-     :kids (tiltontec.model.core/cFkids ~@kids)
-     :fx-gen (fn [me]
-               (statefully me
-                 (fn [me ctx]
-                   (dart:core/print (str "Text-Ex REBUILDING " (cty/minfo me)))
-                   (let [builder (or (mget me :builder)
-                                   (builder (mx-type me)))]
-                     (builder me ctx)))))
-     ~@(concat
-         (vec (apply concat (seq fx-props)))
-         (vec (apply concat (seq custom-props))))))
+  (cond
+    (nil? vargs)
+    `(tiltontec.mx-flutter.core/make-fx (tiltontec.mx-flutter.core/FXText) {} {} nil)
 
-(defn Text-fx-gen [me]
-  (statefully me
-    (fn [me ctx]
-      #_(do (prn :text-gen-meta-records-ctx!! ctx (meta me) #_(cty/minfo me))
-            (util/rmap-meta-setf [:ctx me] ctx))
-      (dart:core/print (str "text REBUILDING " (cty/minfo me)))
-      (if-let [builder (mget me :builder)]
-        (builder me ctx)
-        (w/Text (first (md/md-kids me))
-          :style (let [style (mget me :style)]
-                   (if (fn? style)
-                     (style me ctx)
-                     style)))))))
+    (not (map? (first vargs)))                              ;; just kids
+    `(tiltontec.mx-flutter.core/make-fx
+       (tiltontec.mx-flutter.core/FXText) {} {}
+       (tiltontec.model.core/cFkids ~@vargs))
 
-(defmacro text [custom-props fx-props & kids]
-  ;; todo: enforce only one kid
-  `(tiltontec.model.core/make
-     :mx-type (tiltontec.mx-flutter.core/FXText.)
-     ;;:dart-type (parts (tiltontec.mx-flutter.core/FXText.))
-     :kids (tiltontec.model.core/cFkids ~@kids)
-     :fx-gen Text-fx-gen
-     ~@(concat
-         (vec (apply concat (seq fx-props)))
-         (vec (apply concat (seq custom-props))))))
+    (map? (second vargs))                                   ;; full spec
+    ;; (textpp {:fx 42} {:mx 3} k1)
+    `(tiltontec.mx-flutter.core/make-fx (tiltontec.mx-flutter.core/FXText)
+       ~(first vargs)
+       ~(second vargs)
+       ~(when-let [kids# (seq (nthrest vargs 2))]
+          `(tiltontec.model.core/cFkids ~@kids#)))
 
+    :default `(tiltontec.mx-flutter.core/make-fx (tiltontec.mx-flutter.core/FXText)
+                ~(first vargs)
+                {}
+                ~(when-let [kids# (seq (nthrest vargs 1))]
+                   `(tiltontec.model.core/cFkids ~@kids#)))))
+
+;; Clojur eversion
+#_ ;; OK
+(defmacro deftag [tag fx-type-name]
+  (prn :deftag-entry!!!! tag  (name tag) fx-type-name )
+  `(defmacro ~tag [& vargs#]
+     (let [typx# '~fx-type-name]
+       (cond
+         (nil? vargs#)
+         `[:tagmac-says-type-ok (str 'typx#) (new ~typx#) (quote red)]))))
+
+#_
+(defmacro deftag [tag fx-type-name]
+  (prn :deftag-entry!!!! tag  (name tag) fx-type-name )
+  `(defmacro ~tag [& vargs#]
+     (cond
+       (nil? vargs#)
+       `[:tagmac-says-type-ok (new ~'~fx-type-name)])))
+
+(defmacro deftag [tag fx-type-name]
+  (prn :deftag-entry!!!!!!! tag fx-type-name)
+  `(defmacro ~tag [& vargs#]
+     (let [fx-type# '~fx-type-name]
+       (cond
+         (nil? vargs#)
+         `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
+            {} {} nil)
+
+         (not (map? (first vargs#)))
+         ;; we must have justkids
+         `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
+            {} {}
+            (tiltontec.model.core/cFkids ~@vargs#))
+
+         (map? (second vargs#))
+         ;; full spec, maybe kids
+         (do (prn :full-spec!!!!!!!!!!!! (second vargs#))
+             `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
+                ~(first vargs#)
+                ~(second vargs#)
+                ~(when-let [kids# (seq (nthrest vargs# 2))]
+                   `(tiltontec.model.core/cFkids ~@kids#))))
+
+         :else ;; just first map of fx props and maybe kids
+         `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
+            ~(first vargs#)
+            {}
+            ~(when-let [kids# (seq (nthrest vargs# 1))]
+               `(tiltontec.model.core/cFkids ~@kids#)))))))
+
+(deftag column tiltontec.mx-flutter.core/FXColumn)
+
+(deftag material-app tiltontec.mx-flutter.core/FXMaterialApp)
+
+#_
 (defmacro material-app [custom-props fx-props & kids]
   `(tiltontec.model.core/make
      :mx-type (tiltontec.mx-flutter.core/FXMaterialApp.)
@@ -211,6 +336,7 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+#_
 (defn Scaffold-fx-gen [me]
   (statefully me
     (fn [me ctx]
@@ -224,6 +350,8 @@
             (button# me ctx)
             button#))))))
 
+(deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
+#_
 (defmacro scaffold [custom-props fx-props & kids]
   `(make :mx-type (tiltontec.mx-flutter.core/FXScaffold.)
      :kids (cFkids ~@kids)
@@ -232,6 +360,7 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+#_
 (defmacro column [custom-props fx-props & kids]
   `(make :mx-type (tiltontec.mx-flutter.core/FXColumn)
      :kids (tiltontec.model.core/cFkids ~@kids)
@@ -244,6 +373,9 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+(deftag row tiltontec.mx-flutter.core/FXRow)
+
+#_
 (defmacro row [custom-props fx-props & kids]
   `(make :mx-type (tiltontec.mx-flutter.core/FXRow)
      :kids (tiltontec.model.core/cFkids ~@kids)
@@ -254,6 +386,8 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+(deftag center tiltontec.mx-flutter.core/FXCenter)
+#_
 (defmacro center [custom-props fx-props & kids]
   ;; todo: enforce only one kid
   `(tiltontec.model.core/make
@@ -265,6 +399,8 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+(deftag expanded tiltontec.mx-flutter.core/FXExpanded)
+#_
 (defmacro expanded [custom-props fx-props & kids]
   `(make :mx-type (tiltontec.mx-flutter.core/FXExpanded)
      :kids (cFkids ~@kids)
@@ -274,6 +410,8 @@
          (vec (apply concat (seq fx-props)))
          (vec (apply concat (seq custom-props))))))
 
+(deftag elevated-button tiltontec.mx-flutter.core/FXElevatedButton)
+#_
 (defmacro elevated-button [custom-props fx-props & kids]
   `(make :mx-type (tiltontec.mx-flutter.core/FXElevatedButton)
      :kids (cFkids ~@kids)

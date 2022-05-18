@@ -6,7 +6,7 @@
      :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [render-fx material-app center text text-ex scaffold column]]
+     :refer [render-fx material-app center text  scaffold column]]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -21,27 +21,24 @@
     ))
 
 (defn make-app []
-  (material-app {:name :mat-app}
+  (material-app
     {:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
-    (scaffold {}
+    (scaffold
       {:appBar               (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000))))
        :floatingActionButton (cF (FloatingActionButton
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
                                    :child (Icon Icons/add :color Colors/black)))}
-      (center {} {}
-        (column {}
+      (center
+        (fx/column
           {:mainAxisAlignment MainAxisAlignment/center}
-          (text {}
-            {:style (TextStyle
-                      :color Colors/black
-                      :fontSize 18.0)}
-            "You have clicked the button this many times:")
-          (text-ex {:name  :z-counter
-                 :value (cI 0)}
-            ;; a custom builder can access Dart context
+          (fx/text {:style (TextStyle
+                          :color Colors/black
+                          :fontSize 18.0)}
+            "You clicked the button this many times:")
+          (fx/text
             {:style
              #_;; a reactive version tracking another property
                      (cF (TextStyle.
@@ -51,23 +48,19 @@
              ;; a version that needs the runtime context, done as a callback (experiemental)
              (fn [me ctx]
                (.headline4 (.textTheme (Theme/of ctx))))
-
-             ;; straight-up fixed value
-             #_(TextStyle.
-                 :color m.Colors/red
-                 :fontSize 42.0)
-
              ;; or comment out the above entirely and supply a custom builder
              #_#_:builder (fn [me ctx]
                             (Text (str (md/my-val))
                               :style (.headline4 (.textTheme (Theme/of ctx)))))
              }
+            {:name  :z-counter
+             :value (cI 0)}
+            ;; a custom builder can access Dart context
+
             (str (md/my-val))
             )
-          (text
-            {:name  :zx2
-             :value (cF (* 2 (md/fmuval :z-counter)))}
-            {}
+          (fx/text {}
+            {:value (cF (* 2 (md/fmuval :z-counter)))}
             (str "Button click times two = " (md/my-val))))))))
 
 

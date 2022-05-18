@@ -1,0 +1,34 @@
+(ns tiltontec.example.gridlist
+  "Faithful port of https://docs.flutter.dev/cookbook/lists/grid-lists"
+  (:require
+    [cljd.flutter.alpha :as f]
+    [clojure.string :as str]
+    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
+    [tiltontec.model.base :refer [md-cell]]
+    [tiltontec.model.core :refer [make mx-par mget  md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.mx-flutter.core :as fx
+     :refer [render-fx material-app center text grid-view-count row expanded elevated-button scaffold column]]
+    ["package:flutter/widgets.dart"
+     :refer [Text State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]))
+
+(defn make-app []
+   (let [title "Grid List"]
+     (material-app
+       {:title title}
+       (scaffold
+         {:appBar (m/AppBar :title (m/Text title))}
+         (grid-view-count {}
+           {:crossAxisCount 2}
+           (mapv
+             (fn [i] (center
+                       (text
+                         {:style (fn [me ctx]
+                                   (-> (Theme/of ctx) .textTheme .headline3))}
+                         (str "Item " i))))
+              (range 100)))))))

@@ -5,9 +5,9 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
     [tiltontec.model.base :refer [md-cell]]
-    [tiltontec.model.core :refer [make mx-par mget  md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [render-fx material-app center text row expanded elevated-button text-ex scaffold column]]
+     :refer [render-fx material-app center text row expanded elevated-button scaffold column]]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -16,25 +16,26 @@
      :refer [TextStyle]]))
 
 (defn build-counter [counter-key]
-  (expanded {} {}
-    (column {:name  :counter-col
-             :value (cF (let [app (md/fm-ascendant :counter-app me :me? false)]
-                          (dprn :Column-checks-its-counter counter-key)
-                          (get-in (mget app :flux-store) [:counters counter-key])))}
+  (expanded
+    (fx/column
       {:mainAxisAlignment MainAxisAlignment/center}
-      (text {} {} (str/capitalize (name counter-key)))
-      (text {}
-        {:style (TextStyle
-                  :color Colors/green
-                  :fontSize 48.0)}
+      {:name  :counter-col
+       :value (cF (let [app (md/fm-ascendant :counter-app me)]
+                    (dprn :Column-checks-its-counter counter-key)
+                    (get-in (mget app :flux-store) [:counters counter-key])))}
+      (text (str/capitalize (name counter-key)))
+      (text
+        {:style (fn [me ctx]
+                  ;; todo this can be (theme-fn ....)
+                  (-> (Theme/of ctx) .textTheme .displayLarge))}
         (do (dprn :building-counter!!!!!!!!!!!!! counter-key)
             (str (md/fmuval :counter-col))))
-      (elevated-button {}
+      (elevated-button
         {:onPressed (cFnil (fn ^void []
                              (dprn :incrementing-counter counter-key)
                              (md/mswap! (md/fm-ascendant :counter-app me)
                                :flux-store update-in [:counters counter-key] inc)))}
-        (text {} {} "+")))))
+        (text "+")))))
 
 (defn make-app []
   (material-app {:name       :counter-app
@@ -44,9 +45,9 @@
                  :flux-store (cI {:counters {:left 0 :right 0}})}
     {:title "Two Counters"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
-    (scaffold {}
+    (scaffold
       {:appBar (AppBar :title (Text "Two Counters ala Flux"))}
-      (center {} {}
-        (row {}
+      (center
+        (row
           {:mainAxisAlignment MainAxisAlignment/center}
           (mapv #(build-counter %) [:left :right]))))))
