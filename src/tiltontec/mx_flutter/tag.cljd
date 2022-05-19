@@ -1,0 +1,84 @@
+(ns tiltontec.mx-flutter.tag
+  (:require ["package:flutter/material.dart" :as m
+             :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
+                     FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+            ["package:flutter/widgets.dart" :as w
+             :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
+            ["package:flutter/painting.dart" :as p
+             :refer [TextStyle]]
+            [tiltontec.util.base :refer [dprn]]
+            [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe] :as cty]
+            [tiltontec.util.core :as util
+             :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
+            [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]))
+
+(defprotocol PDartWidget
+  (parts [this] "eg, Scaffold [:appBar :body :floatingActionButton ...]")
+  (parts-ex [this count] "Test")
+  (builder [this]))
+
+(defn render-fx [fx]
+  ;;(prn :render-fx-entry fx)
+  (let [gen (mget fx :fx-gen)]
+    (when-not gen
+      (prn :rfx-sees-no-fx-gen!!! fx))
+    (gen fx)))
+
+(defn statefully [me builder]
+  (reify :extends w/StatefulWidget
+    (createState [this]
+      (util/rmap-meta-setf [:state-ref me]
+        (reify :extends w/State
+          ;; todo make this next optional
+          ^:mixin m/SingleTickerProviderStateMixin
+          (build [this ctx]
+            (builder me ctx)))))))
+
+(defn make-fx [mx-type fx-props custom-props cFkids-form]
+  (apply tiltontec.model.core/make
+    :mx-type mx-type
+    :fx-prop-keys (keys fx-props)
+    :kids cFkids-form
+    :fx-gen (fn [me]
+              (tiltontec.mx-flutter.tag/statefully me
+                (fn [me ctx]
+                  ;;(dprn "GEN" mx-type)
+                  (let [builder (or (mget me :builder)
+                                  (builder mx-type))]
+                    (builder me ctx)))))
+    (concat
+      (vec (apply concat (seq fx-props)))
+      (vec (apply concat (seq custom-props))))))
+
+(defmacro deftag [tag fx-type-name]
+  ;;(prn :deftag-entry!!!!!!! tag fx-type-name)
+  `(defmacro ~tag [& vargs#]
+     ;;(prn :expanding-deftag '~tag)
+     (let [fx-type# '~fx-type-name]
+       (cond
+         (nil? vargs#)
+         `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
+            {} {} nil)
+
+         (not (map? (first vargs#)))
+         (do ;;(prn :just-kids!!!!!!!! '~tag)
+             ;; we must have justkids
+             `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
+                {} {}
+                (tiltontec.model.core/cFkids ~@vargs#)))
+
+         (map? (second vargs#))
+         ;; full spec, maybe kids
+         (do ;;(prn :full-spec!!!!!!!!!!!! (second vargs#))
+             `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
+                ~(first vargs#)
+                ~(second vargs#)
+                ~(when-let [kids# (seq (nthrest vargs# 2))]
+                   `(tiltontec.model.core/cFkids ~@kids#))))
+
+         :else ;; just first map of fx props and maybe kids
+         `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
+            ~(first vargs#)
+            {}
+            ~(when-let [kids# (seq (nthrest vargs# 1))]
+               `(tiltontec.model.core/cFkids ~@kids#)))))))

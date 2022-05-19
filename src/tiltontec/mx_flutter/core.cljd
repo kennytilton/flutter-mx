@@ -10,12 +10,8 @@
             [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]))
-
-(defprotocol PDartWidget
-  (parts [this] "eg, Scaffold [:appBar :body :floatingActionButton ...]")
-  (parts-ex [this count] "Test")
-  (builder [this]))
+            [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
+            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget render-fx] :as tag]))
 
 ;(deftype TPart []
 ;  PDartWidget
@@ -38,6 +34,8 @@
   (parts [this]
     [:no-parts]))
 
+;;; --- material app ---------------------------------------
+
 (deftype FXMaterialApp []
   ;;:type-only true
   :extends FXDartWidget
@@ -51,6 +49,10 @@
         :title (mget me :title)
         :theme (mget me :theme)
         :home (render-fx (first (md-kids me)))))))
+
+(deftag material-app tiltontec.mx-flutter.core/FXMaterialApp)
+
+;;; --- scaffold ---------------------------------------
 
 (deftype FXScaffold []
   ;;:type-only true
@@ -70,6 +72,10 @@
             (button# me ctx)
             button#))))))
 
+(deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
+
+;;; --- center ---------------------------------------
+
 (deftype FXCenter []
   :extends FXDartWidget
   ;;:type-only true
@@ -78,9 +84,13 @@
     [:child])
   (builder [this]
     (fn [me ctx]
-      (dprn (str "Center Type REBUILDING " (cty/minfo me)))
+      ;;(dprn (str "Center Type REBUILDING " (cty/minfo me)))
       (m/Center
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag center tiltontec.mx-flutter.core/FXCenter)
+
+;;; --- expanded ---------------------------------------
 
 (deftype FXExpanded []
   :extends FXDartWidget
@@ -93,6 +103,10 @@
       (m/Expanded
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
 
+(deftag expanded tiltontec.mx-flutter.core/FXExpanded)
+
+;;; --- column ---------------------------------------
+
 (deftype FXColumn []
   :extends FXDartWidget
   ;;:type-only true
@@ -101,10 +115,14 @@
     [:children])
   (builder [this]
     (fn [me ctx]
-      (dprn (str "Column Type REBUILDING " (cty/minfo me)))
+      ;;(dprn (str "Column Type REBUILDING " (cty/minfo me)))
       (m/Column.
         :mainAxisAlignment (md/mget me :mainAxisAlignment)
-        :children (mapv render-fx (md/md-kids me))))))
+        :children (mapv tiltontec.mx-flutter.tag/render-fx (md/md-kids me))))))
+
+(deftag column tiltontec.mx-flutter.core/FXColumn)
+
+;;; --- row ---------------------------------------
 
 (deftype FXRow []
   :extends FXDartWidget
@@ -116,7 +134,11 @@
     (fn [me ctx]
       (m/Row
         :mainAxisAlignment (tiltontec.model.core/mget me :mainAxisAlignment)
-        :children (mapv render-fx (tiltontec.model.core/md-kids me))))))
+        :children (mapv tiltontec.mx-flutter.tag/render-fx (tiltontec.model.core/md-kids me))))))
+
+(deftag row tiltontec.mx-flutter.core/FXRow)
+
+;;; --- text ---------------------------------------
 
 (deftype FXText []
   :extends FXDartWidget
@@ -133,6 +155,10 @@
                    (style me ctx)
                    style))))))
 
+(deftag text tiltontec.mx-flutter.core/FXText)
+
+;;; --- elevated button  ---------------------------------------
+
 (deftype FXElevatedButton []
   :extends FXDartWidget
   ;;:type-only true
@@ -143,7 +169,9 @@
     (fn [me ctx]
       (m/ElevatedButton
         :onPressed (mget me :onPressed)
-        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+        :child (tiltontec.mx-flutter.tag/render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag elevated-button tiltontec.mx-flutter.core/FXElevatedButton)
 
 ;;; --- GridView/counter -------------------------------------
 
@@ -152,33 +180,15 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXGridViewCount-obs-IGNORE!! slot)))
+    (prn :FXGridViewCount-obs-IGNORE!! slot))
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m.GridView/count
+        :crossAxisCount (mget me :crossAxisCount)
+        :children (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))
 
-;; (m.GridView/count
-;                     :crossAxisCount 2
-;                     :children (map
-;                                (fn [i] (m/Center :child (m/Text (str "Item " i) :style (-> theme .textTheme .headline3))))
-;                                (range 100)))))))))
-
-(defmacro grid-view-count [custom-props fx-props & kids]
-  ;; todo: enforce only one kid
-  `(tiltontec.model.core/make
-     :mx-type (tiltontec.mx-flutter.core/FXGridViewCount)
-     :fx-gen (fn [me]
-               (statefully me
-                 (fn [me ctx]
-                   (dprn :chking-builder)
-                   (if-let [builder (mget me :builder)]
-                     (builder me ctx)
-                     (do
-                       (dprn :fx-gen-gview (count (md-kids me)) (cty/minfo me))
-                       (m.GridView/count
-                         :crossAxisCount (mget me :crossAxisCount)
-                         :children (mapv render-fx (md-kids me))))))))
-     :kids (tiltontec.model.core/cFkids ~@kids)
-     ~@(concat
-         (vec (apply concat (seq fx-props)))
-         (vec (apply concat (seq custom-props))))))
+(deftag grid-view-count tiltontec.mx-flutter.core/FXGridViewCount)
 
 ;;; --- ListView/builder -----------------------------------------
 
@@ -187,99 +197,14 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXListViewBuilder-obs!! slot)))
+    (prn :FXListViewBuilder-obs!! slot))
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m.ListView/builder
+        :padding (mget me :padding)
+        :itemCount (mget me :itemCount)
+        :itemBuilder (mget me :itemBuilder)))))
 
-(defmacro list-view-builder [custom-props fx-props & kids]
-  ;; todo: enforce only one kid
-  `(tiltontec.model.core/make
-     :mx-type (tiltontec.mx-flutter.core/FXListViewBuilder.)
-     :fx-gen (fn [me]
-               (statefully me
-                 (fn [me ctx]
-                   (if-let [builder (mget me :builder)]
-                     (builder me ctx)
-                     (m.ListView/builder
-                       :padding (mget me :padding)
-                       :itemCount (mget me :itemCount)
-                       :itemBuilder (mget me :itemBuilder) #_(fn [ctx i] (fake-item (odd? i))))))))
-     ~@(concat
-         (vec (apply concat (seq fx-props)))
-         (vec (apply concat (seq custom-props))))))
-
-;;; ----------------------------------------------------
-
-(defn render-fx [fx]
-  ;;(prn :render-fx-entry fx)
-  (let [gen (mget fx :fx-gen)]
-    (when-not gen
-      (prn :rfx-sees-no-fx-gen!!! fx))
-    (gen fx)))
-
-(defn statefully [me builder]
-  (reify :extends w/StatefulWidget
-    (createState [this]
-      (util/rmap-meta-setf [:state-ref me]
-        (reify :extends w/State
-          ^:mixin m/SingleTickerProviderStateMixin
-          (build [this ctx]
-            (builder me ctx)))))))
-
-(defn make-fx [mx-type fx-props custom-props cFkids-form]
-  (apply tiltontec.model.core/make
-    :mx-type mx-type
-    :fx-prop-keys (keys fx-props)
-    :kids cFkids-form
-    :fx-gen (fn [me]
-              (statefully me
-                (fn [me ctx]
-                  (dprn "GEN" mx-type)
-                  (let [builder (or (mget me :builder)
-                                  (builder mx-type))]
-                    (builder me ctx)))))
-    (concat
-      (vec (apply concat (seq fx-props)))
-      (vec (apply concat (seq custom-props))))))
-
-(defmacro deftag [tag fx-type-name]
-  (prn :deftag-entry!!!!!!! tag fx-type-name)
-  `(defmacro ~tag [& vargs#]
-     (prn :expanding-deftag '~tag)
-     (let [fx-type# '~fx-type-name]
-       (cond
-         (nil? vargs#)
-         `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
-            {} {} nil)
-
-         (not (map? (first vargs#)))
-         (do (prn :just-kids!!!!!!!! '~tag)
-             ;; we must have justkids
-             `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
-                {} {}
-                (tiltontec.model.core/cFkids ~@vargs#)))
-
-         (map? (second vargs#))
-         ;; full spec, maybe kids
-         (do (prn :full-spec!!!!!!!!!!!! (second vargs#))
-             `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
-                ~(first vargs#)
-                ~(second vargs#)
-                ~(when-let [kids# (seq (nthrest vargs# 2))]
-                   `(tiltontec.model.core/cFkids ~@kids#))))
-
-         :else ;; just first map of fx props and maybe kids
-         `(tiltontec.mx-flutter.core/make-fx (new ~fx-type#)
-            ~(first vargs#)
-            {}
-            ~(when-let [kids# (seq (nthrest vargs# 1))]
-               `(tiltontec.model.core/cFkids ~@kids#)))))))
-
-(deftag text tiltontec.mx-flutter.core/FXText)
-(deftag column tiltontec.mx-flutter.core/FXColumn)
-(deftag material-app tiltontec.mx-flutter.core/FXMaterialApp)
-(deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
-(deftag row tiltontec.mx-flutter.core/FXRow)
-(deftag center tiltontec.mx-flutter.core/FXCenter)
-(deftag expanded tiltontec.mx-flutter.core/FXExpanded)
-(deftag elevated-button tiltontec.mx-flutter.core/FXElevatedButton)
-
+(deftag list-view-builder tiltontec.mx-flutter.core/FXListViewBuilder)
 
