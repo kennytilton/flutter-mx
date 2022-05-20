@@ -21,8 +21,13 @@
     :with [controller (m/AnimationController :vsync tick)]
     :state [drag-alignment m.Alignment/center]
     (let [size (.size media-query)
+
+
+          ;; getting ready to steal this again
+
           run-animation
           (fn [^m/Offset px-per-s]
+            (dprn :set-BEGIN!!!! @drag-alignment)
             (let [animation (.drive controller
                               (m/AlignmentTween
                                 :begin @drag-alignment
@@ -36,9 +41,15 @@
                                    :stiffness 1
                                    :damping 1)
                   simulation (p/SpringSimulation spring 0 1 (- unit-velocity))]
+              (dprn :animation-OK!!!!!!!!!! animation)
+              (dprn :animation-OK-val!!!!!!!!!! (.value animation))
+              (dprn :sim-OK!!!!!!!!!! simulation)
               (doto controller
                 .clearListeners
-                (.addListener #(reset! drag-alignment (.value animation)))
+                (.addListener #(do
+                                 (dprn :STD-ani animation)
+                                 (dprn :STD-anival!!! (.value animation))
+                                 (reset! drag-alignment (.value animation))))
                 (.animateWith simulation))))]
       (f/nest
         (m/GestureDetector
