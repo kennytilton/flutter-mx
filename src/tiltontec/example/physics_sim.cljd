@@ -20,7 +20,7 @@
     ["package:flutter/painting.dart"
      :refer [TextStyle Alignment]]))
 
-(defn draggable-play-spring-back [me ctx ^m/Offset px-per-s]
+(defn ^void draggable-play-spring-back [me ctx ^m/Offset px-per-s]
   (dprn :spring-entry!! (minfo me) :ctx ctx :pxper px-per-s)
   (let [size (.size (MediaQuery/of ctx))
         _ (dprn :size!!!!!!! size)
@@ -49,15 +49,16 @@
     (dprn :doing-controller!!!!!!!!)
     (dprn :doing-animation!!! animation)
     (dprn :do-sim!!!!!!!!! simulation)
-    (dprn :doing-anival!!! (.value animation))
+    ;; (dprn :doing-anival!!! (.value animation))
     (doto controller
       .clearListeners
-      (.addListener #(do
-                       (dprn :anival-entry!!!!!!!!)
-                       (dprn :anival-input %)
-                       (dprn :an!!!!!!! animation)
-                       (dprn :anival (.value animation))
-                       #_ (md/mset! dragger :dragAlignment (.value animation))))
+      (.addListener (fn ^void []
+                      (dprn :anival-entry!!!!!!!!)
+                      
+                      (dprn :an!!!!!!! animation)
+                      (dprn :anival (.value animation))
+                      nil
+                      #_ (md/mset! dragger :dragAlignment (.value animation))))
       (.animateWith simulation))))
 
 (defn make-app []
@@ -103,6 +104,7 @@
                             nil)
              :onPanEnd    (fn [me ctx ^m/DragEndDetails details]
                             (dprn :panend-deets details)
+                            (dprn :panend-velo (-> details .velocity .pixelsPerSecond))
                             (draggable-play-spring-back me ctx (-> details .velocity .pixelsPerSecond))
                             ;(run-animation (-> details .velocity .pixelsPerSecond))
                             nil)}
