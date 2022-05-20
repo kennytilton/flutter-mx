@@ -27,12 +27,19 @@
   :extends Model
   PObserver
   (observe [this slot me new-value prior-value cell]
-    ;; (prn :FXDartWidget-observing!!! (keys @me) slot new-value prior-value (cty/cinfo cell))
+    (prn :FXDartWidget-observing!!!  slot new-value prior-value (cty/minfo me)(cty/cinfo cell))
     (when-let [^State state (:state-ref (meta me))]
       (.setState state (fn [] (do)))))
   PDartWidget
   (parts [this]
-    [:no-parts]))
+    [:no-parts])
+  (builder [this]
+    (fn [me ctx]
+      (if-let [builder (mget me :builder)]
+        (builder me ctx)
+        (throw (Exception. "Property :builder must be provided for ad hoc widgets"))))))
+
+(deftag widget tiltontec.mx-flutter.core/FXDartWidget)
 
 ;;; --- material app ---------------------------------------
 
@@ -89,6 +96,69 @@
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
 
 (deftag center tiltontec.mx-flutter.core/FXCenter)
+
+;;; --- gesture detector
+
+(deftype FXGestureDetector []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child])
+  (builder [this]
+    (fn [me ctx]
+      ;;(dprn (str "Center Type REBUILDING " (cty/minfo me)))
+      (m/GestureDetector
+        :onPanDown (fn [^m/DragDownDetails details]
+                     ;(dprn :pandown-deets details (str details))
+                     ;(dprn :pandown-local (-> details .localPosition))
+                     ;(dprn :pandown-global (-> details .globalPosition))
+                     ;; (dprn "pdown-delta" (-> details .delta))
+                     (when-let [pan (mget me :onPanDown)]
+                       (pan me ctx details)))
+        :onPanUpdate (fn [^m/DragUpdateDetails details]
+                       ;(dprn :dragupd-deets details)
+                       ;(dprn :dragupd-delta (-> details .delta))
+                       (when-let [pan (mget me :onPanUpdate)]
+                         (pan me ctx details)))
+        :onPanEnd (fn [^m/DragEndDetails details]
+                    ;(dprn :panend (str details))
+                    (when-let [pan (mget me :onPanEnd)]
+                      (pan me ctx details)))
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag gesture-detector tiltontec.mx-flutter.core/FXGestureDetector)
+
+;;; --- align ----------------------
+(deftype FXAlign []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child])
+  (builder [this]
+    (fn [me ctx]
+      (dprn :FXAlign-sees-align (mget me :alignment))
+      (m/Align
+        :alignment (mget me :alignment)
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag align tiltontec.mx-flutter.core/FXAlign)
+
+;;; --- card -------------------------------------------
+
+(deftype FXCard []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child])
+  (builder [this]
+    (fn [me ctx]
+      (m/Card
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag card tiltontec.mx-flutter.core/FXCard)
 
 ;;; --- expanded ---------------------------------------
 
@@ -208,3 +278,18 @@
 
 (deftag list-view-builder tiltontec.mx-flutter.core/FXListViewBuilder)
 
+;;; --- flutter logo -----------------------------------------------------
+
+(deftype FXFlutterLogo []
+  ;;:type-only true
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    #_(prn :FXMatapp-NULL-observing!!! slot))
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m/FlutterLogo
+        :size (or (mget me :size) 128.0)))))
+
+(deftag flutter-logo tiltontec.mx-flutter.core/FXFlutterLogo)

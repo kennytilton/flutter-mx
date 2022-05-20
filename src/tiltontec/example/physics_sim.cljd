@@ -1,0 +1,75 @@
+(ns tiltontec.example.physics-sim
+  (:require
+    [cljd.flutter.alpha :as f]
+    [clojure.string :as str]
+    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.util.core
+     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference] :as util]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
+    [tiltontec.model.base :refer [md-cell]]
+    [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.mx-flutter.tag :refer [render-fx]]
+    [tiltontec.mx-flutter.core :as fx
+     :refer [material-app center text grid-view-count row expanded elevated-button scaffold column]]
+    ["package:flutter/widgets.dart"
+     :refer [Text State StatefulWidget  StatelessWidget] :as w]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment MediaQuery Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle Alignment]]))
+
+(defn  make-app []
+  (let [title "Physics Animation"]
+    (material-app
+      {:title title}
+      (scaffold
+        {:appBar (m/AppBar :title (m/Text title))}
+        (fx/widget {:dragAlignment (cI Alignment/center
+                                     :obs (fn [s me n o c]
+                                            (dprn :dragciobd!!!!!!! s n o)
+                                            (when (not= o cty/unbound)
+                                              (dprn :setttingstate!!!!!!!!)
+                                              (when-let [^State state (:state-ref (meta me))]
+                                                (.setState state (fn [] (do)))))))
+                    }
+          {:name :draggable-card
+           :initState (fn [this me]
+                        (dprn :initstate-call-back!!!!!-NADA)
+                        (dprn :dragAlignment (mget me :dragAlignment))
+                        (let [controller (util/rmap-meta-setf [:controller me]
+                                           (m/AnimationController :vsync this))]
+                          (.addListener controller
+                            (fn [] (prn :controoler-listener!!!!!!!!)))))
+           :builder (fn [me ctx]
+                      ;(dprn :MediaQ!! (MediaQuery/of ctx))
+                      ;(dprn :size!! (.size (MediaQuery/of ctx)))
+                      (m/GestureDetector
+                        :child (render-fx (first (md-kids me)))))}
+          (fx/gesture-detector
+            {:onPanDown (fn [me ctx details] ;; (.stop controller)
+                          (dprn :pandown-deets details)
+                          (when-let [c (:controller (meta me))]
+                            (dprn :pandown-controller!! c)
+                            (.stop c))
+                          nil)
+             :onPanUpdate (fn [me ctx ^m/DragUpdateDetails details]
+                            ;(dprn :pup (-> details .delta .dx) details)
+                            (let [size (.size (MediaQuery/of ctx))
+                                  drag (md/fm-ascendant :draggable-card me)]
+                              ;(dprn :align (mget drag :dragAlignment))
+                              (dprn :new-align (/ (-> details .delta .dx) (/ (.width size) 2))
+                                (/ (-> details .delta .dy) (/ (.height size) 2)))
+                              (md/mswap! drag :dragAlignment
+                                #(.+ (m/Alignment
+                                       (/ (-> details .delta .dx) (/ (.width size) 2))
+                                       (/ (-> details .delta .dy) (/ (.height size) 2)))
+                                   %)))
+                            nil)
+             :onPanEnd (fn [me ctx details]
+                         (dprn :panend-deets details)
+                         ;(run-animation (-> details .velocity .pixelsPerSecond))
+                         nil)}
+            (fx/align {:alignment (cF (mget (md/fm-ascendant :draggable-card me) :dragAlignment))}
+              (fx/card
+                (fx/flutter-logo {:size 128.0})))))))))

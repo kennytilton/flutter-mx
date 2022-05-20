@@ -15,15 +15,19 @@
             [tiltontec.example.two-counters :as two-ct]
             [tiltontec.example.two-counters-matrix :as two-mx]
             [tiltontec.example.gridlist :as gridl]
+            [tiltontec.example.physics-sim :as phys]
+            [tiltontec.example.physics-sim-std :as phys-std]
             ))
 
 (def version (atom nil :meta {}))
 
 (defn main []
   ;;(dprn :main-sees-columnpp (fx/columnppx))
+
   (material/runApp
+    #_ (phys-std/make-app)
     (tag/render-fx
-      (fab/make-app)))
+      (phys/make-app)))
 
   ;(assert (= [:no-parts] (fx/parts (fx/TPart.))))
   ;(assert (= [:no-parts 421] (fx/parts-ex (fx/TPart.) 21)))
