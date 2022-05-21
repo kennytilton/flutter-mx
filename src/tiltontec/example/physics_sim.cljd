@@ -12,11 +12,12 @@
     [tiltontec.mx-flutter.tag :refer [render-fx]]
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text grid-view-count row expanded elevated-button scaffold column]]
+    ["package:flutter/animation.dart" :refer [Animation] :as ani]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
     ["package:flutter/physics.dart" :as p]
     ["package:flutter/material.dart" :as m
-     :refer [MainAxisAlignment MediaQuery Colors Theme Icon Icons ThemeData runApp AppBar State]]
+     :refer [MainAxisAlignment MediaQuery Colors Theme Icon AnimationController Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
      :refer [TextStyle Alignment]]))
 
@@ -65,10 +66,11 @@
   (fx/gesture-detector
     {:dragAlignment (cI m.Alignment/center
                       :obs (fn [s me n o c]
-                             (when (not= o cty/unbound)
-                               (dprn :dragAlignment-setttingstate!!!!!!!!)
+                             #_ (when (not= o cty/unbound)
+                               ;;(dprn :dragAlignment-setttingstate!!!!!!!!)
                                (when-let [^State state (:state-ref (meta me))]
-                                 (.setState state (fn [] (do)))))))
+                                 (.setState state (fn [] (do)))))))}
+    {:name      :draggable-card
      :recoil (fn [me ctx ^m/Offset px-per-s]
                (dprn :run-ani-sees-me!!!!!! (md/md-name me) (minfo me))
                (let [size (.size (MediaQuery/of ctx))
@@ -82,14 +84,26 @@
                      controller (:controller (meta dragger))
                      _ (dprn :controlller? controller)
                      _ (assert controller "controller is nil!!!!")
+                     _ (dprn :conreally? (dart/is? controller AnimationController))
                      align-begin (mget dragger :dragAlignment)
                      _ (dprn :align-begin align-begin)
-                     animation (.drive controller
+
+                     ;  The following _CastError was thrown while handling a gesture:
+                     ;type '_AnimatedEvaluation<Alignment>' is not a subtype of type 'Animation<double>'
+                     ; in type cast
+                     ;
+                     ;The following _CastError was thrown while handling a gesture:
+                     ;type '_AnimatedEvaluation<Alignment>' is not a subtype of type 'Animation<double>' in type cast
+
+                     _ (prn :begin-align!!! align-begin)
+                     _ (prn :malign!!! align-begin)
+                     animation ^#/(m/Animation Alignment) (.drive controller
                                  (m/AlignmentTween
                                    :begin align-begin
                                    :end m.Alignment/center))
-                     _ (dprn :anima animation)
-                     _ (dprn :initial-ani-value (.value animation))
+                     _ (dprn :animation!!!!!! animation)
+                     _ (dprn :animation????!! (dart/is? animation Animation))
+                     ;;_ (dprn :initial-ani-value (.value animation))
                      units-per-s-x (/ (.dx px-per-s) (.width size))
                      units-per-s-y (/ (.dy px-per-s) (.height size))
                      units-per-s (m/Offset units-per-s-x units-per-s-y)
@@ -99,55 +113,57 @@
                                       :stiffness 1
                                       :damping 1)
                      simulation (p/SpringSimulation spring 0 1 (- unit-velocity))]
-                 (dprn :animation-OK!!!!!!!!!! animation)
-                 (dprn :sim-OK!!!!!!!!!! simulation)
                  (doto controller
                    .clearListeners
                    (.addListener #(do
                                     (dprn :new-ani animation)
                                     (dprn :new-anival!!! (.value animation))
-                                    ;;(mreset! dragger :dragAlignment m.Alignment/center)
+                                    (md/mset! dragger :dragAlignment (.value animation))
                                     nil))
-                   (.animateWith simulation))))}
-    {:name      :draggable-card
+                   (.animateWith simulation))))
      :initState (fn [this me]
-                  (dprn :initstate-call-back!!!!!-NADA)
-                  (dprn :initstate-call-back!!!!!-this this)
-                  (dprn :dragAlignment (mget me :dragAlignment))
-                  (let [controller (util/rmap-meta-setf [:controller me]
-                                     (m/AnimationController :vsync this))]
-                    (dprn :controller-in-meta-of (minfo me))
-                    (dprn :controller-in-meta-of (:controller (meta me)))
+                  (dprn :initState!!!!!!!!!!!!! )
+
+                  (let [controller  (m/AnimationController :vsync this)
+                        _ (util/rmap-meta-setf [:controller me] controller)]
+                    (dprn :controller!!!!!!! (dart/is? controller AnimationController) controller)
+
+
+
+                    ;(dprn :controller-in-meta-of (minfo me))
+                    ;(dprn :controller-in-meta-of (:controller (meta me)))
                     (assert (:controller (meta me)) "controller did not stick")
-                    (.addListener controller
+                    #_ (.addListener controller
                       #(.setState ^State this (fn [] (do))))))
+     :dispose (fn [this me]
+                (if-let [con (:controller (meta me))]
+                  (do
+                    (dprn :disposing-con!!!!!!!!!!! con)
+                    (.dispose con))
+                  (dprn :dragger-has-no-con-to-dispose)))
+
      :onPanDown   (fn [me ctx ^m/DragDownDetails details]  ;; (.stop controller)
                      (dprn :pandown-deets details)
                      (when-let [c (:controller (meta (md/fm-ascendant :draggable-card me)))]
-                       (dprn :pandown-controller!! c)
+                       (dprn :STOPPING-pandown-controller!! c)
                        (.stop c))
                      nil)
       :onPanUpdate (fn [me ctx ^m/DragUpdateDetails details]
-                     (let [size (.size (MediaQuery/of ctx))
-                           dcard me]
-                       (assert dcard "No draggable card!")
-                       (prn :updok!! (minfo dcard))
-                       (md/mswap! dcard :dragAlignment
+                     (let [size (.size (MediaQuery/of ctx))]
+                       (md/mswap! me :dragAlignment
                          #(do (dprn :panudpate!!!! %)
                               (.+ % (m/Alignment
                                       (/ (-> details .delta .dx) (/ (.width size) 2))
                                       (/ (-> details .delta .dy) (/ (.height size) 2)))))))
                      nil)
       :onPanEnd    (fn [me ctx ^m/DragEndDetails details]
-                     (dprn :panend-me (minfo me))
                      (dprn :panend-deets details)
                      (dprn :panend-velo (-> details .velocity .pixelsPerSecond))
                      (let [recoil (mget me :recoil)]
                        (assert recoil "recoil not found")
                        (recoil me ctx (-> details .velocity .pixelsPerSecond)))
                      nil)}
-    (let [run-animation
-          ]
+    (let []
       (fx/align {:alignment (cF (mget (md/fm-ascendant :draggable-card me) :dragAlignment))}
         (fx/card drag-child)))))
 

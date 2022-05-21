@@ -27,12 +27,15 @@
   :extends Model
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXDartWidget-observing!!!  slot new-value prior-value (cty/minfo me)(cty/cinfo cell))
-    (when-let [^State state (:state-ref (meta me))]
-      (.setState state (fn [] (do)))))
+    (when (some #{slot} (:fx-prop-keys @me))
+      ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+      (when-let [^State state (:state-ref (meta me))]
+        (.setState state (fn [] (do))))))
+
   PDartWidget
   (parts [this]
     [:no-parts])
+
   (builder [this]
     (fn [me ctx]
       (dprn :widget-ctx ctx)
@@ -49,7 +52,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_(prn :FXMatapp-NULL-observing!!! slot))
+    #_(dprn :FXMatapp-NULL-observing!!! slot))
   PDartWidget
   (builder [this]
     (fn [me ctx]
@@ -142,7 +145,7 @@
   (builder [this]
     (fn [me ctx]
       (let [a (mget me :alignment)]
-        (dprn :FXAlign-builder-sees-align a)
+        ;;(dprn :FXAlign-builder-sees-align a)
         (m/Align
           :alignment a
           :child (render-fx (first (tiltontec.model.core/md-kids me))))))))
@@ -254,7 +257,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXGridViewCount-obs-IGNORE!! slot))
+    (dprn :FXGridViewCount-obs-IGNORE!! slot))
   PDartWidget
   (builder [this]
     (fn [me ctx]
@@ -271,7 +274,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (prn :FXListViewBuilder-obs!! slot))
+    (dprn :FXListViewBuilder-obs!! slot))
   PDartWidget
   (builder [this]
     (fn [me ctx]
@@ -289,7 +292,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_(prn :FXMatapp-NULL-observing!!! slot))
+    #_(dprn :FXMatapp-NULL-observing!!! slot))
   PDartWidget
   (builder [this]
     (fn [me ctx]

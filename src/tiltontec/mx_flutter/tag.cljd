@@ -18,10 +18,10 @@
   (builder [this]))
 
 (defn render-fx [fx]
-  ;;(prn :render-fx-entry fx)
+  ;;(dprn :render-fx-entry fx)
   (let [gen (mget fx :fx-gen)]
     (when-not gen
-      (prn :rfx-sees-no-fx-gen!!! fx))
+      (dprn :rfx-sees-no-fx-gen!!! fx))
     (gen fx)))
 
 (defn statefully [me builder]
@@ -29,13 +29,17 @@
     (createState [this]
       (util/rmap-meta-setf [:state-ref me]
         (reify :extends w/State
-          ^:mixin m/SingleTickerProviderStateMixin
+          ^:mixin m/SingleTickerProviderStateMixin ;; todo make specifiable (macroland?)
           (build [this ctx]
             (builder me ctx))
           (^void initState [this]
             (.initState ^super this)
             (when-let [init (mget me :initState)]
-              (init this me))))))))
+              (init this me)))
+          (^void dispose [this]
+            (dprn :rawdispose!!!!!!!)
+            (when-let [orride (mget me :dispose)]
+              (orride this me))))))))
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   (apply tiltontec.model.core/make
@@ -54,9 +58,9 @@
       (vec (apply concat (seq custom-props))))))
 
 (defmacro deftag [tag fx-type-name]
-  ;;(prn :deftag-entry!!!!!!! tag fx-type-name)
+  ;;(dprn :deftag-entry!!!!!!! tag fx-type-name)
   `(defmacro ~tag [& vargs#]
-     ;;(prn :expanding-deftag '~tag)
+     ;;(dprn :expanding-deftag '~tag)
      (let [fx-type# '~fx-type-name]
        (cond
          (nil? vargs#)
@@ -64,7 +68,7 @@
             {} {} nil)
 
          (not (map? (first vargs#)))
-         (do                                                ;;(prn :just-kids!!!!!!!! '~tag)
+         (do                                                ;;(dprn :just-kids!!!!!!!! '~tag)
            ;; we must have justkids
            `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
               {} {}
@@ -72,7 +76,7 @@
 
          (map? (second vargs#))
          ;; full spec, maybe kids
-         (do                                                ;;(prn :full-spec!!!!!!!!!!!! (second vargs#))
+         (do                                                ;;(dprn :full-spec!!!!!!!!!!!! (second vargs#))
            `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
               ~(first vargs#)
               ~(second vargs#)

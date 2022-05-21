@@ -24,10 +24,13 @@
           run-animation
           (fn [^m/Offset px-per-s]
             (dprn :set-BEGIN!!!! @drag-alignment)
+            (dprn :pre-drive-con controller)
             (let [animation (.drive controller
                               (m/AlignmentTween
                                 :begin @drag-alignment
                                 :end m.Alignment/center))
+                  _ (dprn :boom-ani-std animation (dart/is? animation m/Animation))
+                  _ (dprn :early-ani-val!!!!!!!! (.value animation))
                   units-per-s-x (/ (.dx px-per-s) (.width size))
                   units-per-s-y (/ (.dy px-per-s) (.height size))
                   units-per-s (m/Offset units-per-s-x units-per-s-y)
@@ -43,8 +46,8 @@
               (doto controller
                 .clearListeners
                 (.addListener #(do
-                                 (dprn :STD-ani animation)
-                                 (dprn :STD-anival!!! (.value animation))
+                                 ;(dprn :STD-ani animation)
+                                 ;(dprn :STD-anival!!! (.value animation))
                                  (reset! drag-alignment (.value animation))))
                 (.animateWith simulation))))]
       (f/nest
