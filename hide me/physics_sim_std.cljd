@@ -23,9 +23,7 @@
     (let [size (.size media-query)
           run-animation
           (fn [^m/Offset px-per-s]
-            (dprn :set-BEGIN!!!! @drag-alignment)
-            (dprn :pre-drive-con controller)
-            (let [animation (.drive controller
+             (let [animation (.drive controller
                               (m/AlignmentTween
                                 :begin @drag-alignment
                                 :end m.Alignment/center))
@@ -40,9 +38,6 @@
                                    :stiffness 1
                                    :damping 1)
                   simulation (p/SpringSimulation spring 0 1 (- unit-velocity))]
-              (dprn :animation-OK!!!!!!!!!! animation)
-              (dprn :animation-OK-val!!!!!!!!!! (.value animation))
-              (dprn :sim-OK!!!!!!!!!! simulation)
               (doto controller
                 .clearListeners
                 (.addListener #(do
