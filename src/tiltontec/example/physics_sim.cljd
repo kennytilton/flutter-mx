@@ -36,6 +36,7 @@
       (.animateWith simulation))))
 
 (defn draggable-card [& {:keys [drag-child]}]
+  ;; todo make this reusable??
   (fx/gesture-detector
     {:dragAlignment (cI m.Alignment/center)}
     {:name        :draggable-card
@@ -63,8 +64,9 @@
       (fx/card drag-child))))
 
 (defn make-app []
-  (let [title "Physics Animation"]
+  (let [title (str "Physics Animation " (rand-int 99))]
     (material-app {:title title}
       (scaffold
-        {:appBar (m/AppBar :title (m/Text title))}
-        (draggable-card :drag-child (fx/flutter-logo {:size 128.0}))))))
+        {:appBar (AppBar :title (Text title))}
+        (draggable-card
+          :drag-child (fx/flutter-logo {:size 128.0}))))))

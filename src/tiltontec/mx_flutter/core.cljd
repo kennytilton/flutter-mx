@@ -79,7 +79,15 @@
   (builder [this]
     (fn [me ctx]
       (m/Scaffold
-        :appBar (mget me :appBar)                           ;; todo this s/b render-fx
+        :appBar (let [abar (mget me :appBar)]
+                  (dprn :abar!!!! abar)
+                  (dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
+                  (dprn :abar!!!!!!!! (dart/is? abar m/Widget))
+                  (when (cty/md-ref? abar)
+                    (dprn :md-abar!!!!!!!! (dart/is? (mx-type abar) FXDartWidget)))
+                  (if (dart/is? abar m/AppBar)
+                    abar
+                    (render-fx abar)))
         :body (render-fx (first (md/md-kids me)))
         :floatingActionButton
         ;; todo this too s/b render-fx
@@ -89,6 +97,19 @@
             button#))))))
 
 (deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
+
+;;; ---
+
+(deftype FXAppBar []
+  ;;:type-only true
+  :extends FXDartWidget
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m/AppBar
+        :title (mget me :title)))))
+
+(deftag app-bar tiltontec.mx-flutter.core/FXAppBar)
 
 ;;; --- default tab controller -----------------------
 
