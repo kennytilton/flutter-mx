@@ -15,39 +15,32 @@
     ["package:flutter/painting.dart"
      :refer [TextStyle]]))
 
-(defn build-counter [counter-key]
+(defn- build-counter [counter-key]
+  #_ (text (str "+" (name counter-key)))
   (expanded
     (fx/column
       {:mainAxisAlignment MainAxisAlignment/center}
-      {:name  :counter-col
-       :value (cF (let [app (md/fm-ascendant :counter-app me)]
-                    (dprn :Column-checks-its-counter counter-key)
-                    (get-in (mget app :flux-store) [:counters counter-key])))}
+      {:name  :ctr-col
+       ;; the column maintains its own state, aka "in-place state"
+       :value (cI 0)}
       (text (str/capitalize (name counter-key)))
-      (text
-        {:style (fn [me ctx]
-                  ;; todo this can be (theme-fn ....)
-                  (-> (Theme/of ctx) .textTheme .displayLarge))}
-        (do (dprn :building-counter!!!!!!!!!!!!! counter-key)
-            (str (md/fmuval :counter-col))))
+      (text {:style (fn [me ctx]
+                      ;; todo this can be (theme-fn ....)
+                      (-> (Theme/of ctx) .textTheme .displayLarge))}
+        (str (md/fmuval :ctr-col)))
       (elevated-button
-        {:onPressed (cFnil (fn ^void []
-                             (dprn :incrementing-counter counter-key)
-                             (md/mswap! (md/fm-ascendant :counter-app me)
-                               :flux-store update-in [:counters counter-key] inc)))}
+        {:onPressed (cF (fn ^void []
+                          (md/mswap! (md/fmu :ctr-col) :value inc)))}
         (text "+")))))
 
 (defn make-app []
-  (material-app {:name       :counter-app
-                 ; simulating a separate global store, we bind a purely independent Matrix data structure that
-                 ; must be consulted for values. Pro tip: use `mswap! <the app> :flux-store update-in etc` to
-                 ; increment either counter.
-                 :flux-store (cI {:counters {:left 0 :right 0}})}
-    {:title "Two Counters"
-     :theme (cF (ThemeData :primarySwatch Colors/blue))}
+  (material-app {:title "Two Counters (MX)"
+                 :theme (cF (ThemeData :primarySwatch Colors/blue))}
+    {:name :mat-app}
     (scaffold
-      {:appBar (AppBar :title (Text "Two Counters ala Flux"))}
+      {:appBar (AppBar :title (Text "Two Counters (MX)"))}
       (center
         (row
           {:mainAxisAlignment MainAxisAlignment/center}
-          (mapv #(build-counter %) [:left :right]))))))
+          (mapv #(build-counter %)
+            [:left :right]))))))

@@ -27,7 +27,9 @@
   :extends Model
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (when (some #{slot} (:fx-prop-keys @me))
+    ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+    ;; todo find better way to reduce observing
+    (when true ;; (some #{slot} (:fx-prop-keys @me))
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
       (when-let [^State state (:state-ref (meta me))]
         (.setState state (fn [] (do))))))
@@ -38,7 +40,6 @@
 
   (builder [this]
     (fn [me ctx]
-      (dprn :widget-ctx ctx)
       (if-let [builder (mget me :builder)]
         (builder me ctx)
         (throw (Exception. "Property :builder must be provided for ad hoc widgets"))))))
@@ -86,6 +87,22 @@
             button#))))))
 
 (deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
+
+;;; --- default tab controller -----------------------
+
+(deftype FXDefaultTabController []
+  ;;:type-only true
+  :extends FXDartWidget
+  PDartWidget
+  (parts [this]
+    [:appBar :body :actionButton])
+  (builder [this]
+    (fn [me ctx]
+      (m/DefaultTabController
+        :length (mget me :length)
+        :child (render-fx (first (md/md-kids me)))))))
+
+(deftag default-tab-controller tiltontec.mx-flutter.core/FXDefaultTabController)
 
 ;;; --- center ---------------------------------------
 
@@ -245,7 +262,7 @@
   (builder [this]
     (fn [me ctx]
       (m/ElevatedButton
-        :onPressed (mget me :onPressed)
+        :onPressed (fn [] ((mget me :onPressed) ctx))
         :child (tiltontec.mx-flutter.tag/render-fx (first (tiltontec.model.core/md-kids me)))))))
 
 (deftag elevated-button tiltontec.mx-flutter.core/FXElevatedButton)

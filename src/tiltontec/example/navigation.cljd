@@ -1,0 +1,100 @@
+(ns tiltontec.example.navigation
+  "Port of https://docs.flutter.dev/cookbook/navigation/navigation-basics"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.tag :refer [render-fx] :as tag]
+    [cljd.flutter.alpha :as f]))
+
+(def second-route
+  (fx/scaffold
+    {:appBar (m/AppBar :title (m/Text "Second Route K"))}
+    (fx/center
+      (fx/elevated-button
+        {:onPressed (fn [ctx]
+                      (-> ctx m.Navigator/of .pop))}
+        (m/Text "Go back!")))))
+
+(def first-route
+  (fx/scaffold
+    {:appBar (m/AppBar :title (m/Text "First Route K"))}
+    #_(fx/text "Open route")
+    (fx/center
+      (fx/elevated-button
+        {:onPressed (fn [ctx]
+                      (let [;;nav  (-> ctx m.Navigator/of)
+                            next-route (#/(m/MaterialPageRoute Object)
+                                         :builder (fn [_]
+                                                    (dprn :pgroute-builder!!!!!)
+                                                    (let [r (render-fx second-route)]
+                                                      (dprn :second-r r)
+                                                      r)))]
+                       ;; (dprn :push-sees!!!!!! nav)
+                        (dprn :push-sees!!!!!!-route next-route)
+                        (.push (-> ctx m.Navigator/of) next-route)
+                        (dprn :push-rooute-OK!!!!!!!!!!!!!)
+                        nil))}
+        (fx/text "Open route")))))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Navigation Basics"}
+    {:name :the-app}
+    #_(fx/text "hi mom")
+    first-route))
+
+; import 'package:flutter/material.dart';
+;
+;void main() {
+;  runApp(const MaterialApp(
+;    title: 'Navigation Basics',
+;    home: FirstRoute(),
+;  ));
+;}
+;
+;class FirstRoute extends StatelessWidget {
+;  const FirstRoute({super.key});
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return Scaffold(
+;      appBar: AppBar(
+;        title: const Text('First Route'),
+;      ),
+;      body: Center(
+;        child: ElevatedButton(
+;          child: const Text('Open route'),
+;          onPressed: () {
+;            Navigator.push(
+;              context,
+;              MaterialPageRoute(builder: (context) => const SecondRoute()),
+;            );
+;          },
+;        ),
+;      ),
+;    );
+;  }
+;}
+;
+;class SecondRoute extends StatelessWidget {
+;  const SecondRoute({super.key});
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return Scaffold(
+;      appBar: AppBar(
+;        title: const Text('Second Route'),
+;      ),
+;      body: Center(
+;        child: ElevatedButton(
+;          onPressed: () {
+;            Navigator.pop(context);
+;          },
+;          child: const Text('Go back!'),
+;        ),
+;      ),
+;    );
+;  }
+;}

@@ -7,7 +7,7 @@
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn]]
-            [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe] :as cty]
+            [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe md-ref?] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]))
@@ -19,10 +19,12 @@
 
 (defn render-fx [fx]
   ;;(dprn :render-fx-entry fx)
-  (let [gen (mget fx :fx-gen)]
-    (when-not gen
-      (dprn :rfx-sees-no-fx-gen!!! fx))
-    (gen fx)))
+  (if-let [gen (when (md-ref? fx)
+                 (mget fx :fx-gen))]
+    (gen fx)
+    (do
+      (dprn :warning-NO-FXGEN-rendering-ASIS!! fx)
+      fx)))
 
 (defn statefully [me builder]
   (reify :extends w/StatefulWidget
@@ -37,9 +39,10 @@
             (when-let [init (mget me :initState)]
               (init this me)))
           (^void dispose [this]
-            (dprn :rawdispose!!!!!!!)
             (when-let [orride (mget me :dispose)]
-              (orride this me))))))))
+              (orride this me))
+            (.dispose ^super this)
+            ))))))
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   (apply tiltontec.model.core/make
@@ -81,6 +84,7 @@
               ~(first vargs#)
               ~(second vargs#)
               ~(when-let [kids# (seq (nthrest vargs# 2))]
+                 (prn :kids-form-will-be kids#)
                  `(tiltontec.model.core/cFkids ~@kids#))))
 
          :else                                              ;; just first map of fx props and maybe kids
