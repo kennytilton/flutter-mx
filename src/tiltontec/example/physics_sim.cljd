@@ -1,5 +1,6 @@
 (ns tiltontec.example.physics-sim
   (:require
+    [tiltontec.util.base :refer [dprn]]
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
@@ -16,13 +17,11 @@
 
 (defn logo-recoil [me ctx ^m/Offset px-per-s]
   (let [size (.size (MediaQuery/of ctx))
-        controller (:controller (meta me))
-        animation ^#/(m/Animation Alignment)
-                  ;; --- ^^^^ OMG --------
-                  (.drive controller
-                    (m/AlignmentTween
-                      :begin (mget me :dragAlignment)
-                      :end m.Alignment/center))
+        controller (fx/my-controller)
+        animation ^#/(m/Animation Alignment) (.drive controller
+                                               (m/AlignmentTween
+                                                 :begin (mget me :dragAlignment)
+                                                 :end m.Alignment/center))
         units-per-s (m/Offset (/ (.dx px-per-s) (.width size))
                       (/ (.dy px-per-s) (.height size)))
         unit-velocity (.distance units-per-s)
@@ -46,18 +45,19 @@
                     (util/rmap-meta-setf [:controller me]
                       (m/AnimationController :vsync this)))
      :onPanDown   (fn [me ctx ^m/DragDownDetails details]   ;; (.stop controller)
-                    (when-let [c (:controller (meta (md/fm-ascendant :draggable-card me)))]
+                    (when-let [c ^m/AnimationController (:controller (meta me))]
                       (.stop c)))
      :onPanUpdate (fn [me ctx ^m/DragUpdateDetails details]
                     (let [size (.size (MediaQuery/of ctx))]
-                      (md/mswap! me :dragAlignment ;; MX flow!!!!!!!!
-                        #(.+ % (m/Alignment
-                                 (/ (-> details .delta .dx) (/ (.width size) 2))
-                                 (/ (-> details .delta .dy) (/ (.height size) 2)))))))
+                      (md/mswap! me :dragAlignment          ;; MX flow!!!!!!!!
+                        #(.+ ^m/Alignment %
+                           (m/Alignment
+                             (/ (-> details .delta .dx) (/ (.width size) 2))
+                             (/ (-> details .delta .dy) (/ (.height size) 2)))))))
      :onPanEnd    (fn [me ctx ^m/DragEndDetails details]
                     (logo-recoil me ctx (-> details .velocity .pixelsPerSecond)))
      :dispose     (fn [this me]
-                    (when-let [con (:controller (meta me))]
+                    (when-let [con (fx/my-controller)]      ;; ^m/AnimationController (:controller (meta me))]
                       (.dispose con)))}
     (fx/align {:alignment (cF (mget (md/fm-ascendant :draggable-card me) :dragAlignment))}
       (fx/card drag-child))))

@@ -13,15 +13,19 @@
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget render-fx] :as tag]))
 
-;(deftype TPart []
-;  PDartWidget
-;  (parts [this]
-;    [:no-parts])
-;  (parts-ex [this count]
-;    [:no-parts (* 2 count)]))
+(defmacro  my-controller []
+  `^m/AnimationController (:controller (meta ~'me)))
 
-;(deftype StateWTicker []
-;  :extends m/State ^:mixin m/SingleTickerProviderStateMixin)
+(defn ctx-page-push [ctx fx-page-def]
+  ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
+  (.push (-> ctx m.Navigator/of)
+    (#/(m/MaterialPageRoute Object)
+      :builder (fn [_]
+                 (render-fx fx-page-def)))))
+
+(defn ctx-page-pop [ctx]
+  ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
+  (.pop (-> ctx m.Navigator/of)))
 
 (deftype FXDartWidget []
   :extends Model
@@ -57,7 +61,6 @@
   PDartWidget
   (builder [this]
     (fn [me ctx]
-      (dprn :matl-app-ctx ctx)
       (m/MaterialApp
         :title (mget me :title)
         :theme (mget me :theme)
@@ -75,7 +78,6 @@
     [:appBar :body :actionButton])
   (builder [this]
     (fn [me ctx]
-      (dprn :scaff-ctx ctx)
       (m/Scaffold
         :appBar (mget me :appBar)                           ;; todo this s/b render-fx
         :body (render-fx (first (md/md-kids me)))
