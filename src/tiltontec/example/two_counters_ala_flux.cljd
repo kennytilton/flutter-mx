@@ -1,7 +1,7 @@
 (ns tiltontec.example.two-counters-ala-flux
   (:require
     [clojure.string :as str]
-    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
     [tiltontec.model.base :refer [md-cell]]
@@ -30,7 +30,7 @@
         (str (md/fmuval :counter-col)))
       (elevated-button
         {:onPressed (cFnil (fn ^void []
-                             (dprn :incrementing-counter counter-key)
+                             (dprn dp dpx :incrementing-counter counter-key)
                              (md/mswap! (md/fm-ascendant :counter-app me)
                                :flux-store update-in [:counters counter-key] inc)))}
         (text "+")))))

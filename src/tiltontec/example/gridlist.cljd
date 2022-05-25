@@ -3,7 +3,8 @@
   (:require
     [cljd.flutter.alpha :as f]
     [clojure.string :as str]
-    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
     [tiltontec.model.base :refer [md-cell]]
@@ -11,7 +12,7 @@
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text grid-view-count row expanded elevated-button scaffold column]]
     ["package:flutter/widgets.dart"
-     :refer [Text State StatefulWidget StatelessWidget]]
+     :refer [Text State StatefulWidget StatelessWidget] :as w]
     ["package:flutter/material.dart" :as m
      :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
@@ -22,7 +23,24 @@
     (material-app
       {:title title}
       (scaffold
-        {:appBar (m/AppBar :title (m/Text title))}
+        {:appBar (reify :extends m/AppBar
+                   (createState [this]
+                     (util/rmap-meta-setf [:state-ref me]
+                       (reify :extends #/(w/State m/AppBar)
+                         (build [this ctx]
+                           (m/AppBar :title (m/Text "bs wow 0")))
+                         (^void initState [this]
+                           (.initState ^super this)
+                           (when-let [init (mget me :initState)]
+                             (init this me)))
+                         (^void dispose [this]
+                           (when-let [orride (mget me :dispose)]
+                             (orride this me))
+                           (.dispose ^super this))))))
+         #_(fx/app-bar :title (m/Text title))
+         #_ (m/AppBar :title (m/Text title))}
+        (fx/text "hi mom")
+        #_
         (grid-view-count
           {:crossAxisCount 2}
           (mapv

@@ -6,7 +6,7 @@
              :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
-            [tiltontec.util.base :refer [dprn]]
+            [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
@@ -78,20 +78,32 @@
     [:appBar :body :actionButton])
   (builder [this]
     (fn [me ctx]
+      (dprn :scaffbuildentry (cty/minfo me))
       (m/Scaffold
         :appBar (let [abar (mget me :appBar)]
                   (dprn :abar!!!! abar)
+                  (dprn :abar-PREFERREDSIZE!!! (dart/is? abar w/PreferredSizeWidget))
                   (dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
                   (dprn :abar!!!!!!!! (dart/is? abar m/Widget))
                   (when (cty/md-ref? abar)
-                    (dprn :md-abar!!!!!!!! (dart/is? (mx-type abar) FXDartWidget)))
+                    (dprn :md-abar!!!!!!!! (mx-type abar) (dart/is? (mx-type abar) FXDartWidget)))
                   (if (dart/is? abar m/AppBar)
-                    abar
-                    (render-fx abar)))
-        :body (render-fx (first (md/md-kids me)))
+                    (do (dprn :straight-abar!!!!!!!!)
+                        abar)
+                    (let [_ (dprn :hack-rendering-fx (mx-type abar))
+                          fbar #_ (m/AppBar :title (m/Text "baby"))
+                          (tag/render-fx-hack abar)]
+                      (dprn :hack-rendered-fx (mx-type abar))
+                      (dprn :hack-yields fbar)
+                      ;;(m/AppBar :title (m/Text "baby"))
+                      fbar)))
+        :body (let [bod (render-fx (first (md/md-kids me)))]
+                (dprn :rfx-scaffbod!!!!!!!! (cty/minfo (first (md/md-kids me))) bod)
+                bod)
         :floatingActionButton
         ;; todo this too s/b render-fx
         (let [button# (mget me :floatingActionButton)]
+          (dprn :scaffbutt (fn? button#) button#)
           (if (fn? button#)
             (button# me ctx)
             button#))))))
@@ -103,11 +115,22 @@
 (deftype FXAppBar []
   ;;:type-only true
   :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    (dprn :FXAppBar-NULL-observing!!! slot))
   PDartWidget
+  (parts [this]
+    [:title])
   (builder [this]
+    (dp :APPBAR-builder-factory-entry!!!!!!!!!!!!!!!!)
     (fn [me ctx]
+      (dprn :fxappbar-build!???)
+      (dprn :fxappbar-build!!!!! (cty/minfo me))
       (m/AppBar
-        :title (mget me :title)))))
+        :title (m/Text "faketitle")
+        #_ (let [title (mget me :title)]
+                 (dprn :app-bar-sees-title title)
+                 title)))))
 
 (deftag app-bar tiltontec.mx-flutter.core/FXAppBar)
 

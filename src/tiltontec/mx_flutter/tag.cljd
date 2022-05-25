@@ -3,10 +3,10 @@
              :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
                      FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
             ["package:flutter/widgets.dart" :as w
-             :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
+             :refer [Text Center Expanded Column State PreferredSizeWidget StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
-            [tiltontec.util.base :refer [dprn]]
+            [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe md-ref?] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
@@ -18,20 +18,50 @@
   (builder [this]))
 
 (defn render-fx [fx]
-  ;;(dprn :render-fx-entry fx)
-  (if-let [gen (when (md-ref? fx)
-                 (mget fx :fx-gen))]
-    (gen fx)
+  (dprn :render-fx-entry (cty/minfo fx) fx)
+  (cond
+    (not (md-ref? fx))
     (do
-      (dprn :warning-NO-FXGEN-rendering-ASIS!! fx)
-      fx)))
+      (dprn :rnfx-sees-not-md-passing-thru fx)
+      fx)
+
+    :else (let [gen (mget fx :fx-gen)]
+            (dprn :renfx-sees-fx-gen gen @fx)
+            (assert gen "render-fx of model finds no fx-gen: ")
+            (dprn :renfx-calls-fx-gen gen @fx)
+            (gen fx))
+    )
+  #_(if-let [gen (when (md-ref? fx)
+                   (mget fx :fx-gen))]
+      (do (dprn :rfx-bingo-gen (cty/minfo fx) gen)
+          (gen fx))
+      (do
+        (dprn :warning-NO-FXGEN-rendering-ASIS!! fx)
+        fx)))
+
+(defn render-fx-hack [fx]
+  (dprn :hackrender-fx-entry (cty/minfo fx) fx)
+  (cond
+    (not (md-ref? fx))
+    (do
+      (dprn :hackrnfx-sees-not-md-passing-thru fx)
+      fx)
+
+    :else (let [gen (mget fx :fx-gen)]
+            (dprn :hacknfx-sees-fx-gen!!!!!! gen @fx)
+            (assert gen "render-fx of model finds no fx-gen: ")
+            (dprn :renfx-calls-fx-gen gen @fx)
+            (let [genned (gen fx)]
+              (dprn :genned!!!!!!!!! genned)
+              genned)
+            )))
 
 (defn statefully [me builder]
   (reify :extends w/StatefulWidget
     (createState [this]
       (util/rmap-meta-setf [:state-ref me]
         (reify :extends w/State
-          ^:mixin m/SingleTickerProviderStateMixin ;; todo make specifiable (macroland?)
+          ^:mixin m/SingleTickerProviderStateMixin          ;; todo make specifiable (macroland?)
           (build [this ctx]
             (builder me ctx))
           (^void initState [this]
@@ -41,8 +71,7 @@
           (^void dispose [this]
             (when-let [orride (mget me :dispose)]
               (orride this me))
-            (.dispose ^super this)
-            ))))))
+            (.dispose ^super this)))))))
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   (apply tiltontec.model.core/make
@@ -50,12 +79,37 @@
     :fx-prop-keys (keys fx-props)
     :kids cFkids-form
     :fx-gen (fn [me]
+              (dp :make-fx-gen-entry!!!!!!!!!!!! mx-type)
               (tiltontec.mx-flutter.tag/statefully me
                 (fn [me ctx]
-                  ;;(dprn "GEN" mx-type)
+                  (dprn "mfx-fx-GEN" mx-type)
+                  (dprn "mfx-fx-GEN me" (cty/minfo me))
                   (let [builder (or (mget me :builder)
                                   (builder mx-type))]
-                    (builder me ctx)))))
+                    (dprn "mfx-fx-GEN hits builder" mx-type
+                      builder)
+                    (let [bilt (builder me ctx)]
+                      (dprn :BUILT!!! bilt)
+                      bilt)))))
+    (concat
+      (vec (apply concat (seq fx-props)))
+      (vec (apply concat (seq custom-props))))))
+
+(defn make-fx-raw [mx-type fx-props custom-props cFkids-form]
+  (apply tiltontec.model.core/make
+    :mx-type mx-type
+    :fx-prop-keys (keys fx-props)
+    :kids cFkids-form
+    :fx-gen (fn [me]
+              (dp :make-fx-gen-entry-RAW!!!! mx-type)
+              (fn [me ctx]
+                (let [builder (or (mget me :builder)
+                                (builder mx-type))]
+                  (dprn "RAW mfx-fx-GEN hits builder" mx-type
+                    builder)
+                  (let [bilt (builder me ctx)]
+                    (dprn :BUILT-RAW!!! bilt)
+                    bilt))))
     (concat
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))

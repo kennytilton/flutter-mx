@@ -1,6 +1,7 @@
 (ns tiltontec.example.counter
   (:require
     [clojure.string :as string]
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cF_ cI]]
@@ -25,9 +26,11 @@
     {:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
     (scaffold
-      {:appBar               (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000))))
+      {:appBar               (cF (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000)
+                                                        " ctr=" (mget (md/fm* :z-counter) :value)))))
        :floatingActionButton (cF (FloatingActionButton
                                    :onPressed (fn ^void []
+                                                (dp :fab-sees-me (cty/minfo me))
                                                 (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
                                    :child (Icon Icons/add :color Colors/black)))}

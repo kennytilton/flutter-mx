@@ -1,10 +1,11 @@
 (ns tiltontec.example.physics-sim
   (:require
-    [tiltontec.util.base :refer [dprn]]
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.mx-flutter.tag :as tag]
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text grid-view-count row expanded elevated-button scaffold column]]
     ["package:flutter/widgets.dart"
@@ -64,9 +65,25 @@
       (fx/card drag-child))))
 
 (defn make-app []
-  (let [title (str "Physics Animation " (rand-int 99))]
+  (let [title (str "Physics Animation3 " (rand-int 99))]
     (material-app {:title title}
       (scaffold
-        {:appBar (AppBar :title (Text title))}
-        (draggable-card
-          :drag-child (fx/flutter-logo {:size 128.0}))))))
+        {:appBar (cF (m/AppBar
+                   :title (m/Text (str "not custom built but in cF: " (rand-int 99)))))
+        #_  (tag/make-fx-raw (tiltontec.mx-flutter.core/FXAppBar)
+           {:title "plain titke" #_(fx/text {} {:name    :title-1
+                                                :builder (fn [me ctx]
+                                                           (m/AppBar
+                                                             :title (m/Text "rawtitle")))}
+                                     "rawtitle")}
+           {:name :barry}
+           []
+           #_(fx/text {} {:name :title-x} "extrakid"))
+      :floatingActionButton (cF (m/FloatingActionButton
+                                  :onPressed (fn ^void []
+                                               (dprn :dumyaction))
+                                  :tooltip "Increment"
+                                  :child (Icon Icons/add :color Colors/white))) }
+{:name :scaffy}
+(draggable-card
+  :drag-child (fx/flutter-logo {:size 128.0})) ) ) ) )
