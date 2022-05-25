@@ -81,10 +81,10 @@
       (dprn :scaffbuildentry (cty/minfo me))
       (m/Scaffold
         :appBar (let [abar (mget me :appBar)]
-                  (dprn :abar!!!! abar)
-                  (dprn :abar-PREFERREDSIZE!!! (dart/is? abar w/PreferredSizeWidget))
-                  (dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
-                  (dprn :abar!!!!!!!! (dart/is? abar m/Widget))
+                  (dprn :abar!!!! @abar)
+                  ;(dprn :abar-PREFERREDSIZE!!! (dart/is? abar w/PreferredSizeWidget))
+                  ;(dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
+                  ;(dprn :abar!!!!!!!! (dart/is? abar m/Widget))
                   (when (cty/md-ref? abar)
                     (dprn :md-abar!!!!!!!! (mx-type abar) (dart/is? (mx-type abar) FXDartWidget)))
                   (if (dart/is? abar m/AppBar)
@@ -92,9 +92,9 @@
                         abar)
                     (let [_ (dprn :hack-rendering-fx (mx-type abar))
                           fbar #_ (m/AppBar :title (m/Text "baby"))
-                          (tag/render-fx-hack abar)]
-                      (dprn :hack-rendered-fx (mx-type abar))
-                      (dprn :hack-yields fbar)
+                          (tag/render-fx abar)]
+                      (dprn :hack-rendered-fx-fbar (mx-type fbar) fbar)
+                      (dprn :hack-yields fbar :prefsize? (dart/is? abar w/PreferredSizeWidget))
                       ;;(m/AppBar :title (m/Text "baby"))
                       fbar)))
         :body (let [bod (render-fx (first (md/md-kids me)))]

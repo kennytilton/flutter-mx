@@ -29,32 +29,7 @@
             (dprn :renfx-sees-fx-gen gen @fx)
             (assert gen "render-fx of model finds no fx-gen: ")
             (dprn :renfx-calls-fx-gen gen @fx)
-            (gen fx))
-    )
-  #_(if-let [gen (when (md-ref? fx)
-                   (mget fx :fx-gen))]
-      (do (dprn :rfx-bingo-gen (cty/minfo fx) gen)
-          (gen fx))
-      (do
-        (dprn :warning-NO-FXGEN-rendering-ASIS!! fx)
-        fx)))
-
-(defn render-fx-hack [fx]
-  (dprn :hackrender-fx-entry (cty/minfo fx) fx)
-  (cond
-    (not (md-ref? fx))
-    (do
-      (dprn :hackrnfx-sees-not-md-passing-thru fx)
-      fx)
-
-    :else (let [gen (mget fx :fx-gen)]
-            (dprn :hacknfx-sees-fx-gen!!!!!! gen @fx)
-            (assert gen "render-fx of model finds no fx-gen: ")
-            (dprn :renfx-calls-fx-gen gen @fx)
-            (let [genned (gen fx)]
-              (dprn :genned!!!!!!!!! genned)
-              genned)
-            )))
+            (gen fx))))
 
 (defn statefully [me builder]
   (reify :extends w/StatefulWidget
@@ -79,37 +54,28 @@
     :fx-prop-keys (keys fx-props)
     :kids cFkids-form
     :fx-gen (fn [me]
-              (dp :make-fx-gen-entry!!!!!!!!!!!! mx-type)
+              (reify :extends w/StatefulWidget
+                (createState [this]
+                  (util/rmap-meta-setf [:state-ref me]
+                    (reify :extends w/State
+                      ^:mixin m/SingleTickerProviderStateMixin          ;; todo make specifiable (macroland?)
+                      (build [this ctx]
+                        (let [builder (or (mget me :builder)
+                                        (builder mx-type))]
+                          (builder me ctx)))
+                      (^void initState [this]
+                        (.initState ^super this)
+                        (when-let [init (mget me :initState)]
+                          (init this me)))
+                      (^void dispose [this]
+                        (when-let [orride (mget me :dispose)]
+                          (orride this me))
+                        (.dispose ^super this))))))
               (tiltontec.mx-flutter.tag/statefully me
                 (fn [me ctx]
-                  (dprn "mfx-fx-GEN" mx-type)
-                  (dprn "mfx-fx-GEN me" (cty/minfo me))
                   (let [builder (or (mget me :builder)
                                   (builder mx-type))]
-                    (dprn "mfx-fx-GEN hits builder" mx-type
-                      builder)
-                    (let [bilt (builder me ctx)]
-                      (dprn :BUILT!!! bilt)
-                      bilt)))))
-    (concat
-      (vec (apply concat (seq fx-props)))
-      (vec (apply concat (seq custom-props))))))
-
-(defn make-fx-raw [mx-type fx-props custom-props cFkids-form]
-  (apply tiltontec.model.core/make
-    :mx-type mx-type
-    :fx-prop-keys (keys fx-props)
-    :kids cFkids-form
-    :fx-gen (fn [me]
-              (dp :make-fx-gen-entry-RAW!!!! mx-type)
-              (fn [me ctx]
-                (let [builder (or (mget me :builder)
-                                (builder mx-type))]
-                  (dprn "RAW mfx-fx-GEN hits builder" mx-type
-                    builder)
-                  (let [bilt (builder me ctx)]
-                    (dprn :BUILT-RAW!!! bilt)
-                    bilt))))
+                    (builder me ctx)))))
     (concat
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
