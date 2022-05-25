@@ -122,15 +122,14 @@
   (parts [this]
     [:title])
   (builder [this]
-    (dp :APPBAR-builder-factory-entry!!!!!!!!!!!!!!!!)
+    (dp :APPBAR-builder-factory-requested!!)
     (fn [me ctx]
-      (dprn :fxappbar-build!???)
       (dprn :fxappbar-build!!!!! (cty/minfo me))
       (m/AppBar
-        :title (m/Text "faketitle")
-        #_ (let [title (mget me :title)]
-                 (dprn :app-bar-sees-title title)
-                 title)))))
+        :title (let [title (mget me :title)]
+                 (if (string? title)
+                   (m/Text title)
+                   title))))))
 
 (deftag app-bar tiltontec.mx-flutter.core/FXAppBar)
 

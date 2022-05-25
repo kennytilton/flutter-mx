@@ -6,6 +6,7 @@
             ["dart:developer" :as dev]
             ["dart:math" :as mth]
             [tiltontec.util.base :refer [dprn dp dpx]]
+            [tiltontec.cell.base :refer [builder parts]]
             [tiltontec.testing :as testing]
             [tiltontec.mx-flutter.tag :as tag]
             [tiltontec.mx-flutter.core :as fx]
@@ -25,11 +26,15 @@
 (def version (atom nil :meta {}))
 
 (defn main []
-  ;;(dprn :main-sees-columnpp (fx/columnppx))
   #_ (navo/main)
+  #_
   (material/runApp
     (tag/render-fx
       (gridl/make-app)))
+  (dp :parts (do (fx/FXAppBar.)))
+  (let [ab (fx/FXAppBar.)]
+    (dp :ab ab)
+    (dp :parts (parts ab)))
   ;; (testing/run-tests)
   ;;(widgets/debugDumpApp)
   )

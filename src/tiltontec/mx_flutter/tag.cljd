@@ -53,8 +53,21 @@
     :mx-type mx-type
     :fx-prop-keys (keys fx-props)
     :kids cFkids-form
+    #_ (fn [me]
+         (dp :make-fx-gen-entry!!!!!!!!!!!! mx-type)
+         (tiltontec.mx-flutter.tag/statefully me
+           (fn [me ctx]
+             (dprn "mfx-fx-GEN" mx-type)
+             (dprn "mfx-fx-GEN me" (cty/minfo me))
+             (let [builder (or (mget me :builder)
+                             (builder mx-type))]
+               (dprn "mfx-fx-GEN hits builder" mx-type
+                 builder)
+               (let [bilt (builder me ctx)]
+                 (dprn :BUILT!!! bilt)
+                 bilt)))))
     :fx-gen (fn [me]
-              (reify :extends w/StatefulWidget
+              #_ (reify :extends w/StatefulWidget
                 (createState [this]
                   (util/rmap-meta-setf [:state-ref me]
                     (reify :extends w/State
