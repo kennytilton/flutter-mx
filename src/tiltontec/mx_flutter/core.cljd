@@ -13,7 +13,7 @@
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget render-fx] :as tag]))
 
-(defmacro  my-controller []
+(defmacro my-controller []
   `^m/AnimationController (:controller (meta ~'me)))
 
 (defn ctx-page-push [ctx fx-page-def]
@@ -33,7 +33,7 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; todo find better way to reduce observing
-    (when true ;; (some #{slot} (:fx-prop-keys @me))
+    (when true                                              ;; (some #{slot} (:fx-prop-keys @me))
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
       (when-let [^State state (:state-ref (meta me))]
         (.setState state (fn [] (do))))))
@@ -91,7 +91,7 @@
                     (do (dprn :straight-abar!!!!!!!!)
                         abar)
                     (let [_ (dprn :hack-rendering-fx (mx-type abar))
-                          fbar #_ (m/AppBar :title (m/Text "baby"))
+                          fbar #_(m/AppBar :title (m/Text "baby"))
                           (tag/render-fx abar)]
                       (dprn :hack-rendered-fx-fbar (mx-type fbar) fbar)
                       (dprn :hack-yields fbar :prefsize? (dart/is? abar w/PreferredSizeWidget))
@@ -122,9 +122,7 @@
   (parts [this]
     [:title])
   (builder [this]
-    (dp :APPBAR-builder-factory-requested!!)
     (fn [me ctx]
-      (dprn :fxappbar-build!!!!! (cty/minfo me))
       (m/AppBar
         :title (let [title (mget me :title)]
                  (if (string? title)
