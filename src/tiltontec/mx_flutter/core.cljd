@@ -11,7 +11,8 @@
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
-            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget render-fx] :as tag]))
+    ;;[tiltontec.mx-flutter.tag :refer [builder fx-to-flutter] :as tag]
+            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget builder render-fx] :as tag]))
 
 (defmacro my-controller []
   `^m/AnimationController (:controller (meta ~'me)))
@@ -41,6 +42,9 @@
   PDartWidget
   (parts [this]
     [:no-parts])
+
+  (fx-genner [this]
+    nil)
 
   (builder [this]
     (fn [me ctx]
@@ -81,20 +85,20 @@
       (dprn :scaffbuildentry (cty/minfo me))
       (m/Scaffold
         :appBar (let [abar (mget me :appBar)]
-                  (dprn :abar!!!! @abar)
+                  (dprn :ScaffB-megets-appbar abar)
                   ;(dprn :abar-PREFERREDSIZE!!! (dart/is? abar w/PreferredSizeWidget))
-                  ;(dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
-                  ;(dprn :abar!!!!!!!! (dart/is? abar m/Widget))
-                  (when (cty/md-ref? abar)
-                    (dprn :md-abar!!!!!!!! (mx-type abar) (dart/is? (mx-type abar) FXDartWidget)))
+                  (dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
+                  (dprn :abar!!!!!!!! (dart/is? abar m/Widget))
+                  #_(when (cty/md-ref? abar)
+                      (dprn :md-abar!!!!!!!! (mx-type abar) (dart/is? (mx-type abar) FXDartWidget)))
                   (if (dart/is? abar m/AppBar)
-                    (do (dprn :straight-abar!!!!!!!!)
+                    (do (dprn :ScaffB-straight-abar!!!!!!!!)
                         abar)
-                    (let [_ (dprn :hack-rendering-fx (mx-type abar))
+                    (let [_ (dprn :ScaffB-rendering-fx (mx-type abar))
                           fbar #_(m/AppBar :title (m/Text "baby"))
                           (tag/render-fx abar)]
-                      (dprn :hack-rendered-fx-fbar (mx-type fbar) fbar)
-                      (dprn :hack-yields fbar :prefsize? (dart/is? abar w/PreferredSizeWidget))
+                      (dprn :ScaffB-rendered-fx-fbar (mx-type fbar) fbar)
+                      (dprn :ScaffB-yields fbar :prefsize? (dart/is? fbar w/PreferredSizeWidget))
                       ;;(m/AppBar :title (m/Text "baby"))
                       fbar)))
         :body (let [bod (render-fx (first (md/md-kids me)))]
@@ -123,11 +127,49 @@
     [:title])
   (builder [this]
     (fn [me ctx]
+      (dp :FXAPPBAR-builder-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
       (m/AppBar
         :title (let [title (mget me :title)]
+                 (dp :appbar-builder-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
                  (if (string? title)
-                   (m/Text title)
-                   title))))))
+                   (m/Text (str "Yikes-1" title))
+                   title)))))
+  (fx-genner [this]
+    ;; Scaffolds require appBar objects to be PreferredSizeWidgets.
+    ;; The default fx gen uses an anonymous StatefulWidget.
+    ;; So we have to override fx gen (so AppBars (PSWs) go out unwrapped and thus OK to Scaffold.
+    (fn [me]
+      (dp :FXZppBar-gennner-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+      (reify :extends m/AppBar
+        (createState [this]
+          (util/rmap-meta-setf [:state-ref me]
+            (reify :extends #/(w/State m/AppBar)
+              (build [this ctx]
+                (if-let [bldr (mget me :builder)]
+                  (bldr me ctx)
+                  (let [type-builder (builder (FXAppBar))]
+                    (type-builder me ctx))))
+              (^void initState [this]
+                (.initState ^super this)
+                (when-let [init (mget me :initState)]
+                  (init this me)))
+              (^void dispose [this]
+                (when-let [orride (mget me :dispose)]
+                  (orride this me))
+                (.dispose ^super this)))))))))
+#_(fn [me]
+    (reify :extends m/AppBar
+      (createState [this]
+        (reify :extends #/(w/State m/AppBar)
+          (build [this ctx]
+            (if-let [bldr (mget me :builder)]
+              (bldr me ctx)
+              (let [type-builder (builder (fx/FXAppBar))]
+                (type-builder me ctx))))
+          (^void initState [this]
+            (.initState ^super this)
+            (when-let [init (mget me :initState)]
+              (init this me)))))))
 
 (deftag app-bar tiltontec.mx-flutter.core/FXAppBar)
 
