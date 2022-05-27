@@ -16,78 +16,17 @@
     ["package:flutter/painting.dart"
      :refer [TextStyle]]))
 
-#_
-(defmacro fx-to-flutter [fx-type flutter-type]
-  `(fn []
-     (reify :extends ~flutter-type
-       (createState [this#]
-         (reify :extends #/(w/State ~flutter-type)
-           (build [this# ctx#]
-             (prn :hi-mom)))))))
-
-;(comment
-;  (fx/app-bar {:title (m/Text "fx gen override wow 0")}
-;    {:fx-gen (fx-to-flutter fx/FXAppBar m/AppBar)}))
-
-
-
-
-
-#_
-(fn [me]
-  (reify :extends m/AppBar
-    (createState [this]
-      (util/rmap-meta-setf [:state-ref me]
-        (reify :extends #/(w/State m/AppBar)
-          (build [this ctx]
-            (if-let [bldr (mget me :builder)]
-              (bldr me ctx)
-              (when-let [type-builder (builder (fx/FXAppBar))]
-                (type-builder me ctx))))
-          (^void initState [this]
-            (.initState ^super this)
-            (when-let [init (mget me :initState)]
-              (init this me))))))))
-
 (defn make-app []
   (let [title "Grid List"]
-    (material-app
-      {:title title}
-      (scaffold
-        ; we want a matrix incarnation of the AppBar so we have the power of MX if needed.
-        ; In this case, we also need to emit a PreferredSizeWidget for the Scaffold appbar.
-        ; The current scheme works because we just go with StatefulWidget and State for
-        ; all MX-FX proxies, so there is no need to reify the intended specific widget -- we
-        ; do that in the build function.
-        ;
-        ; But Scaffold wants a PSW in the appBar property.
-        ;
-        {:appBar #_ (m/AppBar
-                   :title (m/Text "Expandable Fab 2"))
-                (fx/app-bar {:title (m/Text (str "fx gen NO override " (rand-int 99)))}
-                   #_ {:fx-gen #_ (fx-to-flutter fx/FXAppBar m/AppBar)
-                    (fn [me]
-                      (dp :appbar-GRIDLIST-fx-gen-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-                      (reify :extends m/AppBar
-                        (createState [this]
-                          (reify :extends #/(w/State m/AppBar)
-                            (build [this ctx]
-                              (if-let [bldr (mget me :builder)]
-                                (bldr me ctx)
-                                (let [type-builder (builder (fx/FXAppBar))]
-                                  (type-builder me ctx))))
-                            (^void initState [this]
-                              (.initState ^super this)
-                              (when-let [init (mget me :initState)]
-                                (init this me)))
-                            ))))})}
-        (fx/center (fx/text "hi mom"))
-        #_ (grid-view-count
-            {:crossAxisCount 2}
-            (mapv
-              (fn [i] (center
-                        (text
-                          {:style (fn [me ctx]
-                                    (-> (Theme/of ctx) .textTheme .headline3))}
-                          (str "Item " i))))
-              (range 100)))))))
+    (material-app {:title title}
+      (scaffold {:appBar (fx/app-bar {:title (m/Text "A Grid List Example")})}
+        ; --- implicit body ---
+        (grid-view-count
+          {:crossAxisCount 2}
+          (mapv
+            (fn [i] (center
+                      (text
+                        {:style (fn [me ctx]
+                                  (-> (Theme/of ctx) .textTheme .headline3))}
+                        (str "Item " i))))
+            (range 100)))))))

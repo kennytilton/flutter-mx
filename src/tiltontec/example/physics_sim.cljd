@@ -3,11 +3,10 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
+    [tiltontec.cell.core :as cell :refer [cF cI]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
     [tiltontec.mx-flutter.tag :as tag]
-    [tiltontec.mx-flutter.core :as fx
-     :refer [material-app center text grid-view-count row expanded elevated-button scaffold column]]
+    [tiltontec.mx-flutter.core :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
     ["package:flutter/physics.dart" :as p]
@@ -33,25 +32,23 @@
         simulation (p/SpringSimulation spring 0 1 (- unit-velocity))]
     (doto controller
       .clearListeners
-      (.addListener #(md/mset! me :dragAlignment (.value animation)))
+      (.addListener #(md/mset! me :dragAlignment (.value animation))) ;; <==== dataflow trigger
       (.animateWith simulation))))
 
 (defn draggable-card [& {:keys [drag-child]}]
-  ;; todo make this reusable??
   (fx/gesture-detector
-    {:dragAlignment (cI m.Alignment/center)}
+    {:dragAlignment (cI m.Alignment/center)} ;; <=====  Our only reactive data point
     {:name        :draggable-card
-     :recoil      logo-recoil
      :initState   (fn [this me]
-                    ;; we can use the meta of the widget for instance vars
+                    ;; we use the meta of the proxy where Dart code uses instance vars
                     (util/rmap-meta-setf [:controller me]
                       (m/AnimationController :vsync this)))
-     :onPanDown   (fn [me ctx ^m/DragDownDetails details]   ;; (.stop controller)
+     :onPanDown   (fn [me ctx ^m/DragDownDetails details]
                     (when-let [c ^m/AnimationController (:controller (meta me))]
                       (.stop c)))
      :onPanUpdate (fn [me ctx ^m/DragUpdateDetails details]
                     (let [size (.size (MediaQuery/of ctx))]
-                      (md/mswap! me :dragAlignment          ;; MX flow!!!!!!!!
+                      (md/mswap! me :dragAlignment          ;; <============ MX flow triggered
                         #(.+ ^m/Alignment %
                            (m/Alignment
                              (/ (-> details .delta .dx) (/ (.width size) 2))
@@ -59,22 +56,17 @@
      :onPanEnd    (fn [me ctx ^m/DragEndDetails details]
                     (logo-recoil me ctx (-> details .velocity .pixelsPerSecond)))
      :dispose     (fn [this me]
-                    (when-let [con (fx/my-controller)]      ;; ^m/AnimationController (:controller (meta me))]
+                    (when-let [con (fx/my-controller)]
                       (.dispose con)))}
-    (fx/align {:alignment (cF (mget (md/fm-ascendant :draggable-card me) :dragAlignment))}
+    (fx/align
+      {:alignment (cF (mget (md/fasc :draggable-card) ;; <========== reactive read
+                        :dragAlignment))}
       (fx/card drag-child))))
 
 (defn make-app []
-  (let [title (str "Physics Animation3 " (rand-int 99))]
-    (material-app {:title title}
-      (scaffold
-        {:appBar (cF (m/AppBar
-                   :title (m/Text (str "not custom built but in cF: " (rand-int 99)))))
-      :floatingActionButton (cF (m/FloatingActionButton
-                                  :onPressed (fn ^void []
-                                               (dprn :dumyaction))
-                                  :tooltip "Increment"
-                                  :child (Icon Icons/add :color Colors/white))) }
-{:name :scaffy}
-(draggable-card
-  :drag-child (fx/flutter-logo {:size 128.0})) ) ) ) )
+  (let [title "Physics Animation"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (m/AppBar :title (m/Text title))}
+        (draggable-card
+          :drag-child (fx/flutter-logo {:size 128.0}))))))

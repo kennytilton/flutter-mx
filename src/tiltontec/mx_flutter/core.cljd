@@ -82,32 +82,15 @@
     [:appBar :body :actionButton])
   (builder [this]
     (fn [me ctx]
-      (dprn :scaffbuildentry (cty/minfo me))
       (m/Scaffold
         :appBar (let [abar (mget me :appBar)]
-                  (dprn :ScaffB-megets-appbar abar)
-                  ;(dprn :abar-PREFERREDSIZE!!! (dart/is? abar w/PreferredSizeWidget))
-                  (dprn :abar!!!!!!!! (dart/is? abar m/AppBar))
-                  (dprn :abar!!!!!!!! (dart/is? abar m/Widget))
-                  #_(when (cty/md-ref? abar)
-                      (dprn :md-abar!!!!!!!! (mx-type abar) (dart/is? (mx-type abar) FXDartWidget)))
                   (if (dart/is? abar m/AppBar)
-                    (do (dprn :ScaffB-straight-abar!!!!!!!!)
-                        abar)
-                    (let [_ (dprn :ScaffB-rendering-fx (mx-type abar))
-                          fbar #_(m/AppBar :title (m/Text "baby"))
-                          (tag/render-fx abar)]
-                      (dprn :ScaffB-rendered-fx-fbar (mx-type fbar) fbar)
-                      (dprn :ScaffB-yields fbar :prefsize? (dart/is? fbar w/PreferredSizeWidget))
-                      ;;(m/AppBar :title (m/Text "baby"))
-                      fbar)))
-        :body (let [bod (render-fx (first (md/md-kids me)))]
-                (dprn :rfx-scaffbod!!!!!!!! (cty/minfo (first (md/md-kids me))) bod)
-                bod)
+                    abar
+                    (tag/render-fx abar)))
+        :body (render-fx (first (md/md-kids me)))
         :floatingActionButton
         ;; todo this too s/b render-fx
         (let [button# (mget me :floatingActionButton)]
-          (dprn :scaffbutt (fn? button#) button#)
           (if (fn? button#)
             (button# me ctx)
             button#))))))
@@ -121,16 +104,14 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    (dprn :FXAppBar-NULL-observing!!! slot))
+    #_ (dprn :FXAppBar-NULL-observing!!! slot))
   PDartWidget
   (parts [this]
     [:title])
   (builder [this]
     (fn [me ctx]
-      (dp :FXAPPBAR-builder-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
       (m/AppBar
         :title (let [title (mget me :title)]
-                 (dp :appbar-builder-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
                  (if (string? title)
                    (m/Text (str "Yikes-1" title))
                    title)))))
@@ -139,7 +120,6 @@
     ;; The default fx gen uses an anonymous StatefulWidget.
     ;; So we have to override fx gen (so AppBars (PSWs) go out unwrapped and thus OK to Scaffold.
     (fn [me]
-      (dp :FXZppBar-gennner-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
       (reify :extends m/AppBar
         (createState [this]
           (util/rmap-meta-setf [:state-ref me]
@@ -157,19 +137,7 @@
                 (when-let [orride (mget me :dispose)]
                   (orride this me))
                 (.dispose ^super this)))))))))
-#_(fn [me]
-    (reify :extends m/AppBar
-      (createState [this]
-        (reify :extends #/(w/State m/AppBar)
-          (build [this ctx]
-            (if-let [bldr (mget me :builder)]
-              (bldr me ctx)
-              (let [type-builder (builder (fx/FXAppBar))]
-                (type-builder me ctx))))
-          (^void initState [this]
-            (.initState ^super this)
-            (when-let [init (mget me :initState)]
-              (init this me)))))))
+
 
 (deftag app-bar tiltontec.mx-flutter.core/FXAppBar)
 
@@ -215,22 +183,14 @@
     [:child])
   (builder [this]
     (fn [me ctx]
-      ;;(dprn (str "Center Type REBUILDING " (cty/minfo me)))
       (m/GestureDetector
         :onPanDown (fn [^m/DragDownDetails details]
-                     ;(dprn :pandown-deets details (str details))
-                     ;(dprn :pandown-local (-> details .localPosition))
-                     ;(dprn :pandown-global (-> details .globalPosition))
-                     ;; (dprn "pdown-delta" (-> details .delta))
                      (when-let [pan (mget me :onPanDown)]
                        (pan me ctx details)))
         :onPanUpdate (fn [^m/DragUpdateDetails details]
-                       ;(dprn :dragupd-deets details)
-                       ;(dprn :dragupd-delta (-> details .delta))
                        (when-let [pan (mget me :onPanUpdate)]
                          (pan me ctx details)))
         :onPanEnd (fn [^m/DragEndDetails details]
-                    ;(dprn :panend (str details))
                     (when-let [pan (mget me :onPanEnd)]
                       (pan me ctx details)))
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
@@ -347,7 +307,10 @@
   (builder [this]
     (fn [me ctx]
       (m/ElevatedButton
-        :onPressed (fn [] ((mget me :onPressed) ctx))
+        :onPressed (fn []
+                     (when-let [op (mget me :onPressed)]
+                       (dp :elev-ftype-onpress-sees-callback op)
+                       (op me ctx)))
         :child (tiltontec.mx-flutter.tag/render-fx (first (tiltontec.model.core/md-kids me)))))))
 
 (deftag elevated-button tiltontec.mx-flutter.core/FXElevatedButton)
@@ -357,9 +320,6 @@
 (deftype FXGridViewCount []
   ;;:type-only true
   :extends FXDartWidget
-  PObserver
-  (observe [this slot me new-value prior-value cell]
-    (dprn :FXGridViewCount-obs-IGNORE!! slot))
   PDartWidget
   (builder [this]
     (fn [me ctx]
@@ -392,9 +352,6 @@
 (deftype FXFlutterLogo []
   ;;:type-only true
   :extends FXDartWidget
-  PObserver
-  (observe [this slot me new-value prior-value cell]
-    #_(dprn :FXMatapp-NULL-observing!!! slot))
   PDartWidget
   (builder [this]
     (fn [me ctx]

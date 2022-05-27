@@ -7,7 +7,7 @@
     [tiltontec.model.base :refer [md-cell]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [ material-app center text row expanded elevated-button scaffold column]]
+     :refer [material-app center text row expanded elevated-button scaffold column]]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -16,27 +16,29 @@
      :refer [TextStyle]]))
 
 (defn- build-counter [counter-key]
-  #_ (text (str "+" (name counter-key)))
+  #_(text (str "+" (name counter-key)))
   (expanded
     (fx/column
       {:mainAxisAlignment MainAxisAlignment/center}
       {:name  :ctr-col
-       ;; the column maintains its own state, aka "in-place state"
+       ;; The column maintains its own state, aka "in-place state".
+       ;; We find it useful to give every widget a "value" property for holding the primary value of a widget
        :value (cI 0)}
       (text (str/capitalize (name counter-key)))
       (text {:style (fn [me ctx]
-                      ;; todo this can be (theme-fn ....)
+                      ;; we hacked the text widget a bit to look for callback functions on "style"
+                      ;; so a style formula can tap the runtime context.
                       (-> (Theme/of ctx) .textTheme .displayLarge))}
         (str (md/fmuval :ctr-col)))
       (elevated-button
-        {:onPressed (cF (fn ^void []
+        {:onPressed (cF (fn ^void [me ctx]
+                          ;; no reason we produce the handler in a Cell formula; just a demo that we can
                           (md/mswap! (md/fmu :ctr-col) :value inc)))}
         (text "+")))))
 
 (defn make-app []
   (material-app {:title "Two Counters (MX)"
                  :theme (cF (ThemeData :primarySwatch Colors/blue))}
-    {:name :mat-app}
     (scaffold
       {:appBar (AppBar :title (Text "Two Counters (MX)"))}
       (center

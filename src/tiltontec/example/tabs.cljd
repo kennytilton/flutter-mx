@@ -1,18 +1,8 @@
 (ns tiltontec.example.tabs
   (:require
-    [cljd.flutter.alpha :as f]
-    [clojure.string :as string]
     [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
-    [tiltontec.cell.core :as cell
-     :refer [cF cF+ cI]]
-    [tiltontec.model.core :refer [mget] :as md]
-    [tiltontec.mx-flutter.core :as fx
-     :refer [material-app scaffold center text]]
-    ;; State StatefulWidget StatelessWidget]]
-
-
-    ["package:flutter/material.dart" :as m :refer [AppBar Colors Text ThemeData]]
-    ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
+    [tiltontec.mx-flutter.core :as fx]
+    ["package:flutter/material.dart" :as m ]))
 
 (defn make-app
   []
@@ -32,5 +22,23 @@
                                  (m/TabBarView
                                    :children [(m/Tab :icon (m/Icon. m.Icons/directions_car)),
                                               (m/Tab :icon (m/Icon. m.Icons/directions_transit)),
-                                              (m/Tab :icon (m/Icon. m.Icons/directions_bike))]))
-                      }))))))
+                                              (m/Tab :icon (m/Icon. m.Icons/directions_bike))]))}))))))
+
+;;; ---  left as exercise -------------
+#_ (defn make-app
+     []
+     (let [title "Tabs Demo"]
+       (fx/material-app {:title title}
+         (fx/default-tab-controller
+           {:length 3}
+           (fx/scaffold
+             {:appBar (fx/app-bar
+                        {:bottom
+                         (fx/tab-bar
+                           (fx/tab :icon (m/Icon. m.Icons/directions_car)),
+                           (fx/tab :icon (m/Icon. m.Icons/directions_transit)),
+                           (fx/tab :icon (m/Icon. m.Icons/directions_bike)))})}
+             (fx/tab-bar-view
+               (fx/tab :icon (m/Icon. m.Icons/directions_car)),
+               (fx/tab :icon (m/Icon. m.Icons/directions_transit)),
+               (fx/tab :icon (m/Icon. m.Icons/directions_bike))))))))

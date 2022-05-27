@@ -19,17 +19,14 @@
   (fx-genner [this]))
 
 (defn render-fx [fx]
-  (dprn :render-fx-entry (cty/minfo fx) fx)
   (cond
     (not (md-ref? fx))
     (do
-      (dprn :rnfx-sees-not-md-passing-thru fx)
+     ;; (dprn :rnfx-sees-not-md-passing-thru fx)
       fx)
 
     :else (let [gen (mget fx :fx-gen)]
-            (dprn :renfx-sees-fx-gen gen @fx)
-            (assert gen "render-fx of model finds no fx-gen: ")
-            (dprn :renfx-calls-fx-gen gen @fx)
+            (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen fx))))
 
 (defn statefully [me builder]
@@ -54,39 +51,13 @@
     :mx-type mx-type
     :fx-prop-keys (keys fx-props)
     :kids cFkids-form
-    #_(fn [me]
-        (dp :make-fx-gen-entry!!!!!!!!!!!! mx-type)
-        (tiltontec.mx-flutter.tag/statefully me
-          (fn [me ctx]
-            (dprn "mfx-fx-GEN" mx-type)
-            (dprn "mfx-fx-GEN me" (cty/minfo me))
-            (let [builder (or (mget me :builder)
-                            (builder mx-type))]
-              (dprn "mfx-fx-GEN hits builder" mx-type
-                builder)
-              (let [bilt (builder me ctx)]
-                (dprn :BUILT!!! bilt)
-                bilt)))))
     :fx-gen (fn [me]
-              #_(reify :extends w/StatefulWidget
-                  (createState [this]
-                    (util/rmap-meta-setf [:state-ref me]
-                      (reify :extends w/State
-                        ^:mixin m/SingleTickerProviderStateMixin ;; todo make specifiable (macroland?)
-                        (build [this ctx]
-                          (let [builder (or (mget me :builder)
-                                          (builder mx-type))]
-                            (builder me ctx)))
-                        (^void initState [this]
-                          (.initState ^super this)
-                          (when-let [init (mget me :initState)]
-                            (init this me)))
-                        (^void dispose [this]
-                          (when-let [orride (mget me :dispose)]
-                            (orride this me))
-                          (.dispose ^super this))))))
-              (if-let [g (fx-genner mx-type)]
-                (g me)
+              ;; the default "statefully" works for must Flutter widgets,
+              ;; but not all, such as AppBar, so we allow individual widget Types to
+              ;; supply their own fx-gen.
+              (if-let [type-fx-gen (fx-genner mx-type)]
+                (type-fx-gen me)
+                ; --- no special fx gen, so...the default:
                 (tiltontec.mx-flutter.tag/statefully me
                   (fn [me ctx]
                     (let [builder (or (mget me :builder)
@@ -129,18 +100,3 @@
             {}
             ~(when-let [kids# (seq (nthrest vargs# 1))]
                `(tiltontec.model.core/cFkids ~@kids#)))))))
-
-(defmacro fx-to-flutter [fx-type flutter-type]
-  `(fn [me#]
-     (reify :extends ~flutter-type
-       (createState [this#]
-         (reify :extends #/(w/State ~flutter-type)
-           (build [this# ctx#]
-             (if-let [bldr (tiltontec.model.core/mget me# :buixlder)]
-               (bldr me# ctx#)
-               (let [type-builder# (builder (~fx-type))]
-                 (type-builder# me# ctx#))))
-           (^void initState [this#]
-             (.initState ^{:tag ~'super} this#)
-             (when-let [init# (tiltontec.model.core/mget me# :initState)]
-               (init# me#))))))))

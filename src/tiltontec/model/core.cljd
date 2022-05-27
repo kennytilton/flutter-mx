@@ -314,6 +314,12 @@
        (fm-navig #(= name# (md-get % :name))
          ~me-ref :me? false :up? true :inside? false))))
 
+(defmacro fasc "Search strictly up"
+  [name & [me]]
+  (let [me-ref (or me 'me)]
+    `(let [name# ~name]
+       (tiltontec.model.core/fm-ascendant name# ~me-ref))))
+
 (defmacro fm* [name & [me]]
   ;; todo this needs to look for more than just name
   (let [me-ref (or me 'me)]
