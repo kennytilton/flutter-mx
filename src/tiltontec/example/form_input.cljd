@@ -43,39 +43,20 @@
      :floatingActionButton (fx/floating-action-button
                              {:onPressed (cF (fn ^void [me ctx]
                                                ;; no reason we produce the handler in a Cell formula; just a demo that we can
-                                               (dp :onpressed!!!!!!!!!!-me (cty/minfo me))
-                                               (dp :onpressed!!!!!!!!!!-ctx ctx)
-                                               (dp :onpressed!!!!!!!!!!-par (cty/minfo (:par @me)))
-                                               (dp :onpressed!!!!!!!!!!-form (cty/minfo (md/fm* :custom-form)))
-                                               (dp :onpressed!!!!!!!!!!-contro (mget (md/fm* :custom-form) :text-controller))
-                                               (dp :onpp-text!!!!!!! (.text (mget (md/fm* :custom-form) :text-controller)))
-                                               #_
                                                (m/showDialog
                                                  :context ctx
                                                  :builder (fn [_]
                                                             (m/AlertDialog
-                                                              :content (m/Text (.text (mget me :text-controller))))))
+                                                              :content (m/Text (.text ^m/TextEditingController
+                                                                                 (mget (md/fm* :test-input) :controller))))))
                                                nil))
-                              #_(fn ^void []
-                                  (dp :form-show-sees-con (mget me :text-controller))
-                                  (dp :form-show-sees-text (.text ^m/TextEditingController (mget me :text-controller)))
-                                  (dp :form-show-sees-me (cty/minfo me)))
                               :tooltip   "Show me the value!"}
                              (m/Icon m.Icons/text_fields))}
-    {:name            :custom-form
-     :text-controller (m/TextEditingController)}
     (fx/padding
       {:padding ^:const (m.EdgeInsets/all 16.0)}
-      #_(fx/text "hi mom")
-      (fx/text-field {:name :test-input}
-        {:controller (cF (let [form (fasc :custom-form)
-                               _ (dp :form!!!!!! form)
-                               con ^m/TextEditingController (mget form :text-controller)
-                               _ (dp :con con)]
-                           (assert (dart/is? con m/TextEditingController)
-                             "not txcon for fx/text-field controller property")
-                           (dp :txcon-cool-pulled-for-textfield-controller con)
-                           con))}))))
+      (fx/text-field {:controller (m/TextEditingController)}
+        ;; todo add to dispose ^^^
+        {:name :test-input}))))
 
 (defn make-app []
   (let [title "Retrieve text input"]

@@ -381,6 +381,12 @@
        (mget mx slot-name)
        (throw (str "fmov> " id-name " lacks " slot-name " property"))))))
 
+;;; --- ancestry ----
+(defn fm-ancestry [me]
+  (assert (md-ref? me))
+  (when-let [par (mx-par me)]
+    (conj (fm-ancestry par) par)))
+
 (defmacro the-kids [& tree]
   `(binding [*par* ~'me]
      (assert *par*)
