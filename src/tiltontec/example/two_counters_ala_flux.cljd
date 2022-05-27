@@ -25,14 +25,13 @@
       (text (str/capitalize (name counter-key)))
       (text
         {:style (fn [me ctx]
-                  ;; todo this can be (theme-fn ....)
                   (-> (Theme/of ctx) .textTheme .displayLarge))}
         (str (md/fmuval :counter-col)))
       (elevated-button
-        {:onPressed (cFnil (fn ^void []
-                             (dprn dp dpx :incrementing-counter counter-key)
-                             (md/mswap! (md/fm-ascendant :counter-app me)
-                               :flux-store update-in [:counters counter-key] inc)))}
+        {:onPressed (fn ^void [me ctx]
+                      (dprn dp dpx :incrementing-counter counter-key)
+                      (md/mswap! (md/fm-ascendant :counter-app me)
+                        :flux-store update-in [:counters counter-key] inc))}
         (text "+")))))
 
 (defn make-app []

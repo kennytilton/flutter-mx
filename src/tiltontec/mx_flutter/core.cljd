@@ -66,7 +66,7 @@
   (builder [this]
     (fn [me ctx]
       (m/MaterialApp
-        :title (mget me :title)
+        :title (or (mget me :title) "")
         :theme (mget me :theme)
         :home (render-fx (first (md-kids me)))))))
 
@@ -140,6 +140,32 @@
 
 
 (deftag app-bar tiltontec.mx-flutter.core/FXAppBar)
+
+;;; --- single-child scroll view ----------------------------
+(deftype FXSingleChildScrollView []
+  :extends FXDartWidget
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m/SingleChildScrollView
+        :scrollDirection (md/mget me :scrollDirection)
+        :child (render-fx (first (md/md-kids me)))))))
+(deftag single-child-scroll-view tiltontec.mx-flutter.core/FXSingleChildScrollView)
+
+;;; --- data table  ----------------------------
+(deftype FXDataTable []
+  :extends FXDartWidget
+  PDartWidget
+  (parts [this]
+    [:headingTextStyle :columnSpacing :sortColumnIndex :sortAscending :showBottomBorder :columns :rows])
+  (builder [this]
+    (fn [me ctx]
+      (m/DataTable
+        :headingTextStyle (md/mget me :headingTextStyle)
+        :showBottomBorder (md/mget me :showBottomBorder)
+        :columns (md/mget me :columns)
+        :rows (md/mget me :rows)))))
+(deftag data-table tiltontec.mx-flutter.core/FXDataTable)
 
 ;;; --- default tab controller -----------------------
 
