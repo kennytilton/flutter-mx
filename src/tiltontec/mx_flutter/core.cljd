@@ -11,7 +11,6 @@
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
-    ;;[tiltontec.mx-flutter.tag :refer [builder fx-to-flutter] :as tag]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget builder render-fx] :as tag]))
 
 (defmacro my-controller []
@@ -74,6 +73,29 @@
 
 ;;; --- scaffold ---------------------------------------
 
+(defn extract-widget [dbg-key me ctx fab]
+  (cond
+    (nil? fab)
+    (do (dp :exwid-sees-nil dbg-key)
+        nil)
+
+    (dart/is? fab m/Widget)
+    (do (dp :fab-is-widget fab)
+        fab)
+
+    (fn? fab)
+    (do (dp :ew-sees-fn dbg-key fab)
+        ;; render-fx?
+        (recur [dbg-key :fn] me ctx (fab me ctx)))
+
+    (and (cty/md-ref? fab)
+      (dart/is? (mx-type fab) fx/FXDartWidget))
+    (do (dp :md-fx!!!!!-rendering!!! [dbg-key ])
+        (recur [dbg-key :renfx] me ctx
+          (render-fx fab)))
+
+    :default (throw (Exception. (str "extract-widget stuck after " dbg-key " on " fab)))))
+
 (deftype FXScaffold []
   ;;:type-only true
   :extends FXDartWidget
@@ -90,10 +112,8 @@
         :body (render-fx (first (md/md-kids me)))
         :floatingActionButton
         ;; todo this too s/b render-fx
-        (let [button# (mget me :floatingActionButton)]
-          (if (fn? button#)
-            (button# me ctx)
-            button#))))))
+        (let [button (mget me :floatingActionButton)]
+          (extract-widget :scaffold-fab me ctx button))))))
 
 (deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
 
@@ -104,7 +124,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_ (dprn :FXAppBar-NULL-observing!!! slot))
+    #_(dprn :FXAppBar-NULL-observing!!! slot))
   PDartWidget
   (parts [this]
     [:title])
@@ -167,6 +187,24 @@
         :rows (md/mget me :rows)))))
 (deftag data-table tiltontec.mx-flutter.core/FXDataTable)
 
+;;; --- floating action button
+
+(deftype FXFloatingActionButton []
+  :extends FXDartWidget
+  PDartWidget
+  (parts [this]
+    [:onPressed :tooltip :child])
+  (builder [this]
+    (fn [me ctx]
+      (m/FloatingActionButton
+        :onPressed (fn []
+                     (when-let [op (mget me :onPressed)]
+                       (op me ctx)))
+        :tooltip (md/mget me :tooltip)
+        :child (render-fx (first (md/md-kids me)))))))
+
+(deftag floating-action-button tiltontec.mx-flutter.core/FXFloatingActionButton)
+
 ;;; --- default tab controller -----------------------
 
 (deftype FXDefaultTabController []
@@ -193,11 +231,25 @@
     [:child])
   (builder [this]
     (fn [me ctx]
-      ;;(dprn (str "Center Type REBUILDING " (cty/minfo me)))
       (m/Center
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
 
 (deftag center tiltontec.mx-flutter.core/FXCenter)
+
+;;; --- padding ---------------------------------------
+
+(deftype FXPadding []
+  :extends FXDartWidget
+  PDartWidget
+  (parts [this]
+    [:padding])
+  (builder [this]
+    (fn [me ctx]
+      (m/Padding
+        :padding (mget me :padding)
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag padding tiltontec.mx-flutter.core/FXPadding)
 
 ;;; --- gesture detector
 
@@ -322,6 +374,23 @@
 
 (deftag text tiltontec.mx-flutter.core/FXText)
 
+;;; --- text ---------------------------------------
+
+(deftype FXTextField []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:controller])
+  (builder [this]
+    (fn [me ctx]
+      (m/TextField
+        :controller (let [con (mget me :controller)]
+                      (assert (dart/is? con m/TextEditingController))
+                      con)))))
+
+(deftag text-field tiltontec.mx-flutter.core/FXTextField)
+
 ;;; --- elevated button  ---------------------------------------
 
 (deftype FXElevatedButton []
@@ -335,7 +404,7 @@
       (m/ElevatedButton
         :onPressed (fn []
                      (when-let [op (mget me :onPressed)]
-                       (dp :elev-ftype-onpress-sees-callback op)
+                       (dp :FXelev-onpressing me :ctx ctx)
                        (op me ctx)))
         :child (tiltontec.mx-flutter.tag/render-fx (first (tiltontec.model.core/md-kids me)))))))
 

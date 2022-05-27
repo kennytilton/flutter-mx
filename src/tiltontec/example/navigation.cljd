@@ -2,6 +2,8 @@
   "Port of https://docs.flutter.dev/cookbook/navigation/navigation-basics"
   (:require
     ["package:flutter/material.dart" :as m]
+    [tiltontec.util.base
+     :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
     [tiltontec.cell.base :as cty] ;; todo eliminate need for macro support (unbound ref)
     [tiltontec.mx-flutter.core :as fx]))
 
@@ -11,7 +13,8 @@
     (fx/center
       (fx/elevated-button
         ;; todo universal mechanism for "on" handlers providing ctx
-        {:onPressed (fn [ctx]
+        {:onPressed (fn [me ctx]
+                      (dp :onpreess-back-ctx ctx)
                       (fx/ctx-page-pop ctx))}
         (m/Text "Go back!")))))
 
@@ -20,7 +23,8 @@
     {:appBar (m/AppBar :title (m/Text "First Route"))}
     (fx/center
       (fx/elevated-button
-        {:onPressed (fn [ctx]
+        {:onPressed (fn [me ctx]
+                      (dp :onpreess-ctx ctx)
                       (fx/ctx-page-push ctx second-route))}
         (fx/text "Open route")))))
 
