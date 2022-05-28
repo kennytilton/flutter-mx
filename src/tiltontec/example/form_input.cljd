@@ -17,39 +17,19 @@
      :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
      :refer [TextStyle]]))
-#_(defn my-custom-form-state [title]
-    (f/widget
-      :context ctx
-      :with [text-controller (m/TextEditingController)]
-      (m/Scaffold
-        :appBar (m/AppBar :title (m/Text title))
-        :body
-        (m/Padding. :padding
-          ^:const (m.EdgeInsets/all 16.0)
-          :child (m/TextField :controller text-controller))
-        :floatingActionButton
-        (m/FloatingActionButton
-          :onPressed (fn []
-                       (m/showDialog
-                         :context ctx
-                         :builder (fn [_] (m/AlertDialog :content (m/Text (.text text-controller))))) nil
-                       )
-          :tooltip "Show me the value!"
-          :child (m/Icon m.Icons/text_fields)))))
 
 (defn my-custom-form-state [title]
   (fx/scaffold
     {:appBar               (m/AppBar :title (m/Text title))
      :floatingActionButton (fx/floating-action-button
-                             {:onPressed (cF (fn ^void [me ctx]
-                                               ;; no reason we produce the handler in a Cell formula; just a demo that we can
-                                               (m/showDialog
-                                                 :context ctx
-                                                 :builder (fn [_]
-                                                            (m/AlertDialog
-                                                              :content (m/Text (.text ^m/TextEditingController
-                                                                                 (mget (md/fm* :test-input) :controller))))))
-                                               nil))
+                             {:onPressed (fn ^void [me ctx]
+                                            (m/showDialog
+                                             :context ctx
+                                             :builder (fn [_]
+                                                        (m/AlertDialog
+                                                          :content (m/Text (.text ^m/TextEditingController
+                                                                             (mget (md/fm* :test-input) :controller))))))
+                                           nil)
                               :tooltip   "Show me the value!"}
                              (m/Icon m.Icons/text_fields))}
     (fx/padding

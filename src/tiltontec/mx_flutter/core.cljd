@@ -53,6 +53,32 @@
 
 (deftag widget tiltontec.mx-flutter.core/FXDartWidget)
 
+
+;;; --- extract widget --------------------------------------
+
+(defn extract-widget [dbg-key me ctx fab]
+  (cond
+    (nil? fab)
+    (do (dp :exwid-sees-nil-fab dbg-key)
+        nil)
+
+    (dart/is? fab m/Widget)
+    (do (dp :fab-is-widget fab)
+        fab)
+
+    (fn? fab)
+    (do (dp :ew-sees-fn dbg-key fab)
+        ;; render-fx?
+        (recur [dbg-key :fn] me ctx (fab me ctx)))
+
+    (and (cty/md-ref? fab)
+      (dart/is? (mx-type fab) fx/FXDartWidget))
+    (do
+      (recur [dbg-key :renfx] me ctx
+        (render-fx fab)))
+
+    :default (throw (Exception. (str "extract-widget stuck after " dbg-key " on " fab)))))
+
 ;;; --- material app ---------------------------------------
 
 (deftype FXMaterialApp []
@@ -72,29 +98,6 @@
 (deftag material-app tiltontec.mx-flutter.core/FXMaterialApp)
 
 ;;; --- scaffold ---------------------------------------
-
-(defn extract-widget [dbg-key me ctx fab]
-  (cond
-    (nil? fab)
-    (do (dp :exwid-sees-nil dbg-key)
-        nil)
-
-    (dart/is? fab m/Widget)
-    (do (dp :fab-is-widget fab)
-        fab)
-
-    (fn? fab)
-    (do (dp :ew-sees-fn dbg-key fab)
-        ;; render-fx?
-        (recur [dbg-key :fn] me ctx (fab me ctx)))
-
-    (and (cty/md-ref? fab)
-      (dart/is? (mx-type fab) fx/FXDartWidget))
-    (do (dp :md-fx!!!!!-rendering!!! [dbg-key ])
-        (recur [dbg-key :renfx] me ctx
-          (render-fx fab)))
-
-    :default (throw (Exception. (str "extract-widget stuck after " dbg-key " on " fab)))))
 
 (deftype FXScaffold []
   ;;:type-only true
@@ -385,7 +388,10 @@
   (builder [this]
     (fn [me ctx]
       (m/TextField
-        :controller (let [con (mget me :controller)]
+        :onChanged (fn [text]
+                     (when-let [handler (mget me :onChanged)]
+                       (handler me ctx text)))
+        :controller (when-let [con (mget me :controller)]
                       (assert (dart/is? con m/TextEditingController))
                       con)))))
 

@@ -1,0 +1,49 @@
+(ns tiltontec.example.form-change
+  (:require
+    [tiltontec.util.base
+     :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
+    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.cell.core :as cell
+     :refer [cF cFonce cI]]
+    [tiltontec.model.core :refer [make mget md-kids cFkids fasc fmuv] :as md]
+    [tiltontec.mx-flutter.core :as fx
+     :refer [center column elevated-button expanded grid-view-count
+             material-app row scaffold padding text text-field app-bar]]
+    ["package:flutter/widgets.dart"
+     :refer [Text State StatefulWidget StatelessWidget] :as w]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]))
+
+(defn my-custom-form-state [title]
+  (scaffold
+    {:appBar (app-bar :title (m/Text title))}
+    (padding
+      {:padding ^:const (m.EdgeInsets/all 16.0)}
+      (column
+        {:mainAxisAlignment MainAxisAlignment/center}
+        ; todo if we have onchanged and also listen to the controller, what happens?
+        (text-field
+          {:onChanged (cF (fn [me ctx text]
+                            (md/mset! me :value text)))}
+          {:name  :input-a
+           :value (cI nil :obs (fn [slot me newv priorv c]
+                                 (dp (str "First text field: " text))))})
+        (text-field {:onChanged (cF (fn [me ctx text]
+                                      (md/mset! me :value text)))}
+          {:name       :input-b
+           :value      (cI "And then...?")
+           :controller (cFonce (let [c (m/TextEditingController :text (mget me :value))]
+                                 (.addListener c
+                                   (fn [] (dp (str "Second text field: " (.text c)))))
+                                 c))})
+        (text (str "(a) " (md/fmuval :input-a) "and (b) " (md/fmuval :input-b)))))))
+
+(defn make-app []
+  (let [title "Text field change detection"]
+    (material-app {:title title}
+      (my-custom-form-state title))))
+
+
+
