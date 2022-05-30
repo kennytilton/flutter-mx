@@ -1,17 +1,13 @@
 (ns tiltontec.example.animated-container
-  "Faithful port of https://docs.flutter.dev/cookbook/animation/animated-container"
   (:require
     ["package:flutter/material.dart" :as m]
-    [clojure.string :as string]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [mx-type minfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [material-app center text scaffold column list-view-builder]]
-
-    #_[cljd.flutter.alpha :as f]))
+     :refer [material-app center text scaffold column list-view-builder]]))
 
 (defn random-to-double [max]
   (-> max rand-int .toDouble))
@@ -22,49 +18,20 @@
     (rand-int 256)
     1))
 
-#_(defn animated-container []
-    (f/widget
-      :state [config {:width 50.0 :height 50.0 :color m.Colors/green :border-radius (m.BorderRadius/circular 8.0)}]
-      (m/Scaffold
-        :appBar (m/AppBar :title (m/Text "AnimatedContainer Demo"))
-        :body
-        (m/Center
-          :child
-          (m/AnimatedContainer
-            :width (:width @config)
-            :height (:height @config)
-            :decoration (m/BoxDecoration :color (:color @config) :borderRadius (:border-radius @config))
-            :duration ^:const (Duration :seconds 1)
-            :curve m.Curves/fastOutSlowIn))
-        :floatingActionButton
-        (m/FloatingActionButton :onPressed #(swap! config assoc
-                                              :width (random-to-double 300)
-                                              :height (random-to-double 300)
-                                              :color (random-color)
-                                              :border-radius (m.BorderRadius/circular (random-to-double 100)))
-          :child (m/Icon. m.Icons/play_arrow)))))
-
 (defn animated-container []
   (scaffold
     {:appBar               (m/AppBar :title (m/Text "AnimatedContainer Demo"))
      :floatingActionButton (cF (m/FloatingActionButton
-                                 :onPressed (fn ^void []
-                                              (dp :fab-sees-me (cty/minfo me)))
-                                 :tooltip "Increment"
-                                 :child (m/Icon. m.Icons/add :color m.Colors/black)))
-     #_ (cF (m/FloatingActionButton :onPressed #(md/mswap! me :config assoc
-                                                                     :width (random-to-double 300)
-                                                                     :height (random-to-double 300)
-                                                                     :color (random-color)
-                                                                     :border-radius (m.BorderRadius/circular (random-to-double 100)))
+                                 :onPressed #(do
+                                               (md/mswap! me :config assoc
+                                                 :width (random-to-double 300)
+                                                 :height (random-to-double 300)
+                                                 :color (random-color)
+                                                 :border-radius (m.BorderRadius/circular (random-to-double 100))))
                                  :child (m/Icon. m.Icons/play_arrow)))}
     {:config (cI {:width 50.0 :height 50.0 :color m.Colors/green :border-radius (m.BorderRadius/circular 8.0)})}
     (fx/center
       (let [{:keys [width height color border-radius]} (mget (md/mx-par me) :config)]
-        (dprn :testme (minfo me))
-        (dprn :testpar (minfo (md/mx-par me)))
-        (dprn :testfig (mget (md/mx-par me) :config))
-        (dprn :config!!!!!!!! [width height color border-radius])
         (m/AnimatedContainer
           :width width
           :height height
@@ -72,33 +39,8 @@
                         :color color
                         :borderRadius border-radius)
           :duration ^:const (Duration :seconds 1)
-          :curve m.Curves/fastOutSlowIn)
-        #_ (fx/text "hi mom"))
-      #_
-      (let [{:keys [width height color border-radius]} nil #_ (mget (md/mx-par me) :config)]
-        (dprn :me-center (minfo me))
-        (dprn :config!!!!!!!! [width height color border-radius])
-        (fx/text "hi mom")
-        #_
-        (m/AnimatedContainer
-          :width width
-          :height height
-          :decoration (m/BoxDecoration :color color :borderRadius border-radius)
-          :duration ^:const (Duration :seconds 1)
           :curve m.Curves/fastOutSlowIn)))))
-
-
 
 (defn make-app []
   (material-app
     (animated-container)))
-
-#_ (material-app {:debugShowCheckedModeBanner false}
-     (scaffold {:appBar (fx/app-bar {:title (m/Text "DataTable Sample")})}
-       (center
-         (data-table :cols ["#" "Name" "Age" "City"]
-           :rows [["1" "zm" "42" "guangzhou"]
-                  ["2" "zrj" "10" "guangzhou"]
-                  ["3" "wrp" "13" "hongkong"]
-                  ["4" "wrl" "11" "guangzhou"]
-                  ["5" "wrj" "10" "beijing"]]))))
