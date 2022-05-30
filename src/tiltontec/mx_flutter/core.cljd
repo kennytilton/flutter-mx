@@ -358,6 +358,25 @@
 
 (deftag row tiltontec.mx-flutter.core/FXRow)
 
+;;; --- stack ---------------------------------------
+
+(deftype FXStack []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:children])
+  (builder [this]
+    (fn [me ctx]
+      ;;(dprn (str "Column Type REBUILDING " (cty/minfo me)))
+      (m/Stack.
+        :alignment (tiltontec.model.core/mget me :alignment)
+        :clipBehavior (tiltontec.model.core/mget me :clipBehavior)
+        :children (mapv tiltontec.mx-flutter.tag/render-fx (md/md-kids me))))))
+
+(deftag stack tiltontec.mx-flutter.core/FXStack)
+
+
 ;;; --- text ---------------------------------------
 
 (deftype FXText []
@@ -460,3 +479,23 @@
         :size (or (mget me :size) 128.0)))))
 
 (deftag flutter-logo tiltontec.mx-flutter.core/FXFlutterLogo)
+
+;;; --- ---------------------------------------
+
+(deftype FXGridViewCount []
+  ;;:type-only true
+  :extends FXDartWidget
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m.GridView/count
+        :crossAxisCount (mget me :crossAxisCount)
+        :children (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))
+
+(deftype sized-box+expand []
+  :extends FXDartWidget
+  PDartWidget
+  (builder [this]
+    (fn [me ctx]
+      (m.SizedBox/expand
+        :child (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))

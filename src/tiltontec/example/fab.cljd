@@ -6,7 +6,7 @@
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [ material-app center text scaffold column list-view-builder]]
+     :refer [material-app center text scaffold column list-view-builder]]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -21,14 +21,8 @@
      :refer [fn-obs]]
     ))
 
-(defn fake-item [is-big?]
-  (m/Container
-    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
-    :height (if is-big? 128.0 36.0)
-    :decoration
-    (m/BoxDecoration
-      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-      :color (.-shade300 Colors/grey))))
+(declare fake-item)
+
 
 (def action-titles ["Create Post" "Upload Photo" "Upload Video"])
 
@@ -56,104 +50,178 @@
 ;;;
 ;;; --- the app -----------------------------------------------
 ;;;
+(declare expandable-fab)
 
 (defn make-app []
   (material-app
-    {:title "Welcome to mxFlutter World"
-     :theme (cF (ThemeData :primarySwatch Colors/blue))
+    {:title                      "Welcome to mxFlutter World"
+     :theme                      (cF (ThemeData :primarySwatch Colors/blue))
      :debugShowCheckedModeBanner false}
     {:name :mat-app}
+
     (scaffold {:name :scaff}
       {:appBar               (AppBar
                                :title (Text "Expandable Fab"))
-       :floatingActionButton
-       ;; works
-               (fn [me ctx]
-                 (action-button :on-pressed #(show-action ctx 0)
-                   :icon ^:const (m/Icon Icons/format_size)))
-       #_ (expandable-fab {}
-         {:distance 112.0}
-         (action-button :on-pressed #(show-action ctx 0)
-           :icon ^:const (m/Icon m.Icons/format_size))
-         (action-button :on-pressed #(show-action ctx 1)
-           :icon ^:const (m/Icon m.Icons/insert_photo))
-         (action-button :on-pressed #(show-action ctx 2)
-           :icon ^:const (m/Icon m.Icons/videocam)))
-
-       #_ (cF (FloatingActionButton.
-                                   :onPressed (fn ^void []
-                                                (md/mswap! (md/fm* :z-counter)
-                                                  :value inc))
-                                   :tooltip "Increment"
-                                   :child (Icon. Icons/add
-                                            :color Colors/black)))}
+       :floatingActionButton (expandable-fab
+                               :distance 112.0
+                               :actions [{:action "Create Post" :icon Icons/format_size}
+                                         {:action "Upload Photo" :icon Icons/insert_photo}
+                                         {:action "Upload Video" :icon Icons/videocam}])
+       }
       (list-view-builder {}
-        {:padding (m.EdgeInsets/symmetric :vertical 8.0)
-        :itemCount 25
-        :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
+        {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
+         :itemCount   25
+         :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
+
+(declare expanding-action-button)
+
+(defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
+  #_ (fx/sized-box+expand
+    {:initState (fn [this me]
+                  ;; we use the meta of the proxy where Dart code uses instance vars
+                  (.initState ^super this)
+                  (let [c (util/rmap-meta-setf [:controller me]
+                            (m/AnimationController
+                              :value (if initial-open? 1.0 0.0)
+                              :duration ^:const (dart:core/Duration :milliseconds 250)
+                              :vsync this))]
+                    (util/rmap-meta-setf [:expand-animation me]
+                      (m/CurvedAnimation
+                        :curve m.Curves/fastOutSlowIn
+                        :reverseCurve m.Curves/easeOutQuad
+                        :parent c))))}
+    {:name  :fab
+     :open? initial-open?
+     :step (cF (/ 90.0 (dec (count actions))))}
+    (fx/stack
+      {:alignment    m.Alignment/bottomRight
+       :clipBehavior m.Clip/none}
+      ;; (_build-tap-to-close)
+      ;; Matrix always flattens childrens (and discards nils)
+      (-> [] ;;; [tap-to-close-fab]
+        (into (map-indexed
+                (fn [i action]
+                  (expanding-action-button
+                    :direction-degrees (* i (mget me :step))
+                    :max-distance distance
+                    :progress (let [fab (md/fasc :fab)]
+                                (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
+                                (:expand-animation (meta fab)))
+                    :child action))) ;; HHACKKKK!!!!!!!!!!! <----------------------------------------
+          actions)
+        #_ (conj tap-to-open-fab))
+      #_ (_build-tap-to-close))))
+
+;;; expanding action  item
+#_ ;; hhack
+(defn expanding-action-button [& [{:key [action direction-degrees max-distance ^#/(m/Animation double) progress]}]]
+  (fx/animated-builder
+    :animation progress
+    :builder (fn [ctx child]
+               (let [offset (m.Offset/fromDirection
+                              (* direction-degrees (/ math/pi 180.0))
+                              (* (.value progress) max-distance))]
+                 (f/nest
+                   (m/Positioned
+                     :right (+ 4.0 (.dx offset))
+                     :bottom (+ 4.0 (.dy offset)))
+                   (m.Transform/rotate
+                     :angle (* (- 1.0 (.value progress))
+                              math/pi 0.5))
+                   child)))))
 
 #_
-(defn make-app []
-  #_ (m/MaterialApp
-       :home (example-expandable-fab)
-       :debugShowCheckedModeBanner false)
-  (material-app {}
-    {:debugShowCheckedModeBanner false}
-    (scaffold {}
-      {:appBar (AppBar.
-                 :title (Text. "Expandable Fab"))
-       :floatingActionButton
-       (cF (FloatingActionButton.
-             :onPressed (fn ^void [])
-             :tooltip "Increment"
-             :child (Icon. Icons/add
-                      :color Colors/black)))
-       #_ (expandable-fab
-                               :distance 112.0
-                               :children [(action-button :on-pressed #(show-action ctx 0)
-                                            :icon ^:const (m/Icon m.Icons/format_size))
-                                          (action-button :on-pressed #(show-action ctx 1)
-                                            :icon ^:const (m/Icon m.Icons/insert_photo))
-                                          (action-button :on-pressed #(show-action ctx 2)
-                                            :icon ^:const (m/Icon m.Icons/videocam))])}
-      (text {} {:style (p/TextStyle.
-                         :color Colors/black
-                         :fontSize 32.0)}
-        "hello, world\\n")
-      #_ (m.ListView/builder
-        :padding (m.EdgeInsets/symmetric :vertical 8.0)
-        :itemCount 25
-        :itemBuilder (fn [ctx i] (fake-item (odd? i)))))))
+(defn expanding-action-button
+  [& {:keys [direction-degrees max-distance ^#/(m/Animation double) progress child]}]
+  (f/widget
+    (f/nest
+      (m/AnimatedBuilder
+        :animation progress
+        :builder (fn [ctx child]
+                   (let [offset (m.Offset/fromDirection
+                                  (* direction-degrees (/ math/pi 180.0))
+                                  (* (.value progress) max-distance))]
+                     (f/nest
+                       (m/Positioned
+                         :right (+ 4.0 (.dx offset))
+                         :bottom (+ 4.0 (.dy offset)))
+                       (m.Transform/rotate
+                         :angle (* (- 1.0 (.value progress))
+                                  math/pi 0.5))
+                       child))))
+      (m/FadeTransition :opacity progress)
+      child)))
+;;; --- the fake item ------------------------------------------------
 
-#_#_
-    {:title "Welcome to mxFlutter World"
+(defn fake-item [is-big?]
+  (m/Container
+    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+    :height (if is-big? 128.0 36.0)
+    :decoration
+    (m/BoxDecoration
+      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+      :color (.-shade300 Colors/grey))))
+
+#_(defn make-app []
+    #_(m/MaterialApp
+        :home (example-expandable-fab)
+        :debugShowCheckedModeBanner false)
+    (material-app {}
+      {:debugShowCheckedModeBanner false}
+      (scaffold {}
+        {:appBar (AppBar.
+                   :title (Text. "Expandable Fab"))
+         :floatingActionButton
+         (cF (FloatingActionButton.
+               :onPressed (fn ^void [])
+               :tooltip "Increment"
+               :child (Icon. Icons/add
+                        :color Colors/black)))
+         #_(expandable-fab
+             :distance 112.0
+             :children [(action-button :on-pressed #(show-action ctx 0)
+                          :icon ^:const (m/Icon m.Icons/format_size))
+                        (action-button :on-pressed #(show-action ctx 1)
+                          :icon ^:const (m/Icon m.Icons/insert_photo))
+                        (action-button :on-pressed #(show-action ctx 2)
+                          :icon ^:const (m/Icon m.Icons/videocam))])}
+        (text {} {:style (p/TextStyle.
+                           :color Colors/black
+                           :fontSize 32.0)}
+          "hello, world\\n")
+        #_(m.ListView/builder
+            :padding (m.EdgeInsets/symmetric :vertical 8.0)
+            :itemCount 25
+            :itemBuilder (fn [ctx i] (fake-item (odd? i)))))))
+
+#_#_{:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData. :primarySwatch Colors/blue))}
-    (scaffold {:name :scaff}
-      {:appBar               (AppBar.
-                               :title (Text. "mxFlutter  Home Page"))
-       :floatingActionButton (cF (FloatingActionButton.
-                                   :onPressed (fn ^void []
-                                                (md/mswap! (md/fm* :z-counter)
-                                                  :value inc))
-                                   :tooltip "Increment"
-                                   :child (Icon. Icons/add
-                                            :color Colors/black)))}
-      (center
-        (column {}
-          {:mainAxisAlignment MainAxisAlignment/center}
-          (text {}
-            {:style (TextStyle.
-                      :color Colors/black
-                      :fontSize 18.0)}
-            "You have clicked the button this many times:")
-          (text {:name    :z-counter
-                 :value (cI 0)}
-            ;; a custom builder can access Dart context
-            {:builder (fn [me ctx]
-                        (Text. (str (md/my-val))
-                          :style (.headline4 (.textTheme (Theme/of ctx)))))})
-          (text
-            {:name  :zx2
-             :value (cF (* 2 (md/fmuval :z-counter)))}
-            {}
-            (str "Button click times two = " (md/my-val))))))
+        (scaffold {:name :scaff}
+          {:appBar               (AppBar.
+                                   :title (Text. "mxFlutter  Home Page"))
+           :floatingActionButton (cF (FloatingActionButton.
+                                       :onPressed (fn ^void []
+                                                    (md/mswap! (md/fm* :z-counter)
+                                                      :value inc))
+                                       :tooltip "Increment"
+                                       :child (Icon. Icons/add
+                                                :color Colors/black)))}
+          (center
+            (column {}
+              {:mainAxisAlignment MainAxisAlignment/center}
+              (text {}
+                {:style (TextStyle.
+                          :color Colors/black
+                          :fontSize 18.0)}
+                "You have clicked the button this many times:")
+              (text {:name  :z-counter
+                     :value (cI 0)}
+                ;; a custom builder can access Dart context
+                {:builder (fn [me ctx]
+                            (Text. (str (md/my-val))
+                              :style (.headline4 (.textTheme (Theme/of ctx)))))})
+              (text
+                {:name  :zx2
+                 :value (cF (* 2 (md/fmuval :z-counter)))}
+                {}
+                (str "Button click times two = " (md/my-val))))))
