@@ -324,7 +324,9 @@
   ;; todo this needs to look for more than just name
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (fm-navig #(= name# (md-get % :name))
+       ;; (dp :fm*-start-after name#)
+       (fm-navig #(do ;; (dp :fm*-sees (= name# (md-get % :name)) (minfo %))
+                      (= name# (md-get % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
 (defmacro fmuv [slot name & [me]]

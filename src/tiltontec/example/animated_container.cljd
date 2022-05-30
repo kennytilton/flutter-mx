@@ -2,7 +2,7 @@
   (:require
     ["package:flutter/material.dart" :as m]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [mx-type minfo unbound *depender*] :as cty]
+    [tiltontec.cell.base :refer [minfo] :as cty]
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
@@ -22,24 +22,29 @@
   (scaffold
     {:appBar               (m/AppBar :title (m/Text "AnimatedContainer Demo"))
      :floatingActionButton (cF (m/FloatingActionButton
-                                 :onPressed #(do
-                                               (md/mswap! me :config assoc
+                                 :onPressed #(let [anicon (md/fm* :anicon)]
+                                               (md/mswap! anicon :config assoc
                                                  :width (random-to-double 300)
                                                  :height (random-to-double 300)
                                                  :color (random-color)
-                                                 :border-radius (m.BorderRadius/circular (random-to-double 100))))
+                                                 :borderRadius (m.BorderRadius/circular (random-to-double 100))))
                                  :child (m/Icon. m.Icons/play_arrow)))}
-    {:config (cI {:width 50.0 :height 50.0 :color m.Colors/green :border-radius (m.BorderRadius/circular 8.0)})}
+
     (fx/center
-      (let [{:keys [width height color border-radius]} (mget (md/mx-par me) :config)]
-        (m/AnimatedContainer
-          :width width
-          :height height
-          :decoration (m/BoxDecoration
-                        :color color
-                        :borderRadius border-radius)
-          :duration ^:const (Duration :seconds 1)
-          :curve m.Curves/fastOutSlowIn)))))
+      (fx/animated-container
+        {:width      (cF (:width (mget me :config)))
+         :height     (cF (:height (mget me :config)))
+         :decoration (cF (let [config (mget me :config)]
+                           (m/BoxDecoration
+                             :color (:color config)
+                             :borderRadius (:borderRadius config))))
+         :duration   ^:const (Duration :seconds 1)
+         :curve      m.Curves/fastOutSlowIn}
+        {:name   :anicon
+         :config (cI {:width         50.0
+                      :height        50.0
+                      :color         m.Colors/green
+                      :borderRadius (m.BorderRadius/circular 8.0)})}))))
 
 (defn make-app []
   (material-app

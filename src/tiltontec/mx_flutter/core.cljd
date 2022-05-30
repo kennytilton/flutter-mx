@@ -310,6 +310,25 @@
 
 (deftag card tiltontec.mx-flutter.core/FXCard)
 
+;;; --- animated container -------------------------------------------
+
+(deftype FXAnimatedContainer []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:height :width :color :border-radius])
+  (builder [this]
+    (fn [me ctx]
+      (m/AnimatedContainer
+        :width (md/mget me :width)
+        :height (md/mget me :height)
+        :decoration (md/mget me :decoration)
+        :duration ^:const (md/mget me :duration)
+        :curve (md/mget me :curve)))))
+
+(deftag animated-container tiltontec.mx-flutter.core/FXAnimatedContainer)
+
 ;;; --- expanded ---------------------------------------
 
 (deftype FXExpanded []
