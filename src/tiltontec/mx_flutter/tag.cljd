@@ -7,7 +7,7 @@
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
-            [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.base :refer [mx-type minfo cinfo unbound Model PObserver observe md-ref?] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]))
@@ -38,7 +38,7 @@
           (build [this ctx]
             (builder me ctx))
           (^void initState [this]
-            ;; HHACK (.initState ^super this)
+            (.initState ^super this)
             (when-let [init (mget me :initState)]
               (init this me)))
           (^void dispose [this]
@@ -47,6 +47,7 @@
             (.dispose ^super this)))))))
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
+  (dp :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
     :fx-prop-keys (keys fx-props)
@@ -62,6 +63,7 @@
                   (fn [me ctx]
                     (let [builder (or (mget me :builder)
                                     (builder mx-type))]
+                      (dp :make-fx-using-builder!!!!!!!! (minfo me) builder)
                       (builder me ctx))))))
     (concat
       (vec (apply concat (seq fx-props)))

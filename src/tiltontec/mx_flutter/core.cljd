@@ -7,7 +7,7 @@
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
-            [tiltontec.cell.base :refer [mx-type unbound Model PObserver observe] :as cty]
+            [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
@@ -48,7 +48,8 @@
   (builder [this]
     (fn [me ctx]
       (if-let [builder (mget me :builder)]
-        (builder me ctx)
+        (do (dp :generic-builder-getting-two builder)
+            (builder me ctx))
         (throw (Exception. "Property :builder must be provided for ad hoc widgets"))))))
 
 (deftag widget tiltontec.mx-flutter.core/FXDartWidget)
@@ -329,6 +330,50 @@
 
 (deftag animated-container tiltontec.mx-flutter.core/FXAnimatedContainer)
 
+;;; --- animated builder -------------------------------------------
+
+(deftype FXAnimatedBuilder []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:animation :child])
+  (builder [this]
+    (fn [me ctx]
+      (apply m/AnimatedBuilder
+        :animation (let [ani (mget me :animation)]
+                     (dp :ani-b-sees-ani (fn? ani) ani)
+                     (if (fn? ani)
+                       (ani me ctx)
+                       ^#/(m/Animation double) ani))
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))
+        :builder (fn [ctx child]
+                   (let [builder (mget me :builder)]
+                     (dp :FXAniB-sees-b builder)
+                     (assert builder (str "Animated builder " (minfo me) " lacks required builder callback " ))
+                     (render-fx (builder me ctx child))))))))
+
+(deftag animated-builder tiltontec.mx-flutter.core/FXAnimatedBuilder)
+
+;;; --- fade transition -------------------------------------------
+
+(deftype FXFadeTransition []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:opacity :child])
+  (builder [this]
+    (fn [me ctx]
+      (apply m/FadeTransition
+        :opacity (let [op (mget me :opacity)]
+                   (if (fn? op)
+                     (op me ctx)
+                     op))
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag fade-transition tiltontec.mx-flutter.core/FXFadeTransition)
+
 ;;; --- expanded ---------------------------------------
 
 (deftype FXExpanded []
@@ -465,7 +510,6 @@
       (m.GridView/count
         :crossAxisCount (mget me :crossAxisCount)
         :children (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))
-
 (deftag grid-view-count tiltontec.mx-flutter.core/FXGridViewCount)
 
 ;;; --- ListView/builder -----------------------------------------
@@ -501,20 +545,14 @@
 
 ;;; --- ---------------------------------------
 
-(deftype FXGridViewCount []
-  ;;:type-only true
+(deftype FXSizedBoxExpand []
   :extends FXDartWidget
   PDartWidget
   (builder [this]
     (fn [me ctx]
-      (m.GridView/count
-        :crossAxisCount (mget me :crossAxisCount)
-        :children (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))
+      (let [child (first (tiltontec.model.core/md-kids me))]
+        (dp :sbx-child (minfo child))
+        (m.SizedBox/expand
+          :child (render-fx child))))))
 
-(deftype sized-box+expand []
-  :extends FXDartWidget
-  PDartWidget
-  (builder [this]
-    (fn [me ctx]
-      (m.SizedBox/expand
-        :child (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))
+(deftag sized-box-expand tiltontec.mx-flutter.core/FXSizedBoxExpand)

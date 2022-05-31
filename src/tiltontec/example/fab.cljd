@@ -1,7 +1,10 @@
 (ns tiltontec.example.fab
   (:require
+    ["dart:math" :as math]
+    [cljd.flutter.alpha :as f]
     [clojure.string :as string]
-    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
@@ -26,12 +29,12 @@
 
 (def action-titles ["Create Post" "Upload Photo" "Upload Video"])
 
-(defn show-action [ctx i]
+(defn show-action [ctx action]
   (m/showDialog
     :context ctx
     :builder (fn [ctx]
                (m/AlertDialog
-                 :content (m/Text (action-titles i))
+                 :content (m/Text (:title action))
                  :actions [(m/TextButton
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
@@ -41,11 +44,13 @@
   (m/Material
     :shape ^:const (m/CircleBorder)
     :clipBehavior m.Clip/antiAlias
+    ;; todo get colors from Ctx and then Theme
     :color Colors/blue
     :elevation 4.0
     :child (m/IconButton
              :onPressed on-pressed
-             :icon icon
+             ; const Icon(Icons.volume_up)
+             :icon (m/Icon. m.Icons/play_arrow) ;; Icons/format_size ;; todo icon
              :color Colors/blue)))
 
 ;;;
@@ -64,9 +69,9 @@
                                :title (Text "Expandable Fab"))
        :floatingActionButton (expandable-fab
                                :distance 112.0
-                               :actions [{:action "Create Post" :icon Icons/format_size}
-                                         {:action "Upload Photo" :icon Icons/insert_photo}
-                                         {:action "Upload Video" :icon Icons/videocam}])
+                               :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
+                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
+                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])
        }
       (list-view-builder {}
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
@@ -76,10 +81,10 @@
 (declare expanding-action-button)
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
-  #_ (fx/sized-box+expand
+  (dp :efab-entry initial-open? distance actions)
+  (fx/sized-box-expand
     {:initState (fn [this me]
-                  ;; we use the meta of the proxy where Dart code uses instance vars
-                  (.initState ^super this)
+                  (dp :Bam-hello-initstate!!!!!!! (minfo me))
                   (let [c (util/rmap-meta-setf [:controller me]
                             (m/AnimationController
                               :value (if initial-open? 1.0 0.0)
@@ -101,56 +106,71 @@
       (-> [] ;;; [tap-to-close-fab]
         (into (map-indexed
                 (fn [i action]
-                  (expanding-action-button
-                    :direction-degrees (* i (mget me :step))
-                    :max-distance distance
-                    :progress (let [fab (md/fasc :fab)]
-                                (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
-                                (:expand-animation (meta fab)))
-                    :child action))) ;; HHACKKKK!!!!!!!!!!! <----------------------------------------
+                  (let [fab (md/fasc :fab)]
+                    (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
+                    (dp :mapi i action (mget fab :step))
+                    (expanding-action-button
+                      :direction-degrees (* i (mget fab :step))
+                      :max-distance distance
+                      :progress-key :expand-animation
+                      :action action))))
           actions)
         #_ (conj tap-to-open-fab))
       #_ (_build-tap-to-close))))
 
 ;;; expanding action  item
-#_ ;; hhack
-(defn expanding-action-button [& [{:key [action direction-degrees max-distance ^#/(m/Animation double) progress]}]]
+
+(defn expanding-action-button [& {:keys [action direction-degrees max-distance progress-key]}]
+  (dp :expactbutt action direction-degrees max-distance  progress-key)
   (fx/animated-builder
-    :animation progress
-    :builder (fn [ctx child]
-               (let [offset (m.Offset/fromDirection
+    {:animation (fn [me ctx]
+                  (dp :eab-ani-callback (minfo me))
+                  (let [fab (md/fm* :fab)]
+                    (assert fab "eabutton animation does not see fab")
+                    (let [xani (progress-key (meta fab))]
+                      (assert xani "cannot get expand ani from meta")
+                      xani)))
+    :builder (fn [me ctx] ;; s/b child
+               (dp :eab-builder-cb (minfo me))
+               (let [fab (md/fm* :fab)
+                     _ (dp :fab??????????????? (minfo fab))
+                     _ (assert fab "eabutton builder does not see fab")
+                     _ (dp :fab-meta (meta fab))
+                     progress (let [xani ^m/CurvedAnimation (:expand-animation (meta fab))]
+                                (assert xani "cannot get expand ani from meta")
+                                xani)
+                     _ (dp :progress!!!!!!!!! progress)
+                     _ (dp :progress!!!!!!!!! direction-degrees (.value progress) max-distance)
+                     offset (m.Offset/fromDirection
                               (* direction-degrees (/ math/pi 180.0))
                               (* (.value progress) max-distance))]
-                 (f/nest
-                   (m/Positioned
-                     :right (+ 4.0 (.dx offset))
-                     :bottom (+ 4.0 (.dy offset)))
-                   (m.Transform/rotate
-                     :angle (* (- 1.0 (.value progress))
-                              math/pi 0.5))
-                   child)))))
+                 (dp :eabam!!!!!!!!!! fab progress offset)
+                 ;; todo convert to MX
+                 (f/widget
+                   (f/nest
+                     (m/Positioned
+                       :right (+ 4.0 (.dx offset))
+                       :bottom (+ 4.0 (.dy offset)))
+                     (m.Transform/rotate
+                       :angle (* (- 1.0 (.value progress))
+                                math/pi 0.5))
+                     (m/Text "TODO")))))}
+    (fx/text "hi mom") ;; HHHHACK!!!!!!!!!!!!!!!!!!!!!!!
+    #_
+    (fx/fade-transition
+      {:opacity (fn [me ctx]
+                  (let [fab (md/fm* :fab)]
+                    (assert fab "opacity does not see fab")
+                    (let [xani (:expand-animation (meta fab))]
+                      (assert xani "opacity cannot get expand ani from meta")
+                      xani)))}
+      (action-button
+        :icon (:icon action)
+        :onPressed (fn ^void [me ctx]
+                     (show-action ctx action)
+                     nil)))))
 
-#_
-(defn expanding-action-button
-  [& {:keys [direction-degrees max-distance ^#/(m/Animation double) progress child]}]
-  (f/widget
-    (f/nest
-      (m/AnimatedBuilder
-        :animation progress
-        :builder (fn [ctx child]
-                   (let [offset (m.Offset/fromDirection
-                                  (* direction-degrees (/ math/pi 180.0))
-                                  (* (.value progress) max-distance))]
-                     (f/nest
-                       (m/Positioned
-                         :right (+ 4.0 (.dx offset))
-                         :bottom (+ 4.0 (.dy offset)))
-                       (m.Transform/rotate
-                         :angle (* (- 1.0 (.value progress))
-                                  math/pi 0.5))
-                       child))))
-      (m/FadeTransition :opacity progress)
-      child)))
+
 ;;; --- the fake item ------------------------------------------------
 
 (defn fake-item [is-big?]
@@ -161,36 +181,4 @@
     (m/BoxDecoration
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 Colors/grey))))
-
-#_(defn make-app []
-    #_(m/MaterialApp
-        :home (example-expandable-fab)
-        :debugShowCheckedModeBanner false)
-    (material-app {}
-      {:debugShowCheckedModeBanner false}
-      (scaffold {}
-        {:appBar (AppBar.
-                   :title (Text. "Expandable Fab"))
-         :floatingActionButton
-         (cF (FloatingActionButton.
-               :onPressed (fn ^void [])
-               :tooltip "Increment"
-               :child (Icon. Icons/add
-                        :color Colors/black)))
-         #_(expandable-fab
-             :distance 112.0
-             :children [(action-button :on-pressed #(show-action ctx 0)
-                          :icon ^:const (m/Icon m.Icons/format_size))
-                        (action-button :on-pressed #(show-action ctx 1)
-                          :icon ^:const (m/Icon m.Icons/insert_photo))
-                        (action-button :on-pressed #(show-action ctx 2)
-                          :icon ^:const (m/Icon m.Icons/videocam))])}
-        (text {} {:style (p/TextStyle.
-                           :color Colors/black
-                           :fontSize 32.0)}
-          "hello, world\\n")
-        #_(m.ListView/builder
-            :padding (m.EdgeInsets/symmetric :vertical 8.0)
-            :itemCount 25
-            :itemBuilder (fn [ctx i] (fake-item (odd? i)))))))
 
