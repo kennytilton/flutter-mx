@@ -26,9 +26,6 @@
 
 (declare fake-item)
 
-
-(def action-titles ["Create Post" "Upload Photo" "Upload Video"])
-
 (defn show-action [ctx action]
   (m/showDialog
     :context ctx
@@ -39,19 +36,18 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
-(defn action-button [& {:keys [on-pressed icon]}]
+(defn action-button [& {:keys [onPressed icon]}]
   ;; todo this needs to pick up color from ctx Theme
   (m/Material
     :shape ^:const (m/CircleBorder)
     :clipBehavior m.Clip/antiAlias
     ;; todo get colors from Ctx and then Theme
-    :color Colors/blue
-    :elevation 4.0
+    :color Colors/green ;; hhack blue
+    :elevation 12 ;; hhack 4.0
     :child (m/IconButton
-             :onPressed on-pressed
-             ; const Icon(Icons.volume_up)
-             :icon (m/Icon. m.Icons/play_arrow) ;; Icons/format_size ;; todo icon
-             :color Colors/blue)))
+             :onPressed onPressed
+             :icon icon                                     ;; (m/Icon. m.Icons/play_arrow)
+             :color Colors/red #_ Colors/blue)))
 
 ;;;
 ;;; --- the app -----------------------------------------------
@@ -80,8 +76,42 @@
 
 (declare expanding-action-button)
 
+(defn- tap-to-close-fab [par toggle]
+  (f/nest
+    (m/SizedBox
+      :width 56.0
+      :height 56.0)
+    m/Center
+    (m/Material
+      :shape ^:const (m/CircleBorder)
+      :clipBehavior m.Clip/antiAlias
+      :elevation 4.0)
+    (m/InkWell :onTap toggle)
+    (m/Padding :padding ^:const (m.EdgeInsets/all 8.0))
+    ;; todo use theme below
+    (m/Icon m.Icons/close :color m.Colors/green  #_(.primaryColor theme))))
+
+(defn- tap-to-open-fab [par toggle]
+  (dp :building-tap-open-for (minfo par))
+  (f/nest
+    (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
+    (m/AnimatedContainer
+      :transformAlignment m.Alignment/center
+      :transform (let [open? (mget (md/fasc :fab par) :open?)]
+                   (m.Matrix4/diagonal3Values
+                     (if open? 0.7 1.0)
+                     (if open? 0.7 1.0)
+                     1.0))
+      :duration ^:const (dart:core/Duration :milliseconds 250)
+      :curve ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut))
+    (m/AnimatedOpacity
+      :opacity (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
+      :curve ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+      :duration ^:const (dart:core/Duration :milliseconds 250))
+    (m/FloatingActionButton :onPressed toggle)
+    (m/Icon m.Icons/create)))
+
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
-  (dp :efab-entry initial-open? distance actions)
   (fx/sized-box-expand
     {:initState (fn [this me]
                   (dp :Bam-hello-initstate!!!!!!! (minfo me))
@@ -96,67 +126,84 @@
                         :reverseCurve m.Curves/easeOutQuad
                         :parent c))))}
     {:name  :fab
-     :open? initial-open?
-     :step (cF (/ 90.0 (dec (count actions))))}
+     :open? (cI initial-open?
+              :obs (fn-obs
+                     (dp :open-obs!!! (minfo me))
+                     (let [c (:controller (meta me))]  ;; wait for installation
+                       (dp :obs-sees-controller?? (minfo me) c (meta me))
+                       (when c
+                         (dp :oobs-META (meta me))
+                         (assert c "open? observer cannot find controller")
+                         (dp :fab-open?-sees-runs new old)
+                         (if new
+                           (.forward c)
+                           (.reverse c))))))
+     :step  (cF (/ 90.0 (dec (count actions))))
+     }
     (fx/stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
-      ;; (_build-tap-to-close)
       ;; Matrix always flattens childrens (and discards nils)
-      (-> [] ;;; [tap-to-close-fab]
-        (into (map-indexed
-                (fn [i action]
-                  (let [fab (md/fasc :fab)]
-                    (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
-                    (dp :mapi i action (mget fab :step))
-                    (expanding-action-button
-                      :direction-degrees (* i (mget fab :step))
-                      :max-distance distance
-                      :progress-key :expand-animation
-                      :action action))))
-          actions)
-        #_ (conj tap-to-open-fab))
-      #_ (_build-tap-to-close))))
+      (tap-to-close-fab me
+        (fn []
+          (let [fab (md/fasc :fab)]
+            (assert fab (str "tap2close did not find fab calling fasc on " (cty/minfo me)))
+            (md/mswap! fab :open? not))))
+
+      (doall (map-indexed
+               (fn [i action]
+                 (let [fab (md/fasc :fab)]
+                   (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
+                   (dp :mapi i action distance (mget fab :step))
+                   (expanding-action-button
+                     :direction-degrees (* i (mget fab :step))
+                     :max-distance distance
+                     :progress-key :expand-animation
+                     :action action)))
+               actions))
+
+      (tap-to-open-fab me
+        (fn []
+          (let [fab (md/fasc :fab)]
+            (assert fab (str "tap2close did not find fab calling fasc on " (cty/minfo me)))
+            (md/mswap! fab :open? not)))))))
 
 ;;; expanding action  item
 
 (defn expanding-action-button [& {:keys [action direction-degrees max-distance progress-key]}]
-  (dp :expactbutt action direction-degrees max-distance  progress-key)
   (fx/animated-builder
     {:animation (fn [me ctx]
-                  (dp :eab-ani-callback (minfo me))
                   (let [fab (md/fm* :fab)]
                     (assert fab "eabutton animation does not see fab")
                     (let [xani (progress-key (meta fab))]
                       (assert xani "cannot get expand ani from meta")
                       xani)))
-    :builder (fn [me ctx] ;; s/b child
-               (dp :eab-builder-cb (minfo me))
-               (let [fab (md/fm* :fab)
-                     _ (dp :fab??????????????? (minfo fab))
-                     _ (assert fab "eabutton builder does not see fab")
-                     _ (dp :fab-meta (meta fab))
-                     progress (let [xani ^m/CurvedAnimation (:expand-animation (meta fab))]
-                                (assert xani "cannot get expand ani from meta")
-                                xani)
-                     _ (dp :progress!!!!!!!!! progress)
-                     _ (dp :progress!!!!!!!!! direction-degrees (.value progress) max-distance)
-                     offset (m.Offset/fromDirection
-                              (* direction-degrees (/ math/pi 180.0))
-                              (* (.value progress) max-distance))]
-                 (dp :eabam!!!!!!!!!! fab progress offset)
-                 ;; todo convert to MX
-                 (f/widget
-                   (f/nest
-                     (m/Positioned
-                       :right (+ 4.0 (.dx offset))
-                       :bottom (+ 4.0 (.dy offset)))
-                     (m.Transform/rotate
-                       :angle (* (- 1.0 (.value progress))
-                                math/pi 0.5))
-                     (m/Text "TODO")))))}
-    (fx/text "hi mom") ;; HHHHACK!!!!!!!!!!!!!!!!!!!!!!!
-    #_
+     :builder   (fn [me ctx]                                ;; s/b child
+                  (let [fab (md/fm* :fab)
+                        progress (let [xani ^m/CurvedAnimation (:expand-animation (meta fab))]
+                                   (assert xani "cannot get expand ani from meta")
+                                   xani)
+                        _ (dp :PROGRESS!!!!! (.value progress))
+                        offset (m.Offset/fromDirection
+                                 (* direction-degrees (/ math/pi 180.0))
+                                 (* 1 #_ (.value progress) max-distance))] ;; <__ hhhackkkkk
+                    ;; todo convert to MX
+                    (dp :abutt-sess progress offset action)
+                    (f/widget
+                      (f/nest
+                        (m/Positioned
+                          :right (+ 4.0 (.dx offset))
+                          :bottom (+ 4.0 (.dy offset)))
+                        (m.Transform/rotate
+                          :angle (* (- 1.0 (.value progress))
+                                   math/pi 0.5))
+                        (action-button
+                          :icon (:icon action)
+                          :onPressed (fn ^void []
+                                       (dprn :show-action!!!!!!!! action)
+                                       ;;(dprn :show-action!!!!!!!! action (minfo me))
+                                       (show-action ctx action)
+                                       nil))))))}
     (fx/fade-transition
       {:opacity (fn [me ctx]
                   (let [fab (md/fm* :fab)]
@@ -166,8 +213,10 @@
                       xani)))}
       (action-button
         :icon (:icon action)
-        :onPressed (fn ^void [me ctx]
-                     (show-action ctx action)
+        :onPressed (fn ^void []
+                     (dprn :show-action!!!!!!!!)
+                     (dprn :show-action!!!!!!!! action (minfo me))
+                     ;; hhack (show-action ctx action)
                      nil)))))
 
 
