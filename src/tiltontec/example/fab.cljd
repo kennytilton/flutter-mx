@@ -37,6 +37,7 @@
                              :child ^:const (m/Text "CLOSE"))]))))
 
 (defn action-button [& {:keys [on-pressed icon]}]
+  ;; todo this needs to pick up color from ctx Theme
   (m/Material
     :shape ^:const (m/CircleBorder)
     :clipBehavior m.Clip/antiAlias
@@ -55,7 +56,6 @@
 (defn make-app []
   (material-app
     {:title                      "Welcome to mxFlutter World"
-     :theme                      (cF (ThemeData :primarySwatch Colors/blue))
      :debugShowCheckedModeBanner false}
     {:name :mat-app}
 
@@ -194,34 +194,3 @@
             :itemCount 25
             :itemBuilder (fn [ctx i] (fake-item (odd? i)))))))
 
-#_#_{:title "Welcome to mxFlutter World"
-     :theme (cF (ThemeData. :primarySwatch Colors/blue))}
-        (scaffold {:name :scaff}
-          {:appBar               (AppBar.
-                                   :title (Text. "mxFlutter  Home Page"))
-           :floatingActionButton (cF (FloatingActionButton.
-                                       :onPressed (fn ^void []
-                                                    (md/mswap! (md/fm* :z-counter)
-                                                      :value inc))
-                                       :tooltip "Increment"
-                                       :child (Icon. Icons/add
-                                                :color Colors/black)))}
-          (center
-            (column {}
-              {:mainAxisAlignment MainAxisAlignment/center}
-              (text {}
-                {:style (TextStyle.
-                          :color Colors/black
-                          :fontSize 18.0)}
-                "You have clicked the button this many times:")
-              (text {:name  :z-counter
-                     :value (cI 0)}
-                ;; a custom builder can access Dart context
-                {:builder (fn [me ctx]
-                            (Text. (str (md/my-val))
-                              :style (.headline4 (.textTheme (Theme/of ctx)))))})
-              (text
-                {:name  :zx2
-                 :value (cF (* 2 (md/fmuval :z-counter)))}
-                {}
-                (str "Button click times two = " (md/my-val))))))

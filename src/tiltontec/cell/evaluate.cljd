@@ -275,7 +275,7 @@
               prior-state (c-value-state c)]
 
           ;; --- cell maintenance ---
-          ;; hhhack: new for 4/19/2016: even if no news at
+          ;; new for 4/19/2016: even if no news at
           ;; least honor the reset!
           ;;
           (rmap-setf [:value c] new-value)
@@ -363,8 +363,7 @@ then clear our record of them."
 
     (cty/cprn :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
 
-    (rmap-setf [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss
-    ; the cell below. hhack
+    (rmap-setf [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss the cell below.
     (c-observe c prior-value :opti-away)
 
     (when-let [me (c-model c)]
