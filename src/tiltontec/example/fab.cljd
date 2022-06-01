@@ -62,7 +62,7 @@
 
     (scaffold {:name :scaff}
       {:appBar               (AppBar
-                               :title (Text "Expandable Fab"))
+                               :title (Text "Expandable Fab/MX"))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
@@ -132,7 +132,6 @@
                      (let [c (:controller (meta me))]  ;; wait for installation
                        (dp :obs-sees-controller?? (minfo me) c (meta me))
                        (when c
-                         (dp :oobs-META (meta me))
                          (assert c "open? observer cannot find controller")
                          (dp :fab-open?-sees-runs new old)
                          (if new
@@ -150,11 +149,10 @@
             (assert fab (str "tap2close did not find fab calling fasc on " (cty/minfo me)))
             (md/mswap! fab :open? not))))
 
-      (doall (map-indexed
+      #_ (doall (map-indexed
                (fn [i action]
                  (let [fab (md/fasc :fab)]
                    (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
-                   (dp :mapi i action distance (mget fab :step))
                    (expanding-action-button
                      :direction-degrees (* i (mget fab :step))
                      :max-distance distance
@@ -176,9 +174,9 @@
                   (let [fab (md/fm* :fab)]
                     (assert fab "eabutton animation does not see fab")
                     (let [xani (progress-key (meta fab))]
-                      (assert xani "cannot get expand ani from meta")
+                      (assert xani (str "cannot get expand ani from meta with key " progress-key))
                       xani)))
-     :builder   (fn [me ctx]                                ;; s/b child
+     :builder   (fn [me ctx]
                   (let [fab (md/fm* :fab)
                         progress (let [xani ^m/CurvedAnimation (:expand-animation (meta fab))]
                                    (assert xani "cannot get expand ani from meta")
@@ -186,9 +184,9 @@
                         _ (dp :PROGRESS!!!!! (.value progress))
                         offset (m.Offset/fromDirection
                                  (* direction-degrees (/ math/pi 180.0))
-                                 (* 1 #_ (.value progress) max-distance))] ;; <__ hhhackkkkk
+                                 (* (.value progress) max-distance))]
                     ;; todo convert to MX
-                    (dp :abutt-sess progress offset action)
+                    (dp :exp-action-button-progress progress offset action)
                     (f/widget
                       (f/nest
                         (m/Positioned
@@ -200,7 +198,7 @@
                         (action-button
                           :icon (:icon action)
                           :onPressed (fn ^void []
-                                       (dprn :show-action!!!!!!!! action)
+                                       (dprn :cheat-show-action!!!!!!!! action)
                                        ;;(dprn :show-action!!!!!!!! action (minfo me))
                                        (show-action ctx action)
                                        nil))))))}
@@ -214,9 +212,9 @@
       (action-button
         :icon (:icon action)
         :onPressed (fn ^void []
-                     (dprn :show-action!!!!!!!!)
-                     (dprn :show-action!!!!!!!! action (minfo me))
-                     ;; hhack (show-action ctx action)
+                     ;; todo this should be a child under ^^^ positioned
+                     (dprn :NO-CTX-fader-show-action!!!!!!!! action (minfo me))
+                     ;;(show-action ctx action)
                      nil)))))
 
 
