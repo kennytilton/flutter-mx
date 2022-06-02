@@ -501,7 +501,7 @@
 
 ;;; --- GridView/counter -------------------------------------
 
-(deftype FXGridViewCount []
+(deftype FXGridView+count []
   ;;:type-only true
   :extends FXDartWidget
   PDartWidget
@@ -510,16 +510,16 @@
       (m.GridView/count
         :crossAxisCount (mget me :crossAxisCount)
         :children (mapv tiltontec.mx-flutter.tag/render-fx (md-kids me))))))
-(deftag grid-view-count tiltontec.mx-flutter.core/FXGridViewCount)
+(deftag grid-view+count tiltontec.mx-flutter.core/FXGridView+count)
 
 ;;; --- ListView/builder -----------------------------------------
 ;; todo can this be FXListView+Builder or FXListView.Builder or sth?
-(deftype FXListViewBuilder []
+(deftype FXListView+builder []
   ;;:type-only true
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_ (dprn :FXListViewBuilder-obs!! slot))
+    #_ (dprn :FXListView+builder-obs!! slot))
   PDartWidget
   (beefer [this]
     (fn [me ctx]
@@ -528,7 +528,7 @@
         :itemCount (mget me :itemCount)
         :itemBuilder (mget me :itemBuilder)))))
 
-(deftag list-view+builder tiltontec.mx-flutter.core/FXListViewBuilder)
+(deftag list-view+builder tiltontec.mx-flutter.core/FXListView+builder)
 
 ;;; --- flutter logo -----------------------------------------------------
 
@@ -545,7 +545,7 @@
 
 ;;; --- ---------------------------------------
 
-(deftype FXSizedBoxExpand []
+(deftype FXSizedBox+expand []
   :extends FXDartWidget
   PDartWidget
   (beefer [this]
@@ -554,4 +554,4 @@
         (m.SizedBox/expand
           :child (render-fx child))))))
 
-(deftag sized-box-expand tiltontec.mx-flutter.core/FXSizedBoxExpand)
+(deftag sized-box+expand tiltontec.mx-flutter.core/FXSizedBox+expand)
