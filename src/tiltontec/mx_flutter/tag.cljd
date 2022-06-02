@@ -15,7 +15,7 @@
 (defprotocol PDartWidget
   (parts [this] "eg, Scaffold [:appBar :body :floatingActionButton ...]")
   (parts-ex [this count] "Test")
-  (builder [this])
+  (beefer [this])
   (fx-genner [this]))
 
 (defn render-fx [fx]
@@ -29,14 +29,19 @@
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen fx))))
 
-(defn statefully [me builder]
+(defn statefully [me beefer]
   (reify :extends w/StatefulWidget
     (createState [this]
       (util/rmap-meta-setf [:state-ref me]
         (reify :extends w/State
           ^:mixin m/SingleTickerProviderStateMixin          ;; todo make specifiable (macroland?)
           (build [this ctx]
-            (builder me ctx))
+            ;; the current use of statefully is to pass along as the beefer either
+            ;; one defined with the MX instance or one provided by the FXType as beefer.
+            ;; So can we just let the FXType always define builders?
+            ;;
+            ;; we include the MX "me" in the generation...
+            (beefer me ctx))
           (^void initState [this]
             (.initState ^super this)
             (when-let [init (mget me :initState)]
@@ -61,10 +66,10 @@
                 ; --- no special fx gen, so...the default:
                 (tiltontec.mx-flutter.tag/statefully me
                   (fn [me ctx]
-                    (let [builder (or (mget me :builder)
-                                    (builder mx-type))]
-                      ;; (dp :make-fx-using-builder!!!!!!!! (minfo me) builder)
-                      (builder me ctx))))))
+                    (let [beefer (or (mget me :beefer)
+                                    (beefer mx-type))]
+                      ;; (dp :make-fx-using-beefer!!!!!!!! (minfo me) beefer)
+                      (beefer me ctx))))))
     (concat
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))

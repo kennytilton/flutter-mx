@@ -11,7 +11,7 @@
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
-            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget builder render-fx] :as tag]))
+            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
 
 (defmacro my-controller []
   `^m/AnimationController (:controller (meta ~'me)))
@@ -45,12 +45,12 @@
   (fx-genner [this]
     nil)
 
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
-      (if-let [builder (mget me :builder)]
-        (do (dp :generic-builder-getting-two builder)
-            (builder me ctx))
-        (throw (Exception. "Property :builder must be provided for ad hoc widgets"))))))
+      (if-let [beefer (mget me :beefer)]
+        (do (dp :generic-beefer-getting-overridden beefer)
+            (beefer me ctx))
+        (throw (Exception. "Property :beefer must be provided for ad hoc widgets"))))))
 
 (deftag widget tiltontec.mx-flutter.core/FXDartWidget)
 
@@ -89,7 +89,7 @@
   (observe [this slot me new-value prior-value cell]
     #_(dprn :FXMatapp-NULL-observing!!! slot))
   PDartWidget
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/MaterialApp
         :title (or (mget me :title) "")
@@ -106,7 +106,7 @@
   PDartWidget
   (parts [this]
     [:appBar :body :actionButton])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/Scaffold
         :appBar (let [abar (mget me :appBar)]
@@ -132,7 +132,7 @@
   PDartWidget
   (parts [this]
     [:title])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/AppBar
         :title (let [title (mget me :title)]
@@ -149,10 +149,10 @@
           (util/rmap-meta-setf [:state-ref me]
             (reify :extends #/(w/State m/AppBar)
               (build [this ctx]
-                (if-let [bldr (mget me :builder)]
+                (if-let [bldr (mget me :beefer)]
                   (bldr me ctx)
-                  (let [type-builder (builder (FXAppBar))]
-                    (type-builder me ctx))))
+                  (let [type-beefer (beefer (FXAppBar))]
+                    (type-beefer me ctx))))
               (^void initState [this]
                 (.initState ^super this)
                 (when-let [init (mget me :initState)]
@@ -169,7 +169,7 @@
 (deftype FXSingleChildScrollView []
   :extends FXDartWidget
   PDartWidget
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/SingleChildScrollView
         :scrollDirection (md/mget me :scrollDirection)
@@ -182,7 +182,7 @@
   PDartWidget
   (parts [this]
     [:headingTextStyle :columnSpacing :sortColumnIndex :sortAscending :showBottomBorder :columns :rows])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/DataTable
         :headingTextStyle (md/mget me :headingTextStyle)
@@ -198,7 +198,7 @@
   PDartWidget
   (parts [this]
     [:onPressed :tooltip :child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/FloatingActionButton
         :onPressed (fn []
@@ -217,7 +217,7 @@
   PDartWidget
   (parts [this]
     [:appBar :body :actionButton])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/DefaultTabController
         :length (mget me :length)
@@ -233,7 +233,7 @@
   PDartWidget
   (parts [this]
     [:child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/Center
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
@@ -247,7 +247,7 @@
   PDartWidget
   (parts [this]
     [:padding])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/Padding
         :padding (mget me :padding)
@@ -263,7 +263,7 @@
   PDartWidget
   (parts [this]
     [:child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/GestureDetector
         :onPanDown (fn [^m/DragDownDetails details]
@@ -286,10 +286,10 @@
   PDartWidget
   (parts [this]
     [:child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (let [a (mget me :alignment)]
-        ;;(dprn :FXAlign-builder-sees-align a)
+        ;;(dprn :FXAlign-beefer-sees-align a)
         (m/Align
           :alignment a
           :child (render-fx (first (tiltontec.model.core/md-kids me))))))))
@@ -304,7 +304,7 @@
   PDartWidget
   (parts [this]
     [:child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/Card
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
@@ -319,7 +319,7 @@
   PDartWidget
   (parts [this]
     [:height :width :color :border-radius])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/AnimatedContainer
         :width (md/mget me :width)
@@ -338,7 +338,7 @@
   PDartWidget
   (parts [this]
     [:animation :child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (apply m/AnimatedBuilder
         :animation (let [ani (mget me :animation)]
@@ -348,10 +348,10 @@
                        ^#/(m/Animation double) ani))
         :child (render-fx (first (tiltontec.model.core/md-kids me)))
         :builder (fn [ctx child]
-                   (let [builder (mget me :builder)]
-                     (dp :FXAniB-sees-child-too!!!!!!!! builder)
-                     (assert builder (str "Animated builder " (minfo me) " lacks required builder callback " ))
-                     (render-fx (builder me ctx child))))))))
+                   (let [beefer (mget me :beefer)]
+                     (dp :FXAniB-sees-child-too!!!!!!!! beefer)
+                     (assert beefer (str "Animated builder " (minfo me) " lacks required beefer callback " ))
+                     (render-fx (beefer me ctx child))))))))
 
 (deftag animated-builder tiltontec.mx-flutter.core/FXAnimatedBuilder)
 
@@ -363,7 +363,7 @@
   PDartWidget
   (parts [this]
     [:opacity :child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (apply m/FadeTransition
         :opacity (let [op (mget me :opacity)]
@@ -382,7 +382,7 @@
   PDartWidget
   (parts [this]
     [:child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/Expanded
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
@@ -397,7 +397,7 @@
   PDartWidget
   (parts [this]
     [:children])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       ;;(dprn (str "Column Type REBUILDING " (cty/minfo me)))
       (m/Column.
@@ -414,7 +414,7 @@
   PDartWidget
   (parts [this]
     [:children])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/Row
         :mainAxisAlignment (tiltontec.model.core/mget me :mainAxisAlignment)
@@ -430,7 +430,7 @@
   PDartWidget
   (parts [this]
     [:children])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       ;;(dprn (str "Column Type REBUILDING " (cty/minfo me)))
       (m/Stack.
@@ -449,7 +449,7 @@
   PDartWidget
   (parts [this]
     [:child :style])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       ;; (dart:core/print (str "FXText Type REBUILDING " (cty/minfo me)))
       (w/Text (first (md/md-kids me))
@@ -468,7 +468,7 @@
   PDartWidget
   (parts [this]
     [:controller])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/TextField
         :onChanged (fn [text]
@@ -488,7 +488,7 @@
   PDartWidget
   (parts [this]
     [:child])
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/ElevatedButton
         :onPressed (fn []
@@ -505,7 +505,7 @@
   ;;:type-only true
   :extends FXDartWidget
   PDartWidget
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m.GridView/count
         :crossAxisCount (mget me :crossAxisCount)
@@ -513,7 +513,7 @@
 (deftag grid-view-count tiltontec.mx-flutter.core/FXGridViewCount)
 
 ;;; --- ListView/builder -----------------------------------------
-
+;; todo can this be FXListView+Builder or FXListView.Builder or sth?
 (deftype FXListViewBuilder []
   ;;:type-only true
   :extends FXDartWidget
@@ -521,7 +521,7 @@
   (observe [this slot me new-value prior-value cell]
     #_ (dprn :FXListViewBuilder-obs!! slot))
   PDartWidget
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m.ListView/builder
         :padding (mget me :padding)
@@ -536,7 +536,7 @@
   ;;:type-only true
   :extends FXDartWidget
   PDartWidget
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (m/FlutterLogo
         :size (or (mget me :size) 128.0)))))
@@ -548,7 +548,7 @@
 (deftype FXSizedBoxExpand []
   :extends FXDartWidget
   PDartWidget
-  (builder [this]
+  (beefer [this]
     (fn [me ctx]
       (let [child (first (tiltontec.model.core/md-kids me))]
         (m.SizedBox/expand

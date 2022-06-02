@@ -7,7 +7,7 @@
      :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [ material-app center text  scaffold column]]
+     :refer [material-app center text scaffold column]]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -30,7 +30,6 @@
                                                         " ctr=" (mget (md/fm* :z-counter) :value)))))
        :floatingActionButton (cF (FloatingActionButton
                                    :onPressed (fn ^void []
-                                                (dp :fab-sees-me (cty/minfo me))
                                                 (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
                                    :child (Icon Icons/add :color Colors/black)))}
@@ -38,8 +37,8 @@
         (fx/column
           {:mainAxisAlignment MainAxisAlignment/center}
           (fx/text {:style (TextStyle
-                          :color Colors/black
-                          :fontSize 18.0)}
+                             :color Colors/black
+                             :fontSize 18.0)}
             "You clicked the button this many times:")
           (fx/text
             {:style
@@ -52,16 +51,14 @@
              (fn [me ctx]
                (.headline4 (.textTheme (Theme/of ctx))))
              ;; or comment out the above entirely and supply a custom builder
-             #_#_:builder (fn [me ctx]
+             #_#_:beefer (fn [me ctx]
                             (Text (str (md/my-val))
                               :style (.headline4 (.textTheme (Theme/of ctx)))))
              }
             {:name  :z-counter
              :value (cI 0)}
-            ;; a custom builder can access Dart context
+            (str (md/my-val)))
 
-            (str (md/my-val))
-            )
           (fx/text {}
             {:value (cF (* 2 (md/fmuval :z-counter)))}
             (str "Button click times two = " (md/my-val))))))))
