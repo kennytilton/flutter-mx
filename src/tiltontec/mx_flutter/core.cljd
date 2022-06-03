@@ -342,14 +342,17 @@
     (fn [me ctx]
       (m/AnimatedBuilder
         :animation (let [ani (mget me :animation)]
-                     (dp :ani-b-sees-ani (fn? ani) ani)
                      (if (fn? ani)
                        (ani me ctx)
                        ^#/(m/Animation double) ani))
-        :child (render-fx (first (tiltontec.model.core/md-kids me)))
+        :child (let [childer (mget me :ani-child)]
+                 (assert childer "Animated builder requires :ani-child property")
+                 (dp :got-childer!!!!!! (fn? childer) childer)
+                 (render-fx (if (fn? childer)
+                              (childer me ctx)
+                              childer)))
         :builder (fn [ctx child]
                    (let [beefer (mget me :ani-beefer)]
-                     (dp :FXAniB-sees-child-too!!!!!!!! beefer)
                      (assert beefer (str "Animated builder " (minfo me) " lacks required beefer callback " ))
                      (render-fx (beefer me ctx child))))))))
 

@@ -36,18 +36,19 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
-(defn action-button [& {:keys [onPressed icon]}]
+(defn action-button [ctx & {:keys [onPressed icon]}]
   ;; todo this needs to pick up color from ctx Theme
   (m/Material
     :shape ^:const (m/CircleBorder)
     :clipBehavior m.Clip/antiAlias
     ;; todo get colors from Ctx and then Theme
-    :color Colors/green                                     ;; hhack blue
-    :elevation 12                                           ;; hhack 4.0
+    :color Colors/blue                                      ;; (-> theme .-colorScheme .-secondary)
+    :elevation 4.0
     :child (m/IconButton
              :onPressed onPressed
-             :icon icon                                     ;; (m/Icon. m.Icons/play_arrow)
-             :color Colors/red #_Colors/blue)))
+             :icon icon                                     ;;
+             :color Colors/white                            ;; (-> theme .-colorScheme .-onSecondary)
+             )))
 
 ;;;
 ;;; --- the app -----------------------------------------------
@@ -62,7 +63,7 @@
 
     (scaffold {:name :scaff}
       {:appBar               (AppBar
-                               :title (Text "Expandable Fab/MX2"))
+                               :title (Text "Expandable Fab/MX"))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
@@ -81,7 +82,6 @@
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
   (fx/sized-box+expand
     {:initState (fn [this me]
-                  (dp :Bam-hello-initstate!!!!!!! (minfo me))
                   (let [c (util/rmap-meta-setf [:controller me]
                             (m/AnimationController
                               :value (if initial-open? 1.0 0.0)
@@ -95,24 +95,24 @@
     {:name  :fab
      :open? (cI initial-open?
               :obs (fn-obs
-                     (let [c (:controller (meta me))]       ;; wait for installation
-                       (when c
-                         (assert c "open? observer cannot find controller")
-                         (dp :fab-open-runs-forward?? new)
-                         (if new
-                           (.forward c)
-                           (.reverse c))))))
+                     (when-let [c (:controller (meta me))]  ;; wait for installation
+                       (dp :fab-open-runs-forward?? new)
+                       (if new
+                         (.forward c)
+                         (.reverse c)))))
      :step  (cF (/ 90.0 (dec (count actions))))
      }
     (fx/stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
-      ;; Matrix always flattens childrens (and discards nils)
+
       (tap-to-close-fab me
         (fn []
           (let [fab (md/fasc :fab)]
             (assert fab (str "tap2close did not find fab calling fasc on " (cty/minfo me)))
             (md/mswap! fab :open? not))))
+
+      ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
 
       (doall (map-indexed
                (fn [i action]
@@ -143,17 +143,14 @@
                        (dp :ani-got-ani!! progress-key xani)
                        xani)))
      :ani-beefer (fn [me ctx child]
-                   (dp :fab-builder-entry!!!!!! (minfo me) child)
                    (let [fab (md/fm* :fab)
                          progress (let [xani ^m/CurvedAnimation (:expand-animation (meta fab))]
                                     (assert xani "cannot get expand ani from meta")
                                     xani)
-                         _ (dp :PROGRESS!!!!! (.value progress))
                          offset (m.Offset/fromDirection
                                   (* direction-degrees (/ math/pi 180.0))
                                   (* (.value progress) max-distance))]
                      ;; todo convert to MX
-                     (dp :exp-action-button-progress progress offset action)
                      (f/widget
                        (f/nest
                          (m/Positioned
@@ -162,30 +159,34 @@
                          (m.Transform/rotate
                            :angle (* (- 1.0 (.value progress))
                                     math/pi 0.5))
-                         child
-                         #_(action-button
-                             :icon (:icon action)
-                             :onPressed (fn ^void []
-                                          (dprn :cheat-show-action!!!!!!!! action)
-                                          ;;(dprn :show-action!!!!!!!! action (minfo me))
-                                          (show-action ctx action)
-                                          nil))))))}
-    (fx/text "hi mom")
-    #_
-    (fx/fade-transition
-      {:opacity (fn [me ctx]
-                  (let [fab (md/fm* :fab)]
-                    (assert fab "opacity does not see fab")
-                    (let [xani (:expand-animation (meta fab))]
-                      (assert xani "opacity cannot get expand ani from meta")
-                      xani)))}
-      (action-button
-        :icon (:icon action)
-        :onPressed (fn ^void []
-                     ;; todo this should be a child under ^^^ positioned
-                     (dprn :NO-CTX-fader-show-action!!!!!!!! action (minfo me))
-                     ;;(show-action ctx action)
-                     nil)))))
+                         child))))
+     :ani-child  (fn [me ctx]
+                   (dp :ani-child-entry!!!!!!!!!! action)
+                   (action-button ctx
+                     :icon (:icon action)
+                     :onPressed (fn ^void []
+                                  ;; todo this should be a child under ^^^ positioned
+                                  (dprn :NO-CTX-fader-show-action!!!!!!!! action (minfo me))
+                                  ;
+                                  ; right here we need to add ctx to the render-fx calls
+                                  ;
+                                  ;
+                                  ;; (show-action ctx action)
+                                  nil)))}))
+#_(fx/fade-transition
+    {:opacity (fn [me ctx]
+                (let [fab (md/fm* :fab)]
+                  (assert fab "opacity does not see fab")
+                  (let [xani (:expand-animation (meta fab))]
+                    (assert xani "opacity cannot get expand ani from meta")
+                    xani)))}
+    (action-button
+      :icon (:icon action)
+      :onPressed (fn ^void []
+                   ;; todo this should be a child under ^^^ positioned
+                   (dprn :NO-CTX-fader-show-action!!!!!!!! action (minfo me))
+                   ;;(show-action ctx action)
+                   nil)))
 
 
 ;;; --- the fake item ------------------------------------------------
