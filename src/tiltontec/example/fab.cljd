@@ -42,13 +42,12 @@
     :shape ^:const (m/CircleBorder)
     :clipBehavior m.Clip/antiAlias
     ;; todo get colors from Ctx and then Theme
-    :color Colors/blue                                      ;; (-> theme .-colorScheme .-secondary)
+    :color (-> (Theme/of ctx) .-colorScheme .-secondary)
     :elevation 4.0
     :child (m/IconButton
              :onPressed onPressed
              :icon icon                                     ;;
-             :color Colors/white                            ;; (-> theme .-colorScheme .-onSecondary)
-             )))
+             :color (-> (Theme/of ctx) .-colorScheme .-onSecondary))))
 
 ;;;
 ;;; --- the app -----------------------------------------------
@@ -160,8 +159,8 @@
                            :angle (* (- 1.0 (.value progress))
                                     math/pi 0.5))
                          child))))
-     :ani-child  (fn [me ctx]
-                   (dp :ani-child-entry!!!!!!!!!! action)
+     :animated-child  (fn [me ctx]
+                   (dp :animated-child-entry!!!!!!!!!! action)
                    (action-button ctx
                      :icon (:icon action)
                      :onPressed (fn ^void []
@@ -171,7 +170,7 @@
                                   ; right here we need to add ctx to the render-fx calls
                                   ;
                                   ;
-                                  ;; (show-action ctx action)
+                                  (show-action ctx action)
                                   nil)))}))
 #_(fx/fade-transition
     {:opacity (fn [me ctx]
