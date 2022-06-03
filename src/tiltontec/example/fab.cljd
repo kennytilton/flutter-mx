@@ -44,13 +44,12 @@
 
 (defn make-app []
   (material-app
-    {:title                      "Welcome to mxFlutter World"
+    {:title                      "Expandable Fab/MX"
      :debugShowCheckedModeBanner false}
     {:name :mat-app}
 
     (scaffold {:name :scaff}
-      {:appBar               (AppBar
-                               :title (Text "Expandable Fab/MX"))
+      {:appBar               (AppBar :title (Text "Expandable Fab/MX"))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
@@ -80,11 +79,11 @@
                         :reverseCurve m.Curves/easeOutQuad
                         :parent c))))}
     {:name  :fab
-     :step (cF (/ 90.0 (dec (count actions))))
+     :step  (cF (/ 90.0 (dec (count actions))))
      :open? (cI initial-open?
-              :obs (fn-obs
+              :obs (fn [prop-name me new-value prior-value cell]
                      (when-let [c (:controller (meta me))]  ;; not until first render installation
-                       (if new
+                       (if new-value
                          (.forward c)
                          (.reverse c)))))}
     (fx/stack
@@ -94,33 +93,25 @@
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
       (doall (map-indexed
                (fn [i action]
-                 (let [fab (md/fasc :fab)]
-                   (assert fab (str "action did not find fab calling fasc on " (cty/minfo me)))
-                   (expanding-action-button
-                     :direction-degrees (* i (mget fab :step))
-                     :max-distance distance
-                     :progress-key :expand-animation
-                     :action action)))
+                 (expanding-action-button
+                   :direction-degrees (* i (fmuv :step :fab))
+                   :max-distance distance
+                   :progress-key :expand-animation
+                   :action action))
                actions))
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [& {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation      (fn [me ctx]
-                       (let [fab (md/fm* :fab)]
-                         (assert fab "eabutton animation does not see fab")
-                         (let [xani (progress-key (meta fab))]
-                           (assert xani (str "cannot get expand ani from meta with key " progress-key))
-                           xani)))
+                       (progress-key (meta (md/fm* :fab))))
+     ;; todo lose "beefer"
      :ani-beefer     (fn [me ctx child]
                        (let [fab (md/fm* :fab)
-                             progress (let [xani ^m/CurvedAnimation (:expand-animation (meta fab))]
-                                        (assert xani "cannot get expand ani from meta")
-                                        xani)
+                             progress ^m/CurvedAnimation (:expand-animation (meta fab))
                              offset (m.Offset/fromDirection
                                       (* direction-degrees (/ math/pi 180.0))
                                       (* (.value progress) max-distance))]
-                         ;; todo convert to MX
                          (f/widget
                            (f/nest
                              (m/Positioned
@@ -137,22 +128,21 @@
                                       (show-action ctx action)
                                       nil))
                        ;; todo fade transition
-                       #_
-                       (let [fab (md/fm* :fab)]
-                         (dp :fab??????????????? (minfo fab))
-                         (fx/fade-transition
-                           {:opacity (fn [me ctx]
-                                       ;; we cannot fm* :fab because we are not a true child
-                                       ;; todo  consider this in the dispose or not-to-be
-                                       (assert fab "opacity does not see fab")
-                                       (let [xani (:expand-animation (meta fab))]
-                                         (assert xani "opacity cannot get expand ani from meta")
-                                         xani))}
-                           (action-button ctx
-                             :icon (:icon action)
-                             :onPressed (fn ^void []
-                                          (show-action ctx action)
-                                          nil)))))}))
+                       #_(let [fab (md/fm* :fab)]
+                           (dp :fab??????????????? (minfo fab))
+                           (fx/fade-transition
+                             {:opacity (fn [me ctx]
+                                         ;; we cannot fm* :fab because we are not a true child
+                                         ;; todo  consider this in the dispose or not-to-be
+                                         (assert fab "opacity does not see fab")
+                                         (let [xani (:expand-animation (meta fab))]
+                                           (assert xani "opacity cannot get expand ani from meta")
+                                           xani))}
+                             (action-button ctx
+                               :icon (:icon action)
+                               :onPressed (fn ^void []
+                                            (show-action ctx action)
+                                            nil)))))}))
 
 (defn fake-item [is-big?]
   (m/Container
@@ -176,7 +166,7 @@
     (m/InkWell :onTap #(md/mswap! (md/fasc :fab par) :open? not))
     (m/Padding :padding ^:const (m.EdgeInsets/all 8.0))
     ;; todo use theme below
-    (m/Icon m.Icons/close :color m.Colors/green  #_(.primaryColor theme))))
+    (m/Icon m.Icons/close :color m.Colors/blue  #_(.primaryColor theme))))
 
 (defn- tap-to-open-fab [par]
   (f/nest
