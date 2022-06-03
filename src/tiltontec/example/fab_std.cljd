@@ -45,7 +45,6 @@
 
 (defn expanding-action-button
   [& {:keys [direction-degrees max-distance ^#/(m/Animation double) progress child]}]
-  (dp :eab-itself-sees-prog (.value progress))
   (f/widget
     (f/nest
       (m/AnimatedBuilder
@@ -81,7 +80,7 @@
                               :reverseCurve m.Curves/easeOutQuad
                               :parent controller)]
 
-    (let [toggle #(do (dp :toggling!!!!!before!!!! @open)
+    (let [toggle #(do
                       (if (swap! open not)
                         (.forward controller)
                         (.reverse controller)))
