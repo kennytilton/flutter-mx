@@ -19,28 +19,7 @@
     [tiltontec.util.core :as util :refer [rmap-meta-setf]]
     [tiltontec.cell.observer :refer [fn-obs]]))
 
-(declare fake-item expandable-fad)
-
-(defn show-action [ctx action]
-  (m/showDialog
-    :context ctx
-    :builder (fn [ctx]
-               (m/AlertDialog
-                 :content (m/Text (:title action))
-                 :actions [(m/TextButton
-                             :onPressed #(-> ctx m.Navigator/of .pop)
-                             :child ^:const (m/Text "CLOSE"))]))))
-
-(defn action-button [ctx & {:keys [onPressed icon]}]
-  (m/Material
-    :shape ^:const (m/CircleBorder)
-    :clipBehavior m.Clip/antiAlias
-    :color (-> (Theme/of ctx) .-colorScheme .-secondary)
-    :elevation 4.0
-    :child (m/IconButton
-             :onPressed onPressed
-             :icon icon                                     ;;
-             :color (-> (Theme/of ctx) .-colorScheme .-onSecondary))))
+(declare fake-item expandable-fad show-action action-button)
 
 (defn make-app []
   (material-app
@@ -122,6 +101,22 @@
                                         math/pi 0.5))
                              child))))
      :animated-child (fn [me ctx]
+                       #_
+                       (let [fab (md/fm* :fab)]
+                         (fx/fade-transition
+                           {:opacity (fn [me ctx]
+                                       ;; we cannot fm* :fab because we are not a true child
+                                     ;; todo  consider this in the dispose or not-to-be
+                                       (assert fab "opacity does not see fab")
+                                     (let [xani (:expand-animation (meta fab))]
+                                       (assert xani "opacity cannot get expand ani from meta")
+                                       xani))}
+                           (action-button ctx
+                             :icon (:icon action)
+                             :onPressed (fn ^void []
+                                          (show-action ctx action)
+                                          nil))))
+
                        (action-button ctx
                          :icon (:icon action)
                          :onPressed (fn ^void []
@@ -130,28 +125,20 @@
                        ;; todo fade transition
                        #_(let [fab (md/fm* :fab)]
                            (dp :fab??????????????? (minfo fab))
-                           (fx/fade-transition
-                             {:opacity (fn [me ctx]
-                                         ;; we cannot fm* :fab because we are not a true child
-                                         ;; todo  consider this in the dispose or not-to-be
-                                         (assert fab "opacity does not see fab")
-                                         (let [xani (:expand-animation (meta fab))]
-                                           (assert xani "opacity cannot get expand ani from meta")
-                                           xani))}
-                             (action-button ctx
-                               :icon (:icon action)
-                               :onPressed (fn ^void []
-                                            (show-action ctx action)
-                                            nil)))))}))
-
-(defn fake-item [is-big?]
-  (m/Container
-    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
-    :height (if is-big? 128.0 36.0)
-    :decoration
-    (m/BoxDecoration
-      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-      :color (.-shade300 Colors/grey))))
+                           ))}
+    #_ (fx/fade-transition
+      {:opacity (fn [me ctx]
+                  ;; we cannot fm* :fab because we are not a true child
+                  ;; todo  consider this in the dispose or not-to-be
+                  (assert fab "opacity does not see fab")
+                  (let [xani (:expand-animation (meta fab))]
+                    (assert xani "opacity cannot get expand ani from meta")
+                    xani))}
+      (action-button ctx
+        :icon (:icon action)
+        :onPressed (fn ^void []
+                     (show-action ctx action)
+                     nil)))))
 
 (defn- tap-to-close-fab [par]
   (f/nest
@@ -186,3 +173,34 @@
       :duration ^:const (dart:core/Duration :milliseconds 250))
     (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
     (m/Icon m.Icons/create)))
+
+
+(defn show-action [ctx action]
+  (m/showDialog
+    :context ctx
+    :builder (fn [ctx]
+               (m/AlertDialog
+                 :content (m/Text (:title action))
+                 :actions [(m/TextButton
+                             :onPressed #(-> ctx m.Navigator/of .pop)
+                             :child ^:const (m/Text "CLOSE"))]))))
+
+(defn action-button [ctx & {:keys [onPressed icon]}]
+  (m/Material
+    :shape ^:const (m/CircleBorder)
+    :clipBehavior m.Clip/antiAlias
+    :color (-> (Theme/of ctx) .-colorScheme .-secondary)
+    :elevation 4.0
+    :child (m/IconButton
+             :onPressed onPressed
+             :icon icon                                     ;;
+             :color (-> (Theme/of ctx) .-colorScheme .-onSecondary))))
+
+(defn fake-item [is-big?]
+  (m/Container
+    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+    :height (if is-big? 128.0 36.0)
+    :decoration
+    (m/BoxDecoration
+      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+      :color (.-shade300 Colors/grey))))
