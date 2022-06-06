@@ -16,6 +16,12 @@
 (defmacro my-controller []
   `^m/AnimationController (:controller (meta ~'me)))
 
+(defmacro my-state []
+  `^State (:state-ref (meta ~'me)))
+
+(defmacro my-ctx []
+  `(.context ^State (:state-ref (meta ~'me))))
+
 (defn ctx-page-push [ctx fx-page-def]
   ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
   (.push (-> ctx m.Navigator/of)
@@ -48,7 +54,7 @@
   (beefer [this]
     (fn [me ctx]
       (if-let [beefer (mget me :beefer)]
-        (do (dp :generic-beefer-getting-overridden beefer)
+        (do (dp :ad-hoc-widget-found-custom-beefer (minfo me) beefer)
             (beefer me ctx))
         (throw (Exception. "Property :beefer must be provided for ad hoc widgets"))))))
 
@@ -97,6 +103,48 @@
         :home (render-fx (first (md-kids me)))))))
 
 (deftag material-app tiltontec.mx-flutter.core/FXMaterialApp)
+
+;;; --- material ---------------------------------------
+(deftype FXMaterial []
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    #_(dprn :FXMatapp-NULL-observing!!! slot))
+  PDartWidget
+  (beefer [this]
+    (fn [me ctx]
+      ; :shape ^:const (m/CircleBorder)
+      ;    :clipBehavior m.Clip/antiAlias
+      ;    :color (-> (Theme/of ctx) .-colorScheme .-secondary)
+      ;    :elevation 4.0
+      ;    :child
+
+      (m/Material
+        :shape (mget me :shape)
+        :clipBehavior (mget me :clipBehavior)
+        :color (mget me :color)
+        :elevation (mget me :elevation)
+        :child (render-fx (first (md-kids me)))))))
+(deftag material tiltontec.mx-flutter.core/FXMaterial)
+
+;;; --- icon button ------------------------------------
+
+(deftype FXIconButton []
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell])
+  PDartWidget
+  (beefer [this]
+    (fn [me ctx]
+      (m/IconButton
+        :icon (mget me :icon)
+        :onPressed (mget me :onPressed)
+        :color (let [color (mget me :color)]
+                 (dp :icon-button-sees-color!! color)
+                 (if (fn? color)
+                   (color me ctx)
+                   color))))))
+(deftag icon-button tiltontec.mx-flutter.core/FXIconButton)
 
 ;;; --- scaffold ---------------------------------------
 
@@ -342,6 +390,7 @@
     (fn [me ctx]
       (m/AnimatedBuilder
         :animation (let [ani (mget me :animation)]
+                     (assert ani "anibuilder sees null :animation property")
                      (if (fn? ani)
                        (ani me ctx)
                        ^#/(m/Animation double) ani))
@@ -352,7 +401,7 @@
                               childer)))
         :builder (fn [ctx child]
                    (let [beefer (mget me :ani-beefer)]
-                     (assert beefer (str "Animated builder " (minfo me) " lacks required beefer callback " ))
+                     (assert beefer (str "Animated builder " (minfo me) " lacks required beefer callback "))
                      (render-fx (beefer me ctx child))))))))
 
 (deftag animated-builder tiltontec.mx-flutter.core/FXAnimatedBuilder)
@@ -373,7 +422,6 @@
                      (op me ctx)
                      op))
         :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
-
 (deftag fade-transition tiltontec.mx-flutter.core/FXFadeTransition)
 
 ;;; --- expanded ---------------------------------------
@@ -401,11 +449,9 @@
     [:children])
   (beefer [this]
     (fn [me ctx]
-      ;;(dprn (str "Column Type REBUILDING " (cty/minfo me)))
       (m/Column.
         :mainAxisAlignment (md/mget me :mainAxisAlignment)
         :children (mapv tiltontec.mx-flutter.tag/render-fx (md/md-kids me))))))
-
 (deftag column tiltontec.mx-flutter.core/FXColumn)
 
 ;;; --- row ---------------------------------------
@@ -421,7 +467,6 @@
       (m/Row
         :mainAxisAlignment (tiltontec.model.core/mget me :mainAxisAlignment)
         :children (mapv tiltontec.mx-flutter.tag/render-fx (tiltontec.model.core/md-kids me))))))
-
 (deftag row tiltontec.mx-flutter.core/FXRow)
 
 ;;; --- stack ---------------------------------------
@@ -434,7 +479,6 @@
     [:children])
   (beefer [this]
     (fn [me ctx]
-      ;;(dprn (str "Column Type REBUILDING " (cty/minfo me)))
       (m/Stack.
         :alignment (tiltontec.model.core/mget me :alignment)
         :clipBehavior (tiltontec.model.core/mget me :clipBehavior)
@@ -521,7 +565,7 @@
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_ (dprn :FXListView+builder-obs!! slot))
+    #_(dprn :FXListView+builder-obs!! slot))
   PDartWidget
   (beefer [this]
     (fn [me ctx]
@@ -533,7 +577,7 @@
 (deftag list-view+builder tiltontec.mx-flutter.core/FXListView+builder)
 
 ;;; --- flutter logo -----------------------------------------------------
-
+; todo how could we do this without creating a custom type?
 (deftype FXFlutterLogo []
   ;;:type-only true
   :extends FXDartWidget

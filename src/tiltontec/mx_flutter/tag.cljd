@@ -22,7 +22,7 @@
   (cond
     (not (md-ref? fx))
     (do
-     ;; (dprn :rnfx-sees-not-md-passing-thru fx)
+     ;(dprn :rnfx-sees-not-md-ref?-passing-thru fx)
       fx)
 
     :else (let [gen (mget fx :fx-gen)]
@@ -48,7 +48,7 @@
               (init this me)))
           (^void dispose [this]
             (when-let [orride (mget me :dispose)]
-              (orride this me))
+              (orride this me)) ;; todo why pass this?
             (.dispose ^super this)))))))
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
@@ -107,3 +107,5 @@
             {}
             ~(when-let [kids# (seq (nthrest vargs# 1))]
                `(tiltontec.model.core/cFkids ~@kids#)))))))
+
+

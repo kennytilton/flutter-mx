@@ -8,7 +8,7 @@
     [tiltontec.cell.core :as cell :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
-     :refer [material-app center text scaffold column list-view+builder]]
+     :refer [material-app center text scaffold column list-view+builder my-ctx my-state]]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -52,6 +52,7 @@
                               :value (if initial-open? 1.0 0.0)
                               :duration ^:const (dart:core/Duration :milliseconds 250)
                               :vsync this))]
+                    ;; todo can we just make a Ticker instead of using the state mixin
                     (util/rmap-meta-setf [:expand-animation me]
                       (m/CurvedAnimation
                         :curve m.Curves/fastOutSlowIn
@@ -72,7 +73,7 @@
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
       (doall (map-indexed
                (fn [i action]
-                 (expanding-action-button
+                 (expanding-action-button me
                    :direction-degrees (* i (fmuv :step :fab))
                    :max-distance distance
                    :progress-key :expand-animation
@@ -80,10 +81,17 @@
                actions))
       (tap-to-open-fab me))))
 
-(defn expanding-action-button [& {:keys [action direction-degrees max-distance progress-key]}]
+(defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
+  (dp :eab-entry
+    ;;:fab (md/fm* :fab)
+    :ani-key progress-key                                   ;; :ani (progress-key (meta (md/fm* :fab)) :notfound)
+    :ctx! (when-let [^State state (:state-ref (meta me))]
+            (.context state)))
+
   (fx/animated-builder
-    {:animation      (fn [me ctx]
-                       (progress-key (meta (md/fm* :fab))))
+    {:animation                                             ;;(cF (progress-key (meta (md/fm* :fab))))
+     (fn [me ctx]
+       (progress-key (meta (md/fm* :fab))))
      ;; todo lose "beefer"
      :ani-beefer     (fn [me ctx child]
                        (let [fab (md/fm* :fab)
@@ -101,44 +109,46 @@
                                         math/pi 0.5))
                              child))))
      :animated-child (fn [me ctx]
-                       #_
-                       (let [fab (md/fm* :fab)]
-                         (fx/fade-transition
-                           {:opacity (fn [me ctx]
-                                       ;; we cannot fm* :fab because we are not a true child
-                                     ;; todo  consider this in the dispose or not-to-be
-                                       (assert fab "opacity does not see fab")
-                                     (let [xani (:expand-animation (meta fab))]
-                                       (assert xani "opacity cannot get expand ani from meta")
-                                       xani))}
-                           (action-button ctx
-                             :icon (:icon action)
-                             :onPressed (fn ^void []
-                                          (show-action ctx action)
-                                          nil))))
+                       #_(let [fab (md/fm* :fab)]
+                           (fx/fade-transition
+                             {:opacity (fn [me ctx]
+                                         ;; we cannot fm* :fab because we are not a true child
+                                         ;; todo  consider this in the dispose or not-to-be
+                                         (assert fab "opacity does not see fab")
+                                         (let [xani (:expand-animation (meta fab))]
+                                           (assert xani "opacity cannot get expand ani from meta")
+                                           xani))}
+                             (action-button ctx
+                               :icon (:icon action)
+                               :onPressed (fn ^void []
+                                            (show-action ctx action)
+                                            nil))))
 
-                       (action-button ctx
+                       (action-button
                          :icon (:icon action)
                          :onPressed (fn ^void []
-                                      (show-action ctx action)
+                                      (let [^State state (:state-ref (meta me))]
+                                        (assert state)
+                                        (assert (.context state))
+                                        (show-action (.context state) action))
                                       nil))
                        ;; todo fade transition
                        #_(let [fab (md/fm* :fab)]
                            (dp :fab??????????????? (minfo fab))
                            ))}
-    #_ (fx/fade-transition
-      {:opacity (fn [me ctx]
-                  ;; we cannot fm* :fab because we are not a true child
-                  ;; todo  consider this in the dispose or not-to-be
-                  (assert fab "opacity does not see fab")
-                  (let [xani (:expand-animation (meta fab))]
-                    (assert xani "opacity cannot get expand ani from meta")
-                    xani))}
-      (action-button ctx
-        :icon (:icon action)
-        :onPressed (fn ^void []
-                     (show-action ctx action)
-                     nil)))))
+    #_(fx/fade-transition
+        {:opacity (fn [me ctx]
+                    ;; we cannot fm* :fab because we are not a true child
+                    ;; todo  consider this in the dispose or not-to-be
+                    (assert fab "opacity does not see fab")
+                    (let [xani (:expand-animation (meta fab))]
+                      (assert xani "opacity cannot get expand ani from meta")
+                      xani))}
+        (action-button ctx
+          :icon (:icon action)
+          :onPressed (fn ^void []
+                       (show-action ctx action)
+                       nil)))))
 
 (defn- tap-to-close-fab [par]
   (f/nest
@@ -174,7 +184,6 @@
     (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
     (m/Icon m.Icons/create)))
 
-
 (defn show-action [ctx action]
   (m/showDialog
     :context ctx
@@ -185,16 +194,17 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
-(defn action-button [ctx & {:keys [onPressed icon]}]
-  (m/Material
-    :shape ^:const (m/CircleBorder)
-    :clipBehavior m.Clip/antiAlias
-    :color (-> (Theme/of ctx) .-colorScheme .-secondary)
-    :elevation 4.0
-    :child (m/IconButton
-             :onPressed onPressed
-             :icon icon                                     ;;
-             :color (-> (Theme/of ctx) .-colorScheme .-onSecondary))))
+(defn action-button [& {:keys [onPressed icon]}]
+  (fx/material {:shape ^:const (m/CircleBorder)
+                :clipBehavior m.Clip/antiAlias
+                :color Colors/blue #_ (cF (assert (my-ctx))
+                         (-> (Theme/of (my-ctx)) .-colorScheme .-secondary))
+                :elevation 4.0}
+    (fx/icon-button
+      {:onPressed onPressed
+       :icon icon
+       :color Colors/white #_ (cF (assert (my-ctx))
+                (-> (Theme/of (my-ctx)) .-colorScheme .-onSecondary))})))
 
 (defn fake-item [is-big?]
   (m/Container
@@ -204,3 +214,26 @@
     (m/BoxDecoration
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 Colors/grey))))
+
+;; ^#/(Map Symbol dynamic)
+
+#_(defn fake-item [is-big?]
+    (dart:core.Function/apply m/Container nil
+      (into {} [["margin" 42.0] ["height" 36.0]])))
+
+#_(dart:core.Function/apply m/Container nil
+    ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+                             :height (if is-big? 128.0 36.0)
+                             :decoration
+                             (m/BoxDecoration
+                               :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                               :color (.-shade300 Colors/pink))})
+
+;; ^#/(Map Symbol dynamic)
+#_(m/Container
+    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+    :height (if is-big? 128.0 36.0)
+    :decoration
+    (m/BoxDecoration
+      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+      :color (.-shade300 Colors/pink)))
