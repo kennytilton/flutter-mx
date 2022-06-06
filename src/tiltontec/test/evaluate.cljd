@@ -2,7 +2,7 @@
   (:require
     ["dart:developer" :as dev]
     [tiltontec.util.base :as ub
-     :refer [def-rmap-slots rmap-setf trx prog1 *trx?*]]
+     :refer [def-rmap-slots rmap-setf trx dp prog1 *trx?*]]
     [tiltontec.util.core
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
@@ -43,7 +43,7 @@
     (assert (nil? (c-model c)))
     (assert (= :bingo (c-slot c) (c-slot-name c)))
     (assert (= (c-get c) 42))
-    (prn :test-input-OK)))
+    (dp :test-input-OK)))
 
 (defn t-formula []
   (let [c (cF (+ 40 2))]
@@ -56,7 +56,7 @@
     (assert (nil? (c-model c)))
     (trx nil :readddd (c-get c))
     (assert (= (c-get c) 42))
-    (prn :t-formula-OK)))
+    (dp :t-formula-OK)))
 
 (defn t-formula-2 []
   (let [b (cI 2)
@@ -79,7 +79,7 @@
     (assert (= 2 (count (c-useds d))))
     (assert (= 0 (count (c-callers d))))
 
-    (prn :t-formula-2-OK)))
+    (dp :t-formula-2-OK)))
 
 (defn t-formula-22 []
   (cells-init)
@@ -108,7 +108,7 @@
     (assert (= 2 @dct))
     (assert (= 2 @cct))
 
-    (prn :t-formula-22-OK)
+    (dp :t-formula-22-OK)
     ))
 
 
@@ -137,7 +137,7 @@
   ;; please see: http://smuglispweeny.blogspot.com/2008/07/aa-bb-cc-and-dd.html
   ;;
   (cells-init)
-  (prn :pod-entry)
+  (dp :pod-entry)
   (let [run (atom {})
         obs (atom {})
 
@@ -160,7 +160,7 @@
 
         aa (cI 1 :slot :aa :obs podobs)
         a7 (cI 7 :slot :a7 :obs podobs)
-        _ (prn :starting-cF+)
+        _ (dp :starting-cF+)
         a70 (cF+ [:slot :a70 :obs podobs]
               (logrun :a70)
               (* 10 (cr a7)))
@@ -263,7 +263,7 @@
       ;
       (assert (= #{:bb} (c-slots dd :useds)))
       ))
-  (prn :pentagram-of-death-OK))
+  (dp :pentagram-of-death-OK))
 
 (defn t-cell-unchanged-test []
   (cells-init)
@@ -272,16 +272,16 @@
   (let [ob (atom 0)
         b (cI 2 :slot :bb
             :obs (fn-obs
-                   (prn :obs-bb!! new old)
+                   (dp :obs-bb!! new old)
                    (swap! ob inc))
             :unchanged-if (fn [n p]
-                            (prn :ucif-sees n p)
+                            (dp :ucif-sees n p)
                             (and (number? n)
                               (number? p)
                               (or (and (even? n)(even? p))
                                 (and (odd? n)(odd? p))))))
         _ (c-awaken b)
-        _ (prn :b-start @b)
+        _ (dp :b-start @b)
         cct (atom 0)
         c (cF+ [:slot :cc]
             (swap! cct inc)
@@ -303,15 +303,15 @@
     (assert (= (c-get b) 5))
     (assert (= 2 @ob))
     (assert (= 2 @cct)))
-  (prn :t-cell-unchanged-test-OK))
+  (dp :t-cell-unchanged-test-OK))
 
 (defn opti-away []
   (let [aa (cF 42)]
     (assert (= 42 (c-get aa)))
-    (println :aa @aa)
+    (dp :aa @aa)
     (assert (c-optimized-away? aa))
     (assert (= 42 @aa)))
-  (prn :opti-away-OK))
+  (dp :opti-away-OK))
 
 (defn run-tests []
   (test-input)
@@ -321,4 +321,4 @@
   ;(pentagram-of-death)
   ;(t-cell-unchanged-test)
   ;(opti-away)
-  (prn :test.evaluate-tests-OK))
+  (dp :test.evaluate-tests-OK))

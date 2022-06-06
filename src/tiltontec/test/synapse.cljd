@@ -1,6 +1,6 @@
 (ns tiltontec.test.synapse
   (:require
-    [tiltontec.util.base :refer [trx prog1]]
+    [tiltontec.util.base :refer [trx dp prog1]]
     [tiltontec.util.core :refer [rmap-setf]]
     [tiltontec.cell.base
      :refer [without-c-dependency c-optimized-away? c-formula? c-value c-optimize
@@ -43,11 +43,11 @@
               (swap! z-runs inc)
               (assert (even? y)))
             y)]
-    (println :warm-up (c-get z))
+    (dp :warm-up (c-get z))
     (doseq [n (range max)]
       (c-reset! x n))
     (assert (= @z-runs (count (filter even? (range max))))))
-  (prn :non-syn-even-OK))
+  (dp :non-syn-even-OK))
 
 (defn synaptic-even-filtering []
   ; now we look at how a synapse (an anonymous cell usable only by its containing formula)
@@ -59,16 +59,16 @@
         z-runs (atom 0)
         z (cF (when-let [x (with-synapse (:even-x)
                              (when-let [x (c-get x)]
-                               (prn :syn-sees-x x)
+                               (dp :syn-sees-x x)
                                (swap! syn-runs inc)
                                (if (even? x)
                                  ^{:propagate true} [x]
                                  ^{:propagate false} [nil])))]
-                (println :x-see-x x)
+                (dp :x-see-x x)
                 (swap! z-runs inc)
                 (assert (even? (first x)))
                 (first x)))]
-    (println :warm-up (c-get z))
+    (dp :warm-up (c-get z))
     (doseq [n (range max)]
       (c-reset! x n))
     (assert (= @syn-runs (count (range max))))
@@ -92,14 +92,14 @@
                                    (let [delta (abs (if @prior
                                                            (- x @prior)
                                                            0))]
-                                     (println @prior x delta)
+                                     (dp @prior x delta)
                                      (reset! prior x)
                                      ^{:propagate (not (zero? delta))} [delta])))]
-                    (println :delta d)
+                    (dp :delta d)
                     (swap! alarm-runs inc)
                     (if (> d 5)
                       :on :off)))]
-    (println :warm-up (c-get alarm))
+    (dp :warm-up (c-get alarm))
     (assert (= @syn-runs 0))
     (assert (= @alarm-runs 0))
     (assert (nil? (c-get alarm)))
@@ -143,13 +143,13 @@
                                                  ^{:propagate true} [x])
 
                                              :default ^{:propagate false} [x])))]
-                    (println :changed changed-x)
+                    (dp :changed changed-x)
                     (swap! alarm-runs inc)
                     (if (> changed-x 5)
                       :on :off)))]
 
     (do (reset-runs)
-        (println :warm-up (c-get alarm))
+        (dp :warm-up (c-get alarm))
         (assert (= @syn-runs 1))
         (assert (= @alarm-runs 1))
         (assert (= :off (c-get alarm))))
@@ -183,15 +183,15 @@
                                    (= (count buffer-val) 3)
                                    (do
                                      (reset! buffer [])
-                                     (println :syn-propping!!!!! buffer-val)
+                                     (dp :syn-propping!!!!! buffer-val)
                                      ^{:propagate true} [buffer-val])
 
                                    :default ^{:propagate false} [buffer-val]))))]
-                (println :new-g g)
+                (dp :new-g g)
                 (assert (= 3 (count g)))
 
                 g))]
-    (println :warm-up (c-get y))
+    (dp :warm-up (c-get y))
     (doseq [n (range 10)]
       (c-reset! x n))
 
@@ -203,4 +203,4 @@
   ;(synaptic-delta)
   ;(synaptic-sensitivity)
   ;(synaptic-grouping)
-  (prn :synapses-OK))
+  (dp :synapses-OK))

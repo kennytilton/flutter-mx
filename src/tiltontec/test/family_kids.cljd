@@ -1,7 +1,7 @@
 (ns tiltontec.test.family-kids
   (:require
     [tiltontec.util.base
-     :refer [trx prog1 *trx?*]]
+     :refer [trx dp prog1 *trx?*]]
     [tiltontec.util.core :refer [type-of err]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
@@ -48,13 +48,13 @@
       (assert (not (empty? (md-get f :kids))))
       (assert (= 42 (mdv! :yep :value f)))
 
-      (prn :ok-42!!!!!!!!)
+      (dp :ok-42!!!!!!!!)
       (let [dmw (first (md-get f :kids))]
         (assert (md-ref? dmw))
         (md-reset! f :ee 0)
         (assert (empty? (md-get f :kids)))
 
-        (prn :dmw @dmw :meta (meta dmw))
+        (dp :dmw @dmw :meta (meta dmw))
         ;; todo get kids observe to quiesce kids
 
         (assert (nil? @dmw))
@@ -62,6 +62,6 @@
 
 (defn run-tests []
   (k-notq2be)
-  (prn :family-kids-OK))
+  (dp :family-kids-OK))
 
 

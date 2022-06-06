@@ -1,6 +1,6 @@
 (ns tiltontec.test.model-core
   (:require
-    [tiltontec.util.base :refer [trx prog1 *trx?*]]
+    [tiltontec.util.base :refer [trx dp prog1 *trx?*]]
     [tiltontec.util.core :refer [type-of err]]
     [tiltontec.cell.base
      :refer [without-c-dependency mx-type
@@ -40,12 +40,12 @@
                           :name :konzo
                           :kzo (cI 3))))))]
     (assert (not (some #{:mx-type} (keys @u))))
-    ;;(prn :u-keys (keys @u))
+    ;;(dp :u-keys (keys @u))
     (assert (nil? (:kids @u)))
-    ;;(prn :u-cells (:cz (meta u)) (meta u))
+    ;;(dp :u-cells (:cz (meta u)) (meta u))
     (let [kc (md-cell u :kids)
           kon (md-cell u :kon)]
-      ;;(prn :resetting-cell kon)
+      ;;(dp :resetting-cell kon)
       (c-reset! kon true)
       (assert (= 1 (count (:kids @u))))
       (assert (md/fm-navig :konzo u :inside? true))
@@ -157,7 +157,7 @@
                                         :name :bbx))))
                         (md/make :name :dd
                           :kzo (cF (let [p (fm-navig :picker me)]
-                                     (println :bingo p)
+                                     (dp :bingo p)
                                      (md-get p :value)))))))]
     (assert (= 42 (mdv! :picker :value u)))
     (assert (= 42 (mdv! :dd :kzo u)))))
@@ -201,7 +201,7 @@
                            :leave :away
                            :return :home
                            :missing))))]
-    (println :meta (meta res))
+    (dp :meta (meta res))
     (assert (= (:cz (meta res)) (md-cz res)))
     (assert (= 4 (count (md-cz res))))
     (assert (every? c-ref? (vals (md-cz res))))
@@ -212,11 +212,11 @@
                  (vals (md-cz res))))))
     (assert (= "Bob" (:name @res)))
     (assert (= "Bob" (md-name res)))
-    (println :res @res)
+    (dp :res @res)
     (assert (= 42 (:bogus @res)))
     (assert (= nil (:bogus-e @res))) ;; ephemeral, so reset to nil silently
     (assert (= nil (:action @res)))
-    (println :loc (:loc @res))
+    (dp :loc (:loc @res))
     (assert (= :missing (:loc @res)))
     (assert (= 1 @bct))
     (reset! bct 0)
@@ -280,22 +280,22 @@
 
 (defn run-tests []
   (fm-0)
-  (prn :fm-0 :ok)
+  (dp :fm-0 :ok)
   (fm-2)
-  (prn :fm-2 :ok)
+  (dp :fm-2 :ok)
   (fm-3)
-  (prn :fm-3 :ok)
+  (dp :fm-3 :ok)
   (fm-3x)
-  (prn :fm-3x :ok)
+  (dp :fm-3x :ok)
   (fm-picker)
-  (prn :fm-picker :ok)
+  (dp :fm-picker :ok)
   (mm-typed)
-  (prn :fm-mm-typed :ok)
+  (dp :fm-mm-typed :ok)
   (mm-opti-1)
 
-  (prn :fm-opti-1 :ok)
+  (dp :fm-opti-1 :ok)
   (mm-install-alive)
-  (prn :fm-in-alive :ok)
+  (dp :fm-in-alive :ok)
   (hello-model)
-  (prn :model-core-OK)
+  (dp :model-core-OK)
   )

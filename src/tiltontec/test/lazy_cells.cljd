@@ -1,7 +1,7 @@
 (ns tiltontec.test.lazy-cells
   (:require
     [tiltontec.util.base
-     :refer [trx prog1]]
+     :refer [trx dp prog1]]
     [tiltontec.cell.base
      :refer [without-c-dependency c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?  cells-init
@@ -19,18 +19,32 @@
     [tiltontec.cell.observer
      :refer [defobserver fn-obs]]
     [tiltontec.cell.core
-     :refer [cF cF+ c_F cF_ cI c-reset!]]))
+     :refer [cF cF+ c_F cF_ cI c-reset! c-fn make-c-formula]]))
 
 
 (defn solid-lazy []
   (cells-init)
   (let [xo (atom 0)
         a (cI 0)
-        x (cF_ [:obs (fn-obs (swap! xo inc))]
-            (+ (c-get a) 40))]
+        runs (atom 0)
+       #_#_  x (cF_ [:obs (fn-obs (swap! xo inc))]
+            (swap! runs inc)
+            (dp :x-ran-runs-now @runs)
+            (+ (c-get a) 40))
+        x (make-c-formula
+            :obs (fn-obs (swap! xo inc))
+            :value tiltontec.cell.base/unbound
+            :lazy :until-asked
+            :rule (c-fn (swap! runs inc)
+                    (dp :x-ran-runs-now @runs)
+                    (+ (c-get a) 40)))]
     (assert (= unbound (:value @x)))
     (assert (= 0 @xo))
+    (assert (= 0 @runs))
     (assert (= 40 (c-get x)))
+    (assert (= 1 @runs))
+    (assert (= 40 (c-get x)))
+    (assert (= 2 @runs))
     (assert (= 1 @xo))
     (c-reset! a 100)
     (assert (= 1 @xo))
@@ -94,4 +108,4 @@
   (solid-lazy)
   (lazy-until-asked)
   (optimize-when-value-t)
-  (prn :lazy-cells-OK))
+  (dp :lazy-cells-OK))

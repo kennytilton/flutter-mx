@@ -122,7 +122,12 @@
       (m/Material
         :shape (mget me :shape)
         :clipBehavior (mget me :clipBehavior)
-        :color (mget me :color)
+        ;; todo write call-or-get-property or sth
+        :color (let [color (mget me :color)]
+                 (dp :MTL-sees-color!! color)
+                 (if (fn? color)
+                   (color me ctx)
+                   color))
         :elevation (mget me :elevation)
         :child (render-fx (first (md-kids me)))))))
 (deftag material tiltontec.mx-flutter.core/FXMaterial)

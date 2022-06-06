@@ -197,8 +197,16 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                :color Colors/blue #_ (cF (assert (my-ctx))
-                         (-> (Theme/of (my-ctx)) .-colorScheme .-secondary))
+                :color (fn [me ctx]
+                         (dp :color-callback!!!!!)
+                         (-> (Theme/of ctx) .-colorScheme .-secondary))
+                #_ (cF (dp :mtlcolor-meta (meta me))
+
+                         Colors/red) #_ (cF
+                         (dp :mtlcolor-sees (my-state))
+
+                         ;;(-> (Theme/of (my-ctx)) .-colorScheme .-secondary)
+                         )
                 :elevation 4.0}
     (fx/icon-button
       {:onPressed onPressed

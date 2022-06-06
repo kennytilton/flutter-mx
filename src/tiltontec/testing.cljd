@@ -1,5 +1,6 @@
 (ns tiltontec.testing
   (:require
+    [tiltontec.util.base :refer [dp]]
     [tiltontec.test.cell-core :refer [run-tests] :as test-cell-core]
     [tiltontec.test.hello-cells :refer [run-tests] :as hello-cells]
     [tiltontec.test.evaluate :refer [run-tests] :as test-eval]
@@ -11,7 +12,9 @@
     [tiltontec.test.family-kids :refer [run-tests] :as fm-kids]
     ))
 
-;(def ^:dynamic *dyno*)
+(defn run-test-lazy []
+  (test-lazy/run-tests)
+  (dp :test-lzy-ok))
 
 (defn run-tests []
   (test-cell-core/run-tests)
@@ -23,5 +26,5 @@
   (md/run-tests)
   (fm-kids/run-tests)
   ; TODO (test-syn/run-tests)
-  (prn "testing-OK"))
+  (dp "testing-OK"))
 

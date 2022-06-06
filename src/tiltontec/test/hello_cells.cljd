@@ -1,7 +1,7 @@
 (ns tiltontec.test.hello-cells
   (:require
     [tiltontec.util.base
-     :refer [trx prog1 *trx?*]]
+     :refer [trx dp prog1 *trx?* dp]]
     [tiltontec.util.core :refer [type-of err]]
     [tiltontec.cell.base
      :refer [without-c-dependency
@@ -29,8 +29,14 @@
          :action (make-cell :value "knocks"
                    :input? true)}]
 
-    (println (c-get (:name v))
+    (dp :hw01 v)
+
+    (dp :name (c-get (:name v)))
+
+    (dp  :name-act(c-get (:name v))
       (c-get (:action v)))
+
+
 
     (assert (=  (c-get (:name v)) "World"))
     (assert (=  (c-get (:action v)) "knocks"))))
@@ -44,7 +50,7 @@
                    :obs ;; short for observer
                    (fn [slot me new old c]
                      (reset! obs-action new)
-                     (println :observing slot new old)))}]
+                     (dp :observing slot new old)))}]
     (assert (=  (c-get (:name v)) "World"))
     (c-reset! (:action v) "knocks")
     (assert (=  (c-get (:action v)) "knocks"))
@@ -54,7 +60,7 @@
   (let [action (atom nil)
         obs-action (fn [slot me new old c]
                      (reset! action new)
-                     (println :observing slot new old))
+                     (dp :observing slot new old))
         v {:name "World"
            :action (cI nil :slot :v-action
                      :obs obs-action)}]
@@ -67,7 +73,7 @@
     (assert (= (c-get (:action v)) "knock-knock"))))
 
 (defn gobs [slot me new old c]
-  (println :gobs> slot new old))
+  (dp :gobs> slot new old))
 
 (defn hw-04 []
   (let [r-action (cI nil
@@ -83,15 +89,15 @@
                           :missing)))]
     (c-awaken r-loc)
     (assert (= :missing (:value @r-loc)))
-    (println :---about-to-leave------------------)
+    (dp :---about-to-leave------------------)
     (c-reset! r-action :leave)
-    (println :---left------------------)
+    (dp :---left------------------)
     (assert (= :away (c-get r-loc)))))
 
 (defn hw-05 []
-  (println :--go------------------)
+  (dp :--go------------------)
   (let [obs-action (fn [slot me new old c]
-                     (println slot new old))
+                     (dp slot new old))
         v {:name "World"
            :action (cI nil :slot :v-action
                      :obs obs-action)}
@@ -112,9 +118,9 @@
     (assert (= :home (c-get r-loc)))))
 
 (defn hello-world []
-  (println :--go------------------)
+  (dp :--go------------------)
   (let [obs-action (fn [slot me new old c]
-                     (println slot new old))
+                     (dp slot new old))
         v {:name "World"
            :action (cI nil
                      :slot :v-action
@@ -139,7 +145,7 @@
     (c-reset! (:action v) :knock-knock)))
 
 (defn hello-world-2 []
-  (println :--go------------------)
+  (dp :--go------------------)
   (let [obs-action (fn [slot me new old c]
                      (when new (trx visitor-did new)))
         v {:name "World"
@@ -190,5 +196,5 @@
   (hw-05)
   (hello-world)
   ;; todo maybe? (hello-world-2)
-  (prn :hello-cells-OK))
+  (dp :hello-cells-OK))
 

@@ -1,6 +1,6 @@
 (ns tiltontec.test.integrity
   (:require
-    [tiltontec.util.base :refer [trx prog1]]
+    [tiltontec.util.base :refer [trx dp prog1]]
     [tiltontec.util.core :refer [type-of err]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
@@ -89,7 +89,7 @@
                 :return :home
                 :missing))
         alarm-speak (cF+ [:obs (fn-obs
-                                 (prn :alarm-speak (c-get act) :sees (c-get alarm) (c-get loc))
+                                 (dp :alarm-speak (c-get act) :sees (c-get alarm) (c-get loc))
                                  (assert (= (c-get alarm) (case (c-get act)
                                                         :return :off
                                                         :leave :on
@@ -138,17 +138,17 @@
                                    (for [[k v] @obs]
                                      [k (cget v)])))]
                          (swap! obsd update-in [(cget (:a @obs))] conj o)
-                         ;(println :tag tag :a (cget (:a @obs)))
-                         ;(println :tag tag :sees o)
+                         ;(dp :tag tag :a (cget (:a @obs)))
+                         ;(dp :tag tag :sees o)
                          )))
-        a (cI 0 :obs (fn-obs (println :a-now new)))
+        a (cI 0 :obs (fn-obs (dp :a-now new)))
         b (cF+ [:obs (obsr :b)]
             (* 10 (cget a)))
         c (cF+ [:obs (obsr :c)]
             (* 100 (cget a)))
-        d (cF+ [:obs (fn-obs (println :d-now new))]
+        d (cF+ [:obs (fn-obs (dp :d-now new))]
             (+ (cget b) (cget c)(cget a)))
-        e (cF+ [:obs (fn-obs (println :e-now new))]
+        e (cF+ [:obs (fn-obs (dp :e-now new))]
             (+ (cget c)(cget b)(cget a)))
         ]
     (reset! obs {:a a :b b :c c})
@@ -160,7 +160,7 @@
     (assert (= 100 (cget c)))
     (assert (= 111 (cget d)))
     (assert (= 111 (cget e)))
-    (println @obsd)
+    (dp @obsd)
     (doseq [[k v] @obsd]
       (assert (apply = v)))))
 
@@ -194,5 +194,5 @@
   (see-into-fn)
   (obs-sees-current)
   (no-prop-no-obs)
-  (prn :integrity-tests-OK))
+  (dp :integrity-tests-OK))
 
