@@ -44,6 +44,7 @@
             (beefer me ctx))
           (^void initState [this]
             (.initState ^super this)
+            (rmap-meta-setf [:context me] (.context this))
             (when-let [init (mget me :initState)]
               (init this me)))
           (^void dispose [this]

@@ -24,6 +24,7 @@
 (defn make-app []
   (material-app
     {:title                      "Expandable Fab/MX"
+     :theme                      (.dark m/ThemeData)        ;;(m/ThemeData. :primarySwatch m.Colors/pink)
      :debugShowCheckedModeBanner false}
     {:name :mat-app}
 
@@ -47,17 +48,20 @@
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
   (fx/sized-box+expand
     {:initState (fn [this me]
+                  (dp :all-new-fab!)
                   (let [c (util/rmap-meta-setf [:controller me]
                             (m/AnimationController
                               :value (if initial-open? 1.0 0.0)
                               :duration ^:const (dart:core/Duration :milliseconds 250)
                               :vsync this))]
-                    ;; todo can we just make a Ticker instead of using the state mixin
                     (util/rmap-meta-setf [:expand-animation me]
                       (m/CurvedAnimation
                         :curve m.Curves/fastOutSlowIn
                         :reverseCurve m.Curves/easeOutQuad
-                        :parent c))))}
+                        :parent c))))
+     :dispose   (fn [this me]
+                  (when-let [controller (:controller (meta me))]
+                    (.dispose controller)))}
     {:name  :fab
      :step  (cF (/ 90.0 (dec (count actions))))
      :open? (cI initial-open?
@@ -71,27 +75,27 @@
        :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-      (doall (map-indexed
-               (fn [i action]
-                 (expanding-action-button me
-                   :direction-degrees (* i (fmuv :step :fab))
-                   :max-distance distance
-                   :progress-key :expand-animation
-                   :action action))
-               actions))
+      (doall (do (dp :rebuilding-actions!!)
+                 (map-indexed
+                   (fn [i action]
+                     (expanding-action-button me
+                       :direction-degrees (* i (fmuv :step :fab))
+                       :max-distance distance
+                       :progress-key :expand-animation
+                       :action action))
+                   actions)))
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
-  (dp :eab-entry
-    ;;:fab (md/fm* :fab)
-    :ani-key progress-key                                   ;; :ani (progress-key (meta (md/fm* :fab)) :notfound)
-    :ctx! (when-let [^State state (:state-ref (meta me))]
-            (.context state)))
+  #_(dp :eab-entry
+      ;;:fab (md/fm* :fab)
+      :ani-key progress-key                                 ;; :ani (progress-key (meta (md/fm* :fab)) :notfound)
+      :ctx! (when-let [^State state (:state-ref (meta me))]
+              (.context state)))
 
   (fx/animated-builder
-    {:animation                                             ;;(cF (progress-key (meta (md/fm* :fab))))
-     (fn [me ctx]
-       (progress-key (meta (md/fm* :fab))))
+    {:animation      (fn [me ctx]
+                       (progress-key (meta (md/fm* :fab))))
      ;; todo lose "beefer"
      :ani-beefer     (fn [me ctx child]
                        (let [fab (md/fm* :fab)
@@ -124,9 +128,10 @@
                                             (show-action ctx action)
                                             nil))))
 
-                       (action-button
+                       (action-button ctx
                          :icon (:icon action)
                          :onPressed (fn ^void []
+                                      ;; todo roll up into (with-context (ctx) ....)
                                       (let [^State state (:state-ref (meta me))]
                                         (assert state)
                                         (assert (.context state))
@@ -161,28 +166,15 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
-(defn action-button [& {:keys [onPressed icon]}]
+(defn action-button [ctx & {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                :color        (fn [me ctx]
-                                (dp :color-callback!!!!!)
-                                (-> (Theme/of ctx) .-colorScheme .-secondary))
-                ;; todo avoid callback
-                #_(cF (dp :mtlcolor-meta (meta me))
-
-                    Colors/red) #_(cF
-                                    (dp :mtlcolor-sees (my-state))
-
-                                    ;;(-> (Theme/of (my-ctx)) .-colorScheme .-secondary)
-                                    )
+                :color        (-> (Theme/of ctx) .-colorScheme .-secondary)
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     Colors/white ;; todo use theme
-       #_(cF (assert (my-ctx))
-           (-> (Theme/of (my-ctx)) .-colorScheme .-onSecondary))})))
-
+       :color     (-> (Theme/of ctx) .-colorScheme .-onSecondary)})))
 
 (defn- tap-to-close-fab [par]
   (f/nest
@@ -200,6 +192,7 @@
     (m/Icon m.Icons/close :color m.Colors/blue  #_(.primaryColor theme)))) ;; todo use theme
 
 (defn- tap-to-open-fab [par]
+  (dp :tap-to-open-entry)
   (f/nest
     (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
     (m/AnimatedContainer

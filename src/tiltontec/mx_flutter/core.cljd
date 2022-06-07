@@ -19,8 +19,20 @@
 (defmacro my-state []
   `^State (:state-ref (meta ~'me)))
 
+#_
 (defmacro my-ctx []
   `(.context ^State (:state-ref (meta ~'me))))
+
+(defmacro my-ctx [& [me]]
+  (let [me-ref (or me 'me)]
+    `(do (assert (:state-ref (meta ~me-ref)) (str "state ref not bound for " (minfo ~me-ref)))
+         (.context ^State (:state-ref (meta ~me-ref))))))
+
+#_ (defmacro fmu [name & [me]]
+     (let [me-ref (or me 'me)]
+       `(let [name# ~name]
+          (fm-navig #(= name# (md-get % :name))
+            ~me-ref :me? false :up? true :inside? false))))
 
 (defn ctx-page-push [ctx fx-page-def]
   ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
@@ -70,12 +82,11 @@
         nil)
 
     (dart/is? fab m/Widget)
-    (do (dp :fab-is-widget fab)
+    (do ;; (dp :fab-is-widget fab)
         fab)
 
     (fn? fab)
     (do (dp :ew-sees-fn dbg-key fab)
-        ;; render-fx?
         (recur [dbg-key :fn] me ctx (fab me ctx)))
 
     (and (cty/md-ref? fab)
@@ -124,7 +135,6 @@
         :clipBehavior (mget me :clipBehavior)
         ;; todo write call-or-get-property or sth
         :color (let [color (mget me :color)]
-                 (dp :MTL-sees-color!! color)
                  (if (fn? color)
                    (color me ctx)
                    color))
@@ -145,7 +155,6 @@
         :icon (mget me :icon)
         :onPressed (mget me :onPressed)
         :color (let [color (mget me :color)]
-                 (dp :icon-button-sees-color!! color)
                  (if (fn? color)
                    (color me ctx)
                    color))))))
@@ -163,6 +172,7 @@
     (fn [me ctx]
       (m/Scaffold
         :appBar (let [abar (mget me :appBar)]
+                  ;; todo convert to, and create, universal extract-widget
                   (if (dart/is? abar m/AppBar)
                     abar
                     (tag/render-fx abar)))
@@ -208,6 +218,7 @@
                     (type-beefer me ctx))))
               (^void initState [this]
                 (.initState ^super this)
+                (rmap-meta-setf [:context me] (.context this))
                 (when-let [init (mget me :initState)]
                   (init this me)))
               (^void dispose [this]
