@@ -150,6 +150,40 @@
                        (show-action ctx action)
                        nil)))))
 
+
+(defn show-action [ctx action]
+  (m/showDialog
+    :context ctx
+    :builder (fn [ctx]
+               (m/AlertDialog
+                 :content (m/Text (:title action))
+                 :actions [(m/TextButton
+                             :onPressed #(-> ctx m.Navigator/of .pop)
+                             :child ^:const (m/Text "CLOSE"))]))))
+
+(defn action-button [& {:keys [onPressed icon]}]
+  (fx/material {:shape        ^:const (m/CircleBorder)
+                :clipBehavior m.Clip/antiAlias
+                :color        (fn [me ctx]
+                                (dp :color-callback!!!!!)
+                                (-> (Theme/of ctx) .-colorScheme .-secondary))
+                ;; todo avoid callback
+                #_(cF (dp :mtlcolor-meta (meta me))
+
+                    Colors/red) #_(cF
+                                    (dp :mtlcolor-sees (my-state))
+
+                                    ;;(-> (Theme/of (my-ctx)) .-colorScheme .-secondary)
+                                    )
+                :elevation    4.0}
+    (fx/icon-button
+      {:onPressed onPressed
+       :icon      icon
+       :color     Colors/white ;; todo use theme
+       #_(cF (assert (my-ctx))
+           (-> (Theme/of (my-ctx)) .-colorScheme .-onSecondary))})))
+
+
 (defn- tap-to-close-fab [par]
   (f/nest
     (m/SizedBox
@@ -163,7 +197,7 @@
     (m/InkWell :onTap #(md/mswap! (md/fasc :fab par) :open? not))
     (m/Padding :padding ^:const (m.EdgeInsets/all 8.0))
     ;; todo use theme below
-    (m/Icon m.Icons/close :color m.Colors/blue  #_(.primaryColor theme))))
+    (m/Icon m.Icons/close :color m.Colors/blue  #_(.primaryColor theme)))) ;; todo use theme
 
 (defn- tap-to-open-fab [par]
   (f/nest
@@ -184,36 +218,6 @@
     (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
     (m/Icon m.Icons/create)))
 
-(defn show-action [ctx action]
-  (m/showDialog
-    :context ctx
-    :builder (fn [ctx]
-               (m/AlertDialog
-                 :content (m/Text (:title action))
-                 :actions [(m/TextButton
-                             :onPressed #(-> ctx m.Navigator/of .pop)
-                             :child ^:const (m/Text "CLOSE"))]))))
-
-(defn action-button [& {:keys [onPressed icon]}]
-  (fx/material {:shape ^:const (m/CircleBorder)
-                :clipBehavior m.Clip/antiAlias
-                :color (fn [me ctx]
-                         (dp :color-callback!!!!!)
-                         (-> (Theme/of ctx) .-colorScheme .-secondary))
-                #_ (cF (dp :mtlcolor-meta (meta me))
-
-                         Colors/red) #_ (cF
-                         (dp :mtlcolor-sees (my-state))
-
-                         ;;(-> (Theme/of (my-ctx)) .-colorScheme .-secondary)
-                         )
-                :elevation 4.0}
-    (fx/icon-button
-      {:onPressed onPressed
-       :icon icon
-       :color Colors/white #_ (cF (assert (my-ctx))
-                (-> (Theme/of (my-ctx)) .-colorScheme .-onSecondary))})))
-
 (defn fake-item [is-big?]
   (m/Container
     :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
@@ -228,20 +232,3 @@
 #_(defn fake-item [is-big?]
     (dart:core.Function/apply m/Container nil
       (into {} [["margin" 42.0] ["height" 36.0]])))
-
-#_(dart:core.Function/apply m/Container nil
-    ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
-                             :height (if is-big? 128.0 36.0)
-                             :decoration
-                             (m/BoxDecoration
-                               :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-                               :color (.-shade300 Colors/pink))})
-
-;; ^#/(Map Symbol dynamic)
-#_(m/Container
-    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
-    :height (if is-big? 128.0 36.0)
-    :decoration
-    (m/BoxDecoration
-      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-      :color (.-shade300 Colors/pink)))
