@@ -32,26 +32,30 @@
             (dp :x-ran-runs-now @runs)
             (+ (c-get a) 40))
         x (make-c-formula
-            :obs (fn-obs (swap! xo inc))
+            :obs (fn-obs ;;(dp :obs-incing-xo!!!!!!!!!)
+                   (swap! xo inc))
             :value tiltontec.cell.base/unbound
             :lazy :until-asked
             :rule (c-fn (swap! runs inc)
-                    (dp :x-ran-runs-now @runs)
+                    ;; (dp :x-ran-runs-now @runs)
                     (+ (c-get a) 40)))]
     (assert (= unbound (:value @x)))
     (assert (= 0 @xo))
     (assert (= 0 @runs))
     (assert (= 40 (c-get x)))
     (assert (= 1 @runs))
+    (assert (= 1 @xo))
     (assert (= 40 (c-get x)))
-    (assert (= 2 @runs))
+    (assert (= 1 @runs) (str "solid test runs not 1, instead: " @runs))
     (assert (= 1 @xo))
     (c-reset! a 100)
-    (assert (= 1 @xo))
-    (assert (= 40 (:value @x)))
+    (assert (= 2 @xo))
+    (assert (= 140 (:value @x)))
     (assert (= 140 (c-get x)))
     (assert (= 2 @xo))
     ))
+
+
 
 (defn lazy-until-asked []
   (cells-init)
@@ -104,8 +108,61 @@
     (assert (empty? (c-callers x)))
     ))
 
+(defn always-call []
+  (dp :test-always-start)
+  (cells-init)
+  (let [xo (atom 0)
+        ctx (atom nil)
+        a (cI 0)
+        runs (atom 0)
+        #_#_  x (cF_ [:obs (fn-obs (swap! xo inc))]
+                  (swap! runs inc)
+                  (dp :x-ran-runs-now @runs)
+                  (+ (c-get a) 40))
+        x (make-c-formula
+            :slot :xxx
+            :obs (fn-obs ;;(dp :obs-incing-xo!!! new old)
+                   (swap! xo inc))
+            :value tiltontec.cell.base/unbound
+            ;; todo make sure not optimized away
+            :always-compute true
+            :rule (c-fn
+                    (swap! runs inc)
+                    (when @ctx
+                      ;;(dp :x-ran-runs-now @runs)
+                      (+ (c-get a) 40))))]
+    (assert (= unbound (:value @x)))
+    (assert (= 0 @xo))
+    (assert (= 0 @runs))
+    (assert (nil? (c-get x)))
+    (assert (= 1 @runs))
+    (assert (= 1 @xo))
+    (reset! ctx true)
+
+    (assert (= 40 (c-get x)))
+    (assert (= 2 @runs) (str "runs not 2, instead " @runs))
+
+    (assert (= 2 @xo) (str "a xo is not 2 it is " @xo))
+
+    (assert (= 40 (c-get x)))
+    (assert (= 3 @runs))
+    (assert (= 2 @xo) (str "always a xo is not 2 it is " @xo))
+    (c-reset! a 100)
+    (assert (= 3 @xo) (str "always b xo is not 3 it is " @xo))
+    (assert (= 4 @runs) (str "always runs is not 3 it is " @runs))
+    (assert (= 140 (:value @x)) (str "always internal x is not 140 it is " (:value @x)))
+    (assert (= 140 (c-get x)))
+    (assert (= 5 @runs))
+    (assert (= 3 @xo))
+    (dp :test-always-ok)
+    ))
+
 (defn run-tests []
+  (always-call)
+  (dp :always-call-OK)
   (solid-lazy)
+  (dp :solid-lazy-OK)
   (lazy-until-asked)
+  (dp :lazy-until-asked-OK)
   (optimize-when-value-t)
   (dp :lazy-cells-OK))

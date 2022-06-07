@@ -6,14 +6,14 @@
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type cprn
+             c-unbound? c-input? mx-type cprn c-always-compute
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
              c-synaptic? caller-drop c-md-name
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
+             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots c-slot-name
              *depender* *not-to-be*
              *c-prop-depth* md-slot-owning? c-lazy] :as cty]
     [tiltontec.cell.observer :refer [c-observe]]
@@ -62,7 +62,20 @@
         (err "evic> unbound slot %s of model %s"
           (c-slot c) (c-model c)))
 
-      (c-valid? c)                                          ;; probably accomplishes nothing
+      (c-valid? c)
+      ;; c is valid, go ahead and return its value in case not-to-be can use it.
+      (c-value c))
+
+    ;; --- always compute --------
+    (c-always-compute c)
+    ;; some Flutter props cannot be computed until a widget is built and
+    ;; we have the Flutter context. An experiment to see if Cells can tolerate
+    ;; Cells that always compute. In this case, the formula just punts if it does not
+    ;; see a context. optimize-away has been defeated elsewhere.
+    ;; tbh, we are abusing Cells a bit here.
+    (let [prior-value (c-value c)]
+      (calculate-and-set c :evic ensurer)
+      ;; (c-observe c prior-value :get-always-compute)
       (c-value c))
 
     ;; --- easy way out: our pulse is current ---------------
@@ -94,7 +107,8 @@
           ;; (println :pulse-checks (c-slot used)(c-pulse-last-changed used)(c-slot c)(c-pulse c))
           (or (> (c-pulse-last-changed used) (c-pulse c))
             (recur urest)))))
-    (do                                                     ;; we seem to need update, but...
+    (do
+      ;; we seem to need update, but check that other processing did not bring c current
       (when-not (c-current? c)
         ;;(println :not-current-so-calc!!!!!!! (c-slot c)(c-state c)(c-valid? c))
         ;; happens if dependent changed and its observer read/updated me
@@ -161,8 +175,7 @@
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
-  (cty/with-cdbg (and (= :style (c-slot c))
-                   (= :z-counter (c-md-name c)))
+  (do ;; cty/with-cdbg (and (= :style (c-slot c)) (= :z-counter (c-md-name c)))
     ;; (wtrx [0 20 :cnset-entry (c-slot c)]
     (let [[raw-value propagation-code] (calculate-and-link c)]
       ;;(trx :cn-set-sees!!!! (c-slot c) raw-value propagation-code)
@@ -215,8 +228,8 @@
   ;(prn :c-awaken-sees @c (mx-type c))
   (cond
     (c-formula? c)
-    (do (when (and (= (c-slot c) :style) (= :z-counter (c-md-name c)))
-          (prn :c-awaken-sees!!!!!!!! (c-slot c) (c-md-name c)
+    (do #_ (when (and (= (c-slot c) :style) (= :z-counter (c-md-name c)))
+          (dp :c-awaken-sees!!!!!!!! (c-slot c) (c-md-name c)
             (c-current? c)
             (cinfo c)))
         (binding [*depender* nil]
@@ -319,7 +332,7 @@
               (when-not (or (= propagation-code :no-propagate)
                           (c-optimized-away? c))
                 (assert (map? @c))
-                #_(println :propping!!!! (c-slot c) new-value prior-value
+                #_ (dp :value-assume-propping!!!! (c-slot c) :new new-value :prior prior-value
                     :to-caller-ct (count callers))
                 (propagate c prior-value callers)))))))))
 
@@ -354,6 +367,7 @@ then clear our record of them."
 
   [c prior-value]
   (when (and (c-formula? c)
+          (not (c-always-compute c))
           (empty? (c-useds c))
           (c-optimize c)
           (not (c-optimized-away? c))                       ;; c-streams (FNYI) may come this way repeatedly even if optimized away
@@ -469,11 +483,12 @@ then clear our record of them."
         ;;(trx :obs-chkpulse!!!!!!!! @+pulse+ (c-pulse-observed c))
 
         (when-not (c-optimized-away? c)                     ;; they get observed at the time
-          ;;(trx :not-opti!!!! @c)
+          #_ (dp :not-opti-decide-obs!!!! (c-slot-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
           (when (or (> @+pulse+ (c-pulse-observed c))
+                  (c-always-compute c)
                   (some #{(c-lazy c)}
                     [:once-asked :always true]))            ;; messy: these can get setfed/propagated twice in one pulse+
-            ;;(println :observing!!!!!!!!!!! (c-slot c) (c-value c))
+            ;; (dp :observing-unobserved-or-lazy!! (c-slot c) (c-value c))
             (c-observe c prior-value :propagate)))
 
         ;;
