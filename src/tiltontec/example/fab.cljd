@@ -7,6 +7,7 @@
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
+    [tiltontec.mx-flutter.tag :refer [*ctx*]]
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text scaffold column list-view+builder my-ctx my-state]]
     ["package:flutter/widgets.dart"
@@ -23,13 +24,13 @@
 
 (defn make-app []
   (material-app
-    {:title                      "Expandable Fab/MX"
+    {:title                      (str "Expandable Fab/MX " (rand-int 99))
      :theme                      (.dark m/ThemeData)        ;;(m/ThemeData. :primarySwatch m.Colors/pink)
      :debugShowCheckedModeBanner false}
     {:name :mat-app}
 
     (scaffold {:name :scaff}
-      {:appBar               (AppBar :title (Text "Expandable Fab/MX"))
+      {:appBar               (AppBar :title (Text (str "Expandable Fab/MX " (rand-int 99))))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
@@ -48,7 +49,7 @@
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
   (fx/sized-box+expand
     {:initState (fn [this me]
-                  (dp :all-new-fab!)
+                  (dp :all-new-fab-initState!)
                   (let [c (util/rmap-meta-setf [:controller me]
                             (m/AnimationController
                               :value (if initial-open? 1.0 0.0)
@@ -94,8 +95,11 @@
               (.context state)))
 
   (fx/animated-builder
-    {:animation      (fn [me ctx]
-                       (progress-key (meta (md/fm* :fab))))
+    {:animation      (cF
+                       ;(dp :ani-rule-fab?! @(md/fm* :fab))
+                       ;(dp :ani-rule-sees-meta!!!! (meta (md/fm* :fab)))
+                       (fn [me ctx]
+                         (progress-key (meta (md/fm* :fab)))))
      ;; todo lose "beefer"
      :ani-beefer     (fn [me ctx child]
                        (let [fab (md/fm* :fab)
@@ -122,13 +126,13 @@
                                          (let [xani (:expand-animation (meta fab))]
                                            (assert xani "opacity cannot get expand ani from meta")
                                            xani))}
-                             (action-button ctx
+                             (action-button
                                :icon (:icon action)
                                :onPressed (fn ^void []
                                             (show-action ctx action)
                                             nil))))
 
-                       (action-button ctx
+                       (action-button
                          :icon (:icon action)
                          :onPressed (fn ^void []
                                       ;; todo roll up into (with-context (ctx) ....)
@@ -149,7 +153,7 @@
                     (let [xani (:expand-animation (meta fab))]
                       (assert xani "opacity cannot get expand ani from meta")
                       xani))}
-        (action-button ctx
+        (action-button
           :icon (:icon action)
           :onPressed (fn ^void []
                        (show-action ctx action)
@@ -166,33 +170,38 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
-(defn action-button [ctx & {:keys [onPressed icon]}]
+(defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                :color        (-> (Theme/of ctx) .-colorScheme .-secondary)
+                :color        (fn [me ctx]
+                                (-> (Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     (-> (Theme/of ctx) .-colorScheme .-onSecondary)})))
+       :color     (fn [me ctx]
+                    (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
-  (f/nest
-    (m/SizedBox
-      :width 56.0
-      :height 56.0)
-    m/Center
-    (m/Material
-      :shape ^:const (m/CircleBorder)
-      :clipBehavior m.Clip/antiAlias
-      :elevation 4.0)
-    (m/InkWell :onTap #(md/mswap! (md/fasc :fab par) :open? not))
-    (m/Padding :padding ^:const (m.EdgeInsets/all 8.0))
-    ;; todo use theme below
-    (m/Icon m.Icons/close :color m.Colors/blue  #_(.primaryColor theme)))) ;; todo use theme
+  (fx/sized-box
+    {:width  56.0
+     :height 56.0}
+    (fx/center
+      (fx/material
+        {:shape        ^:const (m/CircleBorder)
+         :clipBehavior m.Clip/antiAlias
+         :elevation    4.0}
+        (fx/ink-well
+          {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
+          (fx/padding
+            {:padding ^:const (m.EdgeInsets/all 8.0)}
+            (fx/icon {:icon  m.Icons/close
+                      :color (fn [me ctx]
+                               (dp :callled!!!! (.primaryColor (Theme/of ctx)))
+                               (.primaryColor (Theme/of ctx)))})))))))
 
 (defn- tap-to-open-fab [par]
-  (dp :tap-to-open-entry)
+  ;; Non-MX components are welcome at leaves of MX components
   (f/nest
     (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
     (m/AnimatedContainer

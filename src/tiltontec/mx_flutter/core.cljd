@@ -160,6 +160,36 @@
                    color))))))
 (deftag icon-button tiltontec.mx-flutter.core/FXIconButton)
 
+;;; --- icon  ------------------------------------
+
+(deftype FXIcon []
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell])
+  PDartWidget
+  (beefer [this]
+    (fn [me ctx]
+      (m/Icon (mget me :icon)
+        :color (let [color (mget me :color)]
+                 (if (fn? color)
+                   (color me ctx)
+                   color))))))
+(deftag icon tiltontec.mx-flutter.core/FXIcon)
+
+;;; --- ink well ------------------------------------
+
+(deftype FXInkWell []
+  :extends FXDartWidget
+  PObserver
+  (observe [this slot me new-value prior-value cell])
+  PDartWidget
+  (beefer [this]
+    (fn [me ctx]
+      (m/InkWell
+        :onTap (mget me :onTap)
+        :child (render-fx (first (md-kids me)))))))
+(deftag ink-well tiltontec.mx-flutter.core/FXInkWell)
+
 ;;; --- scaffold ---------------------------------------
 
 (deftype FXScaffold []
@@ -604,6 +634,21 @@
         :size (or (mget me :size) 128.0)))))
 
 (deftag flutter-logo tiltontec.mx-flutter.core/FXFlutterLogo)
+
+;;; --- ---------------------------------------
+
+(deftype FXSizedBox []
+  :extends FXDartWidget
+  PDartWidget
+  (beefer [this]
+    (fn [me ctx]
+      (let [child (first (tiltontec.model.core/md-kids me))]
+        (m/SizedBox
+          :width (mget me :width)
+          :height (mget me :height)
+          :child (render-fx child))))))
+
+(deftag sized-box tiltontec.mx-flutter.core/FXSizedBox)
 
 ;;; --- ---------------------------------------
 

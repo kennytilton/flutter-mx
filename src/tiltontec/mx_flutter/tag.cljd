@@ -29,6 +29,8 @@
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen fx))))
 
+(def ^:dynamic *ctx* nil)
+
 (defn statefully [me beefer]
   (reify :extends w/StatefulWidget
     (createState [this]
@@ -41,7 +43,9 @@
             ;; So can we just let the FXType always define builders?
             ;;
             ;; we include the MX "me" in the generation...
-            (beefer me ctx))
+            (assert (= ctx (.context this)))
+            (binding [*ctx* ctx]
+              (beefer me ctx)))
           (^void initState [this]
             (.initState ^super this)
             (rmap-meta-setf [:context me] (.context this))
@@ -70,7 +74,8 @@
                     (let [beefer (or (mget me :beefer)
                                     (beefer mx-type))]
                       ;; (dp :make-fx-using-beefer!!!!!!!! (minfo me) beefer)
-                      (beefer me ctx))))))
+                      (binding [*ctx* ctx]
+                        (beefer me ctx)))))))
     (concat
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
