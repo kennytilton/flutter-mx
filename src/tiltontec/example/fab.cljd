@@ -5,7 +5,7 @@
     [clojure.string :as string]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
-    [tiltontec.cell.core :as cell :refer [cF cF+ cI]]
+    [tiltontec.cell.core :as cell :refer [cF c_F cF+ cI make-c-formula c-fn]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.tag :refer [*ctx*]]
     [tiltontec.mx-flutter.core :as fx
@@ -23,20 +23,17 @@
 (declare fake-item expandable-fad show-action action-button)
 
 (defn make-app []
-  (material-app
-    {:title                      (str "Expandable Fab/MX " (rand-int 99))
-     ;; save this :theme                      (.dark m/ThemeData)
-     :debugShowCheckedModeBanner false}
+  (material-app {:title                      (str "Expandable Fab/MX " (rand-int 99))
+                 ;; save this :theme                      (.dark m/ThemeData)
+                 :debugShowCheckedModeBanner false}
     {:name :mat-app}
-
     (scaffold {:name :scaff}
       {:appBar               (AppBar :title (Text (str "Expandable Fab/MX " (rand-int 99))))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
                                          {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
-                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])
-       }
+                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       (list-view+builder {}
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
@@ -49,7 +46,7 @@
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
   (fx/sized-box+expand
     {:initState (fn [this me]
-                  (dp :all-new-fab-initState!)
+                  (dp :initing-FAB-state!!!!!!)
                   (let [c (util/rmap-meta-setf [:controller me]
                             (m/AnimationController
                               :value (if initial-open? 1.0 0.0)
@@ -76,15 +73,15 @@
        :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-      (doall (do (dp :rebuilding-actions!!)
-                 (map-indexed
-                   (fn [i action]
-                     (expanding-action-button me
-                       :direction-degrees (* i (fmuv :step :fab))
-                       :max-distance distance
-                       :progress-key :expand-animation
-                       :action action))
-                   actions)))
+      (doall (do                                            ;; (dp :rebuilding-actions!!)
+               (map-indexed
+                 (fn [i action]
+                   (expanding-action-button me
+                     :direction-degrees (* i (fmuv :step :fab))
+                     :max-distance distance
+                     :progress-key :expand-animation
+                     :action action))
+                 actions)))
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
@@ -162,6 +159,7 @@
                     (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
+  (dp :building-tap2close!!!!!!!!!!!!)
   (fx/sized-box {:width  56.0
                  :height 56.0}
     (fx/center
@@ -171,30 +169,134 @@
         (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
-                      :color (fn [me ctx]
-                               (dp :callled!!!! (.primaryColor (Theme/of ctx)))
-                               ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
-                               (.primaryColor (Theme/of ctx)))})))))))
+                      :color (cF (let [st (:state-ref (meta me))]
+                                   (if st
+                                     (do (dp :icon-sees-state! st)
+                                         (dp :icon-sees-ctx!! (.context st))
+                                         (dp :icon-sees-theme (do (Theme/of (.context st))))
+                                         (dp :sees-color (.primaryColor (Theme/of (.context st))))
+                                         (.primaryColor (Theme/of (.context st))))
+                                     (do ;(dp :icon-no-see-state (meta me))
+                                         m.Colors/red
+                                         (fn [me ctx]
+                                           ;(dp :callback-icon-state (:state-ref (meta me)))
+                                           ;(dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
+                                           ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
+                                           (.primaryColor (Theme/of ctx))))
+                                     )))}
+              {:name :iconic})))))))
+
+
+(defn random-to-double [max]
+  (-> max rand-int .toDouble))
+
+(defn random-color []
+  (m.Color/fromRGBO (rand-int 256)
+    (rand-int 256)
+    (rand-int 256)
+    1))
+
+#_(defn- tap-to-open-fab [par]
+    ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
+    (f/nest
+      (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
+      (m/AnimatedContainer
+        :transformAlignment m.Alignment/center
+        :transform (let [open? (mget (md/fasc :fab par) :open?)]
+                     (dp :tap2-pen-sees-open open?)
+                     (m.Matrix4/diagonal3Values
+                       (if open? 0.7 1.0)
+                       (if open? 0.7 1.0)
+                       1.0))
+        :duration ^:const (dart:core/Duration :milliseconds 250)
+        :curve ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut))
+      (m/AnimatedOpacity
+        :opacity (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
+        :curve ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+        :duration ^:const (dart:core/Duration :milliseconds 250))
+      (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
+      (m/Icon m.Icons/create)))
+
+
+
+;;; -------------------------------------------------------------
 
 (defn- tap-to-open-fab [par]
   ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
-  (f/nest
-    (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
-    (m/AnimatedContainer
-      :transformAlignment m.Alignment/center
-      :transform (let [open? (mget (md/fasc :fab par) :open?)]
-                   (m.Matrix4/diagonal3Values
-                     (if open? 0.7 1.0)
-                     (if open? 0.7 1.0)
-                     1.0))
-      :duration ^:const (dart:core/Duration :milliseconds 250)
-      :curve ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut))
-    (m/AnimatedOpacity
-      :opacity (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
-      :curve ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-      :duration ^:const (dart:core/Duration :milliseconds 250))
-    (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
-    (m/Icon m.Icons/create)))
+
+  (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
+                                        (dp :opacity-sees-open?!!!!!!! open?)
+                                        (if open? 0.0 1.0)))
+                        :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+                        :duration ^:const (dart:core/Duration :milliseconds 250)}
+    (fx/floating-action-button {:onPressed (fn [me ctx]
+                                             (md/mswap! (md/fasc :fab par) :open? not))}
+
+      (fx/icon {:icon #_ (make-c-formula
+                        :value tiltontec.cell.base/unbound
+                        :lazy true
+                        :rule (c-fn (dp :icocn-rule-runs!!!!!!!!!)
+                                (dp :callstack!!!! (map cinfo cty/*call-stack*))
+                                (throw (Exception. "u are here"))
+                                (if-let [s (:state-ref (meta me))]
+                                  (do (dp :icon-cf-sees-state!!!)
+                                      m.Icons/create)
+                                  (do (dp :icon-f-NOT-SEEING-state)
+                                      m.Icons/videocam))))
+                (c_F [:obs (fn-obs (dp :obs-icon!!!!!! new))]
+                  (dp :icocn-rule-runs!!!!!!!!!)
+                  (if-let [s (:state-ref (meta me))]
+                    (do (dp :icon-cf-sees-state!!!)
+                        m.Icons/create)
+                    (do (dp :icon-f-NOT-SEEING-state)
+                        m.Icons/videocam)))
+                })
+      #_
+      (fx/icon {:icon (cF (if-let [s (:state-ref (meta me))]
+                                                       (do (dp :icon-cf-sees-state!!!)
+                                                           m.Icons/create)
+                                                       (do (dp :icon-f-NOT-SEEING-state)
+                                                           m.Icons/videocam)))
+                                           }))))
+
+#_(fx/animated-container {:width      32.0
+                          :height     42.0
+                          :decoration (cF (m/BoxDecoration
+                                            :color (random-color)
+                                            :borderRadius (m.BorderRadius/circular (random-to-double 100))))
+                          :duration   ^:const (Duration :seconds 1)
+                          :curve      m.Curves/fastOutSlowIn}
+    #_{:transformAlignment m.Alignment/center
+       :transform          (cF (let [open? false #_(mget (md/fasc :fab par) :open?)]
+                                 (m.Matrix4/diagonal3Values
+                                   (if open? 0.7 1.0)
+                                   (if open? 0.7 1.0)
+                                   1.0)))
+       :duration           ^:const (dart:core/Duration :milliseconds 250)
+       :curve              ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut)}
+    (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
+                                          (dp :opacity-sees-open?!!!!!!! open?)
+                                          (if open? 0.0 1.0)))
+                          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+                          :duration ^:const (dart:core/Duration :milliseconds 250)}
+      (fx/floating-action-button {:onPressed (fn [me ctx]
+                                               (md/mswap! (md/fasc :fab par) :open? not))}
+        (fx/icon {:icon m.Icons/create}))))
+#_(do                                                       ;; fx/ignore-pointer {:ignoring (cF (boolean (mget (md/fasc :fab par) :open?)))}
+    (fx/animated-container {:transformAlignment m.Alignment/center
+                            :transform          (let [open? false #_(mget (md/fasc :fab par) :open?)] ;; HHAACK
+                                                  (m.Matrix4/diagonal3Values
+                                                    (if open? 0.7 1.0)
+                                                    (if open? 0.7 1.0)
+                                                    1.0))
+                            :duration           ^:const (dart:core/Duration :milliseconds 250)
+                            :curve              ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut)}
+      (fx/animated-opacity {:opacity  (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
+                            :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+                            :duration ^:const (dart:core/Duration :milliseconds 250)}
+        (fx/floating-action-button {:onPressed (fn [me ctx]
+                                                 (md/mswap! (md/fasc :fab par) :open? not))}
+          (m/Icon m.Icons/create) #_(fx/icon {:icon m.Icons/create})))))
 
 (defn fake-item [is-big?]
   (m/Container

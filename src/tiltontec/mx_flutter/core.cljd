@@ -53,6 +53,7 @@
     (when true                                              ;; (some #{slot} (:fx-prop-keys @me))
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
       (when-let [^State state (:state-ref (meta me))]
+        ;; (dp :settingstate slot new-value (meta me) (minfo me))
         (.setState state (fn [] (do))))))
 
   PDartWidget
@@ -409,14 +410,57 @@
     [:height :width :color :border-radius])
   (beefer [this]
     (fn [me ctx]
-      (m/AnimatedContainer
-        :width (md/mget me :width)
-        :height (md/mget me :height)
-        :decoration (md/mget me :decoration)
-        :duration ^:const (md/mget me :duration)
-        :curve (md/mget me :curve)))))
+      (if-let [tfa (md/mget me :transformAlignment)]
+        (m/AnimatedContainer
+          :duration ^:const (md/mget me :duration)
+          :curve (md/mget me :curve)
+          :transformAlignment (md/mget me :transformAlignment)
+          :transform (md/mget me :transform))
+        (m/AnimatedContainer
+          :width (md/mget me :width)
+          :height (md/mget me :height)
+          :decoration (md/mget me :decoration)
+          :duration ^:const (md/mget me :duration)
+          :curve (md/mget me :curve))))))
 
 (deftag animated-container tiltontec.mx-flutter.core/FXAnimatedContainer)
+
+;;; --- animated opacity -------------------------------------------
+
+(deftype FXAnimatedOpacity []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:child :opacity :curve :duration :onEnd])
+  (beefer [this]
+    (fn [me ctx]
+      (m/AnimatedOpacity
+        :opacity (md/mget me :opacity)
+        :duration ^:const (md/mget me :duration)
+        :curve (md/mget me :curve)
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag animated-opacity tiltontec.mx-flutter.core/FXAnimatedOpacity)
+
+;; todo explore stateless widgets
+
+;;; --- ignore pointer -------------------------------------------
+
+(deftype FXIgnorePointer []
+  :extends FXDartWidget
+  ;;:type-only true
+  PDartWidget
+  (parts [this]
+    [:ignoring :ignoringSemantics])
+  (beefer [this]
+    (fn [me ctx]
+      (m/IgnorePointer
+        :ignoring (md/mget me :ignoring)
+        :ignoringSemantics (md/mget me :ignoringSemantics)
+        :child (render-fx (first (tiltontec.model.core/md-kids me)))))))
+
+(deftag ignore-pointer tiltontec.mx-flutter.core/FXIgnorePointer)
 
 ;;; --- animated builder -------------------------------------------
 
@@ -441,7 +485,7 @@
                               childer)))
         :builder (fn [ctx child]
                    (let [beefer (mget me :ani-beefer)]
-                     (assert beefer (str "Animated builder " (minfo me) " lacks required beefer callback "))
+                     (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
                      (render-fx (beefer me ctx child))))))))
 
 (deftag animated-builder tiltontec.mx-flutter.core/FXAnimatedBuilder)

@@ -34,9 +34,10 @@
 (defn statefully [me beefer]
   (reify :extends w/StatefulWidget
     (createState [this]
+      ;; (dp :creatingstate!!! (minfo me))
       (util/rmap-meta-setf [:state-ref me]
         (reify :extends w/State
-          ^:mixin m/SingleTickerProviderStateMixin          ;; todo make specifiable (macroland?)
+          ^:mixin m/SingleTickerProviderStateMixin
           (build [this ctx]
             ;; the current use of statefully is to pass along as the beefer either
             ;; one defined with the MX instance or one provided by the FXType as beefer.
@@ -44,6 +45,7 @@
             ;;
             ;; we include the MX "me" in the generation...
             (assert (= ctx (.context this)))
+            ;; todo lose the *ctx* altogether
             (binding [*ctx* ctx]
               (beefer me ctx)))
           (^void initState [this]
@@ -52,8 +54,8 @@
             (when-let [init (mget me :initState)]
               (init this me)))
           (^void dispose [this]
-            (when-let [orride (mget me :dispose)]
-              (orride this me)) ;; todo why pass this?
+            (when-let [disp-fn (mget me :dispose)]
+              (disp-fn this me))
             (.dispose ^super this)))))))
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
