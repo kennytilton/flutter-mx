@@ -25,7 +25,7 @@
 (defn make-app []
   (material-app
     {:title                      (str "Expandable Fab/MX " (rand-int 99))
-     :theme                      (.dark m/ThemeData)        ;;(m/ThemeData. :primarySwatch m.Colors/pink)
+     ;; save this :theme                      (.dark m/ThemeData)
      :debugShowCheckedModeBanner false}
     {:name :mat-app}
 
@@ -88,12 +88,6 @@
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
-  #_(dp :eab-entry
-      ;;:fab (md/fm* :fab)
-      :ani-key progress-key                                 ;; :ani (progress-key (meta (md/fm* :fab)) :notfound)
-      :ctx! (when-let [^State state (:state-ref (meta me))]
-              (.context state)))
-
   (fx/animated-builder
     {:animation      (cF
                        ;(dp :ani-rule-fab?! @(md/fm* :fab))
@@ -117,21 +111,6 @@
                                         math/pi 0.5))
                              child))))
      :animated-child (fn [me ctx]
-                       #_(let [fab (md/fm* :fab)]
-                           (fx/fade-transition
-                             {:opacity (fn [me ctx]
-                                         ;; we cannot fm* :fab because we are not a true child
-                                         ;; todo  consider this in the dispose or not-to-be
-                                         (assert fab "opacity does not see fab")
-                                         (let [xani (:expand-animation (meta fab))]
-                                           (assert xani "opacity cannot get expand ani from meta")
-                                           xani))}
-                             (action-button
-                               :icon (:icon action)
-                               :onPressed (fn ^void []
-                                            (show-action ctx action)
-                                            nil))))
-
                        (action-button
                          :icon (:icon action)
                          :onPressed (fn ^void []
@@ -183,25 +162,22 @@
                     (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
-  (fx/sized-box
-    {:width  56.0
-     :height 56.0}
+  (fx/sized-box {:width  56.0
+                 :height 56.0}
     (fx/center
-      (fx/material
-        {:shape        ^:const (m/CircleBorder)
-         :clipBehavior m.Clip/antiAlias
-         :elevation    4.0}
-        (fx/ink-well
-          {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
-          (fx/padding
-            {:padding ^:const (m.EdgeInsets/all 8.0)}
+      (fx/material {:shape        ^:const (m/CircleBorder)
+                    :clipBehavior m.Clip/antiAlias
+                    :elevation    4.0}
+        (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
+          (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
                       :color (fn [me ctx]
                                (dp :callled!!!! (.primaryColor (Theme/of ctx)))
+                               ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
                                (.primaryColor (Theme/of ctx)))})))))))
 
 (defn- tap-to-open-fab [par]
-  ;; Non-MX components are welcome at leaves of MX components
+  ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
   (f/nest
     (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
     (m/AnimatedContainer
@@ -228,9 +204,3 @@
     (m/BoxDecoration
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 Colors/grey))))
-
-;; ^#/(Map Symbol dynamic)
-
-#_(defn fake-item [is-big?]
-    (dart:core.Function/apply m/Container nil
-      (into {} [["margin" 42.0] ["height" 36.0]])))
