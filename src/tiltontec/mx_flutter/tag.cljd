@@ -29,8 +29,6 @@
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen fx))))
 
-(def ^:dynamic *ctx* nil)
-
 (defn statefully [me beefer]
   (reify :extends w/StatefulWidget
     (createState [this]
@@ -45,9 +43,7 @@
             ;;
             ;; we include the MX "me" in the generation...
             (assert (= ctx (.context this)))
-            ;; todo lose the *ctx* altogether
-            (binding [*ctx* ctx]
-              (beefer me ctx)))
+            (beefer me ctx))
           (^void initState [this]
             (.initState ^super this)
             (rmap-meta-setf [:context me] (.context this))
@@ -66,9 +62,9 @@
     :kids cFkids-form
     :fx-gen (fn [me]
               ;; the default "statefully" works for must Flutter widgets,
-              ;; but not all, such as AppBar, so we allow individual widget Types to
-              ;; supply their own fx-gen.
-              (if-let [type-fx-gen (fx-genner mx-type)]
+              ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
+              ;; so we allow individual widget Types to supply their own fx-gen.
+              (if-let [type-fx-gen (fx-genner mx-type)] ;; <- override option
                 (type-fx-gen me)
                 ; --- no special fx gen, so...the default:
                 (tiltontec.mx-flutter.tag/statefully me
@@ -76,8 +72,7 @@
                     (let [beefer (or (mget me :beefer)
                                     (beefer mx-type))]
                       ;; (dp :make-fx-using-beefer!!!!!!!! (minfo me) beefer)
-                      (binding [*ctx* ctx]
-                        (beefer me ctx)))))))
+                      (beefer me ctx))))))
     (concat
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))

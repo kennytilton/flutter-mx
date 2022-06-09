@@ -173,7 +173,7 @@
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
-  (do ;; cty/with-cdbg (and (= :style (c-slot c)) (= :z-counter (c-md-name c)))
+  (do                                                       ;; cty/with-cdbg (and (= :style (c-slot c)) (= :z-counter (c-md-name c)))
     ;; (wtrx [0 20 :cnset-entry (c-slot c)]
     (let [[raw-value propagation-code] (calculate-and-link c)]
       ;;(trx :cn-set-sees!!!! (c-slot c) raw-value propagation-code)
@@ -223,16 +223,14 @@
 ;;; --- awakening ------------------------------------
 
 (defn c-awaken [c]
-  ;(prn :c-awaken-sees @c (mx-type c))
   (cond
     (c-formula? c)
-    (do #_ (when (and (= (c-slot c) :style) (= :z-counter (c-md-name c)))
-          (dp :c-awaken-sees!!!!!!!! (c-slot c) (c-md-name c)
-            (c-current? c)
-            (cinfo c)))
-        (binding [*depender* nil]
-          (when-not (c-current? c)
-            (calculate-and-set c :fn-c-awaken nil))))
+    (cond
+      (some #{(c-lazy c)} [:until-asked])
+      (dp :not-awakening-lazy (cinfo c))
+      :else (binding [*depender* nil]
+              (when-not (c-current? c)
+                (calculate-and-set c :fn-c-awken nil))))
 
     (c-ref? c)
     (do
@@ -249,9 +247,9 @@
       (c-awaken ce))
 
     :else
-    (println :c-awaken-fall-thru (if (atom? c)
-                                   [:ref-of (meta c) @c]
-                                   [:unref c]))))
+    (dp :c-awken-fall-thru (if (atom? c)
+                             [:ref-of (meta c) @c]
+                             [:unref c]))))
 
 ;; ------------------------------------------------------------
 
@@ -330,7 +328,7 @@
               (when-not (or (= propagation-code :no-propagate)
                           (c-optimized-away? c))
                 (assert (map? @c))
-                #_ (dp :value-assume-propping!!!! (c-slot c) :new new-value :prior prior-value
+                #_(dp :value-assume-propping!!!! (c-slot c) :new new-value :prior prior-value
                     :to-caller-ct (count callers))
                 (propagate c prior-value callers)))))))))
 
@@ -481,7 +479,7 @@ then clear our record of them."
         ;;(trx :obs-chkpulse!!!!!!!! @+pulse+ (c-pulse-observed c))
 
         (when-not (c-optimized-away? c)                     ;; they get observed at the time
-          #_ (dp :not-opti-decide-obs!!!! (c-slot-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
+          #_(dp :not-opti-decide-obs!!!! (c-slot-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
           (when (or (> @+pulse+ (c-pulse-observed c))
                   (c-always-compute c)
                   (some #{(c-lazy c)}

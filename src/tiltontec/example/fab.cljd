@@ -7,7 +7,7 @@
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell :refer [cF c_F cF+ cI make-c-formula c-fn]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
-    [tiltontec.mx-flutter.tag :refer [*ctx*]]
+
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text scaffold column list-view+builder my-ctx my-state]]
     ["package:flutter/widgets.dart"
@@ -176,13 +176,13 @@
                                          (dp :icon-sees-theme (do (Theme/of (.context st))))
                                          (dp :sees-color (.primaryColor (Theme/of (.context st))))
                                          (.primaryColor (Theme/of (.context st))))
-                                     (do ;(dp :icon-no-see-state (meta me))
-                                         m.Colors/red
-                                         (fn [me ctx]
-                                           ;(dp :callback-icon-state (:state-ref (meta me)))
-                                           ;(dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
-                                           ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
-                                           (.primaryColor (Theme/of ctx))))
+                                     (do                    ;(dp :icon-no-see-state (meta me))
+                                       m.Colors/red
+                                       (fn [me ctx]
+                                         ;(dp :callback-icon-state (:state-ref (meta me)))
+                                         ;(dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
+                                         ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
+                                         (.primaryColor (Theme/of ctx))))
                                      )))}
               {:name :iconic})))))))
 
@@ -232,32 +232,14 @@
     (fx/floating-action-button {:onPressed (fn [me ctx]
                                              (md/mswap! (md/fasc :fab par) :open? not))}
 
-      (fx/icon {:icon #_ (make-c-formula
-                        :value tiltontec.cell.base/unbound
-                        :lazy true
-                        :rule (c-fn (dp :icocn-rule-runs!!!!!!!!!)
-                                (dp :callstack!!!! (map cinfo cty/*call-stack*))
-                                (throw (Exception. "u are here"))
-                                (if-let [s (:state-ref (meta me))]
-                                  (do (dp :icon-cf-sees-state!!!)
-                                      m.Icons/create)
-                                  (do (dp :icon-f-NOT-SEEING-state)
-                                      m.Icons/videocam))))
-                (c_F [:obs (fn-obs (dp :obs-icon!!!!!! new))]
-                  (dp :icocn-rule-runs!!!!!!!!!)
-                  (if-let [s (:state-ref (meta me))]
-                    (do (dp :icon-cf-sees-state!!!)
-                        m.Icons/create)
-                    (do (dp :icon-f-NOT-SEEING-state)
-                        m.Icons/videocam)))
-                })
-      #_
-      (fx/icon {:icon (cF (if-let [s (:state-ref (meta me))]
-                                                       (do (dp :icon-cf-sees-state!!!)
-                                                           m.Icons/create)
-                                                       (do (dp :icon-f-NOT-SEEING-state)
-                                                           m.Icons/videocam)))
-                                           }))))
+      (fx/icon {:icon m.Icons/create
+                #_(c_F [:obs (fn-obs (dp :obs-icon!!!!!! new))]
+                    (dp :icon-rule-runs!!!!!!!!!)
+                    (if-let [s (:state-ref (meta me))]
+                      (do (dp :icon-cf-sees-state!!!)
+                          m.Icons/create)
+                      (do (dp :icon-f-NOT-SEEING-state)
+                          m.Icons/videocam)))}))))
 
 #_(fx/animated-container {:width      32.0
                           :height     42.0
@@ -305,4 +287,48 @@
     :decoration
     (m/BoxDecoration
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-      :color (.-shade300 Colors/grey))))
+      :color (.-shade300 Colors/cyan)))
+  #_(m/Container
+      :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+      :height (if is-big? 128.0 36.0)
+      :decoration (dart:core.Function/apply dart/new m/BoxDecoration
+                    {(dart:core/Symbol. "borderRadius") ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                     (dart:core/Symbol. "color")        (.-shade300 Colors/cyan)}))
+
+  #_(dart:core.Function/apply m/Container.new nil
+      {(dart:core/Symbol. "margin")     ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+       (dart:core/Symbol. "height")     (if is-big? 128.0 36.0)
+       (dart:core/Symbol. "decoration") (m/BoxDecoration
+                                          :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                                          :color (.-shade300 Colors/grey))})
+
+  #_(dart:core.Function/apply (dart/new new m/Container) nil
+      {(dart:core/Symbol. "margin")     ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+       (dart:core/Symbol. "height")     (if is-big? 128.0 36.0)
+       (dart:core/Symbol. "decoration") (m/BoxDecoration
+                                          :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                                          :color (.-shade300 Colors/grey))})
+
+  )
+
+#_(defn fake-item [is-big?]
+    (dart:core.Function/apply m/Container nil
+      {(dart:core/Symbol. "margin") 42.0
+       (dart:core/Symbol. "height") 36.0}))
+
+#_(dart:core.Function/apply m/Container nil
+    ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+                             :height (if is-big? 128.0 36.0)
+                             :decoration
+                             (m/BoxDecoration
+                               :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                               :color (.-shade300 Colors/pink))})
+
+;; ^#/(Map Symbol dynamic)
+#_(m/Container
+    :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+    :height (if is-big? 128.0 36.0)
+    :decoration
+    (m/BoxDecoration
+      :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+      :color (.-shade300 Colors/pink)))
