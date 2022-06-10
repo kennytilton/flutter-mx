@@ -228,9 +228,9 @@
                    (m/Text (str "Yikes-1" title))
                    title)))))
   (fx-genner [this]
-    ;; Scaffolds require appBar objects to be PreferredSizeWidgets.
-    ;; The default fx gen uses an anonymous StatefulWidget.
-    ;; So we have to override fx gen (so AppBars (PSWs) go out unwrapped and thus OK to Scaffold.
+    ;; Fact: Scaffolds require appBar objects to be PreferredSizeWidgets (PSW). AppBar is a PSW.
+    ;; Problem: The default fx gen uses an anonymous StatefulWidget (not a PSW) as a wrapper.
+    ;; Solution: override fx gen (so AppBars go out unwrapped and thus acceptable to Scaffold.
     (fn [me]
       (reify :extends m/AppBar
         (createState [this]

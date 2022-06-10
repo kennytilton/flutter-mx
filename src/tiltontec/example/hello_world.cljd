@@ -1,12 +1,15 @@
 (ns tiltontec.example.hello-world
   (:require
     [clojure.string :as string]
-    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.util.base
+     :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
+    [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [mget] :as md]
+    [tiltontec.mx-flutter.tag :as tag]
     [tiltontec.mx-flutter.core :as fx
-     :refer [ material-app scaffold center text]]
+     :refer [material-app scaffold center text]]
     ;; State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m :refer [AppBar Colors Text ThemeData]]
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
@@ -27,8 +30,23 @@
       {:appBar (AppBar
                  :title (m/Text "Welcome to mxFlutter"))}
       (center
-        (text {:style (TextStyle
-                          :color Colors/black
-                          :fontSize 32.0)}{}
-          "hello, world\\n")))))
+        {:name :hello-center}
+        #_ (text {:style (TextStyle
+                          :color Colors/cyan
+                          :fontSize 48.0)} {}
+            "hello, world\\n")
+        (let [mxtype (new tiltontec.mx-flutter.core/FXText)]
+          (md/make
+            :mx-type mxtype
+            :style (TextStyle
+                     :color Colors/cyan
+                     :fontSize 48.0)
+            :kids (cF (md/the-kids
+                        "hello, new world\\n"))
+            :fx-gen (fn [me]
+                      (dp :BAM-fx-gen-custom (minfo me))
+                      (tiltontec.mx-flutter.tag/statefully me
+                        (fn [me ctx]
+                          (let [beefer (tag/beefer mxtype)]
+                            (beefer me ctx)))))))))))
 

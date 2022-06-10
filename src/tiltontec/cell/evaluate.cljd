@@ -10,7 +10,7 @@
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes*
-             c-rule c-me c-value-state c-callers caller-ensure
+             c-rule c-code c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
              c-synaptic? caller-drop c-md-name
              c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots c-slot-name
@@ -206,16 +206,22 @@
     (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
     (unlink-from-used c :pre-rule-clear)
     (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
-    (let [raw-value (try
-                      ((c-rule c) c)
-                      (catch Exception e
-                        (dprn :error-calculating-formula (cinfo c))
-                        (dprn :error-calculating-formula (cty/minfo (c-model c)))
-                        (dprn :rule-calc-caught e)
-                        (throw e)))
+    (dp :calc (c-code c))
+    (dp :calc-info (cinfo c))
+
+    (let [raw-value #_((c-rule c) c)
+          (try
+            ((c-rule c) c)
+            (catch Exception e
+              (dprn :error-calculating-formula (c-code c))
+              (dprn :error-calculating-formula (cinfo c))
+              (dprn :error-calculating-formula (cty/minfo (c-model c)))
+              (dprn :rule-calc-caught e)
+              (throw e)))
           prop-code? (and (c-synaptic? c)
                        (vector? raw-value)
                        (contains? (meta raw-value) :propagate))]
+      (dp :calc-raw-val raw-value prop-code?)
       (if prop-code?
         [(first raw-value) (:propagate (meta raw-value))]
         [raw-value nil]))))

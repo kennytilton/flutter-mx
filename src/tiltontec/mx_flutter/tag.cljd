@@ -19,6 +19,7 @@
   (fx-genner [this]))
 
 (defn render-fx [fx]
+  (dp :renfx-entry fx)
   (cond
     (not (md-ref? fx))
     (do
@@ -101,7 +102,6 @@
               ~(first vargs#)
               ~(second vargs#)
               ~(when-let [kids# (seq (nthrest vargs# 2))]
-                 ;;(prn :kids-form-will-be kids#)
                  `(tiltontec.model.core/cFkids ~@kids#))))
 
          :else                                              ;; just first map of fx props and maybe kids
