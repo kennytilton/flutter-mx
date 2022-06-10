@@ -206,8 +206,6 @@
     (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
     (unlink-from-used c :pre-rule-clear)
     (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
-    (dp :calc (c-code c))
-    (dp :calc-info (cinfo c))
 
     (let [raw-value #_((c-rule c) c)
           (try
@@ -221,7 +219,6 @@
           prop-code? (and (c-synaptic? c)
                        (vector? raw-value)
                        (contains? (meta raw-value) :propagate))]
-      (dp :calc-raw-val raw-value prop-code?)
       (if prop-code?
         [(first raw-value) (:propagate (meta raw-value))]
         [raw-value nil]))))

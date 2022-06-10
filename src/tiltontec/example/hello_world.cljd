@@ -1,6 +1,8 @@
 (ns tiltontec.example.hello-world
   (:require
     [clojure.string :as string]
+    [tiltontec.util.core :as util
+     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.util.base
      :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
@@ -11,8 +13,11 @@
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app scaffold center text]]
     ;; State StatefulWidget StatelessWidget]]
-    ["package:flutter/material.dart" :as m :refer [AppBar Colors Text ThemeData]]
+    ["package:flutter/widgets.dart" :as w
+     :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m :refer [AppBar Colors ThemeData]]
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
+
 
 (defn make-app []
   (material-app
@@ -33,20 +38,21 @@
         {:name :hello-center}
         #_ (text {:style (TextStyle
                           :color Colors/cyan
-                          :fontSize 48.0)} {}
-            "hello, world\\n")
+                          :fontSize 32.0)} {}
+            "hello, world oskool\\n")
+
         (let [mxtype (new tiltontec.mx-flutter.core/FXText)]
           (md/make
-            :mx-type mxtype
+            ;; :mx-type mxtype
             :style (TextStyle
-                     :color Colors/cyan
-                     :fontSize 48.0)
+                     :color Colors/orange
+                     :fontSize 32.0)
             :kids (cF (md/the-kids
-                        "hello, new world\\n"))
-            :fx-gen (fn [me]
-                      (dp :BAM-fx-gen-custom (minfo me))
-                      (tiltontec.mx-flutter.tag/statefully me
-                        (fn [me ctx]
-                          (let [beefer (tag/beefer mxtype)]
-                            (beefer me ctx)))))))))))
+                        (str "hello, new world\\n " (rand-int 199))))
+            :fx-gen (fn [ctx me]
+                      (w/Text (first (md/md-kids me))
+                          :style (let [style (mget me :style)]
+                                   (if (fn? style)
+                                     (style me ctx)
+                                     style))))))))))
 

@@ -18,17 +18,26 @@
   (beefer [this])
   (fx-genner [this]))
 
-(defn render-fx [fx]
-  (dp :renfx-entry fx)
+(defn render-fx [ctx fx]
+  (cond
+    (not (md-ref? fx))
+    (do ;(dprn :rnfx-sees-not-md-ref?-passing-thru fx)
+      fx)
+    :else (let [gen (mget fx :fx-gen)]
+            (assert gen "OBAD: render-fx of model finds no fx-gen: ")
+            (gen ctx fx))))
+
+(defn render-flu [fx ctx]
+  ;(dp :render-flu-entry fx)
   (cond
     (not (md-ref? fx))
     (do
-     ;(dprn :rnfx-sees-not-md-ref?-passing-thru fx)
+      (dp :rnflu-sees-not-md-ref?-passing-thru fx)
       fx)
 
-    :else (let [gen (mget fx :fx-gen)]
-            (assert gen "OBAD: render-fx of model finds no fx-gen: ")
-            (gen fx))))
+    :else (let [gen (mget fx :flu-gen)]
+            (assert gen "OBAD: render-flu of model finds no flu-gen: ")
+            (gen fx ctx))))
 
 (defn statefully [me beefer]
   (reify :extends w/StatefulWidget
@@ -61,12 +70,12 @@
     :mx-type mx-type
     :fx-prop-keys (keys fx-props)
     :kids cFkids-form
-    :fx-gen (fn [me]
+    :fx-gen (fn [ctx me]
               ;; the default "statefully" works for must Flutter widgets,
               ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
               ;; so we allow individual widget Types to supply their own fx-gen.
               (if-let [type-fx-gen (fx-genner mx-type)] ;; <- override option
-                (type-fx-gen me)
+                (type-fx-gen ctx me)
                 ; --- no special fx gen, so...the default:
                 (tiltontec.mx-flutter.tag/statefully me
                   (fn [me ctx]

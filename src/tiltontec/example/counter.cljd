@@ -26,9 +26,12 @@
     {:title "Welcome to mxFlutter World"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
     (scaffold
-      {:appBar               (cF (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000)
+      {:appBar
+       (cF (dp :rebuilding-appbar)
+         (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000)
                                                         " ctr=" (mget (md/fm* :z-counter) :value)))))
-       :floatingActionButton (cF (FloatingActionButton
+       :floatingActionButton (cF (dp :rebuilding-action-button)
+                               (FloatingActionButton
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
@@ -59,7 +62,7 @@
              :value (cI 0)}
             (str (md/my-val)))
 
-          (fx/text {}
+          #_ (fx/text {}
             {:value (cF (* 2 (md/fmuval :z-counter)))}
             (str "Button click times two = " (md/my-val))))))))
 
