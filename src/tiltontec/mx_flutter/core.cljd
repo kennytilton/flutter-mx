@@ -52,9 +52,10 @@
     ;; todo find better way to reduce observing
     (when true                                              ;; (some #{slot} (:fx-prop-keys @me))
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
-      (when-let [^State state (:state-ref (meta me))]
-        (dp :settingstate slot new-value #_ (meta me) (minfo me) state)
-        (.setState state (fn [] (do))))))
+      (if-let [^State state (:state-ref (meta me))]
+        (do (dp :settingstate slot new-value #_ (meta me) (minfo me) state)
+            (.setState state (fn [] (do))))
+        (dp :NOT-settingstate slot new-value (minfo me)))))
 
   PDartWidget
   (parts [this]
