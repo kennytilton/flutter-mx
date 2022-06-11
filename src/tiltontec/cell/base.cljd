@@ -203,12 +203,17 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (c-ref? c)) :not-cell-c
     :else ((juxt c-slot c-md-name) c)))
 
-(defn minfo [md]
-  (cond
-    (nil? md) :null-md
-    (not (atom? md)) :not-atom-md
-    (not (md-ref? md)) :atom-not-md-c
-    :else [(:name @md) (meta md)]))
+(defn minfo
+  ([md]
+   (minfo md false))
+  ([md verbose]
+   (cond
+     (nil? md) :null-md
+     (not (atom? md)) :not-atom-md
+     (not (md-ref? md)) :atom-not-md-c
+     :else (if verbose
+             [(:name @md) (meta md)]
+             [(:name @md) (mx-type md)]))))
 
 ;; --- dependency maintenance --------------------------------
 

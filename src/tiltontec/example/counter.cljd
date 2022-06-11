@@ -8,7 +8,7 @@
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text scaffold column]]
-    ["package:flutter/widgets.dart"
+    ["package:flutter/widgets.dart" :as w
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
      :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
@@ -39,10 +39,34 @@
       (center
         (fx/column
           {:mainAxisAlignment MainAxisAlignment/center}
-          (fx/text {:style (TextStyle
+          #_ (fx/text {:style (TextStyle
                              :color Colors/black
                              :fontSize 18.0)}
             "You clicked the button this many times:")
+          (md/make
+            :name :u-clicked-prompt
+            :style (TextStyle
+                     :color Colors/black
+                     :fontSize 18.0)
+            :kids (cF (md/the-kids
+                        (str "You clicked the button N times: " (rand-int 99))))
+            :fx-gen (fn [ctx me]
+                      (dp :fxgenning-prompt)
+                      (w/Text (first (md/md-kids me))
+                        :style (mget me :style))))
+          (dp :rebuilding-column-kids)
+          (md/make
+            :name  :z-counter
+            :value (cI 0)
+            :style (fn [ctx me]
+                     (.headline4 (.textTheme (Theme/of ctx))))
+            :kids (cF (md/the-kids
+                        (str (md/my-val))))
+            :fx-gen (fn [ctx me]
+                      (dp :fxgenning-z-ctr)
+                      (w/Text (first (md/md-kids me))
+                        :style ((mget me :style) ctx me))))
+          #_
           (fx/text
             {:style
              #_;; a reactive version tracking another property

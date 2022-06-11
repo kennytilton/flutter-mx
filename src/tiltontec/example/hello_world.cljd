@@ -40,19 +40,15 @@
                           :color Colors/cyan
                           :fontSize 32.0)} {}
             "hello, world oskool\\n")
-
-        (let [mxtype (new tiltontec.mx-flutter.core/FXText)]
-          (md/make
-            ;; :mx-type mxtype
-            :style (TextStyle
-                     :color Colors/orange
-                     :fontSize 32.0)
-            :kids (cF (md/the-kids
-                        (str "hello, new world\\n " (rand-int 199))))
-            :fx-gen (fn [ctx me]
-                      (w/Text (first (md/md-kids me))
-                          :style (let [style (mget me :style)]
-                                   (if (fn? style)
-                                     (style me ctx)
-                                     style))))))))))
+        ;; take two
+        (md/make
+          ;; :mx-type mxtype
+          :style (TextStyle
+                   :color Colors/orange
+                   :fontSize 32.0)
+          :kids (cF (md/the-kids
+                      (str "hello, new world\\n " (rand-int 199))))
+          :fx-gen (fn [ctx me]
+                    (w/Text (first (md/md-kids me))
+                      :style (mget me :style))))))))
 
