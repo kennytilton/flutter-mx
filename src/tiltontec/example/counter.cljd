@@ -34,10 +34,10 @@
       {:appBar
        (fx/app-bar {:title (cF (dp :appbar-title-recomputes)
                              (m/Text (str "Counter rnd=" (rand-int 1000)
-                                     " ctr=" (mget (md/fm* :z-counter) :value))))})
-       #_ (cF (dp :rebuilding-appbar)
-                               (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000)
-                                                      " ctr=" (mget (md/fm* :z-counter) :value)))))
+                                       " ctr=" (mget (md/fm* :z-counter) :value))))})
+       #_(cF (dp :rebuilding-appbar)
+           (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000)
+                                  " ctr=" (mget (md/fm* :z-counter) :value)))))
        :floatingActionButton (cF (dp :rebuilding-action-button)
                                (FloatingActionButton
                                  :onPressed (fn ^void []
@@ -47,40 +47,32 @@
       (center
         (fx/column
           {:mainAxisAlignment MainAxisAlignment/center}
-          #_(fx/text {:style (TextStyle
-                               :color Colors/black
-                               :fontSize 18.0)}
-              "You clicked the button this many times:")
+          (fx/text {:style (TextStyle
+                             :color Colors/black
+                             :fontSize 18.0)}
+            "You clicked the button this many times:")
           ;; take2
-          (md/make
-            :name :u-clicked-prompt
-            :style (TextStyle
-                     :color Colors/black
-                     :fontSize 18.0)
-            :kids (cFkids
-                    (str "You clicked the button N times: " (rand-int 99)))
-            :fx-gen (fn [ctx me]
-                      (dp :fxgenning-prompt)
-                      (w/Text (first (md/md-kids me))
-                        :style (mget me :style))))
-          (dp :rebuilding-column-kids)
-
           (md/make
             :name :z-counter
             :mx-type (new fx/FXText)
+
+            ;; ^^^ needed to get observe call; can we lose that?
+
             :value (cI 0)
             :style (fn [ctx me]
                      (.headline4 (.textTheme (Theme/of ctx))))
             :kids (cFkids
                     (str (md/my-val)))
-            :fx-gen (fn [ctx me]
-                      (reify :extends m/TextField
+            :fx-gen second(fn [ctx me]
+                      (reify :extends m/StatefulWidget
                         (createState [this]
-                          ;; (dp :creatingstate!!! (minfo me))
                           (util/rmap-meta-setf [:state-ref me]
-                            (reify :extends #/(w/State m/TextField) ;; w/State
+                            (reify :extends w/State
                               (build [this ctx]
-                                (w/Text (first (md/md-kids me))
+
+                                ;; problem is Text is stateless, so we cannot extend Text and use #/(State Text)
+
+                                (m/Text (first (md/md-kids me))
                                   :style ((mget me :style) ctx me)))))))))
           #_(fx/text
               {:style
