@@ -55,7 +55,8 @@
       (if-let [^State state (:state-ref (meta me))]
         (do (dp :settingstate slot new-value #_ (meta me) (minfo me) state)
             (.setState state (fn [] (do))))
-        (dp :NOT-settingstate slot new-value (minfo me)))))
+        (when-not (= prior-value cty/unbound)
+          (dp :NOT-settingstate slot new-value (minfo me))))))
 
   PDartWidget
   (parts [this]
@@ -79,7 +80,7 @@
 (defn extract-widget [dbg-key me ctx fab]
   (cond
     (nil? fab)
-    (do (dp :exwid-sees-nil-fab dbg-key)
+    (do ;; (dp :exwid-sees-nil-fab dbg-key)
         nil)
 
     (dart/is? fab m/Widget)
@@ -87,7 +88,7 @@
       fab)
 
     (fn? fab)
-    (do (dp :ew-sees-fn dbg-key fab)
+    (do ;; (dp :ew-sees-fn dbg-key fab)
         (recur [dbg-key :fn] me ctx (fab me ctx)))
 
     (and (cty/md-ref? fab)
@@ -593,7 +594,19 @@
 
 (deftag text tiltontec.mx-flutter.core/FXText)
 
-;;; --- text ---------------------------------------
+(defmacro textless [fx-props & children]
+  (let []
+    `(apply tiltontec.model.core/make
+       :kids (tiltontec.model.core/cFkids ~@children)
+       :fx-gen (fn [ctx me]
+                 (w/Text (first (md/md-kids me))           ;; <-- exception
+                   ~@(let [kvs (for [[k# _#] fx-props]
+                                 [k# `(tiltontec.model.core/md-get-ex me ~k#)])]
+                       (prn :kvs-anyway kvs)
+                       (apply concat kvs))))
+       (vec (apply concat (seq ~fx-props))))))
+
+;;; --- text field ---------------------------------------
 
 (deftype FXTextField []
   :extends FXDartWidget

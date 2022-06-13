@@ -18,7 +18,6 @@
     ["package:flutter/material.dart" :as m :refer [AppBar Colors ThemeData]]
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
 
-
 (defn make-app []
   (material-app
     {:title "Hunt for Teal mxFlutter"
@@ -33,22 +32,11 @@
     (scaffold
       ;; todo arrange for awaken/quiesce on stray edges
       {:appBar (AppBar
-                 :title (m/Text "Welcome to mxFlutter"))}
+                 :title (m/Text "Welcome to mxFlutter 42"))}
       (center
         {:name :hello-center}
-        #_ (text {:style (TextStyle
-                          :color Colors/cyan
-                          :fontSize 32.0)} {}
-            "hello, world oskool\\n")
-        ;; take two
-        (md/make
-          ;; :mx-type mxtype
-          :style (TextStyle
-                   :color Colors/orange
-                   :fontSize 32.0)
-          :kids (cF (md/the-kids
-                      (str "hello, new world\\n " (rand-int 199))))
-          :fx-gen (fn [ctx me]
-                    (w/Text (first (md/md-kids me))
-                      :style (mget me :style))))))))
-
+        (fx/textless {:overflow m.TextOverflow/ellipsis
+                      :style    (TextStyle
+                                  :color Colors/cyan
+                                  :fontSize 32.0)}
+          "hello, world super duper ooskoolio\\n")))))

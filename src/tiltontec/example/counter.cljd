@@ -47,12 +47,12 @@
       (center
         (fx/column
           {:mainAxisAlignment MainAxisAlignment/center}
-          (fx/text {:style (TextStyle
+          (fx/textless {:style (TextStyle
                              :color Colors/black
                              :fontSize 18.0)}
             "You clicked the button this many times:")
           ;; take2
-          (md/make
+          #_ (md/make
             :name :z-counter
             :mx-type (new fx/FXText)
 
@@ -63,18 +63,15 @@
                      (.headline4 (.textTheme (Theme/of ctx))))
             :kids (cFkids
                     (str (md/my-val)))
-            :fx-gen second(fn [ctx me]
+            :fx-gen (fn [ctx me]
                       (reify :extends m/StatefulWidget
                         (createState [this]
                           (util/rmap-meta-setf [:state-ref me]
                             (reify :extends w/State
                               (build [this ctx]
-
-                                ;; problem is Text is stateless, so we cannot extend Text and use #/(State Text)
-
                                 (m/Text (first (md/md-kids me))
                                   :style ((mget me :style) ctx me)))))))))
-          #_(fx/text
+          (fx/text
               {:style
                #_;; a reactive version tracking another property
                        (cF (TextStyle.
