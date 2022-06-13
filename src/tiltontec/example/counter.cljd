@@ -52,16 +52,14 @@
                              :fontSize 18.0)}
             "You clicked the button this many times:")
           ;; take2
-          #_ (md/make
+          (md/make
             :name :z-counter
-            :mx-type (new fx/FXText)
-
-            ;; ^^^ needed to get observe call; can we lose that?
-
             :value (cI 0)
             :style (fn [ctx me]
                      (.headline4 (.textTheme (Theme/of ctx))))
             :kids (cFkids
+                    (dp :z-kids-recomputes)
+                    (dp :z-kids-recomputes-off (md/my-val))
                     (str (md/my-val)))
             :fx-gen (fn [ctx me]
                       (reify :extends m/StatefulWidget
@@ -71,7 +69,7 @@
                               (build [this ctx]
                                 (m/Text (first (md/md-kids me))
                                   :style ((mget me :style) ctx me)))))))))
-          (fx/text
+          #_ (fx/text
               {:style
                #_;; a reactive version tracking another property
                        (cF (TextStyle.
