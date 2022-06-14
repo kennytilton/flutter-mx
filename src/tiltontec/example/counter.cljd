@@ -8,6 +8,8 @@
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx
      :refer [material-app center text scaffold column]]
+    [tiltontec.mx-flutter.tag :as tag
+     :refer [with-ctx]]
     ["package:flutter/widgets.dart" :as w
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -69,28 +71,12 @@
                       :color Colors/black
                       :fontSize 18.0)
                      (fn [ctx me]
-                       (.headline4 (.textTheme (Theme/of ctx))))}
+                       (.headline4 (.textTheme (Theme/of ctx))))
+             #_ (with-ctx (ctx-2 me)
+               (.headline4 (.textTheme (Theme/of ctx-2))))}
             {:name  :z-counter
              :value (cI 0)}
-            (str (mget me :value)))
-
-          #_(md/make
-              :name :z-counter
-              :value (cI 0)
-              :style (fn [ctx me]
-                       (.headline4 (.textTheme (Theme/of ctx))))
-              :kids (cFkids
-                      (dp :z-kids-recomputes)
-                      (dp :z-kids-recomputes-off (md/my-val))
-                      (str (md/my-val)))
-              :fx-gen (fn [ctx me]
-                        (reify :extends m/StatefulWidget
-                          (createState [this]
-                            (util/rmap-meta-setf [:state-ref me]
-                              (reify :extends w/State
-                                (build [this ctx]
-                                  (m/Text (first (md/md-kids me))
-                                    :style ((mget me :style) ctx me))))))))))))))
+            (str (md/my-val))))))))
 
 
 #_(fx/text
