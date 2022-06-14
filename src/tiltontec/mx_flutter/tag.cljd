@@ -18,6 +18,12 @@
   (beefer [this])
   (fx-genner [this]))
 
+(defn fx-eval [ctx me value]
+  ;; fx-world values can be expressed as callbacks when
+  ;; the value depends on the fx widget or runtime Flutter context
+  (if (fn? value)
+    (value ctx me)))
+
 (defn render-fx [ctx fx]
   (cond
     (not (md-ref? fx))

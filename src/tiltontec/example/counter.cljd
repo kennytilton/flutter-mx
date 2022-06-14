@@ -27,12 +27,14 @@
      :fx-gen (fn [ctx me]
                (reify :extends m/StatefulWidget
                  (~'createState [_#]
-                   (reify :extends w/State
-                     (~'build [_# _#]
-                       (w/Text (first (md/md-kids me))
-                         ~@(let [kvs (for [[k# _#] fx-props]
-                                       [k# `(tiltontec.model.core/mget me ~k#)])]
-                             (apply concat kvs))))))))
+                   (util/rmap-meta-setf [:state-ref me]
+                     (reify :extends w/State
+                       (~'build [_# ctx]
+                         (w/Text (first (md/md-kids me))
+                           ~@(let [kvs (for [[k# _#] fx-props]
+                                         [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
+                                                (tiltontec.model.core/mget me ~k#))])]
+                               (apply concat kvs)))))))))
      (concat
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
@@ -58,58 +60,57 @@
         (fx/column
           {:mainAxisAlignment MainAxisAlignment/center}
           (fx/textless {:style (TextStyle
-                             :color Colors/black
-                             :fontSize 18.0)}
+                                 :color Colors/black
+                                 :fontSize 18.0)}
             "You clicked the button this many times:")
 
           (text-ful
-            {:style (TextStyle
+            {:style #_ (TextStyle
                       :color Colors/black
                       :fontSize 18.0)
-             #_ ;; todo port to take2
                      (fn [ctx me]
-                      (.headline4 (.textTheme (Theme/of ctx))))}
-            {:name :z-counter
+                       (.headline4 (.textTheme (Theme/of ctx))))}
+            {:name  :z-counter
              :value (cI 0)}
             (str (mget me :value)))
 
-          #_ (md/make
-            :name :z-counter
-            :value (cI 0)
-            :style (fn [ctx me]
-                     (.headline4 (.textTheme (Theme/of ctx))))
-            :kids (cFkids
-                    (dp :z-kids-recomputes)
-                    (dp :z-kids-recomputes-off (md/my-val))
-                    (str (md/my-val)))
-            :fx-gen (fn [ctx me]
-                      (reify :extends m/StatefulWidget
-                        (createState [this]
-                          (util/rmap-meta-setf [:state-ref me]
-                            (reify :extends w/State
-                              (build [this ctx]
-                                (m/Text (first (md/md-kids me))
-                                  :style ((mget me :style) ctx me))))))))))))))
+          #_(md/make
+              :name :z-counter
+              :value (cI 0)
+              :style (fn [ctx me]
+                       (.headline4 (.textTheme (Theme/of ctx))))
+              :kids (cFkids
+                      (dp :z-kids-recomputes)
+                      (dp :z-kids-recomputes-off (md/my-val))
+                      (str (md/my-val)))
+              :fx-gen (fn [ctx me]
+                        (reify :extends m/StatefulWidget
+                          (createState [this]
+                            (util/rmap-meta-setf [:state-ref me]
+                              (reify :extends w/State
+                                (build [this ctx]
+                                  (m/Text (first (md/md-kids me))
+                                    :style ((mget me :style) ctx me))))))))))))))
 
 
-#_ (fx/text
-     {:style
-      #_;; a reactive version tracking another property
-              (cF (TextStyle.
-                    :color m.Colors/green
-                    :fontSize (+ 24.0 (* 2 (md/my-val)))))
+#_(fx/text
+    {:style
+     #_;; a reactive version tracking another property
+             (cF (TextStyle.
+                   :color m.Colors/green
+                   :fontSize (+ 24.0 (* 2 (md/my-val)))))
 
-      ;; a version that needs the runtime context, done as a callback (experiemental)
-      (fn [me ctx]
-        (.headline4 (.textTheme (Theme/of ctx))))
-      ;; or comment out the above entirely and supply a custom builder
-      #_#_:beefer (fn [me ctx]
-                    (Text (str (md/my-val))
-                      :style (.headline4 (.textTheme (Theme/of ctx)))))
-      }
-     {:name  :z-counter
-      :value (cI 0)}
-     (str (md/my-val)))
+     ;; a version that needs the runtime context, done as a callback (experiemental)
+     (fn [me ctx]
+       (.headline4 (.textTheme (Theme/of ctx))))
+     ;; or comment out the above entirely and supply a custom builder
+     #_#_:beefer (fn [me ctx]
+                   (Text (str (md/my-val))
+                     :style (.headline4 (.textTheme (Theme/of ctx)))))
+     }
+    {:name  :z-counter
+     :value (cI 0)}
+    (str (md/my-val)))
 
 #_(fx/text {}
     {:value (cF (* 2 (md/fmuval :z-counter)))}
