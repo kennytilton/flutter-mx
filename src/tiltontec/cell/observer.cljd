@@ -1,7 +1,7 @@
 (ns tiltontec.cell.observer
   (:require
     [tiltontec.util.base
-     :refer [trx dp type-cljd]]
+     :refer [trx dpx dp type-cljd]]
 
     [tiltontec.util.core
      :refer [cl-find set-ify atom? err
@@ -30,9 +30,9 @@
   (get @+observe-method+ key))
 
 (defn observe [slot-name me new-val old-val c]
-  (dp :obs-classic slot-name (cty/minfo me) new-val)
+  (dpx :obs-classic slot-name (cty/minfo me) new-val)
   (when-let [^w/State state (:state-ref (meta me))]
-    (do (dp :settingstate slot-name new-val  (cty/minfo me))
+    (do (dpx :settingstate slot-name new-val  (cty/minfo me))
         (.setState state (fn [] (do)))))
   #_
   (let [obs (if-let [obs (observer-get [slot-name (type-cljd me)])]
@@ -64,7 +64,7 @@ call parameters: slot, me, new, old, and c."
   ([c prior-value why]
    (assert (c-ref? c))
    (assert (dart/is? @+pulse+ int))
-   (dp :c-observe!!!! (cinfo c))
+   (dpx :c-observe!!!! (cinfo c))
    (rmap-setf [:pulse-observed c] @+pulse+)
    ;; we do observes specified for types or slots...
    (observe (c-slot c) (c-model c) (c-value c) prior-value c)
