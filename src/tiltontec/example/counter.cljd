@@ -21,6 +21,22 @@
      :refer [fn-obs]]
     ))
 
+(defmacro text-ful [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx-gen (fn [ctx me]
+               (reify :extends m/StatefulWidget
+                 (~'createState [_#]
+                   (reify :extends w/State
+                     (~'build [_# _#]
+                       (w/Text (first (md/md-kids me))
+                         ~@(let [kvs (for [[k# _#] fx-props]
+                                       [k# `(tiltontec.model.core/mget me ~k#)])]
+                             (apply concat kvs))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
 (defn make-app []
   (material-app
     {:title "Welcome to mxFlutter World"
@@ -46,7 +62,18 @@
                              :fontSize 18.0)}
             "You clicked the button this many times:")
 
-          (md/make
+          (text-ful
+            {:style (TextStyle
+                      :color Colors/black
+                      :fontSize 18.0)
+             #_ ;; todo port to take2
+                     (fn [ctx me]
+                      (.headline4 (.textTheme (Theme/of ctx))))}
+            {:name :z-counter
+             :value (cI 0)}
+            (str (mget me :value)))
+
+          #_ (md/make
             :name :z-counter
             :value (cI 0)
             :style (fn [ctx me]
