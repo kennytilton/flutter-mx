@@ -117,6 +117,28 @@
 
 (deftag material-app tiltontec.mx-flutter.core/FXMaterialApp)
 
+(defmacro material-app-F [fx-props mx-props & children]
+  (prn :fxp fx-props)
+  (prn :mxp mx-props)
+  (prn :kids children)
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx-gen (fn [ctx me]
+               (reify :extends #_ m/MaterialApp m/StatefulWidget
+                 (~'createState [_#]
+                   (util/rmap-meta-setf [:state-ref me]
+                     (reify :extends #_ #/(w/State m/AppBar) w/State
+                       (~'build [_# ctx]
+                         (m/MaterialApp
+                           :home (render-fx ctx (first (md/md-kids me)))
+                           ~@(let [kvs (for [[k# _#] fx-props]
+                                         [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
+                                                (tiltontec.model.core/mget me ~k#))])]
+                               (apply concat kvs)))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
 ;;; --- material ---------------------------------------
 (deftype FXMaterial []
   :extends FXDartWidget
@@ -593,18 +615,6 @@
                    style))))))
 
 (deftag text tiltontec.mx-flutter.core/FXText)
-
-(defmacro textless [fx-props & children]
-  (let []
-    `(apply tiltontec.model.core/make
-       :kids (tiltontec.model.core/cFkids ~@children)
-       :fx-gen (fn [ctx me]
-                 (w/Text (first (md/md-kids me))           ;; <-- exception
-                   ~@(let [kvs (for [[k# _#] fx-props]
-                                 [k# `(tiltontec.model.core/md-get-ex me ~k#)])]
-                       (prn :kvs-anyway kvs)
-                       (apply concat kvs))))
-       (vec (apply concat (seq ~fx-props))))))
 
 ;;; --- text field ---------------------------------------
 

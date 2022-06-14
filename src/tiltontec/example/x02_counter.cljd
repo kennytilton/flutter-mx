@@ -1,0 +1,54 @@
+(ns tiltontec.example.x02-counter
+  (:require
+    [clojure.string :as string]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.cell.core :as cell
+     :refer [cF cF+ cF_ cI]]
+    [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.tag :as tag
+     :refer [with-ctx]]
+    ["package:flutter/widgets.dart" :as w
+     :refer [Text State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m
+     :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
+             FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]
+    [tiltontec.util.core :as util
+     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
+    [tiltontec.cell.observer
+     :refer [fn-obs]]
+    ))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Welcome to mxFlutter World"
+     :theme (ThemeData :primarySwatch Colors/blue)}
+    (fx/scaffold
+      {:appBar               (fx/app-bar {:title (cF (m/Text (str "Counter rnd=" (rand-int 1000)
+                                                               " ctr=" (mget (md/fm* :z-counter) :value))))})
+       :floatingActionButton (cF (dp :rebuilding-action-button)
+                               (FloatingActionButton
+                                 :onPressed (fn ^void []
+                                              (md/mswap! (md/fm* :z-counter) :value inc))
+                                 :tooltip "Increment"
+                                 :child (Icon Icons/add :color Colors/black)))}
+      (fxx/centerless {}{}
+        (fx/column
+          {:mainAxisAlignment MainAxisAlignment/center}
+          (fxx/textless {:style (TextStyle :color Colors/black
+                                 :fontSize 18.0)} {}
+            "You clicked the button so many times:")
+          (fxx/text
+            {:style (with-ctx (ctx-2 me)
+                      (.headline4 (.textTheme (Theme/of ctx-2))))}
+            {:name  :z-counter
+             :value (cI 0)}
+            (str (md/my-val))))))))
+
+
+
+

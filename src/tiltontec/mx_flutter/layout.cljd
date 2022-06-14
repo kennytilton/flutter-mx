@@ -1,0 +1,13 @@
+(ns tiltontec.mx-flutter.layout)
+
+#_
+(defmacro centerless [fx-props & children]
+  (let []
+    `(apply tiltontec.model.core/make
+       :kids (tiltontec.model.core/cFkids ~@children)
+       :fx-gen (fn [ctx me]
+                 (w/Text (first (md/md-kids me))           ;; <-- exception
+                   ~@(let [kvs (for [[k# _#] fx-props]
+                                 [k# `(tiltontec.model.core/md-get-ex me ~k#)])]
+                       (apply concat kvs))))
+       (vec (apply concat (seq ~fx-props))))))

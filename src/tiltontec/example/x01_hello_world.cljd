@@ -1,4 +1,4 @@
-(ns tiltontec.example.hello-world
+(ns tiltontec.example.x01-hello-world
   (:require
     [clojure.string :as string]
     [tiltontec.util.core :as util
@@ -10,8 +10,8 @@
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [mget] :as md]
     [tiltontec.mx-flutter.tag :as tag]
-    [tiltontec.mx-flutter.core :as fx
-     :refer [material-app scaffold center text]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.corex :as fxx]
     ;; State StatefulWidget StatelessWidget]]
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
@@ -19,7 +19,7 @@
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
 
 (defn make-app []
-  (material-app
+  (fx/material-app
     {:title "Hunt for Teal mxFlutter"
      :theme (cF (ThemeData :primarySwatch
                   ;; a computed, reactive value, just for fun, but we offer no way for
@@ -29,14 +29,15 @@
                       (string/includes? ttl "Teal") Colors/teal
                       (string/includes? ttl "Yellow") Colors/yellow
                       :else Colors/blue))))}
-    (scaffold
+    {}
+    (fx/scaffold
       ;; todo arrange for awaken/quiesce on stray edges
       {:appBar (AppBar
-                 :title (m/Text "Welcome to mxFlutter 42"))}
-      (center
-        {:name :hello-center}
-        (fx/textless {:overflow m.TextOverflow/ellipsis
+                 :title (m/Text (str "Welcome to mxFlutter " (rand-int 99))))}
+      (fxx/centerless
+        {} {:name :hello-center}
+        (fxx/textless {:overflow m.TextOverflow/ellipsis
                       :style    (TextStyle
                                   :color Colors/cyan
-                                  :fontSize 32.0)}
-          "hello, world super duper ooskoolio\\n")))))
+                                  :fontSize 32.0)} {}
+          "hello, world\\n")))))
