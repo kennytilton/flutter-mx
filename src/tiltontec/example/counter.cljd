@@ -21,23 +21,17 @@
      :refer [fn-obs]]
     ))
 
-;; todo excess prop
-; flutter: :DPR - 0 -  - :NOT-settingstate - :cells-flushed - ([:floatingActionButton 1]) - [nil Instance of 'FXScaffold']
-; flutter: :DPR - 0 -  - :NOT-settingstate - :fx-prop-keys - (:floatingActionButton :appBar) - [nil Instance of 'FXScaffold']
-
 (defn make-app []
   (material-app
     {:title "Welcome to mxFlutter World"
      :theme (ThemeData :primarySwatch Colors/blue)}
-    (dp :building-app-kids)
+
     (scaffold
       {:appBar
        (fx/app-bar {:title (cF (dp :appbar-title-recomputes)
                              (m/Text (str "Counter rnd=" (rand-int 1000)
                                        " ctr=" (mget (md/fm* :z-counter) :value))))})
-       #_(cF (dp :rebuilding-appbar)
-           (AppBar :title (Text (str "mxFlutter Home Page " (rand-int 1000)
-                                  " ctr=" (mget (md/fm* :z-counter) :value)))))
+
        :floatingActionButton (cF (dp :rebuilding-action-button)
                                (FloatingActionButton
                                  :onPressed (fn ^void []
@@ -51,7 +45,7 @@
                              :color Colors/black
                              :fontSize 18.0)}
             "You clicked the button this many times:")
-          ;; take2
+
           (md/make
             :name :z-counter
             :value (cI 0)
@@ -68,30 +62,28 @@
                             (reify :extends w/State
                               (build [this ctx]
                                 (m/Text (first (md/md-kids me))
-                                  :style ((mget me :style) ctx me)))))))))
-          #_ (fx/text
-              {:style
-               #_;; a reactive version tracking another property
-                       (cF (TextStyle.
-                             :color m.Colors/green
-                             :fontSize (+ 24.0 (* 2 (md/my-val)))))
-
-               ;; a version that needs the runtime context, done as a callback (experiemental)
-               (fn [me ctx]
-                 (.headline4 (.textTheme (Theme/of ctx))))
-               ;; or comment out the above entirely and supply a custom builder
-               #_#_:beefer (fn [me ctx]
-                             (Text (str (md/my-val))
-                               :style (.headline4 (.textTheme (Theme/of ctx)))))
-               }
-              {:name  :z-counter
-               :value (cI 0)}
-              (str (md/my-val)))
-
-          #_(fx/text {}
-              {:value (cF (* 2 (md/fmuval :z-counter)))}
-              (str "Button click times two = " (md/my-val))))))))
+                                  :style ((mget me :style) ctx me))))))))))))))
 
 
+#_ (fx/text
+     {:style
+      #_;; a reactive version tracking another property
+              (cF (TextStyle.
+                    :color m.Colors/green
+                    :fontSize (+ 24.0 (* 2 (md/my-val)))))
 
+      ;; a version that needs the runtime context, done as a callback (experiemental)
+      (fn [me ctx]
+        (.headline4 (.textTheme (Theme/of ctx))))
+      ;; or comment out the above entirely and supply a custom builder
+      #_#_:beefer (fn [me ctx]
+                    (Text (str (md/my-val))
+                      :style (.headline4 (.textTheme (Theme/of ctx)))))
+      }
+     {:name  :z-counter
+      :value (cI 0)}
+     (str (md/my-val)))
 
+#_(fx/text {}
+    {:value (cF (* 2 (md/fmuval :z-counter)))}
+    (str "Button click times two = " (md/my-val)))
