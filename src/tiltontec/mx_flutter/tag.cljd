@@ -33,7 +33,17 @@
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen ctx fx))))
 
-;(defmacro with-ctx )
+(defmacro with-ctx [[ctx-var me-var] & body]
+  `(fn [~ctx-var ~me-var]
+     ~@body))
+
+#_ (defmacro c-fn-var [[c] & body]
+     `(fn [~c]
+        (let [~'me (c-model ~c)
+              ~'cell ~c
+              ~'slot-name (c-slot ~c)
+              ~'cache (c-value ~c)]
+          ~@body)))
 
 (defn statefully [me beefer]
   (reify :extends w/StatefulWidget
