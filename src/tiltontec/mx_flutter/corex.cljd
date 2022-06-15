@@ -54,8 +54,6 @@
 
     :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
 
-
-
 (defmacro scaffold [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
@@ -66,12 +64,15 @@
                      (reify :extends w/State
                        (~'build [_# ctx]
                          (m/Scaffold
+                           ;; todo bundle up test for dart
                            :appBar (let [abar# (mget me :appBar)]
-                                     ;; todo convert to, and create, universal extract-widget
-                                     (dp :abar!!!!! abar#)
                                      (if (dart/is? abar# m/AppBar)
                                        abar#
                                        (tiltontec.mx-flutter.tag/render-fx ctx abar#)))
+                           :drawer (let [com# (mget me :drawer)]
+                                     (if (dart/is? com# m/Widget)
+                                       com#
+                                       (tiltontec.mx-flutter.tag/render-fx ctx com#)))
                            :body (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids me)))
                            :floatingActionButton (let [button (mget me :floatingActionButton)]
                                                    (dp :fab!!!! button)
