@@ -10,6 +10,7 @@
             [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
+            [tiltontec.cell.core :as cell :refer [cF cF+ cI c_F]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
 
@@ -17,14 +18,14 @@
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
      :fx-gen (fn [ctx me]
-               (reify :extends m/MaterialApp #_ m/StatefulWidget
+               (reify :extends m/MaterialApp #_m/StatefulWidget
                  (~'createState [_#]
                    (util/rmap-meta-setf [:state-ref me]
-                     (reify :extends #/(w/State m/MaterialApp) #_ w/State
+                     (reify :extends #/(w/State m/MaterialApp) #_w/State
                        (~'build [_# ctx]
                          (m/MaterialApp
                            :home (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids me)))
-                          ~@(let [kvs (for [[k# _#] fx-props]
+                           ~@(let [kvs (for [[k# _#] fx-props]
                                          [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
                                                 (tiltontec.model.core/mget me ~k#))])]
                                (apply concat kvs)))))))))
@@ -35,7 +36,7 @@
 (defn extract-widget [dbg-key me ctx fab]
   (cond
     (nil? fab)
-    (do ;; (dp :exwid-sees-nil-fab dbg-key)
+    (do                                                     ;; (dp :exwid-sees-nil-fab dbg-key)
       nil)
 
     (dart/is? fab m/Widget)
@@ -43,7 +44,7 @@
       fab)
 
     (fn? fab)
-    (do ;; (dp :ew-sees-fn dbg-key fab)
+    (do                                                     ;; (dp :ew-sees-fn dbg-key fab)
       (recur [dbg-key :fn] me ctx (fab me ctx)))
 
     (cty/md-ref? fab)
@@ -110,6 +111,34 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
+#_
+(defmacro textwow [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :dartstate (tiltontec.cell.core/cF
+                  (reify :extends w/State
+                    (~'build [_# ctx]
+                      (w/Text (first (md/md-kids ~'me))
+                        ~@(let [kvs (for [[k# _#] fx-props]
+                                      [k# `(tiltontec.mx-flutter.tag/fx-eval ctx ~'me
+                                             (tiltontec.model.core/mget ~'me ~k#))])]
+                            (apply concat kvs))))))
+     :dartctx (tiltontec.cell.core/cF ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
+                (let [st ^w/State (tiltontec.model.core/mget ~'me :dartstate)]
+                  (assert st "state not available")
+                  (dp :ctx-sees-st!! st)
+                  (.context st)))
+     :dartwidget (tiltontec.cell.core/cF (reify :extends m/StatefulWidget
+                                           (~'createState [_#]
+                                             (tiltontec.model.core/mget ~'me :dartstate))))
+
+     :fx-gen (fn [ctx me]
+               (assert (tiltontec.model.core/mget me :dartwidget))
+               (tiltontec.model.core/mget me :dartwidget))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
 (defmacro centerless [fx-props mx-props & children]
   (let []
     `(apply tiltontec.model.core/make
@@ -140,4 +169,9 @@
          (vec (apply concat (seq ~fx-props)))
          (vec (apply concat (seq ~mx-props)))))))
 
-
+(defn ctx-nearest [me]
+  (cond
+    (nil? me) (do (dp :ctx-nearest-sees-nil-me)
+                  nil)
+    :else (or (mget me :dartctx) ;; todo why does this not cycle?
+            (recur (:par @me)))))
