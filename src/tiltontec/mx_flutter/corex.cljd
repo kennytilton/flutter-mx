@@ -53,17 +53,7 @@
 
     :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
 
-#_ (m/Scaffold
-     :appBar (let [abar (mget me :appBar)]
-               ;; todo convert to, and create, universal extract-widget
-               (if (dart/is? abar m/AppBar)
-                 abar
-                 (tag/render-fx ctx abar)))
-     :body (render-fx ctx (first (md/md-kids me)))
-     :floatingActionButton
-     ;; todo this too s/b render-fx
-     (let [button (mget me :floatingActionButton)]
-       (extract-widget :scaffold-fab me ctx button)))
+
 
 (defmacro scaffold [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
@@ -102,6 +92,24 @@
          (vec (apply concat (seq ~fx-props)))
          (vec (apply concat (seq ~mx-props)))))))
 
+(defmacro text [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx-gen (fn [ctx me]
+               (reify :extends m/StatefulWidget
+                 (~'createState [_#]
+                   (util/rmap-meta-setf [:state-ref me]
+                     (reify :extends w/State
+                       (~'build [_# ctx]
+                         (w/Text (first (md/md-kids me))
+                           ~@(let [kvs (for [[k# _#] fx-props]
+                                         [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
+                                                (tiltontec.model.core/mget me ~k#))])]
+                               (apply concat kvs)))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
 (defmacro centerless [fx-props mx-props & children]
   (let []
     `(apply tiltontec.model.core/make
@@ -132,20 +140,4 @@
          (vec (apply concat (seq ~fx-props)))
          (vec (apply concat (seq ~mx-props)))))))
 
-(defmacro text [fx-props mx-props & children]
-  `(apply tiltontec.model.core/make
-     :kids (tiltontec.model.core/cFkids ~@children)
-     :fx-gen (fn [ctx me]
-               (reify :extends m/StatefulWidget
-                 (~'createState [_#]
-                   (util/rmap-meta-setf [:state-ref me]
-                     (reify :extends w/State
-                       (~'build [_# ctx]
-                         (w/Text (first (md/md-kids me))
-                           ~@(let [kvs (for [[k# _#] fx-props]
-                                         [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
-                                                (tiltontec.model.core/mget me ~k#))])]
-                               (apply concat kvs)))))))))
-     (concat
-       (vec (apply concat (seq ~fx-props)))
-       (vec (apply concat (seq ~mx-props))))))
+
