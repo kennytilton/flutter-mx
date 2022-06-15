@@ -73,6 +73,18 @@
 
     :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
 
+#_ (m/Scaffold
+     :appBar (let [abar (mget me :appBar)]
+               ;; todo convert to, and create, universal extract-widget
+               (if (dart/is? abar m/AppBar)
+                 abar
+                 (tag/render-fx ctx abar)))
+     :body (render-fx ctx (first (md/md-kids me)))
+     :floatingActionButton
+     ;; todo this too s/b render-fx
+     (let [button (mget me :floatingActionButton)]
+       (extract-widget :scaffold-fab me ctx button)))
+
 (defmacro scaffold [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
@@ -117,6 +129,20 @@
                  ;        :child (render-fx ctx (first (tiltontec.model.core/md-kids me))))
                  (m/Center
                    :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                   ~@(let [kvs (for [[k# _#] fx-props]
+                                 [k# `(tiltontec.model.core/mget me ~k#)])]
+                       (apply concat kvs))))
+       (concat
+         (vec (apply concat (seq ~fx-props)))
+         (vec (apply concat (seq ~mx-props)))))))
+
+(defmacro column [fx-props mx-props & children]
+  (let []
+    `(apply tiltontec.model.core/make
+       :kids (tiltontec.model.core/cFkids ~@children)
+       :fx-gen (fn [ctx me]
+                 (m/Column
+                   :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))
                    ~@(let [kvs (for [[k# _#] fx-props]
                                  [k# `(tiltontec.model.core/mget me ~k#)])]
                        (apply concat kvs))))

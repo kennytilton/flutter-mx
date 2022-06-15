@@ -211,9 +211,13 @@
           (try
             ((c-rule c) c)
             (catch Exception e
+              (dprn :exception e)
               (dprn :error-calculating-formula (c-code c))
               (dprn :error-calculating-formula (cinfo c))
               (dprn :error-calculating-formula (cty/minfo (c-model c)))
+              (dprn :ex-data (ex-data e))
+           ;   (dprn :ex-message (ex-message e))
+            ;  (dprn :ex-cause (ex-cause e))
               (dprn :rule-calc-caught e)
               (throw e)))
           prop-code? (and (c-synaptic? c)
