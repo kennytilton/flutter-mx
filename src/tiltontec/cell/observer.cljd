@@ -31,6 +31,8 @@
 
 (defn observe [slot-name me new-val old-val c]
   (dpx :obs-classic slot-name (cty/minfo me) new-val)
+  ;; todo if no state next, search up for nearest and
+  ;;      setState that,
   (when-let [^w/State state (:state-ref (meta me))]
     (do (dpx :settingstate slot-name new-val  (cty/minfo me))
         (.setState state (fn [] (do)))))

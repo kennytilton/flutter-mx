@@ -13,26 +13,6 @@
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
 
-#_(deftype FXScaffold []
-    ;;:type-only true
-    :extends FXDartWidget
-    PDartWidget
-    (parts [this]
-      [:appBar :body :actionButton])
-    (beefer [this]
-      (fn [me ctx]
-        (m/Scaffold
-          :appBar (let [abar (mget me :appBar)]
-                    ;; todo convert to, and create, universal extract-widget
-                    (if (dart/is? abar m/AppBar)
-                      abar
-                      (tag/render-fx ctx abar)))
-          :body (render-fx ctx (first (md/md-kids me)))
-          :floatingActionButton
-          ;; todo this too s/b render-fx
-          (let [button (mget me :floatingActionButton)]
-            (extract-widget :scaffold-fab me ctx button))))))
-
 (defmacro material-app [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
@@ -43,7 +23,7 @@
                      (reify :extends #/(w/State m/MaterialApp) #_ w/State
                        (~'build [_# ctx]
                          (m/MaterialApp
-                           :home (render-fx ctx (first (md/md-kids me)))
+                           :home (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids me)))
                           ~@(let [kvs (for [[k# _#] fx-props]
                                          [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
                                                 (tiltontec.model.core/mget me ~k#))])]
@@ -97,11 +77,13 @@
                          (m/Scaffold
                            :appBar (let [abar# (mget me :appBar)]
                                      ;; todo convert to, and create, universal extract-widget
+                                     (dp :abar!!!!! abar#)
                                      (if (dart/is? abar# m/AppBar)
                                        abar#
-                                       (tag/render-fx ctx abar#)))
-                           :body (render-fx ctx (first (md/md-kids me)))
+                                       (tiltontec.mx-flutter.tag/render-fx ctx abar#)))
+                           :body (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids me)))
                            :floatingActionButton (let [button (mget me :floatingActionButton)]
+                                                   (dp :fab!!!! button)
                                                    (extract-widget :scaffold-fab me ctx button)))))))))
      (concat
        (vec (apply concat (seq ~fx-props)))
