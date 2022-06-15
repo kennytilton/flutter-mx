@@ -1,4 +1,4 @@
-(ns tiltontec.example.physics-sim
+(ns tiltontec.example.x03-physics-sim
   (:require
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
@@ -45,11 +45,11 @@
                     (util/rmap-meta-setf [:controller me]
                       (m/AnimationController :vsync this)))
      :onPanDown   (fn [me ctx ^m/DragDownDetails details]
-                    (when-let [c ^m/AnimationController (:controller (meta me))]
+                    (when-let [c (fx/my-controller)]
                       (.stop c)))
      :onPanUpdate (fn [me ctx ^m/DragUpdateDetails details]
                     (let [size (.size (MediaQuery/of ctx))]
-                      (md/mswap! me :dragAlignment          ;; <============ MX flow triggered
+                      (md/mswap! me :dragAlignment
                         #(.+ ^m/Alignment %
                            (m/Alignment
                              (/ (-> details .delta .dx) (/ (.width size) 2))
@@ -60,8 +60,7 @@
                     (when-let [con (fx/my-controller)]
                       (.dispose con)))}
     (fx/align
-      {:alignment (cF (mget (md/fasc :draggable-card) ;; <========== reactive read
-                        :dragAlignment))}
+      {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
       (fx/card drag-child))))
 
 (defn make-app []
