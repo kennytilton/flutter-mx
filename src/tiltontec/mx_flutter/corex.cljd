@@ -13,13 +13,94 @@
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
 
+#_(deftype FXScaffold []
+    ;;:type-only true
+    :extends FXDartWidget
+    PDartWidget
+    (parts [this]
+      [:appBar :body :actionButton])
+    (beefer [this]
+      (fn [me ctx]
+        (m/Scaffold
+          :appBar (let [abar (mget me :appBar)]
+                    ;; todo convert to, and create, universal extract-widget
+                    (if (dart/is? abar m/AppBar)
+                      abar
+                      (tag/render-fx ctx abar)))
+          :body (render-fx ctx (first (md/md-kids me)))
+          :floatingActionButton
+          ;; todo this too s/b render-fx
+          (let [button (mget me :floatingActionButton)]
+            (extract-widget :scaffold-fab me ctx button))))))
+
+(defmacro material-app [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx-gen (fn [ctx me]
+               (reify :extends m/MaterialApp #_ m/StatefulWidget
+                 (~'createState [_#]
+                   (util/rmap-meta-setf [:state-ref me]
+                     (reify :extends #/(w/State m/MaterialApp) #_ w/State
+                       (~'build [_# ctx]
+                         (m/MaterialApp
+                           :home (render-fx ctx (first (md/md-kids me)))
+                          ~@(let [kvs (for [[k# _#] fx-props]
+                                         [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
+                                                (tiltontec.model.core/mget me ~k#))])]
+                               (apply concat kvs)))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
+(defn extract-widget [dbg-key me ctx fab]
+  (cond
+    (nil? fab)
+    (do ;; (dp :exwid-sees-nil-fab dbg-key)
+      nil)
+
+    (dart/is? fab m/Widget)
+    (do                                                     ;; (dp :fab-is-widget fab)
+      fab)
+
+    (fn? fab)
+    (do ;; (dp :ew-sees-fn dbg-key fab)
+      (recur [dbg-key :fn] me ctx (fab me ctx)))
+
+    (cty/md-ref? fab)
+    (do
+      (recur [dbg-key :renfx] me ctx
+        (render-fx ctx fab)))
+
+    :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
+
+(defmacro scaffold [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx-gen (fn [ctx me]
+               (reify :extends m/StatefulWidget
+                 (~'createState [_#]
+                   (util/rmap-meta-setf [:state-ref me]
+                     (reify :extends w/State
+                       (~'build [_# ctx]
+                         (m/Scaffold
+                           :appBar (let [abar# (mget me :appBar)]
+                                     ;; todo convert to, and create, universal extract-widget
+                                     (if (dart/is? abar# m/AppBar)
+                                       abar#
+                                       (tag/render-fx ctx abar#)))
+                           :body (render-fx ctx (first (md/md-kids me)))
+                           :floatingActionButton (let [button (mget me :floatingActionButton)]
+                                                   (extract-widget :scaffold-fab me ctx button)))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
 
 (defmacro textless [fx-props mx-props & children]
   (let []
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
        :fx-gen (fn [ctx me]
-                 (w/Text (first (md/md-kids me))  ;; need a render-fx here?
+                 (w/Text (first (md/md-kids me))            ;; need a render-fx here?
                    ~@(let [kvs (for [[k# _#] fx-props]
                                  [k# `(tiltontec.model.core/mget me ~k#)])]
                        (apply concat kvs))))
@@ -35,7 +116,7 @@
                  ; (m/Center
                  ;        :child (render-fx ctx (first (tiltontec.model.core/md-kids me))))
                  (m/Center
-                   :child (render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                   :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                    ~@(let [kvs (for [[k# _#] fx-props]
                                  [k# `(tiltontec.model.core/mget me ~k#)])]
                        (apply concat kvs))))

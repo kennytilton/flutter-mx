@@ -19,9 +19,9 @@
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
 
 (defn make-app []
-  (fx/material-app
+  (fxx/material-app
     {:title "Hunt for Teal mxFlutter"
-     :theme (cF (ThemeData :primarySwatch
+     #_#_ :theme (cF (ThemeData :primarySwatch
                   ;; a computed, reactive value, just for fun, but we offer no way for
                   ;; the title to change, so the theme will never get to "react"
                   (let [ttl (mget me :title)]
@@ -30,10 +30,11 @@
                       (string/includes? ttl "Yellow") Colors/yellow
                       :else Colors/blue))))}
     {}
-    (fx/scaffold
+    (fxx/scaffold
       ;; todo arrange for awaken/quiesce on stray edges
       {:appBar (AppBar
-                 :title (m/Text (str "Welcome to mxFlutter " (rand-int 99))))}
+                 :title (m/Text (str "Welcome to mxFlutter 2.0 " (rand-int 99))))}
+      {}
       (fxx/centerless
         {} {:name :hello-center}
         (fxx/textless {:overflow m.TextOverflow/ellipsis
