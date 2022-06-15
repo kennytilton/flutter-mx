@@ -1,0 +1,69 @@
+(ns tiltontec.example.x04-drawer
+  (:require
+    [clojure.string :as string]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.cell.core :as cell
+     :refer [cF cF+ cF_ cI c_F]]
+    [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.tag :as tag
+     :refer [with-ctx]]
+    ["package:flutter/widgets.dart" :as w
+     :refer [Text State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m
+     :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
+             FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]
+    [tiltontec.util.core :as util
+     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
+    [tiltontec.cell.observer
+     :refer [fn-obs]]
+    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.tag :as tag]
+    ))
+
+
+(defn my-home-page [title]
+  (fxx/scaffold
+    {:appBar (m/AppBar :title (m/Text title))
+     :drawer (cF (fxx/drawer {}{}
+                   (m/ListView
+                     ; Important: Remove any padding from the ListView.
+                     :padding m.EdgeInsets/zero
+                     :children [(m/DrawerHeader
+                                  :decoration (m/BoxDecoration :color m.Colors/blue)
+                                  :child (m/Text "Drawer Header"))
+
+
+                                ;; dynamic *ctx* not working well. why not?
+                                ;; can we stash context in the meta at build time?
+                                ;; can we create/stash the navigator itself (better)
+
+
+
+
+                                (m/ListTile
+                                  :title (m/Text "Item 1")
+                                  :onTap #(do (dart:core/print [:item-1 tag/*ctx* (meta me)])
+                                              #_ (.pop ^m/Navigator (mget me :navigator))))
+                                (m/ListTile
+                                  :title (m/Text "Item 2")
+                                  :onTap #(do (dart:core/print [:item-2 tag/*ctx* (meta me)])
+                                              #_ (.pop ^m/Navigator (mget me :navigator))))])))}
+    {:navigator (m/Navigator)}
+    (fxx/centerless {}{}
+      (fxx/text {}{} "My Ported Page!"))
+    ))
+
+(defn make-app
+  []
+  (fxx/material-app
+    {:title                      "Welcome to mxFlutter World"
+     :debugShowCheckedModeBanner false}
+    {}
+    (my-home-page "Drawer Demo")))
+
+
