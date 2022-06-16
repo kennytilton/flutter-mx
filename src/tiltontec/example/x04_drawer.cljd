@@ -53,7 +53,22 @@
                                   :title (m/Text "Item 2")
                                   :onTap #(do (dart:core/print [:item-2 tag/*ctx* (meta me)])
                                               #_ (.pop ^m/Navigator (mget me :navigator))))])))}
-    {:navigator (m/Navigator)}
+
+    ;we are trying to get a Navigator object but it needs context
+
+    {:navigator (m/Navigator)
+     :initState (fn [this me]
+                  (dp :initing-DRAWERstate!!!!!!)
+                  #_ (let [c (util/rmap-meta-setf [:controller me]
+                            (m/AnimationController
+                              :value (if initial-open? 1.0 0.0)
+                              :duration ^:const (dart:core/Duration :milliseconds 250)
+                              :vsync this))]
+                    (util/rmap-meta-setf [:expand-animation me]
+                      (m/CurvedAnimation
+                        :curve m.Curves/fastOutSlowIn
+                        :reverseCurve m.Curves/easeOutQuad
+                        :parent c))))}
     (fxx/centerless {}{}
       (fxx/text {}{} "My Ported Page!"))
     ))
