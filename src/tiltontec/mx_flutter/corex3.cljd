@@ -1,11 +1,9 @@
-(ns tiltontec.mx-flutter.corex
+(ns tiltontec.mx-flutter.corex3
   (:require ["package:flutter/material.dart" :as m
              :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
                      FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
-            ["package:flutter/widgets.dart" :as w
-             :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
-            ["package:flutter/painting.dart" :as p
-             :refer [TextStyle]]
+            ["package:flutter/widgets.dart" :as w]
+            ["package:flutter/painting.dart" :as p]
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe] :as cty]
             [tiltontec.util.core :as util
@@ -58,16 +56,11 @@
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
      :fx-gen (fn [ctx me]
-               (dp :scaff-fx-gen-sees-ctx (or ctx :nope))
-               (util/rmap-meta-setf [:context me] ctx)
                (reify :extends m/StatefulWidget
                  (~'createState [_#]
                    (util/rmap-meta-setf [:state-ref me]
                      (reify :extends w/State
                        (~'build [_# ctx]
-                         (dp :scaff-state-build-sees-ctx ctx (minfo me))
-                         (util/rmap-meta-setf [:context me] ctx)
-                         (dp :scaff-meta (meta me))
                          (m/Scaffold
                            ;; todo bundle up test for dart
                            :appBar (let [abar# (mget me :appBar)]
@@ -117,32 +110,32 @@
        (vec (apply concat (seq ~mx-props))))))
 
 #_
-(defmacro textwow [fx-props mx-props & children]
-  `(apply tiltontec.model.core/make
-     :kids (tiltontec.model.core/cFkids ~@children)
-     :dartstate (tiltontec.cell.core/cF
-                  (reify :extends w/State
-                    (~'build [_# ctx]
-                      (w/Text (first (md/md-kids ~'me))
-                        ~@(let [kvs (for [[k# _#] fx-props]
-                                      [k# `(tiltontec.mx-flutter.tag/fx-eval ctx ~'me
-                                             (tiltontec.model.core/mget ~'me ~k#))])]
-                            (apply concat kvs))))))
-     :dartctx (tiltontec.cell.core/cF ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
-                (let [st ^w/State (tiltontec.model.core/mget ~'me :dartstate)]
-                  (assert st "state not available")
-                  (dp :ctx-sees-st!! st)
-                  (.context st)))
-     :dartwidget (tiltontec.cell.core/cF (reify :extends m/StatefulWidget
-                                           (~'createState [_#]
-                                             (tiltontec.model.core/mget ~'me :dartstate))))
+        (defmacro textwow [fx-props mx-props & children]
+          `(apply tiltontec.model.core/make
+             :kids (tiltontec.model.core/cFkids ~@children)
+             :dartstate (tiltontec.cell.core/cF
+                          (reify :extends w/State
+                            (~'build [_# ctx]
+                              (w/Text (first (md/md-kids ~'me))
+                                ~@(let [kvs (for [[k# _#] fx-props]
+                                              [k# `(tiltontec.mx-flutter.tag/fx-eval ctx ~'me
+                                                     (tiltontec.model.core/mget ~'me ~k#))])]
+                                    (apply concat kvs))))))
+             :dartctx (tiltontec.cell.core/cF ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
+                        (let [st ^w/State (tiltontec.model.core/mget ~'me :dartstate)]
+                          (assert st "state not available")
+                          (dp :ctx-sees-st!! st)
+                          (.context st)))
+             :dartwidget (tiltontec.cell.core/cF (reify :extends m/StatefulWidget
+                                                   (~'createState [_#]
+                                                     (tiltontec.model.core/mget ~'me :dartstate))))
 
-     :fx-gen (fn [ctx me]
-               (assert (tiltontec.model.core/mget me :dartwidget))
-               (tiltontec.model.core/mget me :dartwidget))
-     (concat
-       (vec (apply concat (seq ~fx-props)))
-       (vec (apply concat (seq ~mx-props))))))
+             :fx-gen (fn [ctx me]
+                       (assert (tiltontec.model.core/mget me :dartwidget))
+                       (tiltontec.model.core/mget me :dartwidget))
+             (concat
+               (vec (apply concat (seq ~fx-props)))
+               (vec (apply concat (seq ~mx-props))))))
 
 (defmacro centerless [fx-props mx-props & children]
   (let []
@@ -179,7 +172,6 @@
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
        :fx-gen (fn [ctx me]
-                 (util/rmap-meta-setf [:context me] ctx)
                  (m/Drawer
                    :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                    ~@(let [kvs (for [[k# _#] fx-props]

@@ -41,20 +41,28 @@
       (fxx/centerless {} {}
         (fxx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
-          #_ (fxx/textless {:style (TextStyle :color Colors/black
-                                  :fontSize 18.0)} {}
-            "You clicked the button so many times:")
+          #_(fxx/textless {:style (TextStyle :color Colors/black
+                                    :fontSize 18.0)} {}
+              "You clicked the button so many times:")
 
           (make
-            :style (c_F []
-                     (dp :style-sees-ctx (mget me :dartctx))
+            :style (c_F [:always-compute true]
+
+
+                     ; just getting ready to try this ^^^^^
+
                      (if-let [ctx (mget me :dartctx)]
-                       (.headline3 (.textTheme (Theme/of ctx)))
-                       (TextStyle :color Colors/red
-                         :fontSize 24.0)))
+                       (do (dp :style-sees-ctx ctx)
+                           (.headline3 (.textTheme (Theme/of ctx))))
+                       (do (dp :style-NO-SEE-ctx)
+                           (TextStyle :color Colors/red
+                             :fontWeight m.FontWeight/bold
+                             :fontSize 18.0))))
             :kids (cFkids "You clicked the button this many times:")
             :dartctx (c_F []
-                       (fxx/ctx-nearest (:par @me))) ;; todo create my-par or sth
+                       (let [ctx (fxx/ctx-nearest (:par @me))]
+                         (dp :dartctx-runs-gets!!!! (or ctx :nada))
+                         ctx))        ;; todo create my-par or sth
             :dartwidget (c_F []
                           (w/Text (first (md/md-kids me))
                             :style (mget me :style)))
@@ -65,16 +73,16 @@
             :name :z-counter
             :style (c_F []
                      (let [ctx (mget me :dartctx)]
-                          (.headline3 (.textTheme (Theme/of ctx)))))
+                       (.headline3 (.textTheme (Theme/of ctx)))))
             :value (cI 0)
             :kids (cFkids (str (md/my-val)))
             :dartstate (c_F [:obs (fn-obs
                                     (util/rmap-meta-setf [:state-ref me] new))]
                          (reify :extends w/State
-                              (build [this ctx]
-                                (w/Text (first (md/md-kids me))
-                                  :style (mget me :style)))))
-            :dartctx (c_F []                                  ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
+                           (build [this ctx]
+                             (w/Text (first (md/md-kids me))
+                               :style (mget me :style)))))
+            :dartctx (c_F []                                ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
                        (dp :ctx-gets-state)
                        (let [st ^w/State (mget me :dartstate)]
                          (assert st "state not available")
@@ -83,8 +91,8 @@
             :dartwidget (c_F []
                           (dp :making-widget)
                           (reify :extends m/StatefulWidget
-                              (createState [_]
-                                (mget me :dartstate))))
+                            (createState [_]
+                              (mget me :dartstate))))
 
             :fx-gen (fn [ctx me]
                       (assert (mget me :dartwidget))

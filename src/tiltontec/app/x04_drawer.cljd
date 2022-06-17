@@ -1,4 +1,4 @@
-(ns tiltontec.example.x04-drawer
+(ns tiltontec.app.x04-drawer
   (:require
     [clojure.string :as string]
     [tiltontec.util.base :refer [dprn dp dpx]]
@@ -29,7 +29,7 @@
 (defn my-home-page [title]
   (fxx/scaffold
     {:appBar (m/AppBar :title (m/Text title))
-     :drawer (cF (fxx/drawer {}{}
+     :drawer (cF (fxx/drawer {}{:name :my-drawer}
                    (m/ListView
                      ; Important: Remove any padding from the ListView.
                      :padding m.EdgeInsets/zero
@@ -37,41 +37,17 @@
                                   :decoration (m/BoxDecoration :color m.Colors/blue)
                                   :child (m/Text "Drawer Header"))
 
-
-                                ;; dynamic *ctx* not working well. why not?
-                                ;; can we stash context in the meta at build time?
-                                ;; can we create/stash the navigator itself (better)
-
-
-
-
                                 (m/ListTile
                                   :title (m/Text "Item 1")
-                                  :onTap #(do (dart:core/print [:item-1 tag/*ctx* (meta me)])
-                                              #_ (.pop ^m/Navigator (mget me :navigator))))
+                                  :onTap #(let [nav (m.Navigator/of (:context (meta me)))]
+                                            (.pop nav)))
                                 (m/ListTile
                                   :title (m/Text "Item 2")
-                                  :onTap #(do (dart:core/print [:item-2 tag/*ctx* (meta me)])
-                                              #_ (.pop ^m/Navigator (mget me :navigator))))])))}
-
-    ;we are trying to get a Navigator object but it needs context
-
-    {:navigator (m/Navigator)
-     :initState (fn [this me]
-                  (dp :initing-DRAWERstate!!!!!!)
-                  #_ (let [c (util/rmap-meta-setf [:controller me]
-                            (m/AnimationController
-                              :value (if initial-open? 1.0 0.0)
-                              :duration ^:const (dart:core/Duration :milliseconds 250)
-                              :vsync this))]
-                    (util/rmap-meta-setf [:expand-animation me]
-                      (m/CurvedAnimation
-                        :curve m.Curves/fastOutSlowIn
-                        :reverseCurve m.Curves/easeOutQuad
-                        :parent c))))}
-    (fxx/centerless {}{}
-      (fxx/text {}{} "My Ported Page!"))
-    ))
+                                  :onTap #(let [nav (m.Navigator/of (:context (meta me)))]
+                                            (.pop nav)))])))}
+    {}
+    (fxx/centerless {}{:name :ctr-less}
+      (fxx/text {}{:name :mypage} "My Ported Page!"))))
 
 (defn make-app
   []
