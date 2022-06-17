@@ -9,107 +9,34 @@
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cI]]
     [tiltontec.model.core :refer [mget] :as md]
-    [tiltontec.mx-flutter.tag :as tag]
-    [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.mx-flutter.corex :as fxx]
-    [tiltontec.mx-flutter.corex3 :as fx3]
+    [tiltontec.mx-flutter.corex :as fx]
     ;; State StatefulWidget StatelessWidget]]
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m :refer [AppBar Colors ThemeData]]
     ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
 
-;(defmacro host [fx & [mesym]]
-;  (let [me (or me 'me)]
-;    `(or (:host @~me)
-;       (throw (Exception. (str ":host nil in " (cty/minfo ~me)))))))
-
-(defn render-fx3 [fx]
-  (cond
-    (not (cty/md-ref? fx))
-    (do (dprn :rnfx-sees-not-md-ref?-passing-thru fx)
-        fx)
-    :else (let [b (mget fx :builder)]
-            (assert b (str "ERROR: render-fx of model finds no buildr: " (minfo fx)))
-            (b fx))))
-
-#_
 (defn make-app []
-  (md/make :mx-type (fx3/FXModel)
-    :name :hello-app
-    :fx (c_F (md/make :mx-type (fx3/FXProxy)
-               :host me
-               :dartwidget (c_F (reify :extends m/MaterialApp
-                                  (~'createState [_#]
-                                    (md/mget ~'me :dartstate))))
-
-               :dartstate (c_F (reify :extends #/(w/State m/MaterialApp)
-                                 (build [_ ctx]
-                                   (binding [*ctx* ctx]
-                                     (let [fx (md/make :mx-type (fx3/FXProxy)
-                                                :host me
-                                                :title "Hunt for Teal mxFlutter"
-                                                :theme (m.Theme/of *ctx*))
-                                           ])
-                                   (let [builder (mget me :builder)]
-                                     (assert builder (str "No fx-gen for " (cty/minfo me)))
-                                     (assert (fn? builder) (str "fx-gen not a fn? for " (cty/minfo me) ", " builder))
-                                     (binding [*ctx* ctx]
-                                       (builder me))))))
-               :builder (fn [proxy]
-                          (m/MaterialApp
-                            :home (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids proxy)))
-                            :title (mget proxy :title)
-                            :theme (mget proxy :theme)))
-               ;; ------------------------------------------------------------
-               :title "Hunt for Teal mxFlutter"
-               :theme (c_F (m.Theme/of *ctx*))
-               #_ (cF (ThemeData :primarySwatch
-                        ;; a computed, reactive value, just for fun, but we offer no way for
-                        ;; the title to change, so the theme will never get to "react"
-                        (let [ttl (mget me :title)]
-                          (cond
-                            (string/includes? ttl "Teal") Colors/teal
-                            (string/includes? ttl "Yellow") Colors/yellow
-                            :else Colors/blue))
-                        ))))
-
-    :kids (cFkids)
-    (fxx/material-app
-      {:title "Hunt for Teal mxFlutter"
-       :theme (cF (ThemeData :primarySwatch
-                    ;; a computed, reactive value, just for fun, but we offer no way for
-                    ;; the title to change, so the theme will never get to "react"
-                    (let [ttl (mget me :title)]
-                      (cond
-                        (string/includes? ttl "Teal") Colors/teal
-                        (string/includes? ttl "Yellow") Colors/yellow
-                        :else Colors/blue))))}
-      {}
-      (fxx/textless {:overflow m.TextOverflow/ellipsis
-                     :style    (TextStyle
-                                 :color Colors/cyan
-                                 :fontSize 32.0)} {}
-        "hello, world\\n")))))
-
-#_(cF (ThemeData :primarySwatch
-        ;; a computed, reactive value, just for fun, but we offer no way for
-        ;; the title to change, so the theme will never get to "react"
-        (let [ttl (mget (host) :title)]
-          (cond
-            (string/includes? ttl "Teal") Colors/teal
-            (string/includes? ttl "Yellow") Colors/yellow
-            :else Colors/blue))))
-
-#_(fxx/scaffold
-    ;; todo arrange for awaken/quiesce on stray edges
-    {:appBar (AppBar
-               :title (m/Text (str "Welcome to mxFlutter 3.0 " (rand-int 99))))}
+  (fx/material-app
+    {:title "Hunt for Teal mxFlutter"
+     :theme (cF (ThemeData :primarySwatch
+                  ;; a computed, reactive value, just for fun, but we offer no way for
+                  ;; the title to change, so the theme will never get to "react"
+                  (let [ttl (mget me :title)]
+                    (cond
+                      (string/includes? ttl "Teal") Colors/teal
+                      (string/includes? ttl "Yellow") Colors/yellow
+                      :else Colors/blue))))}
     {}
-    (fxx/centerless
-      {} {:name :hello-center}
-      (fxx/textless {:overflow m.TextOverflow/ellipsis
-                     :style    (TextStyle
-                                 :color Colors/cyan
-                                 :fontSize 32.0)} {}
-        "hello, world\\n")))
+    (fx/scaffold
+      ;; todo arrange for awaken/quiesce on stray edges
+      {:appBar (AppBar
+                 :title (m/Text "Welcome to mxFlutter 0.2"))}
+      {}
+      (fx/centerless
+        {} {:name :hello-center}
+        (fx/textless {:overflow m.TextOverflow/ellipsis
+                       :style    (TextStyle
+                                   :color Colors/cyan
+                                   :fontSize 32.0)} {}
+          "hello, world\\n")))))
