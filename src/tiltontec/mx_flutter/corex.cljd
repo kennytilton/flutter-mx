@@ -189,6 +189,12 @@
          (vec (apply concat (seq ~fx-props)))
          (vec (apply concat (seq ~mx-props)))))))
 
+;;; --- utils -------------------------------------
+
+(defmacro mmeta [] `(meta ~'me))
+(defmacro mctx [] `(:context (meta ~'me)))
+(defmacro mnav [] `(m.Navigator/of (:context (meta ~'me))))
+
 (defn ctx-nearest [me]
   (cond
     (nil? me) (do (dp :ctx-nearest-sees-nil-me)
