@@ -1,4 +1,4 @@
-(ns tiltontec.example.x02-counter
+(ns tiltontec.app.x02-counter
   (:require
     [clojure.string :as string]
     [tiltontec.util.base :refer [dprn dp dpx]]
@@ -19,8 +19,7 @@
      :refer [TextStyle]]
     [tiltontec.util.core :as util
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-    [tiltontec.cell.observer
-     :refer [fn-obs]]
+    [tiltontec.cell.observer :refer [fn-obs]]
     ))
 
 (defn make-app []
@@ -29,31 +28,29 @@
      :theme (ThemeData :primarySwatch Colors/blue)}
     {}
     (fxx/scaffold
-      {:appBar               (fx/app-bar {:title (cF (m/Text (str "Counter fxx rnd=" (rand-int 1000)
-                                                               ", ctr=" (mget (md/fm* :z-counter) :value))))})
-       :floatingActionButton (cF
-                               (FloatingActionButton
-                                 :onPressed (fn ^void []
-                                              (md/mswap! (md/fm* :z-counter) :value inc))
-                                 :tooltip "Increment"
-                                 :child (Icon Icons/add :color Colors/black)))}
+      {:appBar               (fx/app-bar {:title (cF (m/Text (str "Counter = " (mget (md/fm* :z-counter) :value))))})
+       :floatingActionButton (cF (FloatingActionButton
+                                   :onPressed (fn ^void []
+                                                (md/mswap! (md/fm* :z-counter) :value inc))
+                                   :tooltip "Increment"
+                                   :child (Icon Icons/add :color Colors/black)))}
       {}
       (fxx/center {} {}
         (fxx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
-          #_ (fxx/textless {:style (TextStyle :color Colors/black
-                                  :fontSize 18.0)} {}
-            "You clicked the button so many times:")
+          #_(fxx/textless {:style (TextStyle :color Colors/black
+                                    :fontSize 18.0)} {}
+              "You clicked the button so many times:")
           (make
             :style (c_F []
                      (dp :style-sees-ctx (mget me :dartctx))
                      (if-let [ctx (mget me :dartctx)]
-                       (.headline4 (.textTheme (Theme/of ctx)))
+                       (.headline3 (.textTheme (Theme/of ctx)))
                        (TextStyle :color Colors/red
                          :fontSize 24.0)))
             :kids (cFkids "You clicked the button this many times:")
             :dartctx (c_F []
-                       (fxx/ctx-nearest (:par @me))) ;; todo create my-par or sth
+                       (fxx/ctx-nearest (:par @me)))        ;; todo create my-par or sth
             :dartwidget (c_F []
                           (w/Text (first (md/md-kids me))
                             :style (mget me :style)))
@@ -63,17 +60,15 @@
           (md/make
             :name :z-counter
             :style (c_F []
-                     (let [ctx (mget me :dartctx)]
-                          (.headline3 (.textTheme (Theme/of ctx)))))
+                     (.headline3 (.textTheme (Theme/of (fxx/mctx)))))
             :value (cI 0)
             :kids (cFkids (str (md/my-val)))
-            :dartstate (c_F [:obs (fn-obs
-                                    (util/rmap-meta-setf [:state-ref me] new))]
+            :dartstate (c_F [:obs (fn-obs (util/rmap-meta-setf [:state-ref me] new))]
                          (reify :extends w/State
-                              (build [this ctx]
-                                (w/Text (first (md/md-kids me))
-                                  :style (mget me :style)))))
-            :dartctx (c_F []                                  ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
+                           (build [this ctx]
+                             (w/Text (first (md/md-kids me))
+                               :style (mget me :style)))))
+            :dartctx (c_F []                                ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
                        (dp :ctx-gets-state)
                        (let [st ^w/State (mget me :dartstate)]
                          (assert st "state not available")
@@ -82,8 +77,8 @@
             :dartwidget (c_F []
                           (dp :making-widget)
                           (reify :extends m/StatefulWidget
-                              (createState [_]
-                                (mget me :dartstate))))
+                            (createState [_]
+                              (mget me :dartstate))))
 
             :fx-gen (fn [ctx me]
                       (assert (mget me :dartwidget))

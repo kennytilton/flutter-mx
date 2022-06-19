@@ -33,6 +33,27 @@
          (fm-navig #(= name# (md-get % :name))
            ~me-ref :me? false :up? true :inside? false))))
 
+(defn extract-widget [dbg-key me ctx fab]
+  (cond
+    (nil? fab)
+    (do                                                     ;; (dp :exwid-sees-nil-fab dbg-key)
+      nil)
+
+    (dart/is? fab m/Widget)
+    (do                                                     ;; (dp :fab-is-widget fab)
+      fab)
+
+    (fn? fab)
+    (do                                                     ;; (dp :ew-sees-fn dbg-key fab)
+      (recur [dbg-key :fn] me ctx (fab me ctx)))
+
+    (cty/md-ref? fab)
+    (do
+      (recur [dbg-key :renfx] me ctx
+        (render-fx ctx fab)))
+
+    :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
+
 (defn ctx-page-push [ctx fx-page-def]
   ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
   (.push (-> ctx m.Navigator/of)
@@ -152,7 +173,7 @@
         (m/Material
           :shape (mget me :shape)
           :clipBehavior (mget me :clipBehavior)
-          ;; todo write call-or-get-property or sth
+          ;; todo when ready to dump fx1: write call-or-get-property or sth
           :color (if (fn? color)
                    (color me ctx)
                    color)
@@ -220,14 +241,9 @@
   (beefer [this]
     (fn [me ctx]
       (m/Scaffold
-        :appBar (let [abar (mget me :appBar)]
-                  ;; todo convert to, and create, universal extract-widget
-                  (if (dart/is? abar m/AppBar)
-                    abar
-                    (tag/render-fx ctx abar)))
+        :appBar (extract-widget :core-appbar me ctx (mget me :appBar)) ;; todo now test where used
         :body (render-fx ctx (first (md/md-kids me)))
         :floatingActionButton
-        ;; todo this too s/b render-fx
         (let [button (mget me :floatingActionButton)]
           (extract-widget :scaffold-fab me ctx button))))))
 
@@ -256,8 +272,7 @@
     ;; Problem: The default fx gen uses an anonymous StatefulWidget (not a PSW) as a wrapper.
     ;; Solution: override fx gen (so AppBars go out unwrapped and thus acceptable to Scaffold.
     (fn [ctx me]
-      ;; todo see if new approach eliminates need for special handling
-      ;;  since we are eliminating wrapping
+      ;; todo today see if new un-wrapped approach eliminates need for special handling
       (reify :extends m/AppBar
         (createState [this]
           (util/rmap-meta-setf [:state-ref me]
@@ -469,8 +484,6 @@
 
 (deftag animated-opacity tiltontec.mx-flutter.core/FXAnimatedOpacity)
 
-;; todo explore stateless widgets
-
 ;;; --- ignore pointer -------------------------------------------
 
 (deftype FXIgnorePointer []
@@ -669,7 +682,6 @@
 (deftag grid-view+count tiltontec.mx-flutter.core/FXGridView+count)
 
 ;;; --- ListView/builder -----------------------------------------
-;; todo can this be FXListView+Builder or FXListView.Builder or sth?
 (deftype FXListView+builder []
   ;;:type-only true
   :extends FXDartWidget
@@ -687,7 +699,7 @@
 (deftag list-view+builder tiltontec.mx-flutter.core/FXListView+builder)
 
 ;;; --- flutter logo -----------------------------------------------------
-; todo how could we do this without creating a custom type?
+; todo today how could we do this without creating a custom type?
 (deftype FXFlutterLogo []
   ;;:type-only true
   :extends FXDartWidget

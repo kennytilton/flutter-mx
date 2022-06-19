@@ -13,7 +13,7 @@
     {:appBar (m/AppBar :title (m/Text title))
      :drawer (cF (fx/drawer {}{:name :my-drawer}
                    (m/ListView
-                     :padding m.EdgeInsets/zero ;; <-- important
+                     :padding m.EdgeInsets/zero ;; <-- default padding not good, so we specify one. Same as in HTML!
                      :children [(m/DrawerHeader
                                   :decoration (m/BoxDecoration :color m.Colors/blue)
                                   :child (m/Text "Drawer Header"))
@@ -25,8 +25,20 @@
                                   :title (m/Text "Item 2")
                                   :onTap #(.pop (fx/mnav)))])))}
     {}
-    (fx/centerless {}{:name :ctr-less}
+    ;; todo convert c-less, to center, use center! for stateful? But will most be stateless and require "!"?
+    (fx/center {}{:name :ctr-less}
       (fx/text {}{:name :mypage} "My Ported Page!!"))))
+
+;; todo mxf-ify
+#_ (fx/drawer {}{:name :my-drawer}
+     (fx/list-view {:padding m.EdgeInsets/zero} ;; <-- important
+       {}
+       (fx/drawer-header {:decoration (m/BoxDecoration :color m.Colors/blue)}{}
+         (m/Text "Drawer Header"))
+       (fx/list-tile {:title (m/Text "Item 1a")
+                      :onTap #(.pop (fx/mnav))})
+       (fx/list-tile {:title (m/Text "Item 2a")
+                      :onTap #(.pop (fx/mnav))})))
 
 (defn make-app []
   (fx/material-app

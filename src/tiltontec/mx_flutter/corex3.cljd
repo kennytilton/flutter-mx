@@ -182,8 +182,9 @@
          (vec (apply concat (seq ~mx-props)))))))
 
 (defn ctx-nearest [me]
+  ;; todo today de-dup with cortex and sort out search
   (cond
     (nil? me) (do (dp :ctx-nearest-sees-nil-me)
                   nil)
-    :else (or (mget me :dartctx) ;; todo why does this not cycle?
+    :else (or (mget me :dartctx)
             (recur (:par @me)))))
