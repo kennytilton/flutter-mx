@@ -161,15 +161,17 @@
 
 ;;; --- utils -------------------------------------
 
-(defmacro mmeta [] `(meta ~'me))
-(defmacro mctx [] `(:context (meta ~'me)))
-(defmacro mnav [] `(m.Navigator/of (:context (meta ~'me))))
-
 (defn ctx-nearest [me]
   (cond
     (nil? me) (do (dp :ctx-nearest-sees-nil-me-out-top?)
                   nil)
     :else (do
             (assert (cty/md-ref? me) "ctx-nearest passed non-md")
+            ;; todo lose meta ctx used elsewhere once sure not needed
             (or (mget me :fx$ctx)
               (recur (:par @me))))))
+
+;(defmacro mmeta [] `(meta ~'me))
+(defmacro my-ctx [] `(ctx-nearest ~'me))
+(defmacro my-nav [] `(m.Navigator/of (ctx-nearest ~'me)))
+

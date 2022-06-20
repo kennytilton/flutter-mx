@@ -16,12 +16,7 @@
      :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
              FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
-     :refer [TextStyle]]
-    [tiltontec.util.core :as util
-     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-    [tiltontec.cell.observer
-     :refer [fn-obs]]
-    ))
+     :refer [TextStyle]]))
 
 (defn make-app []
   (fxx/material-app
@@ -45,9 +40,7 @@
                                   :fontSize 18.0)} {}
             "You clicked the button so many times:")
           (fxx/text
-            {:style (cF (dp :seeking_CTX (cty/minfo me))
-                      (when-let [ctx-3 (fxx/ctx-nearest me)] ;; todo cvt to my-ctx when stable
-                          (dp :BAM_CTX!!! ctx-3)
+            {:style (cF (when-let [ctx-3 (fxx/ctx-nearest me)] ;; todo cvt to my-ctx when stable
                           (.headline4 (.textTheme (Theme/of ctx-3)))))}
             {:name  :z-counter
              :value (cI 0)}
