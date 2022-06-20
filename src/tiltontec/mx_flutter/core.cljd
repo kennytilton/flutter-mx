@@ -670,7 +670,7 @@
 
 ;;; --- GridView/counter -------------------------------------
 
-(deftype FXGridView+count []
+(deftype FXGridViewCount []
   ;;:type-only true
   :extends FXDartWidget
   PDartWidget
@@ -679,15 +679,15 @@
       (m.GridView/count
         :crossAxisCount (mget me :crossAxisCount)
         :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md-kids me))))))
-(deftag grid-view+count tiltontec.mx-flutter.core/FXGridView+count)
+(deftag grid-view+count tiltontec.mx-flutter.core/FXGridViewCount)
 
 ;;; --- ListView/builder -----------------------------------------
-(deftype FXListView+builder []
+(deftype FXListViewBuilder []
   ;;:type-only true
   :extends FXDartWidget
   PObserver
   (observe [this slot me new-value prior-value cell]
-    #_(dprn :FXListView+builder-obs!! slot))
+    #_(dprn :FXListViewBuilder-obs!! slot))
   PDartWidget
   (beefer [this]
     (fn [me ctx]
@@ -696,7 +696,7 @@
         :itemCount (mget me :itemCount)
         :itemBuilder (mget me :itemBuilder)))))
 
-(deftag list-view+builder tiltontec.mx-flutter.core/FXListView+builder)
+(deftag list-view+builder tiltontec.mx-flutter.core/FXListViewBuilder)
 
 ;;; --- flutter logo -----------------------------------------------------
 ; todo today how could we do this without creating a custom type?
@@ -728,7 +728,7 @@
 
 ;;; --- ---------------------------------------
 
-(deftype FXSizedBox+expand []
+(deftype FXSizedBoxExpand []
   :extends FXDartWidget
   PDartWidget
   (beefer [this]
@@ -737,4 +737,4 @@
         (m.SizedBox/expand
           :child (render-fx ctx child))))))
 
-(deftag sized-box+expand tiltontec.mx-flutter.core/FXSizedBox+expand)
+(deftag sized-box+expand tiltontec.mx-flutter.core/FXSizedBoxExpand)

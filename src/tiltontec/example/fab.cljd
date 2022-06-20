@@ -59,13 +59,13 @@
                         :reverseCurve m.Curves/easeOutQuad
                         :parent c))))
      :dispose   (fn [this me]
-                  (when-let [controller (:controller (meta me))]
+                  (when-let [controller (fx/my-controller)]
                     (.dispose controller)))}
     {:name  :fab
      :step  (cF (/ 90.0 (dec (count actions))))
      :open? (cI initial-open?
               :obs (fn [prop-name me new-value prior-value cell]
-                     (when-let [c (:controller (meta me))]  ;; not until first render installation
+                     (when-let [c (fx/my-controller)]  ;; not until first render installation
                        (if new-value
                          (.forward c)
                          (.reverse c)))))}
@@ -170,7 +170,7 @@
         (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
-                      :color (cF (let [st (:state-ref (meta me))]
+                      :color (cF (let [st (fx/my-state)]
                                    (if st
                                      (do (dp :icon-sees-state! st)
                                          (dp :icon-sees-ctx!! (.context st))
