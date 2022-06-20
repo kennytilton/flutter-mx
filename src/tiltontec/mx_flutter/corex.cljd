@@ -17,6 +17,7 @@
 (defmacro material-app [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
+     :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
      :fx-gen (fn [ctx me]
                (reify :extends m/MaterialApp #_m/StatefulWidget
                  (~'createState [_#]
@@ -57,6 +58,7 @@
 (defmacro scaffold [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
+     :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
      :fx-gen (fn [ctx me]
                (dp :scaff-fx-gen-sees-ctx (or ctx :nope))
                (util/rmap-meta-setf [:context me] ctx)
@@ -82,6 +84,7 @@
   (let []
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
+       :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
        :fx-gen (fn [ctx me]
                  (w/Text (first (md/md-kids me))            ;; need a render-fx here?
                    ~@(let [kvs (for [[k# _#] fx-props]
@@ -94,12 +97,14 @@
 (defmacro text [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
+     :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
      :fx-gen (fn [ctx me]
                (reify :extends m/StatefulWidget
                  (~'createState [_#]
                    (util/rmap-meta-setf [:state-ref me]
                      (reify :extends w/State
                        (~'build [_# ctx]
+                         (tiltontec.model.core/mset! me :fx$ctx ctx)
                          (w/Text (first (md/md-kids me))
                            ~@(let [kvs (for [[k# _#] fx-props]
                                          [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
@@ -141,8 +146,10 @@
   (let []
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
+       :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
        :fx-gen (fn [ctx me]
                  (util/rmap-meta-setf [:context me] ctx)
+                 (tiltontec.model.core/mset! me :fx$ctx ctx)
                  (m/Drawer
                    :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                    ~@(let [kvs (for [[k# _#] fx-props]
@@ -162,5 +169,7 @@
   (cond
     (nil? me) (do (dp :ctx-nearest-sees-nil-me-out-top?)
                   nil)
-    :else (or (:context (meta me))
-            (recur (:par @me)))))
+    :else (do
+            (assert (cty/md-ref? me) "ctx-nearest passed non-md")
+            (or (mget me :fx$ctx)
+              (recur (:par @me))))))

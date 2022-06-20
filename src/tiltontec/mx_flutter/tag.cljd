@@ -8,6 +8,8 @@
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.cell.base :refer [mx-type minfo cinfo unbound Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.core
+             :refer [cF cF+ c-reset-next! cFonce cFn cI c-reset! make-cell make-c-formula]]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]))
@@ -65,6 +67,8 @@
             ;;
             ;; we include the MX "me" in the generation...
             (assert (= ctx (.context this)))
+            (dp :reactive-ctx-set!!!! (minfo me) ctx)
+            (md/mset! me :fx$ctx ctx)
             (beefer me ctx))
           (^void initState [this]
             (.initState ^super this)
@@ -76,12 +80,33 @@
               (disp-fn this me))
             (.dispose ^super this)))))))
 
+(defn make-fxx [mx-type fx-props custom-props cFkids-form]
+  ;;(dp :make-fx!!!!!!! mx-type)
+  (apply tiltontec.model.core/make
+    :kids cFkids-form
+    :fx$ctx (cI nil) ;; set at start of build
+    :fx-prop-keys (keys fx-props)
+    :fx-gen (fn [ctx me]
+              ;; the default "statefully" works for must Flutter widgets,
+              ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
+              ;; so we allow individual widget Types to supply their own fx-gen.
+              (tiltontec.mx-flutter.tag/statefully me
+                (fn [me ctx]
+                  (let [beefer (or (mget me :beefer)
+                                 (beefer mx-type))]
+                    ;; (dp :make-fx-using-beefer!!!!!!!! (minfo me) beefer)
+                    (beefer me ctx)))))
+    (concat
+      (vec (apply concat (seq fx-props)))
+      (vec (apply concat (seq custom-props))))))
+
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   ;;(dp :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :fx-prop-keys (keys fx-props)
     :kids cFkids-form
+    :fx$ctx (cI nil) ;; set at start of build
+    :fx-prop-keys (keys fx-props)
     :fx-gen (fn [ctx me]
               ;; the default "statefully" works for must Flutter widgets,
               ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
