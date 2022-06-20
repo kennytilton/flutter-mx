@@ -46,14 +46,20 @@
             "You clicked the button so many times:")
           (make
             :style (c_F []
-                     (dp :style-sees-ctx (mget me :dartctx))
-                     (if-let [ctx (mget me :dartctx)]
-                       (.headline4 (.textTheme (Theme/of ctx)))
-                       (TextStyle :color Colors/red
-                         :fontSize 24.0)))
+                     (let [ctx (fxx/mctx) #_ (mget me :dartctx)]
+                       (if ctx
+                         (do
+                           (dp :style-sees-ctx ctx)
+                           (.headline4 (.textTheme (Theme/of ctx))))
+                         (do
+                           (dp :sees-NO-ctx-hardcode)
+                           (TextStyle :color Colors/red
+                             :fontSize 24.0)))))
+
             :kids (cFkids "You clicked the button this many times:")
             :dartctx (c_F []
-                       (fxx/ctx-nearest (:par @me))) ;; todo create my-par or sth
+                       (fxx/mctx)
+                       #_ (fxx/ctx-nearest (:par @me))) ;; todo create my-par or sth
             :dartwidget (c_F []
                           (w/Text (first (md/md-kids me))
                             :style (mget me :style)))

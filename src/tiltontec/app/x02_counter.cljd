@@ -63,17 +63,7 @@
                      (.headline3 (.textTheme (Theme/of (fxx/mctx)))))
             :value (cI 0)
             :kids (cFkids (str (md/my-val)))
-            :dartstate (c_F [:obs (fn-obs (util/rmap-meta-setf [:state-ref me] new))]
-                         (reify :extends w/State
-                           (build [this ctx]
-                             (w/Text (first (md/md-kids me))
-                               :style (mget me :style)))))
-            :dartctx (c_F []                                ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
-                       (dp :ctx-gets-state)
-                       (let [st ^w/State (mget me :dartstate)]
-                         (assert st "state not available")
-                         (dp :ctx-sees-st!! st)
-                         (.context st)))
+            :dartctx (cI nil) ;; populated in build
             :dartwidget (c_F []
                           (dp :making-widget)
                           (reify :extends m/StatefulWidget
