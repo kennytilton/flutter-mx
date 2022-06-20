@@ -31,7 +31,7 @@
     value))
 
 (defn render-fx [ctx fx]
-  (dp :rfx-entry ctx (cty/minfo fx))
+  (dpx :rfx-entry ctx (cty/minfo fx))
   (binding [*ctx* ctx]
     (cond
       (not (md-ref? fx))
@@ -67,7 +67,7 @@
             ;;
             ;; we include the MX "me" in the generation...
             (assert (= ctx (.context this)))
-            (dp :reactive-ctx-set!!!! (minfo me) ctx)
+            (dpx :reactive-ctx-set!!!! (minfo me) ctx)
             (md/mset! me :fx$ctx ctx)
             (beefer me ctx))
           (^void initState [this]
