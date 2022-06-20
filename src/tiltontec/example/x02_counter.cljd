@@ -4,7 +4,7 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell
-     :refer [cF cF+ cF_ cI c_F]]
+     :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx]
     [tiltontec.mx-flutter.corex :as fxx]
@@ -38,68 +38,18 @@
                                  :tooltip "Increment"
                                  :child (Icon Icons/add :color Colors/black)))}
       {}
-      (fxx/center {} {}
+      (fxx/center {}{}
         (fxx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
-          #_ (fxx/textless {:style (TextStyle :color Colors/black
+          (fxx/textless {:style (TextStyle :color Colors/black
                                   :fontSize 18.0)} {}
             "You clicked the button so many times:")
-          (make
-            :style (c_F []
-                     (let [ctx (fxx/mctx) #_ (mget me :dartctx)]
-                       (if ctx
-                         (do
-                           (dp :style-sees-ctx ctx)
-                           (.headline4 (.textTheme (Theme/of ctx))))
-                         (do
-                           (dp :sees-NO-ctx-hardcode)
-                           (TextStyle :color Colors/red
-                             :fontSize 24.0)))))
-
-            :kids (cFkids "You clicked the button this many times:")
-            :dartctx (c_F []
-                       (fxx/mctx)
-                       #_ (fxx/ctx-nearest (:par @me))) ;; todo create my-par or sth
-            :dartwidget (c_F []
-                          (w/Text (first (md/md-kids me))
-                            :style (mget me :style)))
-            :fx-gen (fn [ctx me]
-                      (assert (mget me :dartwidget))
-                      (mget me :dartwidget)))
-          (md/make
-            :name :z-counter
-            :style (c_F []
-                     (let [ctx (mget me :dartctx)]
-                          (.headline3 (.textTheme (Theme/of ctx)))))
-            :value (cI 0)
-            :kids (cFkids (str (md/my-val)))
-            :dartstate (c_F [:obs (fn-obs
-                                    (util/rmap-meta-setf [:state-ref me] new))]
-                         (reify :extends w/State
-                              (build [this ctx]
-                                (w/Text (first (md/md-kids me))
-                                  :style (mget me :style)))))
-            :dartctx (c_F []                                  ;;(.context ^w/State (tiltontec.model.core/mget ~'me :dartstate))
-                       (dp :ctx-gets-state)
-                       (let [st ^w/State (mget me :dartstate)]
-                         (assert st "state not available")
-                         (dp :ctx-sees-st!! st)
-                         (.context st)))
-            :dartwidget (c_F []
-                          (dp :making-widget)
-                          (reify :extends m/StatefulWidget
-                              (createState [_]
-                                (mget me :dartstate))))
-
-            :fx-gen (fn [ctx me]
-                      (assert (mget me :dartwidget))
-                      (mget me :dartwidget)))
-          #_(fxx/text
-              {:style (with-ctx (ctx-2 me)
-                        (.headline4 (.textTheme (Theme/of ctx-2))))}
-              {:name  :z-counter
-               :value (cI 0)}
-              (str (md/my-val))))))))
+          (fxx/text
+            {:style (with-ctx (ctx-2 me)
+                      (.headline4 (.textTheme (Theme/of ctx-2))))}
+            {:name  :z-counter
+             :value (cI 0)}
+            (str (md/my-val))))))))
 
 
 
