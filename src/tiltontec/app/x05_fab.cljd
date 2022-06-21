@@ -5,7 +5,7 @@
     [clojure.string :as string]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
-    [tiltontec.cell.core :as cell :refer [cF c_F cF+ cI make-c-formula c-fn]]
+    [tiltontec.cell.core :as cell :refer [cF c_F cF_ cF+ cI make-c-formula c-fn]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.corex :as fxx]
 
@@ -52,8 +52,7 @@
     {:name             :fab
      :initState        (fn [this me]
                          (md/mset! me :fx$state this))
-     :fx$state         (cI nil :obs (fn [slot me new-val old-val c]
-                                      (rmap-meta-setf [:state-ref me] new-val)))
+     :fx$state         (cI nil)
      :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
                              (.context st)))
      :controller       (cF (when-let [state (fxx/my-state)]
@@ -93,22 +92,6 @@
                  actions)))
       (tap-to-open-fab me))))
 
-#_(m/AnimatedBuilder
-    :animation (let [ani (mget me :animation)]
-                 (assert ani "anibuilder sees null :animation property")
-                 (dp :anibuilder-sees-ani ani)
-                 (if (fn? ani)
-                   (ani me ctx)
-                   ^#/(m/Animation double) ani))
-    :child (let [childer (mget me :animated-child)]
-             (assert childer "Animated builder requires :animated-child property")
-             (render-fx ctx (if (fn? childer)
-                              (childer me ctx)
-                              childer)))
-    :builder (fn [ctx child]
-               (let [beefer (mget me :ani-beefer)]
-                 (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
-                 (render-fx ctx (beefer me ctx child)))))
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (md/make
     :name :ea-button
@@ -142,28 +125,22 @@
                       (m/AnimatedBuilder
                         :animation (mget (md/fasc :fab) :expand-animation)
                         :child (fxx/extract-widget :fab me ctx (first (md/md-kids me)))
-                        :builder #_(fn [ctx child]
-                                     (let [beefer (mget me :ani-beefer)]
-                                       (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
-                                       (render-fx ctx (beefer me ctx child))))
-                        (fn [ctx child]
-                          (assert ctx "anibuilder-NOT-seeing-ctx")
-                          (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
-                                _ (assert progress)
-                                offset (m.Offset/fromDirection
-                                         (* direction-degrees (/ math/pi 180.0))
-                                         (* (.value progress) max-distance))]
-                            (dp :XFAB-progress progress)
-                            (f/widget
-                              (f/nest
-                                (m/Positioned
-                                  :right (+ 4.0 (.dx offset))
-                                  :bottom (+ 4.0 (.dy offset)))
-                                (m.Transform/rotate
-                                  :angle (* (- 1.0 (.value progress))
-                                           math/pi 0.5))
-                                child))))
-                        ))))))))
+                        :builder (fn [ctx child]
+                                   (assert ctx "anibuilder-NOT-seeing-ctx")
+                                   (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
+                                         _ (assert progress)
+                                         offset (m.Offset/fromDirection
+                                                  (* direction-degrees (/ math/pi 180.0))
+                                                  (* (.value progress) max-distance))]
+                                     (f/widget
+                                       (f/nest
+                                         (m/Positioned
+                                           :right (+ 4.0 (.dx offset))
+                                           :bottom (+ 4.0 (.dy offset)))
+                                         (m.Transform/rotate
+                                           :angle (* (- 1.0 (.value progress))
+                                                    math/pi 0.5))
+                                         child))))))))))))
 
 
 (defn show-action [ctx action]
@@ -180,17 +157,16 @@
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
                 ;; todo get to ctx
-                :color        m.Colors/blue #_ (cF (when-let [ctx (fxx/my-ctx)]
-                                    (-> (Theme/of ctx) .-colorScheme .-secondary)))
+                :color        m.Colors/blue #_(cF (when-let [ctx (fxx/my-ctx)]
+                                                    (-> (Theme/of ctx) .-colorScheme .-secondary)))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     m.Colors/white #_ (cF (when-let [ctx (fxx/my-ctx)]
-                        (-> (Theme/of ctx) .-colorScheme .-onSecondary)))})))
+       :color     m.Colors/white #_(cF (when-let [ctx (fxx/my-ctx)]
+                                         (-> (Theme/of ctx) .-colorScheme .-onSecondary)))})))
 
 (defn- tap-to-close-fab [par]
-  (dp :building-tap2close!!!!!!!!!!!!)
   (fx/sized-box {:width  56.0
                  :height 56.0}
     (fx/center
@@ -200,20 +176,22 @@
         (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
-                      :color (cF (let [st (fx/my-state)]
-                                   (if st
-                                     (do (dp :icon-sees-state! st)
-                                         (dp :icon-sees-ctx!! (.context st))
-                                         (dp :icon-sees-theme (do (Theme/of (.context st))))
-                                         (dp :sees-color (.primaryColor (Theme/of (.context st))))
-                                         (.primaryColor (Theme/of (.context st))))
-                                     (do                    ;(dp :icon-no-see-state (meta me))
-                                       m.Colors/red
-                                       (fn [me ctx]
-                                         ;(dp :callback-icon-state (:state-ref (meta me)))
-                                         ;(dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
-                                         ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
-                                         (.primaryColor (Theme/of ctx))))
+                      :color #_ (fn [me ctx]
+                               ;(dp :callback-icon-state (:state-ref (meta me)))
+                               ;(dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
+                               ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
+                               (.primaryColor (Theme/of ctx)))
+
+                      (cF [] (let [ctx (fxx/my-ctx)]
+                                   (if ctx
+                                     (do
+                                         (dp :icon-sees-me!! (minfo me))
+                                         (dp :icon-sees-ctx!! ctx)
+                                         (dp :sees-color (.primaryColor (Theme/of ctx)))
+                                         (.primaryColor (Theme/of ctx)))
+                                     (do
+                                       (dp :icon-no-see-cintext (minfo me))
+                                       m.Colors/red)
                                      )))}
               {:name :iconic})))))))
 
