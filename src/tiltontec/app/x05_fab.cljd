@@ -53,7 +53,7 @@
     {:name             :fab
      :initState        (fn [this me]
                          (binding [cty/*within-integrity* true]
-                           (integrity/with-cc :exfab-inistate!!!!!!!!!!!!!
+                           (do ;; integrity/with-cc :exfab-inistate!!!!!!!!!!!!!
                              (md/mset! me :fx$state this))))
      :fx$state         (cI nil)
      :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
@@ -110,7 +110,6 @@
     :initState (fn [this me]
                  (md/mset! me :fx$state this))
     :fx$state (cI nil :obs (fn [_ me new-val _ _]
-                             (dp :eab-gets-state (minfo me) new-val)
                              (rmap-meta-setf [:state-ref me] new-val)))
     :fx$ctx (cF (when-let [st (fxx/my-state)]
                   (.context ^State st)))
@@ -188,12 +187,12 @@
                       (cF [] (let [ctx (fxx/my-ctx)]
                                    (if ctx
                                      (do
-                                         (dp :icon-sees-me!! (minfo me))
-                                         (dp :icon-sees-ctx!! ctx)
-                                         (dp :sees-color (.primaryColor (Theme/of ctx)))
+                                         ;(dp :icon-sees-me!! (minfo me))
+                                         ;(dp :icon-sees-ctx!! ctx)
+                                         ;(dp :sees-color (.primaryColor (Theme/of ctx)))
                                          (.primaryColor (Theme/of ctx)))
                                      (do
-                                       (dp :icon-no-see-cintext (minfo me))
+                                       (dp :icon-no-see-context!!!! (minfo me))
                                        m.Colors/red)
                                      )))}
               {:name :iconic})))))))
@@ -235,7 +234,6 @@
 
 (defn- tap-to-open-fab [par]
   (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                        (dp :opacity-sees-open?!!!!!!! open?)
                                         (if open? 0.0 1.0)))
                         :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                         :duration ^:const (dart:core/Duration :milliseconds 250)}

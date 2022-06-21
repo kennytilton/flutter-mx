@@ -149,7 +149,7 @@
   #_ (when (and  opcode *within-integrity*)
        (println :cwi opcode *within-integrity*))
   (when (and opcode (not (some #{opcode} [:awaken])))
-    (dp :cwi-entry!!!!!!! opcode *within-integrity*))
+    (dpx :cwi-entry!!!!!!! opcode *within-integrity*))
   (do                                                       ;; wtrx (0 100 "cwi-begin" opcode *within-integrity*)
     (do ;; hun-stopped
       (do
@@ -166,7 +166,7 @@
               ;; the setf'ed value figure out what is going on:
               ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
               (when (and opcode (not (some #{opcode} [:awaken])))
-                (dp :cwi-deferred!!!! opcode))
+                (dpx :cwi-deferred!!!! opcode))
               (ufb-add opcode [defer-info action]))
 
             ;; thus by not supplying an opcode one can get something
@@ -178,7 +178,7 @@
             ;;
             (do
               (when (and opcode (not (some #{opcode} [:awaken])))
-                (pln :cwi-bypassing-integrity!!! opcode defer-info))
+                (dpx :cwi-bypassing-integrity!!! opcode defer-info))
               (action opcode defer-info)))
 
           :else (binding [*within-integrity* true

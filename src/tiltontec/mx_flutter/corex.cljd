@@ -88,16 +88,13 @@
                           (.setState state (fn [] (do))))
                       (dp :observe-sees-no-state (cty/minfo me))))
      :fx-gen (fn [ctx me]
-               (dp :scaff-fx-gen-sees-ctx (or ctx :nope))
                (util/rmap-meta-setf [:context me] ctx)
                (reify :extends m/StatefulWidget
                  (~'createState [_#]
                    (util/rmap-meta-setf [:state-ref me]
                      (reify :extends w/State
                        (~'build [_# ctx]
-                         (dp :scaff-state-build-sees-ctx ctx (minfo me))
                          (util/rmap-meta-setf [:context me] ctx)
-                         (dp :scaff-meta (meta me))
                          (m/Scaffold
                            :appBar (fx/extract-widget :core-appbar me ctx (mget me :appBar))
                            :drawer (fx/extract-widget :core-appbar me ctx (mget me :drawer))
