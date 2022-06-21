@@ -1,4 +1,4 @@
-(ns tiltontec.example.fab
+(ns tiltontec.app.x05-fab
   (:require
     ["dart:math" :as math]
     [cljd.flutter.alpha :as f]
@@ -10,35 +10,34 @@
     [tiltontec.mx-flutter.corex :as fxx]
 
     [tiltontec.mx-flutter.core :as fx
-     :refer [material-app center text scaffold column list-view+builder my-ctx my-state]]
+     :refer [center text scaffold column list-view+builder my-state]]
     [tiltontec.mx-flutter.corex :as fxx]
-    ["package:flutter/widgets.dart"
+    ["package:flutter/widgets.dart" :as w
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
      :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
-             FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+             FloatingActionButton Icon Icons ThemeData runApp AppBar]]
     ["package:flutter/painting.dart"
      :refer [TextStyle]]
     [tiltontec.util.core :as util :refer [rmap-meta-setf]]
     [tiltontec.cell.observer :refer [fn-obs]]))
 
-(declare fake-item expandable-fad show-action action-button)
+(declare fake-item expandable-fab show-action action-button)
 
 (defn make-app []
   (fxx/material-app {:title                      (str "Expandable Fab/MX " (rand-int 99))
-                 ;; save this :theme                      (.dark m/ThemeData)
-                 :debugShowCheckedModeBanner false}
-    {:name :mat-app} ;; todo lose if not used
-    (fxx/scaffold {}
-      {:name :scaff
-       ;; todo mx-ify appbar
-       :appBar               (AppBar :title (Text (str "Expandable Fab/MX " (rand-int 99))))
+                     ;; save this :theme                      (.dark m/ThemeData)
+                     :debugShowCheckedModeBanner false}
+    {:name :mat-app}
+    (fxx/scaffold {:name :scaff}
+      ; todo fxx/app-bar
+      {:appBar               (AppBar :title (Text (str "Expandable Fab/MX " (rand-int 99))))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
                                          {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
                                          {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
-      (list-view+builder {} ;;mxify
+      (fx/list-view+builder {}                              ;; todo mxify
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
          :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
@@ -48,29 +47,36 @@
   tap-to-open-fab)
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
-  (fx/sized-box+expand
-    {:initState (fn [this me]
-                  (let [c (util/rmap-meta-setf [:controller me]
-                            (m/AnimationController
-                              :value (if initial-open? 1.0 0.0)
-                              :duration ^:const (dart:core/Duration :milliseconds 250)
-                              :vsync this))]
-                    (util/rmap-meta-setf [:expand-animation me]
-                      (m/CurvedAnimation
-                        :curve m.Curves/fastOutSlowIn
-                        :reverseCurve m.Curves/easeOutQuad
-                        :parent c))))
-     :dispose   (fn [this me]
-                  (when-let [controller (fx/my-controller)]
-                    (.dispose controller)))}
-    {:name  :fab
-     :step  (cF (/ 90.0 (dec (count actions))))
-     :open? (cI initial-open?
-              :obs (fn [prop-name me new-value prior-value cell]
-                     (when-let [c (fx/my-controller)]  ;; not until first render installation
-                       (if new-value
-                         (.forward c)
-                         (.reverse c)))))}
+  (fxx/sized-box+expand-ful
+    {}
+    {:name             :fab
+     :initState        (fn [this me]
+                         (md/mset! me :fx$state this))
+     :fx$state         (cI nil :obs (fn [slot me new-val old-val c]
+                                      (rmap-meta-setf [:state-ref me] new-val)))
+     :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
+                             (.context st)))
+     :controller       (cF (when-let [state (fxx/my-state)]
+                             (m/AnimationController
+                               :value (if initial-open? 1.0 0.0)
+                               :duration ^:const (dart:core/Duration :milliseconds 250)
+                               :vsync state)))
+     :expand-animation (cF (when-let [c (fxx/my-controller)]
+                             (m/CurvedAnimation
+                               :curve m.Curves/fastOutSlowIn
+                               :reverseCurve m.Curves/easeOutQuad
+                               :parent c)))
+     :dispose          (fn [this me]
+                         (when-let [controller (fx/my-controller)]
+                           (.dispose controller)))
+
+     :step             (cF (/ 90.0 (dec (count actions))))
+     :open?            (cI initial-open?
+                         :obs (fn [prop-name me new-value prior-value cell]
+                                (when-let [c (fx/my-controller)] ;; not until first render installation
+                                  (if new-value
+                                    (.forward c)
+                                    (.reverse c)))))}
     (fx/stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
@@ -87,54 +93,76 @@
                  actions)))
       (tap-to-open-fab me))))
 
+#_(m/AnimatedBuilder
+    :animation (let [ani (mget me :animation)]
+                 (assert ani "anibuilder sees null :animation property")
+                 (dp :anibuilder-sees-ani ani)
+                 (if (fn? ani)
+                   (ani me ctx)
+                   ^#/(m/Animation double) ani))
+    :child (let [childer (mget me :animated-child)]
+             (assert childer "Animated builder requires :animated-child property")
+             (render-fx ctx (if (fn? childer)
+                              (childer me ctx)
+                              childer)))
+    :builder (fn [ctx child]
+               (let [beefer (mget me :ani-beefer)]
+                 (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
+                 (render-fx ctx (beefer me ctx child)))))
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
-  (fx/animated-builder
-    {:animation      (cF
-                       ;(dp :ani-rule-fab?! @(md/fm* :fab))
-                       ;(dp :ani-rule-sees-meta!!!! (meta (md/fm* :fab)))
-                       (fn [me ctx]
-                         (progress-key (meta (md/fm* :fab)))))
-     ;; todo lose "beefer"
-     :ani-beefer     (fn [me ctx child]
-                       (let [fab (md/fm* :fab)
-                             progress ^m/CurvedAnimation (:expand-animation (meta fab))
-                             offset (m.Offset/fromDirection
-                                      (* direction-degrees (/ math/pi 180.0))
-                                      (* (.value progress) max-distance))]
-                         (f/widget
-                           (f/nest
-                             (m/Positioned
-                               :right (+ 4.0 (.dx offset))
-                               :bottom (+ 4.0 (.dy offset)))
-                             (m.Transform/rotate
-                               :angle (* (- 1.0 (.value progress))
-                                        math/pi 0.5))
-                             child))))
-     :animated-child (fn [me ctx]
-                       (dp :anichild-runs!!!!!!!!!)
-                       ;; todo fade transition (see below)
-                       (action-button
-                         :icon (:icon action)
-                         :onPressed (fn ^void []
-                                      ;; todo roll up into (with-context (ctx) ....)
-                                      (let [^State state (:state-ref (meta me))]
-                                        (assert state)
-                                        (assert (.context state))
-                                        (show-action (.context state) action))
-                                      nil)))}
-    #_(fx/fade-transition
-        {:opacity (fn [me ctx]
-                    ;; we cannot fm* :fab because we are not a true child
-                    ;; todo  consider this in the dispose or not-to-be
-                    (assert fab "opacity does not see fab")
-                    (let [xani (:expand-animation (meta fab))]
-                      (assert xani "opacity cannot get expand ani from meta")
-                      xani))}
-        (action-button
-          :icon (:icon action)
-          :onPressed (fn ^void []
-                       (show-action ctx action)
-                       nil)))))
+  (md/make
+    :name :ea-button
+    :kids (cFkids (action-button
+                    :icon (:icon action)
+                    :onPressed (fn ^void []
+                                 ;; todo roll up into (with-context (ctx) ....)
+                                 (let [^State state (:state-ref (meta me))]
+                                   (assert state)
+                                   (assert (.context state))
+                                   (show-action (.context state) action))
+                                 nil)))
+    :initState (fn [this me]
+                 (md/mset! me :fx$state this))
+    :fx$state (cI nil :obs (fn [_ me new-val _ _]
+                             (dp :eab-gets-state (minfo me) new-val)
+                             (rmap-meta-setf [:state-ref me] new-val)))
+    :fx$ctx (cF (when-let [st (fxx/my-state)]
+                  (.context ^State st)))
+    :fx-gen (fn [ctx me]
+              (reify :extends m/StatefulWidget              ;; m/AnimatedBuilder
+                (createState [this]
+                  (reify :extends w/State                   ;; #/(w/State m/AnimatedBuilder)
+                    ^:mixin m/SingleTickerProviderStateMixin
+                    (^void initState [this]
+                      (.initState ^super this)
+                      (md/mset! me :fx$state this))
+                    (build [this ctx]
+                      (assert (mget (md/fasc :fab) :expand-animation))
+                      (assert (first (md/md-kids me)))
+                      (m/AnimatedBuilder
+                        :animation (mget (md/fasc :fab) :expand-animation)
+                        :child (fxx/extract-widget :fab me ctx (first (md/md-kids me)))
+                        :builder #_(fn [ctx child]
+                                     (let [beefer (mget me :ani-beefer)]
+                                       (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
+                                       (render-fx ctx (beefer me ctx child))))
+                        (fn [ctx child]
+                          (assert ctx "anibuilder-NOT-seeing-ctx")
+                          (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
+                                _ (assert progress)
+                                offset (m.Offset/fromDirection
+                                         (* direction-degrees (/ math/pi 180.0))
+                                         (* (.value progress) max-distance))]
+                            (f/widget
+                              (f/nest
+                                (m/Positioned
+                                  :right (+ 4.0 (.dx offset))
+                                  :bottom (+ 4.0 (.dy offset)))
+                                (m.Transform/rotate
+                                  :angle (* (- 1.0 (.value progress))
+                                           math/pi 0.5))
+                                child))))
+                        ))))))))
 
 
 (defn show-action [ctx action]
@@ -150,14 +178,15 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                :color        (fn [me ctx]
-                                (-> (Theme/of ctx) .-colorScheme .-secondary))
+                ;; todo get to ctx
+                :color        m.Colors/blue #_ (cF (when-let [ctx (fxx/my-ctx)]
+                                    (-> (Theme/of ctx) .-colorScheme .-secondary)))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     (fn [me ctx]
-                    (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
+       :color     m.Colors/white #_ (cF (when-let [ctx (fxx/my-ctx)]
+                        (-> (Theme/of ctx) .-colorScheme .-onSecondary)))})))
 
 (defn- tap-to-close-fab [par]
   (dp :building-tap2close!!!!!!!!!!!!)
@@ -223,15 +252,24 @@
 ;;; -------------------------------------------------------------
 
 (defn- tap-to-open-fab [par]
+  ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
+
   (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
+                                        (dp :opacity-sees-open?!!!!!!! open?)
                                         (if open? 0.0 1.0)))
                         :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                         :duration ^:const (dart:core/Duration :milliseconds 250)}
     (fx/floating-action-button {:onPressed (fn [me ctx]
-                                             ;; todo make this ^^ standard
                                              (md/mswap! (md/fasc :fab par) :open? not))}
 
-      (fx/icon {:icon m.Icons/create}))))
+      (fx/icon {:icon m.Icons/create
+                #_(c_F [:obs (fn-obs (dp :obs-icon!!!!!! new))]
+                    (dp :icon-rule-runs!!!!!!!!!)
+                    (if-let [s (:state-ref (meta me))]
+                      (do (dp :icon-cf-sees-state!!!)
+                          m.Icons/create)
+                      (do (dp :icon-f-NOT-SEEING-state)
+                          m.Icons/videocam)))}))))
 
 #_(fx/animated-container {:width      32.0
                           :height     42.0
@@ -281,6 +319,11 @@
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 Colors/cyan))))
 
+#_(defn fake-item [is-big?]
+    (dart:core.Function/apply m/Container nil
+      {(dart:core/Symbol. "margin") 42.0
+       (dart:core/Symbol. "height") 36.0}))
+
 #_(dart:core.Function/apply m/Container nil
     ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
                              :height (if is-big? 128.0 36.0)
@@ -288,4 +331,3 @@
                              (m/BoxDecoration
                                :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
                                :color (.-shade300 Colors/pink))})
-

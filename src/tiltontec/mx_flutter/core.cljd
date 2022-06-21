@@ -14,24 +14,15 @@
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
 
 (defmacro my-controller []
-  `^m/AnimationController (:controller (meta ~'me)))
+  `^m/AnimationController? (:controller (meta ~'me)))
 
 (defmacro my-state []
-  `^State (:state-ref (meta ~'me)))
-
-#_(defmacro my-ctx []
-    `(.context ^State (:state-ref (meta ~'me))))
+  `^State? (:state-ref (meta ~'me)))
 
 (defmacro my-ctx [& [me]]
   (let [me-ref (or me 'me)]
     `(do (assert (:state-ref (meta ~me-ref)) (str "state ref not bound for " (minfo ~me-ref)))
          (.context ^State (:state-ref (meta ~me-ref))))))
-
-#_(defmacro fmu [name & [me]]
-    (let [me-ref (or me 'me)]
-      `(let [name# ~name]
-         (fm-navig #(= name# (md-get % :name))
-           ~me-ref :me? false :up? true :inside? false))))
 
 (defn extract-widget [dbg-key me ctx fab]
   (cond
@@ -514,6 +505,7 @@
       (m/AnimatedBuilder
         :animation (let [ani (mget me :animation)]
                      (assert ani "anibuilder sees null :animation property")
+                     (dp :anibuilder-sees-ani ani)
                      (if (fn? ani)
                        (ani me ctx)
                        ^#/(m/Animation double) ani))

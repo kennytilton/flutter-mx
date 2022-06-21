@@ -31,26 +31,28 @@
 
 (defn observe [slot-name me new-val old-val c]
   (dpx :obs-classic slot-name (cty/minfo me) new-val)
-  ;; todo if no state next, search up for nearest and
-  ;;      setState that,
-  (when-let [^w/State state (or #_ (mget me :dartctx)
-                              (:state-ref (meta me)))]
-    (do (dpx :settingstate slot-name new-val  (cty/minfo me))
-        (.setState state (fn [] (do)))))
-  #_
-  (let [obs (if-let [obs (observer-get [slot-name (type-cljd me)])]
+  ;; todo if no state next, search up for nearest and setState that
+  (if-let [obs (:fx$observer @me)]
+    (do (dp :using-obj-observer (cty/minfo me))
+        (obs slot-name me new-val old-val c))
+    (if-let [^w/State state (:state-ref (meta me))]
+      (do (dpx :setting-META-state slot-name new-val (cty/minfo me))
+          (.setState state (fn [] (do))))
+      (dp :observe-sees-no-state (cty/minfo me)))))
+
+#_(let [obs (if-let [obs (observer-get [slot-name (type-cljd me)])]
               (do (prn :using-slot-obs slot-name (type-cljd me))
                   obs)
               (if-let [obs (observer-get (type-cljd me))]
                 (do (prn :using-type-obs slot-name (type-cljd me))
                     obs)
                 (if-let [obs @+observe-default-handler+]
-                  (do ;;(prn :using-default-obs slot-name (type-cljd me))
-                      obs)
+                  (do                                       ;;(prn :using-default-obs slot-name (type-cljd me))
+                    obs)
                   (when (= slot-name :kids)
-                    #_ (prn :no-obs-define-for slot-name (type-cljd me)
-                      (keys @+observe-method+))))))]
-    (when obs (obs slot-name me new-val old-val c))))
+                    #_(prn :no-obs-define-for slot-name (type-cljd me)
+                        (keys @+observe-method+))))))]
+    (when obs (obs slot-name me new-val old-val c)))
 
 (defmacro fn-obs
   "Shortcut definer for cell-specific observers.
@@ -82,7 +84,7 @@ call parameters: slot, me, new, old, and c."
    ;; nb that we do not want ad hoc observers to shadow those specified generically
    ;; indeed, in Lisp observers are progn methods -- they all run.
    (when-let [cell-observer (:obs @c)]
-     #_ (dp :cell-specific-obs!!!!!! why (cinfo c))
+     #_(dp :cell-specific-obs!!!!!! why (cinfo c))
      (cell-observer (c-slot c) (c-model c) (c-value c) prior-value c))))
 
 

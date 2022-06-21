@@ -11,13 +11,34 @@
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.cell.core :as cell :refer [cF cF+ cI c_F]]
+            [tiltontec.cell.observer :refer [fn-obs]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
+
+
+;(defmacro mmeta [] `(meta ~'me))
+(defmacro my-ctx [] `(ctx-nearest ~'me))
+(defmacro my-nav [] `(m.Navigator/of (ctx-nearest ~'me)))
+
+(defmacro my-controller []
+  `^m/AnimationController? (mget ~'me :controller))
+
+(defmacro my-animation []
+  ;; uncast since type will vary
+  `(mget ~'me :animation))
+
+(defmacro my-state []
+  `(mget ~'me :fx$state))
 
 (defmacro material-app [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
-     :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
+     :fx$ctx (tiltontec.cell.core/cI nil)                   ;; set at start of build
+     :fx$observer (fn [slot me new-val old-val c]
+                    (if-let [^w/State? state (mget me :fx$state)]
+                      (do (dpx :matapp-setting-FX-state slot new-val (cty/minfo me))
+                          (.setState state (fn [] (do))))
+                      (dp :observe-sees-no-state (cty/minfo me))))
      :fx-gen (fn [ctx me]
                (reify :extends m/MaterialApp #_m/StatefulWidget
                  (~'createState [_#]
@@ -37,7 +58,8 @@
 (defn extract-widget [dbg-key me ctx fab]
   (cond
     (nil? fab)
-    (do                                                     ;; (dp :exwid-sees-nil-fab dbg-key)
+    (do
+      (dp :exwid-sees-nil-fab!!!!!!!!!! dbg-key (minfo me))
       nil)
 
     (dart/is? fab m/Widget)
@@ -58,7 +80,12 @@
 (defmacro scaffold [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
-     :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
+     :fx$ctx (tiltontec.cell.core/cI nil)                   ;; set at start of build
+     :fx$observer (fn [slot me new-val old-val c]
+                    (if-let [^w/State state (mget me :fx$state)]
+                      (do (dpx :setting-FX-state slot new-val (cty/minfo me))
+                          (.setState state (fn [] (do))))
+                      (dp :observe-sees-no-state (cty/minfo me))))
      :fx-gen (fn [ctx me]
                (dp :scaff-fx-gen-sees-ctx (or ctx :nope))
                (util/rmap-meta-setf [:context me] ctx)
@@ -84,7 +111,7 @@
   (let []
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
-       :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
+       :fx$ctx (tiltontec.cell.core/cI nil)                 ;; set at start of build
        :fx-gen (fn [ctx me]
                  (w/Text (first (md/md-kids me))            ;; need a render-fx here?
                    ~@(let [kvs (for [[k# _#] fx-props]
@@ -97,7 +124,7 @@
 (defmacro text [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
-     :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
+     :fx$ctx (tiltontec.cell.core/cI nil)                   ;; set at start of build
      :fx-gen (fn [ctx me]
                (reify :extends m/StatefulWidget
                  (~'createState [_#]
@@ -110,6 +137,98 @@
                                          [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
                                                 (tiltontec.model.core/mget me ~k#))])]
                                (apply concat kvs)))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
+(defmacro sized-box+expand-ful [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx$ctx (tiltontec.cell.core/cI nil)
+     :fx-gen (fn [ctx ~'me]
+               (reify :extends m/StatefulWidget
+                 (~'createState [_#]
+                   (reify :extends w/State
+                     ^:mixin m/SingleTickerProviderStateMixin
+                     (^void ~'initState [~'this]
+                       ;;(.initState ~'^super ~'this)
+                       (when-let [init (mget ~'me :initState)]
+                         (init ~'this ~'me)))
+                     (~'build [_# ctx]
+                       (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
+                       (m.SizedBox/expand
+                         :child (tiltontec.mx-flutter.corex/extract-widget :sizedboxexpand ~'me ctx
+                                  (first (tiltontec.model.core/md-kids ~'me)))
+                         ~@(let [kvs (for [[k# _#] fx-props]
+                                       [k# `(tiltontec.model.core/mget ~'me ~k#)])] ;; todo call if fn?
+                             (apply concat kvs))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+
+#_(deftype FXAnimatedBuilder []
+    :extends FXDartWidget
+    ;;:type-only true
+    PDartWidget
+    (parts [this]
+      [:animation :child])
+    (beefer [this]
+      (fn [me ctx]
+        (m/AnimatedBuilder
+          :animation (let [ani (mget me :animation)]
+                       (assert ani "anibuilder sees null :animation property")
+                       (dp :anibuilder-sees-ani ani)
+                       (if (fn? ani)
+                         (ani me ctx)
+                         ^#/(m/Animation double) ani))
+          :child (let [childer (mget me :animated-child)]
+                   (assert childer "Animated builder requires :animated-child property")
+                   (render-fx ctx (if (fn? childer)
+                                    (childer me ctx)
+                                    childer)))
+          :builder (fn [ctx child]
+                     (let [beefer (mget me :ani-beefer)]
+                       (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
+                       (render-fx ctx (beefer me ctx child))))))))
+
+
+(defmacro animated-builder [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx$ctx (tiltontec.cell.core/cI nil)
+     :fx-gen (fn [ctx ~'me]
+               (reify :extends m/StatefulWidget
+                 (~'createState [_#]
+                   (reify :extends w/State
+                     ^:mixin m/SingleTickerProviderStateMixin
+                     (^void ~'initState [~'this]
+                       ;;(.initState ~'^super ~'this)
+                       (when-let [init (mget ~'me :initState)]
+                         (init ~'this ~'me)))
+                     (~'build [_# ctx]
+                       (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
+                       (m.SizedBox/expand
+                         :child (tiltontec.mx-flutter.corex/extract-widget :sizedboxexpand ~'me ctx
+                                  (first (tiltontec.model.core/md-kids ~'me)))
+                         ~@(let [kvs (for [[k# _#] fx-props]
+                                       [k# `(tiltontec.model.core/mget ~'me ~k#)])] ;; todo call if fn?
+                             (apply concat kvs))))))))
+     (concat
+       (vec (apply concat (seq ~fx-props)))
+       (vec (apply concat (seq ~mx-props))))))
+;;; --- stateless ---------------------------------------
+
+(defmacro sized-box+expand [fx-props mx-props & children]
+  `(apply tiltontec.model.core/make
+     :kids (tiltontec.model.core/cFkids ~@children)
+     :fx$ctx (tiltontec.cell.core/cI nil)
+     :fx-gen (fn [ctx me]
+               (m.SizedBox/expand
+                 :child (tiltontec.mx-flutter.corex/extract-widget :sizedboxexpand me ctx
+                          (first (tiltontec.model.core/md-kids me)))
+                 ~@(let [kvs (for [[k# _#] fx-props]
+                               [k# `(tiltontec.model.core/mget me ~k#)])] ;; todo call if fn?
+                     (apply concat kvs))))
      (concat
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
@@ -146,7 +265,7 @@
   (let []
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
-       :fx$ctx (tiltontec.cell.core/cI nil) ;; set at start of build
+       :fx$ctx (tiltontec.cell.core/cI nil)                 ;; set at start of build
        :fx-gen (fn [ctx me]
                  (util/rmap-meta-setf [:context me] ctx)
                  (tiltontec.model.core/mset! me :fx$ctx ctx)
@@ -170,16 +289,3 @@
             ;; todo lose meta ctx used elsewhere once sure not needed
             (or (mget me :fx$ctx)
               (recur (:par @me))))))
-
-;(defmacro mmeta [] `(meta ~'me))
-(defmacro my-ctx [] `(ctx-nearest ~'me))
-(defmacro my-nav [] `(m.Navigator/of (ctx-nearest ~'me)))
-
-(defmacro my-controller []
-  `^m/AnimationController (mget ~'me :controller))
-
-(defmacro my-state []
-  `^State? (mget ~'me :fx$state))
-
-(defmacro my-state-raw []
-  `(mget ~'me :fx$state))
