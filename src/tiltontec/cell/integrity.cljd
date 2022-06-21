@@ -148,6 +148,8 @@
   ;                  opcode +ufb-opcodes+)))
   #_ (when (and  opcode *within-integrity*)
        (println :cwi opcode *within-integrity*))
+  (when (and opcode (not (some #{opcode} [:awaken])))
+    (dp :cwi-entry!!!!!!! opcode *within-integrity*))
   (do                                                       ;; wtrx (0 100 "cwi-begin" opcode *within-integrity*)
     (do ;; hun-stopped
       (do
@@ -163,6 +165,8 @@
               ;; something that will help someone who tries to use
               ;; the setf'ed value figure out what is going on:
               ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
+              (when (and opcode (not (some #{opcode} [:awaken])))
+                (dp :cwi-deferred!!!! opcode))
               (ufb-add opcode [defer-info action]))
 
             ;; thus by not supplying an opcode one can get something
@@ -173,13 +177,13 @@
             ;; If you have read this comment.
             ;;
             (do
-
-              ;;(pln :cwi-bypassing-integrity!!! opcode defer-info)
+              (when (and opcode (not (some #{opcode} [:awaken])))
+                (pln :cwi-bypassing-integrity!!! opcode defer-info))
               (action opcode defer-info)))
 
           :else (binding [*within-integrity* true
                           *defer-changes* false]
-                  ;;(println :cwi-go-1)
+                  (println :cwi-go-1 opcode)
                   (when (or (zero? @+pulse+)
                           (= opcode :change))
                     (data-pulse-next [:cwi opcode defer-info]))

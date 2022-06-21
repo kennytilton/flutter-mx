@@ -20,7 +20,8 @@
     ["package:flutter/painting.dart"
      :refer [TextStyle]]
     [tiltontec.util.core :as util :refer [rmap-meta-setf]]
-    [tiltontec.cell.observer :refer [fn-obs]]))
+    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.cell.integrity :as integrity]))
 
 (declare fake-item expandable-fab show-action action-button)
 
@@ -51,7 +52,9 @@
     {}
     {:name             :fab
      :initState        (fn [this me]
-                         (md/mset! me :fx$state this))
+                         (binding [cty/*within-integrity* true]
+                           (integrity/with-cc :exfab-inistate!!!!!!!!!!!!!
+                             (md/mset! me :fx$state this))))
      :fx$state         (cI nil)
      :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
                              (.context st)))
@@ -231,8 +234,6 @@
 ;;; -------------------------------------------------------------
 
 (defn- tap-to-open-fab [par]
-  ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
-
   (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
                                         (dp :opacity-sees-open?!!!!!!! open?)
                                         (if open? 0.0 1.0)))
