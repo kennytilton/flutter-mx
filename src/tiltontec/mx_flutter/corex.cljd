@@ -38,7 +38,7 @@
                     (if-let [^w/State? state (mget me :fx$state)]
                       (do (dpx :matapp-setting-FX-state slot new-val (cty/minfo me))
                           (.setState state (fn [] (do))))
-                      (dp :observe-sees-no-state (cty/minfo me))))
+                      (dp :MATAPP=observe-sees-no-state (cty/minfo me))))
      :fx-gen (fn [ctx me]
                (reify :extends m/MaterialApp #_m/StatefulWidget
                  (~'createState [_#]
@@ -83,7 +83,7 @@
      :fx$ctx (tiltontec.cell.core/cI nil)                   ;; set at start of build
      :fx$observer (fn [slot me new-val old-val c]
                     (if-let [^w/State state (mget me :fx$state)]
-                      (do (dpx :setting-FX-state slot new-val (cty/minfo me))
+                      (do (dp :setting-FX-state slot new-val (cty/minfo me))
                           (.setState state (fn [] (do))))
                       (dp :observe-sees-no-state (cty/minfo me))))
      :fx-gen (fn [ctx me]

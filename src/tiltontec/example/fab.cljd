@@ -36,7 +36,7 @@
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
-                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
+                                        #_{:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
                                          {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       (list-view+builder {} ;;mxify
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
@@ -101,6 +101,7 @@
                              offset (m.Offset/fromDirection
                                       (* direction-degrees (/ math/pi 180.0))
                                       (* (.value progress) max-distance))]
+                         (dp :eabutton-beefer-prog progress )
                          (f/widget
                            (f/nest
                              (m/Positioned
@@ -111,7 +112,7 @@
                                         math/pi 0.5))
                              child))))
      :animated-child (fn [me ctx]
-                       (dp :anichild-runs!!!!!!!!!)
+                       (dp :anichild-building!!!!!!!!!)
                        ;; todo fade transition (see below)
                        (action-button
                          :icon (:icon action)
@@ -122,6 +123,7 @@
                                         (assert (.context state))
                                         (show-action (.context state) action))
                                       nil)))}
+    {:name :ea-builder}
     #_(fx/fade-transition
         {:opacity (fn [me ctx]
                     ;; we cannot fm* :fab because we are not a true child
@@ -197,28 +199,6 @@
     (rand-int 256)
     1))
 
-#_(defn- tap-to-open-fab [par]
-    ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
-    (f/nest
-      (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
-      (m/AnimatedContainer
-        :transformAlignment m.Alignment/center
-        :transform (let [open? (mget (md/fasc :fab par) :open?)]
-                     (dp :tap2-pen-sees-open open?)
-                     (m.Matrix4/diagonal3Values
-                       (if open? 0.7 1.0)
-                       (if open? 0.7 1.0)
-                       1.0))
-        :duration ^:const (dart:core/Duration :milliseconds 250)
-        :curve ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut))
-      (m/AnimatedOpacity
-        :opacity (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
-        :curve ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-        :duration ^:const (dart:core/Duration :milliseconds 250))
-      (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
-      (m/Icon m.Icons/create)))
-
-
 
 ;;; -------------------------------------------------------------
 
@@ -272,6 +252,7 @@
                                                  (md/mswap! (md/fasc :fab par) :open? not))}
           (m/Icon m.Icons/create) #_(fx/icon {:icon m.Icons/create})))))
 
+
 (defn fake-item [is-big?]
   (m/Container
     :margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
@@ -281,11 +262,13 @@
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 Colors/cyan))))
 
-#_(dart:core.Function/apply m/Container nil
+#_ ;; todo can this work in CLJD? OK in Dart
+(defn fake-item [is-big?]
+  (dart:core.Function/apply m/Container nil
     ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
                              :height (if is-big? 128.0 36.0)
                              :decoration
                              (m/BoxDecoration
                                :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-                               :color (.-shade300 Colors/pink))})
+                               :color (.-shade300 Colors/pink))}))
 

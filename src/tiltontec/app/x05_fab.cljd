@@ -25,13 +25,13 @@
 (declare fake-item expandable-fab show-action action-button)
 
 (defn make-app []
-  (fxx/material-app {:title                      (str "Expandable Fab/MX " (rand-int 99))
+  (fxx/material-app {:title                      "Expandable Fab/FXX"
                      ;; save this :theme                      (.dark m/ThemeData)
                      :debugShowCheckedModeBanner false}
     {:name :mat-app}
     (fxx/scaffold {:name :scaff}
       ; todo fxx/app-bar
-      {:appBar               (AppBar :title (Text (str "Expandable Fab/MX " (rand-int 99))))
+      {:appBar               (AppBar :title (Text (str "Expandable Fab/FXX " (rand-int 99))))
        :floatingActionButton (expandable-fab
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
@@ -73,7 +73,7 @@
      :step             (cF (/ 90.0 (dec (count actions))))
      :open?            (cI initial-open?
                          :obs (fn [prop-name me new-value prior-value cell]
-                                (when-let [c (fx/my-controller)] ;; not until first render installation
+                                (when-let [c (fxx/my-controller)] ;; not until first render installation
                                   (if new-value
                                     (.forward c)
                                     (.reverse c)))))}
@@ -153,6 +153,7 @@
                                 offset (m.Offset/fromDirection
                                          (* direction-degrees (/ math/pi 180.0))
                                          (* (.value progress) max-distance))]
+                            (dp :XFAB-progress progress)
                             (f/widget
                               (f/nest
                                 (m/Positioned
@@ -259,18 +260,12 @@
                                         (if open? 0.0 1.0)))
                         :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                         :duration ^:const (dart:core/Duration :milliseconds 250)}
+    {:name :tap2open}
     (fx/floating-action-button {:onPressed (fn [me ctx]
                                              (md/mswap! (md/fasc :fab par) :open? not))}
+      (fx/icon {:icon m.Icons/create}))))
 
-      (fx/icon {:icon m.Icons/create
-                #_(c_F [:obs (fn-obs (dp :obs-icon!!!!!! new))]
-                    (dp :icon-rule-runs!!!!!!!!!)
-                    (if-let [s (:state-ref (meta me))]
-                      (do (dp :icon-cf-sees-state!!!)
-                          m.Icons/create)
-                      (do (dp :icon-f-NOT-SEEING-state)
-                          m.Icons/videocam)))}))))
-
+;; -- full version, but container breaks it
 #_(fx/animated-container {:width      32.0
                           :height     42.0
                           :decoration (cF (m/BoxDecoration
