@@ -22,12 +22,12 @@
 
 (def ^:dynamic *ctx* nil)
 
-(defn fx-eval [ctx me value]
+(defn fx-eval [me ctx value]
   ;; fx-world values can be expressed as callbacks when
   ;; the value depends on the fx widget or runtime Flutter context
   (if (fn? value)
     (binding [*ctx* ctx]
-      (value ctx me))
+      (value me ctx))
     value))
 
 (defn render-fx [ctx fx]
@@ -39,10 +39,10 @@
           fx)
       :else (let [gen (mget fx :fx-gen)]
               (assert gen "OBAD: render-fx of model finds no fx-gen: ")
-              (gen ctx fx)))))
+              (gen fx ctx)))))
 
-(defmacro with-ctx [[ctx-var me-var] & body]
-  `(fn [~ctx-var ~me-var]
+(defmacro with-ctx [[me-var ctx-var] & body]
+  `(fn [~me-var ~ctx-var]
      ~@body))
 
 #_ (defmacro c-fn-var [[c] & body]
@@ -67,7 +67,7 @@
             ;;
             ;; we include the MX "me" in the generation...
             (assert (= ctx (.context this)))
-            (dpx :reactive-ctx-set!!!! (minfo me) ctx)
+            (dp :build-reactive-ctx-set!!!! (minfo me) ctx)
             (md/mset! me :fx$ctx ctx)
             (beefer me ctx))
           (^void initState [this]
@@ -86,7 +86,7 @@
     :kids cFkids-form
     :fx$ctx (cI nil) ;; set at start of build
     :fx-prop-keys (keys fx-props)
-    :fx-gen (fn [ctx me]
+    :fx-gen (fn [me ctx]
               ;; the default "statefully" works for must Flutter widgets,
               ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
               ;; so we allow individual widget Types to supply their own fx-gen.
@@ -107,12 +107,12 @@
     :kids cFkids-form
     :fx$ctx (cI nil) ;; set at start of build
     :fx-prop-keys (keys fx-props)
-    :fx-gen (fn [ctx me]
+    :fx-gen (fn [me ctx]
               ;; the default "statefully" works for must Flutter widgets,
               ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
               ;; so we allow individual widget Types to supply their own fx-gen.
               (if-let [type-fx-gen (fx-genner mx-type)] ;; <- override option
-                (type-fx-gen ctx me)
+                (type-fx-gen me ctx)
                 ; --- no special fx gen, so...the default:
                 (tiltontec.mx-flutter.tag/statefully me
                   (fn [me ctx]

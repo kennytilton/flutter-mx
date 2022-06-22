@@ -135,7 +135,7 @@
   (prn :kids children)
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
-     :fx-gen (fn [ctx me]
+     :fx-gen (fn [me ctx]
                (reify :extends #_ m/MaterialApp m/StatefulWidget
                  (~'createState [_#]
                    (util/rmap-meta-setf [:state-ref me]
@@ -144,7 +144,7 @@
                          (m/MaterialApp
                            :home (render-fx ctx (first (md/md-kids me)))
                            ~@(let [kvs (for [[k# _#] fx-props]
-                                         [k# `(tiltontec.mx-flutter.tag/fx-eval ctx me
+                                         [k# `(tiltontec.mx-flutter.tag/fx-eval me ctx
                                                 (tiltontec.model.core/mget me ~k#))])]
                                (apply concat kvs)))))))))
      (concat
@@ -262,7 +262,7 @@
     ;; Fact: Scaffolds require appBar objects to be PreferredSizeWidgets (PSW). AppBar is a PSW.
     ;; Problem: The default fx gen uses an anonymous StatefulWidget (not a PSW) as a wrapper.
     ;; Solution: override fx gen (so AppBars go out unwrapped and thus acceptable to Scaffold.
-    (fn [ctx me]
+    (fn [me ctx]
       ;; todo today see if new un-wrapped approach eliminates need for special handling
       (reify :extends m/AppBar
         (createState [this]
