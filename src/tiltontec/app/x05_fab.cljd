@@ -97,16 +97,28 @@
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
+  #_ (fxx/make-fxx
+    {}
+    {}
+    (cFkids (action-button
+              :icon (:icon action)
+              :onPressed (fn ^void []
+                           ;; todo roll up into (with-context (ctx) ....)
+                           (let [^State state (mget me :fx$state)]
+                             (show-action (.context state) action))
+                           nil))))
   (md/make
-    :kids (cFkids (action-button
-                    :icon (:icon action)
-                    :onPressed (fn ^void []
-                                 ;; todo roll up into (with-context (ctx) ....)
-                                 (let [^State state (mget me :fx$state)]
-                                   (assert state)
-                                   (assert (.context state))
-                                   (show-action (.context state) action))
-                                 nil)))
+    :kids (cFkids (fx/fade-transition
+                    {:opacity (mget (md/fasc :fab) :expand-animation)}
+                    (action-button
+                      :icon (:icon action)
+                      :onPressed (fn ^void []
+                                   ;; todo roll up into (with-context (ctx) ....)
+                                   (let [^State state (mget me :fx$state)]
+                                     (assert state)
+                                     (assert (.context state))
+                                     (show-action (.context state) action))
+                                   nil))))
     :initState (fn [this me]
                  (md/mset! me :fx$state this))
     :fx$state (cI nil)
@@ -121,8 +133,6 @@
                       (.initState ^super this)
                       (md/mset! me :fx$state this))
                     (build [this ctx]
-                      (assert (mget (md/fasc :fab) :expand-animation))
-                      (assert (first (md/md-kids me)))
                       (m/AnimatedBuilder
                         :animation (mget (md/fasc :fab) :expand-animation)
                         :child (fxx/extract-widget :fab me ctx (first (md/md-kids me)))
