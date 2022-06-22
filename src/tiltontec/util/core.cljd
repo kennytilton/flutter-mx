@@ -55,12 +55,7 @@
 
 (defn rmap-meta-setf [[slot ref] new-value]
   (assert (meta ref))
-  #_ (when (some #{slot} [:state-ref])
-    (prn :rmap-meta-set!!!!!! slot ref new-value))
   (alter-meta! ref assoc slot new-value)
-  #_ (when (some #{slot} [:state-ref])
-    (prn :rmap-meta-set-fini!!!!!! (meta ref)))
-
   new-value)
 
 ;; --- error handling -----------------

@@ -1,7 +1,6 @@
 (ns tiltontec.app.x03-physics-sim
   (:require
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.util.core :as util :refer [rmap-meta-setf]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :as cell :refer [cF cI]]
     [tiltontec.cell.observer :refer [fn-obs]]
@@ -43,8 +42,7 @@
     {:name        :draggable-card
      :initState   (fn [this me]
                     (md/mset! me :fx$state this))
-     :fx$state    (cI nil :obs (fn [_ me new-val __]
-                                 (rmap-meta-setf [:state-ref me] new-val)))
+     :fx$state    (cI nil)
      :fx$ctx  (cF (when-let [st (fxx/my-state)]
                         (.context ^State st)))
      :controller  (cF (when-let [st (fxx/my-state)]

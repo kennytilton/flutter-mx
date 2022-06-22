@@ -398,15 +398,6 @@
 (defmacro cFkids [& tree]
   `(cF (the-kids ~@tree)))
 
-(defmacro cFkidsObs [& tree]
-  `(cF+ [:obs (fn-obs (prn :yep-cfkobs!!! ~'new ~'me)
-                (when-let [^State state# (:state-ref (meta ~'me))]
-                  (dp :BINGO-setstate-kidobs!! state#)
-                  (.setState state# (fn [] (do)))))]
-     (assert ~'me "no me for cFkids")
-     ;;(print :cFkids-me!!! (:id (deref ~'me)))
-     (the-kids ~@tree)))
-
 (defn kid-values-kids [me x-kids]
   (let [k-key (md-get me :kid-key)
         _ (assert k-key)

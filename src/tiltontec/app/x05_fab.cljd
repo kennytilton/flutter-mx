@@ -21,7 +21,8 @@
      :refer [TextStyle]]
     [tiltontec.util.core :as util :refer [rmap-meta-setf]]
     [tiltontec.cell.observer :refer [fn-obs]]
-    [tiltontec.cell.integrity :as integrity]))
+    [tiltontec.cell.integrity :as integrity]
+    [tiltontec.mx-flutter.tag :as tag]))
 
 (declare fake-item expandable-fab show-action action-button)
 
@@ -56,7 +57,7 @@
                            (do ;; integrity/with-cc :exfab-inistate!!!!!!!!!!!!!
                              (md/mset! me :fx$state this))))
      :fx$state         (cI nil)
-     :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
+     #_ #_ :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
                              (.context st)))
      :controller       (cF (when-let [state (fxx/my-state)]
                              (m/AnimationController
@@ -84,7 +85,7 @@
        :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-      (doall (do                                            ;; (dp :rebuilding-actions!!)
+      (doall (do
                (map-indexed
                  (fn [i action]
                    (expanding-action-button me
@@ -102,15 +103,14 @@
                     :icon (:icon action)
                     :onPressed (fn ^void []
                                  ;; todo roll up into (with-context (ctx) ....)
-                                 (let [^State state (:state-ref (meta me))]
+                                 (let [^State state (mget me :fx$state)]
                                    (assert state)
                                    (assert (.context state))
                                    (show-action (.context state) action))
                                  nil)))
     :initState (fn [this me]
                  (md/mset! me :fx$state this))
-    :fx$state (cI nil :obs (fn [_ me new-val _ _]
-                             (rmap-meta-setf [:state-ref me] new-val)))
+    :fx$state (cI nil)
     :fx$ctx (cF (when-let [st (fxx/my-state)]
                   (.context ^State st)))
     :fx-gen (fn [ctx me]
@@ -158,14 +158,20 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                ;; todo get to ctx
-                :color        m.Colors/blue #_(cF (when-let [ctx (fxx/my-ctx)]
-                                                    (-> (Theme/of ctx) .-colorScheme .-secondary)))
+                ;; todo get to ctx without lazy
+                :color        #_ (tag/with-ctx [ctx me]
+                                (-> (Theme/of ctx) .-colorScheme .-secondary))
+                #_m.Colors/blue
+                #_(cF_ [] (when-let [ctx (fxx/my-ctx)]
+                            (dp :BAM!!!-lazy-color!!!!)
+                            (-> (Theme/of ctx) .-colorScheme .-secondary)))
+                (fn [me ctx]
+                    (-> (Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     m.Colors/white #_(cF (when-let [ctx (fxx/my-ctx)]
+       :color     #_ m.Colors/white (cF_ [] (when-let [ctx (fxx/my-ctx)]
                                          (-> (Theme/of ctx) .-colorScheme .-onSecondary)))})))
 
 (defn- tap-to-close-fab [par]
@@ -178,17 +184,16 @@
         (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
-                      :color #_ (fn [me ctx]
-                               ;(dp :callback-icon-state (:state-ref (meta me)))
-                               ;(dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
+                      :color (fn [me ctx]
+                               (dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
                                ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
                                (.primaryColor (Theme/of ctx)))
 
-                      (cF [] (let [ctx (fxx/my-ctx)]
+                      #_ (cF (let [ctx (fxx/my-ctx)]
                                    (if ctx
                                      (do
                                          ;(dp :icon-sees-me!! (minfo me))
-                                         ;(dp :icon-sees-ctx!! ctx)
+                                         (dp :icon-sees-ctx!! ctx)
                                          ;(dp :sees-color (.primaryColor (Theme/of ctx)))
                                          (.primaryColor (Theme/of ctx)))
                                      (do
