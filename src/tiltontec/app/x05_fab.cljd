@@ -35,6 +35,7 @@
       ; todo fxx/app-bar
       {:appBar               (AppBar :title (Text (str "Expandable Fab/FXX " (rand-int 99))))
        :floatingActionButton (expandable-fab
+                               ;; :initial-open? false
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
                                          {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
@@ -48,14 +49,15 @@
   tap-to-close-fab
   tap-to-open-fab)
 
-(defn expandable-fab [& {:keys [initial-open? distance actions] :or [initial-open? false]}]
+(defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
   (fxx/sized-box+expand-ful
     {}
     {:name             :fab
      :initState        (fn [this me]
                          (binding [cty/*within-integrity* true]
-                           ;; todo necesssary? ^^^^
-                           (md/mset! me :fx$state this)))
+                           ;; todo necesssary? ^^^^ but good idea?
+                           (integrity/with-cc :inistate
+                             (md/mset! me :fx$state this))))
      :fx$state         (cI nil)
      :controller       (cF (tag/when-my-state [state]
                              (m/AnimationController
@@ -96,7 +98,6 @@
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (md/make
-    :name :ea-button
     :kids (cFkids (action-button
                     :icon (:icon action)
                     :onPressed (fn ^void []
@@ -126,7 +127,6 @@
                         :animation (mget (md/fasc :fab) :expand-animation)
                         :child (fxx/extract-widget :fab me ctx (first (md/md-kids me)))
                         :builder (fn [ctx child]
-                                   (assert ctx "anibuilder-NOT-seeing-ctx")
                                    (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
                                          _ (assert progress)
                                          offset (m.Offset/fromDirection
@@ -156,7 +156,6 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                ;; todo get to ctx without lazy
                 :color        (tag/with-ctx [me ctx]
                                 (-> (Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
@@ -177,12 +176,10 @@
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
                       :color (tag/with-ctx [me ctx]
-                               (.primaryColor (Theme/of ctx)))}
-              {:name :iconic})))))))
-
+                               (.primaryColor (Theme/of ctx)))})))))))
 
 (defn random-to-double [max]
-  (-> max rand-int .toDouble))
+  (.toDouble (rand-int max)))
 
 (defn random-color []
   (m.Color/fromRGBO (rand-int 256)
@@ -190,44 +187,21 @@
     (rand-int 256)
     1))
 
-#_(defn- tap-to-open-fab [par]
-    ;; version from std fab sample to show Non-MX components are welcome at leaves of MX components
-    (f/nest
-      (m/IgnorePointer :ignoring (boolean (mget (md/fasc :fab par) :open?)))
-      (m/AnimatedContainer
-        :transformAlignment m.Alignment/center
-        :transform (let [open? (mget (md/fasc :fab par) :open?)]
-                     (dp :tap2-pen-sees-open open?)
-                     (m.Matrix4/diagonal3Values
-                       (if open? 0.7 1.0)
-                       (if open? 0.7 1.0)
-                       1.0))
-        :duration ^:const (dart:core/Duration :milliseconds 250)
-        :curve ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut))
-      (m/AnimatedOpacity
-        :opacity (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
-        :curve ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-        :duration ^:const (dart:core/Duration :milliseconds 250))
-      (m/FloatingActionButton :onPressed #(md/mswap! (md/fasc :fab par) :open? not))
-      (m/Icon m.Icons/create)))
-
-
-
 ;;; -------------------------------------------------------------
 
 (defn- tap-to-open-fab [par]
-  (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                        (if open? 0.0 1.0)))
-                        :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                        :duration ^:const (dart:core/Duration :milliseconds 250)}
-    (fx/floating-action-button {:onPressed (fn [me ctx]
-                                             (md/mswap! (md/fasc :fab par) :open? not))}
-      (fx/icon {:icon m.Icons/create}))))
+  (fxx/ignore-pointer
+    {:ignoring (mget (md/fasc :fab par) :open?)}{}
+    (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
+                                          (if open? 0.0 1.0)))
+                          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+                          :duration ^:const (dart:core/Duration :milliseconds 250)}
+      (fx/floating-action-button {:onPressed (fn [me ctx]
+                                               (md/mswap! (md/fasc :fab par) :open? not))}
+        (fx/icon {:icon m.Icons/create})))))
 
 ;; -- full version, but container breaks it
-#_(fx/animated-container {:width      32.0
-                          :height     42.0
-                          :decoration (cF (m/BoxDecoration
+#_(fx/animated-container {:decoration (cF (m/BoxDecoration
                                             :color (random-color)
                                             :borderRadius (m.BorderRadius/circular (random-to-double 100))))
                           :duration   ^:const (Duration :seconds 1)
@@ -248,21 +222,6 @@
       (fx/floating-action-button {:onPressed (fn [me ctx]
                                                (md/mswap! (md/fasc :fab par) :open? not))}
         (fx/icon {:icon m.Icons/create}))))
-#_(do                                                       ;; fx/ignore-pointer {:ignoring (cF (boolean (mget (md/fasc :fab par) :open?)))}
-    (fx/animated-container {:transformAlignment m.Alignment/center
-                            :transform          (let [open? false #_(mget (md/fasc :fab par) :open?)] ;; HHAACK
-                                                  (m.Matrix4/diagonal3Values
-                                                    (if open? 0.7 1.0)
-                                                    (if open? 0.7 1.0)
-                                                    1.0))
-                            :duration           ^:const (dart:core/Duration :milliseconds 250)
-                            :curve              ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut)}
-      (fx/animated-opacity {:opacity  (if (mget (md/fasc :fab par) :open?) 0.0 1.0)
-                            :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                            :duration ^:const (dart:core/Duration :milliseconds 250)}
-        (fx/floating-action-button {:onPressed (fn [me ctx]
-                                                 (md/mswap! (md/fasc :fab par) :open? not))}
-          (m/Icon m.Icons/create) #_(fx/icon {:icon m.Icons/create})))))
 
 (defn fake-item [is-big?]
   (m/Container
@@ -272,11 +231,6 @@
     (m/BoxDecoration
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 Colors/cyan))))
-
-#_(defn fake-item [is-big?]
-    (dart:core.Function/apply m/Container nil
-      {(dart:core/Symbol. "margin") 42.0
-       (dart:core/Symbol. "height") 36.0}))
 
 #_(dart:core.Function/apply m/Container nil
     ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)

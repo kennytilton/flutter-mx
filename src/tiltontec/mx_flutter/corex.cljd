@@ -259,6 +259,21 @@
          (vec (apply concat (seq ~fx-props)))
          (vec (apply concat (seq ~mx-props)))))))
 
+(defmacro ignore-pointer [fx-props mx-props & children]
+  (let []
+    `(apply tiltontec.model.core/make
+       :kids (tiltontec.model.core/cFkids ~@children)
+       :fx-gen (fn [me ctx]
+                 (m/IgnorePointer
+                   ;; todo try extractwidget here vvv
+                   :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                   ~@(let [kvs (for [[k# _#] fx-props]
+                                 [k# `(tiltontec.model.core/mget me ~k#)])]
+                       (apply concat kvs))))
+       (concat
+         (vec (apply concat (seq ~fx-props)))
+         (vec (apply concat (seq ~mx-props)))))))
+
 (defmacro drawer [fx-props mx-props & children]
   (let []
     `(apply tiltontec.model.core/make
