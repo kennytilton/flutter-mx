@@ -45,6 +45,10 @@
   `(fn [~me-var ~ctx-var]
      ~@body))
 
+(defmacro when-my-state [[state-var] & body]
+  `(when-let [~state-var (fxx/my-state)]
+     ~@body))
+
 #_ (defmacro c-fn-var [[c] & body]
      `(fn [~c]
         (let [~'me (c-model ~c)
@@ -67,7 +71,6 @@
             ;;
             ;; we include the MX "me" in the generation...
             (assert (= ctx (.context this)))
-            (dp :build-reactive-ctx-set!!!! (minfo me) ctx)
             (md/mset! me :fx$ctx ctx)
             (beefer me ctx))
           (^void initState [this]

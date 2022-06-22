@@ -53,15 +53,11 @@
     {}
     {:name             :fab
      :initState        (fn [this me]
-                         (assert (cty/md-ref? me))
                          (binding [cty/*within-integrity* true]
-                           (do ;; integrity/with-cc :exfab-inistate!!!!!!!!!!!!!
-                             (dp :set-1!!!!!!! (minfo me))
-                             (md/mset! me :fx$state this))))
+                           ;; todo necesssary? ^^^^
+                           (md/mset! me :fx$state this)))
      :fx$state         (cI nil)
-     #_ #_ :fx$ctx           (cF (when-let [st ^State? (fxx/my-state)]
-                             (.context st)))
-     :controller       (cF (when-let [state (fxx/my-state)]
+     :controller       (cF (tag/when-my-state [state]
                              (m/AnimationController
                                :value (if initial-open? 1.0 0.0)
                                :duration ^:const (dart:core/Duration :milliseconds 250)
@@ -161,20 +157,14 @@
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
                 ;; todo get to ctx without lazy
-                :color        #_ (tag/with-ctx [me ctx]
+                :color        (tag/with-ctx [me ctx]
                                 (-> (Theme/of ctx) .-colorScheme .-secondary))
-                #_m.Colors/blue
-                #_(cF_ [] (when-let [ctx (fxx/my-ctx)]
-                            (dp :BAM!!!-lazy-color!!!!)
-                            (-> (Theme/of ctx) .-colorScheme .-secondary)))
-                (fn [me ctx]
-                    (-> (Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     #_ m.Colors/white (cF_ [] (when-let [ctx (fxx/my-ctx)]
-                                         (-> (Theme/of ctx) .-colorScheme .-onSecondary)))})))
+       :color     (tag/with-ctx [me ctx]
+                    (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
   (fx/sized-box {:width  56.0
@@ -186,22 +176,8 @@
         (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
-                      :color (fn [me ctx]
-                               (dp :icon-color-callled!!!! (.primaryColor (Theme/of ctx)))
-                               ;; fyi, this goes not work well in dark mode: bkg goes black like icon, almost
-                               (.primaryColor (Theme/of ctx)))
-
-                      #_ (cF (let [ctx (fxx/my-ctx)]
-                                   (if ctx
-                                     (do
-                                         ;(dp :icon-sees-me!! (minfo me))
-                                         (dp :icon-sees-ctx!! ctx)
-                                         ;(dp :sees-color (.primaryColor (Theme/of ctx)))
-                                         (.primaryColor (Theme/of ctx)))
-                                     (do
-                                       (dp :icon-no-see-context!!!! (minfo me))
-                                       m.Colors/red)
-                                     )))}
+                      :color (tag/with-ctx [me ctx]
+                               (.primaryColor (Theme/of ctx)))}
               {:name :iconic})))))))
 
 
