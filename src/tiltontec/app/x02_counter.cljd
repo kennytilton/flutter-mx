@@ -38,12 +38,12 @@
       (fxx/center {}{}
         (fxx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
-          (fxx/textless {:style (TextStyle :color Colors/black
+          (fxx/text {:style (TextStyle :color Colors/black
                                   :fontSize 18.0)} {}
             "You clicked the button so many times:")
-          (fxx/text
-            {:style (cF (when-let [ctx-3 (fxx/ctx-nearest me)] ;; todo cvt to my-ctx when stable
-                          (.headline4 (.textTheme (Theme/of ctx-3)))))}
+          (fxx/text!
+            {:style (tag/with-ctx [_ ctx]
+                      (.headline4 (.textTheme (Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
             (str (md/my-val))))))))
