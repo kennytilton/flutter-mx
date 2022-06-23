@@ -30,6 +30,30 @@
       (value me ctx))
     value))
 
+(defn extract-widget [me ctx widget-value]
+  (cond
+    (nil? widget-value)
+    (do                                                     ;; (dp :exwid-sees-nil-widget-value)
+      nil)
+
+    (dart/is? widget-value m/Widget)
+    (do                                                     ;; (dp :widget-value-is-widget widget-value)
+      widget-value)
+
+    (fn? widget-value)
+    (do                                                     ;; (dp :ew-sees-fn widget-value)
+      (recur me ctx (widget-value me ctx)))
+
+    (cty/md-ref? widget-value)
+    (do
+      (recur me ctx
+        (render-fx ctx widget-value)))
+
+    :default widget-value))
+
+(defn resolve-fx-val [me ctx property]
+  (extract-widget me ctx (md/mget me property)))
+
 (defn render-fx [ctx fx]
   ;; todo reverse params? awkward for many calls where fx is complex
   (dpx :rfx-entry ctx (cty/minfo fx))

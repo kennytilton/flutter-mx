@@ -24,27 +24,6 @@
     `(do (assert (:state-ref (meta ~me-ref)) (str "state ref not bound for " (minfo ~me-ref)))
          (.context ^State (:state-ref (meta ~me-ref))))))
 
-(defn extract-widget [me ctx widget-value]
-  (cond
-    (nil? widget-value)
-    (do                                                     ;; (dp :exwid-sees-nil-widget-value)
-      nil)
-
-    (dart/is? widget-value m/Widget)
-    (do                                                     ;; (dp :widget-value-is-widget widget-value)
-      widget-value)
-
-    (fn? widget-value)
-    (do                                                     ;; (dp :ew-sees-fn widget-value)
-      (recur me ctx (widget-value me ctx)))
-
-    (cty/md-ref? widget-value)
-    (do
-      (recur me ctx
-        (render-fx ctx widget-value)))
-
-    :default (throw (Exception. (str "fxx/extract-widget stuck on " widget-value)))))
-
 (defn ctx-page-push [ctx fx-page-def]
   ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
   (.push (-> ctx m.Navigator/of)
@@ -207,11 +186,11 @@
   (beefer [this]
     (fn [me ctx]
       (m/Scaffold
-        :appBar (extract-widget me ctx (mget me :appBar)) ;; todo now test where used
+        :appBar (tag/extract-widget me ctx (mget me :appBar)) ;; todo now test where used
         :body (render-fx ctx (first (md/md-kids me)))
         :floatingActionButton
         (let [button (mget me :floatingActionButton)]
-          (extract-widget me ctx button))))))
+          (tag/extract-widget me ctx button))))))
 
 (deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
 

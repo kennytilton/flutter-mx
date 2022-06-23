@@ -72,9 +72,7 @@
       (recur me ctx (fab me ctx)))
 
     (cty/md-ref? fab)
-    (do
-      (recur me ctx
-        (render-fx ctx fab)))
+    (render-fx ctx fab)
 
     :default (throw (Exception. (str "fxx/extract-widget stuck after on " fab)))))
 
@@ -102,9 +100,9 @@
                                  (apply concat kvs)))
 
                          (m/Scaffold
-                           :appBar (fx/extract-widget me ctx (mget me :appBar))
-                           :drawer (fx/extract-widget me ctx (mget me :drawer))
-                           :body (fx/extract-widget me ctx (or (mget me :body)
+                           :appBar (tag/extract-widget me ctx (mget me :appBar))
+                           :drawer (tag/extract-widget me ctx (mget me :drawer))
+                           :body (tag/extract-widget me ctx (or (mget me :body)
                                                              (first (md/md-kids me))))
                            :floatingActionButton (extract-widget me ctx
                                                    (mget me :floatingActionButton)))))))))
@@ -171,32 +169,6 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-#_(deftype FXAnimatedBuilder []
-    :extends FXDartWidget
-    ;;:type-only true
-    PDartWidget
-    (parts [this]
-      [:animation :child])
-    (beefer [this]
-      (fn [me ctx]
-        (m/AnimatedBuilder
-          :animation (let [ani (mget me :animation)]
-                       (assert ani "anibuilder sees null :animation property")
-                       (dp :anibuilder-sees-ani ani)
-                       (if (fn? ani)
-                         (ani me ctx)
-                         ^#/(m/Animation double) ani))
-          :child (let [childer (mget me :animated-child)]
-                   (assert childer "Animated builder requires :animated-child property")
-                   (render-fx ctx (if (fn? childer)
-                                    (childer me ctx)
-                                    childer)))
-          :builder (fn [ctx child]
-                     (let [beefer (mget me :ani-beefer)]
-                       (assert beefer (str "Animated builder " #_(minfo me) " lacks required beefer callback "))
-                       (render-fx ctx (beefer me ctx child))))))))
-
-
 (defmacro animated-builder [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
@@ -222,6 +194,8 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 ;;; --- stateless ---------------------------------------
+
+
 
 (defmacro sized-box+expand [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
