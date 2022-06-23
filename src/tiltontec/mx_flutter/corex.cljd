@@ -142,19 +142,7 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-(defmacro textless [fx-props mx-props & children]
-  (let []
-    `(apply tiltontec.model.core/make
-       :kids (tiltontec.model.core/cFkids ~@children)
-       :fx$ctx (tiltontec.cell.core/cI nil)                 ;; set at start of build
-       :fx-gen (fn [me ctx]
-                 (w/Text (first (md/md-kids me))            ;; need a render-fx here?
-                   ~@(let [kvs (for [[k# _#] fx-props]
-                                 [k# `(tiltontec.model.core/mget me ~k#)])]
-                       (apply concat kvs))))
-       (concat
-         (vec (apply concat (seq ~fx-props)))
-         (vec (apply concat (seq ~mx-props)))))))
+
 
 (defmacro text [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
@@ -273,66 +261,45 @@
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro center [fx-props mx-props & children]
-  `(child-1k-stateless m/Center ~fx-props ~mx-props ~@children))
-
-#_ ;; OK
-(defmacro center [fx-props mx-props & children]
+(defmacro children-stateless [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
        ~fx-props
        (assoc ~mx-props
-          :fx-gen (fn [me ctx]
-                    (m/Center
-                      :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
-                      ~@(let [kvs (for [[k# _#] fx-props]
-                                    [k# `(tiltontec.model.core/mget me ~k#)])]
-                          (apply concat kvs)))))
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                         (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
-;(deftagx center m/Center :stateless :k1-child)
+(defmacro center [fx-props mx-props & children]
+  `(child-1k-stateless m/Center ~fx-props ~mx-props ~@children))
 
 (defmacro app-bar [fx-props mx-props & children]
-  (let []
-    `(apply tiltontec.model.core/make
-       :kids (tiltontec.model.core/cFkids ~@children)
-       :fx-gen (fn [me ctx]
-                 (m/AppBar
-                   ~@(let [kvs (for [[k# _#] fx-props]
-                                 [k# `(tiltontec.model.core/mget me ~k#)])]
-                       (apply concat kvs))))
-       (concat
-         (vec (apply concat (seq ~fx-props)))
-         (vec (apply concat (seq ~mx-props)))))))
+  `(children-stateless m/Center ~fx-props ~mx-props nil))
 
 (defmacro column [fx-props mx-props & children]
-  (let []
-    `(apply tiltontec.model.core/make
-       :kids (tiltontec.model.core/cFkids ~@children)
-       :fx-gen (fn [me ctx]
-                 (m/Column
-                   :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))
-                   ~@(let [kvs (for [[k# _#] fx-props]
-                                 [k# `(tiltontec.model.core/mget me ~k#)])]
-                       (apply concat kvs))))
-       (concat
-         (vec (apply concat (seq ~fx-props)))
-         (vec (apply concat (seq ~mx-props)))))))
+  `(children-stateless m/Column ~fx-props ~mx-props ~@children))
 
 (defmacro ignore-pointer [fx-props mx-props & children]
+  `(child-1k-stateless m/IgnorePointer ~fx-props ~mx-props ~@children))
+
+(defmacro p1-k1-stateless [fx-class fx-props mx-props & children]
   (let []
-    `(apply tiltontec.model.core/make
-       :kids (tiltontec.model.core/cFkids ~@children)
-       :fx-gen (fn [me ctx]
-                 (m/IgnorePointer
-                   ;; todo try extractwidget here vvv
-                   :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
-                   ~@(let [kvs (for [[k# _#] fx-props]
-                                 [k# `(tiltontec.model.core/mget me ~k#)])]
-                       (apply concat kvs))))
-       (concat
-         (vec (apply concat (seq ~fx-props)))
-         (vec (apply concat (seq ~mx-props)))))))
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (~fx-class (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro textless [fx-props mx-props & children]
+  `(p1-k1-stateless m/Text ~fx-props ~mx-props ~@children))
 
 (defmacro drawer [fx-props mx-props & children]
   (let []
