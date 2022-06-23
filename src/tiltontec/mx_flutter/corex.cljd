@@ -37,7 +37,7 @@
   (dpx :make-fxx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :initState (fn [this me]
+    #_ #_ :initState (fn [this me]
                  (md/mset! me :fx$state this))
     :fx-prop-keys (keys fx-props)                           ;; todo lose if never needed
     :fx$state (cI nil)
@@ -56,8 +56,8 @@
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (= prior-value cty/unbound)
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
-      (if-let [^State state (:state-ref (meta me))]
-        (do (dpx :settingstate slot new-value #_(meta me) (minfo me) state)
+      (if-let [^State state (mget me :fx$state) #_ (:state-ref (meta me))]
+        (do (dp :settingstate slot new-value #_(meta me) (minfo me) state)
             (.setState state (fn [] (do))))
         ;; todo search up to find nearest state
         (dp :NOT-settingstate-on-stateless slot new-value (minfo me))))))
@@ -223,6 +223,7 @@
        (tiltontec.model.core/cFkids ~@children))))
 
 (defmacro children-stateless [fx-class fx-props mx-props & children]
+  (prn :stateless-children-sees children)
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
        ~fx-props
@@ -230,10 +231,41 @@
          :fx-gen (fn [me ctx]
                    (~fx-class
                      :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))
+                    #_  ~@(when children
+                         (dp :yep-children children)
+                         `(:children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.model.core/mget me ~k#)])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro childless-stateless [fx-class fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.mx-flutter.tag/render-fx ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       nil #_ (tiltontec.model.core/cFkids ~@children))))
+
+#_
+(defmacro childless-stateless [fx-class fx-props mx-props]
+  (let []
+    (prn :childless-stateless!!!!!! )
+    (prn :childless-stateless-mxprops! mx-props )
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                         (apply concat kvs)))))
+       nil)))
 
 (defmacro p1-k1-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -257,6 +289,11 @@
                      (~'createState [_#]
                        (do ;; hhack util/rmap-meta-setf [:state-ref me]
                          (reify :extends w/State
+                           (^void ~'initState [this]
+                             ;(.initState ~'^super this)
+                             (md/mset! me :fx$state this)
+                             #_ (when-let [init (mget me :initState)]
+                               (init this me)))
                            (~'build [_# ctx]
                              (~fx-constructor (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                                ~@(let [kvs (for [[k# _#] fx-props]
@@ -265,18 +302,18 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro text! [fx-props mx-props & children]
-  `(p1-k1-stateful m/Text ~fx-props ~mx-props ~@children))
-
 ;;;
 ;;; -------------------------------------------------------
 ;;;
 
+(defmacro text! [fx-props mx-props & children]
+  `(p1-k1-stateful m/Text ~fx-props ~mx-props ~@children))
+
 (defmacro center [fx-props mx-props & children]
   `(child-1k-stateless m/Center ~fx-props ~mx-props ~@children))
 
-(defmacro app-bar [fx-props mx-props & children]
-  `(children-stateless m/Center ~fx-props ~mx-props nil))
+(defmacro app-bar [fx-props mx-props]
+  `(childless-stateless m/AppBar ~fx-props ~mx-props))
 
 (defmacro column [fx-props mx-props & children]
   `(children-stateless m/Column ~fx-props ~mx-props ~@children))

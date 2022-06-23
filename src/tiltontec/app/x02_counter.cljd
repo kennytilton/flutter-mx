@@ -24,22 +24,22 @@
      :theme (ThemeData :primarySwatch Colors/blue)}
     {}
     (fxx/scaffold
-      {:appBar               (fx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
-                                                       (assert ctr "app-bar cannot see ctr")
-                                                       (m/Text (str "Counter fxx rnd=" (rand-int 1000)
-                                                               ", ctr=" (mget ctr :value)))))})
-       :floatingActionButton (cF
-                               (FloatingActionButton
-                                 :onPressed (fn ^void []
-                                              (md/mswap! (md/fm* :z-counter) :value inc))
-                                 :tooltip "Increment"
-                                 :child (Icon Icons/add :color Colors/black)))}
+      {:appBar               (fxx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
+                                                        (assert ctr "app-bar cannot see ctr")
+                                                        (fxx/text! {} {:name :appbartitle}
+                                                          (str "Counter fxx rnd=" (rand-int 1000)
+                                                            ", ctr=" (mget ctr :value)))))} {})
+       :floatingActionButton (cF (FloatingActionButton
+                                   :onPressed (fn ^void []
+                                                (md/mswap! (md/fm* :z-counter) :value inc))
+                                   :tooltip "Increment"
+                                   :child (Icon Icons/add :color Colors/black)))}
       {}
-      (fxx/center {}{}
+      (fxx/center {} {}
         (fxx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
           (fxx/text {:style (TextStyle :color Colors/black
-                                  :fontSize 18.0)} {}
+                              :fontSize 18.0)} {}
             "You clicked the button so many times:")
           (fxx/text!
             {:style (tag/with-ctx [_ ctx]
