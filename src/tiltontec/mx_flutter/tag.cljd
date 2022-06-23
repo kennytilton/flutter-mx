@@ -116,27 +116,6 @@
     :fx$ctx (cI nil) ;; set at start of build
     :fx-prop-keys (keys fx-props)
     :fx-gen (fn [me ctx]
-              (if-let [type-fx-gen (fx-genner mx-type)] ;; <- override option
-                (type-fx-gen me ctx)
-                ; --- no special fx gen, so...the default:
-                (tiltontec.mx-flutter.tag/statefully me
-                  (fn [me ctx]
-                    (let [beefer (or (mget me :beefer)
-                                   (beefer mx-type))]
-                      ;; (dp :make-fx-using-beefer!!!!!!!! (minfo me) beefer)
-                      (beefer me ctx))))))
-    (concat
-      (vec (apply concat (seq fx-props)))
-      (vec (apply concat (seq custom-props))))))
-
-(defn make-fx [mx-type fx-props custom-props cFkids-form]
-  ;;(dp :make-fx!!!!!!! mx-type)
-  (apply tiltontec.model.core/make
-    :mx-type mx-type
-    :kids cFkids-form
-    :fx$ctx (cI nil) ;; set at start of build
-    :fx-prop-keys (keys fx-props)
-    :fx-gen (fn [me ctx]
               ;; the default "statefully" works for must Flutter widgets,
               ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
               ;; so we allow individual widget Types to supply their own fx-gen.

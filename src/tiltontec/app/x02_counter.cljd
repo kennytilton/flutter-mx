@@ -24,8 +24,10 @@
      :theme (ThemeData :primarySwatch Colors/blue)}
     {}
     (fxx/scaffold
-      {:appBar               (fx/app-bar {:title (cF (m/Text (str "Counter fxx rnd=" (rand-int 1000)
-                                                               ", ctr=" (mget (md/fm* :z-counter) :value))))})
+      {:appBar               (fx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
+                                                       (assert ctr "app-bar cannot see ctr")
+                                                       (m/Text (str "Counter fxx rnd=" (rand-int 1000)
+                                                               ", ctr=" (mget ctr :value)))))})
        :floatingActionButton (cF
                                (FloatingActionButton
                                  :onPressed (fn ^void []

@@ -22,15 +22,47 @@
 (defmacro my-nav [] `(m.Navigator/of (ctx-nearest ~'me)))
 
 (defmacro my-controller []
-  `^m/AnimationController? (mget ~'me :controller))
+  `^m/AnimationController? (tiltontec.model.core/mget ~'me :controller))
 
 (defmacro my-animation []
   ;; uncast since type will vary
-  `(mget ~'me :animation))
+  `(tiltontec.model.core/mget ~'me :animation))
 
 (defmacro my-state []
-  `(mget ~'me :fx$state))
+  `(tiltontec.model.core/mget ~'me :fx$state))
 
+;;; --- make fxx ------------------------------------------
+
+(defn make-fxx [mx-type fx-props custom-props cFkids-form]
+  (dpx :make-fxx!!!!!!! mx-type)
+  (apply tiltontec.model.core/make
+    :mx-type mx-type
+    :initState (fn [this me]
+                 (md/mset! me :fx$state this))
+    :fx-prop-keys (keys fx-props)                           ;; todo lose if never needed
+    :fx$state (cI nil)
+    :fx$ctx (cF (when-let [st (my-state)]                   ;; todo lose this?
+                  (.context ^State st)))
+    :kids cFkids-form
+    (concat
+      (vec (apply concat (seq fx-props)))
+      (vec (apply concat (seq custom-props))))))
+
+(deftype FXXDartWidget []
+  :extends Model
+  PObserver
+  (observe [this slot me new-value prior-value cell]
+    ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+    ;; no need to observer initial value observation, when prior is unbound
+    (when-not (= prior-value cty/unbound)
+      ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+      (if-let [^State state (:state-ref (meta me))]
+        (do (dpx :settingstate slot new-value #_(meta me) (minfo me) state)
+            (.setState state (fn [] (do))))
+        ;; todo search up to find nearest state
+        (dp :NOT-settingstate-on-stateless slot new-value (minfo me))))))
+
+;;; --- WIDGETS -------------------------------------------------
 (defmacro material-app [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
@@ -95,7 +127,7 @@
                          (util/rmap-meta-setf [:context me] ctx)
                          #_(m/Scaffold
                              ~@(let [kvs (for [[k# _#] fx-props]
-                                           [k# `(tiltontec.mx-flutter.corex/extract-widget  me ctx
+                                           [k# `(tiltontec.mx-flutter.corex/extract-widget me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))
 
@@ -103,7 +135,7 @@
                            :appBar (tag/extract-widget me ctx (mget me :appBar))
                            :drawer (tag/extract-widget me ctx (mget me :drawer))
                            :body (tag/extract-widget me ctx (or (mget me :body)
-                                                             (first (md/md-kids me))))
+                                                              (first (md/md-kids me))))
                            :floatingActionButton (extract-widget me ctx
                                                    (mget me :floatingActionButton)))))))))
      (concat
@@ -213,21 +245,65 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
+#_(defmacro center [fx-props mx-props & children]
+    (let []
+      `(apply tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+         {}
+         :kids (tiltontec.model.core/cFkids ~@children)
+         :fx-gen (fn [me ctx]
+                   (m/Center
+                     :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                         (apply concat kvs))))
+         (concat
+           (vec (apply concat (seq ~fx-props)))
+           (vec (apply concat (seq ~mx-props)))))))
+
+(defmacro child-1k-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
 (defmacro center [fx-props mx-props & children]
+  `(child-1k-stateless m/Center ~fx-props ~mx-props ~@children))
+
+#_ ;; OK
+(defmacro center [fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+          :fx-gen (fn [me ctx]
+                    (m/Center
+                      :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                      ~@(let [kvs (for [[k# _#] fx-props]
+                                    [k# `(tiltontec.model.core/mget me ~k#)])]
+                          (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+;(deftagx center m/Center :stateless :k1-child)
+
+(defmacro app-bar [fx-props mx-props & children]
   (let []
     `(apply tiltontec.model.core/make
        :kids (tiltontec.model.core/cFkids ~@children)
        :fx-gen (fn [me ctx]
-                 (m/Center
-                   :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                 (m/AppBar
                    ~@(let [kvs (for [[k# _#] fx-props]
                                  [k# `(tiltontec.model.core/mget me ~k#)])]
                        (apply concat kvs))))
        (concat
          (vec (apply concat (seq ~fx-props)))
          (vec (apply concat (seq ~mx-props)))))))
-
-;(deftagx center m/Center :stateless :k1-child)
 
 (defmacro column [fx-props mx-props & children]
   (let []

@@ -261,7 +261,7 @@
               (and (:inside? options)
                 (if-let [kids (md-get where :kids)]
                   (do
-                    ;(trx nil :inside-kids!!! (:name @where))
+                    (do :navig-sees-kids kids)
                     (if-let [netkids (remove #{(:skip options)} kids)]
                       (do
                         (some #(fm-navig what %
@@ -284,8 +284,9 @@
 
               (when (:must? options)
                 (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))))))
-      :else (do ;; not really (dprn :NAVIG-falls-out nil)
+      :else (do (dp :NAVIG-falls-out nil)
                 (when (:must? options)
+                  (throw (Exception. "fall out navig"))
                   (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))
                 nil))))
 
@@ -326,7 +327,7 @@
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        ;; (dp :fm*-start-after name#)
-       (fm-navig #(do ;; (dp :fm*-sees (= name# (md-get % :name)) (minfo %))
+       (fm-navig #(do ;;(dp :fm*-sees (= name# (md-get % :name)) (minfo %))
                       (= name# (md-get % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
