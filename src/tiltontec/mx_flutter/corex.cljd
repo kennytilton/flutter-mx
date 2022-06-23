@@ -96,11 +96,18 @@
                        (~'build [_# ctx]
                          (util/rmap-meta-setf [:context me] ctx)
                          (m/Scaffold
+                           ~@(let [kvs (for [[k# _#] fx-props]
+                                         [k# `(tiltontec.mx-flutter.corex/extract-widget :scaffmac me ctx
+                                                (tiltontec.model.core/mget me ~k#))])]
+                               (apply concat kvs)))
+                         #_
+                         (m/Scaffold
                            :appBar (fx/extract-widget :core-appbar me ctx (mget me :appBar))
                            :drawer (fx/extract-widget :core-appbar me ctx (mget me :drawer))
-                           :body (fx/extract-widget :core-appbar me ctx (first (md/md-kids me)))
-                           :floatingActionButton (let [button (mget me :floatingActionButton)]
-                                                   (extract-widget :scaffold-fab me ctx button)))))))))
+                           :body (fx/extract-widget :core-appbar me ctx (or (mget me :body)
+                                                                          (first (md/md-kids me))))
+                           :floatingActionButton (extract-widget :scaffold-fab me ctx
+                                                   (mget me :floatingActionButton)))))))))
      (concat
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
