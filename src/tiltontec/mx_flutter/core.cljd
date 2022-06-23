@@ -24,26 +24,26 @@
     `(do (assert (:state-ref (meta ~me-ref)) (str "state ref not bound for " (minfo ~me-ref)))
          (.context ^State (:state-ref (meta ~me-ref))))))
 
-(defn extract-widget [dbg-key me ctx fab]
+(defn extract-widget [me ctx widget-value]
   (cond
-    (nil? fab)
-    (do                                                     ;; (dp :exwid-sees-nil-fab dbg-key)
+    (nil? widget-value)
+    (do                                                     ;; (dp :exwid-sees-nil-widget-value)
       nil)
 
-    (dart/is? fab m/Widget)
-    (do                                                     ;; (dp :fab-is-widget fab)
-      fab)
+    (dart/is? widget-value m/Widget)
+    (do                                                     ;; (dp :widget-value-is-widget widget-value)
+      widget-value)
 
-    (fn? fab)
-    (do                                                     ;; (dp :ew-sees-fn dbg-key fab)
-      (recur [dbg-key :fn] me ctx (fab me ctx)))
+    (fn? widget-value)
+    (do                                                     ;; (dp :ew-sees-fn widget-value)
+      (recur me ctx (widget-value me ctx)))
 
-    (cty/md-ref? fab)
+    (cty/md-ref? widget-value)
     (do
-      (recur [dbg-key :renfx] me ctx
-        (render-fx ctx fab)))
+      (recur me ctx
+        (render-fx ctx widget-value)))
 
-    :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
+    :default (throw (Exception. (str "fxx/extract-widget stuck on " widget-value)))))
 
 (defn ctx-page-push [ctx fx-page-def]
   ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
@@ -85,31 +85,6 @@
         (throw (Exception. "Property :beefer must be provided for ad hoc widgets"))))))
 
 (deftag widget tiltontec.mx-flutter.core/FXDartWidget)
-
-
-;;; --- extract widget --------------------------------------
-
-(defn extract-widget [dbg-key me ctx fab]
-  (cond
-    (nil? fab)
-    (do ;; (dp :exwid-sees-nil-fab dbg-key)
-        nil)
-
-    (dart/is? fab m/Widget)
-    (do                                                     ;; (dp :fab-is-widget fab)
-      fab)
-
-    (fn? fab)
-    (do ;; (dp :ew-sees-fn dbg-key fab)
-        (recur [dbg-key :fn] me ctx (fab me ctx)))
-
-    (and (cty/md-ref? fab)
-      (dart/is? (mx-type fab) fx/FXDartWidget))
-    (do
-      (recur [dbg-key :renfx] me ctx
-        (render-fx ctx fab)))
-
-    :default (throw (Exception. (str "extract-widget stuck after " dbg-key " on " fab)))))
 
 ;;; --- material app ---------------------------------------
 
@@ -232,11 +207,11 @@
   (beefer [this]
     (fn [me ctx]
       (m/Scaffold
-        :appBar (extract-widget :core-appbar me ctx (mget me :appBar)) ;; todo now test where used
+        :appBar (extract-widget me ctx (mget me :appBar)) ;; todo now test where used
         :body (render-fx ctx (first (md/md-kids me)))
         :floatingActionButton
         (let [button (mget me :floatingActionButton)]
-          (extract-widget :scaffold-fab me ctx button))))))
+          (extract-widget me ctx button))))))
 
 (deftag scaffold tiltontec.mx-flutter.core/FXScaffold)
 

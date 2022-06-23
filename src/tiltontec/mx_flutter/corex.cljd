@@ -56,11 +56,11 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-(defn extract-widget [dbg-key me ctx fab]
+(defn extract-widget [me ctx fab]
   (cond
     (nil? fab)
     (do
-      (dp :exwid-sees-nil-fab!!!!!!!!!! dbg-key (minfo me))
+      (dp :exwid-sees-nil-fab!!!!!!!!!! (minfo me))
       nil)
 
     (dart/is? fab m/Widget)
@@ -68,15 +68,15 @@
       fab)
 
     (fn? fab)
-    (do                                                     ;; (dp :ew-sees-fn dbg-key fab)
-      (recur [dbg-key :fn] me ctx (fab me ctx)))
+    (do                                                     ;; (dp :ew-sees-fn fab)
+      (recur me ctx (fab me ctx)))
 
     (cty/md-ref? fab)
     (do
-      (recur [dbg-key :renfx] me ctx
+      (recur me ctx
         (render-fx ctx fab)))
 
-    :default (throw (Exception. (str "fxx/extract-widget stuck after " dbg-key " on " fab)))))
+    :default (throw (Exception. (str "fxx/extract-widget stuck after on " fab)))))
 
 (defmacro scaffold [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
@@ -95,18 +95,18 @@
                      (reify :extends w/State
                        (~'build [_# ctx]
                          (util/rmap-meta-setf [:context me] ctx)
+                         #_(m/Scaffold
+                             ~@(let [kvs (for [[k# _#] fx-props]
+                                           [k# `(tiltontec.mx-flutter.corex/extract-widget  me ctx
+                                                  (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))
+
                          (m/Scaffold
-                           ~@(let [kvs (for [[k# _#] fx-props]
-                                         [k# `(tiltontec.mx-flutter.corex/extract-widget :scaffmac me ctx
-                                                (tiltontec.model.core/mget me ~k#))])]
-                               (apply concat kvs)))
-                         #_
-                         (m/Scaffold
-                           :appBar (fx/extract-widget :core-appbar me ctx (mget me :appBar))
-                           :drawer (fx/extract-widget :core-appbar me ctx (mget me :drawer))
-                           :body (fx/extract-widget :core-appbar me ctx (or (mget me :body)
-                                                                          (first (md/md-kids me))))
-                           :floatingActionButton (extract-widget :scaffold-fab me ctx
+                           :appBar (fx/extract-widget me ctx (mget me :appBar))
+                           :drawer (fx/extract-widget me ctx (mget me :drawer))
+                           :body (fx/extract-widget me ctx (or (mget me :body)
+                                                             (first (md/md-kids me))))
+                           :floatingActionButton (extract-widget me ctx
                                                    (mget me :floatingActionButton)))))))))
      (concat
        (vec (apply concat (seq ~fx-props)))
@@ -162,7 +162,7 @@
                      (~'build [_# ctx]
                        (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
                        (m.SizedBox/expand
-                         :child (tiltontec.mx-flutter.corex/extract-widget :sizedboxexpand ~'me ctx
+                         :child (tiltontec.mx-flutter.corex/extract-widget ~'me ctx
                                   (first (tiltontec.model.core/md-kids ~'me)))
                          ~@(let [kvs (for [[k# _#] fx-props]
                                        [k# `(tiltontec.model.core/mget ~'me ~k#)])] ;; todo call if fn?
@@ -213,7 +213,7 @@
                      (~'build [_# ctx]
                        (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
                        (m.SizedBox/expand
-                         :child (tiltontec.mx-flutter.corex/extract-widget :sizedboxexpand ~'me ctx
+                         :child (tiltontec.mx-flutter.corex/extract-widget ~'me ctx
                                   (first (tiltontec.model.core/md-kids ~'me)))
                          ~@(let [kvs (for [[k# _#] fx-props]
                                        [k# `(tiltontec.model.core/mget ~'me ~k#)])] ;; todo call if fn?
@@ -229,10 +229,11 @@
      :fx$ctx (tiltontec.cell.core/cI nil)
      :fx-gen (fn [me ctx]
                (m.SizedBox/expand
-                 :child (tiltontec.mx-flutter.corex/extract-widget :sizedboxexpand me ctx
+                 :child (tiltontec.mx-flutter.corex/extract-widget me ctx
                           (first (tiltontec.model.core/md-kids me)))
                  ~@(let [kvs (for [[k# _#] fx-props]
-                               [k# `(tiltontec.model.core/mget me ~k#)])] ;; todo call if fn?
+                               ;; todo need the ultimate value extractor FN
+                               [k# `(tiltontec.model.core/mget me ~k#)])]
                      (apply concat kvs))))
      (concat
        (vec (apply concat (seq ~fx-props)))
