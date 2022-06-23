@@ -19,8 +19,8 @@
   (fx/material-app
     {:title "Hunt for Teal mxFlutter"
      :theme (cF (m/ThemeData :primarySwatch
-                  ;; a computed, reactive value, just for fun, but we offer no way for
-                  ;; the title to change, so the theme will never get to "react"
+                  ;; a computed, reactive value. Silly because the user cannot
+                  ;; change the title, so we never get to see the Theme "react"
                   (let [ttl (mget me :title)]
                     (cond
                       (string/includes? ttl "Teal") m.Colors/teal
@@ -33,12 +33,12 @@
       {:appBar (m/AppBar
                  :title (m/Text "Welcome to app/mxFlutter"))}
       {}
-       #_ :body
+      #_:body
       (fx/center
-               {} {:name :hello-center}
-               ;; todo text and text!
-               (fx/textless {:overflow m.TextOverflow/ellipsis
-                             :style    (TextStyle
-                                         :color m.Colors/cyan
-                                         :fontSize 32.0)} {}
-                 "hello, world\\n")))))
+        {} {:name :hello-center}
+        ;; todo text and text!
+        (fx/textless {:overflow m.TextOverflow/ellipsis
+                      :style    (TextStyle
+                                  :color m.Colors/cyan
+                                  :fontSize 32.0)} {}
+          "hello, world\\n")))))
