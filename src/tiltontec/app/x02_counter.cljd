@@ -6,8 +6,7 @@
     [tiltontec.cell.core :as cell
      :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
-    [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.corex :as fx]
     [tiltontec.mx-flutter.tag :as tag
      :refer [with-ctx]]
     ["package:flutter/widgets.dart" :as w
@@ -19,15 +18,15 @@
      :refer [TextStyle]]))
 
 (defn make-app []
-  (fxx/material-app
+  (fx/material-app
     {:title "Welcome to mxFlutter World"
      :theme (ThemeData :primarySwatch Colors/blue)}
     {}
-    (fxx/scaffold
-      {:appBar               (fxx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
+    (fx/scaffold
+      {:appBar               (fx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
                                                         (assert ctr "app-bar cannot see ctr")
-                                                        (fxx/text! {} {:name :appbartitle}
-                                                          (str "Counter fxx rnd=" (rand-int 1000)
+                                                        (fx/text! {} {:name :appbartitle}
+                                                          (str "Counter fx rnd=" (rand-int 1000)
                                                             ", ctr=" (mget ctr :value)))))} {})
        :floatingActionButton (cF (FloatingActionButton
                                    :onPressed (fn ^void []
@@ -35,13 +34,13 @@
                                    :tooltip "Increment"
                                    :child (Icon Icons/add :color Colors/black)))}
       {}
-      (fxx/center {} {}
-        (fxx/column
+      (fx/center {} {}
+        (fx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
-          (fxx/text {:style (TextStyle :color Colors/black
+          (fx/text {:style (TextStyle :color Colors/black
                               :fontSize 18.0)} {}
             "You clicked the button so many times:")
-          (fxx/text!
+          (fx/text!
             {:style (tag/with-ctx [_ ctx]
                       (.headline4 (.textTheme (Theme/of ctx))))}
             {:name  :z-counter
