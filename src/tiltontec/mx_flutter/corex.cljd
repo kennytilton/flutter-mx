@@ -59,7 +59,6 @@
       (if-let [^State state (mget me :fx$state) #_ (:state-ref (meta me))]
         (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state)
             (.setState state (fn [] (do))))
-        ;; todo search up to find nearest state
         (if-let [^State state (tag/fx-state-nearest me)]
           (do (dp :obs-FXXD-uses-nearest-state (minfo me))
               (.setState state (fn [] (do))))
@@ -203,6 +202,7 @@
      :kids (tiltontec.model.core/cFkids ~@children)
      :fx$ctx (tiltontec.cell.core/cI nil)
      :fx-gen (fn [me ctx]
+               (md/mset! me :fx$ctx ctx)
                (m.SizedBox/expand
                  :child (tiltontec.mx-flutter.corex/extract-widget me ctx
                           (first (tiltontec.model.core/md-kids me)))
@@ -222,6 +222,7 @@
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
@@ -235,6 +236,7 @@
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))
                     #_  ~@(when children
@@ -251,6 +253,7 @@
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.mx-flutter.tag/render-fx ctx
@@ -268,6 +271,7 @@
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
                    (~fx-class (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.model.core/mget me ~k#)])]
@@ -289,6 +293,7 @@
                            #_ (when-let [init (mget m e :initState)]
                                 (init this me)))
                          (~'build [_# ctx]
+                           (md/mset! me :fx$ctx ctx)
                            (~fx-constructor (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                              ~@(let [kvs (for [[k# _#] fx-props]
                                            [k# `(tiltontec.mx-flutter.tag/fx-eval me ctx
@@ -328,13 +333,11 @@
 
 ;;; --- utils -------------------------------------
 
-;; todo now explore all such remaining vestiges of cached ctx and make sure they are solved
 (defn ctx-nearest [me]
   (cond
     (nil? me) (do ;; (dp :ctx-nearest-sees-nil-me-out-top?)
                   nil)
     :else (do
             (assert (cty/md-ref? me) "ctx-nearest passed non-md")
-            ;; todo lose meta ctx used elsewhere once sure not needed
             (or (mget me :fx$ctx)
               (recur (:par @me))))))
