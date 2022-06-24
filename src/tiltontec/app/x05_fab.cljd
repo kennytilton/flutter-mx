@@ -28,23 +28,22 @@
 
 (defn make-app []
   (fxx/material-app {:title                      "Expandable Fab/FXX"
-                     ;; save this :theme                      (.dark m/ThemeData)
                      :debugShowCheckedModeBanner false}
     {:name :mat-app}
     (fxx/scaffold
-      ; todo fxx/app-bar
-      {:appBar               (AppBar :title (Text (str "Expandable Fab/FXX " (rand-int 99))))
+      ; todo DEFTAGX!!!!!!!!!!!!!!!!!!!!!!
+      {:appBar               (fxx/app-bar {:title (Text (str "Expandable Fab/FXX " (rand-int 99)))}{})
        :floatingActionButton (expandable-fab
-                               ;; :initial-open? false
+                               :initial-open? false
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
                                          {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
                                          {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       {}
-      (fx/list-view+builder {}                              ;; todo mxify
+      (fxx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
-         :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
+         :itemBuilder (fn [ctx i] (fake-item (odd? i)))}{}))))
 
 (declare expanding-action-button
   tap-to-close-fab
