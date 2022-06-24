@@ -57,10 +57,13 @@
     (when-not (= prior-value cty/unbound)
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
       (if-let [^State state (mget me :fx$state) #_ (:state-ref (meta me))]
-        (do (dp :settingstate slot new-value #_(meta me) (minfo me) state)
+        (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state)
             (.setState state (fn [] (do))))
         ;; todo search up to find nearest state
-        (dp :NOT-settingstate-on-stateless slot new-value (minfo me))))))
+        (if-let [^State state (tag/fx-state-nearest me)]
+          (do (dp :obs-FXXD-uses-nearest-state (minfo me))
+              (.setState state (fn [] (do))))
+          (dp :NOT-settingstate-on-stateless slot new-value (minfo me)))))))
 
 ;;; --- WIDGETS -------------------------------------------------
 (defmacro material-app [fx-props mx-props & children]
@@ -227,7 +230,6 @@
        (tiltontec.model.core/cFkids ~@children))))
 
 (defmacro children-stateless [fx-class fx-props mx-props & children]
-  (prn :stateless-children-sees children)
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
        ~fx-props
@@ -280,19 +282,18 @@
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
-                       (do ;; hhack util/rmap-meta-setf [:state-ref me]
-                         (reify :extends w/State
-                           (^void ~'initState [this]
-                             ;(.initState ~'^super this)
-                             (md/mset! me :fx$state this)
-                             #_ (when-let [init (mget m e :initState)]
-                               (init this me)))
-                           (~'build [_# ctx]
-                             (~fx-constructor (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
-                               ~@(let [kvs (for [[k# _#] fx-props]
-                                             [k# `(tiltontec.mx-flutter.tag/fx-eval me ctx
-                                                    (tiltontec.model.core/mget me ~k#))])]
-                                   (apply concat kvs))))))))))
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (md/mset! me :fx$state this)
+                           #_ (when-let [init (mget m e :initState)]
+                                (init this me)))
+                         (~'build [_# ctx]
+                           (~fx-constructor (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                             ~@(let [kvs (for [[k# _#] fx-props]
+                                           [k# `(tiltontec.mx-flutter.tag/fx-eval me ctx
+                                                  (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
 ;;;

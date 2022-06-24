@@ -170,15 +170,18 @@
     (when (= slot :kids)
       (fm-kids-observe slot me new-value prior-value cell))))
 
+(defmacro mpar [& [me]]
+  (let [me (or me 'me)]
+    `(:par @~me)))
+
 (defn make-family [& arg-list]
   (cond
-    ;; a bit sketchy: if arg-list is odd we assume they started with a Family subtype
-    ;; todo make better
+    ;; if arg-list is odd we assume they started with a Family subtype
+    ;; used mostly for regression tests
     (odd? (count arg-list)) (apply make-family :mx-type arg-list)
     :else
     (apply make
       :mx-type (Family.)
-      ;; todo allow override of default fm-not-to-be
       :not-to-be fm-not-to-be
       arg-list)))
 

@@ -33,18 +33,14 @@
   (dpx :obs-classic slot-name (cty/minfo me) new-val)
   ;; todo if no state next, search up for nearest and setState that
 
-
-  ; next we look to see if
-
   (when-let [obs (:fx$observer @me)]
+    ;; note that we carry on with generic observe after specific observe
     (do (dpx :using-obj-observer (cty/minfo me))
         (obs slot-name me new-val old-val c)))
 
-  (if-let [^w/State state (or (:fx$state @me)
-                            (:state-ref (meta me)))]
-    (do (dpx :setting-FX-META-state slot-name new-val (cty/minfo me))
-        (.setState state (fn [] (do))))
-    (dpx :observe-sees-no-state (cty/minfo me))))
+  (when-let [obs (observer-get (type-cljd me))]
+    (do (prn :using-type-obs slot-name (type-cljd me))
+        (obs slot-name me new-val old-val c))))
 
 #_(let [obs (if-let [obs (observer-get [slot-name (type-cljd me)])]
               (do (prn :using-slot-obs slot-name (type-cljd me))
