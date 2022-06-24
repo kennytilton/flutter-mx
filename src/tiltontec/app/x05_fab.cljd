@@ -7,7 +7,9 @@
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell :refer [cF c_F cF_ cF+ cI make-c-formula c-fn]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
-    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.corex
+     :refer [k1-child-stateless]
+     :as fxx]
 
     [tiltontec.mx-flutter.core :as fx
      :refer [center text scaffold column list-view+builder my-state]]
@@ -170,8 +172,9 @@
                     (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
-  (fx/sized-box {:width  56.0
+  (fxx/sized-box {:width  56.0
                  :height 56.0}
+    {}
     (fx/center
       (fx/material {:shape        ^:const (m/CircleBorder)
                     :clipBehavior m.Clip/antiAlias

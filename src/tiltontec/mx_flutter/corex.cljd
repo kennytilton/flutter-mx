@@ -326,10 +326,8 @@
                              (init this me)))
                          (~'build [_# ctx]
                            (md/mset! me :fx$ctx ctx)
-                           (dp :now-building-scaffold!!!!!)
                            (let [bod# (tiltontec.mx-flutter.tag/fx-resolve me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
-                             (dp :bod!!!!!!! bod#)
                              (~fx-constructor
                                ;; todo throw error if they specify :body explicitly, for now
                                :body bod#
@@ -357,10 +355,8 @@
                              (init this me)))
                          (~'build [_# ctx]
                            (md/mset! me :fx$ctx ctx)
-                           (dp :now-building-scaffold!!!!!)
                            (let [k1# (tiltontec.mx-flutter.tag/fx-resolve me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
-                             (dp :k1 k1#)
                              (~fx-constructor
                                ;; todo throw error if they specify :body explicitly, for now
                                :child k1#
@@ -400,6 +396,47 @@
 
 (defmacro center [fx-props mx-props & children]
   `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
+
+(defmacro deftagx [tag fx-type-name expander]
+  (prn :deftag-entry!!!!!!! tag fx-type-name)
+  `(defmacro ~tag [& vargs#]
+     ;;(dprn :expanding-deftag '~tag)
+     (let [fx-type# '~fx-type-name]
+       (cond
+         (nil? vargs#)
+         `(~'~expander fx-type# {} {} nil)
+
+         (not (map? (first vargs#)))
+         (do                                                ;;(dprn :just-kids!!!!!!!! '~tag)
+           ;; we must have justkids
+           `(~'~expander fx-type# {} {}
+              (tiltontec.model.core/cFkids ~@vargs#)))
+
+         (map? (second vargs#))
+         ;; full spec, maybe kids
+         (do                                                ;;(dprn :full-spec!!!!!!!!!!!! (second vargs#))
+           `(~'~expander fx-type#
+              ~(first vargs#)
+              ~(second vargs#)
+              ~(when-let [kids# (seq (nthrest vargs# 2))]
+                 `(tiltontec.model.core/cFkids ~@kids#))))
+
+         :else
+         ;; just first map of fx props and maybe kids
+         `(~'~expander fx-type#
+            ~(first vargs#)
+            {}
+            ~(when-let [kids# (seq (nthrest vargs# 1))]
+               `(tiltontec.model.core/cFkids ~@kids#)))))))
+
+(deftagx sized-box m/SizedBox k1-child-stateless)
+
+
+
+
+#_
+(defmacro sized-box [fx-props mx-props & children]
+  `(k1-child-stateless m/SizedBox ~fx-props ~mx-props ~@children))
 
 (defmacro animated-opacity [fx-props mx-props & children]
   `(k1-child-stateless m/AnimatedOpacity ~fx-props ~mx-props ~@children))
