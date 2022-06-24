@@ -285,6 +285,30 @@
                                  (apply concat kvs)))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro prop-param1-childless-stateful [p1-prop-name fx-constructor fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (reify :extends m/StatefulWidget
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (md/mset! me :fx$state this)
+                           #_(when-let [init (mget m e :initState)]
+                               (init this me)))
+                         (~'build [_# ctx]
+                           (md/mset! me :fx$ctx ctx)
+                           (~fx-constructor (tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                              (tiltontec.model.core/mget me ~p1-prop-name))
+                             ~@(let [kvs (for [[k# _#] fx-props]
+                                           [k# `(tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                                  (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))))))))
+       nil)))
+
 (defmacro k1-body-stateful [fx-constructor fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
@@ -354,6 +378,21 @@
 ;;;
 ;;; -------------------------------------------------------
 ;;;
+;(deftype FXIcon []
+;  :extends FXDartWidget
+;  PObserver
+;  (observe [this slot me new-value prior-value cell])
+;  PDartWidget
+;  (beefer [this]
+;    (fn [me ctx]
+;      (m/Icon (mget me :icon)
+;        :color (let [color (mget me :color)]
+;                 (if (fn? color)
+;                   (color me ctx)
+;                   color))))))
+
+(defmacro icon [fx-props mx-props]
+  `(prop-param1-childless-stateful :icon m/Icon ~fx-props ~mx-props))
 
 (defmacro text! [fx-props mx-props & children]
   ;; todo Text has children?!
@@ -364,6 +403,9 @@
 
 (defmacro animated-opacity [fx-props mx-props & children]
   `(k1-child-stateless m/AnimatedOpacity ~fx-props ~mx-props ~@children))
+
+(defmacro floating-action-button [fx-props mx-props & children]
+  `(k1-child-stateless m/FloatingActionButton ~fx-props ~mx-props ~@children))
 
 (defmacro align [fx-props mx-props & children]
   `(k1-child-stateless m/Align ~fx-props ~mx-props ~@children))

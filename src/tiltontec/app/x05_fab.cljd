@@ -199,10 +199,12 @@
     (fxx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
                                           (if open? 0.0 1.0)))
                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                          :duration ^:const (dart:core/Duration :milliseconds 250)} {}
-      (fx/floating-action-button {:onPressed (fn [me ctx]
+                          :duration ^:const (dart:core/Duration :milliseconds 250)}
+      {}
+      (fxx/floating-action-button {:onPressed (fn ^void []
                                                (md/mswap! (md/fasc :fab par) :open? not))}
-        (fx/icon {:icon m.Icons/create})))))
+        {}
+        (fxx/icon {} {:icon m.Icons/create})))))
 
 ;; -- full version, but container breaks it
 #_(fx/animated-container {:decoration (cF (m/BoxDecoration
