@@ -397,6 +397,24 @@
 (defmacro center [fx-props mx-props & children]
   `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
 
+(defmacro fade-transition [fx-props mx-props & children]
+  `(k1-child-stateless m/FadeTransition ~fx-props ~mx-props ~@children))
+
+;(deftype FXFadeTransition []
+;  :extends FXDartWidget
+;  ;;:type-only true
+;  PDartWidget
+;  (parts [this]
+;    [:opacity :child])
+;  (beefer [this]
+;    (fn [me ctx]
+;      (m/FadeTransition
+;        :opacity (let [op (mget me :opacity)]
+;                   (if (fn? op)
+;                     (op me ctx)
+;                     op))
+;        :child (render-fx ctx (first (tiltontec.model.core/md-kids me)))))))
+
 (defmacro deftagx [tag fx-type-name expander]
   (prn :deftag-entry!!!!!!! tag fx-type-name)
   `(defmacro ~tag [& vargs#]
