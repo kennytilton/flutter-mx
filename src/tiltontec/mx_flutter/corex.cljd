@@ -56,15 +56,18 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (when-not (= prior-value cty/unbound)
-      ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
-      (if-let [^State state (mget me :fx$state) #_(:state-ref (meta me))]
-        (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state)
-            (.setState state (fn [] (do))))
-        (if-let [^State state (tag/fx-state-nearest me)]
-          (do (dp :obs-FXXD-uses-nearest-state (minfo me))
+    (when-not (some #{slot} [:fx$ctx :fx$state])
+      (when-not (= prior-value cty/unbound)
+        ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+        (if-let [^State state (mget me :fx$state) #_(:state-ref (meta me))]
+          (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
               (.setState state (fn [] (do))))
-          (dp :NOT-settingstate-on-stateless slot new-value (minfo me)))))))
+          (if-let [^State state (tag/fx-state-nearest me)]
+            (do
+
+                (dp :obs-FXXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
+                (.setState state (fn [] (do))))
+            (dp :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
 
 ;;; --- WIDGETS -------------------------------------------------
 (defmacro material-app [fx-props mx-props & children]
@@ -142,7 +145,7 @@
                            :appBar (tag/fx-resolve me ctx (mget me :appBar))
                            :drawer (tag/fx-resolve me ctx (mget me :drawer))
                            :body (tag/fx-resolve me ctx (or (mget me :body)
-                                                              (first (md/md-kids me))))
+                                                          (first (md/md-kids me))))
                            :floatingActionButton (fx-resolve me ctx
                                                    (mget me :floatingActionButton)))))))))
      (concat
@@ -324,7 +327,7 @@
                            (md/mset! me :fx$ctx ctx)
                            (dp :now-building-scaffold!!!!!)
                            (let [bod# (tiltontec.mx-flutter.tag/fx-resolve me ctx
-                                       (first (tiltontec.model.core/md-kids me)))]
+                                        (first (tiltontec.model.core/md-kids me)))]
                              (dp :bod!!!!!!! bod#)
                              (~fx-constructor
                                ;; todo throw error if they specify :body explicitly, for now
@@ -365,7 +368,7 @@
 
 (defmacro drawer [fx-props mx-props & children]
   ;; todo doesn't a drawer need to have open? state
-  `(k1-param1-stateless m/Text ~fx-props ~mx-props ~@children))
+  `(k1-child-stateless m/Drawer ~fx-props ~mx-props ~@children))
 
 ;;; --- utils -------------------------------------
 
