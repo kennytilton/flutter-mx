@@ -10,7 +10,7 @@
             [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe] :as cty]
             [tiltontec.util.core :as util
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.cell.core :as cell :refer [cF cF+ cI c_F]]
+            [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.cell.observer :refer [fn-obs]]
 
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
@@ -37,11 +37,13 @@
   (dpx :make-fxx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    #_ #_ :initState (fn [this me]
+    :initState (fn [this me]
                  (md/mset! me :fx$state this))
     :fx-prop-keys (keys fx-props)                           ;; todo lose if never needed
     :fx$state (cI nil)
-    :fx$ctx (cF (when-let [st (my-state)]                   ;; todo lose this?
+    :fx$ctx (cF_ []
+              ;; on-handlers do not get context, so we have "me" keep a pointer
+              (when-let [st (my-state)]
                   (.context ^State st)))
     :kids cFkids-form
     (concat
