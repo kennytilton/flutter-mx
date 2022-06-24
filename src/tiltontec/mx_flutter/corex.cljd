@@ -152,30 +152,7 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-(defmacro sized-box+expand-ful [fx-props mx-props & children]
-  `(apply tiltontec.model.core/make
-     :kids (tiltontec.model.core/cFkids ~@children)
-     :fx$ctx (tiltontec.cell.core/cI nil)
-     :fx-gen (fn [~'me ctx]
-               (reify :extends m/StatefulWidget
-                 (~'createState [_#]
-                   (reify :extends w/State
-                     ^:mixin m/SingleTickerProviderStateMixin
-                     (^void ~'initState [~'this]
-                       ;;(.initState ~'^super ~'this)
-                       (when-let [init (mget ~'me :initState)]
-                         (init ~'this ~'me)))
-                     (~'build [_# ctx]
-                       (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
-                       (m.SizedBox/expand
-                         :child (tiltontec.mx-flutter.corex/fx-resolve ~'me ctx
-                                  (first (tiltontec.model.core/md-kids ~'me)))
-                         ~@(let [kvs (for [[k# _#] fx-props]
-                                       [k# `(tiltontec.model.core/mget ~'me ~k#)])] ;; todo call if fn?
-                             (apply concat kvs))))))))
-     (concat
-       (vec (apply concat (seq ~fx-props)))
-       (vec (apply concat (seq ~mx-props))))))
+
 
 (defmacro animated-builder [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
@@ -338,6 +315,40 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro k1-child-stateful [fx-constructor fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (reify :extends m/StatefulWidget
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (md/mset! me :fx$state this)
+                           (when-let [init (mget me :initState)]
+                             ;; this is where widgets can build controllers who vsync
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (md/mset! me :fx$ctx ctx)
+                           (dp :now-building-scaffold!!!!!)
+                           (let [k1# (tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                        (first (tiltontec.model.core/md-kids me)))]
+                             (dp :k1 k1#)
+                             (~fx-constructor
+                               ;; todo throw error if they specify :body explicitly, for now
+                               :child k1#
+                               ~@(let [kvs (for [[k# _#] fx-props]
+                                             [k# `(tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                                    (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro sized-box+expand-ful [fx-props mx-props & children]
+  `(k1-child-stateful m.SizedBox/expand ~fx-props ~mx-props ~@children))
+
 (defmacro scaffold [fx-props mx-props & children]
   `(k1-body-stateful m/Scaffold ~fx-props ~mx-props ~@children))
 ;;;
@@ -350,6 +361,9 @@
 
 (defmacro center [fx-props mx-props & children]
   `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
+
+(defmacro animated-opacity [fx-props mx-props & children]
+  `(k1-child-stateless m/AnimatedOpacity ~fx-props ~mx-props ~@children))
 
 (defmacro align [fx-props mx-props & children]
   `(k1-child-stateless m/Align ~fx-props ~mx-props ~@children))

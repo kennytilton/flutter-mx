@@ -53,12 +53,6 @@
   (fxx/sized-box+expand-ful
     {}
     {:name             :fab
-     :initState        (fn [this me]
-                         (binding [cty/*within-integrity* true]
-                           ;; todo necesssary? ^^^^ but good idea?
-                           (integrity/with-cc :inistate
-                             (md/mset! me :fx$state this))))
-     :fx$state         (cI nil)
      :controller       (cF (tag/when-my-state [state]
                              (m/AnimationController
                                :value (if initial-open? 1.0 0.0)
@@ -202,10 +196,10 @@
 (defn- tap-to-open-fab [par]
   (fxx/ignore-pointer
     {:ignoring (mget (md/fasc :fab par) :open?)}{}
-    (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
+    (fxx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
                                           (if open? 0.0 1.0)))
                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                          :duration ^:const (dart:core/Duration :milliseconds 250)}
+                          :duration ^:const (dart:core/Duration :milliseconds 250)} {}
       (fx/floating-action-button {:onPressed (fn [me ctx]
                                                (md/mswap! (md/fasc :fab par) :open? not))}
         (fx/icon {:icon m.Icons/create})))))
