@@ -55,6 +55,9 @@
     (assert rule)
     (assert (fn? rule))
 
+    (when-let [lazy (:lazy options)]
+      (assert (some #{lazy} [true false :until-asked]) (str "make-cf sees invalid value for :lazy " lazy)))
+
     (atom (merge {:value              unbound
                   ::cty/state         :nascent              ;; s/b :unbound?
                   :pulse              0
@@ -195,8 +198,6 @@
      :lazy :until-asked
      :rule (c-fn ~@body)
      :debug true))
-
-;; todo add validation somewhere of lazy option
 
 (defmacro c-formula [[& kvs] & body]
   `(make-c-formula

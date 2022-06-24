@@ -171,16 +171,14 @@
       (fm-kids-observe slot me new-value prior-value cell))))
 
 (defn make-family [& arg-list]
-  ;; todo avoid repeated register
   (cond
-    ;; a bit sketchy: if arg-list is odd we assume they started with a type
+    ;; a bit sketchy: if arg-list is odd we assume they started with a Family subtype
     ;; todo make better
-    (odd? (count arg-list)) (apply make :mx-type arg-list)
+    (odd? (count arg-list)) (apply make-family :mx-type arg-list)
     :else
     (apply make
       :mx-type (Family.)
-      ;; no way to override default fm-not-to-be
-      ;; todo make better
+      ;; todo allow override of default fm-not-to-be
       :not-to-be fm-not-to-be
       arg-list)))
 

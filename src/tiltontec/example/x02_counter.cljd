@@ -40,8 +40,8 @@
                                   :fontSize 18.0)} {}
             "You clicked the button so many times:")
           (fxx/text!
-            {:style (cF (when-let [ctx-3 (fxx/ctx-nearest me)] ;; todo cvt to my-ctx when stable
-                          (.headline4 (.textTheme (Theme/of ctx-3)))))}
+            {:style (with-ctx [me ctx]
+                      (.headline4 (.textTheme (Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
             (str (md/my-val))))))))

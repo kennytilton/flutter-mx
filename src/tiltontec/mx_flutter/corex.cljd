@@ -109,6 +109,7 @@
     :default (throw (Exception. (str "fxx/extract-widget stuck after on " fab)))))
 
 (defmacro scaffold [fx-props mx-props & children]
+  ;; todo today convert to make-fxx
   `(apply tiltontec.model.core/make
      :kids (tiltontec.model.core/cFkids ~@children)
      :fx$ctx (tiltontec.cell.core/cI nil)                   ;; set at start of build
@@ -191,6 +192,7 @@
      (concat
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
+
 ;;; --- stateless ---------------------------------------
 
 (defmacro sized-box+expand [fx-props mx-props & children]
@@ -209,7 +211,9 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-(defmacro child-1k-stateless [fx-class fx-props mx-props & children]
+;;; ---- FXX New gen -----------------------------------------------------------------------
+
+(defmacro k1-child-stateless [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
        ~fx-props
@@ -250,24 +254,13 @@
                                    [k# `(tiltontec.mx-flutter.tag/render-fx ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
-       nil #_ (tiltontec.model.core/cFkids ~@children))))
-
-#_
-(defmacro childless-stateless [fx-class fx-props mx-props]
-  (let []
-    (prn :childless-stateless!!!!!! )
-    (prn :childless-stateless-mxprops! mx-props )
-    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
-       ~fx-props
-       (assoc ~mx-props
-         :fx-gen (fn [me ctx]
-                   (~fx-class
-                     ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.model.core/mget me ~k#)])]
-                         (apply concat kvs)))))
        nil)))
 
-(defmacro p1-k1-stateless [fx-class fx-props mx-props & children]
+(defmacro flutter-logo [fx-props mx-props]
+  `(childless-stateless m/FlutterLogo ~fx-props ~mx-props))
+
+
+(defmacro k1-param1-stateless [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
        ~fx-props
@@ -279,7 +272,7 @@
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro p1-k1-stateful [fx-constructor fx-props mx-props & children]
+(defmacro k1-param1-stateful [fx-constructor fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
        ~fx-props
@@ -292,7 +285,7 @@
                            (^void ~'initState [this]
                              ;(.initState ~'^super this)
                              (md/mset! me :fx$state this)
-                             #_ (when-let [init (mget me :initState)]
+                             #_ (when-let [init (mget m e :initState)]
                                (init this me)))
                            (~'build [_# ctx]
                              (~fx-constructor (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
@@ -307,10 +300,14 @@
 ;;;
 
 (defmacro text! [fx-props mx-props & children]
-  `(p1-k1-stateful m/Text ~fx-props ~mx-props ~@children))
+  ;; todo Text has children?!
+  `(k1-param1-stateful m/Text ~fx-props ~mx-props ~@children))
 
 (defmacro center [fx-props mx-props & children]
-  `(child-1k-stateless m/Center ~fx-props ~mx-props ~@children))
+  `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
+
+(defmacro align [fx-props mx-props & children]
+  `(k1-child-stateless m/Align ~fx-props ~mx-props ~@children))
 
 (defmacro app-bar [fx-props mx-props]
   `(childless-stateless m/AppBar ~fx-props ~mx-props))
@@ -319,33 +316,21 @@
   `(children-stateless m/Column ~fx-props ~mx-props ~@children))
 
 (defmacro ignore-pointer [fx-props mx-props & children]
-  `(child-1k-stateless m/IgnorePointer ~fx-props ~mx-props ~@children))
+  `(k1-child-stateless m/IgnorePointer ~fx-props ~mx-props ~@children))
 
 (defmacro text [fx-props mx-props & children]
-  `(p1-k1-stateless m/Text ~fx-props ~mx-props ~@children))
+  `(k1-param1-stateless m/Text ~fx-props ~mx-props ~@children))
 
 (defmacro drawer [fx-props mx-props & children]
-  (let []
-    `(apply tiltontec.model.core/make
-       :kids (tiltontec.model.core/cFkids ~@children)
-       :fx$ctx (tiltontec.cell.core/cI nil)                 ;; set at start of build
-       :fx-gen (fn [me ctx]
-                 (util/rmap-meta-setf [:context me] ctx)
-                 (tiltontec.model.core/mset! me :fx$ctx ctx)
-                 (m/Drawer
-                   :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
-                   ~@(let [kvs (for [[k# _#] fx-props]
-                                 [k# `(tiltontec.model.core/mget me ~k#)])]
-                       (apply concat kvs))))
-       (concat
-         (vec (apply concat (seq ~fx-props)))
-         (vec (apply concat (seq ~mx-props)))))))
+  ;; todo doesn't a drawer need to have open? state
+  `(k1-param1-stateless m/Text ~fx-props ~mx-props ~@children))
 
 ;;; --- utils -------------------------------------
 
+;; todo now explore all such remaining vestiges of cached ctx and make sure they are solved
 (defn ctx-nearest [me]
   (cond
-    (nil? me) (do (dp :ctx-nearest-sees-nil-me-out-top?)
+    (nil? me) (do ;; (dp :ctx-nearest-sees-nil-me-out-top?)
                   nil)
     :else (do
             (assert (cty/md-ref? me) "ctx-nearest passed non-md")

@@ -43,8 +43,7 @@
      :initState   (fn [this me]
                     (md/mset! me :fx$state this))
      :fx$state    (cI nil)
-     :fx$ctx  (cF (when-let [st (fxx/my-state)]
-                        (.context ^State st)))
+
      :controller  (cF (when-let [st (fxx/my-state)]
                         (m/AnimationController :vsync st)))
      :onPanDown   (fn [me ctx ^m/DragDownDetails details]
@@ -62,14 +61,16 @@
      :dispose     (fn [this me]
                     (when-let [con (fxx/my-controller)]
                       (.dispose con)))}
-    (fx/align
+    (fxx/align
       {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
+      {}
       (fx/card drag-child))))
 
 (defn make-app []
-  (let [title "Physics Animation"]
-    (fx/material-app {:title title}
-      (fx/scaffold
+  (let [title (str "Physics Animation #" (rand-int 99))]
+    (fxx/material-app {:title title}{}
+      (fxx/scaffold
         {:appBar (m/AppBar :title (m/Text title))}
+        {}
         (draggable-card
-          :drag-child (fx/flutter-logo {:size 128.0}))))))
+          :drag-child (fxx/flutter-logo {:size 128.0}{}))))))
