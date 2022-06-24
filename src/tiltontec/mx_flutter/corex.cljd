@@ -44,7 +44,7 @@
     :fx$ctx (cF_ []
               ;; on-handlers do not get context, so we have "me" keep a pointer
               (when-let [st (my-state)]
-                  (.context ^State st)))
+                (.context ^State st)))
     :kids cFkids-form
     (concat
       (vec (apply concat (seq fx-props)))
@@ -58,7 +58,7 @@
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (= prior-value cty/unbound)
       ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
-      (if-let [^State state (mget me :fx$state) #_ (:state-ref (meta me))]
+      (if-let [^State state (mget me :fx$state) #_(:state-ref (meta me))]
         (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state)
             (.setState state (fn [] (do))))
         (if-let [^State state (tag/fx-state-nearest me)]
@@ -243,9 +243,9 @@
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      :children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))
-                    #_  ~@(when children
-                         (dp :yep-children children)
-                         `(:children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))))
+                     #_~@(when children
+                           (dp :yep-children children)
+                           `(:children (mapv (partial tiltontec.mx-flutter.tag/render-fx ctx) (md/md-kids me))))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.model.core/mget me ~k#)])]
                          (apply concat kvs)))))
@@ -294,8 +294,8 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
-                           #_ (when-let [init (mget m e :initState)]
-                                (init this me)))
+                           #_(when-let [init (mget m e :initState)]
+                               (init this me)))
                          (~'build [_# ctx]
                            (md/mset! me :fx$ctx ctx)
                            (~fx-constructor (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
@@ -305,6 +305,39 @@
                                  (apply concat kvs)))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro k1-body-stateful [fx-constructor fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (reify :extends m/StatefulWidget
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (md/mset! me :fx$state this)
+                           (when-let [init (mget me :initState)]
+                             ;; this is where widgets can build controllers who vsync
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (md/mset! me :fx$ctx ctx)
+                           (dp :now-building-scaffold!!!!!)
+                           (let [bod# (tiltontec.mx-flutter.tag/fx-eval me ctx
+                                       (first (tiltontec.model.core/md-kids me)))]
+                             (dp :bod!!!!!!! bod#)
+                             (~fx-constructor
+                               ;; todo throw error if they specify :body explicitly, for now
+                               ;; todo fx-resolve NOW
+                               :body bod#
+                               ~@(let [kvs (for [[k# _#] fx-props]
+                                             [k# `(tiltontec.mx-flutter.tag/fx-eval me ctx
+                                                    (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro scaffold [fx-props mx-props & children]
+  `(k1-body-stateful m/Scaffold ~fx-props ~mx-props ~@children))
 ;;;
 ;;; -------------------------------------------------------
 ;;;
@@ -339,8 +372,8 @@
 
 (defn ctx-nearest [me]
   (cond
-    (nil? me) (do ;; (dp :ctx-nearest-sees-nil-me-out-top?)
-                  nil)
+    (nil? me) (do                                           ;; (dp :ctx-nearest-sees-nil-me-out-top?)
+                nil)
     :else (do
             (assert (cty/md-ref? me) "ctx-nearest passed non-md")
             (or (mget me :fx$ctx)

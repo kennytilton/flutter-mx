@@ -3,7 +3,7 @@
              :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
                      FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
             ["package:flutter/widgets.dart" :as w
-             :refer [Text Center Expanded Column State PreferredSizeWidget StatefulWidget StatelessWidget]]
+             :refer [Text Center Expanded Column State  StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
@@ -20,15 +20,10 @@
   (beefer [this])
   (fx-genner [this]))
 
-(def ^:dynamic *ctx* nil)
-
 (defn fx-eval [me ctx value]
   ;; fx-world values can be expressed as callbacks when
   ;; the value depends on the fx widget or runtime Flutter context
-  (if (fn? value)
-    (binding [*ctx* ctx]
-      (value me ctx))
-    value))
+  (extract-widget me ctx value))
 
 (defn extract-widget [me ctx widget-value]
   (cond
@@ -57,14 +52,13 @@
 (defn render-fx [ctx fx]
   ;; todo reverse params? awkward for many calls where fx is complex
   (dpx :rfx-entry ctx (cty/minfo fx))
-  (binding [*ctx* ctx]
-    (cond
-      (not (md-ref? fx))
-      (do ;; (dprn :rnfx-sees-not-md-ref?-passing-thru fx)
-          fx)
-      :else (let [gen (mget fx :fx-gen)]
-              (assert gen "OBAD: render-fx of model finds no fx-gen: ")
-              (gen fx ctx)))))
+  (cond
+    (not (md-ref? fx))
+    (do ;; (dprn :rnfx-sees-not-md-ref?-passing-thru fx)
+      fx)
+    :else (let [gen (mget fx :fx-gen)]
+            (assert gen "OBAD: render-fx of model finds no fx-gen: ")
+            (gen fx ctx))))
 
 (defmacro with-ctx [[me-var ctx-var] & body]
   `(fn [~me-var ~ctx-var]
