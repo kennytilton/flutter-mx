@@ -37,10 +37,10 @@
   (dpx :make-fxx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :initState (fn [this me]
-                 (md/mset! me :fx$state this))
     :fx-prop-keys (keys fx-props)                           ;; todo lose if never needed
     :fx$state (cI nil)
+    :initState (fn [this me]
+                 (md/mset! me :fx$state this))
     :fx$ctx (cF_ []
               ;; on-handlers do not get context, so we have "me" keep a pointer
               (when-let [st (my-state)]
@@ -82,6 +82,7 @@
                    (util/rmap-meta-setf [:state-ref me]
                      (reify :extends #/(w/State m/MaterialApp) #_w/State
                        (~'build [_# ctx]
+                         (md/mset! me :fx$ctx ctx)
                          (m/MaterialApp
                            :home (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids me)))
                            ~@(let [kvs (for [[k# _#] fx-props]
@@ -130,6 +131,7 @@
                      (reify :extends w/State
                        (~'build [_# ctx]
                          (util/rmap-meta-setf [:context me] ctx)
+                         (md/mset! me :fx$ctx ctx)
                          #_(m/Scaffold
                              ~@(let [kvs (for [[k# _#] fx-props]
                                            [k# `(tiltontec.mx-flutter.corex/extract-widget me ctx
