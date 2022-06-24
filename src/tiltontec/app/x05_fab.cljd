@@ -111,11 +111,8 @@
                     (action-button
                       :icon (:icon action)
                       :onPressed (fn ^void []
-                                   ;; todo roll up into (with-context (ctx) ....)
-                                   (let [^State state (tag/fx-state-nearest me)]
-                                     (assert state (str "no fxstate in or above " (minfo me)))
-                                     (assert (.context state))
-                                     (show-action (.context state) action))
+                                   (tag/with-my-ctx [ctx]
+                                     (show-action ctx action))
                                    nil))))
     :name :ea-button
     :initState (fn [this me]
