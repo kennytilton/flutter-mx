@@ -1,6 +1,6 @@
 # Matrix for ClojureDart
 
-A port to Clojure of [Matrix](https://github.com/kennytilton/matrix), a generic, fine-grained, transparent, reactive state manager.
+Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE14sd2MGLJW35qeuJynmTRjqpUL3SbIUhOiS4TihjyZ9iTVRoCJkoQAvD_BwE&gclsrc=aw.ds) with [ClojureDart](https://github.com/Tensegritics/ClojureDart) and [Matrix](https://github.com/kennytilton/matrix), a generic, fine-grained, transparent, reactive state manager.
 
 
 
@@ -8,21 +8,21 @@ A port to Clojure of [Matrix](https://github.com/kennytilton/matrix), a generic,
 
 We begin with the [ClojureDart "Getting started"](https://github.com/Tensegritics/ClojureDartPreview/blob/main/doc/flutter-quick-start.md).
 
-In our case, we spent a day upgrading XCode and sorting out the Dart and Flutter set-up, and then getting the CLJD "Hello world" ^^^ running. The resulting project is how this project was created.
+In our case, we spent a day upgrading XCode and sorting out the Dart and Flutter set-up, and then getting the CLJD "Hello world" running. The resulting project is how this project was created.
 
 Then we added the Matrix code you will find here, including a test suite from the CLJC version. Anyway...
 
-> FLASH! The "Getting Started" example has now also been done using a nascent `mx-flutter` library. Please see that [here](https://github.com/kennytilton/matrix/blob/main/cljd/matrix/src/tiltontec/mx_cljd_world.cljd).
+> FLASH! The "Getting Started" example has now also been done using a nascent `mx-flutter` library. Please see that [here](https://github.com/kennytilton/mxflutter/blob/main/src/tiltontec/app/x02_counter.cljd).
 
 ### Step One
 Work thru the CLJD Hello World separately to make sure you have your dependencies right. This step can be skipped if you have confidence in your CLJD support (XCode, Dart, Flutter).
 
 ### Step Two
-Download or pull a local copy of the entire [Matrix mono repo](https://github.com/kennytilton/matrix).
+Download or pull a local copy of this [mxFlutter repo]((https://github.com/kennytilton/mxflutter).
 
 In a terminal:
 
-* `cd matrix/cljd/matrix`;
+* `cd matrix/cljd/mxFlutter`;
 * start the Flutter debugger: `dart devtools`.
 
 This ^^^ command does not return. After a few seconds, look for a new browser tab "DevTools for Futter". We like to tear that off and keep it handy because that will be our console.
@@ -30,7 +30,7 @@ This ^^^ command does not return. After a few seconds, look for a new browser ta
 * In a new terminal, `open -a Simulator`. An iPhone simulator should open.
 * That ^^^ command returns, so in the same terminal: `clj -M -m cljd.build flutter`
 
-That build ^^^ command does not return, and takes about thirty seconds before you should see "hello, world v.nnn" on the simulator, where nnn is a randomw number that lets us confirm a changed app has been reloaded.
+That build ^^^ command does _not_ return, and takes about thirty seconds before you should see "hello, world v.nnn" on the simulator, where nnn is a randomw number that lets us confirm a changed app has been reloaded.
 
 That build command ends by displaying something like:
 ```
