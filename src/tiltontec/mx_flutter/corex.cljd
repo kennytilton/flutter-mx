@@ -60,14 +60,14 @@
       (when-not (= prior-value cty/unbound)
         ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
         (if-let [^State state (mget me :fx$state) #_(:state-ref (meta me))]
-          (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
+          (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
               (.setState state (fn [] (do))))
           (if-let [^State state (tag/fx-state-nearest me)]
             (do
 
-                (dp :obs-FXXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
+                (dpx :obs-FXXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
                 (.setState state (fn [] (do))))
-            (dp :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
+            (dpx :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
 
 ;;; --- WIDGETS -------------------------------------------------
 (defmacro material-app [fx-props mx-props & children]
@@ -395,7 +395,6 @@
                            (let [k1# (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/md-kids me)))]
                              ;(dp :giving ~fx-constructor :child k1# :from (first (tiltontec.model.core/md-kids me)))
-                             (dp :giving-props (keys ~fx-props))
                              (~fx-constructor
                                ;; todo throw error if they specify :child explicitly, for now
                                :child k1#
