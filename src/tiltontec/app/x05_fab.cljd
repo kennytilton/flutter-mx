@@ -34,7 +34,7 @@
     {:name :mat-app}
     (fxx/scaffold
       ; todo DEFTAGX!!!!!!!!!!!!!!!!!!!!!!
-      {:appBar               (fxx/app-bar {:title (Text (str "Expandable Fab/FXX " (rand-int 99)))}{})
+      {:appBar               (fxx/app-bar {:title (Text (str "Expandable Fab/FXX " (rand-int 99)))} {})
        :floatingActionButton (expandable-fab
                                :initial-open? false
                                :distance 112.0
@@ -45,7 +45,7 @@
       (fxx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
-         :itemBuilder (fn [ctx i] (fake-item (odd? i)))}{}))))
+         :itemBuilder (fn [ctx i] (fake-item (odd? i)))} {}))))
 
 (declare expanding-action-button
   tap-to-close-fab
@@ -77,7 +77,7 @@
                                   (if new-value
                                     (.forward c)
                                     (.reverse c)))))}
-    (fx/stack ;; todo stack
+    (fx/stack                                               ;; todo stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
@@ -94,51 +94,92 @@
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
-  ;; todo fxx-ify
-  (md/make
-    :kids (cFkids (fxx/fade-transition
-                    {:opacity (mget (md/fasc :fab) :expand-animation)}
-                    {}
-                    (action-button
-                      :icon (:icon action)
-                      :onPressed (fn ^void []
-                                   (tag/with-my-ctx [ctx]
-                                     (show-action ctx action))
-                                   nil))))
-    :name :ea-button
-    :initState (fn [this me]
-                 (md/mset! me :fx$state this))
-    :fx$state (cI nil)
-    :fx$ctx (cF (when-let [st (fxx/my-state)]
-                  (.context ^State st)))
-    :fx-gen (fn [me ctx]
-              (reify :extends m/StatefulWidget              ;; m/AnimatedBuilder
-                (createState [this]
-                  (reify :extends w/State                   ;; #/(w/State m/AnimatedBuilder)
-                    ^:mixin m/SingleTickerProviderStateMixin
-                    (^void initState [this]
-                      (.initState ^super this)
-                      (md/mset! me :fx$state this))
-                    (build [this ctx]
-                      (m/AnimatedBuilder
-                        :animation (mget (md/fasc :fab) :expand-animation)
-                        :child (fxx/fx-resolve me ctx (first (md/md-kids me)))
-                        :builder (fn [ctx child]
-                                   (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
-                                         _ (assert progress)
-                                         offset (m.Offset/fromDirection
-                                                  (* direction-degrees (/ math/pi 180.0))
-                                                  (* (.value progress) max-distance))]
-                                     (f/widget
-                                       (f/nest
-                                         (m/Positioned
-                                           :right (+ 4.0 (.dx offset))
-                                           :bottom (+ 4.0 (.dy offset)))
-                                         (m.Transform/rotate
-                                           :angle (* (- 1.0 (.value progress))
-                                                    math/pi 0.5))
-                                         child))))))))))))
+  (fxx/make-fxx (new fxx/FXXDartWidget)
+    {:animation (mget (md/fasc :fab) :expand-animation)
+     :builder   (fn [ctx child]
+                  (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
+                        _ (assert progress)
+                        offset (m.Offset/fromDirection
+                                 (* direction-degrees (/ math/pi 180.0))
+                                 (* (.value progress) max-distance))]
+                    (f/widget
+                      (f/nest
+                        (m/Positioned
+                          :right (+ 4.0 (.dx offset))
+                          :bottom (+ 4.0 (.dy offset)))
+                        (m.Transform/rotate
+                          :angle (* (- 1.0 (.value progress))
+                                   math/pi 0.5))
+                        child))))}
+    {:name   :ea-button
+     :fx-gen (fn [me ctx]
+               (reify :extends m/StatefulWidget             ;; m/AnimatedBuilder
+                 (createState [this]
+                   (reify :extends w/State                  ;; #/(w/State m/AnimatedBuilder)
+                     ^:mixin m/SingleTickerProviderStateMixin
+                     (^void initState [this]
+                       (.initState ^super this)
+                       (md/mset! me :fx$state this))
+                     (build [this ctx]
+                       (m/AnimatedBuilder
+                         :animation (mget me :animation)
+                         :child (fxx/fx-resolve me ctx (first (md/md-kids me)))
+                         :builder (mget me :builder)))))))}
+    (cFkids (fxx/fade-transition
+              {:opacity (mget (md/fasc :fab) :expand-animation)}
+              {}
+              (action-button
+                :icon (:icon action)
+                :onPressed (fn ^void []
+                             (tag/with-my-ctx [ctx]
+                               (show-action ctx action))
+                             nil))))))
 
+#_(defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
+    ;; todo fxx-ify
+    (md/make
+      :kids (cFkids (fxx/fade-transition
+                      {:opacity (mget (md/fasc :fab) :expand-animation)}
+                      {}
+                      (action-button
+                        :icon (:icon action)
+                        :onPressed (fn ^void []
+                                     (tag/with-my-ctx [ctx]
+                                       (show-action ctx action))
+                                     nil))))
+      :name :ea-button
+      :initState (fn [this me]
+                   (md/mset! me :fx$state this))
+      :fx$state (cI nil)
+      :fx$ctx (cF (when-let [st (fxx/my-state)]
+                    (.context ^State st)))
+      :fx-gen (fn [me ctx]
+                (reify :extends m/StatefulWidget            ;; m/AnimatedBuilder
+                  (createState [this]
+                    (reify :extends w/State                 ;; #/(w/State m/AnimatedBuilder)
+                      ^:mixin m/SingleTickerProviderStateMixin
+                      (^void initState [this]
+                        (.initState ^super this)
+                        (md/mset! me :fx$state this))
+                      (build [this ctx]
+                        (m/AnimatedBuilder
+                          :animation (mget (md/fasc :fab) :expand-animation)
+                          :child (fxx/fx-resolve me ctx (first (md/md-kids me)))
+                          :builder (fn [ctx child]
+                                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
+                                           _ (assert progress)
+                                           offset (m.Offset/fromDirection
+                                                    (* direction-degrees (/ math/pi 180.0))
+                                                    (* (.value progress) max-distance))]
+                                       (f/widget
+                                         (f/nest
+                                           (m/Positioned
+                                             :right (+ 4.0 (.dx offset))
+                                             :bottom (+ 4.0 (.dy offset)))
+                                           (m.Transform/rotate
+                                             :angle (* (- 1.0 (.value progress))
+                                                      math/pi 0.5))
+                                           child))))))))))))
 
 (defn show-action [ctx action]
   (m/showDialog
@@ -173,15 +214,8 @@
                     (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
-
-
-
-  ;; right now the desired (fxx/sized-box... fails need defgtagx
-
-
-
   (fxx/sized-box {:width  56.0
-                 :height 56.0}
+                  :height 56.0}
     {}
     (fx/center
       (fx/material {:shape        ^:const (m/CircleBorder)
@@ -206,14 +240,14 @@
 
 (defn- tap-to-open-fab [par]
   (fxx/ignore-pointer
-    {:ignoring (mget (md/fasc :fab par) :open?)}{}
+    {:ignoring (mget (md/fasc :fab par) :open?)} {}
     (fxx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                          (if open? 0.0 1.0)))
-                          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                          :duration ^:const (dart:core/Duration :milliseconds 250)}
+                                           (if open? 0.0 1.0)))
+                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+                           :duration ^:const (dart:core/Duration :milliseconds 250)}
       {}
       (fxx/floating-action-button {:onPressed (fn ^void []
-                                               (md/mswap! (md/fasc :fab par) :open? not))}
+                                                (md/mswap! (md/fasc :fab par) :open? not))}
         {}
         (fxx/icon {} {:icon m.Icons/create})))))
 
