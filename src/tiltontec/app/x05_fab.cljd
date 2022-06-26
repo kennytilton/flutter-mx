@@ -123,11 +123,15 @@
                      (build [this ctx]
                        (m/AnimatedBuilder
                          :animation (mget me :animation)
-                         :child (fxx/fx-resolve me ctx (first (md/md-kids me)))
+                         :child (let [raw (first (md/md-kids me))]
+                                  (dp :child-raw (minfo raw))
+                                  (let [res (fxx/fx-resolve me ctx raw)]
+                                    (dp :child-final res)
+                                    res))
                          :builder (mget me :builder)))))))}
     (cFkids (fxx/fade-transition
               {:opacity (mget (md/fasc :fab) :expand-animation)}
-              {}
+              {:name :fade-trans}
               (action-button
                 :icon (:icon action)
                 :onPressed (fn ^void []
