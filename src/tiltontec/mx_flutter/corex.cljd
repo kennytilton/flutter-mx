@@ -96,25 +96,28 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-(defn fx-resolve [me ctx fab]
-  (cond
-    (nil? fab)
-    (do
-      (dp :exwid-sees-nil-fab!!!!!!!!!! (minfo me))
-      nil)
+(defn fx-resolve
+  ([me ctx widget-value]
+   (fx-resolve :anon me ctx widget-value))
+  ([slot me ctx widget-value]
+   (cond
+     (nil? widget-value)
+     (do
+       (dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
+       nil)
 
-    (dart/is? fab m/Widget)
-    (do                                                     ;; (dp :fab-is-widget fab)
-      fab)
+     (dart/is? widget-value m/Widget)
+     (do                                                    ;; (dp :widget-value-is-widget widget-value)
+       widget-value)
 
-    (fn? fab)
-    (do                                                     ;; (dp :ew-sees-fn fab)
-      (recur me ctx (fab me ctx)))
+     (fn? widget-value)
+     (do                                                    ;; (dp :ew-sees-fn widget-value)
+       (recur slot me ctx (widget-value me ctx)))
 
-    (cty/md-ref? fab)
-    (render-fx ctx fab)
+     (cty/md-ref? widget-value)
+     (render-fx ctx widget-value)
 
-    :default (throw (Exception. (str "fxx/fx-resolve stuck after on " fab)))))
+     :default (throw (Exception. (str "fxx/fx-resolve stuck after on " widget-value))))))
 
 (defmacro scaffold [fx-props mx-props & children]
   ;; todo today convert to make-fxx

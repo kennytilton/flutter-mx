@@ -31,60 +31,41 @@
   (beefer [this])
   (fx-genner [this]))
 
-(defn fx-resolve [me ctx widget-value]
-  (cond
-    (nil? widget-value)
-    (do                                                     ;; (dp :exwid-sees-nil-widget-value)
-      nil)
+(defn fx-resolve
+  ([me ctx widget-value]
+   (fx-resolve :anon me ctx widget-value))
+  ([slot me ctx widget-value]
+   (cond
+     (nil? widget-value)
+     (do                                                    ;; (dp :exwid-sees-nil-widget-value)
+       nil)
 
-    (dart/is? widget-value MXFXAsIs)
-    (do
-      (dp :fx-reseolve-as-ising!!!!!!!!! widget-value)
-      (.-value widget-value))
+     (dart/is? widget-value MXFXAsIs)
+     (do
+       (dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+       (.-value widget-value))
 
-    (dart/is? widget-value MXFXCallback)
-    (do
-      (dp :fx-reso-calling-back!!!!!!! widget-value)
-      ((.-value widget-value)))
+     (dart/is? widget-value MXFXCallback)
+     (do
+       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       ((.-value widget-value)))
 
 
-    (dart/is? widget-value m/Widget)
-    (do                                                     ;; (dp :widget-value-is-widget widget-value)
-      widget-value)
+     (dart/is? widget-value m/Widget)
+     (do                                                    ;; (dp :widget-value-is-widget widget-value)
+       widget-value)
 
-    (fn? widget-value)
-    (do
-      (dp :DEPRECATED!!!-unwrapped-fn!! (minfo me))
-      (recur me ctx (widget-value me ctx)))
+     (fn? widget-value)
+     (do
+       (dp :DEPRECATED!!!-unwrapped-fn!! slot (minfo me))
+       (recur slot me ctx (widget-value me ctx)))
 
-    (cty/md-ref? widget-value)
-    (do
-      (recur me ctx
-        (render-fx ctx widget-value)))
+     (cty/md-ref? widget-value)
+     (do
+       (recur slot me ctx
+         (render-fx ctx widget-value)))
 
-    :default widget-value))
-
-(defn fx-resolve-dbg [me ctx widget-value]
-  (cond
-    (nil? widget-value)
-    (do                                                     ;; (dp :exwid-sees-nil-widget-value)
-      nil)
-
-    (dart/is? widget-value m/Widget)
-    (do                                                     ;; (dp :widget-value-is-widget widget-value)
-      widget-value)
-
-    (fn? widget-value)
-    (do
-      (dp :exwid-sees-fn!!!!!!!!!!!!! widget-value)
-      (recur me ctx (widget-value me ctx)))
-
-    (cty/md-ref? widget-value)
-    (do
-      (recur me ctx
-        (render-fx ctx widget-value)))
-
-    :default widget-value))
+     :default widget-value)))
 
 (defn render-fx [ctx fx]
   ;; todo reverse params? awkward for many calls where fx is complex
