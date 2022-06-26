@@ -99,7 +99,7 @@
                          (m/MaterialApp
                            :home (render-fx ctx (first (md/md-kids me)))
                            ~@(let [kvs (for [[k# _#] fx-props]
-                                         [k# `(tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                         [k# `(tiltontec.mx-flutter.tag/fx-resolve k# me ctx
                                                 (tiltontec.model.core/mget me ~k#))])]
                                (apply concat kvs)))))))))
      (concat
@@ -186,7 +186,7 @@
   (beefer [this]
     (fn [me ctx]
       (m/Scaffold
-        :appBar (tag/fx-resolve me ctx (mget me :appBar))
+        :appBar (tag/fx-resolve :appBar me ctx (mget me :appBar))
         :body (render-fx ctx (first (md/md-kids me)))
         :floatingActionButton
         (let [button (mget me :floatingActionButton)]
