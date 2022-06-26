@@ -26,12 +26,39 @@
     (do                                                     ;; (dp :exwid-sees-nil-widget-value)
       nil)
 
+    (dart/is? widget-value cty/MXFXAsIs)
+    (do
+      (dp :fx-reseolve-as-ising!!!!!!!!! widget-value)
+      (.-value widget-value))
+
     (dart/is? widget-value m/Widget)
     (do                                                     ;; (dp :widget-value-is-widget widget-value)
       widget-value)
 
     (fn? widget-value)
-    (do                                                     ;; (dp :ew-sees-fn widget-value)
+    (do
+      (recur me ctx (widget-value me ctx)))
+
+    (cty/md-ref? widget-value)
+    (do
+      (recur me ctx
+        (render-fx ctx widget-value)))
+
+    :default widget-value))
+
+(defn fx-resolve-dbg [me ctx widget-value]
+  (cond
+    (nil? widget-value)
+    (do                                                     ;; (dp :exwid-sees-nil-widget-value)
+      nil)
+
+    (dart/is? widget-value m/Widget)
+    (do                                                     ;; (dp :widget-value-is-widget widget-value)
+      widget-value)
+
+    (fn? widget-value)
+    (do
+      (dp :exwid-sees-fn!!!!!!!!!!!!! widget-value)
       (recur me ctx (widget-value me ctx)))
 
     (cty/md-ref? widget-value)

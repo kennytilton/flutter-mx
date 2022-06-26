@@ -8,7 +8,7 @@
             ["dart:developer" :as dev]
             ["dart:math" :as mth]
             [tiltontec.util.base :refer [dprn dp dpx]]
-            ;[tiltontec.cell.base :refer [beefer parts]]
+            [tiltontec.cell.base :as cbase]
             [tiltontec.testing :as testing]
             [tiltontec.test.lazy-cells :as test-lazy]
             [tiltontec.mx-flutter.tag :refer [PDartWidget parts] :as tag]
@@ -40,11 +40,24 @@
 
 (def version (atom nil :meta {}))
 
+(deftype AsIs [value]
+  :extends cbase/MXImplementer)
+
+
+
 (defn main []
   #_ (navo/main)
   (material/runApp
     (tag/render-fx nil
       (xfab/make-app)))
+
+  (let [ai (->AsIs 42)]
+    (dp :asis!!!!!!!!! ai)
+    (dp :asis!!!!!!!!!vale ai (.-value ai)))
+
+  (let [ai (AsIs 42)]
+    (dp :asis!!!!!!!!! ai)
+    (dp :asis!!!!!!!!!vale ai (.-value ai)))
 
   ;(let [{:keys [initial-open? distance actions] :or [initial-open? false]}
   ;      {:distance 42}]

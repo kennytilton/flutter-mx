@@ -369,6 +369,46 @@
 (defmacro sized-box+expand-ful [fx-props mx-props & children]
   `(k1-child-stateful m.SizedBox/expand ~fx-props ~mx-props ~@children))
 
+(defmacro k1-child-stateful-debug [fx-constructor fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (reify :extends m/StatefulWidget
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (md/mset! me :fx$state this)
+                           (when-let [init (mget me :initState)]
+                             ;; this is where widgets can build controllers who vsync
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (md/mset! me :fx$ctx ctx)
+                           (let [k1# (tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                       (first (tiltontec.model.core/md-kids me)))]
+                             (dp :giving ~fx-constructor :child k1# :from (first (tiltontec.model.core/md-kids me)))
+                             (dp :giving-props (keys ~fx-props))
+                             (m/AnimatedBuilder
+                               :animation (tiltontec.mx-flutter.tag/fx-resolve me ctx (mget me :animation))
+                               :child k1#
+                               :builder (tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                          (mget me :builder)))
+                             #_
+                             (~fx-constructor
+                               ;; todo throw error if they specify :body explicitly, for now
+                               :child k1#
+                               #_ ~@(let [kvs (for [[k# _#] fx-props]
+                                             [k# `(tiltontec.mx-flutter.tag/fx-resolve me ctx
+                                                    (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro animated-builder [fx-props mx-props & children]
+  `(k1-child-stateful-debug m/AnimatedBuilder ~fx-props ~mx-props ~@children))
+
 (defmacro scaffold [fx-props mx-props & children]
   `(k1-body-stateful m/Scaffold ~fx-props ~mx-props ~@children))
 ;;;
