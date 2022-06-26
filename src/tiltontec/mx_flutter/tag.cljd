@@ -62,22 +62,15 @@
       (fx-state-nearest (md/mpar)))))
 
 (defmacro with-my-ctx [[ctx-var] & body]
-  `(let [^State state# (tag/fx-state-nearest ~'me)]
+  `(let [^State state# (tiltontec.mx-flutter.tag/fx-state-nearest ~'me)]
      (assert state# (str "no fxstate in or above " (minfo ~'me)))
      (assert (.context state#) (str "with-my-ctx-sees-state-not-context " state " " (minfo ~'me)))
-     ~@body))
+     (let [~ctx-var (.context state#)]
+       ~@body)))
 
 (defmacro when-my-state [[state-var] & body]
   `(when-let [~state-var (fxx/my-state)]
      ~@body))
-
-#_ (defmacro c-fn-var [[c] & body]
-     `(fn [~c]
-        (let [~'me (c-model ~c)
-              ~'cell ~c
-              ~'slot-name (c-slot ~c)
-              ~'cache (c-value ~c)]
-          ~@body)))
 
 (defn statefully [me beefer]
   (reify :extends w/StatefulWidget

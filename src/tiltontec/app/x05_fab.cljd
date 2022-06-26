@@ -55,6 +55,7 @@
   (fxx/sized-box+expand-ful
     {}
     {:name             :fab
+     ; --- mechanics ----------------------
      :controller       (cF (tag/when-my-state [state]
                              (m/AnimationController
                                :value (if initial-open? 1.0 0.0)
@@ -68,7 +69,7 @@
      :dispose          (fn [this me]
                          (when-let [controller (fx/my-controller)]
                            (.dispose controller)))
-
+     ; --- behavior -------------------------
      :step             (cF (/ 90.0 (dec (count actions))))
      :open?            (cI initial-open?
                          :obs (fn [prop-name me new-value prior-value cell]
@@ -76,7 +77,7 @@
                                   (if new-value
                                     (.forward c)
                                     (.reverse c)))))}
-    (fx/stack
+    (fx/stack ;; todo stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
@@ -93,16 +94,6 @@
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
-  #_ (fxx/make-fxx
-    {}
-    {}
-    (cFkids (action-button
-              :icon (:icon action)
-              :onPressed (fn ^void []
-                           ;; todo roll up into (with-context (ctx) ....)
-                           (let [^State state (mget me :fx$state)]
-                             (show-action (.context state) action))
-                           nil))))
   ;; todo fxx-ify
   (md/make
     :kids (cFkids (fxx/fade-transition
@@ -159,7 +150,17 @@
                              :onPressed #(-> ctx m.Navigator/of .pop)
                              :child ^:const (m/Text "CLOSE"))]))))
 
+;(defn show-action [ctx action]
+;  (fx/show-dialog
+;    {:context ctx}
+;    (fx/alert-dialog
+;      {:actions [(fx/text-button
+;                   {:onPressed #(-> ctx m.Navigator/of .pop)}
+;                   (m/Text "CLOSE"))]}
+;      (m/Text (:title action)))))
+
 (defn action-button [& {:keys [onPressed icon]}]
+  ;; todo fxx
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
                 :color        (tag/with-ctx [me ctx]
