@@ -64,7 +64,7 @@
 (defmacro with-my-ctx [[ctx-var] & body]
   `(let [^State state# (tiltontec.mx-flutter.tag/fx-state-nearest ~'me)]
      (assert state# (str "no fxstate in or above " (minfo ~'me)))
-     (assert (.context state#) (str "with-my-ctx-sees-state-not-context " state " " (minfo ~'me)))
+     (assert (.context state#) (str "with-my-ctx-sees-state-not-context " state# " " (minfo ~'me)))
      (let [~ctx-var (.context state#)]
        ~@body)))
 
