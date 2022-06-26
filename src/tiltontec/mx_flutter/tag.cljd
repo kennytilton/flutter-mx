@@ -31,12 +31,19 @@
       (dp :fx-reseolve-as-ising!!!!!!!!! widget-value)
       (.-value widget-value))
 
+    (dart/is? widget-value cty/MXFXCallback)
+    (do
+      (dp :fx-reso-calling-back!!!!!!! widget-value)
+      ((.-value widget-value)))
+
+
     (dart/is? widget-value m/Widget)
     (do                                                     ;; (dp :widget-value-is-widget widget-value)
       widget-value)
 
     (fn? widget-value)
     (do
+      (dp :DEPRECATED!!!-unwrapped-fn!! (minfo me))
       (recur me ctx (widget-value me ctx)))
 
     (cty/md-ref? widget-value)
@@ -82,6 +89,11 @@
 (defmacro with-ctx [[me-var ctx-var] & body]
   `(fn [~me-var ~ctx-var]
      ~@body))
+
+(defmacro with-mxfx-callback [[me-var ctx-var] & body]
+  `(tiltontec.cell.base/MXFXCallback
+     (fn [~me-var ~ctx-var]
+     ~@body)))
 
 (defn fx-state-nearest [me]
   (when me
