@@ -103,12 +103,11 @@
                           offset (m.Offset/fromDirection
                                    (* direction-degrees (/ math/pi 180.0))
                                    (* (.value progress) max-distance))]
-                      #_
-                      (fxx/fx-resolve
-                        (fxx/positioned {:right (+ 4.0 (.dx offset))
-                                         :bottom (+ 4.0 (.dy offset))}{}
-                          (fxx/transform.rotate {:angle (* (- 1.0 (.value progress))
-                                                          math/pi 0.5)}{})))
+                      #_(fxx/fx-resolve
+                          (fxx/positioned {:right  (+ 4.0 (.dx offset))
+                                           :bottom (+ 4.0 (.dy offset))} {}
+                            (fxx/transform.rotate {:angle (* (- 1.0 (.value progress))
+                                                            math/pi 0.5)} {})))
                       (f/widget
                         (f/nest
                           (m/Positioned
@@ -118,7 +117,7 @@
                             :angle (* (- 1.0 (.value progress))
                                      math/pi 0.5))
                           child)))))}
-    {:name   :ea-button}
+    {:name :ea-button}
     (fxx/fade-transition
       {:opacity (mget (md/fasc :fab) :expand-animation)}
       {:name :fade-trans}
@@ -150,16 +149,20 @@
 
 (defn action-button [& {:keys [onPressed icon]}]
   ;; todo fxx
-  (fx/material {:shape        ^:const (m/CircleBorder)
-                :clipBehavior m.Clip/antiAlias
-                :color        (tag/with-ctx [me ctx]
-                                (-> (Theme/of ctx) .-colorScheme .-secondary))
-                :elevation    4.0}
+  (dp :acctbutt-entry!!!!!!!)
+  (fxx/material {:shape        ^:const (m/CircleBorder)
+                 :clipBehavior m.Clip/antiAlias
+                 :color        (tag/with-ctx-cb [me ctx]
+                                 (dp :matact-color!!!!!!! (-> (Theme/of ctx) .-colorScheme .-secondary))
+                                 (-> (Theme/of ctx) .-colorScheme .-secondary))
+                 :elevation    4.0}
+    {}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
        :color     (tag/with-ctx [me ctx]
-                    (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
+                    (dp :ico-color!!!!!!! (-> (Theme/of ctx) .-colorScheme .-secondary))
+                    (-> (Theme/of ctx) .-colorScheme .-onSecondary))} {})))
 
 (defn- tap-to-close-fab [par]
   (fxx/sized-box {:width  56.0
@@ -188,15 +191,17 @@
 
 (defn- tap-to-open-fab [par]
   (fxx/ignore-pointer
-    {:ignoring (mget (md/fasc :fab par) :open?)} {}
+    {:ignoring (mget (md/fasc :fab par) :open?)}
+    {}
     (fxx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
                                            (if open? 0.0 1.0)))
                            :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                            :duration ^:const (dart:core/Duration :milliseconds 250)}
       {}
-      (fxx/floating-action-button {:onPressed (fn ^void []
-                                                (md/mswap! (md/fasc :fab par) :open? not))}
-        {}
+      (fxx/floating-action-button {:onPressed (tag/MXFXAsIs
+                                                (fn ^void []
+                                                  (md/mswap! (md/fasc :fab par) :open? not)))}
+        {:name :fab-button-in-fact}
         (fxx/icon {} {:icon m.Icons/create})))))
 
 ;; -- full version, but container breaks it

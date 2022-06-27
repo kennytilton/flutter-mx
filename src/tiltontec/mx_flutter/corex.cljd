@@ -100,11 +100,22 @@
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
   ([slot me ctx widget-value]
+   (dp :resolving slot (minfo me) widget-value)
    (cond
      (nil? widget-value)
      (do
        (dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
        nil)
+
+     (dart/is? widget-value tag/MXFXAsIs)
+     (do
+       (dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+       (.-value ^tag/MXFXAsIs widget-value))
+
+     (dart/is? widget-value tag/MXFXCallback)
+     (do
+       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       ((.-value ^tag/MXFXCallback widget-value) me ctx))
 
      (dart/is? widget-value m/Widget)
      (do                                                    ;; (dp :widget-value-is-widget widget-value)
@@ -112,12 +123,13 @@
 
      (fn? widget-value)
      (do                                                    ;; (dp :ew-sees-fn widget-value)
+       (dp :fxres-calling-fn?-blind widget-value)
        (recur slot me ctx (widget-value me ctx)))
 
      (cty/md-ref? widget-value)
      (render-fx ctx widget-value)
 
-     :default (throw (Exception. (str "fxx/fx-resolve stuck after on " slot (minfo me) widget-value))))))
+     :default widget-value)))
 
 (defmacro scaffold [fx-props mx-props & children]
   ;; todo today convert to make-fxx
@@ -192,11 +204,12 @@
      :fx-gen (fn [me ctx]
                (md/mset! me :fx$ctx ctx)
                (m.SizedBox/expand
+                 ;; todo roll this up as a sub-macro
                  :child (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
                           (first (tiltontec.model.core/md-kids me)))
                  ~@(let [kvs (for [[k# _#] fx-props]
-                               ;; todo need the ultimate value extractor FN
-                               [k# `(tiltontec.model.core/mget me ~k#)])]
+                               [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                                      (tiltontec.model.core/mget me ~k#))])]
                      (apply concat kvs))))
      (concat
        (vec (apply concat (seq ~fx-props)))
@@ -212,10 +225,12 @@
          :fx-gen (fn [me ctx]
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
-                     ;; todo clean up %w render-fx vs resolve
-                     :child (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                     :child (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
+                              (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                                   ;; todo need the ultimate value extractor FN
+                                   [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
@@ -434,6 +449,9 @@
 
 (defmacro center [fx-props mx-props & children]
   `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
+
+(defmacro material [fx-props mx-props & children]
+  `(k1-child-stateless m/Material ~fx-props ~mx-props ~@children))
 
 (defmacro fade-transition [fx-props mx-props & children]
   `(k1-child-stateless m/FadeTransition ~fx-props ~mx-props ~@children))
