@@ -115,21 +115,28 @@
      (dart/is? widget-value tag/MXFXCallback)
      (do
        (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
-       ((.-value ^tag/MXFXCallback widget-value) me ctx))
+       (let [cb-val (.-value ^tag/MXFXCallback widget-value)]
+         (dp :mxfxcallbackyields cb-val)
+         (recur slot me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
-     (do                                                    ;; (dp :widget-value-is-widget widget-value)
+     (do
+       (dp :widget-value-is-widget widget-value)
        widget-value)
 
      (fn? widget-value)
      (do                                                    ;; (dp :ew-sees-fn widget-value)
        (dp :fxres-calling-fn?-blind widget-value)
-       (recur slot me ctx (widget-value me ctx)))
+       (let [v (widget-value me ctx)]
+         (dp :recuring-unwrapped-fn?-return-val v)
+         (recur slot me ctx v)))
 
      (cty/md-ref? widget-value)
-     (render-fx ctx widget-value)
+     (do (dp :rfxing-md widget-value)
+         (render-fx ctx widget-value))
 
-     :default widget-value)))
+     :default (do (dp :resolve-fall-thru-used widget-value)
+                  widget-value))))
 
 (defmacro scaffold [fx-props mx-props & children]
   ;; todo today convert to make-fxx
@@ -166,8 +173,6 @@
      (concat
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
-
-
 
 (defmacro animated-builder [fx-props mx-props & children]
   `(apply tiltontec.model.core/make
@@ -242,8 +247,10 @@
          :fx-gen (fn [me ctx]
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
-                     :content (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
-                              (first (tiltontec.model.core/md-kids me)))
+                     :content (let [con (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
+                                          (first (tiltontec.model.core/md-kids me)))]
+                                (dp :k1-con-less=content con)
+                                con)
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    ;; todo need the ultimate value extractor FN
                                    [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
@@ -280,14 +287,18 @@
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.tag/render-fx ctx
+                                   [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        nil)))
 
+
+
+(defmacro icon-button [fx-props mx-props]
+  `(childless-stateless m/IconButton ~fx-props ~mx-props))
+
 (defmacro flutter-logo [fx-props mx-props]
   `(childless-stateless m/FlutterLogo ~fx-props ~mx-props))
-
 
 (defmacro k1-param1-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -462,21 +473,7 @@
 
 (defmacro scaffold [fx-props mx-props & children]
   `(k1-body-stateful m/Scaffold ~fx-props ~mx-props ~@children))
-;;;
-;;; -------------------------------------------------------
-;;;
-;(deftype FXIcon []
-;  :extends FXDartWidget
-;  PObserver
-;  (observe [this slot me new-value prior-value cell])
-;  PDartWidget
-;  (beefer [this]
-;    (fn [me ctx]
-;      (m/Icon (mget me :icon)
-;        :color (let [color (mget me :color)]
-;                 (if (fn? color)
-;                   (color me ctx)
-;                   color))))))
+
 
 (defmacro icon [fx-props mx-props]
   `(prop-param1-childless-stateful :icon m/Icon ~fx-props ~mx-props))
@@ -558,6 +555,9 @@
 
 (defmacro list-view+builder [fx-props mx-props]
   `(childless-stateless m.ListView/builder ~fx-props ~mx-props))
+
+(defmacro stack [fx-props mx-props & children]
+  `(children-stateless m/Stack ~fx-props ~mx-props ~@children))
 
 (defmacro column [fx-props mx-props & children]
   `(children-stateless m/Column ~fx-props ~mx-props ~@children))
