@@ -133,28 +133,13 @@
     :context ctx
     :builder (fn [ctx]
                (fxx/alert-dialog {}
+                 ;; todo extend resolve to handle vectors then convert VVVV
                  {:actions [(m/TextButton
                               :onPressed #(-> ctx m.Navigator/of .pop)
-                              :child ^:const (m/Text "CLOSE"))]})
-               #_
-               (m/AlertDialog
-                 :content (m/Text (:title action))
-                 :actions [(m/TextButton
-                             :onPressed #(-> ctx m.Navigator/of .pop)
-                             :child ^:const (m/Text "CLOSE"))]))))
-
-;(defn show-action [ctx action]
-;  (fx/show-dialog
-;    {:context ctx}
-;    (fx/alert-dialog
-;      {:actions [(fx/text-button
-;                   {:onPressed #(-> ctx m.Navigator/of .pop)}
-;                   (m/Text "CLOSE"))]}
-;      (m/Text (:title action)))))
+                              :child ^:const (m/Text "CLOSE"))]}))))
 
 (defn action-button [& {:keys [onPressed icon]}]
   ;; todo fxx
-  (dp :acctbutt-entry!!!!!!!)
   (fxx/material {:shape        ^:const (m/CircleBorder)
                  :clipBehavior m.Clip/antiAlias
                  :color        (tag/with-ctx-cb [me ctx]
@@ -173,11 +158,12 @@
   (fxx/sized-box {:width  56.0
                   :height 56.0}
     {}
-    (fx/center
-      (fx/material {:shape        ^:const (m/CircleBorder)
+    (fxx/center {}{}
+      (fxx/material {:shape        ^:const (m/CircleBorder)
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
-        (fx/ink-well {:onTap #(md/mswap! (md/fasc :fab par) :open? not)}
+        {}
+        (fxx/ink-well {:onTap (tag/MXFXAsIs #(md/mswap! (md/fasc :fab par) :open? not))}{}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
                       :color (tag/with-ctx [me ctx]
