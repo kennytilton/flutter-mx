@@ -132,6 +132,11 @@
   (m/showDialog
     :context ctx
     :builder (fn [ctx]
+               (fxx/alert-dialog {}
+                 {:actions [(m/TextButton
+                              :onPressed #(-> ctx m.Navigator/of .pop)
+                              :child ^:const (m/Text "CLOSE"))]})
+               #_
                (m/AlertDialog
                  :content (m/Text (:title action))
                  :actions [(m/TextButton

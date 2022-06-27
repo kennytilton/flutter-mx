@@ -226,6 +226,23 @@
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      :child (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
+                                (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   ;; todo need the ultimate value extractor FN
+                                   [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro k1-content-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
+                   (~fx-class
+                     :content (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
                               (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    ;; todo need the ultimate value extractor FN
@@ -233,6 +250,9 @@
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro alert-dialog [fx-props mx-props & children]
+  `(k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
 (defmacro children-stateless [fx-class fx-props mx-props & children]
   (let []
