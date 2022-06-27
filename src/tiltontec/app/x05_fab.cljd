@@ -10,8 +10,8 @@
     [tiltontec.mx-flutter.corex
      :refer [k1-child-stateless]
      :as fx]
-    #_ [tiltontec.mx-flutter.core :as fx
-     :refer [center text scaffold column list-view+builder my-state]]
+    #_[tiltontec.mx-flutter.core :as fx
+       :refer [center text scaffold column list-view+builder my-state]]
     [tiltontec.mx-flutter.corex :as fx]
     ["package:flutter/widgets.dart" :as w
      :refer [Text State StatefulWidget StatelessWidget]]
@@ -29,7 +29,7 @@
 
 (defn make-app []
   (fx/material-app {:title                      "Expandable Fab"
-                     :debugShowCheckedModeBanner false}
+                    :debugShowCheckedModeBanner false}
     {:name :mat-app}
     (fx/scaffold
       ; todo deftagx
@@ -96,18 +96,22 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
-     :builder   (tag/MXFXAsIs ;; need a callback for Flutter itself to hit
+     :builder   (tag/MXFXAsIs                               ;; need a callback for Flutter itself to hit
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
-                          _ (assert progress)
                           offset (m.Offset/fromDirection
                                    (* direction-degrees (/ math/pi 180.0))
                                    (* (.value progress) max-distance))]
-                      #_(fx/fx-resolve
-                          (fx/positioned {:right  (+ 4.0 (.dx offset))
-                                           :bottom (+ 4.0 (.dy offset))} {}
-                            (fx/transform.rotate {:angle (* (- 1.0 (.value progress))
-                                                            math/pi 0.5)} {})))
+                      ;; todo
+                            #_  (tag/render-fx ctx
+                                (fx/positioned {:right  (+ 4.0 (.dx offset))
+                                                :bottom (+ 4.0 (.dy offset))}
+                                  {:name :positioned}
+                                  (fx/transorm+rotate-ful
+                                    {:angle (* (- 1.0 (.value progress))
+                                              math/pi 0.5)}
+                                    {:name :tx-rot}
+                                    child)))
                       (f/widget
                         (f/nest
                           (m/Positioned
@@ -140,14 +144,14 @@
                                 :onPressed #(-> ctx m.Navigator/of .pop)
                                 :child ^:const (m/Text "CLOSE"))]}
                    {}
-                   (m/Text (:title action)))))))
+                   (fx/text {}{} (:title action)))))))
 
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
-                 :clipBehavior m.Clip/antiAlias
-                 :color        (tag/with-ctx-cb [me ctx]
-                                 (-> (Theme/of ctx) .-colorScheme .-secondary))
-                 :elevation    4.0}
+                :clipBehavior m.Clip/antiAlias
+                :color        (tag/with-ctx-cb [me ctx]
+                                (-> (Theme/of ctx) .-colorScheme .-secondary))
+                :elevation    4.0}
     {}
     (fx/icon-button
       {:onPressed onPressed
@@ -158,18 +162,18 @@
 
 (defn- tap-to-close-fab [par]
   (fx/sized-box {:width  56.0
-                  :height 56.0}
+                 :height 56.0}
     {}
     (fx/center {} {}
       (fx/material {:shape        ^:const (m/CircleBorder)
-                     :clipBehavior m.Clip/antiAlias
-                     :elevation    4.0}
+                    :clipBehavior m.Clip/antiAlias
+                    :elevation    4.0}
         {}
         (fx/ink-well {:onTap (tag/MXFXAsIs #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
             (fx/icon {:icon  m.Icons/close
-                       :color (tag/with-ctx [me ctx]
-                                (.primaryColor (Theme/of ctx)))} {})))))))
+                      :color (tag/with-ctx [me ctx]
+                               (.primaryColor (Theme/of ctx)))} {})))))))
 
 (defn random-to-double [max]
   (.toDouble (rand-int max)))
@@ -187,13 +191,13 @@
     {:ignoring (mget (md/fasc :fab par) :open?)}
     {}
     (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                           (if open? 0.0 1.0)))
-                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                           :duration ^:const (dart:core/Duration :milliseconds 250)}
+                                          (if open? 0.0 1.0)))
+                          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+                          :duration ^:const (dart:core/Duration :milliseconds 250)}
       {}
       (fx/floating-action-button {:onPressed (tag/MXFXAsIs
-                                                (fn ^void []
-                                                  (md/mswap! (md/fasc :fab par) :open? not)))}
+                                               (fn ^void []
+                                                 (md/mswap! (md/fasc :fab par) :open? not)))}
         {:name :fab-button-in-fact}
         (fx/icon {} {:icon m.Icons/create})))))
 

@@ -132,8 +132,10 @@
          (recur slot me ctx v)))
 
      (cty/md-ref? widget-value)
-     (do (dp :rfxing-md widget-value)
-         (render-fx ctx widget-value))
+     (do (dp :rfxing-md (minfo widget-value))
+         (let [fx (render-fx ctx widget-value)]
+           (dp :rfxing-yielded-flutter fx)
+           fx))
 
      :default (do (dp :resolve-fall-thru-used widget-value)
                   widget-value))))
@@ -420,6 +422,12 @@
 (defmacro sized-box+expand-ful [fx-props mx-props & children]
   `(k1-child-stateful m.SizedBox/expand ~fx-props ~mx-props ~@children))
 
+(defmacro positioned [fx-props mx-props & children]
+  `(k1-child-stateful m/Positioned ~fx-props ~mx-props ~@children))
+
+(defmacro transorm+rotate-ful [fx-props mx-props & children]
+  `(k1-child-stateful m.Transform/rotate ~fx-props ~mx-props ~@children))
+
 (defmacro k1-child-stateful-debug [fx-constructor fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
@@ -473,7 +481,6 @@
 
 (defmacro scaffold [fx-props mx-props & children]
   `(k1-body-stateful m/Scaffold ~fx-props ~mx-props ~@children))
-
 
 (defmacro icon [fx-props mx-props]
   `(prop-param1-childless-stateful :icon m/Icon ~fx-props ~mx-props))
