@@ -343,7 +343,7 @@
                            (md/mset! me :fx$ctx ctx)
                            (~fx-constructor (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
                                               (tiltontec.model.core/mget me ~p1-prop-name))
-                             ~@(let [kvs (for [[k# _#] fx-props]
+                             ~@(let [kvs (for [[k# _#] (dissoc fx-props p1-prop-name)]
                                            [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
