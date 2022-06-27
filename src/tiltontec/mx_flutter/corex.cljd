@@ -439,6 +439,24 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro prop-param1-childless-stateless [prop fx-class fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
+                   (~fx-class (tiltontec.mx-flutter.tag/fx-resolve ~prop me ctx
+                                (tiltontec.model.core/mget me ~prop))
+                     ~@(let [kvs (for [[k# _#] (dissoc fx-props prop)]
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       nil)))
+
+;;; -----------------------------------------------------------
+;;; -----------------------------------------------------------
+
 (defmacro animated-builder [fx-props mx-props & children]
   `(k1-child-stateful-debug m/AnimatedBuilder ~fx-props ~mx-props ~@children))
 
