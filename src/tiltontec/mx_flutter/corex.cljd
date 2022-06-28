@@ -1,5 +1,6 @@
 (ns tiltontec.mx-flutter.corex
-  (:require ["package:flutter/material.dart" :as m
+  (:require [clojure.string :as str]
+            ["package:flutter/material.dart" :as m
              :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
                      FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
             ["package:flutter/widgets.dart" :as w
@@ -14,7 +15,8 @@
             [tiltontec.cell.observer :refer [fn-obs]]
 
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
-            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]))
+            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]
+            [clojure.string :as str]))
 
 
 ;(defmacro mmeta [] `(meta ~'me))
@@ -196,6 +198,23 @@
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro k1-child-stateless-ex [fx-class fx-props mx-props & children]
+  (let []
+    (prn :k1-child-stateless-ex-entry fx-class fx-props mx-props :kids children)
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
+                   (~fx-class
+                     :child (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
+                              (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
 (defmacro k1-child-stateless-dbg [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
@@ -217,7 +236,28 @@
     `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
 
 #_
-(defmacro center [& vargs]
+        (defmacro deftagy [factory mx-name]
+          `(defmacro ~mx-name [& vargs#]
+             (let [[fx-props# mx-props# & children#]
+                   (cond
+                     (nil? vargs#)
+                     nil
+
+                     (not (map? (first vargs#)))
+                     ; just kids
+                     (list* nil nil vargs#)
+
+                     (map? (second vargs#))
+                     ; full spec kids optional
+                     vargs#
+
+                     :else
+                     ;; first is fx props, no mx props, maybe kids
+                     (list (first vargs#) nil (rest vargs#)))]
+               `(~'~factory ~'(symbol "m" (clojure.string/capitalize (name '~mx-name))) ~fx-props# ~mx-props# ~@children#))))
+
+#_
+(defmacro padding [& vargs]
   (let [[fx-props mx-props & children]
         (cond
           (nil? vargs)
@@ -233,10 +273,10 @@
 
           :else
           ;; first is fx props, no mx props, maybe kids
-          (list (first vargs) nil (rest vargs)))]
-    `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children)))
+          (list* (first vargs) nil (rest vargs)))]
+    `(k1-child-stateless m/Padding ~fx-props ~mx-props ~@children)))
 
-(defmacro deftagy [mx-name fx-class factory]
+(defmacro deftagy [factory mx-name fx-class]
   `(defmacro ~mx-name [& vargs#]
      (let [[fx-props# mx-props# & children#]
            (cond
@@ -253,10 +293,17 @@
 
              :else
              ;; first is fx props, no mx props, maybe kids
-             (list (first vargs#) nil (rest vargs#)))]
+             (list* (first vargs#) nil (rest vargs#)))]
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
 
-(deftagy center m/Center tiltontec.mx-flutter.corex/k1-child-stateless)
+#_
+(defmacro padding [fx-props mx-props & children]
+  `(k1-child-stateless m/Padding ~fx-props ~mx-props ~@children))
+
+
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateless padding m/Padding)
+
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateless center m/Center)
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -489,9 +536,6 @@
 (defmacro fade-transition [fx-props mx-props & children]
   `(k1-child-stateless m/FadeTransition ~fx-props ~mx-props ~@children))
 
-(defmacro padding [fx-props mx-props & children]
-  `(k1-child-stateless m/Padding ~fx-props ~mx-props ~@children))
-
 (defmacro ink-well [fx-props mx-props & children]
   `(k1-child-stateless m/InkWell ~fx-props ~mx-props ~@children))
 
@@ -546,8 +590,6 @@
 
 (defmacro align [fx-props mx-props & children]
   `(k1-child-stateless m/Align ~fx-props ~mx-props ~@children))
-
-
 
 (defmacro stack [fx-props mx-props & children]
   `(children-stateless m/Stack ~fx-props ~mx-props ~@children))
