@@ -256,26 +256,6 @@
                      (list (first vargs#) nil (rest vargs#)))]
                `(~'~factory ~'(symbol "m" (clojure.string/capitalize (name '~mx-name))) ~fx-props# ~mx-props# ~@children#))))
 
-#_
-(defmacro padding [& vargs]
-  (let [[fx-props mx-props & children]
-        (cond
-          (nil? vargs)
-          nil
-
-          (not (map? (first vargs)))
-          ; just kids
-          (list* nil nil vargs)
-
-          (map? (second vargs))
-          ; full spec kids optional
-          vargs
-
-          :else
-          ;; first is fx props, no mx props, maybe kids
-          (list* (first vargs) nil (rest vargs)))]
-    `(k1-child-stateless m/Padding ~fx-props ~mx-props ~@children)))
-
 (defmacro deftagy [factory mx-name fx-class]
   `(defmacro ~mx-name [& vargs#]
      (let [[fx-props# mx-props# & children#]
@@ -304,6 +284,12 @@
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless padding m/Padding)
 
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless center m/Center)
+
+(deftagy tiltontec.mx-flutter.corex/k1-param1-stateless text m/Text)
+
+#_
+(defmacro text [fx-props mx-props & children]
+  `(k1-param1-stateless m/Text ~fx-props ~mx-props ~@children))
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -599,9 +585,6 @@
 
 (defmacro ignore-pointer [fx-props mx-props & children]
   `(k1-child-stateless m/IgnorePointer ~fx-props ~mx-props ~@children))
-
-(defmacro text [fx-props mx-props & children]
-  `(k1-param1-stateless m/Text ~fx-props ~mx-props ~@children))
 
 (defmacro drawer [fx-props mx-props & children]
   ;; todo doesn't a drawer need to have open? state
