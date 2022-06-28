@@ -35,36 +35,86 @@
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
   ([slot me ctx widget-value]
+   (dp :resolving slot (minfo me) widget-value)
    (cond
      (nil? widget-value)
-     (do                                                    ;; (dp :exwid-sees-nil-widget-value)
+     (do
+       (dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
        nil)
 
-     (dart/is? widget-value MXFXAsIs)
+     (dart/is? widget-value tag/MXFXAsIs)
      (do
-       (dpx :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
-       (.-value ^MXFXAsIs widget-value))
+       (dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+       (.-value ^tag/MXFXAsIs widget-value))
 
-     (dart/is? widget-value MXFXCallback)
+     (dart/is? widget-value tag/MXFXCallback)
      (do
-       (dpx :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
-       ((.-value ^MXFXCallback widget-value)))
+       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       (let [cb-val (.-value ^tag/MXFXCallback widget-value)]
+         (dp :mxfxcallbackyields cb-val)
+         (recur slot me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
-     (do                                                    ;; (dp :widget-value-is-widget widget-value)
+     (do
+       (dp :widget-value-is-widget widget-value)
        widget-value)
 
      (fn? widget-value)
-     (do
-       (dp :DEPRECATED!!!-unwrapped-fn!! slot (minfo me))
-       (recur slot me ctx (widget-value me ctx)))
+     (do                                                    ;; (dp :ew-sees-fn widget-value)
+       (dp :fxres-calling-fn?-blind widget-value)
+       (let [v (widget-value me ctx)]
+         (dp :recuring-unwrapped-fn?-return-val v)
+         (recur slot me ctx v)))
 
      (cty/md-ref? widget-value)
-     (do
-       (recur slot me ctx
-         (render-fx ctx widget-value)))
+     (do (dp :rfxing-md (minfo widget-value))
+         (let [fx (render-fx ctx widget-value)]
+           (dp :rfxing-yielded-flutter fx)
+           fx))
 
-     :default widget-value)))
+     :default (do (dp :resolve-fall-thru-used slot (minfo me) widget-value
+                    (when (atom? widget-value)
+                      (deref widget-value)))
+                  widget-value))))
+
+#_
+(defn fx-resolve
+  ([me ctx widget-value]
+   (fx-resolve :anon me ctx widget-value))
+  ([slot me ctx widget-value]
+   (dp :WRONG-reso!!!!!!!!!!!!!!!!!! slot (minfo me))
+   (let [result (cond
+                  (nil? widget-value)
+                  (do                                       ;; (dp :exwid-sees-nil-widget-value)
+                    nil)
+
+                  (dart/is? widget-value MXFXAsIs)
+                  (do
+                    (dpx :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+                    (.-value ^MXFXAsIs widget-value))
+
+                  (dart/is? widget-value MXFXCallback)
+                  (do
+                    (dpx :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+                    ((.-value ^MXFXCallback widget-value)))
+
+                  (dart/is? widget-value m/Widget)
+                  (do                                       ;; (dp :widget-value-is-widget widget-value)
+                    widget-value)
+
+                  (fn? widget-value)
+                  (do
+                    (dp :DEPRECATED!!!-unwrapped-fn!! slot (minfo me))
+                    (recur slot me ctx (widget-value me ctx)))
+
+                  (cty/md-ref? widget-value)
+                  (do
+                    (recur slot me ctx
+                      (render-fx ctx widget-value)))
+
+                  :default widget-value)]
+     (dp :reso-returns result)
+     result)))
 
 (defn render-fx [ctx fx]
   ;; todo reverse params? awkward for many calls where fx is complex
@@ -79,8 +129,8 @@
             (gen fx ctx))))
 
 (defmacro with-ctx [[me-var ctx-var] & body]
-    `(fn [~me-var ~ctx-var]
-       ~@body))
+  `(fn [~me-var ~ctx-var]
+     ~@body))
 
 (defmacro with-ctx-cb [[me-var ctx-var] & body]
   `(tiltontec.mx-flutter.tag/MXFXCallback

@@ -65,8 +65,8 @@
           (if-let [^State state (tag/fx-state-nearest me)]
             (do
 
-                (dpx :obs-FXXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
-                (.setState state (fn [] (do))))
+              (dpx :obs-FXXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
+              (.setState state (fn [] (do))))
             (dpx :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
 
 ;;; --- WIDGETS -------------------------------------------------
@@ -96,50 +96,6 @@
        (vec (apply concat (seq ~fx-props)))
        (vec (apply concat (seq ~mx-props))))))
 
-(defn fx-resolve
-  ([me ctx widget-value]
-   (fx-resolve :anon me ctx widget-value))
-  ([slot me ctx widget-value]
-   (dp :resolving slot (minfo me) widget-value)
-   (cond
-     (nil? widget-value)
-     (do
-       (dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
-       nil)
-
-     (dart/is? widget-value tag/MXFXAsIs)
-     (do
-       (dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
-       (.-value ^tag/MXFXAsIs widget-value))
-
-     (dart/is? widget-value tag/MXFXCallback)
-     (do
-       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
-       (let [cb-val (.-value ^tag/MXFXCallback widget-value)]
-         (dp :mxfxcallbackyields cb-val)
-         (recur slot me ctx cb-val)))
-
-     (dart/is? widget-value m/Widget)
-     (do
-       (dp :widget-value-is-widget widget-value)
-       widget-value)
-
-     (fn? widget-value)
-     (do                                                    ;; (dp :ew-sees-fn widget-value)
-       (dp :fxres-calling-fn?-blind widget-value)
-       (let [v (widget-value me ctx)]
-         (dp :recuring-unwrapped-fn?-return-val v)
-         (recur slot me ctx v)))
-
-     (cty/md-ref? widget-value)
-     (do (dp :rfxing-md (minfo widget-value))
-         (let [fx (render-fx ctx widget-value)]
-           (dp :rfxing-yielded-flutter fx)
-           fx))
-
-     :default (do (dp :resolve-fall-thru-used widget-value)
-                  widget-value))))
-
 (defmacro scaffold [fx-props mx-props & children]
   ;; todo today convert to make-fxx
   `(apply tiltontec.model.core/make
@@ -161,7 +117,7 @@
                          (md/mset! me :fx$ctx ctx)
                          #_(m/Scaffold
                              ~@(let [kvs (for [[k# _#] fx-props]
-                                           [k# `(tiltontec.mx-flutter.corex/fx-resolve me ctx
+                                           [k# `(tiltontec.mx-flutter.tag/fx-resolve me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))
 
@@ -169,7 +125,7 @@
                            :appBar (tag/fx-resolve :appBar me ctx (mget me :appBar))
                            :drawer (tag/fx-resolve :drawer me ctx (mget me :drawer))
                            :body (tag/fx-resolve :body me ctx (or (mget me :body)
-                                                          (first (md/md-kids me))))
+                                                                (first (md/md-kids me))))
                            :floatingActionButton (fx-resolve :floatingActionButton me ctx
                                                    (mget me :floatingActionButton)))))))))
      (concat
@@ -192,10 +148,10 @@
                      (~'build [_# ctx]
                        (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
                        (m.SizedBox/expand
-                         :child (tiltontec.mx-flutter.corex/fx-resolve :kid1 ~'me ctx
+                         :child (tiltontec.mx-flutter.tag/fx-resolve :kid1 ~'me ctx
                                   (first (tiltontec.model.core/md-kids ~'me)))
                          ~@(let [kvs (for [[k# _#] fx-props]
-                                       [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# ~'me ctx
+                                       [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# ~'me ctx
                                               (tiltontec.model.core/mget ~'me ~k#))])] ;; todo call if fn?
                              (apply concat kvs))))))))
      (concat
@@ -212,10 +168,10 @@
                (md/mset! me :fx$ctx ctx)
                (m.SizedBox/expand
                  ;; todo roll this up as a sub-macro
-                 :child (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
+                 :child (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
                           (first (tiltontec.model.core/md-kids me)))
                  ~@(let [kvs (for [[k# _#] fx-props]
-                               [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                               [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
                                       (tiltontec.model.core/mget me ~k#))])]
                      (apply concat kvs))))
      (concat
@@ -232,14 +188,56 @@
          :fx-gen (fn [me ctx]
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
-                     :child (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
-                                (first (tiltontec.model.core/md-kids me)))
+                     :child (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
+                              (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   ;; todo need the ultimate value extractor FN
-                                   [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro k1-child-stateless-dbg [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (md/mset! me :fx$ctx ctx)
+                   (~fx-class
+                     :child (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
+                              (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+#_
+(defmacro center [fx-props mx-props & children]
+    `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
+
+(defmacro center [& vargs]
+  (let [[fx-props mx-props & children]
+        (cond
+          (nil? vargs)
+          nil
+
+          (not (map? (first vargs)))
+          ; just kids
+          (list* nil nil vargs)
+
+          (map? (second vargs))
+          ; full spec kids optional
+          vargs
+
+          :else
+          ;; first is fx props, no mx props, maybe kids
+          (list (first vargs) nil (rest vargs)))]
+    (prn :center-expand-fx fx-props)
+    (prn :center-expand-mx mx-props)
+    (prn :center-expand-kids children)
+
+    `(k1-child-stateless-dbg m/Center ~fx-props ~mx-props ~@children)))
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -249,13 +247,12 @@
          :fx-gen (fn [me ctx]
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
-                     :content (let [con (tiltontec.mx-flutter.corex/fx-resolve :kid1 me ctx
+                     :content (let [con (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
                                           (first (tiltontec.model.core/md-kids me)))]
                                 (dp :k1-con-less=content con)
                                 con)
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   ;; todo need the ultimate value extractor FN
-                                   [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -289,7 +286,7 @@
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.corex/fx-resolve ~k# me ctx
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        nil)))
@@ -404,7 +401,7 @@
                          (~'build [_# ctx]
                            (md/mset! me :fx$ctx ctx)
                            (let [k1# (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
-                                        (first (tiltontec.model.core/md-kids me)))]
+                                       (first (tiltontec.model.core/md-kids me)))]
                              (~fx-constructor
                                ;; todo throw error if they specify :body explicitly, for now
                                :child k1#
@@ -467,9 +464,6 @@
 (defmacro text! [fx-props mx-props & children]
   `(k1-param1-stateful m/Text ~fx-props ~mx-props ~@children))
 
-(defmacro center [fx-props mx-props & children]
-  `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
-
 (defmacro material [fx-props mx-props & children]
   `(k1-child-stateless m/Material ~fx-props ~mx-props ~@children))
 
@@ -516,8 +510,7 @@
             ~(when-let [kids# (seq (nthrest vargs# 1))]
                `(tiltontec.model.core/cFkids ~@kids#)))))))
 
-#_
-(deftagx sized-box m/SizedBox k1-child-stateless)
+#_(deftagx sized-box m/SizedBox k1-child-stateless)
 
 
 ;     current mission ^^^^^ of this which works....
