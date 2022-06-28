@@ -216,6 +216,7 @@
 (defmacro center [fx-props mx-props & children]
     `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
 
+#_
 (defmacro center [& vargs]
   (let [[fx-props mx-props & children]
         (cond
@@ -235,7 +236,27 @@
           (list (first vargs) nil (rest vargs)))]
     `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children)))
 
-;;(deftagy center m/Center )
+(defmacro deftagy [mx-name fx-class factory]
+  `(defmacro ~mx-name [& vargs#]
+     (let [[fx-props# mx-props# & children#]
+           (cond
+             (nil? vargs#)
+             nil
+
+             (not (map? (first vargs#)))
+             ; just kids
+             (list* nil nil vargs#)
+
+             (map? (second vargs#))
+             ; full spec kids optional
+             vargs#
+
+             :else
+             ;; first is fx props, no mx props, maybe kids
+             (list (first vargs#) nil (rest vargs#)))]
+       `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
+
+(deftagy center m/Center tiltontec.mx-flutter.corex/k1-child-stateless)
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & children]
   (let []
