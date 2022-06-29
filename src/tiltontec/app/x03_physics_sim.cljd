@@ -64,13 +64,12 @@
     (fxx/align
       {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
       {}
-      (fx/card drag-child))))
+      (fxx/card drag-child))))
 
 (defn make-app []
   (let [title (str "Physics Animation #" (rand-int 99))]
-    (fxx/material-app {:title title}{}
+    (fxx/material-app {:title title}
       (fxx/scaffold
-        {:appBar (m/AppBar :title (m/Text title))}
-        {}
+        {:appBar (fxx/app-bar {:title (fxx/text title)})}
         (draggable-card
           :drag-child (fxx/flutter-logo {:size 128.0}{}))))))
