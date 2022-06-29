@@ -10,33 +10,29 @@
     [tiltontec.mx-flutter.corex :as fx]
     [tiltontec.mx-flutter.tag :as tag]))
 
-(defn my-home-page [title]
-  (fx/scaffold
-    {:appBar (fx/app-bar {:title (m/Text title)})
-     :drawer (cF (fx/drawer
-                   (fx/list-view
-                     {:padding m.EdgeInsets/zero
-                      ;; ^^^ default padding not good, so we specify one. Same as in HTML
-                     }
-                     (fx/drawer-header
-                       {:decoration (m/BoxDecoration :color m.Colors/blue)}
-                       (m/Text "Drawer Header"))
-                     (fx/list-tile
-                       {:title (m/Text "Item 1")
-                       :onTap (tag/MXFXAsIs
-                                #(.pop (fx/my-nav)))})
-                     (fx/list-tile
-                       {:title (m/Text "Item 2")
-                        :onTap (tag/MXFXAsIs
-                                 #(.pop (fx/my-nav)))}))))}
-    (fx/center
-      (fx/text "My Ported Page!!"))))
-
 (defn make-app []
   (fx/material-app
     {:title                      "Drawer Demo"
      :debugShowCheckedModeBanner false}
-    {}
-    (my-home-page "Drawer Demo")))
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (m/Text "Drawer Demo")})
+       :drawer (cF (fx/drawer
+                     (fx/list-view
+                       {:padding m.EdgeInsets/zero
+                        ;; ^^^ default padding not good, so we specify one. Same as in HTML
+                        }
+                       (fx/drawer-header
+                         {:decoration (m/BoxDecoration :color m.Colors/blue)}
+                         (m/Text "Drawer Header"))
+                       (fx/list-tile
+                         {:title (m/Text "Item 1")
+                          :onTap (tag/MXFXAsIs
+                                   #(.pop (fx/my-nav)))})
+                       (fx/list-tile
+                         {:title (m/Text "Item 2")
+                          :onTap (tag/MXFXAsIs
+                                   #(.pop (fx/my-nav)))}))))}
+      (fx/center
+        (fx/text "My Ported Page!!")))))
 
 
