@@ -1,42 +1,36 @@
 (ns tiltontec.app.x04-drawer
   (:require
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.mx-flutter.corex :as fx]))
+    [tiltontec.mx-flutter.corex :as fx]
+    [tiltontec.mx-flutter.tag :as tag]))
 
 (defn my-home-page [title]
   (fx/scaffold
-    {:appBar (m/AppBar :title (m/Text title))
-     :drawer (cF (fx/drawer {}{:name :my-drawer}
-                   (m/ListView
-                     :padding m.EdgeInsets/zero ;; <-- default padding not good, so we specify one. Same as in HTML!
-                     :children [(m/DrawerHeader
-                                  :decoration (m/BoxDecoration :color m.Colors/blue)
-                                  :child (m/Text "Drawer Header"))
-                                (m/ListTile
-                                  :title (m/Text "Item 1")
-                                  :onTap #(.pop (fx/my-nav)))
-                                (m/ListTile
-                                  :title (m/Text "Item 2")
-                                  :onTap #(.pop (fx/my-nav)))])))}
-    {}
-    (fx/center {} {}
-      (fx/text {} {} "My Ported Page!!"))))
-
-;; todo mxf-ify
-#_ (fx/drawer {}{:name :my-drawer}
-     (fx/list-view {:padding m.EdgeInsets/zero} ;; <-- important
-       {}
-       (fx/drawer-header {:decoration (m/BoxDecoration :color m.Colors/blue)}{}
-         (m/Text "Drawer Header"))
-       (fx/list-tile {:title (m/Text "Item 1")
-                      :onTap #(.pop (fx/my-nav))})
-       (fx/list-tile {:title (m/Text "Item 2a")
-                      :onTap #(.pop (fx/my-nav))})))
+    {:appBar (fx/app-bar {:title (m/Text title)})
+     :drawer (cF (fx/drawer
+                   (fx/list-view
+                     {:padding m.EdgeInsets/zero
+                      ;; ^^^ default padding not good, so we specify one. Same as in HTML
+                     }
+                     (fx/drawer-header
+                       {:decoration (m/BoxDecoration :color m.Colors/blue)}
+                       (m/Text "Drawer Header"))
+                     (fx/list-tile
+                       {:title (m/Text "Item 1")
+                       :onTap (tag/MXFXAsIs
+                                #(.pop (fx/my-nav)))})
+                     (fx/list-tile
+                       {:title (m/Text "Item 2")
+                        :onTap (tag/MXFXAsIs
+                                 #(.pop (fx/my-nav)))}))))}
+    (fx/center
+      (fx/text "My Ported Page!!"))))
 
 (defn make-app []
   (fx/material-app
