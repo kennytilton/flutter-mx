@@ -13,7 +13,7 @@
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
      :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
-             FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+             Icon Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
      :refer [TextStyle]]))
 
@@ -21,24 +21,22 @@
   (fx/material-app
     {:title "Welcome to mxFlutter World"
      :theme (ThemeData :primarySwatch Colors/blue)}
-    {}
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
-                                                        (fx/text! {} {:name :appbartitle}
-                                                          (str "Counter fx rnd=" (rand-int 1000)
-                                                            ", ctr=" (mget ctr :value)))))} {})
-       :floatingActionButton (cF (FloatingActionButton
-                                   ;; todo fxx all this
-                                   :onPressed (fn ^void []
-                                                (md/mswap! (md/fm* :z-counter) :value inc))
-                                   :tooltip "Increment"
-                                   :child (Icon Icons/add :color Colors/black)))}
-      {}
+                                                       (fx/text! {} {:name :appbartitle}
+                                                         (str "Counter = " (mget ctr :value)))))})
+       ;; todo get not-to-be to handle calling not-to-be on these non-kid leaves
+       :floatingActionButton (cF (fx/floating-action-button
+                                   {:onPressed (tag/MXFXAsIs
+                                                 (fn ^void []
+                                                   (md/mswap! (md/fm* :z-counter) :value inc)))
+                                    :tooltip "Increment"}
+                                   (Icon Icons/add :color Colors/black)))}
       (fx/center
         (fx/column
-          {:mainAxisAlignment MainAxisAlignment/center} {}
+          {:mainAxisAlignment MainAxisAlignment/center}
           (fx/text {:style (TextStyle :color Colors/black
-                              :fontSize 18.0)} {}
+                             :fontSize 18.0)}
             "You clicked the button so many times:")
           (fx/text!
             {:style (tag/with-ctx [_ ctx]
