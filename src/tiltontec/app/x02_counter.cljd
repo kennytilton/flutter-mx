@@ -24,17 +24,17 @@
     {}
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
-                                                        (assert ctr "app-bar cannot see ctr")
                                                         (fx/text! {} {:name :appbartitle}
                                                           (str "Counter fx rnd=" (rand-int 1000)
                                                             ", ctr=" (mget ctr :value)))))} {})
        :floatingActionButton (cF (FloatingActionButton
+                                   ;; todo fxx all this
                                    :onPressed (fn ^void []
                                                 (md/mswap! (md/fm* :z-counter) :value inc))
                                    :tooltip "Increment"
                                    :child (Icon Icons/add :color Colors/black)))}
       {}
-      (fx/center {} {}
+      (fx/center
         (fx/column
           {:mainAxisAlignment MainAxisAlignment/center} {}
           (fx/text {:style (TextStyle :color Colors/black

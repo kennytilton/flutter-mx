@@ -72,31 +72,7 @@
             (dpx :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
 
 ;;; --- WIDGETS -------------------------------------------------
-(defmacro material-app [fx-props mx-props & children]
-  `(apply tiltontec.model.core/make
-     :kids (tiltontec.model.core/cFkids ~@children)
-     :fx$ctx (tiltontec.cell.core/cI nil)                   ;; set at start of build
-     :fx$observer (fn [slot me new-val old-val c]
-                    (if-let [^w/State? state (mget me :fx$state)]
-                      (do (dpx :matapp-setting-FX-state slot new-val (cty/minfo me))
-                          (.setState state (fn [] (do))))
-                      (dpx :MATAPP=observe-sees-no-state (cty/minfo me))))
-     :fx-gen (fn [me ctx]
-               (reify :extends m/MaterialApp #_m/StatefulWidget
-                 (~'createState [_#]
-                   (util/rmap-meta-setf [:state-ref me]
-                     (reify :extends #/(w/State m/MaterialApp) #_w/State
-                       (~'build [_# ctx]
-                         (md/mset! me :fx$ctx ctx)
-                         (m/MaterialApp
-                           :home (tiltontec.mx-flutter.tag/render-fx ctx (first (md/md-kids me)))
-                           ~@(let [kvs (for [[k# _#] fx-props]
-                                         [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
-                                                (tiltontec.model.core/mget me ~k#))])]
-                               (apply concat kvs)))))))))
-     (concat
-       (vec (apply concat (seq ~fx-props)))
-       (vec (apply concat (seq ~mx-props))))))
+
 
 (defmacro scaffold [fx-props mx-props & children]
   ;; todo today convert to make-fxx
@@ -231,30 +207,10 @@
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
-#_
-(defmacro center [fx-props mx-props & children]
-    `(k1-child-stateless m/Center ~fx-props ~mx-props ~@children))
-
-#_
-        (defmacro deftagy [factory mx-name]
-          `(defmacro ~mx-name [& vargs#]
-             (let [[fx-props# mx-props# & children#]
-                   (cond
-                     (nil? vargs#)
-                     nil
-
-                     (not (map? (first vargs#)))
-                     ; just kids
-                     (list* nil nil vargs#)
-
-                     (map? (second vargs#))
-                     ; full spec kids optional
-                     vargs#
-
-                     :else
-                     ;; first is fx props, no mx props, maybe kids
-                     (list (first vargs#) nil (rest vargs#)))]
-               `(~'~factory ~'(symbol "m" (clojure.string/capitalize (name '~mx-name))) ~fx-props# ~mx-props# ~@children#))))
+;(defmacro deftagy [factory mx-name]
+;  `(defmacro ~mx-name [& vargs#]
+;     (let []
+;       `(~'~factory ~'(symbol "m" (clojure.string/capitalize (name '~mx-name))) ~fx-props# ~mx-props# ~@children#))))
 
 (defmacro deftagy [factory mx-name fx-class]
   `(defmacro ~mx-name [& vargs#]
@@ -276,20 +232,19 @@
              (list* (first vargs#) nil (rest vargs#)))]
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
 
-#_
-(defmacro padding [fx-props mx-props & children]
-  `(k1-child-stateless m/Padding ~fx-props ~mx-props ~@children))
-
-
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless padding m/Padding)
-
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless center m/Center)
-
 (deftagy tiltontec.mx-flutter.corex/k1-param1-stateless text m/Text)
+(deftagy tiltontec.mx-flutter.corex/k1-body-stateful scaffold m/Scaffold)
 
-#_
-(defmacro text [fx-props mx-props & children]
-  `(k1-param1-stateless m/Text ~fx-props ~mx-props ~@children))
+(defmacro deftagnokids [factory mx-name fx-class]
+  `(defmacro ~mx-name [& vargs#]
+     (assert (<= (count vargs#) 2) (str (name '~mx-name) " passed too many args " (count vargs#)))
+     (assert (every? map? vargs#))
+     (let [[fx-props# mx-props#] vargs#]
+       `(~'~factory ~'~fx-class ~fx-props# ~mx-props#))))
+
+(deftagnokids tiltontec.mx-flutter.corex/childless-stateless app-bar m/AppBar)
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -434,6 +389,38 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro k1-home-stateful [fx-constructor fx-props mx-props & children]
+  (let []
+    (assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
+    (assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
+    `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-gen (fn [me ctx]
+                   (reify :extends m/StatefulWidget
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (md/mset! me :fx$state this)
+                           (when-let [init (mget me :initState)]
+                             ;; this is where widgets can build controllers who vsync
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (md/mset! me :fx$ctx ctx)
+                           (let [bod# (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
+                                        (first (tiltontec.model.core/md-kids me)))]
+                             (~fx-constructor
+                               :home bod#
+                               ~@(let [kvs (for [[k# _#] fx-props]
+                                             [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
+                                                    (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(deftagy tiltontec.mx-flutter.corex/k1-home-stateful material-app m/MaterialApp)
+
+
 (defmacro k1-child-stateful [fx-constructor fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.corex/make-fxx (new FXXDartWidget)
@@ -478,16 +465,12 @@
                          (apply concat kvs)))))
        nil)))
 
-;;; -----------------------------------------------------------
 ;;; --- childless stateless --------------------------------------------------------
 
 (defmacro icon-button [& vargs]
   (let [[fx-props mx-props] vargs]
     `(childless-stateless m/IconButton ~fx-props ~mx-props)))
 
-(defmacro app-bar [& vargs]
-  (let [[fx-props mx-props] vargs]
-    `(childless-stateless m/AppBar ~fx-props ~mx-props)))
 
 (defmacro list-view+builder [& vargs]
   (let [[fx-props mx-props] vargs]
@@ -506,9 +489,6 @@
 
 (defmacro animated-builder [fx-props mx-props & children]
   `(k1-child-stateful m/AnimatedBuilder ~fx-props ~mx-props ~@children))
-
-(defmacro scaffold [fx-props mx-props & children]
-  `(k1-body-stateful m/Scaffold ~fx-props ~mx-props ~@children))
 
 (defmacro icon [fx-props mx-props]
   `(prop-param1-childless-stateful :icon m/Icon ~fx-props ~mx-props))
@@ -560,10 +540,6 @@
                `(tiltontec.model.core/cFkids ~@kids#)))))))
 
 #_(deftagx sized-box m/SizedBox k1-child-stateless)
-
-
-;     current mission ^^^^^ of this which works....
-
 
 (defmacro sized-box [fx-props mx-props & children]
   `(k1-child-stateless m/SizedBox ~fx-props ~mx-props ~@children))

@@ -20,7 +20,8 @@
     {:title "Hunt for Teal mxFlutter"
      :theme (cF (m/ThemeData :primarySwatch
                   ;; a computed, reactive value. Silly because the user cannot
-                  ;; change the title, so we never get to see the Theme "react"
+                  ;; change the title, so we never get to see the Theme "react".
+                  ;; But you can change it and reload. Soon we go full monty.
                   (let [ttl (mget me :title)]
                     (cond
                       (string/includes? ttl "Teal") m.Colors/teal
@@ -29,13 +30,10 @@
     {}
     (fx/scaffold
       {:appBar (fx/app-bar
-                 {:title (m/Text (str "Welcome app/mxFlutter " (rand-int 99)))}
-                 {})}
-      {:name :scaffy}
-      (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)}
-        (fx/center
-          (fx/text {:overflow m.TextOverflow/ellipsis
-                    :style    (TextStyle
-                                :color m.Colors/cyan
-                                :fontSize 32.0)}
-            "hello, world\\n"))))))
+                 {:title (m/Text "Welcome to Flummox")})}
+      (fx/center
+        (fx/text {:overflow m.TextOverflow/ellipsis
+                  :style    (TextStyle
+                              :color m.Colors/cyan
+                              :fontSize 32.0)}
+          "hello, world\\n")))))
