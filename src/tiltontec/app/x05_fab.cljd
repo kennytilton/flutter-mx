@@ -35,7 +35,6 @@
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
                                          {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
                                          {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
-      {}
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
@@ -49,7 +48,7 @@
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
   (fx/sized-box+expand-ful
-    {}
+    {} ;; <= placeholder
     {:name             :fab
      ; --- animation mechanics ----------------------
      :controller       (cF (tag/when-my-state [state]
@@ -184,7 +183,6 @@
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
     {:ignoring (mget (md/fasc :fab par) :open?)}
-    {}
     (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
                                           (if open? 0.0 1.0)))
                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)

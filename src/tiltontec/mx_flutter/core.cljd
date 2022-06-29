@@ -19,11 +19,6 @@
 (defmacro my-state []
   `^State? (:state-ref (meta ~'me)))
 
-(defmacro my-ctx [& [me]]
-  (let [me-ref (or me 'me)]
-    `(do (assert (:state-ref (meta ~me-ref)) (str "state ref not bound for " (minfo ~me-ref)))
-         (.context ^State (:state-ref (meta ~me-ref))))))
-
 (defn ctx-page-push [ctx fx-page-def]
   ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
   (.push (-> ctx m.Navigator/of)

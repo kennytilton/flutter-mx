@@ -18,9 +18,6 @@
             [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]
             [clojure.string :as str]))
 
-
-;(defmacro mmeta [] `(meta ~'me))
-(defmacro my-ctx [] `(ctx-nearest ~'me))
 (defmacro my-nav [] `(m.Navigator/of (tiltontec.mx-flutter.corex/fx-ctx ~'me)))
 
 (defmacro my-controller []
@@ -505,28 +502,26 @@
 
 #_(deftagx sized-box m/SizedBox k1-child-stateless)
 
-(defmacro sized-box [fx-props mx-props & children]
-  `(k1-child-stateless m/SizedBox ~fx-props ~mx-props ~@children))
 
-(defmacro animated-opacity [fx-props mx-props & children]
-  `(k1-child-stateless m/AnimatedOpacity ~fx-props ~mx-props ~@children))
 
+;(defmacro animated-opacity [fx-props mx-props & children]
+;  `(k1-child-stateless m/AnimatedOpacity ~fx-props ~mx-props ~@children))
+
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateless animated-opacity m/AnimatedOpacity)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless drawer-header m/DrawerHeader)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless floating-action-button m/FloatingActionButton)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless align m/Align)
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateless ignore-pointer m/IgnorePointer)
+
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateful gesture-detector m/GestureDetector)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateful default-tab-controller m/DefaultTabController)
 
-(defmacro stack [fx-props mx-props & children]
-  `(children-stateless m/Stack ~fx-props ~mx-props ~@children))
-
+(deftagy tiltontec.mx-flutter.corex/children-stateless stack m/Stack)
 (deftagy tiltontec.mx-flutter.corex/children-stateless column m/Column)
 (deftagy tiltontec.mx-flutter.corex/children-stateless list-view m/ListView)
 
-(defmacro ignore-pointer [fx-props mx-props & children]
-  `(k1-child-stateless m/IgnorePointer ~fx-props ~mx-props ~@children))
-
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless drawer m/Drawer)
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateless sized-box m/SizedBox)
 
 ;;; --- utils -------------------------------------
 
