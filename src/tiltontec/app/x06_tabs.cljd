@@ -1,17 +1,18 @@
-(ns tiltontec.example.tabs
+(ns tiltontec.app.x06-tabs
   (:require
     [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
+    [tiltontec.model.core :refer [mget] :as md]
     [tiltontec.mx-flutter.core :as fx]
     [tiltontec.mx-flutter.corex :as fxx]
     ["package:flutter/material.dart" :as m ]))
 
 (defn make-app
   []
-  (let [title "Tabs Demo?"]
-    (fx/material-app {:title title}
+  (let [title "Tabs Demo"]
+    (fxx/material-app {:title title}
       (fx/default-tab-controller
         {:length 3}
-        (fx/scaffold
+        (fxx/scaffold
           {:appBar (m/AppBar
                      :bottom
                      (m/TabBar
@@ -20,10 +21,10 @@
                               (m/Tab :icon (m/Icon. m.Icons/directions_bike))]))}
           (fx/widget {
                       :beefer (fn [me ctx]
-                                 (m/TabBarView
-                                   :children [(m/Tab :icon (m/Icon. m.Icons/directions_car)),
-                                              (m/Tab :icon (m/Icon. m.Icons/directions_transit)),
-                                              (m/Tab :icon (m/Icon. m.Icons/directions_bike))]))}))))))
+                                (m/TabBarView
+                                  :children [(m/Tab :icon (m/Icon. m.Icons/directions_car)),
+                                             (m/Tab :icon (m/Icon. m.Icons/directions_transit)),
+                                             (m/Tab :icon (m/Icon. m.Icons/directions_bike))]))}))))))
 
 ;;; ---  left as exercise -------------
 #_ (defn make-app
