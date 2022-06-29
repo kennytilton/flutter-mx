@@ -6,8 +6,7 @@
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
     [tiltontec.mx-flutter.tag :as tag]
-    [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.corex :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
     ["package:flutter/physics.dart" :as p]
@@ -18,7 +17,7 @@
 
 (defn logo-recoil [me ctx ^m/Offset px-per-s]
   (let [size (.size (MediaQuery/of ctx))
-        controller (fxx/my-controller)
+        controller (fx/my-controller)
         animation ^#/(m/Animation Alignment) (.drive controller
                                                (m/AlignmentTween
                                                  :begin (mget me :dragAlignment)
@@ -38,38 +37,41 @@
 
 (defn draggable-card [& {:keys [drag-child]}]
   (fx/gesture-detector
-    {:dragAlignment (cI m.Alignment/center)} ;; <=====  Our only reactive data point
-    {:name        :draggable-card
-     :initState   (fn [this me]
-                    (md/mset! me :fx$state this))
-     :fx$state    (cI nil)
+    {:onPanDown   (cF (tag/MXFXAsIs
+                        (fn [^m/DragDownDetails details]
+                          (when-let [c (fx/my-controller)]
+                            (.stop c)))))
+     :onPanUpdate (tag/with-ctx-cb [me ctx]
+                    (tag/MXFXAsIs
+                      (fn [^m/DragUpdateDetails details]
+                        (let [size (.size (MediaQuery/of ctx))]
+                          (md/mswap! me :dragAlignment
+                            #(.+ ^m/Alignment %
+                               (m/Alignment
+                                 (/ (-> details .delta .dx) (/ (.width size) 2))
+                                 (/ (-> details .delta .dy) (/ (.height size) 2)))))))))
+     :onPanEnd    (cF (tag/with-ctx-cb [me ctx]
+                        (tag/MXFXAsIs
+                          (fn [^m/DragEndDetails details]
+                            (logo-recoil me ctx (-> details .velocity .pixelsPerSecond))))))
 
-     :controller  (cF (when-let [st (fxx/my-state)]
-                        (m/AnimationController :vsync st)))
-     :onPanDown   (fn [me ctx ^m/DragDownDetails details]
-                    (when-let [c (fxx/my-controller)]
-                      (.stop c)))
-     :onPanUpdate (fn [me ctx ^m/DragUpdateDetails details]
-                    (let [size (.size (MediaQuery/of ctx))]
-                      (md/mswap! me :dragAlignment
-                        #(.+ ^m/Alignment %
-                           (m/Alignment
-                             (/ (-> details .delta .dx) (/ (.width size) 2))
-                             (/ (-> details .delta .dy) (/ (.height size) 2)))))))
-     :onPanEnd    (fn [me ctx ^m/DragEndDetails details]
-                    (logo-recoil me ctx (-> details .velocity .pixelsPerSecond)))
-     :dispose     (fn [this me]
-                    (when-let [con (fxx/my-controller)]
-                      (.dispose con)))}
-    (fxx/align
+     }
+    {:name          :draggable-card
+     :dragAlignment (cI m.Alignment/center)
+     :controller    (cF (when-let [st (fx/my-state)]
+                          (m/AnimationController :vsync st)))
+     :dispose       (fn [this me]
+                      (when-let [con (fx/my-controller)]
+                        (.dispose con)))}
+    (fx/align
       {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
       {}
-      (fxx/card drag-child))))
+      (fx/card drag-child))))
 
 (defn make-app []
-  (let [title (str "Physics Animation #" (rand-int 99))]
-    (fxx/material-app {:title title}
-      (fxx/scaffold
-        {:appBar (fxx/app-bar {:title (fxx/text title)})}
+  (let [title (str "Physics Animation")]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
         (draggable-card
-          :drag-child (fxx/flutter-logo {:size 128.0}{}))))))
+          :drag-child (fx/flutter-logo {:size 128.0} {}))))))

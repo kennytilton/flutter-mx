@@ -35,44 +35,44 @@
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
   ([slot me ctx widget-value]
-   (dp :resolving slot (minfo me) widget-value)
+   ;(dp :resolving slot (minfo me) widget-value)
    (cond
      (nil? widget-value)
      (do
-       (dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
+       ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
        nil)
 
      (dart/is? widget-value tag/MXFXAsIs)
      (do
-       (dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+       ;(dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
        (.-value ^tag/MXFXAsIs widget-value))
 
      (dart/is? widget-value tag/MXFXCallback)
      (do
-       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       ;;(dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
        (let [cb-val (.-value ^tag/MXFXCallback widget-value)]
-         (dp :mxfxcallbackyields cb-val)
+         ;;(dp :mxfxcallbackyields cb-val)
          (recur slot me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
      (do
-       (dp :widget-value-is-widget widget-value)
+       ;;(dp :widget-value-is-widget widget-value)
        widget-value)
 
      (fn? widget-value)
      (do                                                    ;; (dp :ew-sees-fn widget-value)
-       (dp :fxres-calling-fn?-blind widget-value)
+       ;;(dp :fxres-calling-fn?-blind widget-value)
        (let [v (widget-value me ctx)]
-         (dp :recuring-unwrapped-fn?-return-val v)
+         ;;(dp :recuring-unwrapped-fn?-return-val v)
          (recur slot me ctx v)))
 
      (cty/md-ref? widget-value)
-     (do (dp :rfxing-md (minfo widget-value))
+     (do ;;(dp :rfxing-md (minfo widget-value))
          (let [fx (render-fx ctx widget-value)]
-           (dp :rfxing-yielded-flutter fx)
+           ;;(dp :rfxing-yielded-flutter fx)
            fx))
 
-     :default (do (dp :resolve-fall-thru-used slot (minfo me) widget-value
+     :default (do #_ (dp :resolve-fall-thru-used slot (minfo me) widget-value
                     (when (atom? widget-value)
                       (deref widget-value)))
                   widget-value))))
