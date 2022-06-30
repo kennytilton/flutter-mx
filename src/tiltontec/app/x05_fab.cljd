@@ -28,7 +28,7 @@
                     :debugShowCheckedModeBanner false}
     {:name :mat-app}
     (fx/scaffold
-      {:appBar               (fx/app-bar {:title (Text (str "Expandable Fab/FXX " (rand-int 99)))})
+      {:appBar               (fx/app-bar {:title (Text (str "Expandable Fab/FX " (rand-int 99)))})
        :floatingActionButton (expandable-fab
                                :initial-open? false
                                :distance 112.0
@@ -39,7 +39,6 @@
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
          :itemBuilder (tag/MXFXAsIs
-                        ;; todo just make this as-is
                         (fn [ctx i] (fake-item (odd? i))))}))))
 
 (declare expanding-action-button
@@ -50,6 +49,10 @@
   (fx/sized-box+expand-ful
     {} ;; <= placeholder
     {:name             :fab
+     ; --- Dart lifecycle ---------------------------
+     :dispose          (fn [this me]
+                         (when-let [controller (fx/my-controller)]
+                           (.dispose controller)))
      ; --- animation mechanics ----------------------
      :controller       (cF (tag/when-my-state [state]
                              (m/AnimationController
@@ -61,9 +64,6 @@
                                :curve m.Curves/fastOutSlowIn
                                :reverseCurve m.Curves/easeOutQuad
                                :parent c)))
-     :dispose          (fn [this me]
-                         (when-let [controller (fx/my-controller)]
-                           (.dispose controller)))
      ; --- behavior -------------------------
      :step             (cF (/ 90.0 (dec (count actions))))
      :open?            (cI initial-open?
@@ -91,22 +91,14 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
-     :builder   (tag/MXFXAsIs                               ;; need a callback for Flutter itself to hit
+     :builder   (tag/MXFXAsIs
+                  ;; "as is"? We need a callback for Flutter itself to hit
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
                           offset (m.Offset/fromDirection
                                    (* direction-degrees (/ math/pi 180.0))
                                    (* (.value progress) max-distance))]
-                      ;; todo
-                            #_  (tag/render-fx ctx
-                                (fx/positioned {:right  (+ 4.0 (.dx offset))
-                                                :bottom (+ 4.0 (.dy offset))}
-                                  {:name :positioned}
-                                  (fx/transorm+rotate-ful
-                                    {:angle (* (- 1.0 (.value progress))
-                                              math/pi 0.5)}
-                                    {:name :tx-rot}
-                                    child)))
+                      ;; alpha widgets welcome at leaves of MX tree
                       (f/widget
                         (f/nest
                           (m/Positioned
@@ -194,7 +186,7 @@
         {:name :fab-button-in-fact}
         (fx/icon {} {:icon m.Icons/create})))))
 
-;; -- full version, but container breaks it
+;; -- full tap-to-open version, but container breaks it
 #_(fx/animated-container {:decoration (cF (m/BoxDecoration
                                             :color (random-color)
                                             :borderRadius (m.BorderRadius/circular (random-to-double 100))))
