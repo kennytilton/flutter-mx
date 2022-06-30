@@ -200,7 +200,6 @@
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless card m/Card)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless padding m/Padding)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless center m/Center)
-(deftagy tiltontec.mx-flutter.corex/k1-param1-stateless text m/Text)
 (deftagy tiltontec.mx-flutter.corex/k1-body-stateful scaffold m/Scaffold)
 
 (defmacro deftagnokids [factory mx-name fx-class]
@@ -273,9 +272,12 @@
                    (md/mset! me :fx$ctx ctx)
                    (~fx-class (tiltontec.mx-flutter.tag/render-fx ctx (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                                   [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
+                                          (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
+
+(deftagy tiltontec.mx-flutter.corex/k1-param1-stateless text m/Text)
 
 (defmacro k1-param1-stateful [fx-constructor fx-props mx-props & children]
   (let []
@@ -505,6 +507,7 @@
             ~(when-let [kids# (seq (nthrest vargs# 1))]
                `(tiltontec.model.core/cFkids ~@kids#)))))))
 
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateless expanded m/Expanded)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless animated-opacity m/AnimatedOpacity)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless drawer-header m/DrawerHeader)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless floating-action-button m/FloatingActionButton)
@@ -518,6 +521,7 @@
 
 (deftagy tiltontec.mx-flutter.corex/children-stateless stack m/Stack)
 (deftagy tiltontec.mx-flutter.corex/children-stateless column m/Column)
+(deftagy tiltontec.mx-flutter.corex/children-stateless row m/Row)
 (deftagy tiltontec.mx-flutter.corex/children-stateless list-view m/ListView)
 
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless drawer m/Drawer)

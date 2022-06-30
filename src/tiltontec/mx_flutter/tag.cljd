@@ -35,7 +35,7 @@
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
   ([slot me ctx widget-value]
-   ;(dp :resolving slot (minfo me) widget-value)
+   (dp :resolving slot (minfo me) widget-value)
    (cond
      (nil? widget-value)
      (do
@@ -67,15 +67,15 @@
          (recur slot me ctx v)))
 
      (cty/md-ref? widget-value)
-     (do ;;(dp :rfxing-md (minfo widget-value))
-         (let [fx (render-fx ctx widget-value)]
-           ;;(dp :rfxing-yielded-flutter fx)
-           fx))
+     (do                                                    ;;(dp :rfxing-md (minfo widget-value))
+       (let [fx (render-fx ctx widget-value)]
+         ;;(dp :rfxing-yielded-flutter fx)
+         fx))
 
-     :default (do #_ (dp :resolve-fall-thru-used slot (minfo me) widget-value
-                    (when (atom? widget-value)
-                      (deref widget-value)))
-                  widget-value))))
+     :default (do #_(dp :resolve-fall-thru-used slot (minfo me) widget-value
+                      (when (atom? widget-value)
+                        (deref widget-value)))
+                widget-value))))
 
 
 (defn ctx-page-push [ctx fx-page-def]
@@ -109,6 +109,14 @@
   `(tiltontec.mx-flutter.tag/MXFXCallback
      (fn [~me-var ~ctx-var]
        ~@body)))
+
+(defmacro with-ctx-cb-dbg [[me-var ctx-var] & body]
+  `(tiltontec.mx-flutter.tag/MXFXCallback
+     (fn [~me-var ~ctx-var]
+       (dp :ctxcb-runs!!!)
+       (let [res# ~@body]
+         (dp :ctxcb-res!!!!! res#)
+         res#))))
 
 (defn fx-state-nearest [me]
   (when me
