@@ -77,44 +77,17 @@
                       (deref widget-value)))
                   widget-value))))
 
-#_
-(defn fx-resolve
-  ([me ctx widget-value]
-   (fx-resolve :anon me ctx widget-value))
-  ([slot me ctx widget-value]
-   (dp :WRONG-reso!!!!!!!!!!!!!!!!!! slot (minfo me))
-   (let [result (cond
-                  (nil? widget-value)
-                  (do                                       ;; (dp :exwid-sees-nil-widget-value)
-                    nil)
 
-                  (dart/is? widget-value MXFXAsIs)
-                  (do
-                    (dpx :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
-                    (.-value ^MXFXAsIs widget-value))
+(defn ctx-page-push [ctx fx-page-def]
+  ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
+  (.push (-> ctx m.Navigator/of)
+    (#/(m/MaterialPageRoute Object)
+      :builder (fn [_]
+                 (render-fx ctx fx-page-def)))))
 
-                  (dart/is? widget-value MXFXCallback)
-                  (do
-                    (dpx :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
-                    ((.-value ^MXFXCallback widget-value)))
-
-                  (dart/is? widget-value m/Widget)
-                  (do                                       ;; (dp :widget-value-is-widget widget-value)
-                    widget-value)
-
-                  (fn? widget-value)
-                  (do
-                    (dp :DEPRECATED!!!-unwrapped-fn!! slot (minfo me))
-                    (recur slot me ctx (widget-value me ctx)))
-
-                  (cty/md-ref? widget-value)
-                  (do
-                    (recur slot me ctx
-                      (render-fx ctx widget-value)))
-
-                  :default widget-value)]
-     (dp :reso-returns result)
-     result)))
+(defn ctx-page-pop [ctx]
+  ;; fx-page-def will be a def (NOT defn) like (def (fx/scaffold....
+  (.pop (-> ctx m.Navigator/of)))
 
 (defn render-fx [ctx fx]
   ;; todo reverse params? awkward for many calls where fx is complex

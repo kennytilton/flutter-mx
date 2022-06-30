@@ -2,31 +2,31 @@
   "Port of CLJD port of https://docs.flutter.dev/cookbook/navigation/navigation-basics"
   (:require
     ["package:flutter/material.dart" :as m]
-    [tiltontec.util.base
-     :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
-    [tiltontec.cell.base :as cty] ;; todo eliminate need for macro support (unbound ref)
-    [tiltontec.mx-flutter.corex :as fxx]
-    [tiltontec.mx-flutter.core :as fx]))
+    [tiltontec.mx-flutter.tag :as tag]
+    [tiltontec.mx-flutter.corex :as fx]))
 
 (def second-route
   (fx/scaffold
-    {:appBar (m/AppBar :title (m/Text "Second Route"))}
+    {:appBar (fx/app-bar {:title (fx/text "Second Route")})}
     (fx/center
       (fx/elevated-button
-        ;; todo universal mechanism for "on" handlers providing ctx
-        {:onPressed (fn [me ctx]
-                      (dp :onpreess-back-ctx ctx)
-                      (fx/ctx-page-pop ctx))}
+        {:onPressed (tag/with-ctx-cb [me ctx]
+                      (tag/MXFXAsIs
+                        (fn ^void []
+                          (tag/ctx-page-pop ctx)
+                          nil)))}
         (m/Text "Go back!")))))
 
 (defn make-app []
-  (fxx/material-app
+  (fx/material-app
     {:title "Navigation Basics"}
-    (fxx/scaffold
-      {:appBar (fxx/app-bar {:title (fxx/text (str "First Route " (rand-int 99)))})}
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "First Route")})}
       (fx/center
         (fx/elevated-button
-          {:onPressed (fn [me ctx]
-                        (dp :onpreess-ctx ctx)
-                        (fx/ctx-page-push ctx second-route))}
+          {:onPressed (tag/with-ctx-cb [me ctx]
+                        (tag/MXFXAsIs
+                          (fn ^void []
+                            (tag/ctx-page-push ctx second-route)
+                            nil)))}
           (fx/text "Open route"))))))
