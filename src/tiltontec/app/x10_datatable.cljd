@@ -1,0 +1,30 @@
+(ns tiltontec.app.x10-datatable
+  (:require
+    [tiltontec.mx-flutter.tag :refer [beefer] :as tag]
+    [tiltontec.mx-flutter.corex :as fxx]
+    ["package:flutter/material.dart" :as m]))
+
+(defn data-table [& {:keys [cols rows]}]
+  (fxx/single-child-scroll-view
+    {:scrollDirection m.Axis/horizontal}
+    (fxx/data-table
+      {:headingTextStyle (m/TextStyle
+                           :fontWeight m.FontWeight/bold
+                           :color m.Colors/blue)
+       :showBottomBorder true
+       :columns          (mapv (fn [col]
+                                 (m/DataColumn :label (m/Text col))) cols)
+       :rows             (mapv (fn [row]
+                                 (m/DataRow :cells (mapv (fn [cell] (m/DataCell (m/Text cell)))
+                                                     row))) rows)})))
+
+(defn make-app []
+  (fxx/material-app {:debugShowCheckedModeBanner false}
+    (fxx/scaffold {:appBar (fxx/app-bar {:title (fxx/text (str "DataTable Sample fx " (rand-int 99)))})}
+      (fxx/center
+        (data-table :cols ["#" "Name" "Age" "City"]
+          :rows [["1" "zm" "42" "guangzhou"]
+                 ["2" "zrj" "10" "guangzhou"]
+                 ["3" "wrp" "13" "hongkong"]
+                 ["4" "wrl" "11" "guangzhou"]
+                 ["5" "wrj" "10" "beijing"]])))))
