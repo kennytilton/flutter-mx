@@ -85,7 +85,7 @@
                      ^:mixin m/SingleTickerProviderStateMixin
                      (^void ~'initState [~'this]
                        ;;(.initState ~'^super ~'this)
-                       (when-let [init (mget ~'me :initState)]
+                       (when-let [init (tiltontec.model.core/mget ~'me :initState)]
                          (init ~'this ~'me)))
                      (~'build [_# ctx]
                        (tiltontec.model.core/mset! ~'me :fx$ctx ctx)
@@ -176,7 +176,7 @@
 ;     (let []
 ;       `(~'~factory ~'(symbol "m" (clojure.string/capitalize (name '~mx-name))) ~fx-props# ~mx-props# ~@children#))))
 
-(defmacro deftagy [factory mx-name fx-class]
+(defmacro deftagy [factory mx-name fx-class & [param-property]]
   `(defmacro ~mx-name [& vargs#]
      (let [[fx-props# mx-props# & children#]
            (cond
@@ -194,7 +194,8 @@
              :else
              ;; first is fx props, no mx props, maybe kids
              (list* (first vargs#) nil (rest vargs#)))]
-       `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
+       `(~'~factory ~@(when ~param-property
+                       [~param-property]) ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
 
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless card m/Card)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless padding m/Padding)
@@ -315,13 +316,18 @@
                                (init this me)))
                          (~'build [_# ctx]
                            (md/mset! me :fx$ctx ctx)
-                           (~fx-constructor (tiltontec.mx-flutter.tag/fx-resolve :kid1 me ctx
+                           (~fx-constructor (tiltontec.mx-flutter.tag/fx-resolve :ico-prop me ctx
                                               (tiltontec.model.core/mget me ~p1-prop-name))
                              ~@(let [kvs (for [[k# _#] (dissoc fx-props p1-prop-name)]
                                            [k# `(tiltontec.mx-flutter.tag/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
        nil)))
+
+;(defmacro icon [fx-props mx-props]
+;  `(prop-param1-childless-stateful :icon m/Icon ~fx-props ~mx-props))
+
+(deftagy tiltontec.mx-flutter.corex/prop-param1-childless-stateful icon m/Icon :icon)
 
 (defmacro k1-body-stateful [fx-constructor fx-props mx-props & children]
   (let []
@@ -335,7 +341,7 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
-                           (when-let [init (mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]
@@ -365,7 +371,7 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
-                           (when-let [init (mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]
@@ -393,7 +399,7 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
-                           (when-let [init (mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]
@@ -448,8 +454,7 @@
 (defmacro animated-builder [fx-props mx-props & children]
   `(k1-child-stateful m/AnimatedBuilder ~fx-props ~mx-props ~@children))
 
-(defmacro icon [fx-props mx-props]
-  `(prop-param1-childless-stateful :icon m/Icon ~fx-props ~mx-props))
+
 
 (deftagy tiltontec.mx-flutter.corex/k1-home-stateful material-app m/MaterialApp)
 (deftagy tiltontec.mx-flutter.corex/k1-param1-stateful text! m/Text)
@@ -500,13 +505,6 @@
             ~(when-let [kids# (seq (nthrest vargs# 1))]
                `(tiltontec.model.core/cFkids ~@kids#)))))))
 
-#_(deftagx sized-box m/SizedBox k1-child-stateless)
-
-
-
-;(defmacro animated-opacity [fx-props mx-props & children]
-;  `(k1-child-stateless m/AnimatedOpacity ~fx-props ~mx-props ~@children))
-
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless animated-opacity m/AnimatedOpacity)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless drawer-header m/DrawerHeader)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless floating-action-button m/FloatingActionButton)
@@ -515,6 +513,7 @@
 
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateful gesture-detector m/GestureDetector)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateful default-tab-controller m/DefaultTabController)
+(deftagy tiltontec.mx-flutter.corex/k1-child-stateful animated-container m/AnimatedContainer)
 
 (deftagy tiltontec.mx-flutter.corex/children-stateless stack m/Stack)
 (deftagy tiltontec.mx-flutter.corex/children-stateless column m/Column)
@@ -523,13 +522,4 @@
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless drawer m/Drawer)
 (deftagy tiltontec.mx-flutter.corex/k1-child-stateless sized-box m/SizedBox)
 
-;;; --- utils -------------------------------------
 
-(defn ctx-nearest [me]
-  (cond
-    (nil? me) (do                                           ;; (dp :ctx-nearest-sees-nil-me-out-top?)
-                nil)
-    :else (do
-            (assert (cty/md-ref? me) "ctx-nearest passed non-md")
-            (or (mget me :fx$ctx)
-              (recur (:par @me))))))

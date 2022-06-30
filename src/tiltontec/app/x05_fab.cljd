@@ -2,9 +2,7 @@
   (:require
     ["dart:math" :as math]
     [cljd.flutter.alpha :as f]
-    [clojure.string :as string]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [mx-type minfo cinfo unbound *depender*] :as cty]
     [tiltontec.cell.core :as cell :refer [cF c_F cF_ cF+ cI make-c-formula c-fn]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
     [tiltontec.mx-flutter.corex :as fx]
@@ -28,7 +26,7 @@
                     :debugShowCheckedModeBanner false}
     {:name :mat-app}
     (fx/scaffold
-      {:appBar               (fx/app-bar {:title (Text (str "Expandable Fab/FX " (rand-int 99)))})
+      {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
        :floatingActionButton (expandable-fab
                                :initial-open? false
                                :distance 112.0
@@ -157,6 +155,7 @@
         {}
         (fx/ink-well {:onTap (tag/MXFXAsIs #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
+            ;; (fx/text "sigh") ;; hhack
             (fx/icon {:icon  m.Icons/close
                       :color (tag/with-ctx [me ctx]
                                (.primaryColor (Theme/of ctx)))} {})))))))
@@ -184,7 +183,8 @@
                                                (fn ^void []
                                                  (md/mswap! (md/fasc :fab par) :open? not)))}
         {:name :fab-button-in-fact}
-        (fx/icon {} {:icon m.Icons/create})))))
+        ;; hhack
+        (fx/icon {:icon m.Icons/create}{})))))
 
 ;; -- full tap-to-open version, but container breaks it
 #_(fx/animated-container {:decoration (cF (m/BoxDecoration
