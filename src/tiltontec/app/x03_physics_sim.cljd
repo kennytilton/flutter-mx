@@ -2,7 +2,7 @@
   (:require
     [tiltontec.cell.core :as cell :refer [cF cI]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
-    [tiltontec.mx-flutter.corex :as fx]
+    [tiltontec.mx-flutter.core :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
     ["package:flutter/physics.dart" :as p]
@@ -49,9 +49,7 @@
      :onPanEnd    (cF (fx/with-ctx-cb [me ctx]
                         (fx/MXFXAsIs
                           (fn [^m/DragEndDetails details]
-                            (logo-recoil me ctx (-> details .velocity .pixelsPerSecond))))))
-
-     }
+                            (logo-recoil me ctx (-> details .velocity .pixelsPerSecond))))))}
     {:name          :draggable-card
      :dragAlignment (cI m.Alignment/center)
      :controller    (cF (when-let [st (fx/my-state)]
@@ -61,7 +59,6 @@
                         (.dispose con)))}
     (fx/align
       {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
-      {}
       (fx/card drag-child))))
 
 (defn make-app []
