@@ -3,7 +3,6 @@
     [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :as md]
     [tiltontec.mx-flutter.corex :as fx]
-    [tiltontec.mx-flutter.tag :as tag]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
@@ -19,7 +18,7 @@
                                                          (str "Counter = " (md/mget ctr :value)))))})
        ;; todo have not-to-be call not-to-be on these non-kid leaves
        :floatingActionButton (cF (fx/floating-action-button
-                                   {:onPressed (tag/MXFXAsIs
+                                   {:onPressed (fx/MXFXAsIs
                                                  (fn ^void []
                                                    ;; the FAB shows a "+". It increments the count where the count lives.
                                                    (md/mswap! (md/fm* :z-counter) :value inc)))
@@ -32,7 +31,7 @@
                              :fontSize 18.0)}
             "You clicked the button so many times:")
           (fx/text!
-            {:style (tag/with-ctx-cb [_ ctx]
+            {:style (fx/with-ctx-cb [_ ctx]
                       (.headline4 (.textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              ;;  "in place" state: the counter widget is where the count resides.

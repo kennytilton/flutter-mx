@@ -6,7 +6,6 @@
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
     [tiltontec.model.base :refer [md-cell]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
-    [tiltontec.mx-flutter.tag :as tag]
     [tiltontec.mx-flutter.corex :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
@@ -24,13 +23,13 @@
        ;; We find it useful to give every widget a "value" property for holding the primary value of a widget
        :value (cI 0)}
       (fx/text (str/capitalize (name counter-key)))
-      (fx/text {:style (tag/with-ctx-cb [me ctx]
+      (fx/text {:style (fx/with-ctx-cb [me ctx]
                          ;; we hacked the text widget a bit to look for callback functions on "style"
                          ;; so a style formula can tap the runtime context.
                          (-> (Theme/of ctx) .textTheme .displayLarge))}
         (str (md/fmuval :ctr-col)))
       (fx/elevated-button
-        {:onPressed (tag/MXFXAsIs
+        {:onPressed (fx/MXFXAsIs
                       (fn ^void []
                         (md/mswap! (md/fm* :ctr-col) :value inc)))}
         (fx/text "+")))))

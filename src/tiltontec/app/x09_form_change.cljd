@@ -12,8 +12,7 @@
     ["package:flutter/material.dart" :as m
      :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
     ["package:flutter/painting.dart"
-     :refer [TextStyle]]
-    [tiltontec.mx-flutter.tag :as tag]))
+     :refer [TextStyle]]))
 
 (defn make-app []
   (let [title "Text field change detection"]
@@ -26,15 +25,15 @@
             {:mainAxisAlignment MainAxisAlignment/center}
             ; todo if we have onchanged and also listen to the controller, what happens?
             (fx/text-field
-              {:onChanged (tag/with-ctx-cb [me ctx]
-                            (tag/MXFXAsIs
+              {:onChanged (fx/with-ctx-cb [me ctx]
+                            (fx/MXFXAsIs
                               (fn [text]
                                 (md/mset! me :value text))))}
               {:name  :input-a
                :value (cI nil :obs (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
-            (fx/text-field {:onChanged (tag/with-ctx-cb [me ctx]
-                                         (tag/MXFXAsIs
+            (fx/text-field {:onChanged (fx/with-ctx-cb [me ctx]
+                                         (fx/MXFXAsIs
                                            (fn [text]
                                              (md/mset! me :value text))))}
               {:name       :input-b

@@ -10,7 +10,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
-final Set<String> libsToDo = {};
+final Set<String> libsToDo = {"dart:developer", "dart:mirrors", "dart:ffi", "dart:io", "dart:isolate", "dart:async", "dart:collection", "dart:convert", "dart:math", "dart:typed_data", "dart:html", "dart:indexed_db", "dart:js", "dart:js_util", "dart:svg", "dart:web_audio", "dart:web_gl"};
 
 final Set<String> libsDone = {};
 
@@ -57,6 +57,7 @@ String emitType(DartType t) {
   if (lib != null) libsToDo.add(lib);
   if (t is FunctionType) {
     return M({':type': "\"Function\"",
+        ':nullable': t.isDartCoreNull || t.nullabilitySuffix == NullabilitySuffix.question,
         ':return-type': emitType(t.returnType),
         ':parameters': t.parameters.map(emitParameter),
         ':type-parameters': t.typeFormals.map(emitTypeParameter)});
@@ -116,6 +117,7 @@ class TopLevelVisitor extends ThrowingElementVisitor {
     for(final c in e.constructors.where(isPublic)) {
       classData["\"${c.displayName}\""]=
       M({':kind': ':constructor',
+          ':named': !c.isDefaultConstructor,
           ':return-type': emitType(c.returnType),
           ':parameters': c.parameters.map(emitParameter),
           ':type-parameters': c.typeParameters.map(emitTypeParameter)

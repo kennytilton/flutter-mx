@@ -12,12 +12,7 @@
     ["package:flutter/material.dart" :as m
      :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
              FloatingActionButton Icon Icons ThemeData runApp AppBar]]
-    ["package:flutter/painting.dart"
-     :refer [TextStyle]]
-    [tiltontec.util.core :as util :refer [rmap-meta-setf]]
-    [tiltontec.cell.observer :refer [fn-obs]]
-    [tiltontec.cell.integrity :as integrity]
-    [tiltontec.mx-flutter.tag :as tag]))
+    ))
 
 (declare fake-item expandable-fab show-action action-button)
 
@@ -36,7 +31,7 @@
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
-         :itemBuilder (tag/MXFXAsIs
+         :itemBuilder (fx/MXFXAsIs
                         (fn [ctx i] (fake-item (odd? i))))}))))
 
 (declare expanding-action-button
@@ -52,7 +47,7 @@
                          (when-let [controller (fx/my-controller)]
                            (.dispose controller)))
      ; --- animation mechanics ----------------------
-     :controller       (cF (tag/when-my-state [state]
+     :controller       (cF (fx/when-my-state [state]
                              (m/AnimationController
                                :value (if initial-open? 1.0 0.0)
                                :duration ^:const (dart:core/Duration :milliseconds 250)
@@ -89,7 +84,7 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
-     :builder   (tag/MXFXAsIs
+     :builder   (fx/MXFXAsIs
                   ;; "as is"? We need a callback for Flutter itself to hit
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
@@ -112,8 +107,8 @@
       {:name :fade-trans}
       (action-button
         :icon (:icon action)
-        :onPressed (tag/with-ctx-cb [me ctx]
-                     (tag/MXFXAsIs
+        :onPressed (fx/with-ctx-cb [me ctx]
+                     (fx/MXFXAsIs
                        (fn ^void []
                          (show-action ctx action)
                          nil)))))))
@@ -122,7 +117,7 @@
   (m/showDialog
     :context ctx
     :builder (fn [ctx]
-               (tag/render-fx ctx
+               (fx/render-fx ctx
                  (fx/alert-dialog
                    ;; todo extend resolve to handle vectors then convert VVVV
                    {:actions [(m/TextButton
@@ -134,14 +129,14 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                :color        (tag/with-ctx-cb [me ctx]
+                :color        (fx/with-ctx-cb [me ctx]
                                 (-> (Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     {}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     (tag/with-ctx-cb [me ctx]
+       :color     (fx/with-ctx-cb [me ctx]
                     (-> (Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
@@ -153,11 +148,11 @@
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         {}
-        (fx/ink-well {:onTap (tag/MXFXAsIs #(md/mswap! (md/fasc :fab par) :open? not))} {}
+        (fx/ink-well {:onTap (fx/MXFXAsIs #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
             ;; (fx/text "sigh") ;; hhack
             (fx/icon {:icon  m.Icons/close
-                      :color (tag/with-ctx-cb [me ctx]
+                      :color (fx/with-ctx-cb [me ctx]
                                (.primaryColor (Theme/of ctx)))} {})))))))
 
 (defn random-to-double [max]
@@ -179,7 +174,7 @@
                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                           :duration ^:const (dart:core/Duration :milliseconds 250)}
       {}
-      (fx/floating-action-button {:onPressed (tag/MXFXAsIs
+      (fx/floating-action-button {:onPressed (fx/MXFXAsIs
                                                (fn ^void []
                                                  (md/mswap! (md/fasc :fab par) :open? not)))}
         {:name :fab-button-in-fact}

@@ -1,13 +1,12 @@
 (ns tiltontec.app.x10-datatable
   (:require
-    [tiltontec.mx-flutter.tag :refer [beefer] :as tag]
-    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.corex :as fx]
     ["package:flutter/material.dart" :as m]))
 
 (defn data-table [& {:keys [cols rows]}]
-  (fxx/single-child-scroll-view
+  (fx/single-child-scroll-view
     {:scrollDirection m.Axis/horizontal}
-    (fxx/data-table
+    (fx/data-table
       {:headingTextStyle (m/TextStyle
                            :fontWeight m.FontWeight/bold
                            :color m.Colors/blue)
@@ -19,9 +18,9 @@
                                                      row))) rows)})))
 
 (defn make-app []
-  (fxx/material-app {:debugShowCheckedModeBanner false}
-    (fxx/scaffold {:appBar (fxx/app-bar {:title (fxx/text (str "DataTable Sample fx " (rand-int 99)))})}
-      (fxx/center
+  (fx/material-app {:debugShowCheckedModeBanner false}
+    (fx/scaffold {:appBar (fx/app-bar {:title (fx/text (str "DataTable Sample fx " (rand-int 99)))})}
+      (fx/center
         (data-table :cols ["#" "Name" "Age" "City"]
           :rows [["1" "zm" "42" "guangzhou"]
                  ["2" "zrj" "10" "guangzhou"]

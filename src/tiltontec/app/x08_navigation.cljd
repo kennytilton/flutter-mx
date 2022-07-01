@@ -2,7 +2,6 @@
   "Port of CLJD port of https://docs.flutter.dev/cookbook/navigation/navigation-basics"
   (:require
     ["package:flutter/material.dart" :as m]
-    [tiltontec.mx-flutter.tag :as tag]
     [tiltontec.mx-flutter.corex :as fx]))
 
 (def second-route
@@ -10,10 +9,10 @@
     {:appBar (fx/app-bar {:title (fx/text "Second Route")})}
     (fx/center
       (fx/elevated-button
-        {:onPressed (tag/with-ctx-cb [me ctx]
-                      (tag/MXFXAsIs
+        {:onPressed (fx/with-ctx-cb [me ctx]
+                      (fx/MXFXAsIs
                         (fn ^void []
-                          (tag/ctx-page-pop ctx)
+                          (fx/ctx-page-pop ctx)
                           nil)))}
         (m/Text "Go back!")))))
 
@@ -24,9 +23,9 @@
       {:appBar (fx/app-bar {:title (fx/text "First Route")})}
       (fx/center
         (fx/elevated-button
-          {:onPressed (tag/with-ctx-cb [me ctx]
-                        (tag/MXFXAsIs
+          {:onPressed (fx/with-ctx-cb [me ctx]
+                        (fx/MXFXAsIs
                           (fn ^void []
-                            (tag/ctx-page-push ctx second-route)
+                            (fx/ctx-page-push ctx second-route)
                             nil)))}
           (fx/text "Open route"))))))
