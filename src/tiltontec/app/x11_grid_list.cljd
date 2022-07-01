@@ -1,0 +1,25 @@
+(ns tiltontec.app.x11-grid-list
+  "Port of CLJD faithful port of https://docs.flutter.dev/cookbook/lists/grid-lists"
+  (:require
+    [tiltontec.mx-flutter.tag :as tag]
+    [tiltontec.mx-flutter.corex :as fx]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]))
+
+(defn make-app []
+  (let [title "Grid List"]
+    (fx/material-app {:title title}
+      (fx/scaffold {:appBar (fx/app-bar {:title (m/Text "A Grid List Example")})}
+        ; --- implicit body ---
+        (fx/grid-view+count
+          {:crossAxisCount 2}
+          (mapv
+            (fn [i] (fx/center
+                      (fx/text
+                        {:style (tag/with-ctx-cb [me ctx]
+                                  (-> (Theme/of ctx) .textTheme .headline3))}
+                        (str "Item " i))))
+            (range 100)))))))

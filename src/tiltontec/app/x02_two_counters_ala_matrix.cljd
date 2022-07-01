@@ -1,4 +1,4 @@
-(ns tiltontec.example.two-counters
+(ns tiltontec.app.x02-two-counters-ala-matrix
   (:require
     [clojure.string :as str]
     [tiltontec.util.base :refer [dprn dp dpx]]
@@ -6,9 +6,8 @@
     [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
     [tiltontec.model.base :refer [md-cell]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
-    [tiltontec.mx-flutter.core :as fx
-     :refer [material-app center text row expanded elevated-button scaffold column]]
-    [tiltontec.mx-flutter.corex :as fxx]
+    [tiltontec.mx-flutter.tag :as tag]
+    [tiltontec.mx-flutter.corex :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -17,33 +16,32 @@
      :refer [TextStyle]]))
 
 (defn- build-counter [counter-key]
-  #_(text (str "+" (name counter-key)))
-  (expanded
+  (fx/expanded
     (fx/column
       {:mainAxisAlignment MainAxisAlignment/center}
       {:name  :ctr-col
        ;; The column maintains its own state, aka "in-place state".
        ;; We find it useful to give every widget a "value" property for holding the primary value of a widget
        :value (cI 0)}
-      (text (str/capitalize (name counter-key)))
-      (text {:style (fn [me ctx]
-                      ;; we hacked the text widget a bit to look for callback functions on "style"
-                      ;; so a style formula can tap the runtime context.
-                      (-> (Theme/of ctx) .textTheme .displayLarge))}
+      (fx/text (str/capitalize (name counter-key)))
+      (fx/text {:style (tag/with-ctx-cb [me ctx]
+                         ;; we hacked the text widget a bit to look for callback functions on "style"
+                         ;; so a style formula can tap the runtime context.
+                         (-> (Theme/of ctx) .textTheme .displayLarge))}
         (str (md/fmuval :ctr-col)))
-      (elevated-button
-        {:onPressed (cF (fn ^void [me ctx]
-                          ;; no reason we produce the handler in a Cell formula; just a demo that we can
-                          (md/mswap! (md/fmu :ctr-col) :value inc)))}
-        (text "+")))))
+      (fx/elevated-button
+        {:onPressed (tag/MXFXAsIs
+                      (fn ^void []
+                        (md/mswap! (md/fm* :ctr-col) :value inc)))}
+        (fx/text "+")))))
 
 (defn make-app []
-  (material-app {:title "Two Counters (MX)"
+  (fx/material-app {:title "Two Counters (MX)"
                  :theme (cF (ThemeData :primarySwatch Colors/blue))}
-    (scaffold
+    (fx/scaffold
       {:appBar (AppBar :title (Text "Two Counters (MX)"))}
-      (center
-        (row
+      (fx/center
+        (fx/row
           {:mainAxisAlignment MainAxisAlignment/center}
           (mapv #(build-counter %)
             [:left :right]))))))
