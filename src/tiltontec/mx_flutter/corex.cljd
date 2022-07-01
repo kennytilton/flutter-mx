@@ -9,13 +9,12 @@
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe] :as cty]
-            [tiltontec.util.core :as util
-             :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
+
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.cell.observer :refer [fn-obs]]
 
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
-            [tiltontec.mx-flutter.tag :refer [deftag PDartWidget beefer render-fx] :as tag]
+            [tiltontec.mx-flutter.tag :refer [render-fx] :as tag]
             [clojure.string :as str]))
 
 (defmacro my-nav [] `(m.Navigator/of (tiltontec.mx-flutter.corex/fx-ctx ~'me)))
@@ -204,8 +203,7 @@
 
 (defmacro deftagnokids [factory mx-name fx-class]
   `(defmacro ~mx-name [& vargs#]
-     (assert (<= (count vargs#) 2) (str (name '~mx-name) " passed too many args " (count vargs#)))
-     (assert (every? map? vargs#))
+     ;; todo user error checking
      (let [[fx-props# mx-props#] vargs#]
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props#))))
 
@@ -477,8 +475,6 @@
 
 (defmacro animated-builder [fx-props mx-props & children]
   `(k1-child-stateful m/AnimatedBuilder ~fx-props ~mx-props ~@children))
-
-
 
 (deftagy tiltontec.mx-flutter.corex/k1-home-stateful material-app m/MaterialApp)
 (deftagy tiltontec.mx-flutter.corex/k1-param1-stateful text! m/Text)

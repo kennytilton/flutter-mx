@@ -1,38 +1,33 @@
 (ns tiltontec.app.x01-hello-world
   (:require
-    [clojure.string :as string]
-    [tiltontec.util.core :as util
-     :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-    [tiltontec.util.base :as ub
-     :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
-    ;; todo arrange for 'unbound' reffed by macros to not throw error without this
-    [tiltontec.cell.base :refer [unbound] :as cty]
-    [tiltontec.cell.core :as cell
-     :refer [cF cF+ cI]]
-    [tiltontec.model.core :refer [mget] :as md]
+    [clojure.string :as str]
+    [tiltontec.cell.core :refer [cF cF+ cI]]
+    [tiltontec.model.core :as md]
     [tiltontec.mx-flutter.corex :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :refer [TextStyle] :as p]))
+    ["package:flutter/painting.dart" :as p]))
 
 (defn make-app []
   (fx/material-app
     {:title "Hunt for Teal mxFlutter"
      :theme (cF (m/ThemeData :primarySwatch
-                  ;; a computed, reactive value. Silly because the user cannot
+                  ;; a silly computed, reactive value. Silly because the user cannot
                   ;; change the title, so we never get to see the Theme "react".
-                  ;; But you can change it and reload. Soon we go full monty.
-                  (let [ttl (mget me :title)]
+                  ;; But you can change it and reload. Next app, we go truly reactive.
+                  (let [ttl (md/mget me :title)]
                     (cond
-                      (string/includes? ttl "Teal") m.Colors/teal
-                      (string/includes? ttl "Yellow") m.Colors/yellow
+                      (str/includes? ttl "Teal") m.Colors/teal
+                      (str/includes? ttl "Yellow") m.Colors/yellow
                       :else m.Colors/blue))))}
     (fx/scaffold
       {:appBar (fx/app-bar
                  {:title (m/Text "Welcome to Flummox")})}
       (fx/center
+        ;; in fx/text we see we prefer the HTML approach of consistent syntax.
+        ;; specifically, the text content appears in the standard child position.
         (fx/text {:overflow m.TextOverflow/ellipsis
-                  :style    (TextStyle
+                  :style    (p/TextStyle
                               :color m.Colors/cyan
                               :fontSize 32.0)}
           "hello, world\\n")))))

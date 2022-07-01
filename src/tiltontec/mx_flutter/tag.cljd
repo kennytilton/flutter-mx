@@ -25,12 +25,6 @@
   ;; used where app needs to see the Flutter context to decide a value
   :extends cty/MXImplementer)
 
-(defprotocol PDartWidget
-  (parts [this] "eg, Scaffold [:appBar :body :floatingActionButton ...]")
-  (parts-ex [this count] "Test")
-  (beefer [this])
-  (fx-genner [this]))
-
 (defn fx-resolve
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
@@ -101,22 +95,10 @@
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen fx ctx))))
 
-(defmacro with-ctx [[me-var ctx-var] & body]
-  `(fn [~me-var ~ctx-var]
-     ~@body))
-
 (defmacro with-ctx-cb [[me-var ctx-var] & body]
   `(tiltontec.mx-flutter.tag/MXFXCallback
      (fn [~me-var ~ctx-var]
        ~@body)))
-
-(defmacro with-ctx-cb-dbg [[me-var ctx-var] & body]
-  `(tiltontec.mx-flutter.tag/MXFXCallback
-     (fn [~me-var ~ctx-var]
-       (dp :ctxcb-runs!!!)
-       (let [res# ~@body]
-         (dp :ctxcb-res!!!!! res#)
-         res#))))
 
 (defn fx-state-nearest [me]
   (when me
@@ -127,87 +109,10 @@
   `(when-let [~state-var (tiltontec.mx-flutter.corex/my-state)]
      ~@body))
 
-(defn statefully [me beefer]
-  (reify :extends w/StatefulWidget
-    (createState [this]
-      ;; (dp :creatingstate!!! (minfo me))
-      (util/rmap-meta-setf [:state-ref me]
-        (reify :extends w/State
-          ^:mixin m/SingleTickerProviderStateMixin
-          (build [this ctx]
-            ;; the current use of statefully is to pass along as the beefer either
-            ;; one defined with the MX instance or one provided by the FXType as beefer.
-            ;; So can we just let the FXType always define builders?
-            ;;
-            ;; we include the MX "me" in the generation...
-            (assert (= ctx (.context this)))
-            (md/mset! me :fx$ctx ctx)
-            (beefer me ctx))
-          (^void initState [this]
-            (.initState ^super this)
-            (rmap-meta-setf [:context me] (.context this))
-            (when-let [init (tiltontec.model.core/mget me :initState)]
-              (init this me)))
-          (^void dispose [this]
-            (when-let [disp-fn (mget me :dispose)]
-              (disp-fn this me))
-            (.dispose ^super this)))))))
 
-(defn make-fx [mx-type fx-props custom-props cFkids-form]
-  ;;(dp :make-fx!!!!!!! mx-type)
-  (apply tiltontec.model.core/make
-    :mx-type mx-type
-    :kids cFkids-form
-    :fx$ctx (cI nil)                                        ;; set at start of build
-    :fx-prop-keys (keys fx-props)
-    :fx-gen (fn [me ctx]
-              ;; the default "statefully" works for must Flutter widgets,
-              ;; but not all, such as AppBar which cannot be wrapped under Scaffold,
-              ;; so we allow individual widget Types to supply their own fx-gen.
-              (if-let [type-fx-gen (fx-genner mx-type)]     ;; <- override option
-                (type-fx-gen me ctx)
-                ; --- no special fx gen, so...the default:
-                (tiltontec.mx-flutter.tag/statefully me
-                  (fn [me ctx]
-                    (let [beefer (or (mget me :beefer)
-                                   (beefer mx-type))]
-                      ;; (dp :make-fx-using-beefer!!!!!!!! (minfo me) beefer)
-                      (beefer me ctx))))))
-    (concat
-      (vec (apply concat (seq fx-props)))
-      (vec (apply concat (seq custom-props))))))
 
-(defmacro deftag [tag fx-type-name]
-  ;;(dprn :deftag-entry!!!!!!! tag fx-type-name)
-  `(defmacro ~tag [& vargs#]
-     ;;(dprn :expanding-deftag '~tag)
-     (let [fx-type# '~fx-type-name]
-       (cond
-         (nil? vargs#)
-         `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
-            {} {} nil)
 
-         (not (map? (first vargs#)))
-         (do                                                ;;(dprn :just-kids!!!!!!!! '~tag)
-           ;; we must have justkids
-           `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
-              {} {}
-              (tiltontec.model.core/cFkids ~@vargs#)))
 
-         (map? (second vargs#))
-         ;; full spec, maybe kids
-         (do                                                ;;(dprn :full-spec!!!!!!!!!!!! (second vargs#))
-           `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
-              ~(first vargs#)
-              ~(second vargs#)
-              ~(when-let [kids# (seq (nthrest vargs# 2))]
-                 `(tiltontec.model.core/cFkids ~@kids#))))
 
-         :else                                              ;; just first map of fx props and maybe kids
-         `(tiltontec.mx-flutter.tag/make-fx (new ~fx-type#)
-            ~(first vargs#)
-            {}
-            ~(when-let [kids# (seq (nthrest vargs# 1))]
-               `(tiltontec.model.core/cFkids ~@kids#)))))))
 
 

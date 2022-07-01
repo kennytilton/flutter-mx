@@ -1,47 +1,41 @@
 (ns tiltontec.app.x02-counter
   (:require
-    [clojure.string :as string]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [mx-type unbound *depender*] :as cty]
-    [tiltontec.cell.core :as cell
-     :refer [cF cF+ cF_ cI]]
-    [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
+    [tiltontec.model.core :as md]
     [tiltontec.mx-flutter.corex :as fx]
-    [tiltontec.mx-flutter.tag :as tag
-     :refer [with-ctx]]
-    ["package:flutter/widgets.dart" :as w
-     :refer [Text State StatefulWidget StatelessWidget]]
-    ["package:flutter/material.dart" :as m
-     :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
-             Icon Icons ThemeData runApp AppBar State]]
-    ["package:flutter/painting.dart"
-     :refer [TextStyle]]))
+    [tiltontec.mx-flutter.tag :as tag]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
 
 (defn make-app []
   (fx/material-app
     {:title "Welcome to mxFlutter World"
-     :theme (ThemeData :primarySwatch Colors/blue)}
+     :theme (m/ThemeData :primarySwatch m.Colors/blue)}
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (cF (let [ctr (md/fm* :z-counter)]
+                                                       ;; true reactivity, albeit pointless
                                                        (fx/text! {} {:name :appbartitle}
-                                                         (str "Counter = " (mget ctr :value)))))})
-       ;; todo get not-to-be to handle calling not-to-be on these non-kid leaves
+                                                         (str "Counter = " (md/mget ctr :value)))))})
+       ;; todo have not-to-be call not-to-be on these non-kid leaves
        :floatingActionButton (cF (fx/floating-action-button
                                    {:onPressed (tag/MXFXAsIs
                                                  (fn ^void []
+                                                   ;; the FAB shows a "+". It increments the count where the count lives.
                                                    (md/mswap! (md/fm* :z-counter) :value inc)))
                                     :tooltip "Increment"}
-                                   (Icon Icons/add :color Colors/black)))}
+                                   (m/Icon m.Icons/add :color m.Colors/black)))}
       (fx/center
         (fx/column
-          {:mainAxisAlignment MainAxisAlignment/center}
-          (fx/text {:style (TextStyle :color Colors/black
+          {:mainAxisAlignment m.MainAxisAlignment/center}
+          (fx/text {:style (p/TextStyle :color m.Colors/black
                              :fontSize 18.0)}
             "You clicked the button so many times:")
           (fx/text!
-            {:style (tag/with-ctx [_ ctx]
-                      (.headline4 (.textTheme (Theme/of ctx))))}
+            {:style (tag/with-ctx-cb [_ ctx]
+                      (.headline4 (.textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
+             ;;  "in place" state: the counter widget is where the count resides.
              :value (cI 0)}
             (str (md/my-val))))))))
 

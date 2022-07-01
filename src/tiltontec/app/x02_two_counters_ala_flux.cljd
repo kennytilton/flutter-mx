@@ -1,15 +1,11 @@
 (ns tiltontec.app.x02-two-counters-ala-flux
   (:require
     [clojure.string :as str]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.cell.core :as cell :refer [cF cFnil cI]]
-    [tiltontec.model.base :refer [md-cell]]
-    [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
+    [tiltontec.cell.core :refer [cF cI]]
+    [tiltontec.model.core :as md]
     [tiltontec.mx-flutter.tag :as tag]
-    [tiltontec.mx-flutter.corex :as fxx]
-    [tiltontec.mx-flutter.core :as fx
-     :refer [ material-app center text row expanded elevated-button scaffold column]]
+    [tiltontec.mx-flutter.corex :as fx]
+
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget]]
     ["package:flutter/material.dart" :as m
@@ -18,27 +14,27 @@
      :refer [TextStyle]]))
 
 (defn build-counter [counter-key]
-  (fxx/expanded
-    (fxx/column
+  (fx/expanded
+    (fx/column
       {:mainAxisAlignment MainAxisAlignment/center}
       {:name  :counter-col
        :value (cF (let [app (md/fm-ascendant :counter-app me :must? true)]
                     (assert app "no find app")
-                    (get-in (mget app :flux-store) [:counters counter-key])))}
-      (fxx/text (str/capitalize (name counter-key)))
-      (fxx/text
+                    (get-in (md/mget app :flux-store) [:counters counter-key])))}
+      (fx/text (str/capitalize (name counter-key)))
+      (fx/text
         {:style (TextStyle
                   :color m.Colors/cyan
                   :fontSize 32.0)}
         (str (md/fmuval :counter-col)))
-      (fxx/elevated-button
+      (fx/elevated-button
         {:onPressed (tag/MXFXAsIs
                       #(md/mswap! (md/fm-ascendant :counter-app me)
                         :flux-store update-in [:counters counter-key] inc))}
-        (fxx/text "+")))))
+        (fx/text "+")))))
 
 (defn make-app []
-  (fxx/material-app
+  (fx/material-app
     {:title "Two Counters"
      :theme (cF (ThemeData :primarySwatch Colors/blue))}
     {:name       :counter-app
@@ -47,9 +43,9 @@
      ; increment either counter.
      :flux-store (cI {:counters {:left 0 :right 0}})}
 
-    (fxx/scaffold
-      {:appBar (fxx/app-bar {:title (fxx/text "Two Counters ala Flux")})}
-      (fxx/center
-        (fxx/row
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Two Counters ala Flux")})}
+      (fx/center
+        (fx/row
           {:mainAxisAlignment MainAxisAlignment/center}
           (mapv #(build-counter %) [:left :right]))))))
