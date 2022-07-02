@@ -27,7 +27,7 @@
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
-         :itemBuilder (fx/cb-as-is
+         :itemBuilder (fx/->cb-as-is
                         (fn [ctx i] (fake-item (odd? i))))}))))
 
 (declare expanding-action-button
@@ -39,7 +39,7 @@
     {}                                                      ;; <= necessary placeholder
     {:name             :fab
      ; --- Dart lifecycle ---------------------------
-     :dispose          (fx/cb-as-is
+     :dispose          (fx/->cb-as-is
                          (fn [this me]                      ;; todo wrap this
                            (when-let [controller (fx/my-controller)]
                              (.dispose controller))))
@@ -82,7 +82,7 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
-     :builder   (fx/cb-as-is
+     :builder   (fx/->cb-as-is
                   ;; "as is"? We need a callback for Flutter itself to hit, so this next fn is passed thru as is
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
@@ -106,7 +106,7 @@
       (action-button
         :icon (:icon action)
         :onPressed (fx/cb-with-ctx [me ctx]
-                     (fx/cb-as-is
+                     (fx/->cb-as-is
                        #(show-action ctx action)))))))
 
 (defn show-action [ctx action]
@@ -144,7 +144,7 @@
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         {}
-        (fx/ink-well {:onTap (fx/cb-as-is #(md/mswap! (md/fasc :fab par) :open? not))} {}
+        (fx/ink-well {:onTap (fx/->cb-as-is #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
             (fx/icon {:icon  m.Icons/close
                       :color (fx/cb-with-ctx [me ctx]
@@ -169,7 +169,7 @@
                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                           :duration ^:const (dart:core/Duration :milliseconds 250)}
       {}
-      (fx/floating-action-button {:onPressed (fx/cb-as-is
+      (fx/floating-action-button {:onPressed (fx/->cb-as-is
                                                (fn ^void []
                                                  (md/mswap! (md/fasc :fab par) :open? not)))}
         {:name :fab-button-in-fact}
