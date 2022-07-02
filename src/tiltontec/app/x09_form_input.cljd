@@ -25,14 +25,12 @@
          (fx/floating-action-button
            {:onPressed (fx/cb-with-ctx [me ctx]
                          (fx/cb-as-is
-                           (fn ^void []
-                             (m/showDialog
-                               :context ctx
-                               :builder (fn [_]
-                                          (m/AlertDialog
-                                            :content (m/Text (.text ^m/TextEditingController
-                                                               (mget (md/fm* :test-input) :controller))))))
-                             nil)))
+                           #(m/showDialog
+                             :context ctx
+                             :builder (fn [_]
+                                        (m/AlertDialog
+                                          :content (m/Text (.text ^m/TextEditingController
+                                                             (mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}
            (m/Icon m.Icons/text_fields))}
         (fx/padding

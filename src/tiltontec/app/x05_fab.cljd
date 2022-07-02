@@ -64,7 +64,7 @@
                                     (.reverse c)))))}
     (fx/stack
       {:alignment    m.Alignment/bottomRight
-       :clipBehavior m.Clip/none} {}
+       :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
       (doall (do
@@ -82,13 +82,13 @@
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
      :builder   (fx/cb-as-is
-                  ;; "as is"? We need a callback for Flutter itself to hit
+                  ;; "as is"? We need a callback for Flutter itself to hit, so this next fn is passed thru as is
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
                           offset (m.Offset/fromDirection
                                    (* direction-degrees (/ math/pi 180.0))
                                    (* (.value progress) max-distance))]
-                      ;; alpha widgets welcome at leaves of MX tree...
+                      ;; alpha widgets are welcome at leaves of the MX tree...
                       (f/widget
                         (f/nest
                           (m/Positioned
@@ -106,9 +106,7 @@
         :icon (:icon action)
         :onPressed (fx/cb-with-ctx [me ctx]
                      (fx/cb-as-is
-                       (fn ^void []
-                         (show-action ctx action)
-                         nil)))))))
+                       #(show-action ctx action)))))))
 
 (defn show-action [ctx action]
   (m/showDialog
