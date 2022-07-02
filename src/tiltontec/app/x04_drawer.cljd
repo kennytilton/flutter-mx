@@ -17,20 +17,20 @@
       {:appBar (fx/app-bar {:title (m/Text "Drawer Demo")})
        :drawer (cF (fx/drawer
                      (fx/list-view
-                       {:padding m.EdgeInsets/zero
-                        ;; ^^^ default padding not good, so we specify one. Same as in HTML!
-                        }
+                       {:padding m.EdgeInsets/zero}
                        (fx/drawer-header
                          {:decoration (m/BoxDecoration :color m.Colors/blue)}
                          (m/Text "Drawer Header"))
                        (fx/list-tile
                          {:title (m/Text "Item 1")
-                          :onTap (fx/cb-as-is
-                                   #(.pop (fx/my-nav)))})
+                          :onTap (fx/cb-with-ctx [me ctx]
+                                   (fx/cb-as-is
+                                     #(.pop (fx/ctx-nav ctx))))})
                        (fx/list-tile
                          {:title (m/Text "Item 2")
-                          :onTap (fx/cb-as-is
-                                   #(.pop (fx/my-nav)))}))))}
+                          :onTap (fx/cb-with-ctx [me ctx]
+                                   (fx/cb-as-is
+                                     #(.pop (fx/ctx-nav ctx))))}))))}
       (fx/center
         (fx/text "My Ported Page!!")))))
 

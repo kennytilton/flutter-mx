@@ -36,12 +36,13 @@
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
   (fx/sized-box+expand-ful
-    {} ;; <= necessary placeholder
+    {}                                                      ;; <= necessary placeholder
     {:name             :fab
      ; --- Dart lifecycle ---------------------------
-     :dispose          (fn [this me]
-                         (when-let [controller (fx/my-controller)]
-                           (.dispose controller)))
+     :dispose          (fx/cb-as-is
+                         (fn [this me]                      ;; todo wrap this
+                           (when-let [controller (fx/my-controller)]
+                             (.dispose controller))))
      ; --- animation mechanics ----------------------
      :controller       (cF (fx/when-my-state [state]
                              (m/AnimationController
@@ -119,7 +120,7 @@
                                 :onPressed #(-> ctx m.Navigator/of .pop)
                                 :child ^:const (m/Text "CLOSE"))]}
                    {}
-                   (fx/text {}{} (:title action)))))))
+                   (fx/text {} {} (:title action)))))))
 
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
@@ -173,7 +174,7 @@
                                                  (md/mswap! (md/fasc :fab par) :open? not)))}
         {:name :fab-button-in-fact}
         ;; hhack
-        (fx/icon {:icon m.Icons/create}{})))))
+        (fx/icon {:icon m.Icons/create} {})))))
 
 ;; -- full tap-to-open version, but container breaks it
 #_(fx/animated-container {:decoration (cF (m/BoxDecoration

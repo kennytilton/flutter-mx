@@ -108,7 +108,8 @@
   `(when-let [~state-var (tiltontec.mx-flutter.core/my-state)]
      ~@body))
 
-(defmacro my-nav [] `(m.Navigator/of (tiltontec.mx-flutter.core/fx-ctx ~'me)))
+(defn ctx-nav [ctx]
+  (m.Navigator/of ctx))
 
 (defmacro my-controller []
   `^m/AnimationController? (tiltontec.model.core/mget ~'me :controller))
@@ -160,24 +161,6 @@
               (dpx :obs-FXXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
               (.setState state (fn [] (do))))
             (dpx :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
-
-(defmacro sized-box+expand [fx-props mx-props & children]
-  `(apply tiltontec.model.core/make
-     :kids (tiltontec.model.core/cFkids ~@children)
-     :fx$ctx (tiltontec.cell.core/cI nil)
-     :fx-gen (fn [me ctx]
-               (md/mset! me :fx$ctx ctx)
-               (m.SizedBox/expand
-                 ;; todo roll this up as a sub-macro
-                 :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
-                          (first (tiltontec.model.core/md-kids me)))
-                 ~@(let [kvs (for [[k# _#] fx-props]
-                               [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
-                                      (tiltontec.model.core/mget me ~k#))])]
-                     (apply concat kvs))))
-     (concat
-       (vec (apply concat (seq ~fx-props)))
-       (vec (apply concat (seq ~mx-props))))))
 
 ;;; ---- FXX New gen -----------------------------------------------------------------------
 
