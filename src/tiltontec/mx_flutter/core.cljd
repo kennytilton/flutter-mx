@@ -127,7 +127,6 @@
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :fx-prop-keys (keys fx-props)                           ;; todo lose if never needed
     :fx$state (cI nil)
     :initState (fn [this me]
                  (md/mset! me :fx$state this))
@@ -142,7 +141,7 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (when-not (some #{slot} [:fx$state])
+    (when-not (some #{slot} [:fx$state]) ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
         ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
         (if-let [^State state (mget me :fx$state)]
@@ -154,7 +153,7 @@
               (.setState state (fn [] (do))))
             (dpx :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
 
-;;; ---- FX New gen -----------------------------------------------------------------------
+;;; ---- sundry factories per Flutter variation ------------------
 
 (defmacro k1-child-stateless [fx-class fx-props mx-props & children]
   (let []
