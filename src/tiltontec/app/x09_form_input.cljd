@@ -20,20 +20,21 @@
   (let [title "Retrieve text input!"]
     (fx/material-app {:title title}
       (fx/scaffold
-        {:appBar               (m/AppBar :title (m/Text title))
-         :floatingActionButton (fx/floating-action-button
-                                 {:onPressed (fx/cb-with-ctx [me ctx]
-                                               (fx/cb-as-is
-                                                 (fn ^void []
-                                                   (m/showDialog
-                                                     :context ctx
-                                                     :builder (fn [_]
-                                                                (m/AlertDialog
-                                                                  :content (m/Text (.text ^m/TextEditingController
-                                                                                     (mget (md/fm* :test-input) :controller))))))
-                                                   nil)))
-                                  :tooltip   "Show me the value!"}
-                                 (m/Icon m.Icons/text_fields))}
+        {:appBar (m/AppBar :title (m/Text title))
+         :floatingActionButton
+         (fx/floating-action-button
+           {:onPressed (fx/cb-with-ctx [me ctx]
+                         (fx/cb-as-is
+                           (fn ^void []
+                             (m/showDialog
+                               :context ctx
+                               :builder (fn [_]
+                                          (m/AlertDialog
+                                            :content (m/Text (.text ^m/TextEditingController
+                                                               (mget (md/fm* :test-input) :controller))))))
+                             nil)))
+            :tooltip   "Show me the value!"}
+           (m/Icon m.Icons/text_fields))}
         (fx/padding
           {:padding ^:const (m.EdgeInsets/all 16.0)}
           (fx/text-field {:controller (m/TextEditingController)}

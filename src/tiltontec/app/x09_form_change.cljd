@@ -34,8 +34,7 @@
                                      (dp (str "First text field: " newv))))})
             (fx/text-field {:onChanged (fx/cb-with-ctx [me ctx]
                                          (fx/cb-as-is
-                                           (fn [text]
-                                             (md/mset! me :value text))))}
+                                           #(md/mset! me :value %)))}
               {:name       :input-b
                :value      (cI "And then...?")
                :controller (cFonce (let [c (m/TextEditingController :text (mget me :value))]
