@@ -1,11 +1,8 @@
 (ns tiltontec.app.x07-animated-container
   (:require
     ["package:flutter/material.dart" :as m]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [minfo] :as cty]
-    [tiltontec.cell.core :as cell
-     :refer [cF cF+ cI]]
-    [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
+    [tiltontec.cell.core :refer [cF cF+ cI]]
+    [tiltontec.model.core :refer [mget] :as md]
     [tiltontec.mx-flutter.core :as fx]))
 
 (defn random-to-double [max]
@@ -22,7 +19,7 @@
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (fx/text "Animated Container Demo")})
        :floatingActionButton (cF (fx/floating-action-button
-                                   {:onPressed (fx/MXFXAsIs
+                                   {:onPressed (fx/cb-as-is
                                                  #(let [anicon (md/fm* :anicon)]
                                                     (md/mswap! anicon :config assoc
                                                       :width (random-to-double 300)

@@ -15,7 +15,7 @@
             [clojure.string :as str]))
 
 
-(deftype MXFXAsIs [value]
+(deftype cb-as-is [value]
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
   ;; treated as callback to MX to get the resolved value.
@@ -37,10 +37,10 @@
        ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
        nil)
 
-     (dart/is? widget-value MXFXAsIs)
+     (dart/is? widget-value cb-as-is)
      (do
        ;(dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
-       (.-value ^MXFXAsIs widget-value))
+       (.-value ^cb-as-is widget-value))
 
      (dart/is? widget-value MXFXCallback)
      (do
@@ -94,7 +94,7 @@
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
             (gen fx ctx))))
 
-(defmacro with-ctx-cb [[me-var ctx-var] & body]
+(defmacro cb-with-ctx [[me-var ctx-var] & body]
   `(tiltontec.mx-flutter.core/MXFXCallback
      (fn [~me-var ~ctx-var]
        ~@body)))

@@ -25,15 +25,15 @@
             {:mainAxisAlignment MainAxisAlignment/center}
             ; todo if we have onchanged and also listen to the controller, what happens?
             (fx/text-field
-              {:onChanged (fx/with-ctx-cb [me ctx]
-                            (fx/MXFXAsIs
+              {:onChanged (fx/cb-with-ctx [me ctx]
+                            (fx/cb-as-is
                               (fn [text]
                                 (md/mset! me :value text))))}
               {:name  :input-a
                :value (cI nil :obs (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
-            (fx/text-field {:onChanged (fx/with-ctx-cb [me ctx]
-                                         (fx/MXFXAsIs
+            (fx/text-field {:onChanged (fx/cb-with-ctx [me ctx]
+                                         (fx/cb-as-is
                                            (fn [text]
                                              (md/mset! me :value text))))}
               {:name       :input-b
