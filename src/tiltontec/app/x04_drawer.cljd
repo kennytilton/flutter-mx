@@ -4,14 +4,17 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.mx-flutter.core :as fx]))
+    [tiltontec.mx-flutter.core :as fx]
+
+    [tiltontec.util.base :refer [dprn dp dpx]]))
 
 (defn make-app []
   (fx/material-app
     {:title                      "Drawer Demo"
      :debugShowCheckedModeBanner false}
     (fx/scaffold
-      {:appBar (fx/app-bar {:title (m/Text "Drawer Demo")})
+      {:appBar (fx/app-bar
+                 {:title (m/Text "Drawer Demo")})
        :drawer (cF (fx/drawer
                      (fx/list-view
                        {:padding m.EdgeInsets/zero}
@@ -22,12 +25,12 @@
                          {:title (m/Text "Item 1")
                           :onTap (fx/cb-with-ctx [me ctx]
                                    (fx/->cb-as-is
-                                     #(.pop (fx/ctx-nav ctx))))})
+                                     #(.pop (m.Navigator/of ctx))))})
                        (fx/list-tile
                          {:title (m/Text "Item 2")
                           :onTap (fx/cb-with-ctx [me ctx]
                                    (fx/->cb-as-is
-                                     #(.pop (fx/ctx-nav ctx))))}))))}
+                                     #(.pop (m.Navigator/of ctx))))}))))}
       (fx/center
         (fx/text "My Ported Page!!")))))
 

@@ -88,7 +88,7 @@
   (cond
     (not (md-ref? fx))
     (do
-      (dp :rnfx-sees-not-md-ref?-passing-thru fx)
+      (dpx :rnfx-sees-not-md-ref?-passing-thru fx)
       fx)
     :else (let [gen (mget fx :fx-gen)]
             (assert gen "OBAD: render-fx of model finds no fx-gen: ")
@@ -102,7 +102,8 @@
 (defn fx-state-nearest [me]
   (when me
     (or ^State? (mget me :fx$state)
-      (fx-state-nearest (md/mpar)))))
+      (md/mset! me :fx$state
+        (fx-state-nearest (md/mpar))))))
 
 (defmacro when-my-state [[state-var] & body]
   `(when-let [~state-var (tiltontec.mx-flutter.core/my-state)]
@@ -248,10 +249,8 @@
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :content (let [con (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
-                                          (first (tiltontec.model.core/md-kids me)))]
-                                (dp :k1-con-less=content con)
-                                con)
+                     :content (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                                (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]

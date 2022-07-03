@@ -4,9 +4,8 @@
     [cljd.flutter.alpha :as f]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.core :as cell :refer [cF c_F cF_ cF+ cI make-c-formula c-fn]]
-    [tiltontec.model.core :refer [make mget md-kids cFkids fmuv] :as md]
+    [tiltontec.model.core :refer [mget fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx]
-
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
 
@@ -83,7 +82,7 @@
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
      :builder   (fx/->cb-as-is
-                  ;; "as is"? We need a callback for Flutter itself to hit, so this next fn is passed thru as is
+                  ;; "as is"? We need a callback for Flutter itself to call, so this next fn is passed thru as is
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
                           offset (m.Offset/fromDirection
@@ -144,7 +143,8 @@
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         {}
-        (fx/ink-well {:onTap (fx/->cb-as-is #(md/mswap! (md/fasc :fab par) :open? not))} {}
+        (fx/ink-well {:onTap (fx/->cb-as-is
+                               #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
             (fx/icon {:icon  m.Icons/close
                       :color (fx/cb-with-ctx [me ctx]
@@ -164,17 +164,15 @@
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
     {:ignoring (mget (md/fasc :fab par) :open?)}
-    (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                          (if open? 0.0 1.0)))
-                          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                          :duration ^:const (dart:core/Duration :milliseconds 250)}
-      {}
-      (fx/floating-action-button {:onPressed (fx/->cb-as-is
-                                               (fn ^void []
-                                                 (md/mswap! (md/fasc :fab par) :open? not)))}
-        {:name :fab-button-in-fact}
-        ;; hhack
-        (fx/icon {:icon m.Icons/create} {})))))
+    (fx/animated-opacity
+      {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
+                       (if open? 0.0 1.0)))
+       :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+       :duration ^:const (dart:core/Duration :milliseconds 250)}
+      (fx/floating-action-button
+        {:onPressed (fx/->cb-as-is
+                      #(md/mswap! (md/fasc :fab par) :open? not))}
+        (fx/icon {:icon m.Icons/create})))))
 
 ;; -- full tap-to-open version, but container breaks it
 #_(fx/animated-container {:decoration (cF (m/BoxDecoration
@@ -191,7 +189,6 @@
        :duration           ^:const (dart:core/Duration :milliseconds 250)
        :curve              ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut)}
     (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                          (dp :opacity-sees-open?!!!!!!! open?)
                                           (if open? 0.0 1.0)))
                           :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
                           :duration ^:const (dart:core/Duration :milliseconds 250)}
@@ -208,10 +205,11 @@
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 m.Colors/cyan))))
 
-#_(dart:core.Function/apply m/Container nil
-    ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
-                             :height (if is-big? 128.0 36.0)
-                             :decoration
-                             (m/BoxDecoration
-                               :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-                               :color (.-shade300 Colors/pink))})
+#_ ;; this below is the above converted to "apply". The Dart equivalent works, but not this
+        (dart:core.Function/apply m/Container nil
+          ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+                                   :height (if is-big? 128.0 36.0)
+                                   :decoration
+                                   (m/BoxDecoration
+                                     :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                                     :color (.-shade300 Colors/pink))})
