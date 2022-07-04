@@ -1,23 +1,14 @@
 (ns tiltontec.app.x09-form-input
   "Port of CLJD faithful port of https://docs.flutter.dev/cookbook/forms/retrieve-input"
   (:require
-    [tiltontec.util.base
-     :refer [trx wtrx dprn dp dpx nowtrx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
-
-    [tiltontec.cell.core :as cell
-     :refer [cF cF+ cF_ cI]]
-    [tiltontec.model.core :refer [make mget md-kids cFkids fasc fmuv] :as md]
+    [tiltontec.model.core :as md]
     [tiltontec.mx-flutter.core :as fx]
-
-    ["package:flutter/widgets.dart"
-     :refer [Text State StatefulWidget StatelessWidget] :as w]
-    ["package:flutter/material.dart" :as m
-     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
-    ["package:flutter/painting.dart"
-     :refer [TextStyle]]))
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
 
 (defn make-app []
-  (let [title "Retrieve text input!"]
+  (let [title "Retrieve text input"]
     (fx/material-app {:title title}
       (fx/scaffold
         {:appBar (m/AppBar :title (m/Text title))
@@ -26,11 +17,10 @@
            {:onPressed (fx/cb-with-ctx [me ctx]
                          (fx/->cb-as-is
                            #(m/showDialog
-                             :context ctx
-                             :builder (fn [_]
-                                        (m/AlertDialog
-                                          :content (m/Text (.text ^m/TextEditingController
-                                                             (mget (md/fm* :test-input) :controller))))))))
+                              :context ctx
+                              :builder (fn [_] (m/AlertDialog
+                                                 :content (m/Text (.text ^m/TextEditingController
+                                                                    (md/mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}
            (m/Icon m.Icons/text_fields))}
         (fx/padding
