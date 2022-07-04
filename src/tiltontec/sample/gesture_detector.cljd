@@ -3,7 +3,8 @@
     ["package:flutter/gestures.dart" :as g]
     ["package:flutter/material.dart" :as m]
     ["package:vector_math/vector_math_64.dart" :as vm]
-    [cljd.flutter.alpha :as f]))
+    [cljd.flutter.alpha :as f]
+    [tiltontec.util.base :refer [dprn dp dpx]]))
 
 ;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/gesture_detector
 ;; Copyright 2022 by Tensegritics, Eclipse
@@ -17,7 +18,7 @@
         m (doto
             (vm/Matrix3 (.-dx oa) (.-dy oa) 0
               (.-dx ob) (.-dy ob) 0
-              (.-dx o)  (.-dy o)  1)
+              (.-dx o) (.-dy o) 1)
             .invert)
         p-1 (.transform m (vm/Vector3 (.-dx mouse-pos) (.-dy mouse-pos) 1))]
     (when (and (<= 0 (.-x p-1) 1) (<= 0 (.-y p-1) 1))
@@ -31,30 +32,32 @@
 (def gesture-parallelogram
   (f/widget
     :state [app-state {:vertices [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)]
-                       :delta nil :dragged nil}]
+                       :delta    nil :dragged nil}]
     (m/GestureDetector
       :onPanStart
       (fn [^g/DragStartDetails details]
         (let [{:keys [vertices]} @app-state
               pointer (.localPosition details)
-              [[id delta]]
-              (concat
-                (for [[i vertex] (map-indexed vector vertices)
-                      :let [delta (.- pointer vertex)]
-                      :when (< (.distance delta) radius)]
-                  [i delta])
-                (when-some [delta (inside-parallelogram vertices pointer)]
-                  [[:parallelogram delta]]))]
+              [id delta] (or
+                           (first (for [[i vertex] (map-indexed vector vertices)
+                                        :let [delta (.- pointer vertex)]
+                                        :when (< (.distance delta) radius)]
+                                    [i delta]))
+                           (when-some [delta (inside-parallelogram vertices pointer)]
+                             (dp :bam-inside! delta)
+                             [:parallelogram delta]))]
+          (dp :id id :delta delta)
           (swap! app-state assoc :dragged id :delta delta)))
       :onPanUpdate
       (fn [^g/DragUpdateDetails details]
         (let [{:keys [dragged delta]} @app-state
-              new-pos (when dragged (.- (.localPosition details) delta))]
+              _ (dp :panupd-sees @app-state)
+              new-pos #(.- (.localPosition details) delta)]
           (cond
             (= dragged :parallelogram)
-            (swap! app-state update :vertices move-to new-pos)
+            (swap! app-state update :vertices move-to (new-pos))
             (int? dragged)
-            (swap! app-state assoc-in [:vertices dragged] new-pos))))
+            (swap! app-state assoc-in [:vertices dragged] (new-pos)))))
       :child
       (m/CustomPaint
         :size (m/Size double/infinity double/infinity)
