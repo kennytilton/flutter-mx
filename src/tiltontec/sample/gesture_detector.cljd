@@ -32,7 +32,8 @@
 (def gesture-parallelogram
   (f/widget
     :state [app-state {:vertices [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)]
-                       :drag-op {:delta    nil :dragged nil}}]
+                       :drag-op {:delta    nil
+                                 :dragee nil}}]
     (m/GestureDetector
       :onPanStart
       (fn [^g/DragStartDetails details]
@@ -53,16 +54,16 @@
                            ;; fall thru binding id and delta to nil. The id being nil is key
                            )]
           (dp :id id :delta delta)
-          (swap! app-state assoc :drag-op {:dragged id :delta delta})))
+          (swap! app-state assoc :drag-op {:dragee id :delta delta})))
       :onPanUpdate
       (fn [^g/DragUpdateDetails details]
-        (let [{:keys [dragged delta]} (:drag-op @app-state)
+        (let [{:keys [dragee delta]} (:drag-op @app-state)
               new-pos (.- (.localPosition details) delta)]
           (cond
-            (= dragged :parallelogram)
+            (= dragee :parallelogram)
             (swap! app-state update :vertices move-to new-pos)
-            (int? dragged)
-            (swap! app-state assoc-in [:vertices dragged] new-pos))))
+            (int? dragee)
+            (swap! app-state assoc-in [:vertices dragee] new-pos))))
       :child
       (m/CustomPaint
         :size (m/Size double/infinity double/infinity)
