@@ -146,12 +146,20 @@
         (dp :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
         (if-let [^State state (mget me :fx$state)]
           (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
+              (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
+              (dp :settingimmediatekid1 (minfo (first (md/md-kids me))))
+              (when-let [cp (first (md/md-kids me))]
+                (when (dart/is? cp m/CustomPaint)
+                  (dp :bam-CustomPaint!!!!!!!!!! cp)
+                  (when-let [ptr (.painter ^m/CustomPaint cp)]
+                    (dp :bam-CustomPaint-painter!!!!! ptr (dart/is? ptr State))
+                    (.setState ^State ptr (fn [] (do))))))
               (.setState state (fn [] (do))))
           (if-let [^State state (fx-state-nearest me)]
             (do
               (dpx :obs-FXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
               (.setState state (fn [] (do))))
-            (dpx :NOT-settingstate-on-stateless slot new-value (minfo me))))))))
+            (dpx :NOT-setting-state-on-stateless slot new-value (minfo me))))))))
 
 ;;; ---- sundry factories per Flutter variation ------------------
 
