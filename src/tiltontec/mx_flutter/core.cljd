@@ -39,7 +39,7 @@
 
      (dart/is? widget-value cb-as-is)
      (do
-       (dp :fx-reseolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+       (dpx :fx-resolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
        (.-value ^cb-as-is widget-value))
 
      (dart/is? widget-value cb-to-resolve)
@@ -63,7 +63,7 @@
 
      (cty/md-ref? widget-value)
      (do                                                    ;;(dp :rfxing-md (minfo widget-value))
-       (let [fx (render-fx ctx widget-value)]
+       (let [fx (fx-render ctx widget-value)]
          ;;(dp :rfxing-yielded-flutter fx)
          fx))
 
@@ -77,13 +77,12 @@
   (.push (-> ctx m.Navigator/of)
     (#/(m/MaterialPageRoute Object)
       :builder (fn [_]
-                 (render-fx ctx fx-page-def)))))
+                 (fx-render ctx fx-page-def)))))
 
 (defn ctx-page-pop [ctx]
   (.pop (-> ctx m.Navigator/of)))
 
-(defn render-fx [ctx fx]
-  ;; todo reverse params? awkward for many calls where fx is complex
+(defn fx-render [ctx fx]
   (dpx :rfx-entry ctx (cty/minfo fx))
   (cond
     (not (md-ref? fx))
@@ -91,7 +90,7 @@
       (dpx :rnfx-sees-not-md-ref?-passing-thru fx)
       fx)
     :else (let [gen (mget fx :fx-gen)]
-            (assert gen "OBAD: render-fx of model finds no fx-gen: ")
+            (assert gen "OBAD: fx-render of model finds no fx-gen: ")
             (gen fx ctx))))
 
 (defmacro cb-with-ctx [[me-var ctx-var] & body]
@@ -144,7 +143,7 @@
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (some #{slot} [:fx$state]) ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
-        ;;(dprn :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+        (dp :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
         (if-let [^State state (mget me :fx$state)]
           (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
               (.setState state (fn [] (do))))
@@ -267,9 +266,7 @@
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :children (mapv (partial tiltontec.mx-flutter.core/render-fx ctx) (md/md-kids me))
-                     #_~@(when children
-                           `(:children (mapv (partial tiltontec.mx-flutter.core/render-fx ctx) (md/md-kids me))))
+                     :children (mapv (partial tiltontec.mx-flutter.core/fx-render ctx) (md/md-kids me))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.model.core/mget me ~k#)])]
                          (apply concat kvs)))))
@@ -294,7 +291,7 @@
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
-                   (~fx-class (tiltontec.mx-flutter.core/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                   (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
@@ -318,7 +315,7 @@
                            (when-let [init (mget me :initState)]
                                (init this me)))
                          (~'build [_# ctx]
-                           (~fx-constructor (tiltontec.mx-flutter.core/render-fx ctx (first (tiltontec.model.core/md-kids me)))
+                           (~fx-constructor (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
                              ~@(let [kvs (for [[k# _#] fx-props]
                                            [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
@@ -448,7 +445,6 @@
                            (let [k1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/md-kids me)))]
                              (~fx-constructor
-                               ;; todo throw error if they specify :body explicitly, for now
                                :child k1#
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
@@ -491,8 +487,7 @@
 (defmacro transorm+rotate-ful [fx-props mx-props & children]
   `(k1-child-stateful m.Transform/rotate ~fx-props ~mx-props ~@children))
 
-(defmacro animated-builder [fx-props mx-props & children]
-  `(k1-child-stateful m/AnimatedBuilder ~fx-props ~mx-props ~@children))
+
 
 (deftag tiltontec.mx-flutter.core/k1-home-stateful material-app m/MaterialApp)
 (deftag tiltontec.mx-flutter.core/k1-param1-stateful text! m/Text)
@@ -520,6 +515,8 @@
 (deftag tiltontec.mx-flutter.core/k1-child-stateful gesture-detector m/GestureDetector)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful elevated-button m/ElevatedButton)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful default-tab-controller m/DefaultTabController)
+(defmacro animated-builder [fx-props mx-props & children]
+  `(k1-child-stateful m/AnimatedBuilder ~fx-props ~mx-props ~@children))
 (deftag tiltontec.mx-flutter.core/k1-child-stateful animated-container m/AnimatedContainer)
 
 (deftag tiltontec.mx-flutter.core/children-stateless stack m/Stack)

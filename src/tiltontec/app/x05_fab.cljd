@@ -38,10 +38,9 @@
     {}                                                      ;; <= necessary placeholder
     {:name             :fab
      ; --- Dart lifecycle ---------------------------
-     :dispose          (fx/->cb-as-is
-                         (fn [this me]                      ;; todo wrap this
-                           (when-let [controller (fx/my-controller)]
-                             (.dispose controller))))
+     :dispose          (fn [this me]
+                         (when-let [controller (fx/my-controller)]
+                           (.dispose controller)))
      ; --- animation mechanics ----------------------
      :controller       (cF (fx/when-my-state [state]
                              (m/AnimationController
@@ -54,9 +53,9 @@
                                :reverseCurve m.Curves/easeOutQuad
                                :parent c)))
      ; --- behavior -------------------------
-     :step             (cF (/ 90.0 (dec (count actions))))
+     :step             (/ 90.0 (dec (count actions)))
      :open?            (cI initial-open?
-                         ;; reactive "observers" are one way changed values turn into app behavior
+                         ;; reactive "observers" are how changed values become app behavior
                          :obs (fn [prop-name me new-value prior-value cell]
                                 (when-let [c (fx/my-controller)] ;; not until first render installation
                                   (if new-value
@@ -112,7 +111,7 @@
   (m/showDialog
     :context ctx
     :builder (fn [ctx]
-               (fx/render-fx ctx
+               (fx/fx-render ctx
                  (fx/alert-dialog
                    ;; todo extend resolve to handle vectors then convert VVVV
                    {:actions [(m/TextButton
@@ -150,51 +149,25 @@
                       :color (fx/cb-with-ctx [me ctx]
                                (.primaryColor (m.Theme/of ctx)))} {})))))))
 
-(defn random-to-double [max]
-  (.toDouble (rand-int max)))
-
-(defn random-color []
-  (m.Color/fromRGBO (rand-int 256)
-    (rand-int 256)
-    (rand-int 256)
-    1))
-
-;;; -------------------------------------------------------------
-
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
     {:ignoring (mget (md/fasc :fab par) :open?)}
-    (fx/animated-opacity
-      {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                       (if open? 0.0 1.0)))
-       :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-       :duration ^:const (dart:core/Duration :milliseconds 250)}
-      (fx/floating-action-button
-        {:onPressed (fx/->cb-as-is
-                      #(md/mswap! (md/fasc :fab par) :open? not))}
-        (fx/icon {:icon m.Icons/create})))))
-
-;; -- full tap-to-open version, but container breaks it
-#_(fx/animated-container {:decoration (cF (m/BoxDecoration
-                                            :color (random-color)
-                                            :borderRadius (m.BorderRadius/circular (random-to-double 100))))
-                          :duration   ^:const (Duration :seconds 1)
-                          :curve      m.Curves/fastOutSlowIn}
-    #_{:transformAlignment m.Alignment/center
-       :transform          (cF (let [open? false #_(mget (md/fasc :fab par) :open?)]
-                                 (m.Matrix4/diagonal3Values
-                                   (if open? 0.7 1.0)
-                                   (if open? 0.7 1.0)
-                                   1.0)))
+    (fx/animated-container
+      {:transformAlignment m.Alignment/center
+       :transform          (cF (if (mget (md/fasc :fab par) :open?)
+                                 (m.Matrix4/diagonal3Values 0.7 0.7 1.0)
+                                 (m.Matrix4/diagonal3Values 1.0 1.0 1.0)))
        :duration           ^:const (dart:core/Duration :milliseconds 250)
        :curve              ^:const (m/Interval 0.0 0.5 :curve m.Curves/easeOut)}
-    (fx/animated-opacity {:opacity  (cF (let [open? (mget (md/fasc :fab par) :open?)]
-                                          (if open? 0.0 1.0)))
-                          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
-                          :duration ^:const (dart:core/Duration :milliseconds 250)}
-      (fx/floating-action-button {:onPressed (fn [me ctx]
-                                               (md/mswap! (md/fasc :fab par) :open? not))}
-        (fx/icon {:icon m.Icons/create}))))
+      (fx/animated-opacity
+        {:opacity  (cF (if (mget (md/fasc :fab par) :open?)
+                         0.0 1.0))
+         :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
+         :duration ^:const (dart:core/Duration :milliseconds 250)}
+        (fx/floating-action-button
+          {:onPressed (fx/->cb-as-is
+                        #(md/mswap! (md/fasc :fab par) :open? not))}
+          (fx/icon {:icon m.Icons/create}))))))
 
 (defn fake-item [is-big?]
   (m/Container
@@ -205,7 +178,7 @@
       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
       :color (.-shade300 m.Colors/cyan))))
 
-#_ ;; this below is the above converted to "apply". The Dart equivalent works, but not this
+#_;; this below is the above converted to "apply". The Dart equivalent works, but not this
         (dart:core.Function/apply m/Container nil
           ^#/(Map Symbol dynamic) {:margin ^:const (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
                                    :height (if is-big? 128.0 36.0)
