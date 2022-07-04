@@ -39,13 +39,19 @@
         (let [{:keys [vertices]} @app-state
               pointer (.localPosition details)
               [id delta] (or
-                           (first (for [[i vertex] (map-indexed vector vertices)
-                                        :let [delta (.- pointer vertex)]
-                                        :when (< (.distance delta) radius)]
-                                    [i delta]))
+                           ;; see if a dot has been clicked, perhaps within the parallelogram
+                           ;; but on the dot, which takes precedence
+                           (some (fn [[i vertex]]
+                                   (let [delta (.- pointer vertex)]
+                                     (when (< (.distance delta) radius)
+                                       [i delta])))
+                             (map-indexed vector vertices))
+                           ;; ... not on a dot, now see if in 'gram
                            (when-some [delta (inside-parallelogram vertices pointer)]
                              (dp :bam-inside! delta)
-                             [:parallelogram delta]))]
+                             [:parallelogram delta])
+                           ;; fall thru binding id and delta to nil. The id being nil is key
+                           )]
           (dp :id id :delta delta)
           (swap! app-state assoc :dragged id :delta delta)))
       :onPanUpdate
