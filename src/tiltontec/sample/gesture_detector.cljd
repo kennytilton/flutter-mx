@@ -32,7 +32,7 @@
 (def gesture-parallelogram
   (f/widget
     :state [app-state {:vertices [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)]
-                       :delta    nil :dragged nil}]
+                       :drag-op {:delta    nil :dragged nil}}]
     (m/GestureDetector
       :onPanStart
       (fn [^g/DragStartDetails details]
@@ -40,7 +40,7 @@
               pointer (.localPosition details)
               [id delta] (or
                            ;; see if a dot has been clicked, perhaps within the parallelogram
-                           ;; but on the dot, which takes precedence
+                           ;; but on the dot, which would take precedence
                            (some (fn [[i vertex]]
                                    (let [delta (.- pointer vertex)]
                                      (when (< (.distance delta) radius)
@@ -53,17 +53,16 @@
                            ;; fall thru binding id and delta to nil. The id being nil is key
                            )]
           (dp :id id :delta delta)
-          (swap! app-state assoc :dragged id :delta delta)))
+          (swap! app-state assoc :drag-op {:dragged id :delta delta})))
       :onPanUpdate
       (fn [^g/DragUpdateDetails details]
-        (let [{:keys [dragged delta]} @app-state
-              _ (dp :panupd-sees @app-state)
-              new-pos #(.- (.localPosition details) delta)]
+        (let [{:keys [dragged delta]} (:drag-op @app-state)
+              new-pos (.- (.localPosition details) delta)]
           (cond
             (= dragged :parallelogram)
-            (swap! app-state update :vertices move-to (new-pos))
+            (swap! app-state update :vertices move-to new-pos)
             (int? dragged)
-            (swap! app-state assoc-in [:vertices dragged] (new-pos)))))
+            (swap! app-state assoc-in [:vertices dragged] new-pos))))
       :child
       (m/CustomPaint
         :size (m/Size double/infinity double/infinity)
