@@ -1,0 +1,43 @@
+(ns tiltontec.app.x13-snackbar
+  "Flummox port of CLJD Faithful port of https://docs.flutter.dev/cookbook/design/snackbars"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    [cljd.flutter.alpha :as f]
+
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.core :as cell :refer [cF cI]]
+    [tiltontec.model.core :refer [mget fmuv] :as md]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.cell.base :refer [minfo cinfo] :as cty]))
+
+;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/snackbar
+;; Copyright 2022 by Tensegritics, Eclipse
+
+(def snackbar
+  (fx/snack-bar
+    {:action (m/SnackBarAction :label "Undo" :onPressed (fn []))}
+    (fx/text "Yay 2! A SnackBar!")))
+
+(defn make-app []
+  (let [title "Snackbar Demo 5"]
+    (fx/material-app
+      {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar
+                   {:title (fx/text title)})}
+        (fx/center
+          (fx/elevated-button
+            {:onPressed (fx/cb-with-ctx [me ctx]
+                          (fx/->CBAsIs
+                            (fn []
+                              (.showSnackBar (m.ScaffoldMessenger/of ctx)
+                                (let [sb (fx/fx-render ctx
+                                           (fx/snack-bar
+                                             {:action (m/SnackBarAction
+                                                        :label "Undo"
+                                                        :onPressed (fn []))}
+                                             (fx/text "Yay 2! A SnackBar!")))]
+                                  (dp :snackbar? sb)
+                                  sb))
+                              nil)))}
+            (fx/text "Show text")))))))
