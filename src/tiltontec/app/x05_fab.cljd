@@ -26,7 +26,7 @@
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric :vertical 8.0)
          :itemCount   25
-         :itemBuilder (fx/->cb-as-is
+         :itemBuilder (fx/->CBAsIs
                         (fn [ctx i] (fake-item (odd? i))))}))))
 
 (declare expanding-action-button
@@ -80,7 +80,7 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
-     :builder   (fx/->cb-as-is
+     :builder   (fx/->CBAsIs
                   ;; "as is"? We need a callback for Flutter itself to call, so this next fn is passed thru as is
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
@@ -103,7 +103,7 @@
       (action-button
         :icon (:icon action)
         :onPressed (fx/cb-with-ctx [me ctx]
-                     (fx/->cb-as-is
+                     (fx/->CBAsIs
                        #(show-action ctx action)))))))
 
 (defn show-action [ctx action]
@@ -141,7 +141,7 @@
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         {}
-        (fx/ink-well {:onTap (fx/->cb-as-is
+        (fx/ink-well {:onTap (fx/->CBAsIs
                                #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
             (fx/icon {:icon  m.Icons/close
@@ -164,7 +164,7 @@
          :curve    ^:const (m/Interval 0.25 1.0 :curve m.Curves/easeInOut)
          :duration ^:const (dart:core/Duration :milliseconds 250)}
         (fx/floating-action-button
-          {:onPressed (fx/->cb-as-is
+          {:onPressed (fx/->CBAsIs
                         #(md/mswap! (md/fasc :fab par) :open? not))}
           (fx/icon {:icon m.Icons/create}))))))
 

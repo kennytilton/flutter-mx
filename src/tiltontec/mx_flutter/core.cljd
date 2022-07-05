@@ -15,13 +15,13 @@
             [clojure.string :as str]))
 
 
-(deftype cb-as-is [value]
+(deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
   ;; treated as callback to MX to get the resolved value.
   :extends cty/MXImplementer)
 
-(deftype cb-to-resolve [value]
+(deftype CBToResolve [value]
   ;; tells fx-resolve to call the mx value as a function of ctx and me.
   ;; used where app needs to see the Flutter context to decide a value
   :extends cty/MXImplementer)
@@ -37,16 +37,16 @@
        ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
        nil)
 
-     (dart/is? widget-value cb-as-is)
+     (dart/is? widget-value CBAsIs)
      (do
        (dpx :fx-resolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
-       (.-value ^cb-as-is widget-value))
+       (.-value ^CBAsIs widget-value))
 
-     (dart/is? widget-value cb-to-resolve)
-     (do
+     (dart/is? widget-value CBToResolve)
+     (let [val ^CBToResolve widget-value]
        ;;(dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
-       (let [cb-val (.-value ^cb-to-resolve widget-value)]
-         ;;(dp :cb-to-resolveyields cb-val)
+       (let [cb-val (.-value val)] ;; ^CBToResolve widget-value)]
+         ;;(dp :CBToResolveyields cb-val)
          (recur slot me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
@@ -94,7 +94,7 @@
             (gen fx ctx))))
 
 (defmacro cb-with-ctx [[me-var ctx-var] & body]
-  `(tiltontec.mx-flutter.core/->cb-to-resolve
+  `(tiltontec.mx-flutter.core/->CBToResolve
      (fn [~me-var ~ctx-var]
        ~@body)))
 
@@ -144,16 +144,11 @@
     (when-not (some #{slot} [:fx$state]) ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
         (dp :FXDartWidget-observing!!!  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
+        (when-let [noter (mget me :fx$notifier)]
+          (.notifyListeners ^m/ChangeNotifier noter))
+
         (if-let [^State state (mget me :fx$state)]
           (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
-              (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
-              (dp :settingimmediatekid1 (minfo (first (md/md-kids me))))
-              (when-let [cp (first (md/md-kids me))]
-                (when (dart/is? cp m/CustomPaint)
-                  (dp :bam-CustomPaint!!!!!!!!!! cp)
-                  (when-let [ptr (.painter ^m/CustomPaint cp)]
-                    (dp :bam-CustomPaint-painter!!!!! ptr (dart/is? ptr State))
-                    (.setState ^State ptr (fn [] (do))))))
               (.setState state (fn [] (do))))
           (if-let [^State state (fx-state-nearest me)]
             (do

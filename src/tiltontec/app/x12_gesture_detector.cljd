@@ -8,7 +8,8 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.core :as cell :refer [cF cI]]
     [tiltontec.model.core :refer [mget fmuv] :as md]
-    [tiltontec.mx-flutter.core :as fx]))
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.cell.base :refer [minfo cinfo] :as cty]))
 
 ;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/gesture_detector
 ;; Copyright 2022 by Tensegritics, Eclipse
@@ -34,63 +35,64 @@
     [o' (.+ a oo') (.+ b oo')]))
 
 (defn xgesture-parallelogram []
-  (f/widget
-    :state [app-state {:vertices [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)]
-                       :drag-op {:delta    nil
-                                 :dragee nil}}]
-    (m/GestureDetector
-      :onPanStart
-      (fn [^g/DragStartDetails details]
-        (let [{:keys [vertices]} @app-state
-              pointer (.localPosition details)
-              [id delta] (or
-                           ;; see if a dot has been clicked, perhaps within the parallelogram
-                           ;; but on the dot, which would take precedence
-                           (some (fn [[i vertex]]
-                                   (let [delta (.- pointer vertex)]
-                                     (when (< (.distance delta) radius)
-                                       [i delta])))
-                             (map-indexed vector vertices))
-                           ;; ... not on a dot, now see if in 'gram
-                           (when-some [delta (inside-parallelogram vertices pointer)]
-                             (dp :bam-inside! delta)
-                             [:parallelogram delta])
-                           ;; fall thru binding id and delta to nil. The id being nil is key
-                           )]
-          (dp :id id :delta delta)
-          (swap! app-state assoc :drag-op {:dragee id :delta delta})))
-      :onPanUpdate
-      (fn [^g/DragUpdateDetails details]
-        (let [{:keys [dragee delta]} (:drag-op @app-state)
-              _ (dp :dragop dragee :delta delta)
-              new-pos (when delta
-                        (.- (.localPosition details) delta))]
-          (cond
-            (= dragee :parallelogram)
-            (swap! app-state update :vertices move-to new-pos)
-            (int? dragee)
-            (swap! app-state assoc-in [:vertices dragee] new-pos))))
-      :child
-      (m/CustomPaint
-        :size (m/Size double/infinity double/infinity)
-        :painter
-        (reify :extends m/CustomPainter
-          (paint [this canvas size]
-            (let [[^m/Offset o ^m/Offset a ^m/Offset b] (:vertices @app-state)
-                  c (.- (.+ b a) o)
-                  paint (doto (m/Paint)
-                          (-> .-color (set! m.Colors/grey))
-                          (-> .-style (set! m.PaintingStyle/fill)))]
-              (doto canvas
-                (.drawLine o a paint)
-                (.drawLine o b paint)
-                (.drawLine b c paint)
-                (.drawLine a c paint)
-                (.drawCircle o radius paint)
-                (.drawCircle a radius paint)
-                (.drawCircle b radius paint))
-              nil))
-          (shouldRepaint [this _] true))))))
+  (fx/gesture-detector
+    {:onPanStart  (cF (fx/->CBAsIs
+                        (fn [^g/DragStartDetails details]
+                          (let [vertices (mget me :vertices)
+                                pointer (.localPosition details)
+                                [id delta] (or
+                                             ;; see if a dot has been clicked, perhaps within the parallelogram
+                                             ;; _and_ on the dot, since they overlap a bit. Our spec gives
+                                             ;; the dot precedence.
+                                             (some (fn [[i vertex]]
+                                                     (let [delta (.- pointer vertex)]
+                                                       (when (< (.distance delta) radius)
+                                                         [i delta])))
+                                               (map-indexed vector vertices))
+                                             ;; ... not on a dot, now see if in parallelogram
+                                             (when-some [delta (inside-parallelogram vertices pointer)]
+                                               (dp :bam-inside! delta)
+                                               [:parallelogram delta])
+                                             ;; fall thru binding id and delta to nil. The id being nil is key
+                                             )]
+                            (dp :panstart!!!!!! :id id :delta delta)
+                            (md/mset! me :drag-op {:dragee id :delta delta})))))
+     :onPanUpdate (cF (fx/->CBAsIs
+                        (fn [^g/DragUpdateDetails details]
+                          (let [{:keys [dragee delta]} (md/mget me :drag-op)
+                                old-verts (md/mget me :vertices)
+                                new-pos (when delta
+                                          (.- (.localPosition details) delta))]
+                            (cond
+                              (= dragee :parallelogram)
+                              (md/mswap! me :vertices move-to new-pos)
+                              (int? dragee)
+                              (md/mswap! me :vertices assoc dragee new-pos))))))}
+    {:name        :affy-gd
+     :fx$notifier (m/ChangeNotifier)
+     :vertices    (cI [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)])
+     :drag-op     (cI {:delta  nil
+                       :dragee nil})}
+    (m/CustomPaint
+      :size (m/Size double/infinity double/infinity)
+      :painter (let [noter (mget me :fx$notifier)]
+                 (reify :extends (m/CustomPainter :repaint noter)
+                   (paint [this canvas size]
+                     (let [[^m/Offset o ^m/Offset a ^m/Offset b] (md/mget me :vertices)
+                           c (.- (.+ b a) o)
+                           paint (doto (m/Paint)
+                                   (-> .-color (set! m.Colors/grey))
+                                   (-> .-style (set! m.PaintingStyle/fill)))]
+                       (doto canvas
+                         (.drawLine o a paint)
+                         (.drawLine o b paint)
+                         (.drawLine b c paint)
+                         (.drawLine a c paint)
+                         (.drawCircle o radius paint)
+                         (.drawCircle a radius paint)
+                         (.drawCircle b radius paint))
+                       nil))
+                   (shouldRepaint [this _] true))))))
 
 (defn make-app []
   (fx/material-app

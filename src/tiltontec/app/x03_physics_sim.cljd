@@ -33,12 +33,12 @@
 
 (defn draggable-card [& {:keys [drag-child]}]
   (fx/gesture-detector
-    {:onPanDown   (cF (fx/->cb-as-is
+    {:onPanDown   (cF (fx/->CBAsIs
                         (fn [^m/DragDownDetails details]
                           (when-let [c (fx/my-controller)]
                             (.stop c)))))
      :onPanUpdate (fx/cb-with-ctx [me ctx]
-                    (fx/->cb-as-is
+                    (fx/->CBAsIs
                       (fn [^m/DragUpdateDetails details]
                         (let [size (.size (MediaQuery/of ctx))]
                           (md/mswap! me :dragAlignment
@@ -47,7 +47,7 @@
                                  (/ (-> details .delta .dx) (/ (.width size) 2))
                                  (/ (-> details .delta .dy) (/ (.height size) 2)))))))))
      :onPanEnd    (cF (fx/cb-with-ctx [me ctx]
-                        (fx/->cb-as-is
+                        (fx/->CBAsIs
                           (fn [^m/DragEndDetails details]
                             (logo-recoil me ctx (-> details .velocity .pixelsPerSecond))))))}
     {:name          :draggable-card

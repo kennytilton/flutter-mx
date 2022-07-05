@@ -26,14 +26,14 @@
             ; todo if we have onchanged and also listen to the controller, what happens?
             (fx/text-field
               {:onChanged (fx/cb-with-ctx [me ctx]
-                            (fx/->cb-as-is
+                            (fx/->CBAsIs
                               (fn [text]
                                 (md/mset! me :value text))))}
               {:name  :input-a
                :value (cI nil :obs (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
             (fx/text-field {:onChanged (fx/cb-with-ctx [me ctx]
-                                         (fx/->cb-as-is
+                                         (fx/->CBAsIs
                                            #(md/mset! me :value %)))}
               {:name       :input-b
                :value      (cI "And then...?")
