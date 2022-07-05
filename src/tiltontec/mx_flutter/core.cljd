@@ -406,26 +406,24 @@
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
-                   (reify :extends m/SnackBar
+                   (reify :extends #_ m/StatefulWidget m/SnackBar
                      (~'createState [_#]
-                       (reify :extends w/State
+                       (reify :extends #_ w/State #/(w/State m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
-                           (let [kid1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                           (let [#_#_ kid1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
                              (dp :building-snackbar!!!!!!!)
                              (m/SnackBar
-                               ;; todo throw error if they specify :body explicitly, for now
-                               :content kid1#
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs))))))))))
-       (tiltontec.model.core/cFkids ~@children))))
+       nil)))
 
 (deftag tiltontec.mx-flutter.core/k1-content-stateful snack-bar m/SnackBar)
 

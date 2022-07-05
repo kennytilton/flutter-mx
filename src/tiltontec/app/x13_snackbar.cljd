@@ -13,10 +13,10 @@
 ;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/snackbar
 ;; Copyright 2022 by Tensegritics, Eclipse
 
-(def snackbar
-  (fx/snack-bar
-    {:action (m/SnackBarAction :label "Undo" :onPressed (fn []))}
-    (fx/text "Yay 2! A SnackBar!")))
+;(def snackbar
+;  (fx/snack-bar
+;    {:action (m/SnackBarAction :label "Undo" :onPressed (fn []))
+;     :content (fx/text "Yay 2! A SnackBar!")}))
 
 (defn make-app []
   (let [title "Snackbar Demo 5"]
@@ -31,13 +31,46 @@
                           (fx/->CBAsIs
                             (fn []
                               (.showSnackBar (m.ScaffoldMessenger/of ctx)
-                                (let [sb (fx/fx-render ctx
+                                (let [sb (m/SnackBar
+                                           :content (m/Text "Yay! A SnackBar!")
+                                           :action
+                                           (m/SnackBarAction :label "Undo" :onPressed (fn [])))
+                                      #_ (fx/fx-render ctx
                                            (fx/snack-bar
                                              {:action (m/SnackBarAction
                                                         :label "Undo"
-                                                        :onPressed (fn []))}
-                                             (fx/text "Yay 2! A SnackBar!")))]
+                                                        :onPressed (fn []))
+                                             :content (fx/text "Yay 2! A SnackBar!")}))]
                                   (dp :snackbar? sb)
                                   sb))
                               nil)))}
             (fx/text "Show text")))))))
+
+#_#_#_
+(def snackbar
+  (m/SnackBar
+    :content (m/Text "Yay! A SnackBar!")
+    :action
+    (m/SnackBarAction :label "Undo" :onPressed (fn []))))
+
+
+(def snackbar-demo
+  (f/widget
+    :inherit [m/ScaffoldMessenger]
+    (m/Center
+      :child
+      (m/ElevatedButton
+        :onPressed (fn []
+                     (.showSnackBar scaffold-messenger snackbar)
+                     nil)
+        :child (m/Text "Show text")))))
+
+(defn main []
+  (let [title "Snackbar Demo"]
+    (m/runApp
+      (m/MaterialApp
+        :title title
+        :home
+        (m/Scaffold
+          :appBar (m/AppBar :title (m/Text title))
+          :body snackbar-demo)))))
