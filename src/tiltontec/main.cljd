@@ -41,7 +41,7 @@
 (def version (atom nil :meta {}))
 
 (defn main []
-  #_ (navo/main)
+  #_(navo/main)
   (material/runApp
     (fx/fx-render nil
       (xfade/make-app)))
@@ -68,15 +68,13 @@
         (.doc id)
         (.set {"title" "Todo title"}))
 
+      ; redaback
 
-
-
-      ;; OK the above runs without error. Now confirm by reading back.
-
-
-
-
-      ))
+      (let [rb (await (-> db
+                        (.collection "todos")
+                        (.doc id)
+                        .get))]
+        (dp :readback!!!!!!!!! rb))))
 
   ;(let [{:keys [initial-open? distance actions] :or [initial-open? false]}
   ;      {:distance 42}]
