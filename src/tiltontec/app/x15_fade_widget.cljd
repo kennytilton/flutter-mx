@@ -1,39 +1,9 @@
 (ns tiltontec.app.x15-fade-widget
   "FlutterMX port of CLJD Faithful port of https://docs.flutter.dev/cookbook/animation/opacity-animation"
   (:require ["package:flutter/material.dart" :as m]
-            [cljd.flutter.alpha :as f]
-            [tiltontec.model.core :refer [make mget md-kids cFkids fasc fmuv] :as md]
+            [tiltontec.model.core :as md]
             [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F]]
-            [tiltontec.mx-flutter.core :as fx]
-            [tiltontec.util.base :refer [dprn dp dpx]]
-            [tiltontec.cell.base :refer [cinfo minfo] :as cty]))
-
-(defn my-home-page [title]
-  (fx/scaffold
-    {:appBar               (fx/app-bar {:title (fx/text title)})
-     :floatingActionButton (cF (fx/floating-action-button
-                                 {:tooltip "Toggle Opacity"
-                                  :onPressed (fx/->CBAsIs
-                                               (fn ^void []
-                                                 (dp :swapping-vis-from!!!!!!! (md/mget me :visible))
-                                                 (md/mswap! me :visible not)
-                                                 nil))}
-                                 (fx/icon {:icon m.Icons/flip})))}
-    {:visible (cI true)
-     :name                 :my-home
-     }
-    (fx/center {}
-      {:name :zcenter}
-      (fx/animated-opacity
-        {:opacity  (cF (dp :ani-op-sees-me (minfo me))
-                     (dp :ancestry (map minfo (md/fm-ancestry me)))
-                     (dp :aniop-sees-my-home (minfo (md/fm* :my-home)))
-                     (assert (md/fm* :my-home) "no asc home")
-                     (cond (true? (md/mget (md/fm* :my-home) :visible)) 1.0
-                           :else 0.0))
-         :duration ^:const (Duration :milliseconds 500)}
-        {:name :ani-opa}
-        (m/Container :width 200.0 :height 200.0 :color (m.Colors/teal))))))
+            [tiltontec.mx-flutter.core :as fx]))
 
 (defn make-app []
   (let [title "Opacity Demo"]
@@ -41,4 +11,22 @@
       {:title                      title
        :debugShowCheckedModeBanner false}
       {:name :zapp}
-      (my-home-page title))))
+      (fx/scaffold
+        {:appBar               (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton (cF (fx/floating-action-button
+                                     {:tooltip   "Toggle Opacity"
+                                      :onPressed (fx/->CBAsIs
+                                                   (fn ^void []
+                                                     (md/mswap! me :visible not)
+                                                     nil))}
+                                     (fx/icon {:icon m.Icons/flip})))}
+        {:visible (cI true)
+         :name    :my-home}
+        (fx/center {}
+          {:name :zcenter}
+          (fx/animated-opacity
+            {:opacity  (cF (cond (true? (md/mget (md/fm* :my-home) :visible)) 1.0
+                                 :else 0.0))
+             :duration ^:const (Duration :milliseconds 500)}
+            {:name :ani-opa}
+            (m/Container :width 200.0 :height 200.0 :color (m.Colors/teal))))))))
