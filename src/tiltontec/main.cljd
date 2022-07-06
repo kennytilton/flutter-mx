@@ -12,6 +12,7 @@
             [tiltontec.test.lazy-cells :as test-lazy]
 
             [tiltontec.mx-flutter.core :as fx]
+            ["package:localstore/localstore.dart" :as ls]
 
             [tiltontec.sample.fab :as fab-std]
 
@@ -45,9 +46,44 @@
     (fx/fx-render nil
       (xfade/make-app)))
 
+  (let [db (.instance ls/Localstore)]
+    (dp :bam-db!!!!!!!!!!! db)
+    ; // gets new id
+    ;final id = db.collection('todos').doc().id;
+    ;
+    ;// save the item
+    ;db.collection('todos').doc(id).set({
+    ;  'title': 'Todo title',
+    ;  'done': false
+    ;});
+    (let [coll (.collection db "todos")
+          ;id (.id (.doc (.collection db "todos")))
+          id (.id (.doc coll))
+          ]
+      (dp :BAM-doc coll)
+      (dp :BAM-doc-id id)
+
+      (-> db
+        (.collection "todos")
+        (.doc id)
+        (.set {"title" "Todo title"}))
+
+
+
+
+      ;; OK the above runs without error. Now confirm by reading back.
+
+
+
+
+      ))
+
   ;(let [{:keys [initial-open? distance actions] :or [initial-open? false]}
   ;      {:distance 42}]
   ;  (dp :s distance :io initial-open?))
 
   ;;(widgets/debugDumpApp)
   )
+
+
+;; db.collection('todos').doc(id).set({ 'title': 'Todo title'});
