@@ -400,15 +400,16 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro k1-content-stateful [fx-constructor fx-props mx-props & children]
+(defmacro make-fx-snackbar [fx-constructor fx-props mx-props & children]
   (let []
+    (prn :mksnack-sees-fxcon fx-constructor)
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
          :fx-gen (fn [me ctx]
-                   (reify :extends #_ m/StatefulWidget m/SnackBar
-                     (~'createState [_#]
-                       (reify :extends #_ w/State #/(w/State m/SnackBar)
+                   (reify :extends (#_ ~fx-constructor m/SnackBar :content (m/Text "himom"))
+                     ^#/(w/State ~fx-constructor #_ m/SnackBar) (~'createState [_#]
+                       (reify :extends #/(w/State #_ ~fx-constructor m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
@@ -417,7 +418,6 @@
                          (~'build [_# ctx]
                            (let [#_#_ kid1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
-                             (dp :building-snackbar!!!!!!!)
                              (m/SnackBar
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
@@ -425,12 +425,12 @@
                                    (apply concat kvs))))))))))
        nil)))
 
-(deftag tiltontec.mx-flutter.core/k1-content-stateful snack-bar m/SnackBar)
+(deftag tiltontec.mx-flutter.core/make-fx-snackbar snack-bar m/SnackBar)
 
 (defmacro k1-home-stateful [fx-constructor fx-props mx-props & children]
   (let []
-    (assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
-    (assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
+    ;(assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
+    ;(assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props

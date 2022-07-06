@@ -31,16 +31,17 @@
                           (fx/->CBAsIs
                             (fn []
                               (.showSnackBar (m.ScaffoldMessenger/of ctx)
-                                (let [sb (m/SnackBar
+                                (let [sb #_ (m/SnackBar
                                            :content (m/Text "Yay! A SnackBar!")
                                            :action
                                            (m/SnackBarAction :label "Undo" :onPressed (fn [])))
-                                      #_ (fx/fx-render ctx
+                                      (fx/fx-render ctx
                                            (fx/snack-bar
                                              {:action (m/SnackBarAction
                                                         :label "Undo"
-                                                        :onPressed (fn []))
-                                             :content (fx/text "Yay 2! A SnackBar!")}))]
+                                                        :onPressed (fx/->CBAsIs (fn []
+                                                                                  (dp :UNDO!!!!!))))
+                                             :content (fx/text "Yay 3! A SnackBar!")}))]
                                   (dp :snackbar? sb)
                                   sb))
                               nil)))}
