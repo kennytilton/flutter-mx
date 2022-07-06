@@ -4,30 +4,15 @@
             [cljd.flutter.alpha :as f]
             [tiltontec.mx-flutter.core :as fx]))
 
-#_
 (def detail-screen
-  (f/widget
-    :inherit [m/Navigator]
-    (m/Scaffold
-      :body
-      (f/nest
-        (m/GestureDetector
-          :onTap #(.pop navigator))
-        m/Center
-        (m/Hero :tag "imageHero")
-        (m.Image/network "https://picsum.photos/250?image=9")))))
-
-(def detail-screen
-  (f/widget
-    :inherit [m/Navigator]
-    (m/Scaffold
-      :body
-      (f/nest
-        (m/GestureDetector
-          :onTap #(.pop navigator))
-        m/Center
-        (m/Hero :tag "imageHero")
-        (m.Image/network "https://picsum.photos/250?image=9")))))
+  (fx/scaffold
+    (fx/gesture-detector
+      {:onTap (fx/cb-with-ctx [me ctx]
+                (fx/->CBAsIs
+                  #(do (.pop (m.Navigator/of ctx)) nil)))}
+      (fx/center
+        (fx/hero {:tag "imageHero"}
+          (m.Image/network "https://picsum.photos/250?image=9"))))))
 
 (defn make-app []
   (let []
@@ -41,7 +26,9 @@
                       #(do
                          (.push (m.Navigator/of ctx)
                            (#/(m/MaterialPageRoute Object)
-                             :builder (fn [_] detail-screen)))
+                             :builder (fn [_]
+                                        (fx/fx-resolve me ctx
+                                          detail-screen))))
                          nil)))}
           (fx/hero {:tag "imageHero"}
             (m.Image/network "https://picsum.photos/250?image=9")))))))
