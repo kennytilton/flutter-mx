@@ -6,6 +6,8 @@
             ["package:flutter/painting.dart" :as painting]
             ["dart:developer" :as dev]
             ["dart:math" :as mth]
+            ["dart:convert" :as convert]
+            ;; [clojure.data.json :as json]
             [tiltontec.util.base :refer [dprn dp dpx]]
 
             [tiltontec.testing :as testing]
@@ -36,6 +38,7 @@
             [tiltontec.sample.gd-orig :as gdorig]
             [tiltontec.app.x14-hero :as xhero]
             [tiltontec.app.x15-fade-widget :as xfade]
+            [clojure.walk :as walk]
             ))
 
 (def version (atom nil :meta {}))
@@ -44,10 +47,34 @@
   #_(navo/main)
   (material/runApp
     (fx/fx-render nil
-      (xhero/make-app)))
+      (xhello/make-app)))
 
-  #_
-  (let [db (.instance ls/Localstore)]
+  ;(dp :jsowrite!!!!! (json/write-str {:a 1 :b 2}))
+  ;(dp :jsoencode (convert/jsonEncode {:a 1 :b 2}))
+  #_ (let [decode (convert/jsonDecode "{ \"name\": \"Pizza da Mario\", \"cuisine\": \"Italian\" }")]
+    (dp :decodes? (string? decode))
+    (dp :decodes-map? (map? decode))
+    (dp :decodes-keywordized (walk/keywordize-keys decode))
+    (dp :decode-k (keys decode))
+    (dp :cuisi (get decode "cuisine"))
+    (dp :decode decode)
+
+    (doseq [[k v] decode]
+      (dp :doseq k v )
+      (dp :doseq (keyword k) v )
+      )
+
+    (dp :forrrrr (into {}
+                   (for [[k v] decode]
+                     [(keyword k) v])))
+    #_
+    (let [mp (into {}
+              (apply concat
+                (for [[k v] decode]
+                  [(keyword k) v])))]
+      (prn :now-m? mp (map? mp))))
+
+  #_ (let [db (.instance ls/Localstore)]
     (dp :bam-db!!!!!!!!!!! db)
     ; // gets new id
     ;final id = db.collection('todos').doc().id;
@@ -57,25 +84,36 @@
     ;  'title': 'Todo title',
     ;  'done': false
     ;});
+    ;
+    ; 3n3aym16h
+    ; 5ggmwupfb
+    ;
     (let [coll (.collection db "todos")
           ;id (.id (.doc (.collection db "todos")))
-          id (.id (.doc coll))
+          ;;id #_ "5ggmwupfb"  (.id (.doc coll))
           ]
       (dp :BAM-doc coll)
-      (dp :BAM-doc-id id)
+      (dp :BAM-doc-get (await (.get coll)))
+      ;;(dp :BAM-doc-id id)
 
-      (-> db
+      #_ (-> db
         (.collection "todos")
         (.doc id)
-        (.set {"title" "Todo title"}))
+        (.set {"title" "Todo title Two"}))
 
       ; redaback
+      (doseq [id ["5ggmwupfb" "3n3aym16h"]]
+        (let [rb (await (-> db
+                          (.collection "todos")
+                          (.doc id)
+                          .get))]
+          (dp :readback!!!!!!!!! id :data rb )))
 
-      (let [rb (await (-> db
+      #_ (let [rb (await (-> db
                         (.collection "todos")
                         (.doc id)
                         .get))]
-        (dp :readback!!!!!!!!! rb))))
+        (dp :readback!!!!!!!!! id :data rb))))
 
   ;(let [{:keys [initial-open? distance actions] :or [initial-open? false]}
   ;      {:distance 42}]

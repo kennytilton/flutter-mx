@@ -14,40 +14,46 @@
   (fx/material-app
     ;; nb! next: all mx/fx proxy constructors take an optional map as their first parameter; these values
     ;;     will be passed to the Flutter constructor as parameters. Unlike the constructor name, the keys
-    ;;     we specify here are the same CamelCase names as in Dart, happily serving as a reminder
+    ;;     we specify here are the same CamelCase names as in Dart, hopefully serving as a reminder
     ;;     that one is now programming in the Flutter sphere.
     {:title "Hunt for Teal mxFlutter"
-     :theme (cF ;; nb! "cF" expands a "F"ormulaic "c"ell, a structure used to manage the value of :theme
+     :theme (cF                                             ;; nb! "cF" expands into a "F"ormulaic "c"ell, a structure used to manage the value of :theme
               (m/ThemeData :primarySwatch
-                  ;; nb! Native Flutter can be used by MX stucture, but NOT vice versa.
-                  (let [ttl (md/mget me :title)]
-                    ;; nb! "mget", the MX reader, can be called from anywhere, not just formulas.
-                    ;; nb! called inside a formula, a dependency of the computed value (here "theme") on
-                    ;;     the gotten value "title" will be recorded.
-                    ;;
-                    ;; This is a silly computed, reactive value. Silly because the user cannot
-                    ;; change the title, so we never get to see the Theme "react".
-                    ;; But you can change it and reload. Next app, we go truly reactive.
-                    (cond
-                      (str/includes? ttl "Teal") m.Colors/teal
-                      (str/includes? ttl "Red") m.Colors/red
-                      :else m.Colors/blue))))}
+                ;; nb! Native Flutter can be used by MX stucture, but NOT vice versa. In this case we are
+                ;; offering a native ThemeData as the :theme, no MX involved
+                (let [ttl (md/mget me :title)]
+                  ;; nb! "mget", the MX reader, can be called from anywhere, not just formulas.
+                  ;; nb! called inside a formula, a dependency of the computed value (here "theme") on
+                  ;;     the gotten value "title" will be recorded.
+                  ;;
+                  ;; This is a silly computed, reactive (not!) value. Silly because the user cannot
+                  ;; change the title, so we never get to see the Theme "react".
+                  ;; But you can change it and reload. Next app, we go truly reactive.
+                  (cond
+                    (str/includes? ttl "Teal") m.Colors/teal
+                    (str/includes? ttl "Red") m.Colors/red
+                    :else m.Colors/blue))))}
     ;; nb! MX offers a bit of syntactic cleanup by collapsing options such as :child, :children,
     ;; body, and :home into the generic MX "kids" concept. Here we simply define the content
-    ;; menat for the app :home parameter as a sole child.
+    ;; meant for the app :home parameter as a sole child.
     (fx/scaffold
       {:appBar (fx/app-bar
                  ;; nb! Below, again we see a Flutter m/Text used as is by an MX app-bar proxy
                  {:title (m/Text "Welcome to Flummox")})}
       ;; nb! in this case, the scaffold :body is again expressed simply as a sole child. We could change this.
       (fx/center
-        ;; in the fx/text syntax we reveal a preference for the HTML's syntax consistency.
+        ;; in the fx/text syntax we manifest our preference for HTML's syntax consistency.
         ;; Specifically, the text content appears in the standard child position, not the first parameter.
         ;; Users can easily go in a different direction on this with their own version of "text".
         ;;
         ;; Otherwise, nb again the easy mingling of MX with Flutter objects for :overflow and :style
-        (fx/text {:overflow m.TextOverflow/ellipsis
-                  :style    (p/TextStyle
-                              :color m.Colors/cyan
-                              :fontSize 32.0)}
-          "hello, world\\n")))))
+        (fx/column
+          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+          (fx/hero {:tag "imageHero"}
+            (m/Image :image (m/AssetImage "image/kernighan.jpeg")
+              :height 512))
+          (fx/text {:overflow m.TextOverflow/ellipsis
+                    :style    (p/TextStyle
+                                :color m.Colors/cyan
+                                :fontSize 32.0)}
+            "hello, world\\n"))))))
