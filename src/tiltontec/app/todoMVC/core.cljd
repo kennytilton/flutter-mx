@@ -1,0 +1,36 @@
+(ns tiltontec.app.todoMVC.core
+  (:require
+    [tiltontec.model.core :as md]
+    [tiltontec.mx-flutter.core :as fx]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+(defn make-app []
+  (let [title "todos"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text
+                                       {:style (p/TextStyle
+                                                 :fontFamily "RobotoMono"
+                                                 :color m.Colors/black
+                                                 :fontWeight m.FontWeight/w100
+                                                 :fontSize 64.0)}
+                                       title)})
+         :floatingActionButton
+         (fx/floating-action-button
+           {:onPressed (fx/cb-with-ctx [me ctx]
+                         (fx/->CBAsIs
+                           #(m/showDialog
+                              :context ctx
+                              :builder (fn [_] (m/AlertDialog
+                                                 :content (m/Text (.text ^m/TextEditingController
+                                                                    (md/mget (md/fm* :test-input) :controller))))))))
+            :tooltip   "Show me the value!"}
+           (m/Icon m.Icons/text_fields))}
+        (fx/padding
+          {:padding ^:const (m.EdgeInsets/all 16.0)}
+          (fx/text-field {:controller (m/TextEditingController)}
+            ;; todo add to dispose ^^^
+            {:name :test-input}))))))
+
