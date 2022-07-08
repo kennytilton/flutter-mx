@@ -28,9 +28,15 @@
                                                                     (md/mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}
            (m/Icon m.Icons/text_fields))}
-        (fx/padding
+        (fx/column
+          (fx/padding
           {:padding ^:const (m.EdgeInsets/all 16.0)}
-          (fx/text-field {:controller (m/TextEditingController)}
+          (fx/text-field {:decoration (m/InputDecoration
+                                        :hintText "What needs doing?"
+                                        :border (m/OutlineInputBorder))
+                          :controller (m/TextEditingController)}
             ;; todo add to dispose ^^^
-            {:name :test-input}))))))
+            {:name :test-input}))
+          (for [do ["walk" "wash" "buy"]]
+            (fx/text do)))))))
 
