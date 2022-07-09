@@ -14,7 +14,7 @@
             [tiltontec.test.lazy-cells :as test-lazy]
 
             [tiltontec.mx-flutter.core :as fx]
-            ["package:localstore/localstore.dart" :as ls]
+
 
             [tiltontec.sample.fab :as fab-std]
 
@@ -50,84 +50,5 @@
     (fx/fx-render nil
       (todo/make-app)))
 
-  ;(dp :jsowrite!!!!! (json/write-str {:a 1 :b 2}))
-  ;(dp :jsoencode (convert/jsonEncode {:a 1 :b 2}))
-  #_(let [decode (convert/jsonDecode "{ \"name\": \"Pizza da Mario\", \"cuisine\": \"Italian\" }")]
-      (dp :decodes? (string? decode))
-      (dp :decodes-map? (map? decode))
-      (dp :decodes-keywordized (walk/keywordize-keys decode))
-      (dp :decode-k (keys decode))
-      (dp :cuisi (get decode "cuisine"))
-      (dp :decode decode)
-
-      (doseq [[k v] decode]
-        (dp :doseq k v)
-        (dp :doseq (keyword k) v)
-        )
-
-      (dp :forrrrr (into {}
-                     (for [[k v] decode]
-                       [(keyword k) v])))
-      #_(let [mp (into {}
-                   (apply concat
-                     (for [[k v] decode]
-                       [(keyword k) v])))]
-          (prn :now-m? mp (map? mp))))
-
-  (let [db (.instance ls/Localstore)]
-    (dp :bam-db!!!!!!!!!!! db)
-
-    ;
-    ; 3n3aym16h
-    ; 5ggmwupfb
-    ;
-    (let [coll (.collection db "todos")
-          ;id (.id (.doc (.collection db "todos")))
-          ;;id #_ "5ggmwupfb"  (.id (.doc coll))
-          ]
-      (dp :BAM-coll coll)
-      (dp :BAM-doc-get-all (await (.get coll)))
-      #_(dp :BAM-doc-get-all-decode (convert/jsonDecode
-                                      (await (.get coll))))
-      ;;(dp :BAM-doc-id id)
-
-      ;;; --- write new entry -----------------------------
-      (let [coll (.collection db "todos")
-            new-id (.id (.doc coll))]
-        ;;id #_ "5ggmwupfb"  (.id (.doc coll))
-        (-> db
-          (.collection "todos")
-          (.doc new-id)
-          (.set {"title" "Todo title Two"})))
-
-      ;;; --- read known IDs ------------------------------
-      (doseq [id ["5ggmwupfb" "3n3aym16h"]]
-        (let [rb (await (-> db
-                          (.collection "todos")
-                          (.doc id)
-                          .get))]
-          (dp :readback!!!!!! id :data (string? rb) (map? rb) :raw> rb)
-          (dp :readback!!!!!! id :keys!!! (keys rb) rb)
-          (dp :CLJD-map!!!! (walk/keywordize-keys
-                              (into {}
-                                (for [k (keys rb)]
-                                  [k (get rb k)]))))
-          #_(dp :readback!!!!!! id :decode!! (convert/jsonDecode rb) rb)))
-
-      ;;  Unhandled Exception: type '_InternalLinkedHashMap<String, dynamic>' is not a subtype of type 'String' in type cast
-
-      #_(let [rb (await (-> db
-                          (.collection "todos")
-                          (.doc id)
-                          .get))]
-          (dp :readback!!!!!!!!! id :data rb))))
-
-  ;(let [{:keys [initial-open? distance actions] :or [initial-open? false]}
-  ;      {:distance 42}]
-  ;  (dp :s distance :io initial-open?))
-
   ;;(widgets/debugDumpApp)
   )
-
-
-;; db.collection('todos').doc(id).set({ 'title': 'Todo title'});

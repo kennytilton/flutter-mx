@@ -2,11 +2,20 @@
   (:require
     [tiltontec.model.core :as md]
     [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.app.todoMVC.todo :as todo]
+    ["dart:convert" :as convert]
+    ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
 
 (defn make-app []
+
+  ;(todo/test-store-one-map)
+  ;(todo/load-test-todos)
+  ;;(todo/just-hack)
+
   (let [title "todos"]
     (fx/material-app {:title title}
       (fx/scaffold
@@ -37,6 +46,6 @@
                           :controller (m/TextEditingController)}
             ;; todo add to dispose ^^^
             {:name :test-input}))
-          (for [do ["walk" "wash" "buy"]]
-            (fx/text do)))))))
+          (for [{:keys [title completed deleted]} (store/coll-get-all "todo")]
+            (fx/text title)))))))
 
