@@ -1,6 +1,8 @@
 (ns tiltontec.app.todoMVC.core
   (:require
     [tiltontec.model.core :as md]
+    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
     [tiltontec.mx-flutter.store :as store]
     [tiltontec.app.todoMVC.todo :as todo]
@@ -12,51 +14,93 @@
 
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
+(declare my-app-bar my-fab)
+
+(comment
+  (todo/test-store-one-map)
+  (todo/load-test-todos)
+  (todo/just-hack)
+  )
+
 (defn make-app []
-
-  ;(todo/test-store-one-map)
-  ;(todo/load-test-todos)
-  ;;(todo/just-hack)
-
   (let [title "todos"]
     (fx/material-app {:title title}
+      {:name    :app
+       :todo-db (cI [{:title     "Wash car"
+                      :completed false
+                      :deleted   false}
+                     {:title     "Wash dog"
+                      :completed true
+                      :deleted   false}
+                     {:title     "Walk dog"
+                      :completed false
+                      :deleted   false}])}
       (fx/scaffold
-        {:appBar (fx/app-bar {:title (fx/text
-                                       {:style (p/TextStyle
-                                                 :fontFamily "RobotoMono"
-                                                 :color m.Colors/black
-                                                 :fontWeight m.FontWeight/w100
-                                                 :fontSize 64.0)}
-                                       title)})
+        {:appBar (my-app-bar title)
          :floatingActionButton
-         (fx/floating-action-button
-           {:onPressed (fx/cb-with-ctx [me ctx]
-                         (fx/->CBAsIs
-                           #(m/showDialog
-                              :context ctx
-                              :builder (fn [_] (m/AlertDialog
-                                                 :content (m/Text (.text ^m/TextEditingController
-                                                                    (md/mget (md/fm* :test-input) :controller))))))))
-            :tooltip   "Show me the value!"}
-           (m/Icon m.Icons/text_fields))}
+         (my-fab)}
         (fx/column
           (fx/padding
-          {:padding ^:const (m.EdgeInsets/all 16.0)}
-          (fx/text-field {:decoration (m/InputDecoration
-                                        :hintText "What needs doing?"
-                                        :border (m/OutlineInputBorder))
-                          :controller (m/TextEditingController)}
-            ;; todo add to dispose ^^^
-            {:name :test-input}))
+            {:padding ^:const (m.EdgeInsets/all 16.0)}
+            (fx/text-field {:decoration  (m/InputDecoration
+                                           :hintText "What needs doing?"
+                                           :border (m/OutlineInputBorder))
+                            :onSubmitted (cF (fx/->CBAsIs
+                                               (fn [value]
+                                                 (dp :submittedd!!!!! value)
+                                                 (md/mset! me :value value)
+                                                 (md/mswap! (md/fasc :app) :todo-db conj
+                                                   {:title value
+                                                    :completed false
+                                                    ;; todo did we get away with omitting :deleted?
+                                                    }))))
+                            :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
+                                                   (.addListener c
+                                                     (fn []
+                                                       (let [value (.text c)]
+                                                         (dp (str "todo input field: " value))
+                                                         (md/mset! me :value value))))
+                                                   c))}
+              {:name  :test-input
+               :value (cI "start value"
+                        :obs (fn-obs (dp :val-obs-sees new)))}))
 
           (fx/expanded
             (fx/list-view
               {:padding m.EdgeInsets/zero}
-              (for [{:keys [title completed deleted]} (store/coll-get-all "todo")
+              (for [{:keys [title completed deleted]} (md/fmuval :app :todo-db)
                     :when (not deleted)]
+                ;; arrange for a key to avoid excess rebuild
                 (fx/list-tile
-                  {:title (m/Text title)
+                  {:title (cF (m/Text (md/mget me :full-item)))
                    :onTap (fx/cb-with-ctx [me ctx]
                             (fx/->CBAsIs
-                              #(dp :hi-tap)))})))))))))
+                              #(dp :hi-tap)))}
+                  {:full-item (cF (str title ": " (if completed "done" "open")))})))))))))
 
+;;; --- breakouts -----------------
+
+(defn my-app-bar [title]
+  (fx/preferred-size
+    {:preferredSize (.fromHeight m/Size 100)}
+    (fx/app-bar {:title (fx/text
+                          {:style (p/TextStyle
+                                    :fontFamily "RobotoMono"
+                                    :color m.Colors/red
+                                    :fontWeight m.FontWeight/w100
+                                    :fontSize 64.0
+                                    ;;:height 4.0
+                                    )}
+                          title)})))
+
+(defn my-fab []
+  (fx/floating-action-button
+    {:onPressed (fx/cb-with-ctx [me ctx]
+                  (fx/->CBAsIs
+                    #(m/showDialog
+                       :context ctx
+                       :builder (fn [_] (m/AlertDialog
+                                          :content (m/Text (.text ^m/TextEditingController
+                                                             (md/mget (md/fm* :test-input) :controller))))))))
+     :tooltip   "Show me the value!"}
+    (m/Icon m.Icons/text_fields)))
