@@ -8,7 +8,9 @@
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]))
+    ["package:flutter/painting.dart" :as p]
+
+    [tiltontec.util.base :refer [dprn dp dpx]]))
 
 (defn make-app []
 
@@ -46,6 +48,15 @@
                           :controller (m/TextEditingController)}
             ;; todo add to dispose ^^^
             {:name :test-input}))
-          (for [{:keys [title completed deleted]} (store/coll-get-all "todo")]
-            (fx/text title)))))))
+
+          (fx/expanded
+            (fx/list-view
+              {:padding m.EdgeInsets/zero}
+              (for [{:keys [title completed deleted]} (store/coll-get-all "todo")
+                    :when (not deleted)]
+                (fx/list-tile
+                  {:title (m/Text title)
+                   :onTap (fx/cb-with-ctx [me ctx]
+                            (fx/->CBAsIs
+                              #(dp :hi-tap)))})))))))))
 

@@ -12,17 +12,19 @@
 
   )
 
+(def test-db (atom [{:title     "Wash car"
+                     :completed false
+                     :deleted false}
+                    {:title     "Wash dog"
+                     :completed true
+                     :deleted false}
+                    {:title     "Walk dog"
+                     :completed false
+                     :deleted false}]))
+
 (defn coll-get-all [coll]
   (case coll
-    "todo" [{:title     "Wash car"
-             :completed false
-             :deleted false}
-            {:title     "Wash dog"
-             :completed true
-             :deleted false}
-            {:title     "Walk dog"
-             :completed false
-             :deleted false}]
+    "todo" @test-db
     (throw (Exception. (str "coll-get-all does not know coll: <" coll ">")))))
 
 ;(dp :jsowrite!!!!! (json/write-str {:a 1 :b 2}))
