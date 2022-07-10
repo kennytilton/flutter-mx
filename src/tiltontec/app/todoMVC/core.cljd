@@ -14,7 +14,7 @@
 
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare my-app-bar my-fab todo-input)
+(declare my-app-bar my-fab todo-input todo-list-item)
 
 (comment
   (todo/test-store-one-map)
@@ -47,6 +47,13 @@
           (fx/expanded ;; required sizer to join column
             (fx/list-view
               {:padding m.EdgeInsets/zero}
+              (for [{:keys [deleted] :as todo} (md/fmuval :app :todo-db)
+                    :when (not deleted)]
+                ;; arrange for a key to avoid excess rebuild
+                ;; todo NEXT break this out and then evolve the list item
+                ;;      make it a row with a "completed" checkbox
+                (todo-list-item todo))
+              #_
               (for [{:keys [title completed deleted]} (md/fmuval :app :todo-db)
                     :when (not deleted)]
                 ;; arrange for a key to avoid excess rebuild
@@ -66,6 +73,26 @@
 
 ; Text('\$8.99', style: TextStyle(decoration: TextDecoration.lineThrough))
 ;;; --- breakouts -----------------
+
+(defn todo-list-item [{:keys [title completed deleted] :as todo}]
+  (fx/list-tile
+    {:leading (fx/check-box
+                {:value completed
+                 :shape (fx/rounded-rectangle-border
+                          {:borderRadius #_ (m.BorderRadius/all (m.Radius/circular 10.0))
+                           (m.BorderRadius/circular 10.0)})
+                 :onChanged (fx/->CBAsIs
+                              (fn [value]
+                                (dp :check-box-changed!!! value)))})
+     :title (cF (m/Text title
+                  :style (if completed
+                           (p/TextStyle
+                             :color m.Colors/grey
+                             :decoration p.TextDecoration/lineThrough)
+                           (p/TextStyle :color m.Colors/black))))
+     :onTap (fx/cb-with-ctx [me ctx]
+              (fx/->CBAsIs
+                #(dp :hi-tap title)))}))
 
 ;; ---- below is a circular checkbox for the "completed" checkbox in each row
 ; Checkbox(
