@@ -14,7 +14,7 @@
 
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare my-app-bar my-fab)
+(declare my-app-bar my-fab todo-input)
 
 (comment
   (todo/test-store-one-map)
@@ -42,43 +42,97 @@
         (fx/column
           (fx/padding
             {:padding ^:const (m.EdgeInsets/all 16.0)}
-            (fx/text-field {:decoration  (m/InputDecoration
-                                           :hintText "What needs doing?"
-                                           :border (m/OutlineInputBorder))
-                            :onSubmitted (cF (fx/->CBAsIs
-                                               (fn [value]
-                                                 (dp :submittedd!!!!! value)
-                                                 (md/mset! me :value value)
-                                                 (md/mswap! (md/fasc :app) :todo-db conj
-                                                   {:title value
-                                                    :completed false
-                                                    ;; todo did we get away with omitting :deleted?
-                                                    }))))
-                            :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
-                                                   (.addListener c
-                                                     (fn []
-                                                       (let [value (.text c)]
-                                                         (dp (str "todo input field: " value))
-                                                         (md/mset! me :value value))))
-                                                   c))}
-              {:name  :test-input
-               :value (cI "start value"
-                        :obs (fn-obs (dp :val-obs-sees new)))}))
+            (todo-input))
 
-          (fx/expanded
+          (fx/expanded ;; required sizer to join column
             (fx/list-view
               {:padding m.EdgeInsets/zero}
               (for [{:keys [title completed deleted]} (md/fmuval :app :todo-db)
                     :when (not deleted)]
                 ;; arrange for a key to avoid excess rebuild
+                ;; todo NEXT break this out and then evolve the list item
+                ;;      make it a row with a "completed" checkbox
                 (fx/list-tile
-                  {:title (cF (m/Text (md/mget me :full-item)))
+                  {:title (cF (m/Text (md/mget me :full-item)
+                                :style (if completed
+                                         (p/TextStyle
+                                           :color m.Colors/grey
+                                           :decoration p.TextDecoration/lineThrough)
+                                         (p/TextStyle :color m.Colors/black))))
                    :onTap (fx/cb-with-ctx [me ctx]
                             (fx/->CBAsIs
                               #(dp :hi-tap)))}
-                  {:full-item (cF (str title ": " (if completed "done" "open")))})))))))))
+                  {:full-item (cF title)})))))))))
 
+; Text('\$8.99', style: TextStyle(decoration: TextDecoration.lineThrough))
 ;;; --- breakouts -----------------
+
+;; ---- below is a circular checkbox for the "completed" checkbox in each row
+; Checkbox(
+;  shape: RoundedRectangleBorder(
+;    borderRadius: BorderRadius.circular(10)),
+;)
+
+;; ----- below another oldskool round checkbox
+; bool _value = false;
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return Scaffold(
+;      appBar: AppBar(
+;        title: Text("Circle CheckBox"),
+;      ),
+;      body: Center(
+;          child: InkWell(
+;        onTap: () {
+;          setState(() {
+;            _value = !_value;
+;          });
+;        },
+;        child: Container(
+;          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue),
+;          child: Padding(
+;            padding: const EdgeInsets.all(10.0),
+;            child: _value
+;                ? Icon(
+;                    Icons.check,
+;                    size: 30.0,
+;                    color: Colors.white,
+;                  )
+;                : Icon(
+;                    Icons.check_box_outline_blank,
+;                    size: 30.0,
+;                    color: Colors.blue,
+;                  ),
+;          ),
+;        ),
+;      )),
+;    );
+;  }
+
+(defn todo-input []
+  (fx/text-field {:decoration  (m/InputDecoration
+                                 :hintText "What needs doing?"
+                                 :border (m/OutlineInputBorder))
+                  :onSubmitted (cF (fx/->CBAsIs
+                                     (fn [value]
+                                       ;; todo clear the text edit field
+                                       (md/mset! me :value value)
+                                       (md/mswap! (md/fasc :app) :todo-db conj
+                                         {:title value
+                                          :completed false
+                                          ;; todo did we get away with omitting :deleted?
+                                          }))))
+                  :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
+                                         (.addListener c
+                                           (fn []
+                                             (let [value (.text c)]
+                                               (dp (str "todo input field: " value))
+                                               (md/mset! me :value value))))
+                                         c))}
+    {:name  :todo-input
+     :value (cI "start value"
+              :obs (fn-obs (dp :val-obs-sees new)))}))
 
 (defn my-app-bar [title]
   (fx/preferred-size
@@ -101,6 +155,6 @@
                        :context ctx
                        :builder (fn [_] (m/AlertDialog
                                           :content (m/Text (.text ^m/TextEditingController
-                                                             (md/mget (md/fm* :test-input) :controller))))))))
+                                                             (md/mget (md/fm* :todo-input) :controller))))))))
      :tooltip   "Show me the value!"}
     (m/Icon m.Icons/text_fields)))
