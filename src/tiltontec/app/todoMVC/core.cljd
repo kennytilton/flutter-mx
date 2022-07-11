@@ -45,7 +45,24 @@
                                                          " item" " items")
                                          " left")))
                                    (m/Text "All")
-                                   (m/Text "Clear completed")]}
+                                   (m/Text "Active")
+                                   (m/Text "Completed")
+                                   (fx/visibility
+                                     {:visible (cF (let [db (md/fmuval :app :todo-db)]
+                                                     (if (some (fn [todo]
+                                                             (dp :2do!! todo)
+                                                                 (and (:completed todo)
+                                                                   (not (:deleted todo)))) db)
+                                                       true false)))
+                                      :maintainSize true
+                                      :maintainAnimation true
+                                      :maintainState true}
+                                     (fx/text-button
+                                       {:onPressed (fx/cb-with-ctx [me ctx]
+                                                     (fx/->CBAsIs
+                                                       (fn []
+                                                         (dp :BAM-text-button))))}
+                                       (m/Text "Clear completed")))]}
         (fx/column
           (fx/padding
             {:padding ^:const (m.EdgeInsets/all 16.0)}
@@ -94,10 +111,10 @@
     {:name :my-list-tile}))
 
 (defn todo-input []
-  (do #_#_ fx/focus+focus-node
-    {;;:autofocus true
-     :focusNode (m/FocusNode :autofocus true)}
-    (fx/text-field {:autofocus true
+  (do #_#_fx/focus+focus-node
+          {;;:autofocus true
+           :focusNode (m/FocusNode :autofocus true)}
+    (fx/text-field {:autofocus   true
                     :decoration  (m/InputDecoration
                                    :hintText "What needs doing?"
                                    :border (m/OutlineInputBorder))
@@ -122,10 +139,10 @@
                                                  (dp (str "todo input field: " value))
                                                  (md/mset! me :value value))))
                                            c))}
-      {:name    :todo-input
-       :value   (cI nil
-                  :obs (fn-obs (dp :val-obs-sees new)))
-       #_#_ :focuser (m/FocusNode)})))
+      {:name  :todo-input
+       :value (cI nil
+                :obs (fn-obs (dp :val-obs-sees new)))
+       #_#_:focuser (m/FocusNode)})))
 
 (defn my-app-bar [title]
   (fx/preferred-size
@@ -138,23 +155,26 @@
                                     :fontSize 64.0)}
                           title)})))
 
-(defn my-fab []
-  (fx/floating-action-button
-    {:onPressed (fx/cb-with-ctx [me ctx]
-                  (fx/->CBAsIs
-                    #(m/showDialog
-                       :context ctx
-                       :builder (fn [_] (m/AlertDialog
-                                          :content (m/Text (.text ^m/TextEditingController
-                                                             (md/mget (md/fm* :todo-input) :controller))))))))
-     :tooltip   "Show me the value!"}
-    (m/Icon m.Icons/text_fields)))
+#_;; not needed, but save maybe for DB reset?
+        (defn my-fab []
+          (fx/floating-action-button
+            {:onPressed (fx/cb-with-ctx [me ctx]
+                          (fx/->CBAsIs
+                            #(m/showDialog
+                               :context ctx
+                               :builder (fn [_] (m/AlertDialog
+                                                  :content (m/Text (.text ^m/TextEditingController
+                                                                     (md/mget (md/fm* :todo-input) :controller))))))))
+             :tooltip   "Show me the value!"}
+            (m/Icon m.Icons/text_fields)))
 
 ;; todo hide footer if no items
 ;; todo refocus todo input after clearing
 
 (def test-todos
-  []
+  [{:title     "Wash dog"
+    :completed true
+    :deleted   false}]
   #_[{:title     "Wash car"
       :completed false
       :deleted   false}
