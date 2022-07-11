@@ -218,8 +218,8 @@
               (dprn :error-calculating-cinfo (cinfo c))
               (dprn :error-calculating-minfo (cty/minfo (c-model c)))
               (dprn :ex-data (ex-data e))
-           ;   (dprn :ex-message (ex-message e))
-            ;  (dprn :ex-cause (ex-cause e))
+              ;   (dprn :ex-message (ex-message e))
+              ;  (dprn :ex-cause (ex-cause e))
               (dprn :rule-calc-caught e)
               (throw e)))
           prop-code? (and (c-synaptic? c)
@@ -231,34 +231,57 @@
 
 ;;; --- awakening ------------------------------------
 
+#_(try
+    ((c-rule c) c)
+    (catch Exception e
+      (dprn :exception e)
+      (dprn :error-calculating-formula (c-code c))
+      (dprn :error-calculating-cinfo (cinfo c))
+      (dprn :error-calculating-minfo (cty/minfo (c-model c)))
+      (dprn :ex-data (ex-data e))
+      ;   (dprn :ex-message (ex-message e))
+      ;  (dprn :ex-cause (ex-cause e))
+      (dprn :rule-calc-caught e)
+      (throw e)))
+
 (defn c-awaken [c]
-  (cond
-    (c-formula? c)
+  (try
     (cond
-      (some #{(c-lazy c)} [:until-asked])
-      (dp :not-awakening-lazy (cinfo c))
-      :else (binding [*depender* nil]
-              (when-not (c-current? c)
-                (calculate-and-set c :fn-c-awken nil))))
+      (c-formula? c)
+      (cond
+        (some #{(c-lazy c)} [:until-asked])
+        (dp :not-awakening-lazy (cinfo c))
+        :else (binding [*depender* nil]
+                (when-not (c-current? c)
+                  (calculate-and-set c :fn-c-awken nil))))
 
-    (c-ref? c)
-    (do
-      (assert (c-input? c))
-      (when (> @+pulse+ (c-pulse-observed c))               ;; safeguard against double-call
-        (when-let [me (c-me c)]
-          (rmap-setf [(c-slot c) me] (c-value c)))
-        (c-observe c :cell-awaken)
-        (ephemeral-reset c)))
+      (c-ref? c)
+      (do
+        (assert (c-input? c))
+        (when (> @+pulse+ (c-pulse-observed c))             ;; safeguard against double-call
+          (when-let [me (c-me c)]
+            (rmap-setf [(c-slot c) me] (c-value c)))
+          (c-observe c :cell-awaken)
+          (ephemeral-reset c)))
 
-    (coll? c)
-    ;; a test function does this for standalones
-    (doseq [ce c]
-      (c-awaken ce))
+      (coll? c)
+      ;; a test function does this for standalones
+      (doseq [ce c]
+        (c-awaken ce))
 
-    :else
-    (dp :c-awken-fall-thru (if (atom? c)
-                             [:ref-of (meta c) @c]
-                             [:unref c]))))
+      :else
+      (dp :c-awaken-fall-thru (if (atom? c)
+                                [:ref-of (meta c) @c]
+                                [:unref c])))
+    (catch Exception e
+      (dprn :error-calculating-cinfo (cinfo c))
+      (dprn :c-awkaken-exception e)
+
+      (dprn :error-calculating-formula (c-code c))
+
+      (dprn :error-calculating-minfo (cty/minfo (c-model c)))
+      (dprn :ex-data (ex-data e))
+      (throw e))))
 
 ;; ------------------------------------------------------------
 

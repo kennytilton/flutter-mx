@@ -8,6 +8,8 @@
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
+            [tiltontec.util.core
+             :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe md-ref?] :as cty]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
@@ -44,9 +46,9 @@
 
      (dart/is? widget-value CBToResolve)
      (let [val ^CBToResolve widget-value]
-       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       (dpx :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
        (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
-         (dp :CBToResolveyields cb-val)
+         (dpx :CBToResolveyields cb-val)
          (recur slot me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
@@ -56,9 +58,9 @@
 
      (fn? widget-value)
      (do                                                    ;; (dp :ew-sees-fn widget-value)
-       (dp :fxres-calling-fn?-blind widget-value)
+       (dpx :fxres-calling-fn?-blind widget-value)
        (let [v (widget-value me ctx)]
-         (dp :recuring-unwrapped-fn?-return-val v)
+         (dpx :recuring-unwrapped-fn?-return-val v)
          (recur slot me ctx v)))
 
      (cty/c-ref? widget-value)
@@ -71,9 +73,9 @@
          fx))
 
      (vector? widget-value)
-     (do (dp :BAM-vector!!!!!!! widget-value)
+     (do (dpx :BAM-vector!!!!!!! widget-value)
          (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
-           (dp :vec-rez rzd)
+           (dpx :vec-rez rzd)
            rzd))
 
      :default (do #_(dp :resolve-fall-thru-used slot (minfo me) widget-value
@@ -105,6 +107,7 @@
             (assert gen "OBAD: fx-render of model finds no fx-gen: ")
             (let [g (gen fx ctx)]
               (dpx :render-genned!!! g)
+              (rmap-meta-setf [:fx-dom fx] g)
               g))))
 
 (defmacro cb-with-ctx [[me-var ctx-var] & body]
@@ -112,11 +115,20 @@
      (fn [~me-var ~ctx-var]
        ~@body)))
 
+;(defn fx-state-nearest [me]
+;  (when me
+;    (or ^State? (mget me :fx$state)
+;      (md/mset! me :fx$state
+;        (fx-state-nearest (md/mpar))))))
+
 (defn fx-state-nearest [me]
+  (dpx :state-nearest-entry (minfo me))
   (when me
-    (or ^State? (mget me :fx$state)
-      (md/mset! me :fx$state
-        (fx-state-nearest (md/mpar))))))
+    (when-let [st (or ^State? (mget me :fx$state)
+                    (fx-state-nearest (md/mpar)))]
+      (dpx :got-st st (minfo me))
+      (md/mset! me :fx$state st)                            ;; for next time
+      st)))
 
 (defmacro when-my-state [[state-var] & body]
   `(when-let [~state-var (tiltontec.mx-flutter.core/my-state)]
@@ -157,18 +169,33 @@
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (some #{slot} [:fx$state])                    ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
-        (dp :FXDartWidget-observing!!! slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me) (cty/cinfo cell))
+        (dp :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
+        (dpx :FXDartWidget-observing-md!!! slot (cty/minfo me) :deref @me)
+        (dpx :FXDartWidget-observing-cell!!! slot (cty/cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dp :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
+          (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
               (.setState state (fn [] (do))))
           (if-let [^State state (fx-state-nearest me)]
             (do
               (dp :obs-FXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
               (.setState state (fn [] (do))))
-            (dp :NOT-setting-state-on-stateless slot new-value (minfo me))))))))
+            (if false #_(= slot :opacity)
+              (do (dp :opacity-trying-dom (minfo me))
+                  (dp :re-run-st-nearest... (fx-state-nearest me))
+                  (let [dom (:fx-dom (meta me))]
+                    (dp :opa-dom! dom)
+                    )
+                  (let [k1 (first (md/mget me :kids))]
+                    (dp :opaset (minfo k1))
+                    (if-let [^State state (mget k1 :fx$state)]
+                      (do
+                        (dp :k1-state!!! state)
+                        (.setState state #(do)))
+                      (dp :no-k1-state (minfo k1)))))
+              (dp :NOT-setting-state-on-stateless slot new-value (minfo me)))))))))
 
 ;;; ---- sundry factories per Flutter variation ------------------
 
@@ -429,7 +456,7 @@
                                          (apply concat kvs)))
                      ^#/(w/State ~fx-constructor #_m/SnackBar)
                      (~'createState [_#]
-                       (reify :extends #/(w/State #_ ~'~fx-constructor m/SnackBar)
+                       (reify :extends #/(w/State #_~'~fx-constructor m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
@@ -564,6 +591,9 @@
 (deftag tiltontec.mx-flutter.core/k1-child-stateless align m/Align)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless ignore-pointer m/IgnorePointer)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless visibility m/Visibility)
+(deftag tiltontec.mx-flutter.core/k1-child-stateful visibility! m/Visibility)
+(deftag tiltontec.mx-flutter.core/k1-child-stateless opacity m/Opacity)
+(deftag tiltontec.mx-flutter.core/k1-child-stateful opacity! m/Opacity)
 
 (deftag tiltontec.mx-flutter.core/k1-child-stateful hero m/Hero)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful gesture-detector m/GestureDetector)

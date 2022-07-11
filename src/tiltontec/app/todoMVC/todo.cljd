@@ -4,6 +4,7 @@
 
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.model.core :as md]
 
     ["package:flutter/widgets.dart" :as w]
@@ -17,7 +18,7 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :todo-obs!!!!!!!! slot (minfo me) new-value)
+    (dp :REAL-todo-obs!!!!!!!! slot (minfo me) :new new-value :prior prior-value)
     #_(when-not (some #{slot} [:fx$state])                  ;; todo check for others to exclude
         (when-not (= prior-value cty/unbound)
           (dpx :FXDartWidget-observing!!! slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me) (cty/cinfo cell))
@@ -33,9 +34,12 @@
                 (.setState state (fn [] (do))))
               (dpx :NOT-setting-state-on-stateless slot new-value (minfo me))))))))
 
-; (apply tiltontec.model.core/make
-;    :mx-type mx-type
-;
+(defn make-todo [title completed]
+  (md/make
+    :mx-type (ToDo.)
+    :name :a-todo-item
+    :title (cI title)
+    :completed (cI completed)))
 
 (defn make-ls [& iargs]
   ;;(assert (:mx-type iargs) "make-ls called without")
@@ -114,7 +118,6 @@
                                 (for [k (keys rb)]
                                   [k (get rb k)])))))))))
 
-(def fake-db (atom ))
 (defn load-test-todos []
   (dp :loading!!!!!!!!-todos-not)
 

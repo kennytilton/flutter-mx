@@ -11,18 +11,11 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare my-app-bar my-fab todo-input todo-list-item test-todos)
-
-(comment
-  (todo/test-store-one-map)
-  (todo/load-test-todos)
-  (todo/just-hack)
-  )
+(declare my-app-bar my-fab todo-input todo-list-item test-todos
+  clear-completed-button items-left)
 
 (defn make-app []
   (let [title "todos"]
@@ -31,38 +24,18 @@
        :debugShowCheckedModeBanner false}
       {:name    :app
        ;; todo persist in localstorage
-       :todo-db (cI test-todos)}
+       :todo-db (cI (doall
+                      (map (fn [{:keys [title completed]}]
+                             (todo/make-todo title completed))
+                        test-todos)))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          #_#_:floatingActionButton (my-fab)
-         :persistentFooterButtons [(fx/text {}
-                                     {:name :items-left}
-                                     (let [db (md/fmuval :app :todo-db)
-                                           left db]
-                                       (assert db)
-                                       (dp :todos db)
-                                       (str (count db) (if (= 1 (count left))
-                                                         " item" " items")
-                                         " left")))
+         :persistentFooterButtons [(items-left-display)
                                    (m/Text "All")
                                    (m/Text "Active")
                                    (m/Text "Completed")
-                                   (fx/visibility
-                                     {:visible (cF (let [db (md/fmuval :app :todo-db)]
-                                                     (if (some (fn [todo]
-                                                             (dp :2do!! todo)
-                                                                 (and (:completed todo)
-                                                                   (not (:deleted todo)))) db)
-                                                       true false)))
-                                      :maintainSize true
-                                      :maintainAnimation true
-                                      :maintainState true}
-                                     (fx/text-button
-                                       {:onPressed (fx/cb-with-ctx [me ctx]
-                                                     (fx/->CBAsIs
-                                                       (fn []
-                                                         (dp :BAM-text-button))))}
-                                       (m/Text "Clear completed")))]}
+                                   (clear-completed-button)]}
         (fx/column
           (fx/padding
             {:padding ^:const (m.EdgeInsets/all 16.0)}
@@ -71,8 +44,7 @@
           (fx/expanded                                      ;; required sizer to join column
             (fx/list-view
               {:padding m.EdgeInsets/zero}
-              (for [{:keys [deleted] :as todo} (md/fmuval :app :todo-db)
-                    :when (not deleted)]
+              (for [todo (md/fmuval :app :todo-db)]
                 ;; arrange for a key to avoid excess rebuild
                 ;; todo NEXT break this out and then evolve the list item
                 ;;      make it a row with a "completed" checkbox
@@ -85,18 +57,52 @@
 ;;; todo all/completed/open
 ;;; --- breakouts -----------------
 
-(defn todo-list-item [{:keys [title completed deleted] :as todo}]
+(defn items-left-display []
+  (fx/text! {}
+    ;; todo warn (how?) if they use regular text with rule or c-in
+    {:name :items-left}
+    (let [db (md/fmuval :app :todo-db)
+          left (remove #(md/mget % :completed) db)]
+      (dp :items-left-sees!!!! (count left) left)
+      (str (count left) (if (= 1 (count left))
+                          " item" " items")
+        " left"))))
+
+(defn clear-completed-button []
+  (fx/visibility!
+    {:visible           (cF (let [db (md/fmuval :app :todo-db)]
+                              (if (some (fn [todo]
+                                          (md/mget todo :completed)) db)
+                                true false)))
+     :maintainSize      true
+     :maintainAnimation true
+     :maintainState     true}
+    {:name :vis-wrapper}
+    (fx/text-button
+      {:onPressed (fx/cb-with-ctx [me ctx]
+                    (fx/->CBAsIs
+                      (fn []
+                        (let [app (md/fasc :app)
+                              db (md/mget app :todo-db)
+                              remaining (remove #(md/mget % :completed) db)]
+                          (dp :db-in db)
+                          (dp :rem remaining)
+                          (md/mset! (md/fasc :app) :todo-db remaining)))))}
+      (m/Text "Clear completed"))))
+
+(defn todo-list-item [todo]
   (fx/list-tile
     {:leading (fx/check-box
-                {:value     (cI completed
-                              :obs (fn-obs (dpx :completed-OBS-sees-new new)))
+                {:value     (cF (dp :chkbox-value-sees-todo (minfo todo) todo)
+                              (or (md/mget todo :completed) false))
                  :shape     (fx/rounded-rectangle-border
                               {:borderRadius #_(m.BorderRadius/all (m.Radius/circular 10.0))
                                (m.BorderRadius/circular 16.0)})
                  :onChanged (cF (fx/->CBAsIs
                                   (fn [value]
                                     (dpx :check-box-ONchanged-to!!! value)
-                                    (md/mset! me :value value))))})
+                                    (md/mset! todo :completed value))))}
+                {:name :da-checkbox})
      :title   (cF (let [ldg (md/mget me :leading)]
                     (fx/text!
                       {:style (cF (if (md/mget ldg :value)
@@ -104,10 +110,7 @@
                                       :color m.Colors/grey
                                       :decoration p.TextDecoration/lineThrough)
                                     (p/TextStyle :color m.Colors/black)))}
-                      title)))
-     #_#_:onTap (fx/cb-with-ctx [me ctx]
-                  (fx/->CBAsIs
-                    #(dp :hi-tap title)))}
+                      (md/mget todo :title))))}
     {:name :my-list-tile}))
 
 (defn todo-input []
@@ -127,10 +130,7 @@
                                          ;(.requestFocus (md/mget me :focuser))
                                          ;; make new to-do!!
                                          (md/mswap! (md/fasc :app) :todo-db conj
-                                           {:title     value
-                                            :completed false
-                                            ;; todo did we get away with omitting :deleted?
-                                            }))))
+                                           (todo/make-todo value false)))))
                     :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
@@ -172,15 +172,11 @@
 ;; todo refocus todo input after clearing
 
 (def test-todos
-  [{:title     "Wash dog"
-    :completed true
-    :deleted   false}]
-  #_[{:title     "Wash car"
-      :completed false
-      :deleted   false}
-     {:title     "Wash dog"
-      :completed true
-      :deleted   false}
-     {:title     "Walk dog"
-      :completed false
-      :deleted   false}])
+  []
+  #_
+  [{:title     "Wash car"
+    :completed false}
+   {:title     "Wash dog"
+    :completed false}
+   {:title     "Walk dog"
+    :completed false}])
