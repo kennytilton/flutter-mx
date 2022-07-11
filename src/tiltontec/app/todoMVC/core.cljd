@@ -16,7 +16,7 @@
 
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare my-app-bar my-fab todo-input todo-list-item)
+(declare my-app-bar my-fab todo-input todo-list-item test-todos)
 
 (comment
   (todo/test-store-one-map)
@@ -26,21 +26,26 @@
 
 (defn make-app []
   (let [title "todos"]
-    (fx/material-app {:title title}
+    (fx/material-app
+      {:title                      title
+       :debugShowCheckedModeBanner false}
       {:name    :app
-       :todo-db (cI [{:title     "Wash car"
-                      :completed false
-                      :deleted   false}
-                     {:title     "Wash dog"
-                      :completed true
-                      :deleted   false}
-                     {:title     "Walk dog"
-                      :completed false
-                      :deleted   false}])}
+       ;; todo persist in localstorage
+       :todo-db (cI test-todos)}
       (fx/scaffold
-        {:appBar (my-app-bar title)
-         :floatingActionButton
-         (my-fab)}
+        {:appBar                  (my-app-bar title)
+         #_#_:floatingActionButton (my-fab)
+         :persistentFooterButtons [(fx/text {}
+                                     {:name :items-left}
+                                     (let [db (md/fmuval :app :todo-db)
+                                           left db]
+                                       (assert db)
+                                       (dp :todos db)
+                                       (str (count db) (if (= 1 (count left))
+                                                         " item" " items")
+                                         " left")))
+                                   (m/Text "All")
+                                   (m/Text "Clear completed")]}
         (fx/column
           (fx/padding
             {:padding ^:const (m.EdgeInsets/all 16.0)}
@@ -56,117 +61,71 @@
                 ;;      make it a row with a "completed" checkbox
                 (todo-list-item todo)))))))))
 
-; Text('\$8.99', style: TextStyle(decoration: TextDecoration.lineThrough))
+;;; todo toggle-all chevron
+;;; todo clear completed button
+;;; todo delete icon; visible iff selected
+;;; todo credits
+;;; todo all/completed/open
 ;;; --- breakouts -----------------
 
 (defn todo-list-item [{:keys [title completed deleted] :as todo}]
   (fx/list-tile
     {:leading (fx/check-box
                 {:value     (cI completed
-                              :obs (fn-obs (dp :completed-OBS-sees-new new)))
+                              :obs (fn-obs (dpx :completed-OBS-sees-new new)))
                  :shape     (fx/rounded-rectangle-border
                               {:borderRadius #_(m.BorderRadius/all (m.Radius/circular 10.0))
                                (m.BorderRadius/circular 16.0)})
                  :onChanged (cF (fx/->CBAsIs
                                   (fn [value]
-                                    (dp :check-box-ONchanged-to!!! value)
+                                    (dpx :check-box-ONchanged-to!!! value)
                                     (md/mset! me :value value))))})
      :title   (cF (let [ldg (md/mget me :leading)]
-                    (dpx :ldg (minfo ldg))
-                    (dp :title-sees-ldg-value (md/mget ldg :value) title)
-
-
-                    ;    styling is not changing when we click the checkbox
-                    ; it is computing correctly
-                    ; so we just need a setState or sth
-
                     (fx/text!
                       {:style (cF (if (md/mget ldg :value)
-                                    (do (dp :line-thru!!!!!!)
-                                        (p/TextStyle
-                                          :color m.Colors/grey
-                                          :decoration p.TextDecoration/lineThrough))
+                                    (p/TextStyle
+                                      :color m.Colors/grey
+                                      :decoration p.TextDecoration/lineThrough)
                                     (p/TextStyle :color m.Colors/black)))}
-                      title)
-
-                    #_(m/Text title
-                        :style (if (md/mget ldg :value)
-                                 (do (dp :line-thru!!!!!!)
-                                     (p/TextStyle
-                                       :color m.Colors/grey
-                                       :decoration p.TextDecoration/lineThrough))
-                                 (p/TextStyle :color m.Colors/black)))))
-     :onTap   (fx/cb-with-ctx [me ctx]
-                (fx/->CBAsIs
-                  #(dp :hi-tap title)))}
+                      title)))
+     #_#_:onTap (fx/cb-with-ctx [me ctx]
+                  (fx/->CBAsIs
+                    #(dp :hi-tap title)))}
     {:name :my-list-tile}))
 
-;; ---- below is a circular checkbox for the "completed" checkbox in each row
-; Checkbox(
-;  shape: RoundedRectangleBorder(
-;    borderRadius: BorderRadius.circular(10)),
-;)
-
-;; ----- below another oldskool round checkbox
-; bool _value = false;
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    return Scaffold(
-;      appBar: AppBar(
-;        title: Text("Circle CheckBox"),
-;      ),
-;      body: Center(
-;          child: InkWell(
-;        onTap: () {
-;          setState(() {
-;            _value = !_value;
-;          });
-;        },
-;        child: Container(
-;          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue),
-;          child: Padding(
-;            padding: const EdgeInsets.all(10.0),
-;            child: _value
-;                ? Icon(
-;                    Icons.check,
-;                    size: 30.0,
-;                    color: Colors.white,
-;                  )
-;                : Icon(
-;                    Icons.check_box_outline_blank,
-;                    size: 30.0,
-;                    color: Colors.blue,
-;                  ),
-;          ),
-;        ),
-;      )),
-;    );
-;  }
-
 (defn todo-input []
-  (fx/text-field {:decoration  (m/InputDecoration
-                                 :hintText "What needs doing?"
-                                 :border (m/OutlineInputBorder))
-                  :onSubmitted (cF (fx/->CBAsIs
-                                     (fn [value]
-                                       ;; todo clear the text edit field
-                                       (md/mset! me :value value)
-                                       (md/mswap! (md/fasc :app) :todo-db conj
-                                         {:title     value
-                                          :completed false
-                                          ;; todo did we get away with omitting :deleted?
-                                          }))))
-                  :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
-                                         (.addListener c
-                                           (fn []
-                                             (let [value (.text c)]
-                                               (dp (str "todo input field: " value))
-                                               (md/mset! me :value value))))
-                                         c))}
-    {:name  :todo-input
-     :value (cI "start value"
-              :obs (fn-obs (dp :val-obs-sees new)))}))
+  (do #_#_ fx/focus+focus-node
+    {;;:autofocus true
+     :focusNode (m/FocusNode :autofocus true)}
+    (fx/text-field {:autofocus true
+                    :decoration  (m/InputDecoration
+                                   :hintText "What needs doing?"
+                                   :border (m/OutlineInputBorder))
+                    :onSubmitted (cF (fx/->CBAsIs
+                                       (fn [value]
+                                         (.clear (md/mget me :controller)) ;; clear the input text field, as per spec
+                                         (md/mset! me :value value)
+                                         ;; refocus
+                                         ;(dp :refocusing!!!!!!!!! (md/mget me :focuser))
+                                         ;(.requestFocus (md/mget me :focuser))
+                                         ;; make new to-do!!
+                                         (md/mswap! (md/fasc :app) :todo-db conj
+                                           {:title     value
+                                            :completed false
+                                            ;; todo did we get away with omitting :deleted?
+                                            }))))
+                    :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
+                                           ;; todo package this as a reusable
+                                           (.addListener c
+                                             (fn []
+                                               (let [value (.text c)]
+                                                 (dp (str "todo input field: " value))
+                                                 (md/mset! me :value value))))
+                                           c))}
+      {:name    :todo-input
+       :value   (cI nil
+                  :obs (fn-obs (dp :val-obs-sees new)))
+       #_#_ :focuser (m/FocusNode)})))
 
 (defn my-app-bar [title]
   (fx/preferred-size
@@ -174,11 +133,9 @@
     (fx/app-bar {:title (fx/text
                           {:style (p/TextStyle
                                     :fontFamily "RobotoMono"
-                                    :color m.Colors/red
+                                    :color m.Colors/white
                                     :fontWeight m.FontWeight/w100
-                                    :fontSize 64.0
-                                    ;;:height 4.0
-                                    )}
+                                    :fontSize 64.0)}
                           title)})))
 
 (defn my-fab []
@@ -192,3 +149,18 @@
                                                              (md/mget (md/fm* :todo-input) :controller))))))))
      :tooltip   "Show me the value!"}
     (m/Icon m.Icons/text_fields)))
+
+;; todo hide footer if no items
+;; todo refocus todo input after clearing
+
+(def test-todos
+  []
+  #_[{:title     "Wash car"
+      :completed false
+      :deleted   false}
+     {:title     "Wash dog"
+      :completed true
+      :deleted   false}
+     {:title     "Walk dog"
+      :completed false
+      :deleted   false}])

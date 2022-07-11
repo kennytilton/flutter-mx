@@ -1,7 +1,8 @@
 (ns tiltontec.cell.base
   (:require
     [tiltontec.util.base :as utb
-     :refer [def-rmap-slots]]
+     :refer [def-rmap-slots dp]]
+
     [tiltontec.util.core
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
@@ -210,7 +211,8 @@ rule to get once behavior or just when fm-traversing to find someone"
    (cond
      (nil? md) :null-md
      (not (atom? md)) :not-atom-md
-     (not (md-ref? md)) :atom-not-md-c
+     (not (md-ref? md)) (do (dp :atom-not-md-c @md)
+                            :atom-not-md-c)
      :else (if verbose
              [(:name @md) (meta md)]
              [(:name @md) (mx-type md)]))))

@@ -44,9 +44,9 @@
 
      (dart/is? widget-value CBToResolve)
      (let [val ^CBToResolve widget-value]
-       ;;(dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       (dp :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
        (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
-         ;;(dp :CBToResolveyields cb-val)
+         (dp :CBToResolveyields cb-val)
          (recur slot me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
@@ -56,16 +56,25 @@
 
      (fn? widget-value)
      (do                                                    ;; (dp :ew-sees-fn widget-value)
-       ;;(dp :fxres-calling-fn?-blind widget-value)
+       (dp :fxres-calling-fn?-blind widget-value)
        (let [v (widget-value me ctx)]
-         ;;(dp :recuring-unwrapped-fn?-return-val v)
+         (dp :recuring-unwrapped-fn?-return-val v)
          (recur slot me ctx v)))
+
+     (cty/c-ref? widget-value)
+     (throw (Exception. (str "fx-resolve sees Cell! " (cinfo widget-value))))
 
      (cty/md-ref? widget-value)
      (do                                                    ;;(dp :rfxing-md (minfo widget-value))
        (let [fx (fx-render ctx widget-value)]
-         ;;(dp :rfxing-yielded-flutter fx)
+         (dpx :rfx-mdref-yielded-flutter fx)
          fx))
+
+     (vector? widget-value)
+     (do (dp :BAM-vector!!!!!!! widget-value)
+         (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
+           (dp :vec-rez rzd)
+           rzd))
 
      :default (do #_(dp :resolve-fall-thru-used slot (minfo me) widget-value
                       (when (atom? widget-value)
@@ -83,15 +92,20 @@
   (.pop (-> ctx m.Navigator/of)))
 
 (defn fx-render [ctx fx]
-  (dpx :rfx-entry ctx (cty/minfo fx))
+  (dpx :render-entry ctx (cty/minfo fx))
   (cond
     (not (md-ref? fx))
-    (do
-      (dpx :rnfx-sees-not-md-ref?-passing-thru fx)
-      fx)
+    (cond
+      (cty/c-ref? fx) (throw (Exception. (str "fx-render passed Cell " (deref fx))))
+      :default (do
+                 (dpx :render-sees-not-md-ref?-passing-thru fx)
+                 fx))
     :else (let [gen (mget fx :fx-gen)]
+            (dpx :render-sees-gen!! gen)
             (assert gen "OBAD: fx-render of model finds no fx-gen: ")
-            (gen fx ctx))))
+            (let [g (gen fx ctx)]
+              (dpx :render-genned!!! g)
+              g))))
 
 (defmacro cb-with-ctx [[me-var ctx-var] & body]
   `(tiltontec.mx-flutter.core/->CBToResolve
@@ -555,6 +569,8 @@
 (deftag tiltontec.mx-flutter.core/k1-child-stateful elevated-button m/ElevatedButton)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful default-tab-controller m/DefaultTabController)
 
+(deftag tiltontec.mx-flutter.core/k1-child-stateful focus m/Focus)
+(deftag tiltontec.mx-flutter.core/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful animated-builder m/AnimatedBuilder)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful animated-container m/AnimatedContainer)
 
