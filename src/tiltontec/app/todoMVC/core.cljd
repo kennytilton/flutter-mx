@@ -42,13 +42,17 @@
             (todo-input))
 
           (fx/expanded                                      ;; required sizer to join column
-            (fx/list-view
-              {:padding m.EdgeInsets/zero}
-              (for [todo (md/fmuval :app :todo-db)]
-                ;; arrange for a key to avoid excess rebuild
-                ;; todo NEXT break this out and then evolve the list item
-                ;;      make it a row with a "completed" checkbox
-                (todo-list-item todo)))))))))
+            (do (dp :REBUILDINGLISTVIEW!!!!)
+                (fx/list-view
+                  {:padding m.EdgeInsets/zero}
+                  {:name :da-list-view}
+                  (doall (for [todo (md/fmuval :app :todo-db)]
+                           ;; arrange for a key to avoid excess rebuild
+                           ;; todo NEXT break this out and then evolve the list item
+                           ;;      make it a row with a "completed" checkbox
+                           (let [xx todo]
+                             (dp :building-list-item!! (md/mget xx :sid) (md/mget xx :title))
+                             (todo-list-item xx))))))))))))
 
 ;;; todo toggle-all chevron
 ;;; todo clear completed button
@@ -63,7 +67,10 @@
     {:name :items-left}
     (let [db (md/fmuval :app :todo-db)
           left (remove #(md/mget % :completed) db)]
-      (dp :items-left-sees!!!! (count left) left)
+      (dp :items-left-sees!!!! (count left) (doall (map (fn [todo]
+                                                          [(md/mget todo :sid)
+                                                           (md/mget todo :title)])
+                                                     left)))
       (str (count left) (if (= 1 (count left))
                           " item" " items")
         " left"))))
@@ -77,7 +84,7 @@
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}
-    {:name :vis-wrapper}
+    {:name :clear-completed-button}
     (fx/text-button
       {:onPressed (fx/cb-with-ctx [me ctx]
                     (fx/->CBAsIs
@@ -91,27 +98,35 @@
       (m/Text "Clear completed"))))
 
 (defn todo-list-item [todo]
-  (fx/list-tile
-    {:leading (fx/check-box
-                {:value     (cF (dp :chkbox-value-sees-todo (minfo todo) todo)
-                              (or (md/mget todo :completed) false))
-                 :shape     (fx/rounded-rectangle-border
-                              {:borderRadius #_(m.BorderRadius/all (m.Radius/circular 10.0))
-                               (m.BorderRadius/circular 16.0)})
-                 :onChanged (cF (fx/->CBAsIs
-                                  (fn [value]
-                                    (dpx :check-box-ONchanged-to!!! value)
-                                    (md/mset! todo :completed value))))}
-                {:name :da-checkbox})
-     :title   (cF (let [ldg (md/mget me :leading)]
-                    (fx/text!
-                      {:style (cF (if (md/mget ldg :value)
-                                    (p/TextStyle
-                                      :color m.Colors/grey
-                                      :decoration p.TextDecoration/lineThrough)
-                                    (p/TextStyle :color m.Colors/black)))}
-                      (md/mget todo :title))))}
-    {:name :my-list-tile}))
+  (let [title (md/mget todo :title)
+        sid (md/mget todo :sid)]
+    (fx/list-tile
+      {:key (m/ValueKey. sid)
+       :leading (fx/check-box
+                  {:value     (cF (dpx :chkbox-value-sees-tdo (minfo todo) todo)
+                                (or (md/mget todo :completed) false))
+                   :shape     (fx/rounded-rectangle-border
+                                {:borderRadius #_(m.BorderRadius/all (m.Radius/circular 10.0))
+                                 (m.BorderRadius/circular 16.0)})
+                   :onChanged (cF (fx/->CBAsIs
+                                    (fn [value]
+                                      (dp :check-box-ONchanged-to!!! value
+                                        :sid (md/mget todo :sid) :title (md/mget todo :title))
+                                      (md/mset! todo :completed value))))}
+                  {:name :da-checkbox})
+       :title   (cF (let [ldg (md/mget me :leading)
+                          #_#_title (md/mget todo :title)]
+                      ;; todo give leading property occupant an mx-name and
+                      ;;      modify search to find widgets in places like :leading
+                      (dp :listtile-gens-text title)
+                      (fx/text!
+                        {:style (cF (if (md/mget ldg :value)
+                                      (p/TextStyle
+                                        :color m.Colors/grey
+                                        :decoration p.TextDecoration/lineThrough)
+                                      (p/TextStyle :color m.Colors/black)))}
+                        title)))}
+      {:name :my-list-tile})))
 
 (defn todo-input []
   (do #_#_fx/focus+focus-node
@@ -119,7 +134,7 @@
            :focusNode (m/FocusNode :autofocus true)}
     (fx/text-field {:autofocus   true
                     :decoration  (m/InputDecoration
-                                   :hintText "What needs doing?"
+                                   :hintText "What needs next doing?"
                                    :border (m/OutlineInputBorder))
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
@@ -129,19 +144,24 @@
                                          ;(dp :refocusing!!!!!!!!! (md/mget me :focuser))
                                          ;(.requestFocus (md/mget me :focuser))
                                          ;; make new to-do!!
-                                         (md/mswap! (md/fasc :app) :todo-db conj
-                                           (todo/make-todo value false)))))
+                                         (dp :onsub-new!!!!!!! value)
+                                         (md/mswap! (md/fasc :app) :todo-db concat
+                                           [(todo/make-todo value false)])
+                                         (dp :postmk-todo (map (fn [td]
+                                                                 [(md/mget td :sid)
+                                                                  (md/mget td :title)])
+                                                            (md/mget (md/fasc :app) :todo-db))))))
                     :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
                                              (fn []
                                                (let [value (.text c)]
-                                                 (dp (str "todo input field: " value))
+                                                 (dpx (str "todo input field: " value))
                                                  (md/mset! me :value value))))
                                            c))}
       {:name  :todo-input
        :value (cI nil
-                :obs (fn-obs (dp :val-obs-sees new)))
+                #_#_ :obs (fn-obs (dp :val-obs-sees new)))
        #_#_:focuser (m/FocusNode)})))
 
 (defn my-app-bar [title]
@@ -172,11 +192,10 @@
 ;; todo refocus todo input after clearing
 
 (def test-todos
-  []
-  #_
+  ;;[]
   [{:title     "Wash car"
-    :completed false}
-   {:title     "Wash dog"
-    :completed false}
-   {:title     "Walk dog"
-    :completed false}])
+      :completed false}
+     {:title     "Wash dog"
+      :completed false}
+     {:title     "Walk dog"
+      :completed false}])

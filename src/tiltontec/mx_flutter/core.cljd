@@ -169,18 +169,18 @@
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (some #{slot} [:fx$state])                    ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
-        (dp :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
+        (dpx :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
         (dpx :FXDartWidget-observing-md!!! slot (cty/minfo me) :deref @me)
         (dpx :FXDartWidget-observing-cell!!! slot (cty/cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
+          (do (dp :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.mounted state))
               (.setState state (fn [] (do))))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dp :obs-FXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
+              (dp :obs-FXD-uses-nearest-state state (.mounted state) :sid (md/mget me :sid) :slot slot :new-prio new-value prior-value)
               (.setState state (fn [] (do))))
             (if false #_(= slot :opacity)
               (do (dp :opacity-trying-dom (minfo me))
@@ -195,7 +195,7 @@
                         (dp :k1-state!!! state)
                         (.setState state #(do)))
                       (dp :no-k1-state (minfo k1)))))
-              (dp :NOT-setting-state-on-stateless slot new-value (minfo me)))))))))
+              (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (minfo me)))))))))
 
 ;;; ---- sundry factories per Flutter variation ------------------
 
