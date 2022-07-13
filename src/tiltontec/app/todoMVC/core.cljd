@@ -111,8 +111,7 @@
                                                            (md/mget todo :title)])
                                                      left)))
       (str (count left) (if (= 1 (count left))
-                          " item" " items")
-        " left"))))
+                          " item" " items")))))
 
 (defn clear-completed-button []
   (fx/visibility!
@@ -150,6 +149,20 @@
                                     (fn [value]
                                       (md/mset! todo :completed value))))}
                   {:name :da-checkbox})
+       :trailing (fx/icon-button
+                   {:onPressed (fx/cb-with-ctx [me ctx]
+                                 (fx/->CBAsIs
+                                   (fn []
+                                     (let [app (md/fasc :app)
+                                           db (md/mget app :todo-db)
+                                           remaining (remove #(= sid (md/mget % :sid)) db)]
+                                       (dp :db-in db)
+                                       (dp :rem remaining)
+                                       (md/mset! (md/fasc :app) :todo-db remaining)))))
+                    :icon      (m/Icon m.Icons/delete :color m.Colors/orange)
+                    :color     (fx/cb-with-ctx [me ctx]
+                                 (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
+
        :title   (cF (let [ldg (md/mget me :leading)
                           #_#_title (md/mget todo :title)]
                       ;; todo give leading property occupant an mx-name and
@@ -169,7 +182,7 @@
            :focusNode (m/FocusNode :autofocus true)}
     (fx/text-field {:autofocus   true
                     :decoration  (m/InputDecoration
-                                   :hintText "What needs next doing?"
+                                   :hintText "What needs doing?"
                                    :border (m/OutlineInputBorder))
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
