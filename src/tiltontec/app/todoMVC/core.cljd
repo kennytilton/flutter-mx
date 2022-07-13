@@ -153,12 +153,8 @@
                    {:onPressed (fx/cb-with-ctx [me ctx]
                                  (fx/->CBAsIs
                                    (fn []
-                                     (let [app (md/fasc :app)
-                                           db (md/mget app :todo-db)
-                                           remaining (remove #(= sid (md/mget % :sid)) db)]
-                                       (dp :db-in db)
-                                       (dp :rem remaining)
-                                       (md/mset! (md/fasc :app) :todo-db remaining)))))
+                                     (md/mswap! (md/fasc :app) :todo-db
+                                       #(remove (fn [td] (= sid (md/mget td :sid))) %)))))
                     :icon      (m/Icon m.Icons/delete :color m.Colors/orange)
                     :color     (fx/cb-with-ctx [me ctx]
                                  (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
@@ -174,7 +170,8 @@
                                         :decoration p.TextDecoration/lineThrough)
                                       (p/TextStyle :color m.Colors/black)))}
                         title)))}
-      {:name :my-list-tile})))
+      {:name :my-list-tile
+       :todo todo})))
 
 (defn todo-input []
   (do #_#_fx/focus+focus-node

@@ -18,21 +18,8 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :REAL-todo-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
-    #_(when-not (some #{slot} [:fx$state])                  ;; todo check for others to exclude
-        (when-not (= prior-value cty/unbound)
-          (dpx :FXDartWidget-observing!!! slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me) (cty/cinfo cell))
-          (when-let [noter (mget me :fx$notifier)]
-            (.notifyListeners ^m/ChangeNotifier noter))
-
-          (if-let [^State state (mget me :fx$state)]
-            (do (dpx :settingimmediatestate slot new-value #_(meta me) (minfo me) state (.mounted state))
-                (.setState state (fn [] (do))))
-            (if-let [^State state (fx-state-nearest me)]
-              (do
-                (dpx :obs-FXD-uses-nearest-state state (.mounted state) :slot slot :new-prio new-value prior-value)
-                (.setState state (fn [] (do))))
-              (dpx :NOT-setting-state-on-stateless slot new-value (minfo me))))))))
+    (dpx :REAL-todo-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
+    ))
 
 (def todo-sid (atom 0))
 
