@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.footer
   (:require
-    [tiltontec.model.core :as md]
+    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
@@ -20,10 +20,10 @@
     ;; todo warn (how?) if they use regular text with rule or c-in
     {:name :items-left}
     (let [db (md/fmuval :app :todo-db)
-          left (remove #(md/mget % :completed) db)]
+          left (remove #(mget % :completed) db)]
       (dp :items-left-sees!!!! (count left) (doall (map (fn [todo]
-                                                          [(md/mget todo :sid)
-                                                           (md/mget todo :title)])
+                                                          [(mget todo :sid)
+                                                           (mget todo :title)])
                                                      left)))
       (str (count left) (if (= 1 (count left))
                           " item" " items")))))
@@ -31,22 +31,38 @@
 (defn completion-filters []
   (fx/row
     {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
-    (fx/expanded {:flex 1} (m/Text "Active"))
-    (fx/expanded {:flex 1}
-      (fx/container
-        {:decoration (m/BoxDecoration
-                       :border (.all m/Border :color (.-grey m/Colors) :width 1)
-                       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 3.0)))}
+    {:name      :completions
+     :selection (cI :all)}
+    (let [choice (fn [option option$]
+                   (fx/expanded {:flex 1}
+                     (fx/ink-well
+                       {:onTap (fx/cb-with-ctx [me ctx]
+                                 (fx/->CBAsIs
+                                   #(let [comps (md/fasc :completions)]
+                                      (mset! comps :selection option))))}
+                       {} ;; todo make this extra map optional
+                       (fx/container
+                         {:decoration (cF (when (mget me :selected?)
+                                            (m/BoxDecoration
+                                              :border (.all m/Border :color (.-black m/Colors) :width 1)
+                                              :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 3.0)))))
 
-        (fx/center (m/Text "All"))))
+                          }
+                         {:enum      option
+                          :selected? (cF (= (mget me :enum)
+                                           (mget (md/fasc :completions) :selection)))}
+                         (fx/center (m/Text option$))))))]
+      (list
+        (choice :all "All")
+        (choice :active "Active")
+        (choice :done "Done")))))
 
-    (fx/expanded {:flex 1} (m/Text "Fini"))))
 
 (defn clear-completed-button []
   (fx/visibility!
     {:visible           (cF (let [db (md/fmuval :app :todo-db)]
                               (if (some (fn [todo]
-                                          (md/mget todo :completed)) db)
+                                          (mget todo :completed)) db)
                                 true false)))
      :maintainSize      true
      :maintainAnimation true
@@ -57,9 +73,9 @@
                     (fx/->CBAsIs
                       (fn []
                         (let [app (md/fasc :app)
-                              db (md/mget app :todo-db)
-                              remaining (remove #(md/mget % :completed) db)]
+                              db (mget app :todo-db)
+                              remaining (remove #(mget % :completed) db)]
                           (dp :db-in db)
                           (dp :rem remaining)
-                          (md/mset! (md/fasc :app) :todo-db remaining)))))}
+                          (mset! (md/fasc :app) :todo-db remaining)))))}
       (m/Text "Clear completed"))))

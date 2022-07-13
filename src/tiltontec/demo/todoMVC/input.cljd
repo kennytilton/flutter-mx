@@ -46,3 +46,17 @@
        :value (cI nil
                 #_#_:obs (fn-obs (dp :val-obs-sees new)))
        #_#_:focuser (m/FocusNode)})))
+
+(defn todo-toggle-all []
+  (fx/icon-button
+    {:onPressed (fx/cb-with-ctx [me ctx]
+                  (fx/->CBAsIs
+                    (fn []
+                      (let [todos (md/mget (md/fasc :app) :todo-db)
+                            all-done? (every? (fn [td] (md/mget td :completed)) todos)]
+                        (doseq [td todos]
+                          ;; todo do all these in one change pulse
+                          (md/mset! td :completed (if all-done? false true)))))))
+     :icon      (m/Icon m.Icons/expand_more :color m.Colors/blueGrey)
+     :color     (fx/cb-with-ctx [me ctx]
+                  (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))}))

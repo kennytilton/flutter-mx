@@ -41,20 +41,7 @@
         (fx/column
           (fx/row
             (fx/expanded {:flex 1}
-              (fx/icon-button
-                {:onPressed (fx/cb-with-ctx [me ctx]
-                              (fx/->CBAsIs
-                                (fn []
-                                  (let [app (md/fasc :app)
-                                        todos (md/mget app :todo-db)
-                                        all-done? (every? (fn [td] (md/mget td :completed)) todos)]
-                                    (dp :chevron-done! all-done?)
-                                    (doseq [td todos]
-                                      ;; todo do all these in one change pulse
-                                      (md/mset! td :completed (if all-done? false true)))))))
-                 :icon      (m/Icon m.Icons/expand_more :color m.Colors/blueGrey)
-                 :color     (fx/cb-with-ctx [me ctx]
-                              (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))}))
+              (input/todo-toggle-all))
             (fx/expanded {:flex 9}
               (fx/padding
                 {:padding ^:const (m.EdgeInsets/all 16.0)}
@@ -65,11 +52,14 @@
               {:padding m.EdgeInsets/zero}
               {:name :da-list-view}
               (map item/todo-list-item
-                (md/fmuval :app :todo-db)))))))))
+                (md/fmuval :app :todo-db))))
+          #_ (fx/column
+            (fx/text "by Kenneth Tilton")
+            (fx/text "Copyright (c) 2022")
+            (fx/text "TiltonTec Software")))))))
 
-;;; todo toggle-all chevron
 ;;; todo??? delete icon visible iff selected
-;;; todo credits
+;;; todo credits in alert?
 ;;; todo all/completed/open
 
 (defn my-app-bar [title]
