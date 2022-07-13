@@ -1,0 +1,53 @@
+(ns tiltontec.demo.todoMVC.list-item
+  (:require
+    [tiltontec.model.core :as md]
+    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.demo.todoMVC.todo :as todo]
+
+    ["dart:convert" :as convert]
+    ["package:localstore/localstore.dart" :as ls]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.util.base :refer [dprn dp dpx]]))
+
+(defn todo-list-item [todo]
+  (let [title (md/mget todo :title)
+        sid (md/mget todo :sid)]
+    (fx/list-tile
+      {:key     (m/ValueKey. sid)
+       :leading (fx/check-box
+                  {:value     (cF (or (md/mget todo :completed) false))
+                   :shape     (fx/rounded-rectangle-border
+                                ;; todo get size to work or use whole new approach to rendering
+                                {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))
+                                 #_ (m.BorderRadius/circular 16.0)})
+                   :onChanged (cF (fx/->CBAsIs
+                                    (fn [value]
+                                      (md/mset! todo :completed value))))}
+                  {:name :da-checkbox})
+       :trailing (fx/icon-button
+                   {:onPressed (fx/cb-with-ctx [me ctx]
+                                 (fx/->CBAsIs
+                                   (fn []
+                                     (md/mswap! (md/fasc :app) :todo-db
+                                       #(remove (fn [td] (= sid (md/mget td :sid))) %)))))
+                    :icon      (m/Icon m.Icons/delete :color m.Colors/orange)
+                    :color     (fx/cb-with-ctx [me ctx]
+                                 (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
+
+       :title   (cF (let [ldg (md/mget me :leading)
+                          title (md/mget (md/mget me :todo) :title)]
+                      (fx/text!
+                        {:style (cF (if (md/mget ldg :value)
+                                      (p/TextStyle
+                                        :color m.Colors/grey
+                                        :decoration p.TextDecoration/lineThrough)
+                                      (p/TextStyle :color m.Colors/black)))}
+                        title)))}
+      {:name :my-list-tile
+       :todo todo})))

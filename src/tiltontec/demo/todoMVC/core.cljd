@@ -1,0 +1,92 @@
+(ns tiltontec.demo.todoMVC.core
+  (:require
+    [tiltontec.model.core :as md]
+    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.demo.todoMVC.todo :as todo]
+    [tiltontec.demo.todoMVC.input :as input]
+    [tiltontec.demo.todoMVC.list-item :as item]
+    [tiltontec.demo.todoMVC.footer :as footer]
+    ["dart:convert" :as convert]
+    ["package:localstore/localstore.dart" :as ls]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.util.base :refer [dprn dp dpx]]))
+
+(declare my-app-bar my-fab   test-todos)
+
+(defn make-app []
+  (let [title "todos"]
+    (fx/material-app
+      {:title                      title
+       :debugShowCheckedModeBanner false}
+      {:name    :app
+       ;; todo persist in localstorage
+       :todo-db (cI (doall
+                      (map (fn [{:keys [title completed]}]
+                             (todo/make-todo title completed))
+                        test-todos)))}
+      (fx/scaffold
+        {:appBar                  (my-app-bar title)
+         #_#_:floatingActionButton (my-fab)
+         :persistentFooterButtons [(fx/row
+                                     {:mainAxisAlignment m.MainAxisAlignment/center}
+                                     (fx/expanded {:flex 1} (footer/items-left-display))
+                                     (fx/expanded {:flex 2} (footer/completion-filters))
+                                     (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
+        (fx/column
+          (fx/padding
+            {:padding ^:const (m.EdgeInsets/all 16.0)}
+            (input/todo-input))
+
+          (fx/expanded                                      ;; required sizer to join column
+            (fx/list-view
+              {:padding m.EdgeInsets/zero}
+              {:name :da-list-view}
+              (map item/todo-list-item
+                (md/fmuval :app :todo-db)))))))))
+
+;;; todo toggle-all chevron
+;;; todo??? delete icon visible iff selected
+;;; todo credits
+;;; todo all/completed/open
+
+(defn my-app-bar [title]
+  (fx/preferred-size
+    {:preferredSize (.fromHeight m/Size 100)}
+    (fx/app-bar {:title (fx/text
+                          {:style (p/TextStyle
+                                    :fontFamily "RobotoMono"
+                                    :color m.Colors/white
+                                    :fontWeight m.FontWeight/w100
+                                    :fontSize 64.0)}
+                          title)})))
+
+#_;; not needed, but save maybe for DB reset?
+        (defn my-fab []
+          (fx/floating-action-button
+            {:onPressed (fx/cb-with-ctx [me ctx]
+                          (fx/->CBAsIs
+                            #(m/showDialog
+                               :context ctx
+                               :builder (fn [_] (m/AlertDialog
+                                                  :content (m/Text (.text ^m/TextEditingController
+                                                                     (md/mget (md/fm* :todo-input) :controller))))))))
+             :tooltip   "Show me the value!"}
+            (m/Icon m.Icons/text_fields)))
+
+;; todo hide footer if no items
+;; todo refocus todo input after clearing
+
+(def test-todos
+  ;;[]
+  [{:title     "Wash car"
+    :completed false}
+   {:title     "Wash dog"
+    :completed false}
+   {:title     "Walk dog"
+    :completed false}])

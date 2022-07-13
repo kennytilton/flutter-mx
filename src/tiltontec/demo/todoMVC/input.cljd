@@ -1,0 +1,48 @@
+(ns tiltontec.demo.todoMVC.input
+  (:require
+    [tiltontec.model.core :as md]
+    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.demo.todoMVC.todo :as todo]
+
+    ["dart:convert" :as convert]
+    ["package:localstore/localstore.dart" :as ls]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.util.base :refer [dprn dp dpx]]))
+
+(defn todo-input []
+  (do #_#_fx/focus+focus-node
+          {;;:autofocus true
+           :focusNode (m/FocusNode :autofocus true)}
+    (fx/text-field {:autofocus   true
+                    :decoration  (m/InputDecoration
+                                   :hintText "What needs doing?"
+                                   :border (m/OutlineInputBorder))
+                    :onSubmitted (cF (fx/->CBAsIs
+                                       (fn [value]
+                                         (.clear (md/mget me :controller)) ;; clear the input text field, as per spec
+                                         (md/mset! me :value value)
+                                         ;; refocus
+                                         ;(dp :refocusing!!!!!!!!! (md/mget me :focuser))
+                                         ;(.requestFocus (md/mget me :focuser))
+                                         ;; make new to-do!!
+
+                                         (md/mswap! (md/fasc :app) :todo-db concat
+                                           [(todo/make-todo value false)]))))
+                    :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
+                                           ;; todo package this as a reusable
+                                           (.addListener c
+                                             (fn []
+                                               (let [value (.text c)]
+                                                 (dpx (str "todo input field: " value))
+                                                 (md/mset! me :value value))))
+                                           c))}
+      {:name  :todo-input
+       :value (cI nil
+                #_#_:obs (fn-obs (dp :val-obs-sees new)))
+       #_#_:focuser (m/FocusNode)})))
