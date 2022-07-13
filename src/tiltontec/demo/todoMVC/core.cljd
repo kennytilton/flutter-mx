@@ -17,7 +17,7 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare my-app-bar my-fab   test-todos)
+(declare my-app-bar my-fab test-todos)
 
 (defn make-app []
   (let [title "todos"]
@@ -39,9 +39,26 @@
                                      (fx/expanded {:flex 2} (footer/completion-filters))
                                      (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
         (fx/column
-          (fx/padding
-            {:padding ^:const (m.EdgeInsets/all 16.0)}
-            (input/todo-input))
+          (fx/row
+            (fx/expanded {:flex 1}
+              (fx/icon-button
+                {:onPressed (fx/cb-with-ctx [me ctx]
+                              (fx/->CBAsIs
+                                (fn []
+                                  (let [app (md/fasc :app)
+                                        todos (md/mget app :todo-db)
+                                        all-done? (every? (fn [td] (md/mget td :completed)) todos)]
+                                    (dp :chevron-done! all-done?)
+                                    (doseq [td todos]
+                                      ;; todo do all these in one change pulse
+                                      (md/mset! td :completed (if all-done? false true)))))))
+                 :icon      (m/Icon m.Icons/expand_more :color m.Colors/blueGrey)
+                 :color     (fx/cb-with-ctx [me ctx]
+                              (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))}))
+            (fx/expanded {:flex 9}
+              (fx/padding
+                {:padding ^:const (m.EdgeInsets/all 16.0)}
+                (input/todo-input))))
 
           (fx/expanded                                      ;; required sizer to join column
             (fx/list-view
