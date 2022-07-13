@@ -17,6 +17,18 @@
 (declare my-app-bar my-fab todo-input todo-list-item test-todos
   clear-completed-button items-left)
 
+(defn completion-filters []
+  (fx/row
+    {:mainAxisAlignment m.MainAxisAlignment/center}
+    (fx/expanded {:flex 1}
+      (fx/container
+        {:decoration (m/BoxDecoration
+                       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
+                       :color (.-shade300 m.Colors/cyan))}
+        (m/Text "All")))
+    (fx/expanded {:flex 1} (m/Text "Active"))
+    (fx/expanded {:flex 1} (m/Text "Completed"))))
+
 (defn make-app []
   (let [title "todos"]
     (fx/material-app
@@ -31,33 +43,48 @@
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          #_#_:floatingActionButton (my-fab)
-         :persistentFooterButtons [(items-left-display)
-                                   ;(m/Container)
-                                   ;(m/Column
-                                   ;  :mainAxisAlignment m.MainAxisAlignment/center
-                                   ;  :children
-                                   ;  [(m/Text (str k))
-                                   (m/Text "All")
-                                   (m/Text "Active")
-                                   (m/Text "Completed")
-                                   (clear-completed-button)]}
+         :persistentFooterButtons [(fx/row
+                                     {:mainAxisAlignment m.MainAxisAlignment/center}
+                                     (fx/expanded {:flex 1} (items-left-display))
+                                     (fx/expanded {:flex 1} (completion-filters))
+                                     (fx/expanded {:flex 1} (clear-completed-button))
+
+                                     )]
+         #_[(items-left-display)
+            (completion-filters)
+            (clear-completed-button)]}
         (fx/column
           (fx/padding
             {:padding ^:const (m.EdgeInsets/all 16.0)}
             (todo-input))
 
           (fx/expanded                                      ;; required sizer to join column
-            (do ;;(dp :REBUILDINGLISTVIEW!!!!)
-                (fx/list-view
-                  {:padding m.EdgeInsets/zero}
-                  {:name :da-list-view}
-                  (doall (for [todo (md/fmuval :app :todo-db)]
-                           ;; arrange for a key to avoid excess rebuild
-                           ;; todo NEXT break this out and then evolve the list item
-                           ;;      make it a row with a "completed" checkbox
-                           (let [xx todo]
-                             ;;(dp :building-list-item!! (md/mget xx :sid) (md/mget xx :title))
-                             (todo-list-item xx))))))))))))
+            (fx/list-view
+              {:padding m.EdgeInsets/zero}
+              {:name :da-list-view}
+              (map todo-list-item
+                (md/fmuval :app :todo-db)))))))))
+
+; Scaffold(
+;  body: Container(
+;    color: Colors.white,
+;    child: Center(child: Text("Flutter"),),
+;  ),
+;  bottomNavigationBar: new Container(
+;    padding: EdgeInsets.all(0.0),
+;    child: Row(
+;      mainAxisSize: MainAxisSize.max,
+;      children: <Widget>[
+;
+;        Expanded(
+;          flex: 1,
+;          child: FlatButton.icon(
+;            onPressed: () {
+;            },
+;            icon: Icon(Icons.search),
+;            label: Text("Search"),
+;          ),
+;        ),
 
 ;;; todo toggle-all chevron
 ;;; todo delete icon; visible iff selected
@@ -105,7 +132,7 @@
   (let [title (md/mget todo :title)
         sid (md/mget todo :sid)]
     (fx/list-tile
-      {:key (m/ValueKey. sid)
+      {:key     (m/ValueKey. sid)
        :leading (fx/check-box
                   {:value     (cF (or (md/mget todo :completed) false))
                    :shape     (fx/rounded-rectangle-border
@@ -157,7 +184,7 @@
                                            c))}
       {:name  :todo-input
        :value (cI nil
-                #_#_ :obs (fn-obs (dp :val-obs-sees new)))
+                #_#_:obs (fn-obs (dp :val-obs-sees new)))
        #_#_:focuser (m/FocusNode)})))
 
 (defn my-app-bar [title]
@@ -190,8 +217,8 @@
 (def test-todos
   ;;[]
   [{:title     "Wash car"
-      :completed false}
-     {:title     "Wash dog"
-      :completed false}
-     {:title     "Walk dog"
-      :completed false}])
+    :completed false}
+   {:title     "Wash dog"
+    :completed false}
+   {:title     "Walk dog"
+    :completed false}])
