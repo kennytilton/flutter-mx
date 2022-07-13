@@ -17,17 +17,25 @@
 (declare my-app-bar my-fab todo-input todo-list-item test-todos
   clear-completed-button items-left)
 
+; border: Border.all(
+;      color: Colors.black,
+;      width: 8,
+;    ),
+;    borderRadius: BorderRadius.circular(12),
+
+; Border.all( color: Colors.black, width: 8, )
 (defn completion-filters []
   (fx/row
-    {:mainAxisAlignment m.MainAxisAlignment/center}
+    {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
     (fx/expanded {:flex 1}
       (fx/container
         {:decoration (m/BoxDecoration
-                       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-                       :color (.-shade300 m.Colors/cyan))}
-        (m/Text "All")))
+                       :border (.all m/Border :color (.-grey m/Colors) :width 1)
+                       :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 3.0)))}
+
+        (fx/center (m/Text "All"))))
     (fx/expanded {:flex 1} (m/Text "Active"))
-    (fx/expanded {:flex 1} (m/Text "Completed"))))
+    (fx/expanded {:flex 1} (m/Text "Fini"))))
 
 (defn make-app []
   (let [title "todos"]
@@ -46,7 +54,7 @@
          :persistentFooterButtons [(fx/row
                                      {:mainAxisAlignment m.MainAxisAlignment/center}
                                      (fx/expanded {:flex 1} (items-left-display))
-                                     (fx/expanded {:flex 1} (completion-filters))
+                                     (fx/expanded {:flex 2} (completion-filters))
                                      (fx/expanded {:flex 1} (clear-completed-button))
 
                                      )]
