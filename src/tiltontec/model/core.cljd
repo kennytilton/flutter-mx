@@ -55,7 +55,7 @@
 (defn mget [me slot] (md-get me slot))
 
 (defn md-getx [tag me slot]
-  (md-get me slot)
+  (md-get-ex me slot)
   #_(wtrx [0 100 (str "md-getx " tag slot (mx-type me))]
       (if-let [c (md-cell me slot)]
         (c-get c)
@@ -132,7 +132,7 @@
             (partition 2)
             (filter (fn [[slot v]]
                       (when-not (some #{slot} [:par :name :mx-type :not-to-be
-                                                :fx$ikeys :fx$notifier :fx$observer])
+                                               :fx$ikeys :fx$notifier :fx$observer])
                         (md-install-cell me slot v))))
             (map vec)
             (into {})))
@@ -243,13 +243,18 @@
 (defn fm-navig-hosted? [what where prop]
   (assert (md-ref? where))
   (when-let [it (mget where prop)]
-    (when (md-ref? it)
-      (dp :BAM!!!!-hosted!! prop (minfo it))
-      (fm-navig what it
-        :me? true :inside? true :up? false))))
+    (cond
+      (md-ref? it) (do (dpx :BAM!!!!-checking-hosted!! prop (minfo it))
+                       (fm-navig what it
+                         :me? true :inside? true :up? false))
+      (sequential? it) (do (dpx :BAM!!!!-checking-hosted-seq!! (map minfo it))
+                           (some (fn [it]
+                                   (fm-navig what it
+                                     :me? true :inside? true :up? false)) it))
+      :else (when it (dpx :ignoring-prop-val it)))))
 
 (defn fm-navig [what where & options]
-  (do ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (md-ref? where) (minfo where)))
+  (do                                                       ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (md-ref? where) (minfo where)))
     ;;(dprn :navig-options options)
     (cond
       (> *trdeep* 16)
@@ -264,16 +269,16 @@
         (binding [*depender* (if (:wocd? options) nil *depender*)]
           (when (md-ref? where)
             ;(println :f)
-            (or (and (:me? options)
-                  #_ (or (fm-navig-eq? what where)
-                    (some (partial fm-navig-hosted? what where) (:fx$ikeys @where)))
-                  where)
+            (or (when (:me? options)
+                  (if (fm-navig-eq? what where)
+                    where
+                    (some (partial fm-navig-hosted? what where)
+                      (keep #{:persistentFooterButtons} (:fx$ikeys @where)))))
 
               (and (:inside? options)
                 (if-let [kids (md-get where :kids)]
                   (do
-                    (do :navig-sees-kids kids)
-                    (if-let [netkids (remove #{(:skip options)} kids)]
+                    (if-let [netkids (remove #{(:skip options)} kids)] ;; todo skip?
                       (do
                         (some #(fm-navig what %
                                  :me? true
@@ -284,13 +289,13 @@
 
               (and (:up? options)
                 (if-let [par (:par @where)]
-                  (do ;; (dprn :navig-up! (minfo par))
-                      (fm-navig what par
-                        :up? true
-                        :me? true
-                        :skip where
-                        :inside? true))
-                  (do (dprn :no-up-from (minfo where))
+                  (do                                       ;; (dprn :navig-up! (minfo par))
+                    (fm-navig what par
+                      :up? true
+                      :me? true
+                      :skip where
+                      :inside? true))
+                  (do (dpx :no-up-from (minfo where))
                       false)))
 
               (when (:must? options)
@@ -338,8 +343,8 @@
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        ;; (dp :fm*-start-after name#)
-       (fm-navig #(do ;;(dp :fm*-sees (= name# (md-get % :name)) (minfo %))
-                      (= name# (md-get % :name)))
+       (fm-navig #(do                                       ;;(dp :fm*-sees (= name# (md-get % :name)) (minfo %))
+                    (= name# (md-get % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
 (defmacro fmuv [slot name & [me]]

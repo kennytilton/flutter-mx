@@ -173,26 +173,13 @@
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dp :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.mounted state))
+          (do (dpx :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.mounted state))
               (.setState state (fn [] (do))))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dp :obs-FXD-uses-nearest-state state (.mounted state) :sid (md/mget me :sid) :slot slot :new-prio new-value prior-value)
+              (dpx :obs-FXD-uses-nearest-state state (.mounted state) :sid (md/mget me :sid) :slot slot :new-prio new-value prior-value)
               (.setState state (fn [] (do))))
-            (if false #_(= slot :opacity)
-              (do (dp :opacity-trying-dom (minfo me))
-                  (dp :re-run-st-nearest... (fx-state-nearest me))
-                  (let [dom (:fx-dom (meta me))]
-                    (dp :opa-dom! dom)
-                    )
-                  (let [k1 (first (md/mget me :kids))]
-                    (dp :opaset (minfo k1))
-                    (if-let [^State state (mget k1 :fx$state)]
-                      (do
-                        (dp :k1-state!!! state)
-                        (.setState state #(do)))
-                      (dp :no-k1-state (minfo k1)))))
-              (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (minfo me)))))))))
+            (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (minfo me))))))))
 
 ;;; ---- sundry factories per Flutter variation ------------------
 
@@ -453,7 +440,6 @@
 
 (defmacro make-fx-snackbar [fx-class fx-props mx-props & children]
   (let []
-    (prn :mksnack-sees-fxcon fx-class)
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props

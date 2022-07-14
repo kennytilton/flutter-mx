@@ -18,19 +18,23 @@
 (defn todo-list-item [todo]
   (let [title (md/mget todo :title)
         sid (md/mget todo :sid)]
+    (dp :building-list-item sid title)
     (fx/visibility!
-      {:visible           (cF (let [comps #_ (md/fmu :completions)
+      {:key      (m/ValueKey. sid)
+       :visible           (cF (let [comps #_(md/fmu :completions)
                                     (md/fm-navig (fn [node]
-                                                (dp :VIZ! (minfo node)
-                                                  :ikeys (:fx$ikeys @node)
-                                                  #_#_ :meta (meta node))
-                                                (when (= :completions (mget node :name))
-                                                  (dp :Bingo!! ))
-                                                (= :completions (mget node :name)))
+                                                   (dpx :VIZ! (minfo node)
+                                                     :ikeys (:fx$ikeys @node)
+                                                     #_#_:meta (meta node))
+                                                   (= :completions (mget node :name)))
                                       me :me? false :up? true :inside? false)]
-                                (dp :BAM-comps! comps)
-                                true))
-       :maintainSize      true
+
+                                (let [select (mget comps :selection)]
+                                  (case select
+                                    :all true
+                                    :active (not (mget todo :completed))
+                                    :done (mget todo :completed)))))
+       :maintainSize      false
        :maintainAnimation true
        :maintainState     true}
       {:name :todo-item-visi}
@@ -50,8 +54,23 @@
                      {:onPressed (fx/cb-with-ctx [me ctx]
                                    (fx/->CBAsIs
                                      (fn []
-                                       (md/mswap! (md/fasc :app) :todo-db
-                                         #(remove (fn [td] (= sid (md/mget td :sid))) %)))))
+                                       (dp :deleting!!!! sid)
+                                       (let [app (md/fasc :app)]
+                                         (assert app)
+                                         (dp :app (minfo app))
+                                         (dp :todos (map minfo (mget app :todo-db)))
+                                         (let [new-todos (remove (fn [td]
+                                                                   (dp :maybe-del sid (minfo td))
+                                                                   (dp :maybe-del sid (mget td :sid))
+                                                                   (= sid (mget td :sid)))
+                                                           (mget app :todo-db))]
+                                           (dp :new!! (map minfo new-todos))
+                                           (md/mset! app :todo-db new-todos)
+                                           #_
+                                           (md/mswap! (md/fasc :app) :todo-db
+                                           #(remove (fn [td]
+                                                      (dp :maybe-del sid (mget td sid))
+                                                      (= sid (md/mget td :sid))) %)))))))
                       :icon      (m/Icon m.Icons/delete :color m.Colors/orange)
                       :color     (fx/cb-with-ctx [me ctx]
                                    (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
