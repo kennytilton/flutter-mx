@@ -131,8 +131,8 @@
           (->> arg-list
             (partition 2)
             (filter (fn [[slot v]]
-                      (when-not (some #{slot} [:par :name :mx-type :not-to-be])
-                        ;; (prn :md-make-installing-cz slot v)
+                      (when-not (some #{slot} [:par :name :mx-type :not-to-be
+                                                :fx$ikeys :fx$notifier :fx$observer])
                         (md-install-cell me slot v))))
             (map vec)
             (into {})))
@@ -239,6 +239,15 @@
           :default
           (recur (rest sibs)))))))
 
+
+(defn fm-navig-hosted? [what where prop]
+  (assert (md-ref? where))
+  (when-let [it (mget where prop)]
+    (when (md-ref? it)
+      (dp :BAM!!!!-hosted!! prop (minfo it))
+      (fm-navig what it
+        :me? true :inside? true :up? false))))
+
 (defn fm-navig [what where & options]
   (do ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (md-ref? where) (minfo where)))
     ;;(dprn :navig-options options)
@@ -253,10 +262,11 @@
                             } (apply hash-map options))]
         ;;(println :fm-navig-opts options)
         (binding [*depender* (if (:wocd? options) nil *depender*)]
-          (when (atom? where)
+          (when (md-ref? where)
             ;(println :f)
             (or (and (:me? options)
-                  (fm-navig-eq? what where)
+                  #_ (or (fm-navig-eq? what where)
+                    (some (partial fm-navig-hosted? what where) (:fx$ikeys @where)))
                   where)
 
               (and (:inside? options)

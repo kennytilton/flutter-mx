@@ -115,12 +115,6 @@
      (fn [~me-var ~ctx-var]
        ~@body)))
 
-;(defn fx-state-nearest [me]
-;  (when me
-;    (or ^State? (mget me :fx$state)
-;      (md/mset! me :fx$state
-;        (fx-state-nearest (md/mpar))))))
-
 (defn fx-state-nearest [me]
   (dpx :state-nearest-entry (minfo me))
   (when me
@@ -153,8 +147,10 @@
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :fx$state (cI nil)
-    :initState (fn [this me]
+    :fx$state (cI nil) ;; todo move these to meta?
+    :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
+                (concat (keys fx-props)(keys custom-props)))
+    :initState (fn [this me] ;; this one too
                  (md/mset! me :fx$state this))
     :kids cFkids-form
     (concat
@@ -167,7 +163,8 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (when-not (some #{slot} [:fx$state])                    ;; todo check for others to exclude
+    (when-not (some #{slot} [:par :name :mx-type :not-to-be
+                             :fx$state :fx$ikeys :fx$notifier :fx$observer])                    ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
         (dpx :FXDartWidget-observing-md!!! slot (cty/minfo me) :deref @me)
@@ -204,6 +201,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
                      :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
@@ -220,6 +218,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
                      :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
@@ -235,6 +234,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
                      :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
@@ -291,6 +291,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
                      :content (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
@@ -309,6 +310,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
                      :children (mapv (partial tiltontec.mx-flutter.core/fx-render ctx) (md/md-kids me))
@@ -322,6 +324,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
                      ~@(let [kvs (for [[k# _#] fx-props]
@@ -335,6 +338,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
@@ -345,11 +349,12 @@
 
 (deftag tiltontec.mx-flutter.core/k1-param1-stateless text m/Text)
 
-(defmacro k1-param1-stateful [fx-constructor fx-props mx-props & children]
+(defmacro k1-param1-stateful [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
@@ -360,18 +365,19 @@
                            (when-let [init (mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
-                           (~fx-constructor (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
+                           (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
                              ~@(let [kvs (for [[k# _#] fx-props]
                                            [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro childless-stateful [fx-constructor fx-props mx-props]
+(defmacro childless-stateful [fx-class fx-props mx-props]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
@@ -382,7 +388,7 @@
                            #_(when-let [init (mget me :initState)]
                                (init this me)))
                          (~'build [_# ctx]
-                           (~fx-constructor
+                           (~fx-class
                              ~@(let [kvs (for [[k# _#] fx-props]
                                            [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
@@ -392,11 +398,12 @@
 (deftag tiltontec.mx-flutter.core/childless-stateful text-field m/TextField)
 (deftag tiltontec.mx-flutter.core/childless-stateful check-box m/Checkbox)
 
-(defmacro prop-param1-childless-stateful [p1-prop-name fx-constructor fx-props mx-props]
+(defmacro prop-param1-childless-stateful [p1-prop-name fx-class fx-props mx-props]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
@@ -407,7 +414,7 @@
                            (when-let [init (mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
-                           (~fx-constructor (tiltontec.mx-flutter.core/fx-resolve :ico-prop me ctx
+                           (~fx-class (tiltontec.mx-flutter.core/fx-resolve :ico-prop me ctx
                                               (tiltontec.model.core/mget me ~p1-prop-name))
                              ~@(let [kvs (for [[k# _#] (dissoc fx-props p1-prop-name)]
                                            [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
@@ -417,11 +424,12 @@
 
 (deftag tiltontec.mx-flutter.core/prop-param1-childless-stateful icon m/Icon :icon)
 
-(defmacro k1-body-stateful [fx-constructor fx-props mx-props & children]
+(defmacro k1-body-stateful [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
@@ -434,7 +442,7 @@
                          (~'build [_# ctx]
                            (let [bod# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-constructor
+                             (~fx-class
                                ;; todo throw error if they specify :body explicitly, for now
                                :body bod#
                                ~@(let [kvs (for [[k# _#] fx-props]
@@ -443,21 +451,22 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro make-fx-snackbar [fx-constructor fx-props mx-props & children]
+(defmacro make-fx-snackbar [fx-class fx-props mx-props & children]
   (let []
-    (prn :mksnack-sees-fxcon fx-constructor)
+    (prn :mksnack-sees-fxcon fx-class)
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends (~fx-constructor #_m/SnackBar
+                   (reify :extends (~fx-class #_m/SnackBar
                                      ~@(let [kvs (for [[k# _#] fx-props]
                                                    [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                           (tiltontec.model.core/mget me ~k#))])]
                                          (apply concat kvs)))
-                     ^#/(w/State ~fx-constructor #_m/SnackBar)
+                     ^#/(w/State ~fx-class #_m/SnackBar)
                      (~'createState [_#]
-                       (reify :extends #/(w/State #_~'~fx-constructor m/SnackBar)
+                       (reify :extends #/(w/State #_~'~fx-class m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
@@ -466,7 +475,7 @@
                          (~'build [_# ctx]
                            (let [#_#_kid1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                              (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-constructor               ;; /SnackBar
+                             (~fx-class               ;; /SnackBar
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
@@ -475,13 +484,14 @@
 
 (deftag tiltontec.mx-flutter.core/make-fx-snackbar snack-bar m/SnackBar)
 
-(defmacro k1-home-stateful [fx-constructor fx-props mx-props & children]
+(defmacro k1-home-stateful [fx-class fx-props mx-props & children]
   (let []
     ;(assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
     ;(assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
@@ -495,7 +505,7 @@
                          (~'build [_# ctx]
                            (let [bod# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-constructor
+                             (~fx-class
                                :home bod#
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
@@ -503,11 +513,12 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro k1-child-stateful [fx-constructor fx-props mx-props & children]
+(defmacro k1-child-stateful [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
                      (~'createState [_#]
@@ -522,7 +533,7 @@
                          (~'build [_# ctx]
                            (let [k1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-constructor
+                             (~fx-class
                                :child k1#
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
@@ -535,6 +546,7 @@
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
        (assoc ~mx-props
+         :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class (tiltontec.mx-flutter.core/fx-resolve ~prop me ctx
                                 (tiltontec.model.core/mget me ~prop))

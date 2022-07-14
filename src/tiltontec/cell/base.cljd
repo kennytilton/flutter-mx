@@ -213,9 +213,12 @@ rule to get once behavior or just when fm-traversing to find someone"
      (not (atom? md)) :not-atom-md
      (not (md-ref? md)) (do (dp :atom-not-md-c @md)
                             :atom-not-md-c)
-     :else (if verbose
+     :else (if false ;; verbose
              [(:name @md) (meta md)]
-             [(:name @md) (mx-type md)]))))
+             [(:fx-class @md)
+              (or (:name @md)
+                (:fx-class @md)
+                [:hunh @md])]))))
 
 ;; --- dependency maintenance --------------------------------
 
