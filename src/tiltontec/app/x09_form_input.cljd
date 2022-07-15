@@ -11,14 +11,14 @@
   (let [title "Retrieve text input"]
     (fx/material-app {:title title}
       (fx/scaffold
-        {:appBar (m/AppBar :title (m/Text title))
+        {:appBar (m/AppBar .title (m/Text title))
          :floatingActionButton
          (fx/floating-action-button
            {:onPressed (fx/cb-with-ctx [me ctx]
                          (fx/->CBAsIs
                            #(m/showDialog
-                              :context ctx
-                              :builder (fn [_] (m/AlertDialog
+                              .context ctx
+                              .builder (fn [_] (m/AlertDialog
                                                  :content (m/Text (.text ^m/TextEditingController
                                                                     (md/mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}

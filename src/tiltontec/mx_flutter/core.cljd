@@ -87,7 +87,7 @@
 (defn ctx-page-push [ctx fx-page-def]
   (.push (-> ctx m.Navigator/of)
     (#/(m/MaterialPageRoute Object)
-      :builder (fn [_]
+      .builder (fn [_]
                  (fx-render ctx fx-page-def)))))
 
 (defn ctx-page-pop [ctx]
@@ -191,10 +191,11 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                     .child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                               (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -208,10 +209,11 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                     .child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                               (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -224,10 +226,11 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                     .child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                               (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -284,10 +287,11 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :content (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                     .content (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                 (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -303,9 +307,10 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (~fx-class
-                     :children (mapv (partial tiltontec.mx-flutter.core/fx-render ctx) (md/md-kids me))
+                     .children (mapv (partial tiltontec.mx-flutter.core/fx-render ctx) (md/md-kids me))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.model.core/mget me ~k#)])]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.model.core/mget me ~k#)])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
@@ -318,7 +323,8 @@
          :fx-gen (fn [me ctx]
                    (~fx-class
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        nil)))
@@ -332,7 +338,8 @@
          :fx-gen (fn [me ctx]
                    (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
                      ~@(let [kvs (for [[k# _#] fx-props]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -357,7 +364,8 @@
                          (~'build [_# ctx]
                            (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
                              ~@(let [kvs (for [[k# _#] fx-props]
-                                           [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -380,7 +388,8 @@
                          (~'build [_# ctx]
                            (~fx-class
                              ~@(let [kvs (for [[k# _#] fx-props]
-                                           [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
        nil)))
@@ -407,7 +416,8 @@
                            (~fx-class (tiltontec.mx-flutter.core/fx-resolve :ico-prop me ctx
                                         (tiltontec.model.core/mget me ~p1-prop-name))
                              ~@(let [kvs (for [[k# _#] (dissoc fx-props p1-prop-name)]
-                                           [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
        nil)))
@@ -434,9 +444,10 @@
                                         (first (tiltontec.model.core/md-kids me)))]
                              (~fx-class
                                ;; todo throw error if they specify :body explicitly, for now
-                               :body bod#
+                               .body bod#
                                ~@(let [kvs (for [[k# _#] fx-props]
-                                             [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                             [(symbol (str "." (name k#)))
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -466,7 +477,8 @@
                                              (first (tiltontec.model.core/md-kids me)))]
                              (~fx-class                     ;; /SnackBar
                                ~@(let [kvs (for [[k# _#] fx-props]
-                                             [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                             [(symbol (str "." (name k#)))
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs))))))))))
        nil)))
@@ -524,9 +536,10 @@
                            (let [k1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/md-kids me)))]
                              (~fx-class
-                               :child k1#
+                               .child k1#
                                ~@(let [kvs (for [[k# _#] fx-props]
-                                             [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                             [(symbol (str "." (name k#)))
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
@@ -541,7 +554,8 @@
                    (~fx-class (tiltontec.mx-flutter.core/fx-resolve ~prop me ctx
                                 (tiltontec.model.core/mget me ~prop))
                      ~@(let [kvs (for [[k# _#] (dissoc fx-props prop)]
-                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                           (tiltontec.model.core/mget me ~k#))])]
                          (apply concat kvs)))))
        nil)))
@@ -600,9 +614,10 @@
                            (let [k1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/md-kids me)))]
                              (~fx-class
-                               :child k1#
+                               .child k1#
                                ~@(let [kvs (for [[k# _#] fx-props]
-                                             [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                             [(symbol (str "." (name k#)))
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
