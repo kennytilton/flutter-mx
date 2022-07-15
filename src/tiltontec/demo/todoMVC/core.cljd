@@ -18,11 +18,30 @@
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
 (declare my-app-bar my-fab test-todos)
-
+; class TodoApp extends StatelessWidget {
+;  @override
+;  Widget build(BuildContext context) {
+;    return new MaterialApp(
+;      title: 'Flutter • TodoMVC',
+;      debugShowCheckedModeBanner: false,
+;      theme: new ThemeData(
+;        fontFamily: 'Helvetica Neue',
+;        primarySwatch: Colors.blueGrey,
+;      ),
+;      home: new SplashPage(),
+;      routes: <String, WidgetBuilder>{
+;        '/todos': (BuildContext context) => new TodoList(),
+;      },
+;    );
+;  }
+;}
 (defn make-app []
   (let [title "todos"]
     (fx/material-app
       {:title                      title
+       :theme (m/ThemeData
+                :fontFamily "Helvetica Neue"
+                :primarySwatch m.Colors/blueGrey)
        :debugShowCheckedModeBanner false}
       {:name    :app
        ;; todo persist in localstorage
@@ -65,10 +84,14 @@
 (defn my-app-bar [title]
   (fx/preferred-size
     {:preferredSize (.fromHeight m/Size 100)}
-    (fx/app-bar {:title (fx/text
+    (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
+                 :title (fx/text
                           {:style (p/TextStyle
-                                    :fontFamily "RobotoMono"
-                                    :color m.Colors/white
+                                    :fontFamily "Helvetica Neue" #_ "RobotoMono"
+                                    :color (.fromRGBO m/Color 184 63 69 0.5) #_ m.Colors/white ;; 184, 63, 69
+                                    #_#_ :background (doto (m/Paint)
+                                                  (-> .-color (set! m.Colors/grey))
+                                                  (-> .-style (set! m.PaintingStyle/fill)))
                                     :fontWeight m.FontWeight/w100
                                     :fontSize 64.0)}
                           title)})))
