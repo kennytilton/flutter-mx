@@ -24,8 +24,8 @@
     (fx/material-app
       {:title                      title
        :theme (m/ThemeData
-                :fontFamily "Helvetica Neue"
-                :backgroundColor (.fromRGBO m/Color 245 245 245 1))
+                .fontFamily "Helvetica Neue"
+                .backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
       {:name    :app
        ;; todo persist in localstorage
@@ -38,7 +38,7 @@
          :backgroundColor (.fromRGBO m/Color 245 245 245 1)
          #_#_:floatingActionButton (my-fab)
          :persistentFooterButtons [(fx/row
-                                     {:mainAxisAlignment m.MainAxisAlignment/center}
+                                     {:mainAxisAlignment m.MainAxisAlignment/-center}
                                      (fx/expanded {:flex 1} (footer/items-left-display))
                                      (fx/expanded {:flex 2} (footer/completion-filters))
                                      (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
@@ -53,7 +53,7 @@
 
           (fx/expanded                                      ;; required sizer to join column
             (fx/list-view
-              {:padding m.EdgeInsets/zero}
+              {:padding m.EdgeInsets/-zero}
               {:name :da-list-view}
               (map item/todo-list-item
                 (md/fmuval :app :todo-db)))))))))
@@ -67,13 +67,10 @@
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
                  :title (fx/text
                           {:style (p/TextStyle
-                                    :fontFamily "Helvetica Neue" #_ "RobotoMono"
-                                    :color (.fromRGBO m/Color 184 63 69 0.5) #_ m.Colors/white ;; 184, 63, 69
-                                    #_#_ :background (doto (m/Paint)
-                                                  (-> .-color (set! m.Colors/grey))
-                                                  (-> .-style (set! m.PaintingStyle/fill)))
-                                    :fontWeight m.FontWeight/w100
-                                    :fontSize 64.0)}
+                                    .fontFamily "Helvetica Neue"
+                                    .color (.fromRGBO m/Color 184 63 69 0.5)
+                                    .fontWeight m.FontWeight/-w100
+                                    .fontSize 64.0)}
                           title)})))
 
 #_;; not needed, but save maybe for DB reset?
@@ -89,7 +86,7 @@
              :tooltip   "Show me the value!"}
             (m/Icon m.Icons/text_fields)))
 
-;; todo hide footer if no items
+;; todo NOT hide footer if no items
 ;; todo refocus todo input after clearing
 
 (def test-todos

@@ -473,14 +473,12 @@
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
-                           (let [#_#_kid1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
-                                             (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-class                     ;; /SnackBar
-                               ~@(let [kvs (for [[k# _#] fx-props]
-                                             [(symbol (str "." (name k#)))
-                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
-                                                    (tiltontec.model.core/mget me ~k#))])]
-                                   (apply concat kvs))))))))))
+                           (~fx-class                     ;; /SnackBar
+                             ~@(let [kvs (for [[k# _#] fx-props]
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                               (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))))))))
        nil)))
 
 (deftag tiltontec.mx-flutter.core/make-fx-snackbar snack-bar m/SnackBar)

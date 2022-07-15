@@ -45,14 +45,14 @@
     {:onPanStart  (cF (fx/->CBAsIs
                         (fn [^g/DragStartDetails details]
                           (let [vertices (mget me :vertices)
-                                pointer (.localPosition details)
+                                pointer (.-localPosition details)
                                 [id delta] (or
                                              ;; see if a dot has been clicked, perhaps within the parallelogram
                                              ;; _and_ on the dot, since they overlap a bit. Our spec gives
                                              ;; the dot precedence.
                                              (some (fn [[i vertex]]
                                                      (let [delta (.- pointer vertex)]
-                                                       (when (< (.distance delta) radius)
+                                                       (when (< (.-distance delta) radius)
                                                          [i delta])))
                                                (map-indexed vector vertices))
                                              ;; ... not on a dot, now see if in parallelogram
@@ -65,7 +65,7 @@
                         (fn [^g/DragUpdateDetails details]
                           (let [{:keys [dragee delta]} (md/mget me :drag-op)
                                 new-pos (when delta
-                                          (.- (.localPosition details) delta))]
+                                          (.- (.-localPosition details) delta))]
                             (cond
                               (= dragee :parallelogram)
                               (md/mswap! me :vertices move-to new-pos)
@@ -76,14 +76,14 @@
      :drag-op     (cI {:delta  nil
                        :dragee nil})}
     (m/CustomPaint
-      :size (m/Size double/infinity double/infinity)
-      :painter (reify :extends (m/CustomPainter :repaint (mget me :fx$notifier))
+      .size (m/Size double/-infinity double/-infinity)
+      .painter (reify :extends (m/CustomPainter .repaint (mget me :fx$notifier))
                  (paint [this canvas size]
                    (let [[^m/Offset o ^m/Offset a ^m/Offset b] (md/mget me :vertices)
                          c (.- (.+ b a) o)
                          paint (doto (m/Paint)
-                                 (-> .-color (set! m.Colors/grey))
-                                 (-> .-style (set! m.PaintingStyle/fill)))]
+                                 (-> .-color (set! m.Colors/-grey))
+                                 (-> .-style (set! m.PaintingStyle/-fill)))]
                      (doto canvas
                        (.drawLine o a paint)
                        (.drawLine o b paint)

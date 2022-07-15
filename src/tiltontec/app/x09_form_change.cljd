@@ -22,7 +22,7 @@
         (fx/padding
           {:padding ^:const (m.EdgeInsets/all 16.0)}
           (fx/column
-            {:mainAxisAlignment MainAxisAlignment/center}
+            {:mainAxisAlignment MainAxisAlignment/-center}
             ; todo if we have onchanged and also listen to the controller, what happens?
             (fx/text-field
               {:onChanged (fx/cb-with-ctx [me ctx]
@@ -37,9 +37,9 @@
                                            #(md/mset! me :value %)))}
               {:name       :input-b
                :value      (cI "And then...?")
-               :controller (cFonce (let [c (m/TextEditingController :text (mget me :value))]
+               :controller (cFonce (let [c (m/TextEditingController .text (mget me :value))]
                                      (.addListener c
-                                       (fn [] (dp (str "Second text field: " (.text c)))))
+                                       (fn [] (dp (str "Second text field: " (.-text c)))))
                                      c))})
             (fx/text (str "(a) " (md/fmuval :input-a) " and (b) " (md/fmuval :input-b)))))))))
 

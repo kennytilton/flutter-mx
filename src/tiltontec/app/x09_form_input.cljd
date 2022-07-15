@@ -8,7 +8,7 @@
     ["package:flutter/painting.dart" :as p]))
 
 (defn make-app []
-  (let [title "Retrieve text input"]
+  (let [title "Retrieve text input 2"]
     (fx/material-app {:title title}
       (fx/scaffold
         {:appBar (m/AppBar .title (m/Text title))
@@ -19,10 +19,10 @@
                            #(m/showDialog
                               .context ctx
                               .builder (fn [_] (m/AlertDialog
-                                                 :content (m/Text (.text ^m/TextEditingController
+                                                 .content (m/Text (.-text ^m/TextEditingController
                                                                     (md/mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}
-           (m/Icon m.Icons/text_fields))}
+           (m/Icon m.Icons/-text_fields))}
         (fx/padding
           {:padding ^:const (m.EdgeInsets/all 16.0)}
           (fx/text-field {:controller (m/TextEditingController)}
