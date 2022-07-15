@@ -147,10 +147,10 @@
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :fx$state (cI nil) ;; todo move these to meta?
+    :fx$state (cI nil)                                      ;; todo move these to meta?
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
-                (concat (keys fx-props)(keys custom-props)))
-    :initState (fn [this me] ;; this one too
+                (concat (keys fx-props) (keys custom-props)))
+    :initState (fn [this me]                                ;; this one too
                  (md/mset! me :fx$state this))
     :kids cFkids-form
     (concat
@@ -164,7 +164,7 @@
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (some #{slot} [:par :name :mx-type :not-to-be
-                             :fx$state :fx$ikeys :fx$notifier :fx$observer])                    ;; todo check for others to exclude
+                             :fx$state :fx$ikeys :fx$notifier :fx$observer]) ;; todo check for others to exclude
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
         (dpx :FXDartWidget-observing-md!!! slot (cty/minfo me) :deref @me)
@@ -405,7 +405,7 @@
                              (init this me)))
                          (~'build [_# ctx]
                            (~fx-class (tiltontec.mx-flutter.core/fx-resolve :ico-prop me ctx
-                                              (tiltontec.model.core/mget me ~p1-prop-name))
+                                        (tiltontec.model.core/mget me ~p1-prop-name))
                              ~@(let [kvs (for [[k# _#] (dissoc fx-props p1-prop-name)]
                                            [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                   (tiltontec.model.core/mget me ~k#))])]
@@ -464,7 +464,7 @@
                          (~'build [_# ctx]
                            (let [#_#_kid1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                              (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-class               ;; /SnackBar
+                             (~fx-class                     ;; /SnackBar
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                     (tiltontec.model.core/mget me ~k#))])]
@@ -495,10 +495,11 @@
                            (let [bod# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.model.core/md-kids me)))]
                              (~fx-class
-                               :home bod#
+                               .home bod#
                                ~@(let [kvs (for [[k# _#] fx-props]
-                                             [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
-                                                    (tiltontec.model.core/mget me ~k#))])]
+                                             [(symbol (str "." (name k#))) ;;k#
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                                 (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 

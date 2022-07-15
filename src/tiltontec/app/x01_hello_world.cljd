@@ -18,7 +18,7 @@
     ;;     that one is now programming in the Flutter sphere.
     {:title "Hunt for Teal mxFlutter"
      :theme (cF                                             ;; nb! "cF" expands into a "F"ormulaic "c"ell, a structure used to manage the value of :theme
-              (m/ThemeData :primarySwatch
+              (m/ThemeData .primarySwatch
                 ;; nb! Native Flutter can be used by MX stucture, but NOT vice versa. In this case we are
                 ;; offering a native ThemeData as the :theme, no MX involved
                 (let [ttl (md/mget me :title)]
@@ -30,9 +30,9 @@
                   ;; change the title, so we never get to see the Theme "react".
                   ;; But you can change it and reload. Next app, we go truly reactive.
                   (cond
-                    (str/includes? ttl "Teal") m.Colors/teal
-                    (str/includes? ttl "Red") m.Colors/red
-                    :else m.Colors/blue))))}
+                    (str/includes? ttl "Teal") m.Colors/-teal
+                    (str/includes? ttl "Red") m.Colors/-red
+                    :else m.Colors/-blue))))}
     ;; nb! MX offers a bit of syntactic cleanup by collapsing options such as :child, :children,
     ;; body, and :home into the generic MX "kids" concept. Here we simply define the content
     ;; meant for the app :home parameter as a sole child.
@@ -48,12 +48,12 @@
         ;;
         ;; Otherwise, nb again the easy mingling of MX with Flutter objects for :overflow and :style
         (fx/column
-          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+          {:mainAxisAlignment m.MainAxisAlignment/-spaceEvenly}
           (fx/hero {:tag "imageHero"}
-            (m/Image :image (m/AssetImage "image/kernighan.jpeg")
+            (m/Image .image (m/AssetImage "image/kernighan.jpeg")
               :height 512))
-          (fx/text {:overflow m.TextOverflow/ellipsis
+          (fx/text {:overflow m.TextOverflow/-ellipsis
                     :style    (p/TextStyle
-                                :color m.Colors/cyan
-                                :fontSize 32.0)}
-            "hello, world\\n"))))))
+                                .color m.Colors/-cyan
+                                .fontSize 32.0)}
+            "hello, x world\\n"))))))
