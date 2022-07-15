@@ -15,14 +15,22 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
+; Material(
+;;              elevation: 20.0,
+;;              shadowColor: Colors.blue,
+;;                          child: Text
 (defn todo-input []
   (do #_#_fx/focus+focus-node
           {;;:autofocus true
            :focusNode (m/FocusNode :autofocus true)}
-    (fx/text-field {:autofocus   true
+    (fx/material {:elevation 20.0
+                  :shadowColor m.Colors/black}
+      (fx/text-field {:autofocus   true
                     :decoration  (m/InputDecoration
                                    :hintText "What needs doing?"
-                                   :border (m/OutlineInputBorder))
+                                   :border m.InputBorder/none #_ (.-none m/InputBorder)
+                                   :contentPadding (m.EdgeInsets/all 9.0)
+                                   )
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
                                          (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field, as per spec
@@ -45,7 +53,7 @@
       {:name  :todo-input
        :value (cI nil
                 #_#_:obs (fn-obs (dp :val-obs-sees new)))
-       #_#_:focuser (m/FocusNode)})))
+       #_#_:focuser (m/FocusNode)}))))
 
 (defn todo-toggle-all []
   (fx/icon-button

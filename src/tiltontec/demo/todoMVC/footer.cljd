@@ -29,6 +29,7 @@
                           " item" " items")))))
 
 (defn completion-filters []
+  ;; todo BUG switching All to Active after any td delete crashes on setState
   (fx/row
     {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
     {:name      :completions
@@ -40,7 +41,6 @@
                                  (fx/->CBAsIs
                                    #(let [comps (md/fasc :completions)]
                                       (mset! comps :selection option))))}
-                       {} ;; todo make this extra map optional
                        (fx/container
                          {:decoration (cF (when (mget me :selected?)
                                             (m/BoxDecoration

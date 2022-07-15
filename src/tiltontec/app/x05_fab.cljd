@@ -99,7 +99,6 @@
                           child)))))}
     (fx/fade-transition
       {:opacity (mget (md/fasc :fab) :expand-animation)}
-      {:name :fade-trans}
       (action-button
         :icon (:icon action)
         :onPressed (fx/cb-with-ctx [me ctx]
@@ -110,6 +109,9 @@
   (m/showDialog
     :context ctx
     :builder (fn [ctx]
+               ;; in this rare case talking directly to Flutter we must
+               ;; use fx-render to build a ready-to-go Dart object. This
+               ;; could be a macro if this comes up a lot,
                (fx/fx-render ctx
                  (fx/alert-dialog
                    ;; todo extend resolve to handle vectors then convert VVVV
@@ -125,7 +127,6 @@
                 :color        (fx/cb-with-ctx [me ctx]
                                 (-> (m.Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
-    {}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
@@ -140,7 +141,6 @@
       (fx/material {:shape        ^:const (m/CircleBorder)
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
-        {}
         (fx/ink-well {:onTap (fx/->CBAsIs
                                #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}

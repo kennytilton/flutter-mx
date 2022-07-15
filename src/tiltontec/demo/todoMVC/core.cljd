@@ -18,30 +18,14 @@
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
 (declare my-app-bar my-fab test-todos)
-; class TodoApp extends StatelessWidget {
-;  @override
-;  Widget build(BuildContext context) {
-;    return new MaterialApp(
-;      title: 'Flutter • TodoMVC',
-;      debugShowCheckedModeBanner: false,
-;      theme: new ThemeData(
-;        fontFamily: 'Helvetica Neue',
-;        primarySwatch: Colors.blueGrey,
-;      ),
-;      home: new SplashPage(),
-;      routes: <String, WidgetBuilder>{
-;        '/todos': (BuildContext context) => new TodoList(),
-;      },
-;    );
-;  }
-;}
+
 (defn make-app []
   (let [title "todos"]
     (fx/material-app
       {:title                      title
        :theme (m/ThemeData
                 :fontFamily "Helvetica Neue"
-                :primarySwatch m.Colors/blueGrey)
+                :backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
       {:name    :app
        ;; todo persist in localstorage
@@ -51,6 +35,7 @@
                         test-todos)))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
+         :backgroundColor (.fromRGBO m/Color 245 245 245 1)
          #_#_:floatingActionButton (my-fab)
          :persistentFooterButtons [(fx/row
                                      {:mainAxisAlignment m.MainAxisAlignment/center}
@@ -71,15 +56,10 @@
               {:padding m.EdgeInsets/zero}
               {:name :da-list-view}
               (map item/todo-list-item
-                (md/fmuval :app :todo-db))))
-          #_ (fx/column
-            (fx/text "by Kenneth Tilton")
-            (fx/text "Copyright (c) 2022")
-            (fx/text "TiltonTec Software")))))))
+                (md/fmuval :app :todo-db)))))))))
 
 ;;; todo??? delete icon visible iff selected
 ;;; todo credits in alert?
-;;; todo all/completed/open
 
 (defn my-app-bar [title]
   (fx/preferred-size
