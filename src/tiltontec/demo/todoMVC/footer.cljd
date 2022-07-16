@@ -30,22 +30,22 @@
     {:name      :completions
      :selection (cI :all)}
     (let [choice (fn [completion-enum option$]
-                   (fx/expanded {:flex 1}
-                     (fx/ink-well
-                       {:onTap (fx/cb-with-ctx [me ctx]
-                                 (fx/->CBAsIs
-                                   #(mset! (md/fasc :completions)
-                                      :selection completion-enum)))}
-                       (fx/container
-                         {:decoration (cF (when (mget me :selected?)
-                                            (m/BoxDecoration
-                                              ;; todo lower internal padding on these
-                                              .border (.all m/Border .color (todo/title-red) .width 0.5)
-                                              .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 6.0)))))}
-                         {:completion-enum completion-enum
-                          :selected?       (cF (= (mget me :completion-enum)
-                                                 (mget (md/fasc :completions) :selection)))}
-                         (fx/center (m/Text option$))))))]
+                   (fx/ink-well
+                     {:onTap (fx/cb-with-ctx [me ctx]
+                               (fx/->CBAsIs
+                                 #(mset! (md/fasc :completions)
+                                    :selection completion-enum)))}
+                     (fx/container
+                       {:decoration (cF (when true #_ (mget me :selected?)
+                                          (m/BoxDecoration
+                                            .border (.all m/Border .color (todo/title-red) .width 0.5)
+                                            .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
+                       {:completion-enum completion-enum
+                        :selected?       (cF (= (mget me :completion-enum)
+                                               (mget (md/fasc :completions) :selection)))}
+                       (fx/padding
+                         {:padding ^:const (m.EdgeInsets/all 3.0)}
+                         (m/Text option$)))))]
       (list
         (choice :all "All")
         (choice :active "Active")

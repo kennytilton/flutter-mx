@@ -31,7 +31,7 @@
 
 (defn observe [slot-name me new-val old-val c]
   (dpx :obs-classic slot-name (cty/minfo me) new-val)
-  ;; todo if no state next, search up for nearest and setState that
+  ;; todo if no state next, search up for nearest and set-State that
 
   (when-let [obs (:fx$observer @me)]
     ;; note that we carry on with generic observe after specific observe
@@ -41,20 +41,6 @@
   (when-let [obs (observer-get (type-cljd me))]
     (do (prn :using-type-obs slot-name (type-cljd me))
         (obs slot-name me new-val old-val c))))
-
-#_(let [obs (if-let [obs (observer-get [slot-name (type-cljd me)])]
-              (do (prn :using-slot-obs slot-name (type-cljd me))
-                  obs)
-              (if-let [obs (observer-get (type-cljd me))]
-                (do (prn :using-type-obs slot-name (type-cljd me))
-                    obs)
-                (if-let [obs @+observe-default-handler+]
-                  (do                                       ;;(prn :using-default-obs slot-name (type-cljd me))
-                    obs)
-                  (when (= slot-name :kids)
-                    #_(prn :no-obs-define-for slot-name (type-cljd me)
-                        (keys @+observe-method+))))))]
-    (when obs (obs slot-name me new-val old-val c)))
 
 (defmacro fn-obs
   "Shortcut definer for cell-specific observers.
