@@ -85,7 +85,7 @@
                   (fn [ctx child]
                     (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
                           offset (m.Offset/fromDirection
-                                   (* direction-degrees (/ math/pi 180.0))
+                                   (* direction-degrees (/ math/pi 180.00))
                                    (* (.-value progress) max-distance))]
                       ;; N.B! alpha widgets are welcome at leaves of the MX tree...
                       (f/widget
@@ -144,7 +144,7 @@
         (fx/ink-well {:onTap (fx/->CBAsIs
                                #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
-            (fx/icon {:icon  m.Icons/close
+            (fx/icon {:icon  m.Icons/-close
                       :color (fx/cb-with-ctx [me ctx]
                                (.-primaryColor (m.Theme/of ctx)))} {})))))))
 
@@ -166,7 +166,7 @@
         (fx/floating-action-button
           {:onPressed (fx/->CBAsIs
                         #(md/mswap! (md/fasc :fab par) :open? not))}
-          (fx/icon {:icon m.Icons/create}))))))
+          (fx/icon {:icon m.Icons/-create}))))))
 
 (defn fake-item [is-big?]
   (m/Container

@@ -26,7 +26,7 @@
       (fx/text {:style (fx/cb-with-ctx [me ctx]
                          ;; we hacked the text widget a bit to look for callback functions on "style"
                          ;; so a style formula can tap the runtime context.
-                         (-> (Theme/of ctx) .-textTheme .displayLarge))}
+                         (-> (Theme/of ctx) .-textTheme .-displayLarge))}
         (str (md/fmuval :ctr-col)))
       (fx/elevated-button
         {:onPressed (fx/->CBAsIs
@@ -36,11 +36,11 @@
 
 (defn make-app []
   (fx/material-app {:title "Two Counters (MX)"
-                 :theme (cF (ThemeData :primarySwatch Colors/blue))}
+                 :theme (cF (ThemeData .primarySwatch Colors/-blue))}
     (fx/scaffold
-      {:appBar (AppBar :title (Text "Two Counters (MX)"))}
+      {:appBar (AppBar .title (Text "Two Counters (MX)"))}
       (fx/center
         (fx/row
-          {:mainAxisAlignment MainAxisAlignment/center}
+          {:mainAxisAlignment MainAxisAlignment/-center}
           (mapv #(build-counter %)
             [:left :right]))))))
