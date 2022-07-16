@@ -157,6 +157,18 @@
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
 
+(defn state-set [^State state]
+  ; the todos demo failed trying to setState a list item that was unmounted
+  ; it may be that the widget saw it needed to redraw at the same time it was getting tossed
+  ; disable this safeguard vvv and follow this sequence to recreate:
+  ;    start the todos demo
+  ;    hit clear completed to lose a td
+  ;    click "Active", but not "Done" for some reason
+  ;    get nice error from Flutter
+  (if (.-mounted state)
+    (.setState state (fn [] (do)))
+    (dp :NOT_SETSTATE-NOT_MOUNTED state)))
+
 (deftype FXDartWidget []
   :extends Model
   PObserver
@@ -173,12 +185,13 @@
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.-mounted state))
-              (.setState state (fn [] (do))))
+          (do (dp :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.-mounted state))
+              (state-set state))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dpx :obs-FXD-uses-nearest-state state (.-mounted state) :sid (md/mget me :sid) :slot slot :new-prio new-value prior-value)
-              (.setState state (fn [] (do))))
+              (dp :obs-FXD-uses-nearest-state state (.-mounted state) :sid (md/mget me :sid)
+                :slot slot :new-prio new-value prior-value)
+              (state-set state))
             (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (minfo me))))))))
 
 ;;; ---- sundry factories per Flutter variation ------------------
@@ -598,7 +611,7 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      ;; todo move this to all the other macros
-                                     :key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
                                             (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
