@@ -13,28 +13,36 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.util.base :refer [dprn dp dpx]]))
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [clojure.string :as str]))
 
 (defn todo-input []
   (fx/material {:elevation   20.0
-                :color m.Colors/-white
+                :color       m.Colors/-white
                 :shadowColor m.Colors/-black}
     (fx/text-field {:autofocus   true
-                    :focusNode (m/FocusNode)
+                    :focusNode   (m/FocusNode)
                     :decoration  (m/InputDecoration
                                    .hintText "What needs doing?"
                                    .border m.InputBorder/-none #_(.-none m/InputBorder)
                                    .contentPadding (m.EdgeInsets/all 9.0))
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
-                                         (md/mset! me :value value)
-                                         ;; u/x nicetities
-                                         (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field, as per spec
-                                         ;; refocus
-                                         (.requestFocus ^m/FocusNode (md/mget me :focusNode))
-                                         ;; now make the to-do
-                                         (md/mswap! (md/fasc :app) :todo-db concat
-                                           [(todo/make-todo value false)]))))
+                                         (let [trimmed (str/trim value)]
+                                           (dp :vals!!! value trimmed)
+                                           (if (str/blank? trimmed)
+                                             ;; "onsubmit" seems to remove the edit focus on its own
+                                             (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                             (do
+                                               (dp :not-blank!!!! trimmed)
+                                               (md/mset! me :value trimmed)
+                                               ;; u/x nicetities
+                                               (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field, as per spec
+                                               ;; refocus
+                                               (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                               ;; now make the to-do
+                                               (md/mswap! (md/fasc :app) :todo-db concat
+                                                 [(todo/make-todo trimmed false)])))))))
                     :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
@@ -47,13 +55,22 @@
        :value (cI nil)})))
 
 (defn todo-toggle-all []
-  (fx/icon-button
-    {:onPressed (fx/cb-with-ctx [me ctx]
-                  (fx/->CBAsIs
-                    (fn []
-                      (let [todos (md/mget (md/fasc :app) :todo-db)
-                            all-done? (every? (fn [td] (md/mget td :completed)) todos)]
-                        (doseq [td todos]
-                          ;; todo do all these in one change pulse
-                          (md/mset! td :completed (if all-done? false true)))))))
-     :icon      (m/Icon m.Icons/-expand_more .color m.Colors/-blueGrey)}))
+  (fx/visibility!
+    {:visible               (cF (let [todos (md/mget (md/fasc :app) :todo-db)]
+                                  (dp :tofods!! (seq todos) (count todos))
+                                  (boolean (seq todos))))
+     :maintainSize          true
+     :maintainSemantics     false
+     :maintainInteractivity false
+     :maintainAnimation     true
+     :maintainState         true}
+    (fx/icon-button
+      {:onPressed (fx/cb-with-ctx [me ctx]
+                    (fx/->CBAsIs
+                      (fn []
+                        (let [todos (md/mget (md/fasc :app) :todo-db)
+                              all-done? (every? (fn [td] (md/mget td :completed)) todos)]
+                          (doseq [td todos]
+                            ;; todo do all these in one change pulse
+                            (md/mset! td :completed (if all-done? false true)))))))
+       :icon      (m/Icon m.Icons/-expand_more .color m.Colors/-blueGrey)})))
