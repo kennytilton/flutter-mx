@@ -20,40 +20,35 @@
 ;;              shadowColor: Colors.blue,
 ;;                          child: Text
 (defn todo-input []
-  (do #_#_fx/focus+focus-node
-          {;;:autofocus true
-           :focusNode (m/FocusNode :autofocus true)}
-    (fx/material {:elevation 20.0
-                  :shadowColor m.Colors/black}
-      (fx/text-field {:autofocus   true
+  (fx/material {:elevation   20.0
+                :shadowColor m.Colors/-black}
+    (fx/text-field {:autofocus   true
+                    :focusNode (m/FocusNode)
                     :decoration  (m/InputDecoration
-                                   :hintText "What needs doing?"
-                                   :border m.InputBorder/none #_ (.-none m/InputBorder)
-                                   :contentPadding (m.EdgeInsets/all 9.0)
+                                   .hintText "What needs doing?"
+                                   .border m.InputBorder/-none #_(.-none m/InputBorder)
+                                   .contentPadding (m.EdgeInsets/all 9.0)
                                    )
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
-                                         (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field, as per spec
                                          (md/mset! me :value value)
+                                         ;; u/x nicetities
+                                         (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field, as per spec
                                          ;; refocus
-                                         ;(dp :refocusing!!!!!!!!! (md/mget me :focuser))
-                                         ;(.requestFocus (md/mget me :focuser))
-                                         ;; make new to-do!!
-
+                                         (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                         ;; now make the to-do
                                          (md/mswap! (md/fasc :app) :todo-db concat
                                            [(todo/make-todo value false)]))))
-                    :controller  (cFonce (let [c (m/TextEditingController :text (md/mget me :value))]
+                    :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
                                              (fn []
-                                               (let [value (.text c)]
+                                               (let [value (.-text c)]
                                                  (dpx (str "todo input field: " value))
                                                  (md/mset! me :value value))))
                                            c))}
       {:name  :todo-input
-       :value (cI nil
-                #_#_:obs (fn-obs (dp :val-obs-sees new)))
-       #_#_:focuser (m/FocusNode)}))))
+       :value (cI nil)})))
 
 (defn todo-toggle-all []
   (fx/icon-button
@@ -65,6 +60,6 @@
                         (doseq [td todos]
                           ;; todo do all these in one change pulse
                           (md/mset! td :completed (if all-done? false true)))))))
-     :icon      (m/Icon m.Icons/expand_more :color m.Colors/blueGrey)
+     :icon      (m/Icon m.Icons/-expand_more .color m.Colors/-blueGrey)
      :color     (fx/cb-with-ctx [me ctx]
                   (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))}))

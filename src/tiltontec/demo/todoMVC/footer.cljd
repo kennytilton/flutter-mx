@@ -44,10 +44,8 @@
                        (fx/container
                          {:decoration (cF (when (mget me :selected?)
                                             (m/BoxDecoration
-                                              :border (.all m/Border :color (.-black m/Colors) :width 1)
-                                              :borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 3.0)))))
-
-                          }
+                                              .border (.all m/Border .color (.-black m/Colors) .width 1)
+                                              .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 3.0)))))}
                          {:enum      option
                           :selected? (cF (= (mget me :enum)
                                            (mget (md/fasc :completions) :selection)))}
@@ -75,7 +73,5 @@
                         (let [app (md/fasc :app)
                               db (mget app :todo-db)
                               remaining (remove #(mget % :completed) db)]
-                          (dp :db-in db)
-                          (dp :rem remaining)
                           (mset! (md/fasc :app) :todo-db remaining)))))}
       (m/Text "Clear completed"))))

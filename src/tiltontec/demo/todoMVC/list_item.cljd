@@ -37,13 +37,10 @@
        :maintainState         true}
       {:name :todo-item-visi}
       (fx/list-tile
-        {;;:key      flutter-key
-         :leading  (fx/check-box
+        {:leading  (fx/check-box
                      {:value     (cF (or (md/mget todo :completed) false))
                       :shape     (fx/rounded-rectangle-border
-                                   ;; todo get size to work or use whole new approach to rendering
-                                   {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))
-                                    #_(m.BorderRadius/circular 16.0)})
+                                   {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
                       :onChanged (cF (fx/->CBAsIs
                                        (fn [value]
                                          (md/mset! todo :completed value))))}
@@ -55,7 +52,7 @@
                                        (md/mswap! (md/fasc :app) :todo-db
                                          (partial remove (fn [td]
                                                            (= sid (md/mget td :sid))))))))
-                      :icon      (m/Icon m.Icons/delete :color (-> m/Colors .-grey .-shade600))
+                      :icon      (m/Icon m.Icons/-delete .color (-> m/Colors .-grey .-shade600))
                       :color     (fx/cb-with-ctx [me ctx]
                                    (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
 
@@ -64,9 +61,9 @@
                          (fx/text!
                            {:style (cF (if (md/mget ldg :value)
                                          (p/TextStyle
-                                           :color m.Colors/grey
-                                           :decoration p.TextDecoration/lineThrough)
-                                         (p/TextStyle :color m.Colors/black)))}
+                                           .color m.Colors/-grey
+                                           .decoration p.TextDecoration/-lineThrough)
+                                         (p/TextStyle .color m.Colors/-black)))}
                            title)))}
         {:name :my-list-tile
          :todo todo}))))
