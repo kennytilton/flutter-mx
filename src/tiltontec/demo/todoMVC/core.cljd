@@ -19,9 +19,6 @@
 
 (declare my-app-bar my-fab test-todos)
 
-;; todo trashcan should be red x
-;; todo borders of copletions need to be red and better padding/margin
-
 (defn make-app []
   (let [title "todos"]
     (fx/material-app
@@ -42,7 +39,7 @@
          #_#_:floatingActionButton (my-fab)
          :persistentFooterButtons [(fx/row
                                      {:mainAxisAlignment m.MainAxisAlignment/-center}
-                                     (fx/expanded {:flex 1} (footer/items-left-display))
+                                     (fx/expanded {:flex 1} (footer/items-remaining-display))
                                      (fx/expanded {:flex 2} (footer/completion-filters))
                                      (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
         (fx/column
@@ -61,8 +58,7 @@
               (map item/todo-list-item
                 (md/fmuval :app :todo-db)))))))))
 
-;;; todo??? delete icon visible iff selected
-;;; todo credits in alert?
+;;; todo credits in alert
 
 (defn my-app-bar [title]
   (fx/preferred-size
@@ -75,8 +71,6 @@
                                     .fontWeight m.FontWeight/-w100
                                     .fontSize 64.0)}
                           title)})))
-
-;; todo NOT hide footer if no items
 
 (def test-todos
   ;;[]
