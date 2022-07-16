@@ -173,11 +173,11 @@
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.mounted state))
+          (do (dpx :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.-mounted state))
               (.setState state (fn [] (do))))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dpx :obs-FXD-uses-nearest-state state (.mounted state) :sid (md/mget me :sid) :slot slot :new-prio new-value prior-value)
+              (dpx :obs-FXD-uses-nearest-state state (.-mounted state) :sid (md/mget me :sid) :slot slot :new-prio new-value prior-value)
               (.setState state (fn [] (do))))
             (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (minfo me))))))))
 
@@ -461,7 +461,8 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (~fx-class #_m/SnackBar
                                      ~@(let [kvs (for [[k# _#] fx-props]
-                                                   [k# `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                                   [(symbol (str "." (name k#)))
+                                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
                                                           (tiltontec.model.core/mget me ~k#))])]
                                          (apply concat kvs)))
                      ^#/(w/State ~fx-class #_m/SnackBar)
@@ -480,7 +481,7 @@
                                                (tiltontec.model.core/mget me ~k#))])]
                                  (apply concat kvs)))))))))
        nil)))
-
+;; todo does snackbar still need this custom macro?
 (deftag tiltontec.mx-flutter.core/make-fx-snackbar snack-bar m/SnackBar)
 
 (defmacro k1-home-stateful [fx-class fx-props mx-props & children]

@@ -2,13 +2,14 @@
   "Flummox port of CLJD Faithful port of https://docs.flutter.dev/cookbook/design/snackbars"
   (:require
     ["package:flutter/material.dart" :as m]
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.mx-flutter.core :as fx]))
 
 ;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/snackbar
 ;;           ^^^ Copyright 2022 by Tensegritics, Eclipse
 
 (defn make-app []
-  (let [title "Snackbar Demo"]
+  (let [title "Snackbar Demo 2"]
     (fx/material-app
       {:title title}
       (fx/scaffold
@@ -22,9 +23,9 @@
                               (.showSnackBar (m.ScaffoldMessenger/of ctx)
                                 (fx/fx-render ctx
                                   (fx/snack-bar
-                                    {:action (m/SnackBarAction
-                                               .label "Undo!"
-                                               .onPressed (fn [] (dart:core/print :UNDO!!!!!)))
+                                    {:action  (m/SnackBarAction
+                                                .label "Undo!"
+                                                .onPressed (fn [] (dart:core/print :UNDO!!!!!)))
                                      :content (fx/text "Yay! A SnackBar!")})))
                               nil)))}
             (fx/text "Show text")))))))

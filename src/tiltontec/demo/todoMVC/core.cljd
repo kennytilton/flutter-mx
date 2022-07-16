@@ -19,6 +19,9 @@
 
 (declare my-app-bar my-fab test-todos)
 
+;; todo trashcan should be red x
+;; todo borders of copletions need to be red and better padding/margin
+
 (defn make-app []
   (let [title "todos"]
     (fx/material-app
@@ -68,26 +71,12 @@
                  :title (fx/text
                           {:style (p/TextStyle
                                     .fontFamily "Helvetica Neue"
-                                    .color (.fromRGBO m/Color 184 63 69 0.5)
+                                    .color (todo/title-red)
                                     .fontWeight m.FontWeight/-w100
                                     .fontSize 64.0)}
                           title)})))
 
-#_;; not needed, but save maybe for DB reset?
-        (defn my-fab []
-          (fx/floating-action-button
-            {:onPressed (fx/cb-with-ctx [me ctx]
-                          (fx/->CBAsIs
-                            #(m/showDialog
-                               :context ctx
-                               :builder (fn [_] (m/AlertDialog
-                                                  :content (m/Text (.text ^m/TextEditingController
-                                                                     (md/mget (md/fm* :todo-input) :controller))))))))
-             :tooltip   "Show me the value!"}
-            (m/Icon m.Icons/text_fields)))
-
 ;; todo NOT hide footer if no items
-;; todo refocus todo input after clearing
 
 (def test-todos
   ;;[]

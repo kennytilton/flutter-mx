@@ -45,16 +45,19 @@
                                        (fn [value]
                                          (md/mset! todo :completed value))))}
                      {:name :da-checkbox})
-         :trailing (fx/icon-button
+         :trailing (fx/text-button
                      {:onPressed (fx/cb-with-ctx [me ctx]
                                    (fx/->CBAsIs
                                      (fn []
                                        (md/mswap! (md/fasc :app) :todo-db
                                          (partial remove (fn [td]
-                                                           (= sid (md/mget td :sid))))))))
-                      :icon      (m/Icon m.Icons/-delete .color (-> m/Colors .-grey .-shade600))
-                      :color     (fx/cb-with-ctx [me ctx]
-                                   (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
+                                                           (= sid (md/mget td :sid))))))))}
+                     (fx/text {:style (p/TextStyle
+                                        .fontFamily "Helvetica Neue"
+                                        .color (todo/title-red)
+                                        .fontWeight m.FontWeight/-w200
+                                        .fontSize 20.0)}
+                       "X"))
 
          :title    (cF (let [ldg (md/mget me :leading)
                              title (md/mget (md/mget me :todo) :title)]
@@ -67,3 +70,17 @@
                            title)))}
         {:name :my-list-tile
          :todo todo}))))
+
+;;; --- archive code -----------------------------------------------------------
+
+#_ (fx/icon-button
+     ;; todo make this a red X
+     {:onPressed (fx/cb-with-ctx [me ctx]
+                   (fx/->CBAsIs
+                     (fn []
+                       (md/mswap! (md/fasc :app) :todo-db
+                         (partial remove (fn [td]
+                                           (= sid (md/mget td :sid))))))))
+      :icon      (m/Icon m.Icons/-delete .color (-> m/Colors .-grey .-shade600))
+      :color     (fx/cb-with-ctx [me ctx]
+                   (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
