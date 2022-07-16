@@ -23,9 +23,10 @@
   (let [title "todos"]
     (fx/material-app
       {:title                      title
-       :theme (m/ThemeData
-                .fontFamily "Helvetica Neue"
-                .backgroundColor (.fromRGBO m/Color 245 245 245 1))
+       :theme                      (m/ThemeData
+                                     ;; todo BG of todos and entry should be whiter
+                                     .fontFamily "Helvetica Neue"
+                                     .backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
       {:name    :app
        ;; todo persist in localstorage
@@ -35,28 +36,29 @@
                         test-todos)))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
-         :backgroundColor (.fromRGBO m/Color 245 245 245 1)
+         :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
          #_#_:floatingActionButton (my-fab)
          :persistentFooterButtons [(fx/row
                                      {:mainAxisAlignment m.MainAxisAlignment/-center}
                                      (fx/expanded {:flex 1} (footer/items-remaining-display))
                                      (fx/expanded {:flex 2} (footer/completion-filters))
                                      (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
-        (fx/column
-          (fx/row
-            (fx/expanded {:flex 1}
-              (input/todo-toggle-all))
-            (fx/expanded {:flex 9}
-              (fx/padding
-                {:padding ^:const (m.EdgeInsets/all 16.0)}
-                (input/todo-input))))
+        (fx/ink {:color m.Colors/-white}
+          (fx/column
+            (fx/row
+              (fx/expanded {:flex 1}
+                (input/todo-toggle-all))
+              (fx/expanded {:flex 9}
+                (fx/padding
+                  {:padding ^:const (m.EdgeInsets/all 16.0)}
+                  (input/todo-input))))
 
-          (fx/expanded                                      ;; required sizer to join column
-            (fx/list-view
-              {:padding m.EdgeInsets/-zero}
-              {:name :da-list-view}
-              (map item/todo-list-item
-                (md/fmuval :app :todo-db)))))))))
+            (fx/expanded                                    ;; required sizer to join column
+              (fx/list-view
+                {:padding m.EdgeInsets/-zero}
+                {:name :da-list-view}
+                (map item/todo-list-item
+                  (md/fmuval :app :todo-db))))))))))
 
 ;;; todo credits in alert
 
@@ -64,13 +66,13 @@
   (fx/preferred-size
     {:preferredSize (.fromHeight m/Size 100)}
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
-                 :title (fx/text
-                          {:style (p/TextStyle
-                                    .fontFamily "Helvetica Neue"
-                                    .color (todo/title-red)
-                                    .fontWeight m.FontWeight/-w100
-                                    .fontSize 64.0)}
-                          title)})))
+                 :title           (fx/text
+                                    {:style (p/TextStyle
+                                              .fontFamily "Helvetica Neue"
+                                              .color (todo/title-red)
+                                              .fontWeight m.FontWeight/-w100
+                                              .fontSize 64.0)}
+                                    title)})))
 
 (def test-todos
   ;;[]

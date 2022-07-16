@@ -17,6 +17,7 @@
 
 (defn todo-input []
   (fx/material {:elevation   20.0
+                :color m.Colors/-white
                 :shadowColor m.Colors/-black}
     (fx/text-field {:autofocus   true
                     :focusNode (m/FocusNode)
@@ -56,6 +57,4 @@
                         (doseq [td todos]
                           ;; todo do all these in one change pulse
                           (md/mset! td :completed (if all-done? false true)))))))
-     :icon      (m/Icon m.Icons/-expand_more .color m.Colors/-blueGrey)
-     :color     (fx/cb-with-ctx [me ctx]
-                  (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))}))
+     :icon      (m/Icon m.Icons/-expand_more .color m.Colors/-blueGrey)}))
