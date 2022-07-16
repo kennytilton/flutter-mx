@@ -36,7 +36,7 @@
                                  #(mset! (md/fasc :completions)
                                     :selection completion-enum)))}
                      (fx/container
-                       {:decoration (cF (when true #_ (mget me :selected?)
+                       {:decoration (cF (when (mget me :selected?)
                                           (m/BoxDecoration
                                             .border (.all m/Border .color (todo/title-red) .width 0.5)
                                             .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
@@ -62,7 +62,6 @@
      :maintainState     true}
     {:name :clear-completed-button}
     (fx/text-button
-      ;; todo can we lose the blue text highlighting?
       ;; todo with-ctx+for-flutter
       {:onPressed (fx/cb-with-ctx [me ctx]
                     (fx/->CBAsIs
@@ -70,5 +69,11 @@
                         (let [app (md/fasc :app)]
                           (mset! (md/fasc :app) :todo-db
                             (remove #(mget % :completed)
-                              (mget app :todo-db)))))))}
-      (m/Text "Clear done"))))
+                              (mget app :todo-db)))))))
+       #_#_:style (m/ButtonStyle .foregroundColor (.all m/MaterialStateProperty (.-black87 m/Colors)))}
+      (fx/text
+        #_ {:style (p/TextStyle
+                  .fontWeight m.FontWeight/-w300
+                  .decoration m.TextDecoration/-underline)
+         }
+        "Clear done"))))
