@@ -17,25 +17,18 @@
 
 (defn todo-list-item [todo]
   (let [title (md/mget todo :title)
-        sid (md/mget todo :sid)
-        flutter-key (m/ValueKey. sid)
-        ]
-    (dp :building-list-item sid title)
+        sid (md/mget todo :sid)]
     (fx/visibility!
-      {:key                   flutter-key
-       :visible               (cF (let [comps (md/fmu :completions)]
-                                    (assert comps)
-                                    (let [select (mget comps :selection)]
-                                      (case select
-                                        :all true
-                                        :active (not (mget todo :completed))
-                                        :done (mget todo :completed)))))
+      {:key                   (m/ValueKey. (md/mget todo :sid))
+       :visible               (cF (case (md/fmuval :completions :selection)
+                                    :all true
+                                    :active (not (mget todo :completed))
+                                    :done (mget todo :completed)))
        :maintainSize          false
        :maintainSemantics     false
        :maintainInteractivity false
        :maintainAnimation     true
        :maintainState         true}
-      {:name :todo-item-visi}
       (fx/list-tile
         {:leading  (fx/check-box
                      {:value     (cF (or (md/mget todo :completed) false))
@@ -43,8 +36,7 @@
                                    {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
                       :onChanged (cF (fx/->CBAsIs
                                        (fn [value]
-                                         (md/mset! todo :completed value))))}
-                     {:name :da-checkbox})
+                                         (md/mset! todo :completed value))))})
          :trailing (fx/text-button
                      {:onPressed (fx/cb-with-ctx [me ctx]
                                    (fx/->CBAsIs
@@ -73,13 +65,13 @@
 
 ;;; --- archive code -----------------------------------------------------------
 
-#_ (fx/icon-button
-     {:onPressed (fx/cb-with-ctx [me ctx]
-                   (fx/->CBAsIs
-                     (fn []
-                       (md/mswap! (md/fasc :app) :todo-db
-                         (partial remove (fn [td]
-                                           (= sid (md/mget td :sid))))))))
-      :icon      (m/Icon m.Icons/-delete .color (-> m/Colors .-grey .-shade600))
-      :color     (fx/cb-with-ctx [me ctx]
-                   (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})
+#_(fx/icon-button
+    {:onPressed (fx/cb-with-ctx [me ctx]
+                  (fx/->CBAsIs
+                    (fn []
+                      (md/mswap! (md/fasc :app) :todo-db
+                        (partial remove (fn [td]
+                                          (= sid (md/mget td :sid))))))))
+     :icon      (m/Icon m.Icons/-delete .color (-> m/Colors .-grey .-shade600))
+     :color     (fx/cb-with-ctx [me ctx]
+                  (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})

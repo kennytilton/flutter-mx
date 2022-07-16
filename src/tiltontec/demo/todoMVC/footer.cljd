@@ -24,7 +24,6 @@
                           " item" " items")))))
 
 (defn completion-filters []
-  ;; todo BUG switching All to Active after any td delete crashes on setState
   (fx/row
     {:mainAxisAlignment m.MainAxisAlignment/-spaceEvenly}
     {:name      :completions
@@ -53,6 +52,7 @@
 
 (defn clear-completed-button []
   (fx/visibility!
+    ;; todo next: simpler visibility calls
     {:visible           (cF (let [db (md/fmuval :app :todo-db)]
                               (if (some (fn [todo]
                                           (mget todo :completed)) db)
@@ -60,16 +60,14 @@
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}
-    {:name :clear-completed-button}
     (fx/text-button
       ;; todo with-ctx+for-flutter
       {:onPressed (fx/cb-with-ctx [me ctx]
                     (fx/->CBAsIs
                       (fn []
                         (let [app (md/fasc :app)]
-                          (mset! (md/fasc :app) :todo-db
-                            (remove #(mget % :completed)
-                              (mget app :todo-db)))))))
+                          (md/mswap! (md/fasc :app) :todo-db
+                            (partial remove #(mget % :completed)))))))
        #_#_:style (m/ButtonStyle .foregroundColor (.all m/MaterialStateProperty (.-black87 m/Colors)))}
       ;; style hacking above/below tries to match official spec when hovered; not attractive
       (fx/text #_ {:style (p/TextStyle

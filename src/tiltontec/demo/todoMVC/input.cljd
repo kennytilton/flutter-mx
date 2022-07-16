@@ -30,14 +30,12 @@
                                        (fn [value]
                                          (let [trimmed (str/trim value)]
                                            (if (str/blank? trimmed)
-                                             ;; "onsubmit" seems to remove the edit focus on its own
+                                             ;; "onsubmit" seems to remove the edit focus on its own; we restore
                                              (.requestFocus ^m/FocusNode (md/mget me :focusNode))
-                                             (do
+                                             (do ;; u/x nicetities
                                                (md/mset! me :value trimmed)
-                                               ;; u/x nicetities
-                                               (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field, as per spec
-                                               ;; refocus
-                                               (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                               (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field,
+                                               (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus
                                                ;; now make the to-do
                                                (md/mswap! (md/fasc :app) :todo-db concat
                                                  [(todo/make-todo trimmed false)])))))))
@@ -59,7 +57,8 @@
      :maintainSemantics     false
      :maintainInteractivity false
      :maintainAnimation     true
-     :maintainState         true}
+     :maintainState         true
+     }
     (fx/icon-button
       {:onPressed (fx/cb-with-ctx [me ctx]
                     (fx/->CBAsIs
