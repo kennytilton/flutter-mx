@@ -214,9 +214,13 @@
               (fm-navig-eq? what where)
               where)
 
-          (when-let [par (:par @where)]
+          (if-let [par (:par @where)]
             (fm-ascendant what par
-              :me? true))
+              :me? true)
+            (when-let [owner (:owner @where)]
+              (dp :trying-owner!!!!! (minfo owner) :seeking what)
+              (fm-ascendant what owner
+                :me? true)))
 
           (when (:must? options)
             (err :fm-ascendant-must-failed what where options)))))))
