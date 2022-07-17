@@ -56,13 +56,12 @@
 (defn to-do-editor [me todo]
   ;; todo have input field UN-focus
   (fx/list-tile
-    {:title (cF (let [title (md/mget todo :title)
-                      focus (m/FocusNode)
+    {:title (cF (let [tile me
+                      title (md/mget todo :title)
+                      ;;focus (m/FocusNode)
                       sid (md/mget todo :sid)]
                   (fx/focus
-                    {:focusNode     focus
-                     :autofocus     true
-                     :onFocusChange (cF (fx/cb-with-ctx [me ctx]
+                    {:onFocusChange (cF (fx/cb-with-ctx [me ctx]
                                           (fx/->CBAsIs
                                             (fn [value]
                                               (dp :focuschange!!!!!! value title)
@@ -70,16 +69,26 @@
                                                 (let [gd (md/fasc :todo-gd)]
                                                   (assert gd "cannot find gestured")
                                                   ;; todo save or delete as if onSubmit
-                                                  (dp :having-gd-turn-off-editing!!!!!! (minfo gd))
                                                   (md/mset! gd :editing? false)))))))}
-                    {:owner me}
+                    {:owner tile}
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
                                     :color       m.Colors/-white
                                     :shadowColor m.Colors/-black}
-                        (fx/text-field {:autofocus   true
-                                        :focusNode   (m/FocusNode)
+                        (fx/text-field {;;:autofocus   true
+                                        :focusNode   (m/FocusNode
+                                                       .onKeyEvent (fn [node ^m/KeyEvent event]
+                                                                     (dp :onkeyevent!!!! event)
+                                                                     (dp :keyevent??? (dart/is? event m/KeyEvent))
+                                                                     ;;(dp :keyevent??? (dart/is? event m/KeyDownEvent))
+
+                                                                     ;; todo handle Escape semantics
+                                                                     ;(dp :keydown??? (dart/is? event m/RawKeyDownEvent))
+                                                                     (dp :onkeyevent-logkey!!!! (.-logicalKey event))
+                                                                     (dp :onkeyevent-logkey-label!!!! (.-keyLabel
+                                                                                                        (.-logicalKey event)))
+                                                                     m/KeyEventResult.-ignored))
                                         :decoration  (m/InputDecoration
                                                        .border (m/OutlineInputBorder
                                                                  .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 0.0)))
@@ -105,12 +114,12 @@
                                                                (.addListener c
                                                                  (fn []
                                                                    (let [value (.-text c)]
-                                                                     (dpx (str "todo input field: " value))
+                                                                     (dp (str "todo input field listener sees: " value))
                                                                      (md/mset! me :value value)))) ;; dataflow trigger
                                                                c))}
                           {:name  :todo-editor
                            :value (cI title)}))))))}
-    {:todo todo
+    {:todo  todo
      :owner me}))
 
 (defn todo-list-item [todo]

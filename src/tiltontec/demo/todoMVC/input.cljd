@@ -21,7 +21,9 @@
                 :color       m.Colors/-white
                 :shadowColor m.Colors/-black}
     (fx/text-field {:autofocus   true
-                    :focusNode   (m/FocusNode)
+                    :focusNode   (m/FocusNode) #_ (cI (m/FocusNode)
+                                   :obs (fn-obs
+                                          #_ (.requestFocus ^m/FocusNode new)))
                     :decoration  (m/InputDecoration
                                    .hintText "What needs doing?"
                                    .border m.InputBorder/-none #_(.-none m/InputBorder)
@@ -30,12 +32,13 @@
                                        (fn [value]
                                          (let [trimmed (str/trim value)]
                                            (if (str/blank? trimmed)
-                                             ;; "onsubmit" removes the edit focus on submit; not ideal. We restore:
+                                             ;; "onsubmit" removes the edit focus on submit; not ideal. We restore
+                                             ;; for continued editing:
                                              (.requestFocus ^m/FocusNode (md/mget me :focusNode))
                                              (do ;; u/x nicetities
                                                (md/mset! me :value trimmed) ;; dataflow trigger
                                                (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field,
-                                               (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
+                                               ;; (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
                                                ;; now make the to-do, and add to _end_ of list
                                                (md/mswap! (md/fasc :app) :todo-db concat
                                                  [(todo/make-todo trimmed false)])))))))
