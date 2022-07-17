@@ -16,6 +16,49 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
+(defn to-do-editor [todo]
+  (fx/list-tile
+    {:title (cF (let [title (md/mget todo :title)
+                      sid (md/mget todo :sid)]
+                  #_(fx/text!
+                      {:style (p/TextStyle .color m.Colors/-black)}
+                      title)
+                  (fx/text-field {:autofocus   true
+                                  :focusNode   (m/FocusNode)
+                                  #_#_:decoration (m/InputDecoration
+                                                    .hintText "What needs doing?"
+                                                    .border m.InputBorder/-none #_(.-none m/InputBorder)
+                                                    .contentPadding (m.EdgeInsets/all 9.0))
+                                  :onSubmitted (cF (fx/cb-with-ctx [me ctx]
+                                                     (fx/->CBAsIs
+                                                       (fn [value]
+                                                         (let [trimmed (str/trim value)]
+                                                           (if (str/blank? trimmed)
+                                                             (do
+                                                               (dp :deleting-blanked!!!!!!! (minfo me))
+                                                               (dp :deleting-blanked!app!!!!!! (md/fasc :app))
+                                                               (md/mswap! (md/fasc :app) :todo-db
+                                                                 (partial remove (fn [td]
+                                                                                   (= sid (md/mget td :sid)))))
+                                                               )
+                                                             (do ;; u/x nicetities
+                                                               ;; todo confirm written to storage
+                                                               (md/mset! me :value trimmed) ;; dataflow trigger
+                                                               (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field,
+                                                               (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
+                                                               )))))))
+                                  :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
+                                                         ;; todo package this as a reusable
+                                                         (.addListener c
+                                                           (fn []
+                                                             (let [value (.-text c)]
+                                                               (dpx (str "todo input field: " value))
+                                                               (md/mset! me :value value)))) ;; dataflow trigger
+                                                         c))}
+                    {:name  :todo-editor
+                     :value (cI title)})))}
+    {:todo todo}))
+
 (defn todo-list-item [todo]
   (let [title (md/mget todo :title)
         sid (md/mget todo :sid)]
@@ -37,41 +80,8 @@
                             (mswap! me :editing? not))))}
         {:editing? (cI false)}
         (if (mget me :editing?)
-          #_ (fx/text "BAM")
-          (fx/list-tile
-            {:title    (cF (let [title (md/mget todo :title)]
-                             #_ (fx/text!
-                               {:style (p/TextStyle .color m.Colors/-black)}
-                               title)
-                             (fx/text-field {:autofocus   true
-                                             :focusNode   (m/FocusNode)
-                                             #_#_:decoration  (m/InputDecoration
-                                                            .hintText "What needs doing?"
-                                                            .border m.InputBorder/-none #_(.-none m/InputBorder)
-                                                            .contentPadding (m.EdgeInsets/all 9.0))
-                                             :onSubmitted (cF (fx/->CBAsIs
-                                                                (fn [value]
-                                                                  (let [trimmed (str/trim value)]
-                                                                    (if (str/blank? trimmed)
-                                                                      ;; "onsubmit" removes the edit focus on submit; not ideal. We restore:
-                                                                      (.requestFocus ^m/FocusNode (md/mget me :focusNode))
-                                                                      (do ;; u/x nicetities
-                                                                        ;; todo confirm written to storage
-                                                                        (md/mset! me :value trimmed) ;; dataflow trigger
-                                                                        (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field,
-                                                                        (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
-                                                                        ))))))
-                                             :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
-                                                                    ;; todo package this as a reusable
-                                                                    (.addListener c
-                                                                      (fn []
-                                                                        (let [value (.-text c)]
-                                                                          (dpx (str "todo input field: " value))
-                                                                          (md/mset! me :value value)))) ;; dataflow trigger
-                                                                    c))}
-                               {:name  :todo-editor
-                                :value (cI title)})))}
-            {:todo todo})
+          (to-do-editor todo)
+          ;; (to-do-display todo)
           (fx/list-tile
             {:leading  (fx/check-box
                          {:value     (cF (or (md/mget todo :completed) false))
