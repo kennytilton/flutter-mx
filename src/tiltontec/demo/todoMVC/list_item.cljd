@@ -74,21 +74,21 @@
                                                              (do
                                                                (dp :deleting-blanked!!!!!!! (minfo me))
                                                                (dp :deleting-blanked!app!!!!!! (md/fasc :app))
-                                                               (md/mswap! (md/fasc :app) :todo-db
+                                                               (md/mswap! (md/fasc :app (mget me :owner)) :todo-db
                                                                  (partial remove (fn [td]
                                                                                    (= sid (md/mget td :sid)))))
                                                                )
                                                              (let [owner (mget me :owner)]
                                                                ;; todo confirm written to storage
-                                                               (dp :changing!!!! (minfo me))
-                                                               (dp :changing-owner!!!! (minfo owner))
-                                                               (dp :chg-app-me????? (md/fasc :app owner))
-                                                               (when owner
-                                                                 (dp :chg-app!!!!! (minfo
-                                                                                     (md/fasc :app owner)))
-                                                                 (dp :chg-app!!!!! (minfo
-                                                                                     (md/fm-ascendant-dbg :app owner))))
-                                                               (dp :title-change!!!!!!! trimmed :from value)
+                                                               ;(dp :changing!!!! (minfo me))
+                                                               ;(dp :changing-owner!!!! (minfo owner))
+                                                               ;(dp :chg-app-me????? (md/fasc :app owner))
+                                                               ;(when owner
+                                                               ;  (dp :chg-app!!!!! (minfo
+                                                               ;                      (md/fasc :app owner)))
+                                                               ;  (dp :chg-app!!!!! (minfo
+                                                               ;                      (md/fm-ascendant-dbg :app owner))))
+                                                               ;(dp :title-change!!!!!!! trimmed :from value)
                                                                (md/mset! todo :title trimmed) ;; dataflow trigger
                                                                ;; (assert (md/fasc :todo-gd))
                                                                (md/mset! (md/fasc :todo-gd owner) :editing? false))))))))
