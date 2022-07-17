@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
-    [tiltontec.model.core :as md]
+    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
@@ -44,7 +44,6 @@
                                      (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
         (fx/ink {:color m.Colors/-white}
           (fx/column
-            ; --- new to-do input ----
             (fx/row
               ; --- they snuck a tool into the new-input area
               (fx/expanded {:flex 1}
@@ -55,21 +54,26 @@
                   {:padding ^:const (m.EdgeInsets/all 16.0)}
                   (input/todo-input))))
             ; --- to-do list ------------------
-            (fx/expanded                                    ;; required sizer to join column
-              (fx/list-view
-                {:padding m.EdgeInsets/-zero}
-                {:name :da-list-view}
+            (fx/expanded
+              ;; ^^^ required sizer to join column
+               (fx/list-view+separated
+                {:padding          ^:const (m.EdgeInsets/all 0.0)
+                 :itemCount        (count (md/fmuval :app :todo-db))
+                 :separatorBuilder (fx/->CBAsIs
+                                     (fn [ctx i] (m/Divider)))
+                 :itemBuilder      (cF (fx/->CBAsIs
+                                         (fn [ctx i]
+                                           (fx/fx-render ctx
+                                             (nth (mget me :kids) i)))))}
+                {}
                 (map item/todo-list-item
                   (md/fmuval :app :todo-db))))))))))
 
 ;;; todo credits in alert
 ;;; todo .trim() the input after editing and then check that it's not empty before creating a new todo.
 ;;; todo When editing mode is activated it will hide the other controls and bring forward
-;;; .....an input that contains the to-do title, which should be focused (.focus()).
-;;;      The edit should be saved on both blur and enter, and the editing class should be removed.
-;;;      Make sure to .trim() the input and then check that it's not empty. If it's empty
-;;;      the to-do should instead be destroyed. If escape is pressed during the edit,
-;;;      the edit state should be left and any changes be discarded.
+;;; todo The edit should be saved on both blur and enter, and the editing class should be removed.
+;;; todo If escape is pressed during the edit, the edit state should be left and any changes be discarded.
 
 (defn my-app-bar [title]
   (fx/preferred-size
@@ -89,5 +93,51 @@
     :completed false}
    {:title     "Wash dog"
     :completed true}
-   {:title     "Walk dog"
+   {:title     "Learn chess"
+    :completed false}
+   {:title     "Sell house"
+    :completed false}
+   {:title     "Buy milk"
+    :completed false}
+   {:title     "Find job"
+    :completed false}
+   {:title     "Call Mom"
+    :completed false}
+   {:title     "Cut hair"
+    :completed false}
+   {:title     "Buy shoes"
+    :completed false}
+   {:title     "Feed cat"
+    :completed false}
+   {:title     "Polish silver"
+    :completed false}
+   {:title     "Start college"
+    :completed false}
+   {:title     "Take nap 42"
+    :completed false}
+   {:title     "Wash car"
+    :completed false}
+   {:title     "Wash dog"
+    :completed true}
+   {:title     "Learn chess"
+    :completed false}
+   {:title     "Sell house"
+    :completed false}
+   {:title     "Buy milk"
+    :completed false}
+   {:title     "Find job"
+    :completed false}
+   {:title     "Call Mom"
+    :completed false}
+   {:title     "Cut hair"
+    :completed false}
+   {:title     "Buy shoes"
+    :completed false}
+   {:title     "Feed cat"
+    :completed false}
+   {:title     "Polish silver"
+    :completed false}
+   {:title     "Start college"
+    :completed false}
+   {:title     "Take nap 42"
     :completed false}])

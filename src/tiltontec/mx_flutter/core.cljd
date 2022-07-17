@@ -582,6 +582,25 @@
   (let [[fx-props mx-props] vargs]
     `(childless-stateless m.ListView/builder ~fx-props ~mx-props)))
 
+(defmacro separated-ad-lib [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro list-view+separated [& vargs]
+  (let [[fx-props mx-props & children] vargs]
+    `(separated-ad-lib m.ListView/separated ~fx-props ~mx-props ~@children)))
+
 ;;; -------------------------------------------------------------
 
 (defmacro sized-box+expand-ful [fx-props mx-props & children]
