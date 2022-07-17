@@ -18,8 +18,8 @@
 (defn items-remaining-display []
   (fx/text! {}
     {:name :items-left}
-    (let [db (md/fmuval :app :todo-db)
-          left (remove #(mget % :completed) db)]
+    (let [db (md/fmuval :app :todo-db)                      ;; dependency
+          left (remove #(mget % :completed) db)]            ;; dependency
       (str (count left) (if (= 1 (count left))
                           " item" " items")))))
 
@@ -32,15 +32,15 @@
                    (fx/ink-well
                      {:onTap (fx/cb-with-ctx [me ctx]
                                (fx/->CBAsIs
-                                 #(mset! (md/fasc :completions)
+                                 #(mset! (md/fasc :completions) ;; dataflow trigger
                                     :selection completion-enum)))}
                      (fx/container
-                       {:decoration (cF (when (mget me :selected?)
+                       {:decoration (cF (when (mget me :selected?) ;; dependency
                                           (m/BoxDecoration
                                             .border (.all m/Border .color (todo/title-red) .width 0.5)
                                             .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
                        {:completion-enum completion-enum
-                        :selected?       (cF (= (mget me :completion-enum)
+                        :selected?       (cF (= (mget me :completion-enum) ;; dependency
                                                (mget (md/fasc :completions) :selection)))}
                        (fx/padding
                          {:padding ^:const (m.EdgeInsets/all 3.0)}
@@ -53,10 +53,9 @@
 (defn clear-completed-button []
   (fx/visibility!
     ;; todo next: simpler visibility calls
-    {:visible           (cF (let [db (md/fmuval :app :todo-db)]
-                              (if (some (fn [todo]
-                                          (mget todo :completed)) db)
-                                true false)))
+    {:visible           (cF (let [db (md/fmuval :app :todo-db)] ;; dependency!
+                              (boolean (some (fn [todo]
+                                               (mget todo :completed)) db)))) ;; dependency!
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}
@@ -66,11 +65,6 @@
                     (fx/->CBAsIs
                       (fn []
                         (let [app (md/fasc :app)]
-                          (md/mswap! (md/fasc :app) :todo-db
-                            (partial remove #(mget % :completed)))))))
-       #_#_:style (m/ButtonStyle .foregroundColor (.all m/MaterialStateProperty (.-black87 m/Colors)))}
-      ;; style hacking above/below tries to match official spec when hovered; not attractive
-      (fx/text #_ {:style (p/TextStyle
-                  .fontWeight m.FontWeight/-w300
-                  .decoration m.TextDecoration/-underline)}
-        "Clear done"))))
+                          (md/mswap! (md/fasc :app) :todo-db ;; dataflow trigger
+                            (partial remove #(mget % :completed)))))))}
+      (fx/text "Clear done"))))

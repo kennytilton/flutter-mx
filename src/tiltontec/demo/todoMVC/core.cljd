@@ -56,9 +56,9 @@
             ; --- to-do list ------------------
             (fx/expanded
               ;; ^^^ required sizer to join column
-               (fx/list-view+separated
+              (fx/list-view+separated
                 {:padding          ^:const (m.EdgeInsets/all 0.0)
-                 :itemCount        (count (md/fmuval :app :todo-db))
+                 :itemCount        (cF (count (md/fmuval :app :todo-db)))
                  :separatorBuilder (fx/->CBAsIs
                                      (fn [ctx i] (m/Divider .thickness 0.5)))
                  :itemBuilder      (cF (fx/->CBAsIs
@@ -67,10 +67,11 @@
                                              (nth (mget me :kids) i)))))}
                 {}
                 (map item/todo-list-item
-                  (md/fmuval :app :todo-db))))))))))
+                  (md/fmuval :app :todo-db))))))))))        ;; dependency!
 
 ;;; todo credits in alert
-;;; todo .trim() the input after editing and then check that it's not empty before creating a new todo.
+;;; todo .trim() the input after editing
+;;; todo if blank after editing, delete
 ;;; todo When editing mode is activated it will hide the other controls and bring forward
 ;;; todo The edit should be saved on both blur and enter, and the editing class should be removed.
 ;;; todo If escape is pressed during the edit, the edit state should be left and any changes be discarded.
