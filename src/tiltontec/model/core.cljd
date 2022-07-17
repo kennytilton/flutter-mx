@@ -221,6 +221,24 @@
           (when (:must? options)
             (err :fm-ascendant-must-failed what where options)))))))
 
+(defn fm-ascendant-dbg [what where & options]
+  (dp :fasc-entry what (minfo where) options)
+  (when (and where what)
+    (let [options (merge {:me? false :wocd? true}
+                    (apply hash-map options))]
+      (binding [*depender* (if (:wocd? options) nil *depender*)]
+        (or (and (:me? options)
+              (fm-navig-eq? what where)
+              where)
+
+          (if-let [par (:par @where)]
+            (fm-ascendant-dbg what par
+              :me? true)
+            (dp :no-par!!!!! (minfo where)))
+
+          (when (:must? options)
+            (err :fm-ascendant-must-failed what where options)))))))
+
 (defn nextsib [mx]
   (without-c-dependency
     (loop [sibs (md-kids (mx-par mx))]
