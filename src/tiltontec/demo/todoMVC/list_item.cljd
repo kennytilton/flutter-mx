@@ -53,6 +53,21 @@
       {:name :my-list-tile
        :todo todo})))
 
+(defn- commit-to-do-editing [me todo value]
+  (let [sid (mget todo :sid)
+        trimmed (str/trim value)]
+    (if (str/blank? trimmed)
+      (do
+        ;; todo modify navig to search owners and owned (as an option?)
+        (md/mswap! (md/fasc :app (mget me :owner)) :todo-db
+          (partial remove (fn [td]
+                            (= sid (md/mget td :sid))))))
+      (let [gd (md/fasc :todo-gd)]
+        (assert gd "cannot find gestured")
+        ;; todo confirm written to storage
+        (md/mset! todo :title trimmed) ;; dataflow trigger
+        (md/mset! gd :editing? false)))))
+
 (defn to-do-editor [me todo]
   ;; todo have input field UN-focus
   (fx/list-tile
@@ -76,27 +91,39 @@
                                     :color       m.Colors/-white
                                     :shadowColor m.Colors/-black}
                         (fx/text-field {:autofocus   true
-                                        :focusNode   (m/FocusNode
+                                        :focusNode   (cF (m/FocusNode
                                                        .onKeyEvent (fn [node ^m/KeyEvent event]
-                                                                     (dp :onkeyevent!!!! event)
-                                                                     (dp :keyevent??? (dart/is? event m/KeyEvent))
-                                                                     ;;(dp :keyevent??? (dart/is? event m/KeyDownEvent))
+                                                                     (cond
+                                                                       (and (= "Escape" (.-keyLabel
+                                                                                          (.-logicalKey event)))
+                                                                         (nil? (.-character event)))
+                                                                       (let [tx-con  (mget me :controller)] ;; ^m/TextEditingController
+                                                                         (assert tx-con)
+                                                                         (dp :onkeyevent-begin!!-------!!!! event)
+                                                                         (dp :onkeyevent-begin-text (.-text tx-con))
+                                                                         (dp :keyevent??? (dart/is? event m/KeyEvent))
+                                                                         ;;(dp :keyevent??? (dart/is? event m/KeyDownEvent))
 
-                                                                     ;; todo handle Escape semantics
-                                                                     ;(dp :keydown??? (dart/is? event m/RawKeyDownEvent))
-                                                                     (dp :onkeyevent-logkey!!!! (.-logicalKey event))
-                                                                     (dp :onkeyevent-logkey-label!!!! (.-keyLabel
-                                                                                                        (.-logicalKey event)))
-                                                                     m/KeyEventResult.-ignored))
+                                                                         ;; todo handle Escape semantics
+                                                                         ;(dp :keydown??? (dart/is? event m/RawKeyDownEvent))
+                                                                         (dp :onkeyevent-logkey!!!! (.-logicalKey event))
+                                                                         (dp :onkeyevent-character!!!! (.-character event))
+                                                                         (dp :onkeyevent-logkey-label!!!! (.-keyLabel
+                                                                                                            (.-logicalKey event)))
+                                                                         (commit-to-do-editing me todo (.-text tx-con))
+                                                                         m/KeyEventResult.-handled)
+                                                                       :else m/KeyEventResult.-ignored))))
                                         :decoration  (m/InputDecoration
                                                        .border (m/OutlineInputBorder
-                                                                 .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 0.0)))
+                                                                 .borderRadius ^:const (m.BorderRadius/all
+                                                                                         (m.Radius/circular 0.0)))
                                                        .contentPadding (m.EdgeInsets/all 9.0))
                                         ;; todo handle onBlur
                                         :onSubmitted (cF (fx/cb-with-ctx [me ctx]
                                                            (fx/->CBAsIs
                                                              (fn [value]
-                                                               (let [trimmed (str/trim value)]
+                                                               (commit-to-do-editing me todo value)
+                                                               #_ (let [trimmed (str/trim value)]
                                                                  (if (str/blank? trimmed)
                                                                    (do
                                                                      ;; todo modify navig to search owners and owned (as an option?)
