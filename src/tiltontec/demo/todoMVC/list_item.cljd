@@ -13,7 +13,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    ;; [“package:flutter/services.dart” :as srvc]
+    ["package:flutter/services.dart" :as srvc]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
@@ -28,13 +28,12 @@
                     :onChanged (cF (fx/->CBAsIs
                                      (fn [value]
                                        (md/mset! todo :completed value))))})
-       :trailing (fx/text-button
-                   {:onPressed (fx/cb-with-ctx [me ctx]
-                                 (fx/->CBAsIs
-                                   (fn []
-                                     (md/mswap! (md/fasc :app) :todo-db
-                                       (partial remove (fn [td]
-                                                         (= sid (md/mget td :sid))))))))}
+       :trailing (fx/text-button                            ;; our "delete" icon on each to-do
+                   {:onPressed (fx/with-ctx+as-is [me ctx]
+                                 (fn []
+                                   (md/mswap! (md/fasc :app) :todo-db
+                                     (partial remove (fn [td]
+                                                       (= sid (md/mget td :sid)))))))}
                    (fx/text {:style (p/TextStyle
                                       .fontFamily "Helvetica Neue"
                                       .color (todo/title-red)
@@ -58,58 +57,51 @@
   ([me todo]
    (let [tx-con ^m/TextEditingController (mget me :controller)]
      (commit-to-do-editing me todo (.-text tx-con))))
+  ;--------
   ([me todo value]
    (let [sid (mget todo :sid)
          trimmed (str/trim value)]
-     (dp :trimmed!!! (str "|" trimmed "|"))
      (if (str/blank? trimmed)
-       (let [app (md/fasc :app)]
-         (assert app (str "No app above for " (minfo me)))
-         ;; todo modify navig to search owners and owned (as an option?)
-         (md/mswap! app :todo-db
+       (do
+         (md/mswap! (md/fasc :app) :todo-db
            ;; todo roll this up into a todo utility
            (partial remove (fn [td]
                              (= sid (md/mget td :sid))))))
-       (let [gd (md/fasc :todo-gd)]
-         (assert gd "cannot find gestured")
-         ;; todo confirm written to storage
-         (md/mset! todo :title trimmed)                     ;; dataflow trigger
-         (md/mset! gd :editing? false))))))
+       (do
+         (md/mset! todo :title trimmed)                     ;; two dataflow triggers
+         (md/mset! (md/fasc :item-control) :editing? false))))))
 
 (defn to-do-editor [me todo]
-  ;; todo have input field UN-focus
   (fx/list-tile
     {:title (cF (let [tile me
-                      title (md/mget todo :title)
-                      sid (md/mget todo :sid)]
+                      title (md/mget todo :title)]
                   (fx/focus-scope
-                    {:onFocusChange (cF (fx/cb-with-ctx [me ctx]
-                                          (fx/->CBAsIs
-                                            (fn [focused?]
-                                              (when (not focused?)
-                                                ;; spec says commit on blur...
-                                                (let [edt (md/fm* :todo-editor)]
-                                                  (commit-to-do-editing edt todo)
-                                                  (md/mset! (md/fasc :todo-gd) :editing? false)))))))}
-                    {:owner tile}
+                    ;; focus subtlety: we want the newly created TextField to autofocus, but
+                    ;; the to-do input field is already focused, and autofocus does not jump those
+                    ;; unless in a fresh scope. So we Lego in a scope.
+                    {:onFocusChange (cF (fx/with-ctx+as-is [me ctx]
+                                          (fn [focused?]
+                                            (when (not focused?)
+                                              ;; spec says commit on blur...
+                                              (commit-to-do-editing (md/fm* :todo-editor) todo)
+                                              (md/mset! (md/fasc :item-control) :editing? false)))))}
+                    {:owner tile} ;; this scope widget is a delegate, not a child, so we record the ListTile as the "owner",
+                    ;; and modified navigation to try any owner if parent is nil while searching up the Matrix.
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
                                     :color       m.Colors/-white
                                     :shadowColor m.Colors/-black}
+                        ;; doing our best ^^^^ to emulate official TodoMVC styling.
                         (fx/text-field {:autofocus   true
                                         :focusNode   (cF (m/FocusNode
                                                            .onKeyEvent (fn [node ^m/KeyEvent event]
                                                                          ;; spec says to abandon edit if Escape key pressed
                                                                          (cond
-                                                                           (and #_(dart/is? event srvc/KeyDownEvent)
-                                                                             (= "Escape" (.-keyLabel (.-logicalKey event)))
-                                                                             ;; next is a stopgap way of distinguishing
-                                                                             ;; key down from up, so we can just process on
-                                                                             ;; one of the two events for an Escape keypress.
-                                                                             (not (nil? (.-character event))))
-                                                                           (let [tx-con ^m/TextEditingController (mget me :controller)]
-                                                                             (md/mset! (md/fasc :todo-gd) :editing? false)
+                                                                           (and (dart/is? event srvc/KeyDownEvent)
+                                                                             (= "Escape" (.-keyLabel (.-logicalKey event))))
+                                                                           (do
+                                                                             (md/mset! (md/fasc :item-control) :editing? false)
                                                                              m/KeyEventResult.-handled)
                                                                            :else m/KeyEventResult.-ignored))))
                                         :decoration  (m/InputDecoration
@@ -117,15 +109,17 @@
                                                                  .borderRadius ^:const (m.BorderRadius/all
                                                                                          (m.Radius/circular 0.0)))
                                                        .contentPadding (m.EdgeInsets/all 9.0))
-                                        :onSubmitted (cF (fx/cb-with-ctx [me ctx]
-                                                           (fx/->CBAsIs
-                                                             (fn [value]
-                                                               ;; spec says to commit on Enter
-                                                               (commit-to-do-editing me todo value)))))
+                                        :onSubmitted (cF (fx/with-ctx+as-is [me ctx]
+                                                           (fn [value]
+                                                             ;; spec says to commit on Enter
+                                                             (commit-to-do-editing me todo value))))
                                         :controller  (cFonce
-                                                       ;; a rule guaranteed to run only once (even if reactive values used
-                                                       ;; by the rule change) on instance initialization.
-                                                       ;; in this case we just want the initial value
+                                                       ;; cFonce is a rarely used rule generator for a rule guaranteed
+                                                       ;; to run only once, on instance initialization, even if
+                                                       ;; reactive values used by the rule change.
+                                                       ;; We want the rule not for reactivity, rather so we can
+                                                       ;; reference "me" (self) in the initform.
+                                                       ;; In this case we just want the initial value
                                                        ;; so we can initialize the controller, and we do not
                                                        ;; want to create controllers on every keystroke.
                                                        (m/TextEditingController
@@ -146,28 +140,14 @@
      :maintainAnimation true
      :maintainState     true}
     (fx/gesture-detector
-      {:onDoubleTap (fx/cb-with-ctx [me ctx]
-                      (fx/->CBAsIs
-                        (fn [] (dp :doubletap!!!!!!!!!!!!!! :old (mget me :editing?))
-                          (when (not (mget me :editing))
-                            ;; todo fix double-taps not seen during editing
-                            (mset! me :editing? true)))))}
-      {:name     :todo-gd                                   ;; todo make better
+      {:onDoubleTap (fx/with-ctx+as-is [me ctx]
+                      (fn []
+                        (dp :on-double-tap!!!!!!!)
+                        (when (not (mget me :editing))
+                          ;; todo fix double-taps not seen during editing
+                          (mset! me :editing? true))))}
+      {:name     :item-control
        :editing? (cI false)}
       (if (mget me :editing?)
         (to-do-editor me todo)
         (to-do-display todo)))))
-
-;;; --- archive code -----------------------------------------------------------
-
-#_;;; a trash can icon
-        (fx/icon-button
-          {:onPressed (fx/cb-with-ctx [me ctx]
-                        (fx/->CBAsIs
-                          (fn []
-                            (md/mswap! (md/fasc :app) :todo-db
-                              (partial remove (fn [td]
-                                                (= sid (md/mget td :sid))))))))
-           :icon      (m/Icon m.Icons/-delete .color (-> m/Colors .-grey .-shade600))
-           :color     (fx/cb-with-ctx [me ctx]
-                        (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})

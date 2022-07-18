@@ -147,7 +147,8 @@
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
-    :fx$state (cI nil)                                      ;; todo move these to meta?
+    :fx$state (cI nil)
+    ;; todo move next two to meta
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
                 (concat (keys fx-props) (keys custom-props)))
     :initState (fn [this me]                                ;; this one too
@@ -535,6 +536,7 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends m/StatefulWidget
+
                      (~'createState [_#]
                        (reify :extends w/State
                          ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
@@ -690,3 +692,7 @@
 (deftag tiltontec.mx-flutter.core/k1-child-stateless sized-box m/SizedBox)
 
 
+(defmacro with-ctx+as-is [[me ctx] callback-fn]
+  `(tiltontec.mx-flutter.core/cb-with-ctx [~me ~ctx]
+     (tiltontec.mx-flutter.core/->CBAsIs
+       ~callback-fn)))

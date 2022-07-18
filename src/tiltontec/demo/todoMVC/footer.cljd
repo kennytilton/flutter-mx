@@ -30,10 +30,9 @@
      :selection (cI :all)}
     (let [choice (fn [completion-enum option$]
                    (fx/ink-well
-                     {:onTap (fx/cb-with-ctx [me ctx]
-                               (fx/->CBAsIs
-                                 #(mset! (md/fasc :completions) ;; dataflow trigger
-                                    :selection completion-enum)))}
+                     {:onTap (fx/with-ctx+as-is [me ctx]
+                               #(mset! (md/fasc :completions) ;; dataflow trigger
+                                  :selection completion-enum))}
                      (fx/container
                        {:decoration (cF (when (mget me :selected?) ;; dependency
                                           (m/BoxDecoration
@@ -60,11 +59,9 @@
      :maintainAnimation true
      :maintainState     true}
     (fx/text-button
-      ;; todo with-ctx+for-flutter
-      {:onPressed (fx/cb-with-ctx [me ctx]
-                    (fx/->CBAsIs
-                      (fn []
-                        (let [app (md/fasc :app)]
-                          (md/mswap! (md/fasc :app) :todo-db ;; dataflow trigger
-                            (partial remove #(mget % :completed)))))))}
+      {:onPressed (fx/with-ctx+as-is [me ctx]
+                    (fn []
+                      (let [app (md/fasc :app)]
+                        (md/mswap! (md/fasc :app) :todo-db  ;; dataflow trigger
+                          (partial remove #(mget % :completed))))))}
       (fx/text "Clear done"))))

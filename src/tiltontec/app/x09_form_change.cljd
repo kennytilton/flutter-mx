@@ -23,12 +23,11 @@
           {:padding ^:const (m.EdgeInsets/all 16.0)}
           (fx/column
             {:mainAxisAlignment MainAxisAlignment/-center}
-            ; todo if we have onchanged and also listen to the controller, what happens?
+            ;  if we have onchanged and also listen to the controller, what happens?
             (fx/text-field
-              {:onChanged (fx/cb-with-ctx [me ctx]
-                            (fx/->CBAsIs
+              {:onChanged (fx/with-ctx+as-is [me ctx]
                               (fn [text]
-                                (md/mset! me :value text))))}
+                                (md/mset! me :value text)))}
               {:name  :input-a
                :value (cI nil :obs (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
