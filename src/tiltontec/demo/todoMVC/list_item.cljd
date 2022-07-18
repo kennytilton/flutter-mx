@@ -60,11 +60,10 @@
                       title (md/mget todo :title)
                       ;;focus (m/FocusNode)
                       sid (md/mget todo :sid)]
-                  (fx/focus
+                  (fx/focus-scope
                     {:onFocusChange (cF (fx/cb-with-ctx [me ctx]
                                           (fx/->CBAsIs
                                             (fn [value]
-                                              (dp :focuschange!!!!!! value title)
                                               (when (not value)
                                                 (let [gd (md/fasc :todo-gd)]
                                                   (assert gd "cannot find gestured")
@@ -76,7 +75,7 @@
                       (fx/material {:elevation   3.0
                                     :color       m.Colors/-white
                                     :shadowColor m.Colors/-black}
-                        (fx/text-field {;;:autofocus   true
+                        (fx/text-field {:autofocus   true
                                         :focusNode   (m/FocusNode
                                                        .onKeyEvent (fn [node ^m/KeyEvent event]
                                                                      (dp :onkeyevent!!!! event)
