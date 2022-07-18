@@ -75,13 +75,26 @@
   (fx/preferred-size
     {:preferredSize (.fromHeight m/Size 100)}
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
-                 :title           (fx/text
-                                    {:style (p/TextStyle
-                                              .fontFamily "Helvetica Neue"
-                                              .color (todo/title-red)
-                                              .fontWeight m.FontWeight/-w100
-                                              .fontSize 64.0)}
-                                    title)})))
+                 :title           (fx/column
+                                    (fx/text
+                                      {:style (p/TextStyle
+                                                .fontFamily "Helvetica Neue"
+                                                .color (todo/title-red)
+                                                .fontWeight m.FontWeight/-w100
+                                                .fontSize 64.0)}
+                                      (str title "/" (rand-int 99)))
+                                    #_ ;; todo show about box
+                                            (fx/gesture-detector
+                                      {:onTap (fx/with-ctx+as-is [me ctx]
+                                                #(do (dp :tapped!!!!!) nil))}
+                                      (fx/text
+                                        {:style (p/TextStyle
+                                                  .fontFamily "Helvetica Neue"
+                                                  .color m.Colors/-black
+                                                  .backgroundColor m.Colors/-cyan
+                                                  .fontWeight m.FontWeight/-w100
+                                                  .fontSize 16.0)}
+                                        "?")))})))
 
 (def test-todos
   ;;[]

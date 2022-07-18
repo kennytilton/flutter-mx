@@ -15,7 +15,7 @@
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [clojure.string :as str]))
-co
+
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
@@ -175,8 +175,8 @@ co
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (when-not (some #{slot} [:par :name :mx-type :not-to-be
-                             :fx$state :fx$ikeys :fx$notifier :fx$observer]) ;; todo check for others to exclude
+    (when-not (some #{slot} [:par :name :mx-type :not-to-be :initState :fx-class :cells-flushed
+                             :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
         (dpx :FXDartWidget-observing-md!!! slot (cty/minfo me) :deref @me)
@@ -641,12 +641,11 @@ co
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
-                                     ;; todo move this to all the other macros
                                      .key (tiltontec.mx-flutter.core/fx-resolve me ctx
                                             (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
-                         ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
+                         ^:mixin m/SingleTickerProviderStateMixin
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (md/mset! me :fx$state this)
