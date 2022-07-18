@@ -15,8 +15,7 @@
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [clojure.string :as str]))
-
-
+co
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
@@ -367,7 +366,9 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends m/StatefulWidget
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -391,7 +392,9 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends m/StatefulWidget
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -418,7 +421,9 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends m/StatefulWidget
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -445,7 +450,9 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends m/StatefulWidget
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -507,7 +514,9 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends m/StatefulWidget
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -535,8 +544,9 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (reify :extends m/StatefulWidget
-
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
