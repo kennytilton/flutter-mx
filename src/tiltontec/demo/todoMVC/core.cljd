@@ -31,7 +31,8 @@
        }
       {:name    :app
        ;; todo persist in localstorage
-       :todo-db (cI (doall
+       :todo-db (cF (td-list-load "fmx-demo")
+                  #_ (doall
                       (map (fn [{:keys [title completed]}]
                              (todo/make-todo title completed))
                         test-todos)))}
@@ -87,10 +88,10 @@
                                                   .fontFamily "Helvetica Neue"
                                                   .color m.Colors/black ;;(todo/title-red)
                                                   .fontWeight m.FontWeight/w100
-                                                  .fontSize 32.0)}
+                                                  .fontSize 64.0)}
                                         (str title "/" (rand-int 99))))
                                     ;;#_ ;; todo show about box
-                                    (fx/gesture-detector
+                                    #_ (fx/gesture-detector
                                       {:onTap (fx/with-ctx+as-is [me ctx]
                                                 #(do (dp :tapped!!!!!) nil))}
                                       (fx/text
