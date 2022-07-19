@@ -17,7 +17,10 @@
     ;;     we specify here are the same CamelCase names as in Dart, hopefully serving as a reminder
     ;;     that one is now programming in the Flutter sphere.
     {:title "Hunt for Teal mxFlutter"
-     :theme (cF                                             ;; nb! "cF" expands into a "F"ormulaic "c"ell, a structure used to manage the value of :theme
+     :theme (cF
+              ;; nb! "cF" expands into a "F"ormulaic "c"ell, a structure used to manage the value of :theme
+              ;;     formulaic cells have an anaphoric "me" (akin to "self" or "this") which can be used
+              ;;     in arbitrary HLL code to compute a value for a property.
               (m/ThemeData .primarySwatch
                 ;; nb! Native Flutter can be used by MX stucture, but NOT vice versa. In this case we are
                 ;; offering a native ThemeData as the :theme, no MX involved
@@ -27,7 +30,7 @@
                   ;;     the gotten value "title" will be recorded.
                   ;;
                   ;; This is a silly computed, reactive (not!) value. Silly because the user cannot
-                  ;; change the title, so we never get to see the Theme "react".
+                  ;; change the title, so we never get to see the Theme "react". But it would.
                   ;; But you can change it and reload. Next app, we go truly reactive.
                   (cond
                     (str/includes? ttl "Teal") m.Colors/-teal
@@ -39,8 +42,8 @@
     (fx/scaffold
       {:appBar (fx/app-bar
                  ;; nb! Below, again we see a Flutter m/Text used as is by an MX app-bar proxy
-                 {:title (m/Text "Welcome to Flummoox")})}
-      ;; nb! in this case, the scaffold :body is again expressed simply as a sole child. We could change this.
+                 {:title (m/Text "Welcome to FlutterMX")})}
+      ;; nb! in this case, the scaffold :body is again expressed simply as a sole child.
       (fx/center
         ;; in the fx/text syntax we manifest our preference for HTML's syntax consistency.
         ;; Specifically, the text content appears in the standard child position, not the first parameter.
@@ -52,7 +55,7 @@
           (fx/hero {:tag "imageHero"}
             (m/Image .image (m/AssetImage "image/kernighan.jpeg")
               .height 512))
-          (fx/text {:overflow m.TextOverflow/-ellipsis
+          (fx/text {:overflow p.TextOverflow/-ellipsis
                     :style    (p/TextStyle
                                 .color m.Colors/-cyan
                                 .fontSize 32.0)}

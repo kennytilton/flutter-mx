@@ -26,7 +26,9 @@
        :theme                      (m/ThemeData
                                      .fontFamily "Helvetica Neue"
                                      .backgroundColor (.fromRGBO m/Color 245 245 245 1))
-       :debugShowCheckedModeBanner false}
+       :debugShowCheckedModeBanner false
+       :debugShowMaterialGrid      false                    ;; but fun
+       }
       {:name    :app
        ;; todo persist in localstorage
        :todo-db (cI (doall
@@ -76,15 +78,19 @@
     {:preferredSize (.fromHeight m/Size 100)}
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
                  :title           (fx/column
-                                    (fx/text
-                                      {:style (p/TextStyle
-                                                .fontFamily "Helvetica Neue"
-                                                .color (todo/title-red)
-                                                .fontWeight m.FontWeight/-w100
-                                                .fontSize 64.0)}
-                                      (str title "/" (rand-int 99)))
-                                    #_ ;; todo show about box
-                                            (fx/gesture-detector
+                                    {;;:height 144
+                                     :crossAxisAlignment m.CrossAxisAlignment/-end,}
+                                    (do ;;fx/expanded
+                                      ;;{:flex 8}
+                                      (fx/text
+                                        {:style (p/TextStyle
+                                                  .fontFamily "Helvetica Neue"
+                                                  .color m.Colors/-black ;;(todo/title-red)
+                                                  .fontWeight m.FontWeight/-w100
+                                                  .fontSize 32.0)}
+                                        (str title "/" (rand-int 99))))
+                                    ;;#_ ;; todo show about box
+                                    (fx/gesture-detector
                                       {:onTap (fx/with-ctx+as-is [me ctx]
                                                 #(do (dp :tapped!!!!!) nil))}
                                       (fx/text
@@ -106,48 +112,5 @@
     :completed false}
    {:title     "X"
     :completed false}
-   ;
-   ;{:title     "Buy milk"
-   ; :completed false}
-   ;{:title     "Find job"
-   ; :completed false}
-   ;{:title     "Call Mom"
-   ; :completed false}
-   ;{:title     "Cut hair"
-   ; :completed false}
-   ;{:title     "Buy shoes"
-   ; :completed false}
-   ;{:title     "Feed cat"
-   ; :completed false}
-   ;{:title     "Polish silver"
-   ; :completed false}
-   ;{:title     "Start college"
-   ; :completed false}
-   ;{:title     "Take nap 42"
-   ; :completed false}
-   ;{:title     "Wash car"
-   ; :completed false}
-   ;{:title     "Wash dog"
-   ; :completed true}
-   ;{:title     "Learn chess"
-   ; :completed false}
-   ;{:title     "Sell house"
-   ; :completed false}
-   ;{:title     "Buy milk"
-   ; :completed false}
-   ;{:title     "Find job"
-   ; :completed false}
-   ;{:title     "Call Mom"
-   ; :completed false}
-   ;{:title     "Cut hair"
-   ; :completed false}
-   ;{:title     "Buy shoes"
-   ; :completed false}
-   ;{:title     "Feed cat"
-   ; :completed false}
-   ;{:title     "Polish silver"
-   ; :completed false}
-   ;{:title     "Start college"
-   ; :completed false}
    {:title     "Take nap 42"
     :completed false}])
