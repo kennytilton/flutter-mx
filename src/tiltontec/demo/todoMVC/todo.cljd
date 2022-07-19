@@ -31,9 +31,9 @@
     :mx-type (ToDoList.)
     :name name
     :sid (swap! todo-sid inc)
-    ;;:ls-doc
-    :kidct (cF (count (mget me :kids)))
     :kids (cI nil)))
+
+(declare td-upsert)
 
 (deftype ToDo []
   :extends cty/Model
@@ -42,10 +42,13 @@
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
     (dp :REAL-todo-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
-    ))
+    (when (= slot :sid) ;; arbitrary choice
+      (dp :REAL-todo-obs-par!!!!!!!! slot  :par!!! @(:par @me))
+      (td-upsert me))))
 
-(defn make-todo [title completed]
+(defn make-todo [td-list title completed]
   (md/make
+    :par td-list
     :mx-type (ToDo.)
     :name :a-todo-item
     :sid (swap! todo-sid inc)
@@ -54,19 +57,19 @@
 
 (defn td-list-load [name] )
 
+(defn td-upsert [td]
+  (dp :upserting!!!! @td)
+  (when-let [par (:par @td)]
+    (dp :ups-par @par)
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    (let [db (.-instance ls/Localstore)
+          coll (.collection db (:name @par))
+          new-id (.-id (.doc coll))
+          new-data (assoc (select-keys [:title :completed :sid] @td)
+                     :ls-id new-id)]
+      (dp :make-ls-new!! new-id new-data)
+      (-> coll
+        (.doc new-id)
+        (.set (walk/stringify-keys new-data))))))
 
 
-(defn make-ls [& iargs]
-  ;;(assert (:mx-type iargs) "make-ls called without")
-  #_(let [me (apply md/make iargs)]
-      (when-not (md/mget me :lsID)
-        (.ensureInitialized w/WidgetsFlutterBinding)
-        (let [db (.-instance ls/Localstore)]
-          (let [coll (.collection db "todos")
-                new-id (.id (.doc coll))
-                new-data (assoc (select-keys [:title :completed]))]
-            (dp :make-ls-new!! new-id)
-            (-> db
-              (.collection "todos")
-              (.doc new-id)
-              (.set {"title" "Todo title Two"})))))))

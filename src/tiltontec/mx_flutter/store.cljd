@@ -6,10 +6,15 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     ;;[tiltontec.mx-flutter.core :as fx]
     ["package:localstore/localstore.dart" :as ls]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.walk :as walk]))
 
-    [clojure.walk :as walk]
-    )
-
-  )
-
-
+(defn read-all-docs [coll-name]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  ;;; --- read all docs ---------------------------
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db coll-name)
+        docs (into {} (await (.get coll)))]
+    (dp :coll-todos  coll)
+    (dp :docs  docs)
+    docs))
