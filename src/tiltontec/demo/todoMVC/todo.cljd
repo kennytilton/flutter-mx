@@ -5,7 +5,7 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
-    [tiltontec.model.core :as md]
+    [tiltontec.model.core :refer [mget] :as md]
 
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -23,7 +23,7 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dpx :REAL-todo-LIST-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
+    (dp :REAL-todo-LIST-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
     ))
 
 (defn make-todo-list [name]
@@ -31,6 +31,8 @@
     :mx-type (ToDoList.)
     :name name
     :sid (swap! todo-sid inc)
+    ;;:ls-doc
+    :kidct (cF (count (mget me :kids)))
     :kids (cI nil)))
 
 (deftype ToDo []
@@ -39,7 +41,7 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dpx :REAL-todo-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
+    (dp :REAL-todo-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
     ))
 
 (defn make-todo [title completed]
@@ -68,238 +70,3 @@
               (.collection "todos")
               (.doc new-id)
               (.set {"title" "Todo title Two"})))))))
-
-(defn just-hack []
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;;; --- read all docs ---------------------------
-  (let [id "1isb6j40s"
-        db (.-instance ls/Localstore)
-        rb (await (-> db
-                    (.collection "todos")
-                    (.doc id)
-                    .get))]
-    (dp :readback!!!!!! id :data (string? rb) (map? rb) :raw> rb)
-    (dp :readback!!!!!! id :keys!!! (keys rb) rb)
-    (dp :CLJD-map!!!! (walk/keywordize-keys
-                        (into {}
-                          (for [k (keys rb)]
-                            [k (get rb k)]))))
-    (dp :deleteing!!!!!!!)
-    (let [db (await (-> db
-                      (.collection "todos")
-                      (.doc id)
-                      .delete))]
-      (dp :dlete-says db))
-    ))
-
-(defn read-all-docs []
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;;; --- read all docs ---------------------------
-  (let [db (.-instance ls/Localstore)
-        coll (.collection db "todos")
-        docs (into {} (await (.get coll)))]
-    (dp :col  coll)
-    (dp :docs  docs)
-
-    ))
-
-(defn test-store-one-map []
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (let [db (.-instance ls/Localstore)]
-    ;;; --- write new entry -----------------------------
-    (let [coll (.collection db "todos")
-          new-id (.-id (.doc coll))]
-      (dp :creating-new-to!! new-id)
-      (-> db
-        (.collection "todos")
-        (.doc new-id)
-        (.set (walk/stringify-keys
-                {:title     "Todo title Two"
-                 :weight    174.3
-                 :completed false})))
-
-      ;;; --- read known IDs ------------------------------
-      (doseq [id [new-id] #_["5ggmwupfb" "3n3aym16h"]]
-        (let [rb (await (-> db
-                          (.collection "todos")
-                          (.doc id)
-                          .get))]
-          (dp :readback!!!!!! id :data (string? rb) (map? rb) :raw> rb)
-          (dp :readback!!!!!! id :keys!!! (keys rb) rb)
-          (dp :CLJD-map!!!! (walk/keywordize-keys
-                              (into {}
-                                (for [k (keys rb)]
-                                  [k (get rb k)])))))))))
-
-(defn load-test-todos []
-  (dp :loading!!!!!!!!-todos-not)
-
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (dp :initialized!!!!!-todos)
-
-  ;(.ensureInitialized w/WidgetsFlutterBinding)
-
-  #_(let [test-todos [{:title     "Wash car"
-                       :completed false}
-                      {:title     "Wash dog"
-                       :completed true}
-                      {:title     "Walk dog"
-                       :completed false}]
-          db (.-instance ls/Localstore)
-          coll (.collection db "todo")]
-      (doseq [{:keys [title completed]} test-todos]
-        (md/make-ls
-          :mx-type (ToDo)
-          :title title
-          :completed completed))
-      )
-
-  ;;; --- read known IDs ------------------------------
-  (let [db (.-instance ls/Localstore)]
-    (doseq [id ["5ggmwupfb" "3n3aym16h"]]
-      (let [rb (await (-> db
-                        (.collection "todos")
-                        (.doc id)
-                        .get))]
-        (dp :readback!!!!!! id :data (string? rb) (map? rb) :raw> rb)
-        (dp :readback!!!!!! id :keys!!! (keys rb) rb)
-        (dp :CLJD-map!!!! (walk/keywordize-keys
-                            (into {}
-                              (for [k (keys rb)]
-                                [k (get rb k)]))))
-        #_(dp :readback!!!!!! id :decode!! (convert/jsonDecode rb) rb)))
-
-    (doseq [id ["5ggmwupfb" "3n3aym16h"]]
-      (let [rb (walk/keywordize-keys
-                 (into {}
-                   (await (-> db
-                            (.collection "todos")
-                            (.doc id)
-                            .get))))]
-        (dp :re22222!!!!!! id :data (string? rb) (map? rb) :raw> rb)
-        (dp :re22222k!!!!!! id :keys!!! (keys rb) rb)
-        (dp :CLJD-map!!!! rb)
-        #_(dp :readback!!!!!! id :decode!! (convert/jsonDecode rb) rb))))
-
-  ; (def items
-  ;  (-> (await db)
-  ;      (.collection "todos")
-  ;      .get))
-
-  #_(let [rb (await (-> db
-                      (.collection "todos")
-                      (.doc id)
-                      .get))]
-      (dp :readback!!!!!!!!! id :data rb)))
-
-
-;; const TODO_LS_PREFIX = "todos-MatrixJS.";
-;
-;class Todo extends MXStorable {
-;    constructor(islots) {
-;        super( Object.assign( {
-;                lsPrefix: TODO_LS_PREFIX},
-;                islots,
-;                { title: cI(islots.title),
-;                completed: cI(islots.completed || false)}))
-;    }
-;
-;    static storableProperties () {
-;        // created and deleted are provided by MXStorable
-;        return ["title", "completed"].concat(super.storableProperties());
-;    }
-;
-;    static loadFromStorage() {
-;        return mkm( null, 'TodoGroup',
-;            { itemsRaw: cI( MXStorable.loadAllItems( Todo, TODO_LS_PREFIX)
-;                                        .sort( (a,b) => a.created < b.created ? -1 : 1) || []),
-;
-;            items: cF( c => c.md.itemsRaw.filter( td => !td.deleted)),
-;
-;            routeItems: cF( c => c.md.items
-;                                    .filter( td => todoRoute.v === 'All'
-;                                                || xor( todoRoute.v==='Active', td.completed))
-;                                    .sort( (a,b) => a.created < b.created ? -1 : 1)),
-;
-;            empty: cF( c => c.md.items.length === 0)})
-;    }
-;}
-
-
-
-(comment
-
-  ;(dp :jsowrite!!!!! (json/write-str {:a 1 :b 2}))
-  ;(dp :jsoencode (convert/jsonEncode {:a 1 :b 2}))
-
-
-  (let [db (.-instance ls/Localstore)]
-    (dp :bam-db!!!!!!!!!!! db)
-
-    ;
-    ; 3n3aym16h
-    ; 5ggmwupfb
-    ;
-    (let [coll (.collection db "todos")
-          ;id (.id (.doc (.collection db "todos")))
-          ;;id #_ "5ggmwupfb"  (.id (.doc coll))
-          ]
-      (dp :BAM-coll coll)
-      (dp :BAM-doc-get-all (await (.get coll)))
-      #_(dp :BAM-doc-get-all-decode (convert/jsonDecode
-                                      (await (.get coll))))
-      ;;(dp :BAM-doc-id id)
-
-      ;;; --- write new entry -----------------------------
-      (let [coll (.collection db "todos")
-            new-id (.id (.doc coll))]
-        ;;id #_ "5ggmwupfb"  (.id (.doc coll))
-        (-> db
-          (.collection "todos")
-          (.doc new-id)
-          (.set {"title" "Todo title Two"})))
-
-      ;;; --- read known IDs ------------------------------
-      (doseq [id ["5ggmwupfb" "3n3aym16h"]]
-        (let [rb (await (-> db
-                          (.collection "todos")
-                          (.doc id)
-                          .get))]
-          (dp :readback!!!!!! id :data (string? rb) (map? rb) :raw> rb)
-          (dp :readback!!!!!! id :keys!!! (keys rb) rb)
-          (dp :CLJD-map!!!! (walk/keywordize-keys
-                              (into {}
-                                (for [k (keys rb)]
-                                  [k (get rb k)]))))
-          #_(dp :readback!!!!!! id :decode!! (convert/jsonDecode rb) rb)))
-
-      ;;  Unhandled Exception: type '_InternalLinkedHashMap<String, dynamic>' is not a subtype of type 'String' in type cast
-
-      #_(let [rb (await (-> db
-                          (.collection "todos")
-                          (.doc id)
-                          .get))]
-          (dp :readback!!!!!!!!! id :data rb)))))
-
-(defn mess-with-json []
-  #_(let [decode (convert/jsonDecode "{ \"name\": \"Pizza da Mario\", \"cuisine\": \"Italian\" }")]
-      (dp :decodes? (string? decode))
-      (dp :decodes-map? (map? decode))
-      (dp :decodes-keywordized (walk/keywordize-keys decode))
-      (dp :decode-k (keys decode))
-      (dp :cuisi (get decode "cuisine"))
-      (dp :decode decode)
-
-      (doseq [[k v] decode]
-        (dp :doseq k v)
-        (dp :doseq (keyword k) v)
-        )
-
-      (dp :forrrrr (into {}
-                     (for [[k v] decode]
-                       [(keyword k) v])))
-      #_(let [mp (into {}
-                   (apply concat
-                     (for [[k v] decode]
-                       [(keyword k) v])))]
-          (prn :now-m? mp (map? mp)))))
