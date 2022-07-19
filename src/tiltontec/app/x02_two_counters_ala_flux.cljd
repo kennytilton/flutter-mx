@@ -15,7 +15,7 @@
 (defn build-counter [counter-key]
   (fx/expanded
     (fx/column
-      {:mainAxisAlignment MainAxisAlignment/-center}
+      {:mainAxisAlignment MainAxisAlignment/center}
       {:name  :counter-col
        :value (cF (let [app (md/fm-ascendant :counter-app me :must? true)]
                     (assert app "no find app")
@@ -23,7 +23,7 @@
       (fx/text (str/capitalize (name counter-key)))
       (fx/text
         {:style (TextStyle
-                  .color m.Colors/-cyan
+                  .color m.Colors/cyan
                   .fontSize 32.0)}
         (str (md/fmuval :counter-col)))
       (fx/elevated-button
@@ -35,7 +35,7 @@
 (defn make-app []
   (fx/material-app
     {:title "Two Counters"
-     :theme (cF (ThemeData .primarySwatch Colors/-blue))}
+     :theme (cF (ThemeData .primarySwatch Colors/blue))}
     {:name       :counter-app
      ; simulating a separate global store a la Flux, we bind a purely independent Matrix data structure that
      ; must be consulted for values. Pro tip: use `mswap! <the app> :flux-store update-in etc` to
@@ -46,5 +46,5 @@
       {:appBar (fx/app-bar {:title (fx/text "Two Counters ala Flux")})}
       (fx/center
         (fx/row
-          {:mainAxisAlignment MainAxisAlignment/-center}
+          {:mainAxisAlignment MainAxisAlignment/center}
           (mapv #(build-counter %) [:left :right]))))))

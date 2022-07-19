@@ -20,9 +20,9 @@
        :floatingActionButton (expandable-fab
                                :initial-open? false
                                :distance 112.0
-                               :actions [{:title "Create Post" :icon (m/Icon m.Icons/-format_size)}
-                                         {:title "Upload Photo" :icon (m/Icon m.Icons/-insert_photo)}
-                                         {:title "Upload Video" :icon (m/Icon m.Icons/-videocam)}])}
+                               :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
+                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
+                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
          :itemCount   25
@@ -49,8 +49,8 @@
                                .vsync state)))
      :expand-animation (cF (when-let [c (fx/my-controller)]
                              (m/CurvedAnimation
-                               .curve m.Curves/-fastOutSlowIn
-                               .reverseCurve m.Curves/-easeOutQuad
+                               .curve m.Curves/fastOutSlowIn
+                               .reverseCurve m.Curves/easeOutQuad
                                .parent c)))
      ; --- behavior -------------------------
      :step             (/ 90.0 (dec (count actions)))
@@ -62,8 +62,8 @@
                                     (.forward c)
                                     (.reverse c)))))}
     (fx/stack
-      {:alignment    m.Alignment/-bottomRight
-       :clipBehavior m.Clip/-none}
+      {:alignment    m.Alignment/bottomRight
+       :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
       (doall (do
@@ -122,7 +122,7 @@
 
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        ^:const (m/CircleBorder)
-                :clipBehavior m.Clip/-antiAlias
+                :clipBehavior m.Clip/antiAlias
                 :color        (fx/cb-with-ctx [me ctx]
                                 (-> (m.Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
@@ -138,12 +138,12 @@
     {}
     (fx/center {} {}
       (fx/material {:shape        ^:const (m/CircleBorder)
-                    :clipBehavior m.Clip/-antiAlias
+                    :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         (fx/ink-well {:onTap (fx/->CBAsIs
                                #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding ^:const (m.EdgeInsets/all 8.0)} {}
-            (fx/icon {:icon  m.Icons/-close
+            (fx/icon {:icon  m.Icons/close
                       :color (fx/cb-with-ctx [me ctx]
                                (.-primaryColor (m.Theme/of ctx)))} {})))))))
 
@@ -151,21 +151,21 @@
   (fx/ignore-pointer
     {:ignoring (mget (md/fasc :fab par) :open?)}
     (fx/animated-container
-      {:transformAlignment m.Alignment/-center
+      {:transformAlignment m.Alignment/center
        :transform          (cF (if (mget (md/fasc :fab par) :open?)
                                  (m.Matrix4/diagonal3Values 0.7 0.7 1.0)
                                  (m.Matrix4/diagonal3Values 1.0 1.0 1.0)))
        :duration           ^:const (dart:core/Duration .milliseconds 250)
-       :curve              ^:const (m/Interval 0.0 0.5 .curve m.Curves/-easeOut)}
+       :curve              ^:const (m/Interval 0.0 0.5 .curve m.Curves/easeOut)}
       (fx/animated-opacity
         {:opacity  (cF (if (mget (md/fasc :fab par) :open?)
                          0.0 1.0))
-         :curve    ^:const (m/Interval 0.25 1.0 .curve m.Curves/-easeInOut)
+         :curve    ^:const (m/Interval 0.25 1.0 .curve m.Curves/easeInOut)
          :duration ^:const (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
           {:onPressed (fx/->CBAsIs
                         #(md/mswap! (md/fasc :fab par) :open? not))}
-          (fx/icon {:icon m.Icons/-create}))))))
+          (fx/icon {:icon m.Icons/create}))))))
 
 (defn fake-item [is-big?]
   (m/Container
@@ -173,7 +173,7 @@
     .height (if is-big? 128.0 36.0)
     .decoration (m/BoxDecoration
                   .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 8.0))
-                  .color (.-shade300 m.Colors/-cyan))))
+                  .color (.-shade300 m.Colors/cyan))))
 
 #_;; this below is the above converted to "apply". The Dart equivalent works, but not this
         (dart:core.Function/apply m/Container nil

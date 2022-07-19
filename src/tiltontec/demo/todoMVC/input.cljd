@@ -18,15 +18,15 @@
 
 (defn todo-input []
   (fx/material {:elevation   20.0
-                :color       m.Colors/-white
-                :shadowColor m.Colors/-black}
+                :color       m.Colors/white
+                :shadowColor m.Colors/black}
     (fx/text-field {:autofocus   true
                     :focusNode   (m/FocusNode) #_ (cI (m/FocusNode)
                                    :obs (fn-obs
                                           #_ (.requestFocus ^m/FocusNode new)))
                     :decoration  (m/InputDecoration
                                    .hintText "What needs doing?"
-                                   .border m.InputBorder/-none #_(.-none m/InputBorder)
+                                   .border m.InputBorder/none #_(.-none m/InputBorder)
                                    .contentPadding (m.EdgeInsets/all 9.0))
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
@@ -70,4 +70,4 @@
                           (doseq [td todos]
                             ;; todo do all these in one change pulse
                             (md/mset! td :completed (if all-done? false true)))))) ;; dataflow trigger
-       :icon      (m/Icon m.Icons/-expand_more .color m.Colors/-blueGrey)})))
+       :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))

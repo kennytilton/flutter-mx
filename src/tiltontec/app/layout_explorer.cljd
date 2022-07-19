@@ -15,27 +15,27 @@
               (m/ThemeData .primarySwatch
                 (let [ttl (md/mget me :title)]
                   (cond
-                    (str/includes? ttl "Teal") m.Colors/-teal
-                    (str/includes? ttl "Red") m.Colors/-red
-                    :else m.Colors/-blue))))}
+                    (str/includes? ttl "Teal") m.Colors/teal
+                    (str/includes? ttl "Red") m.Colors/red
+                    :else m.Colors/blue))))}
     (fx/scaffold
       {:appBar (fx/app-bar
                  {:title (fx/preferred-size
                            {:preferredSize (.fromHeight m/Size 200)}
                            (fx/stack
                            {:alignment
-                            #_(m.Alignment/-topLeft)
-                            (m.AlignmentDirectional/-topEnd)
-                            #_(m.Alignment/-topRight)
+                            #_(m.Alignment/topLeft)
+                            m.AlignmentDirectional/topEnd
+                            #_(m.Alignment/topRight)
                             }
                            #_(fx/material {:elevation   3.0
-                                           :color       m.Colors/-yellow
-                                           :shadowColor m.Colors/-red})
+                                           :color       m.Colors/yellow
+                                           :shadowColor m.Colors/red})
                            (fx/text "Welcome to FlutterMX")
                            #_(fx/text
                                {:style (p/TextStyle
-                                         .color m.Colors/-yellow
-                                         .backgroundColor m.Colors/-pink
+                                         .color m.Colors/yellow
+                                         .backgroundColor m.Colors/pink
                                          .fontSize 32.0)}
                                "?")
                            #_ (fx/sized-box+expand-ful
@@ -43,8 +43,8 @@
 
                              (fx/text
                                {:style (p/TextStyle
-                                         .color m.Colors/-white
-                                         .backgroundColor m.Colors/-cyan
+                                         .color m.Colors/white
+                                         .backgroundColor m.Colors/cyan
                                          .fontSize 24.0)}
                                (str "Booya" (rand-int 99))))
 
@@ -55,18 +55,18 @@
                              {}
                              (fx/text
                                {:style (p/TextStyle
-                                         .color m.Colors/-green
-                                         .backgroundColor m.Colors/-cyan
+                                         .color m.Colors/green
+                                         .backgroundColor m.Colors/cyan
                                          .fontSize 24.0)}
                                (str "Bingo pos " (rand-int 99))))))})}
       (fx/center
         (fx/column
-          {:mainAxisAlignment m.MainAxisAlignment/-spaceEvenly}
+          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
           (fx/hero {:tag "imageHero"}
             (m/Image .image (m/AssetImage "image/einstein.jpeg")
               .height 512))
-          (fx/text {:overflow p.TextOverflow/-ellipsis
+          (fx/text {:overflow p.TextOverflow/ellipsis
                     :style    (p/TextStyle
-                                .color m.Colors/-cyan
+                                .color m.Colors/cyan
                                 .fontSize 32.0)}
             "hello, x world\\n"))))))

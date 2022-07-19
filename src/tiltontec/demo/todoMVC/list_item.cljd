@@ -37,7 +37,7 @@
                    (fx/text {:style (p/TextStyle
                                       .fontFamily "Helvetica Neue"
                                       .color (todo/title-red)
-                                      .fontWeight m.FontWeight/-w200
+                                      .fontWeight m.FontWeight/w200
                                       .fontSize 20.0)}
                      "X"))
 
@@ -46,9 +46,9 @@
                        (fx/text!
                          {:style (cF (if (md/mget ldg :value)
                                        (p/TextStyle
-                                         .color m.Colors/-grey
-                                         .decoration p.TextDecoration/-lineThrough)
-                                       (p/TextStyle .color m.Colors/-black)))}
+                                         .color m.Colors/grey
+                                         .decoration p.TextDecoration/lineThrough)
+                                       (p/TextStyle .color m.Colors/black)))}
                          title)))}
       {:name :my-list-tile
        :todo todo})))
@@ -90,8 +90,8 @@
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
-                                    :color       m.Colors/-white
-                                    :shadowColor m.Colors/-black}
+                                    :color       m.Colors/white
+                                    :shadowColor m.Colors/black}
                         ;; doing our best ^^^^ to emulate official TodoMVC styling.
                         (fx/text-field {:autofocus   true
                                         :focusNode   (cF (m/FocusNode
@@ -102,8 +102,8 @@
                                                                              (= "Escape" (.-keyLabel (.-logicalKey event))))
                                                                            (do
                                                                              (md/mset! (md/fasc :item-control) :editing? false)
-                                                                             m/KeyEventResult.-handled)
-                                                                           :else m/KeyEventResult.-ignored))))
+                                                                             m/KeyEventResult.handled)
+                                                                           :else m/KeyEventResult.ignored))))
                                         :decoration  (m/InputDecoration
                                                        .border (m/OutlineInputBorder
                                                                  .borderRadius ^:const (m.BorderRadius/all
