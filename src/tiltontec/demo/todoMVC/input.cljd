@@ -51,11 +51,11 @@
                                                  (md/mset! me :value value)))) ;; dataflow trigger
                                            c))}
       {:name  :todo-input
-       :value (cI nil)})))
+       :value (cI (str "test " (rand-int 99)))})))
 
 (defn todo-toggle-all []
   (fx/visibility!
-    {:visible               (cF (boolean (seq (md/mget (md/fasc :app) :todo-db)))) ;; dependency
+    {:visible               (cF (boolean (seq (mget (md/fmuval :app :todo-db) :kids))))
      :maintainSize          true
      :maintainSemantics     false
      :maintainInteractivity false
@@ -65,7 +65,7 @@
     (fx/icon-button
       {:onPressed (fx/with-ctx+as-is [me ctx]
                       (fn []
-                        (let [todos (md/mget (md/fasc :app) :todo-db)
+                        (let [todos (mget (md/fmuval :app :todo-db) :kids)
                               all-done? (every? (fn [td] (md/mget td :completed)) todos)]
                           (doseq [td todos]
                             ;; todo do all these in one change pulse

@@ -30,12 +30,7 @@
        :debugShowMaterialGrid      false                    ;; but fun
        }
       {:name    :app
-       ;; todo persist in localstorage
-       :todo-db nil #_  (cF (td-list-load "fmx-demo"))
-                  #_ (cI (doall
-                      (map (fn [{:keys [title completed]}]
-                             (todo/make-todo title completed))
-                        test-todos)))}
+       :todo-db (cF (todo/td-list-load "todo"))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -61,7 +56,7 @@
               ;; ^^^ required sizer to join column
               (fx/list-view+separated
                 {:padding          ^:const (m.EdgeInsets/all 0.0)
-                 :itemCount        (cF (count (md/fmuval :app :todo-db)))
+                 :itemCount        (cF (count (mget (md/fmuval :app :todo-db) :kids)))
                  :separatorBuilder (fx/->CBAsIs
                                      (fn [ctx i] (m/Divider .thickness 0.5)))
                  :itemBuilder      (cF (fx/->CBAsIs
@@ -70,7 +65,7 @@
                                              (nth (mget me :kids) i)))))}
                 {}
                 (map item/todo-list-item
-                  (md/fmuval :app :todo-db))))))))))        ;; dependency!
+                  (mget (md/fmuval :app :todo-db) :kids))))))))))
 
 ;;; todo credits in alert
 

@@ -18,8 +18,10 @@
 (defn items-remaining-display []
   (fx/text! {}
     {:name :items-left}
-    (let [db (md/fmuval :app :todo-db)                      ;; dependency
-          left (remove #(mget % :completed) db)]            ;; dependency
+    (let [tds (mget (md/fmuval :app :todo-db) :kids)
+          _ (dp :items-rem-sees-all (count tds))
+          left (remove #(mget % :completed) tds)]
+      (dp :items-rem-sees-left (count left))
       (str (count left) (if (= 1 (count left))
                           " item" " items")))))
 
@@ -52,9 +54,9 @@
 (defn clear-completed-button []
   (fx/visibility!
     ;; todo next: simpler visibility calls
-    {:visible           (cF (let [db (md/fmuval :app :todo-db)] ;; dependency!
-                              (boolean (some (fn [todo]
-                                               (mget todo :completed)) db)))) ;; dependency!
+    {:visible           (cF (let [tds (mget (md/fmuval :app :todo-db) :kids)]
+                              (boolean
+                                (some #(mget % :completed) tds))))
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}
@@ -62,6 +64,18 @@
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
                       (let [app (md/fasc :app)]
+                        (dp :clear-fnyi)
+                        #_
                         (md/mswap! (md/fasc :app) :todo-db  ;; dataflow trigger
                           (partial remove #(mget % :completed))))))}
       (fx/text "Clear done"))))
+
+#_ (defn items-remaining-display []
+     (fx/text! {}
+       {:name :items-left}
+       (let [tds (mget (md/fmuval :app :todo-db) :kids)
+             _ (dp :items-rem-sees-all (count tds))
+             left (remove #(mget % :completed) tds)]
+         (dp :items-rem-sees-left (count left))
+         (str (count left) (if (= 1 (count left))
+                             " item" " items")))))

@@ -37,16 +37,14 @@
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         docs (into {} (await (.get coll)))]
+    ;; todo just take the keys of (await (.get coll))
     (dp :del-all docs)
-
+    ;; todo maybe kick all these off and then await all?
     (doseq [k (keys docs)
-            :let [ls-id (last (str/split k #"/"))]]
-      (let [raw (get docs k)
-            td (dart-map->cljd-map raw)]
-        (dp :deleting-td ls-id (str/split k #"/") )
-        (let [del-id ls-id]
-          (await (-> db
-                   (.collection coll-name)
-                   (.doc del-id)
-                   .delete)))))))
+            :let [working-id (last (str/split k #"/"))]]
+      ;; full key is /coll-name/id-to-use-to-get-a-doc
+      (await (-> db
+               (.collection coll-name)
+               (.doc working-id)
+               .delete)))))
 

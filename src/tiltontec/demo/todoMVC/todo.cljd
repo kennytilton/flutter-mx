@@ -4,13 +4,14 @@
 
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
     [tiltontec.model.core :refer [mget] :as md]
 
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["dart:convert" :as convert]
-    ["package:localstore/localstore.dart" :as ls]))
+    ["package:localstore/localstore.dart" :as ls]
+    [tiltontec.mx-flutter.store :as store]))
 
 (defn title-red []
   (.fromRGBO m/Color 184 63 69 0.5))
@@ -23,14 +24,20 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :REAL-todo-LIST-obs!!!!!!!! slot :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
+    (dp :REAL-todo-LIST-obs!!!!!!!! slot :new-val new-value)
     ))
 
-(defn make-todo-list [name]
-  (md/make
-    :mx-type (ToDoList.)
-    :name name
-    :kids (cI nil)))
+(defn make-todo-list
+  ([name] (make-todo-list name nil))
+  ([name existing-todos]
+   (md/make
+     :mx-type (ToDoList.)
+     :name name
+     :kids (cFn (mapv (fn [xtd]
+                       (let [{:keys [title completed ls-sid sid]} xtd]
+                         (dp :making-todo!! title completed ls-sid sid)
+                         (make-todo me title completed sid ls-sid)))
+                  existing-todos)))))
 
 (declare td-upsert)
 
@@ -53,27 +60,32 @@
      :par td-list
      :mx-type (ToDo.)
      :sid sid
-     :ls-sid ls-sid ;; on reload, this serves as our update vs create indicator
+     :ls-sid ls-sid                                         ;; on reload, this serves as our update vs create indicator
      ;--
      :title (cI title)
      :completed (cI completed))))
 
-(defn td-list-load [name])
+(defn td-list-load [name]
+  (let [store-tds (await (store/read-all-docs name))]
+    (dp :store-tds (count store-tds))
+    (let [td-lst (make-todo-list name store-tds)]
+      (dp :made-list!!!!!!!! @td-lst)
+      td-lst)))
 
 (defn td-upsert [td]
-  (dp :upserting!!!! @td)
+  (dp :td-upserting!!!! @td)
 
   (assert (mget td :par))
   (let [coll-name (mget (mget td :par) :name)]
-      (dp :upserting-into!!!! coll-name)
-      (.ensureInitialized w/WidgetsFlutterBinding)
-      (if (mget td :ls-sid)
-        (dp :not-yet-UPDATING-lsid!!! @td)
-        (let [db (.-instance ls/Localstore)
-              coll (.collection db coll-name)
-              new-id (.-id (.doc coll))
-              new-data (assoc (select-keys @td [:title :completed :sid])
-                         :ls-id new-id)]
+    (dp :upserting-into!!!! coll-name @td)
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    (if (mget td :ls-sid)
+      (dp :not-yet-UPDATING-lsid!!! @td)
+      (let [db (.-instance ls/Localstore)
+            coll (.collection db coll-name)
+            new-id (.-id (.doc coll))
+            new-data (assoc (select-keys @td [:title :completed :sid])
+                       :ls-id new-id)]
         (dp :make-ls-new!! new-id new-data)
         (-> coll
           (.doc new-id)
