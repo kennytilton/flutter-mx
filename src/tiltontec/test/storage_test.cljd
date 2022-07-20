@@ -316,13 +316,28 @@
       (dp :read id :got (store/dart-map->cljd-map rb))
       (dp :read id :notfound))))
 
+(defn test-old-todo-list []
+  (let [tl (todo/make-todo-list "todos")]
+    (when-let [current (await (store/read-all-docs "todos"))]
+      (dp :bingo-current! current)
+      (md/mset! tl :kids
+        (mapv (fn [ls-td]
+                (let [{:keys [title completed ls-sid sid]} ls-td]
+                  (todo/make-todo tl title completed sid ls-sid)))
+          current))
+
+      (doseq [k (mget tl :kids)]
+        (dp :td-kid @k)))))
+
 (defn test []
   ;;(read-one "todos" "3kpfwt4pp")
   ;(hack-one "todos" "3kpfwt4pp")
-  ;;(store/delete-all-docs "boom")
-  ;(store/read-all-docs "boom")
+  (store/delete-all-docs "todos")
+  ;(store/read-all-docs "todos")
+  ;(dp :all-todos!!! (await (store/read-all-docs "todos")))
   ;(reset! todo/todo-sid 0)
-  (test-new-todo-list)
+  ;(test-new-todo-list)
+  ;(test-old-todo-list)
   )
 
 

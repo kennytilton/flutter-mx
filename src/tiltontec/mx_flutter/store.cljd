@@ -7,23 +7,29 @@
     ;;[tiltontec.mx-flutter.core :as fx]
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
-    [clojure.walk :as walk]))
+    [clojure.walk :as walk]
+    [cljd.string :as str]))
 
 (defn dart-map->cljd-map [dart-map]
   (walk/keywordize-keys
-    (into {}
-      (for [k (keys dart-map)]
-        [k (get dart-map k)]))))
+    (into {} dart-map
+      #_(for [k (keys dart-map)]
+          [k (get dart-map k)]))))
 
 (defn read-all-docs [coll-name]
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;;; --- read all docs ---------------------------
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
-        docs (into {} (await (.get coll)))]
-    (dp :coll-todos coll)
-    (dp :read-all-docs docs)
-    docs))
+        docs (vals (into {}
+                     (await (.get coll))))]
+    (dp :read-all-docs (count docs))
+    ;(dp :read-all-docs (vals docs))
+    (doseq [doc docs]
+        (dp :DOC!
+          (into {} doc)
+          (dart-map->cljd-map doc)))
+    (mapv dart-map->cljd-map docs))) ;; doall? mapv?
 
 (defn delete-all-docs [coll-name]
   (.ensureInitialized w/WidgetsFlutterBinding)
@@ -31,11 +37,14 @@
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         docs (into {} (await (.get coll)))]
-    (doseq [k (keys docs)]
+    (dp :del-all docs)
+
+    (doseq [k (keys docs)
+            :let [ls-id (last (str/split k #"/"))]]
       (let [raw (get docs k)
             td (dart-map->cljd-map raw)]
-        (dp :deleting-td td)
-        (let [del-id (:ls-id td)]
+        (dp :deleting-td ls-id (str/split k #"/") )
+        (let [del-id ls-id]
           (await (-> db
                    (.collection coll-name)
                    (.doc del-id)

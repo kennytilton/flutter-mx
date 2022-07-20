@@ -23,14 +23,13 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :REAL-todo-LIST-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
+    (dp :REAL-todo-LIST-obs!!!!!!!! slot :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
     ))
 
 (defn make-todo-list [name]
   (md/make
     :mx-type (ToDoList.)
     :name name
-    :sid (swap! todo-sid inc)
     :kids (cI nil)))
 
 (declare td-upsert)
@@ -41,35 +40,40 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :REAL-todo-obs!!!!!!!! slot  :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
-    (when (= slot :sid) ;; arbitrary choice
-      (dp :REAL-todo-obs-par!!!!!!!! slot  :par!!! @(:par @me))
+    (dp :REAL-todo-obs!!!!!!!! slot :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
+    (when (= slot :sid)                                     ;; arbitrary choice
+      (dp :REAL-todo-obs-par!!!!!!!! slot :par!!! @(:par @me))
       (td-upsert me))))
 
-(defn make-todo [td-list title completed]
-  (md/make
-    :par td-list
-    :mx-type (ToDo.)
-    :name :a-todo-item
-    :sid (swap! todo-sid inc)
-    :title (cI title)
-    :completed (cI completed)))
+(defn make-todo
+  ([td-list title completed]
+   (make-todo td-list title completed (swap! todo-sid inc) nil))
+  ([td-list title completed sid ls-sid]
+   (md/make
+     :par td-list
+     :mx-type (ToDo.)
+     :sid sid
+     :ls-sid ls-sid ;; on reload, this serves as our update vs create indicator
+     ;--
+     :title (cI title)
+     :completed (cI completed))))
 
-(defn td-list-load [name] )
+(defn td-list-load [name])
 
 (defn td-upsert [td]
   (dp :upserting!!!! @td)
 
-  (when-let [par (:par @td)]
-    (let [coll-name (:name @par)]
-      (dp :ups-par @par)
+  (assert (mget td :par))
+  (let [coll-name (mget (mget td :par) :name)]
       (dp :upserting-into!!!! coll-name)
       (.ensureInitialized w/WidgetsFlutterBinding)
-      (let [db (.-instance ls/Localstore)
-            coll (.collection db coll-name)
-            new-id (.-id (.doc coll))
-            new-data (assoc (select-keys @td [:title :completed :sid])
-                       :ls-id new-id)]
+      (if (mget td :ls-sid)
+        (dp :not-yet-UPDATING-lsid!!! @td)
+        (let [db (.-instance ls/Localstore)
+              coll (.collection db coll-name)
+              new-id (.-id (.doc coll))
+              new-data (assoc (select-keys @td [:title :completed :sid])
+                         :ls-id new-id)]
         (dp :make-ls-new!! new-id new-data)
         (-> coll
           (.doc new-id)
