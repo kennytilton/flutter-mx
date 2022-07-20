@@ -30,10 +30,12 @@
 (defn make-todo-list
   ([name] (make-todo-list name nil))
   ([name existing-todos]
+   (dp :make-tdl-entry name (count existing-todos))
    (md/make
      :mx-type (ToDoList.)
      :name name
-     :kids (cFn (mapv (fn [xtd]
+     :kids (cFn (dp :maketdl-kids-rule-sees (count existing-todos))
+             (mapv (fn [xtd]
                        (let [{:keys [title completed ls-sid sid]} xtd]
                          (dp :making-todo!! title completed ls-sid sid)
                          (make-todo me title completed sid ls-sid)))
@@ -69,7 +71,7 @@
   (let [store-tds (await (store/read-all-docs name))]
     (dp :store-tds (count store-tds))
     (let [td-lst (make-todo-list name store-tds)]
-      (dp :made-list!!!!!!!! @td-lst)
+      (dp :tdlistload-made-list!!!!!!!! @td-lst)
       td-lst)))
 
 (defn td-upsert [td]

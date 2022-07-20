@@ -35,13 +35,15 @@
                                              ;; "onsubmit" removes the edit focus on submit; not ideal. We restore
                                              ;; for continued editing:
                                              (.requestFocus ^m/FocusNode (md/mget me :focusNode))
-                                             (let [app (md/fasc :app)]
+                                             (let [app (md/fasc :app)
+                                                   td-lst (mget app :todo-db)]
                                                (md/mset! me :value trimmed) ;; dataflow trigger
                                                (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field,
                                                ;; (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
                                                ;; now make the to-do, and add to _end_ of list
-                                               (md/mswap! (md/fasc :app) :todo-db concat
-                                                 [(todo/make-todo (mget app :todo-db) trimmed false)])))))))
+                                               (dp :adding-td!! (minfo td-lst) :kidsnow (mget td-lst :kids))
+                                               (md/mswap! td-lst :kids concat
+                                                 [(todo/make-todo td-lst trimmed false)])))))))
                     :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c

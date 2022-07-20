@@ -57,12 +57,14 @@
   "(1) do initial evaluation of all ruled slots
    (2) call observers of all slots"
   [me]
-  (assert me "md-awaken passed nil")
+  (assert me "md-awaken is nil")
   ;(dprn :md-awaken!!!!!!!! (cty/minfo me))
   ;(dprn :md-awaken-deref!! (deref me))
-  ;(dprn :md-awaken-meta!! (meta me))
+  (prn :md-awaken-me!! me)
+  (prn :md-awaken-meta!! (meta me))
+  (prn :md-awaken-deref!! (deref me))
 
-  (c-assert (= :nascent (md-state me)))
+  (assert (= :nascent (md-state me)))
   (rmap-meta-setf [:state me] :awakening)
   (doall
     (for [slot (keys @me)]

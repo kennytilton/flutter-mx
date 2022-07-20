@@ -1,6 +1,7 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
     [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.model.base :as mdbase]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
@@ -30,7 +31,9 @@
        :debugShowMaterialGrid      false                    ;; but fun
        }
       {:name    :app
-       :todo-db (cF (todo/td-list-load "todo"))}
+       :todo-db (cFonce (let [tdl (await (todo/td-list-load "todo"))]
+                          (dp :tdl-loaded!!! (minfo tdl))
+                          (mdbase/md-awaken tdl)))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
