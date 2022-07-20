@@ -181,28 +181,7 @@
                           .get))]
           (dp :readback!!!!!!!!! id :data rb)))))
 
-(defn mess-with-json []
-  #_(let [decode (convert/jsonDecode "{ \"name\": \"Pizza da Mario\", \"cuisine\": \"Italian\" }")]
-      (dp :decodes? (string? decode))
-      (dp :decodes-map? (map? decode))
-      (dp :decodes-keywordized (walk/keywordize-keys decode))
-      (dp :decode-k (keys decode))
-      (dp :cuisi (get decode "cuisine"))
-      (dp :decode decode)
 
-      (doseq [[k v] decode]
-        (dp :doseq k v)
-        (dp :doseq (keyword k) v)
-        )
-
-      (dp :forrrrr (into {}
-                     (for [[k v] decode]
-                       [(keyword k) v])))
-      #_(let [mp (into {}
-                   (apply concat
-                     (for [[k v] decode]
-                       [(keyword k) v])))]
-          (prn :now-m? mp (map? mp)))))
 
 ;(dp :jsowrite!!!!! (json/write-str {:a 1 :b 2}))
 ;(dp :jsoencode (convert/jsonEncode {:a 1 :b 2}))
@@ -285,13 +264,96 @@
   (let [tl (todo/make-todo-list "boom")]
     (dp :back)
     (dp :bingo-td-list @tl)
-    (md/mswap! tl :kids  conj (todo/make-todo tl "wash dog" false))
+    (md/mswap! tl :kids conj (todo/make-todo tl "wash dog" false))
     (dp :pushed!!!!!!)
     (dp :tl+1 @tl)
     (dp :k1 @(first (mget tl :kids)))
     (store/read-all-docs "boom")))
 
+
+
+(defn hack-one [collection-name id]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  ;;; --- read all docs ---------------------------
+  (let [db (.-instance ls/Localstore)
+        rb (await (-> db
+                    (.collection collection-name)
+                    (.doc id)
+                    .get))]
+    (cond
+      (nil? rb)
+      (do
+        (dp :doc-id id :not-found-in collection-name)
+        (dp :all-follow)
+        (store/read-all-docs "todos"))
+
+      :else (do
+              (dp :raw-rb rb)
+              (dp :CLJD-map!!!! (store/dart-map->cljd-map rb))
+              (do
+                (dp :deleteing!!!!!!! id)
+                (let [del-res (await (-> db
+                                  (.collection collection-name)
+                                  (.doc id)
+                                  .delete))]
+                  (dp :delete-returned del-res)
+                  (let [doc (await (-> db
+                                     (.collection collection-name)
+                                     (.doc id)
+                                     .get))]
+                    (dp :read-of-deleted-sees doc))))))
+    ))
+
+(defn read-one [collection-name id]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  ;;; --- read all docs ---------------------------
+  (let [db (.-instance ls/Localstore)
+        rb (await (-> db
+                    (.collection collection-name)
+                    (.doc id)
+                    .get))]
+    (if rb
+      (dp :read id :got (store/dart-map->cljd-map rb))
+      (dp :read id :notfound))))
+
 (defn test []
-  ;;(read-all-docs "todos")
-  (reset! todo/todo-sid 0)
-  (test-new-todo-list))
+  ;;(read-one "todos" "3kpfwt4pp")
+  ;(hack-one "todos" "3kpfwt4pp")
+  ;;(store/delete-all-docs "boom")
+  ;(store/read-all-docs "boom")
+  ;(reset! todo/todo-sid 0)
+  (test-new-todo-list)
+  )
+
+
+
+#_(doseq [db-id (keys docs)]
+    (dp :deleting db-id (string? db-id))
+    (let [dres (await (-> db
+                        (.collection coll-name)
+                        (.doc db-id)
+                        .delete))]
+      (dp :dlete-says dres)))
+
+#_(let [tds (for [k (keys docs)]
+              (let [td (get docs k)]
+                (walk/keywordize-keys
+                  (into {}
+                    (for [k (keys td)]
+                      [k (get td k)])))))]
+    (dp :todos!!!! tds)
+    (doseq [td tds]
+      (dp :deleting (:ls-id td))
+      (let [dres (await (-> db
+                          (.collection "todos")
+                          (.doc (:ls-id td))
+                          .delete))]
+        (dp :dlete-says dres)))
+    #_(doseq [td tds]
+        (dp :deleting (:ls-id td))
+        (let [dres (await (-> db
+                            (.collection "todos")
+                            (.doc (:ls-id td))
+                            .delete))]
+          (dp :dlete-says dres))))
+

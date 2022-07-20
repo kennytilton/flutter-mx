@@ -9,12 +9,35 @@
     ["package:flutter/widgets.dart" :as w]
     [clojure.walk :as walk]))
 
+(defn dart-map->cljd-map [dart-map]
+  (walk/keywordize-keys
+    (into {}
+      (for [k (keys dart-map)]
+        [k (get dart-map k)]))))
+
 (defn read-all-docs [coll-name]
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;;; --- read all docs ---------------------------
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         docs (into {} (await (.get coll)))]
-    (dp :coll-todos  coll)
-    (dp :docs  docs)
+    (dp :coll-todos coll)
+    (dp :read-all-docs docs)
     docs))
+
+(defn delete-all-docs [coll-name]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  ;;; --- read all docs ---------------------------
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db coll-name)
+        docs (into {} (await (.get coll)))]
+    (doseq [k (keys docs)]
+      (let [raw (get docs k)
+            td (dart-map->cljd-map raw)]
+        (dp :deleting-td td)
+        (let [del-id (:ls-id td)]
+          (await (-> db
+                   (.collection coll-name)
+                   (.doc del-id)
+                   .delete)))))))
+

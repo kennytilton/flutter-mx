@@ -59,17 +59,20 @@
 
 (defn td-upsert [td]
   (dp :upserting!!!! @td)
+
   (when-let [par (:par @td)]
-    (dp :ups-par @par)
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    (let [db (.-instance ls/Localstore)
-          coll (.collection db (:name @par))
-          new-id (.-id (.doc coll))
-          new-data (assoc (select-keys [:title :completed :sid] @td)
-                     :ls-id new-id)]
-      (dp :make-ls-new!! new-id new-data)
-      (-> coll
-        (.doc new-id)
-        (.set (walk/stringify-keys new-data))))))
+    (let [coll-name (:name @par)]
+      (dp :ups-par @par)
+      (dp :upserting-into!!!! coll-name)
+      (.ensureInitialized w/WidgetsFlutterBinding)
+      (let [db (.-instance ls/Localstore)
+            coll (.collection db coll-name)
+            new-id (.-id (.doc coll))
+            new-data (assoc (select-keys @td [:title :completed :sid])
+                       :ls-id new-id)]
+        (dp :make-ls-new!! new-id new-data)
+        (-> coll
+          (.doc new-id)
+          (.set (walk/stringify-keys new-data)))))))
 
 
