@@ -1,6 +1,7 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
     [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
+    [tiltontec.cell.integrity :as integrity]
     [tiltontec.model.base :as mdbase]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
@@ -31,16 +32,26 @@
        :debugShowMaterialGrid      false                    ;; but fun
        }
       {:name    :app
-       :todo-db-loader (cF+ [:obs (fn [slot me new _ _]
-                                    (.whenComplete new
-                                      (fn []
+       :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ _]
+                                    (.then todos-future
+                                      (fn [value]
                                         (dp :loader-nil-runs!!!!!!)
-                                        (let [td-lst (await new)]
-                                          (assert td-lst)
-                                          (assert (cty/md-ref? td-lst))
-                                          (dp :AWAIT-yeilds (minfo td-lst) (mapv minfo (mget td-lst :kids)))
-                                          (mset! me :todo-db td-lst)))))]
-                         (todo/td-list-load "todo"))
+                                        (dp :loader-then-values!!!!! value)
+                                        #_ (let [td-lst (await new)]
+                                          (dp :loader-await-gets-back!! td-lst)
+                                          (dp :loader-await-gets-back!! (minfo td-lst))
+                                          (assert td-lst "awaited nil")
+                                          (dp :checking-ref!!!!! td-lst)
+                                          (dp :checking-ref!!!!! @td-lst)
+                                          (assert (cty/md-ref? td-lst) "awaited no md")
+                                          (let [kids (mget td-lst :kids)]
+                                            (dp :and-kids!!!!! kids))
+                                          (dp :AWAIT-yeilds (minfo td-lst))
+                                          (dp :AWAIT-yeilds-kids (mapv minfo (mget td-lst :kids)))
+                                          (integrity/with-cc :load-todos
+                                            (mset! me :todo-db td-lst))))))]
+                         ;; (todo/td-list-load "todo")
+                         (store/read-all-docs "todo"))
        :todo-db (cI nil)}
       (fx/scaffold
         {:appBar                  (my-app-bar title)

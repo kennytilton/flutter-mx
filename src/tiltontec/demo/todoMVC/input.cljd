@@ -45,7 +45,7 @@
                                                (assert me "onsub no me")
                                                (assert app "onsub no app")
                                                (assert td-lst "onsub no tdlist!!")
-                                               (assert (cty/md-ref? td-lst) (str "td-list no mdref?" td-lst))
+                                               (assert (cty/md-ref? td-lst) (str "td-lst no mdref?" td-lst))
                                                (dp :asserts-ok!!!!!)
                                                (md/mset! me :value trimmed) ;; dataflow trigger
                                                (let [c ^m/TextEditingController (md/mget me :controller)]
@@ -76,7 +76,7 @@
   (fx/visibility!
     {:visible               (cF (let [tds (todo/app-todos (fasc :app))]
                                   (dp :toggall-sees-tds!!!!! tds)
-                                  (seq tds)))
+                                  (boolean (seq tds))))
      :maintainSize          true
      :maintainSemantics     false
      :maintainInteractivity false

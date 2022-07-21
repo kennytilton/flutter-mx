@@ -46,14 +46,14 @@
 
 (defn md-get-ex [me slot]
   (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (dp :MGX-getting slot :from (minfo me) :me me :nil (nil? me))
+  (dpx :MGX-getting slot :from (minfo me) :me me :nil (nil? me))
   (when (atom? me)
     (if-let [c (md-cell me slot)]
       (c-get c)
       (slot @me))))
 
 (defn mget [me slot]
-  (dp :mget-entry slot :of (when me (minfo me)))
+  (dpx :mget-entry slot :of (when me (minfo me)))
   (md-get me slot))
 
 (defn md-getx [tag me slot]

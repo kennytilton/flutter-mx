@@ -44,8 +44,12 @@
 
 (defn app-todos [app]
   ;; we have to wait for async load of the to-do collection from localstorage
-  (when-let [td-lst (tiltontec.model.core/mget app  :todo-db)]
-     (tiltontec.model.core/mget td-lst :kids)))
+  (assert app "at no app")
+  (assert (cty/md-ref? app))
+  (when-let [td-lst (tiltontec.model.core/mget app :todo-db)]
+    (dp :app-todos-sees (minfo td-lst))
+    (assert (cty/md-ref? td-lst))
+    (tiltontec.model.core/mget td-lst :kids)))
 
 (declare td-upsert)
 
@@ -61,11 +65,11 @@
       (td-upsert me))))
 
 (defn make-todo
-  ([td-list title completed]
-   (make-todo td-list title completed (swap! todo-sid inc) nil))
-  ([td-list title completed sid ls-sid]
+  ([td-lst title completed]
+   (make-todo td-lst title completed (swap! todo-sid inc) nil))
+  ([td-lst title completed sid ls-sid]
    (md/make
-     :par td-list
+     :par td-lst
      :mx-type (ToDo.)
      :sid sid
      :ls-sid ls-sid                                         ;; on reload, this serves as our update vs create indicator
