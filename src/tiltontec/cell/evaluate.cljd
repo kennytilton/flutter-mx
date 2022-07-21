@@ -155,6 +155,8 @@
                          (c-observe c prior-value :cget)
                          (ephemeral-reset c)))))
                  (when *depender*
+                   (dp :c-get-depender!! (cinfo *depender*))
+                   (dp :c-get-depender!! (deref *depender*))
                    #_(when (and *depender* (not= :kids (c-slot *depender*)))
                        (prn :c-get-records-dependency
                          :askee (c-slot c) (mx-type (c-model c))
@@ -205,6 +207,7 @@
   * Well, we also look to see if a synaptic cell has attached a
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
+  (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
   (dpx :calc-n-link-entry (cinfo c))
   (binding [*depender* c
             *call-stack* (cons c *call-stack*)
