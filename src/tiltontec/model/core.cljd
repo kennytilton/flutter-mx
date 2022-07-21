@@ -52,7 +52,9 @@
       (c-get c)
       (slot @me))))
 
-(defn mget [me slot] (md-get me slot))
+(defn mget [me slot]
+  (dp :mget-entry slot :of (when me (minfo me)))
+  (md-get me slot))
 
 (defn md-getx [tag me slot]
   (md-get-ex me slot)
@@ -84,7 +86,7 @@
           )))))
 
 (defn mset! [me slot new-value]
-  (assert (cty/md-ref? me))
+  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
   (md-reset! me slot new-value))
 
 (defn mswap! [me slot swap-fn & swap-fn-args]

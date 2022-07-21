@@ -31,6 +31,8 @@
        :trailing (fx/text-button                            ;; our "delete" icon on each to-do
                    {:onPressed (fx/with-ctx+as-is [me ctx]
                                  (fn []
+                                   ;; todo hhack
+                                   #_
                                    (md/mswap! (md/fasc :app) :todo-db
                                      (partial remove (fn [td]
                                                        (= sid (md/mget td :sid)))))))}
@@ -63,7 +65,10 @@
          trimmed (str/trim value)]
      (if (str/blank? trimmed)
        (do
-         (md/mswap! (md/fasc :app) :todo-db
+         ;; todo hhack
+         #_
+
+                 (md/mswap! (md/fasc :app) :todo-db
            ;; todo roll this up into a todo utility
            (partial remove (fn [td]
                              (= sid (md/mget td :sid))))))

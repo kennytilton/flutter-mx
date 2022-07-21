@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
-    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
     [tiltontec.model.base :as mdbase]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
@@ -31,9 +31,17 @@
        :debugShowMaterialGrid      false                    ;; but fun
        }
       {:name    :app
-       :todo-db (cFonce (let [tdl (await (todo/td-list-load "todo"))]
-                          (dp :tdl-loaded!!! (minfo tdl))
-                          (mdbase/md-awaken tdl)))}
+       :todo-db-loader (cF+ [:obs (fn [slot me new _ _]
+                                    (.whenComplete new
+                                      (fn []
+                                        (dp :loader-nil-runs!!!!!!)
+                                        (let [td-lst (await new)]
+                                          (assert td-lst)
+                                          (assert (cty/md-ref? td-lst))
+                                          (dp :AWAIT-yeilds (minfo td-lst) (mapv minfo (mget td-lst :kids)))
+                                          (mset! me :todo-db td-lst)))))]
+                         (todo/td-list-load "todo"))
+       :todo-db (cI nil)}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -59,7 +67,7 @@
               ;; ^^^ required sizer to join column
               (fx/list-view+separated
                 {:padding          ^:const (m.EdgeInsets/all 0.0)
-                 :itemCount        (cF (count (mget (md/fmuval :app :todo-db) :kids)))
+                 :itemCount        (cF (count (todo/app-todos (fasc :app))))
                  :separatorBuilder (fx/->CBAsIs
                                      (fn [ctx i] (m/Divider .thickness 0.5)))
                  :itemBuilder      (cF (fx/->CBAsIs
@@ -68,7 +76,7 @@
                                              (nth (mget me :kids) i)))))}
                 {}
                 (map item/todo-list-item
-                  (mget (md/fmuval :app :todo-db) :kids))))))))))
+                  (todo/app-todos (fasc :app)))))))))))
 
 ;;; todo credits in alert
 

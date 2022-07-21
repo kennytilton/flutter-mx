@@ -24,7 +24,7 @@
   (observe [this slot me new-value prior-value cell]
     ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :REAL-todo-LIST-obs!!!!!!!! slot :new-val new-value)
+    (dp :ToDoList-obs!! slot :new-val-> new-value)
     ))
 
 (defn make-todo-list
@@ -34,12 +34,18 @@
    (md/make
      :mx-type (ToDoList.)
      :name name
-     :kids (cFn (dp :maketdl-kids-rule-sees (count existing-todos))
+     :kids (cFn (dp :maketdl-kids-rule-sees!!!!!!! (count existing-todos) (minfo me))
              (mapv (fn [xtd]
-                       (let [{:keys [title completed ls-sid sid]} xtd]
-                         (dp :making-todo!! title completed ls-sid sid)
-                         (make-todo me title completed sid ls-sid)))
-                  existing-todos)))))
+                     (dp :make-td!!!!!!! xtd)
+                     (let [{:keys [title completed ls-sid sid]} xtd]
+                       (dp :making-todo!! title completed ls-sid sid)
+                       (make-todo me title completed sid ls-sid)))
+               existing-todos)))))
+
+(defn app-todos [app]
+  ;; we have to wait for async load of the to-do collection from localstorage
+  (when-let [td-lst (tiltontec.model.core/mget app  :todo-db)]
+     (tiltontec.model.core/mget td-lst :kids)))
 
 (declare td-upsert)
 
@@ -67,7 +73,9 @@
      :title (cI title)
      :completed (cI completed))))
 
-(defn td-list-load [name]
+(defn td-list-load
+  "returns a future; await to get full-blown todos"
+  [name]
   (let [store-tds (await (store/read-all-docs name))]
     (dp :store-tds (count store-tds))
     (let [td-lst (make-todo-list name store-tds)]

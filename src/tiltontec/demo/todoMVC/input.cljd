@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.input
   (:require
-    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.model.core :refer [fasc mget mset! mswap!] :as md]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
@@ -21,29 +21,46 @@
                 :color       m.Colors/white
                 :shadowColor m.Colors/black}
     (fx/text-field {:autofocus   true
-                    :focusNode   (m/FocusNode) #_ (cI (m/FocusNode)
-                                   :obs (fn-obs
-                                          #_ (.requestFocus ^m/FocusNode new)))
+                    :focusNode   (m/FocusNode) #_(cI (m/FocusNode)
+                                                   :obs (fn-obs
+                                                          #_(.requestFocus ^m/FocusNode new)))
                     :decoration  (m/InputDecoration
                                    .hintText "What needs doing?"
                                    .border m.InputBorder/none #_(.-none m/InputBorder)
                                    .contentPadding (m.EdgeInsets/all 9.0))
                     :onSubmitted (cF (fx/->CBAsIs
                                        (fn [value]
+                                         (dp :onsub-running!!!????? value)
                                          (let [trimmed (str/trim value)]
                                            (if (str/blank? trimmed)
                                              ;; "onsubmit" removes the edit focus on submit; not ideal. We restore
                                              ;; for continued editing:
                                              (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                             ;; --- non-blank; save...
                                              (let [app (md/fasc :app)
+                                                   _ (assert app "onsub no app")
                                                    td-lst (mget app :todo-db)]
+                                               (assert td-lst "on sub no tdl")
+                                               (dp :onsub!!!! (minfo app) (minfo td-lst))
+                                               (assert me "onsub no me")
+                                               (assert app "onsub no app")
+                                               (assert td-lst "onsub no tdlist!!")
+                                               (assert (cty/md-ref? td-lst) (str "td-list no mdref?" td-lst))
+                                               (dp :asserts-ok!!!!!)
                                                (md/mset! me :value trimmed) ;; dataflow trigger
-                                               (.clear ^m/TextEditingController (md/mget me :controller)) ;; clear the input text field,
-                                               ;; (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
-                                               ;; now make the to-do, and add to _end_ of list
-                                               (dp :adding-td!! (minfo td-lst) :kidsnow (mget td-lst :kids))
-                                               (md/mswap! td-lst :kids concat
-                                                 [(todo/make-todo td-lst trimmed false)])))))))
+                                               (let [c ^m/TextEditingController (md/mget me :controller)]
+                                                 (dp :mset-ok!!!!!-clearing c)
+                                                 (.clear ^m/TextEditingController c) ;; clear the input text field,
+                                                 ;; (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
+                                                 ;; now make the to-do, and add to _end_ of list
+                                                 (dp :adding-td!! (minfo td-lst))
+                                                 (dp :adding-td!! (minfo td-lst) :kidsnow (mget td-lst :kids))
+                                                 (let [kp (mget td-lst :kids)]
+                                                   (dp :existing-kids!! kp :raw td-lst)
+                                                   (mset! td-lst :kids (concat kp [(todo/make-todo td-lst trimmed false)]))
+                                                   (dp :fini!!!!!!!-new-td))
+                                                 #_(md/mswap! td-lst :kids concat
+                                                     [(todo/make-todo td-lst trimmed false)]))))))))
                     :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
@@ -57,7 +74,9 @@
 
 (defn todo-toggle-all []
   (fx/visibility!
-    {:visible               (cF (boolean (seq (mget (md/fmuval :app :todo-db) :kids))))
+    {:visible               (cF (let [tds (todo/app-todos (fasc :app))]
+                                  (dp :toggall-sees-tds!!!!! tds)
+                                  (seq tds)))
      :maintainSize          true
      :maintainSemantics     false
      :maintainInteractivity false
@@ -66,10 +85,10 @@
      }
     (fx/icon-button
       {:onPressed (fx/with-ctx+as-is [me ctx]
-                      (fn []
-                        (let [todos (mget (md/fmuval :app :todo-db) :kids)
-                              all-done? (every? (fn [td] (md/mget td :completed)) todos)]
-                          (doseq [td todos]
-                            ;; todo do all these in one change pulse
-                            (md/mset! td :completed (if all-done? false true)))))) ;; dataflow trigger
+                    (fn []
+                      (let [todos (todo/app-todos (fasc :app))
+                            all-done? (every? (fn [td] (md/mget td :completed)) todos)]
+                        (doseq [td todos]
+                          ;; todo do all these in one change pulse
+                          (md/mset! td :completed (if all-done? false true)))))) ;; dataflow trigger
        :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))

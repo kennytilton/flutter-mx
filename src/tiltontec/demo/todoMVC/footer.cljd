@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.footer
   (:require
-    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
@@ -18,7 +18,7 @@
 (defn items-remaining-display []
   (fx/text! {}
     {:name :items-left}
-    (let [tds (mget (md/fmuval :app :todo-db) :kids)
+    (let [tds (todo/app-todos (fasc :app))
           _ (dp :items-rem-sees-all (count tds))
           left (remove #(mget % :completed) tds)]
       (dp :items-rem-sees-left (count left))
@@ -54,9 +54,12 @@
 (defn clear-completed-button []
   (fx/visibility!
     ;; todo next: simpler visibility calls
-    {:visible           (cF (let [tds (mget (md/fmuval :app :todo-db) :kids)]
+    ;; todo encapsulate
+    {:visible           (cF (if-let [tds (todo/app-todos (fasc :app))]
                               (boolean
-                                (some #(mget % :completed) tds))))
+                                (some #(mget % :completed) tds))
+                              ;; nb might still be loading initially
+                              false))
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}
@@ -65,17 +68,7 @@
                     (fn []
                       (let [app (md/fasc :app)]
                         (dp :clear-fnyi)
-                        #_
-                        (md/mswap! (md/fasc :app) :todo-db  ;; dataflow trigger
-                          (partial remove #(mget % :completed))))))}
+                        ;; todo hhack
+                        #_(md/mswap! (md/fasc :app) :todo-db ;; dataflow trigger
+                            (partial remove #(mget % :completed))))))}
       (fx/text "Clear done"))))
-
-#_ (defn items-remaining-display []
-     (fx/text! {}
-       {:name :items-left}
-       (let [tds (mget (md/fmuval :app :todo-db) :kids)
-             _ (dp :items-rem-sees-all (count tds))
-             left (remove #(mget % :completed) tds)]
-         (dp :items-rem-sees-left (count left))
-         (str (count left) (if (= 1 (count left))
-                             " item" " items")))))
