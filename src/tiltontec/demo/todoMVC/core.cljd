@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
-    [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
+    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc] :as md]
     [tiltontec.cell.integrity :as integrity]
     [tiltontec.model.base :as mdbase]
     [tiltontec.cell.observer :refer [fn-obs]]
@@ -17,6 +17,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.util.core :refer [atom?]]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
 (declare my-app-bar my-fab test-todos)
@@ -31,28 +32,39 @@
        :debugShowCheckedModeBanner false
        :debugShowMaterialGrid      false                    ;; but fun
        }
-      {:name    :app
-       :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ _]
+      {:name           :app
+       :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ tdlc]
+                                    (dp :tdl-obs-sees-new!!!!!! todos-future cty/*within-integrity*)
+                                    (dp :tdl-obs-sees-new-tdlc!!!!! (cinfo tdlc)(deref tdlc))
                                     (.then todos-future
-                                      (fn [value]
-                                        (dp :loader-nil-runs!!!!!!)
-                                        (dp :loader-then-values!!!!! value)
-                                        #_ (let [td-lst (await new)]
-                                          (dp :loader-await-gets-back!! td-lst)
-                                          (dp :loader-await-gets-back!! (minfo td-lst))
-                                          (assert td-lst "awaited nil")
-                                          (dp :checking-ref!!!!! td-lst)
-                                          (dp :checking-ref!!!!! @td-lst)
-                                          (assert (cty/md-ref? td-lst) "awaited no md")
-                                          (let [kids (mget td-lst :kids)]
-                                            (dp :and-kids!!!!! kids))
-                                          (dp :AWAIT-yeilds (minfo td-lst))
-                                          (dp :AWAIT-yeilds-kids (mapv minfo (mget td-lst :kids)))
+                                      (fn [tds]
+                                        (dp :tdl-obs-THEN-sees!!!!!!!!!!!!!!!!!!!!!!! tds cty/*within-integrity*)
+                                        (dp :tdl-obs-THEN-sees!!!!!!!!!!!!!!!!!!!!!!! tds cty/*within-integrity*)
+                                        (dp :tdl-obs-THEN-sees!!!!!!!!!!!!!!!!!!!!!!! tds cty/*within-integrity*)
+                                        (dp :tdl-obs-THEN-sees!!!!!!!!!!!!!!!!!!!!!!! tds cty/*within-integrity*)
+
+                                        ; todo can we safely kick off a change?
+                                        (binding [cty/*within-integrity* nil]
+                                          (dp :tdl-obs-tdlc-PRE-with-cc!!!!!!!!!!!! (deref tdlc))
                                           (integrity/with-cc :load-todos
-                                            (mset! me :todo-db td-lst))))))]
-                         ;; (todo/td-list-load "todo")
-                         (store/read-all-docs "todo"))
-       :todo-db (cI nil)}
+                                            ;; should this wrap just the mset!?
+                                            (dp :tdl-obs-with-cc-dispatched cty/*within-integrity* cty/*depender*)
+                                            (dp :tdl-obs-with-cc-dispatched-tdlc!!!!!!!!!!!! (deref tdlc))
+
+                                            (dp :tdl-obs-with-cc-dispatched-me @me)
+                                            (dp :tdl-obs-with-cc-dispatched-depender (deref cty/*depender*))
+                                            (dp :tdl-obs-with-cc-dispatched-depender-meta (meta cty/*depender*))
+                                            (let [tdl (todo/make-todo-list "todo-db-loaded" tds)]
+                                              (dp :mset-todo-db!!!!!! (minfo tdl))
+                                              (let [ms (mset!x me :todo-db tdl)]
+                                                (dp :mset!-says!!!!! ms))))))))]
+                         (dp :tdl-runs!!!!!!!!! (count cty/*call-stack*))
+                         (let [rad (store/read-all-docs "todo")]
+                           (dp :tdl-returns!!!!!! rad)
+                           rad))
+       :todo-db        (cI nil
+                         :obs (fn [slot me new old c]
+                                (dp :todo-db-OBS!!!!!! new (when (atom? new) @new))))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -78,7 +90,13 @@
               ;; ^^^ required sizer to join column
               (fx/list-view+separated
                 {:padding          ^:const (m.EdgeInsets/all 0.0)
-                 :itemCount        (cF (count (todo/app-todos (fasc :app))))
+                 :itemCount        (cF (dp :itemco-entry cty/*within-integrity*)
+                                     (dp :itemco-dep (cinfo cty/*depender*))
+                                     (let [app (fasc :app)]
+                                         (assert app "no appp")
+                                         (let [tds (todo/app-todos app)]
+                                           (dp :itemcount-sees-tds tds)
+                                           (count tds))))
                  :separatorBuilder (fx/->CBAsIs
                                      (fn [ctx i] (m/Divider .thickness 0.5)))
                  :itemBuilder      (cF (fx/->CBAsIs
@@ -98,7 +116,7 @@
                  :title           (fx/column
                                     {;;:height 144
                                      :crossAxisAlignment m.CrossAxisAlignment/end,}
-                                    (do ;;fx/expanded
+                                    (do                     ;;fx/expanded
                                       ;;{:flex 8}
                                       (fx/text
                                         {:style (p/TextStyle
@@ -108,17 +126,17 @@
                                                   .fontSize 64.0)}
                                         (str title "/" (rand-int 99))))
                                     ;;#_ ;; todo show about box
-                                    #_ (fx/gesture-detector
-                                      {:onTap (fx/with-ctx+as-is [me ctx]
-                                                #(do (dp :tapped!!!!!) nil))}
-                                      (fx/text
-                                        {:style (p/TextStyle
-                                                  .fontFamily "Helvetica Neue"
-                                                  .color m.Colors/black
-                                                  .backgroundColor m.Colors/cyan
-                                                  .fontWeight m.FontWeight/w100
-                                                  .fontSize 16.0)}
-                                        "?")))})))
+                                    #_(fx/gesture-detector
+                                        {:onTap (fx/with-ctx+as-is [me ctx]
+                                                  #(do (dp :tapped!!!!!) nil))}
+                                        (fx/text
+                                          {:style (p/TextStyle
+                                                    .fontFamily "Helvetica Neue"
+                                                    .color m.Colors/black
+                                                    .backgroundColor m.Colors/cyan
+                                                    .fontWeight m.FontWeight/w100
+                                                    .fontSize 16.0)}
+                                          "?")))})))
 
 (def test-todos
   ;;[]

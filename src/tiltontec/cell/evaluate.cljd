@@ -38,8 +38,18 @@
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
     (assert *depender*)
-    (assert (cty/c-ref? *depender*) (str "reco-dep sees non c-ref depender:" *depender*))
+    (assert (cty/c-ref? *depender*) (str/join " | "
+                                      ["reco-dep sees non c-ref depender: " *depender*
+                                       [:used (cinfo used)]
+                                       (when (atom? *depender*) (deref *depender*))
+                                       (when (and (atom? *depender*)
+                                               (dart/is? @*depender* #/(Future dynamic)))
+                                         [:future])]))
+
     (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
+    (dp :reco-dep-sees-dep @*depender*)
+    (when (dart/is? @*depender* #/(Future dynamic))
+      (dp :reco-dep-future!!!!!!!!! (await @*depender*)))
     (rmap-setf [:useds *depender*]
       (conj (c-useds *depender*) used))
     (caller-ensure used *depender*)))
@@ -105,13 +115,13 @@
           ;;(pcell :cnset-user c)
           (ensure-value-is-current used :nested c)
           ;; now see if it actually changed
-          ;; (println :pulse-checks (c-slot used)(c-pulse-last-changed used)(c-slot c)(c-pulse c))
+          ;; (dp :pulse-checks (c-slot used)(c-pulse-last-changed used)(c-slot c)(c-pulse c))
           (or (> (c-pulse-last-changed used) (c-pulse c))
             (recur urest)))))
     (do
       ;; we seem to need update, but check that other processing did not bring c current
       (when-not (c-current? c)
-        ;;(println :not-current-so-calc!!!!!!! (c-slot c)(c-state c)(c-valid? c))
+        ;;(dp :not-current-so-calc!!!!!!! (c-slot c)(c-state c)(c-valid? c))
         ;; happens if dependent changed and its observer read/updated me
         (calculate-and-set c :evic ensurer))
       (c-value c))
@@ -134,7 +144,7 @@
     (c-ref? c) (prog1
                  (with-integrity ()
                    (let [prior-value (c-value c)]
-                     #_(println :cget-to-evic (c-slot c) (mx-type (c-model c)))
+                     #_(dp :cget-to-evic (c-slot c) (mx-type (c-model c)))
                      #_(when (and *depender* (not= :kids (c-slot *depender*)))
                          (prn :c-get-sees-depender
                            (str "asker= "
@@ -143,7 +153,7 @@
                      (prog1
 
                        (let [ev (ensure-value-is-current c :c-read nil)]
-                         ;; (when (= (c-slot c) :title) (println :evic ev))
+                         ;; (when (= (c-slot c) :title) (dp :evic ev))
                          ev)
                        ;; this is new here, intended to awaken standalone cells JIT
                        ;; /do/ might be better inside evic, or test here
@@ -155,17 +165,18 @@
                          (c-observe c prior-value :cget)
                          (ephemeral-reset c)))))
                  (when *depender*
-                   (dp :c-get-depender!! (cinfo *depender*))
-                   (dp :c-get-depender!! (deref *depender*))
+                   (dpx :c-get-depender!! (cinfo *depender*))
+                   (dp :c-get-depender!! (meta *depender*))
                    #_(when (and *depender* (not= :kids (c-slot *depender*)))
                        (prn :c-get-records-dependency
                          :askee (c-slot c) (mx-type (c-model c))
                          (str "asker= "
                            (c-slot *depender*) "/"
                            (c-md-name *depender*))))
-                   (dpx :c-get-reco-dependency (cinfo c) @c)
-                   (record-dependency c)
-                   (dpx :c-get-reco-dependency-cool (cinfo c))))
+                   (when-not (cty/c-optimized-away? *depender*)
+                     (dp :c-get-reco-dependency (cinfo c) @c (meta c))
+                     (record-dependency c)
+                     (dp :c-get-reco-dependency-cool (cinfo c)))))
     (atom? c) @c
     :else c))
 
@@ -188,13 +199,22 @@
       (cprn :c-calc!!!!!!!!!!!!!!!! raw-value (c-optimized-away? c)
         :meta-mw (meta (c-me c)))
       (when-not (c-optimized-away? c)
-        (assert (map? @c) "calc-n-set")
+        (assert (map? (deref c)) "calc-n-set")
+
         ;; this check for optimized-away? arose because a rule using without-c-dependency
         ;; can be re-entered unnoticed since that clears *call-stack*. If re-entered, a subsequent
         ;; re-exit will be of an optimized away cell, which will have been assumed
         ;; as part of the opti-away processing.
         ;;(trx :calc-n-set->assume raw-value)
-        (c-value-assume c raw-value propagation-code)))))
+        (c-value-assume c raw-value propagation-code)
+        (when-not (or (map? (deref c))
+                    (c-optimized-away? c))
+          (dp :c-NO_LONGER-map!!!!!!!!!-meta (meta c))
+          (dp :c-NO_LONGER-map!!!!!!!!! (deref c) (when (atom? (deref c))
+                                                    (deref (deref c))))
+          (assert (or (map? (deref c))
+                    (c-optimized-away? c)) "calc-n-set deref c not map or opti"))
+        ))))
 
 (declare unlink-from-used)
 
@@ -208,35 +228,35 @@
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
   (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
-  (dpx :calc-n-link-entry (cinfo c))
-  (binding [*depender* c
-            *call-stack* (cons c *call-stack*)
-            *defer-changes* true]
-    (assert (= c (first *call-stack*)) "callstack binding FAIL!!!")
-    (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
-    (unlink-from-used c :pre-rule-clear)
-    (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
+  (wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
+    (binding [*depender* c
+              *call-stack* (cons c *call-stack*)
+              *defer-changes* true]
+      (assert (= c (first *call-stack*)) "callstack binding FAIL!!!")
+      (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
+      (unlink-from-used c :pre-rule-clear)
+      (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
 
-    (dprn nil :PRE-calculating-formula (cinfo c))
-    (let [raw-value #_((c-rule c) c)
-          (try
-            ((c-rule c) c)
-            (catch Exception e
-              (dprn :exception e)
-              (dprn :error-calculating-formula (c-code c))
-              (dprn :error-calculating-cinfo (cinfo c))
-              (dprn :error-calculating-minfo (cty/minfo (c-model c)))
-              (dprn :ex-data (ex-data e))
-              ;   (dprn :ex-message (ex-message e))
-              ;  (dprn :ex-cause (ex-cause e))
-              (dprn :rule-calc-caught e)
-              (throw e)))
-          prop-code? (and (c-synaptic? c)
-                       (vector? raw-value)
-                       (contains? (meta raw-value) :propagate))]
-      (if prop-code?
-        [(first raw-value) (:propagate (meta raw-value))]
-        [raw-value nil]))))
+      (dpx :CNL-trying-formula (cinfo c))
+      (let [raw-value #_((c-rule c) c)
+            (try
+              ((c-rule c) c)
+              (catch Exception e
+                (dprn :exception e)
+                (dprn :error-calculating-formula (c-code c))
+                (dprn :error-calculating-cinfo (cinfo c))
+                (dprn :error-calculating-minfo (cty/minfo (c-model c)))
+                (dprn :ex-data (ex-data e))
+                ;   (dprn :ex-message (ex-message e))
+                ;  (dprn :ex-cause (ex-cause e))
+                (dprn :rule-calc-caught e)
+                (throw e)))
+            prop-code? (and (c-synaptic? c)
+                         (vector? raw-value)
+                         (contains? (meta raw-value) :propagate))]
+        (if prop-code?
+          [(first raw-value) (:propagate (meta raw-value))]
+          [raw-value nil])))))
 
 ;;; --- awakening ------------------------------------
 
@@ -316,13 +336,14 @@
 
   [c new-value propagation-code]
 
-  (assert (c-ref? c))
-  ;; (println :cva-entry (c-slot c) new-value)
+  (assert (c-ref? c) (str "c-ref? fail " c))
+  ;; (dp :cva-entry (c-slot c) new-value)
   (do                                                       ;; (wtrx (0 100 :cv-ass (:slot @c) new-value)
     (prog1 new-value                                        ;; sans doubt
       (without-c-dependency
         (let [prior-value (c-value c)
-              prior-state (c-value-state c)]
+              prior-state (c-value-state c)
+              prior-c (deref c)]
 
           ;; --- cell maintenance ---
           ;; new for 4/19/2016: even if no news at
@@ -340,7 +361,7 @@
             (md-slot-value-store (c-model c) (c-slot c) new-value))
           ;;(trx :val-stored new-value)
           (c-pulse-update c :slotv-assume)
-          #_(println :maybe-propping (c-slot c) new-value
+          (dp :maybe-propping (c-slot c) new-value
               :priorstate prior-state
               :propcode propagation-code
               :changed? (c-value-changed? c new-value prior-value))
@@ -353,10 +374,12 @@
             ;;
             ;; we may be overridden by a :no-propagate below, but anyway
             ;; we now can look to see if we can be optimized away
-            ;;(trx :sth-happened)
+            (dp :maybe-propping-sth-happened)
             (let [callers (c-callers c)]                    ;; get a copy before we might optimize away
               (when-let [optimize (and (c-formula? c)
                                     (c-optimize c))]
+                (dp :VAL-ASS-sees-opti optimize (deref c) :priorc prior-c)
+
                 (if (= optimize :when-value-t)
                   (when (c-value c)
                     (trx nil :when-value-t (c-slot c))
@@ -385,7 +408,7 @@ then clear our record of them."
   (rmap-setf [:useds c] #{}))
 
 (defn md-cell-flush [c]
-  (assert (c-ref? c))
+  (assert (c-ref? c) (str "c-ref? fail on md-cell-flush" c))
   (when-let [me (c-model c)]
     (rmap-setf [:cells-flushed me]
       (conj (:cells-flushed me)
@@ -403,6 +426,9 @@ then clear our record of them."
   find a non-cell in a slot and Just Use It."
 
   [c prior-value]
+  (when (not (map? (deref c)))
+    (dp :OPTI_SEES-NOT_MAP_C (deref c)))
+
   (when (and (c-formula? c)
           (not (c-always-compute c))
           (empty? (c-useds c))
@@ -412,13 +438,14 @@ then clear our record of them."
           (not (c-synaptic? c))                             ;; no slot to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
 
-    (cty/cprn :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
+    (dp :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
 
     (rmap-setf [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss the cell below.
+    (rmap-meta-setf [:optimized-away c] (deref cty/+pulse+))
     (c-observe c prior-value :opti-away)
 
     (when-let [me (c-model c)]
-      ;; (when (= :login (:name @me))   (println :opti-away-nails-cz!!!!!!!!!! (c-slot c)))
+      ;; (when (= :login (:name @me))   (dp :opti-away-nails-cz!!!!!!!!!! (c-slot c)))
       (rmap-meta-setf [:cz me] (assoc (:cz (meta me)) (c-slot c) nil))
       (md-cell-flush c))
 
@@ -494,7 +521,7 @@ then clear our record of them."
     ;; ----------------------------------
     :else
     (do
-      ;;(println :upd-pulse-last-chg-to @+pulse+ c)
+      ;;(dp :upd-pulse-last-chg-to @+pulse+ c)
       (rmap-setf [:pulse-last-changed c] @+pulse+)
 
       (binding [*depender* nil

@@ -8,7 +8,8 @@
      :refer [pcell un-stopped +pulse+ c-pulse c-optimized-away?
              +client-q-handler+ c-stopped
              *within-integrity* *defer-changes*
-             *depender* caller-ensure]]))
+             *depender* caller-ensure]]
+    [tiltontec.cell.base :as cty]))
 
 ;; --- the pulse ------------------------------
 
@@ -29,7 +30,7 @@
 
 (defn c-pulse-update [c key]
   ;(pcell :pulse-upd c)
-  ;(println :pulse-upd-opti (c-optimized-away? c))
+  ;(dp :pulse-upd-opti (c-optimized-away? c))
   (when-not (c-optimized-away? c)
     (assert (>= @+pulse+ (c-pulse c)))
     (swap! c assoc :pulse @+pulse+)))
@@ -84,6 +85,7 @@
      (recur q opcode))))
 
 (defn finish-business []
+  (dpx :fin-biz-entry @cty/+stop+)
   (un-stopped
     (loop [tag :tell-dependents]
       (case tag
@@ -141,20 +143,22 @@
       *call-stack* '()]
      ~@body))
 
+(def wi-depth (atom 0))
+
 (defn call-with-integrity [opcode defer-info action]
   ;    (when opcode
   ;  (assert (cl-find opcode +ufb-opcodes+)
   ;          (str "Invalid opcode for with-integrity: %s. Allowed values: %s"
   ;                  opcode +ufb-opcodes+)))
   #_ (when (and  opcode *within-integrity*)
-       (println :cwi opcode *within-integrity*))
-  (when (and opcode (not (some #{opcode} [:awaken])))
+       (dp :cwi opcode *within-integrity*))
+  #_ (when (and opcode (not (some #{opcode} [:awaken])))
     (dpx :cwi-entry!!!!!!! opcode *within-integrity*))
-  (do                                                       ;; wtrx (0 100 "cwi-begin" opcode *within-integrity*)
+  (wtrx (0 100 nil "cwi-begin" opcode *within-integrity*)
     (do ;; hun-stopped
       (do
         (cond
-          (c-stopped) (println :cwi-sees-cells-stopped!!!!!!!!!!!)
+          (c-stopped) (dp :cwi-sees-cells-stopped!!!!!! @wi-depth)
 
           *within-integrity*
           (if opcode
@@ -166,7 +170,7 @@
               ;; the setf'ed value figure out what is going on:
               ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
               (when (and opcode (not (some #{opcode} [:awaken])))
-                (dpx :cwi-deferred!!!! opcode))
+                (dp :cwi-deferred!!!! opcode @wi-depth))
               (ufb-add opcode [defer-info action]))
 
             ;; thus by not supplying an opcode one can get something
@@ -178,12 +182,23 @@
             ;;
             (do
               (when (and opcode (not (some #{opcode} [:awaken])))
-                (dpx :cwi-bypassing-integrity!!! opcode defer-info))
+                (dp :cwi-bypassing-integrity!!! opcode defer-info @wi-depth))
               (action opcode defer-info)))
+
+
+          ; we are within-integrity so tdl gets deferred but then we never
+          ; run finbiz. (Try wrapping just the mset!x.)
+          ; So:
+          ; make sure we feel w/i should be true. Are callbacks seeing
+          ; an old binding? If not, fix that.
+          ;
+          ; If so, who is doing the binding and why do they miss finbiz?
+          ;
 
           :else (binding [*within-integrity* true
                           *defer-changes* false]
-                  ;(println :cwi-go-1 opcode)
+                  (swap! wi-depth inc)
+                  (dpx :cwi-go-1 opcode @wi-depth)
                   (when (or (zero? @+pulse+)
                           (= opcode :change))
                     (data-pulse-next [:cwi opcode defer-info]))
@@ -192,8 +207,11 @@
                   (prog1
                     (action opcode defer-info)
 
+                    (dpx :cwi-post-action)
                     (do ;; tufte/p :finbiz
                       (finish-business))
                     (ufb-assert-q-empty :tell-dependents)
-                    (ufb-assert-q-empty :change))))))))
+                    (ufb-assert-q-empty :change)
+                    (swap! wi-depth dec)
+                    (dpx :cwi-out!! opcode @wi-depth))))))))
 

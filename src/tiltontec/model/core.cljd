@@ -44,13 +44,15 @@
       (c-get c)
       (slot @me))))
 
-(defn md-get-ex [me slot]
+(defn mgetx [me slot]
   (assert me (str "md-get passed nil for me accessing slot: " slot))
   (dp :MGX-getting slot :from (minfo me) :me me :nil (nil? me))
   (when (atom? me)
     (dp :me-is-atom!)
     (if-let [c (md-cell me slot)]
       (do (dp :got-cell! (cinfo c))
+          (when (atom? c)
+            (dp :got-c-atom!! (deref c)))
           (c-get c))
       (slot @me))))
 
@@ -59,7 +61,7 @@
   (md-get me slot))
 
 (defn md-getx [tag me slot]
-  (md-get-ex me slot)
+  (mgetx me slot)
   #_(wtrx [0 100 (str "md-getx " tag slot (mx-type me))]
       (if-let [c (md-cell me slot)]
         (c-get c)
@@ -74,10 +76,25 @@
 ;;; --- accessors ----
 
 (defn md-reset! [me slot new-value]
-  ;; (println :md-reset slot )
+  ;; (dp :md-reset slot )
   (assert me)
   (if-let [c (md-cell me slot)]
-    (do                                                     ;; (println :gotc!)
+    (do                                                     ;; (dp :gotc!)
+      (c-reset! c new-value))
+    (do
+      (if (contains? @me slot)
+        (err str "change not mediated by cell " slot "/" (mx-type me))
+        (err str "change to slot not mediated by cell and map lacks slot "
+          slot "
+         ;; but has " (str (keys @me))
+          )))))
+
+(defn md-reset!x [me slot new-value]
+  ;; (dp :md-reset slot )
+  (assert me)
+  (if-let [c (md-cell me slot)]
+    (do
+      (dp :md-reset!x-gotc! slot (cinfo c))
       (c-reset! c new-value))
     (do
       (if (contains? @me slot)
@@ -90,6 +107,10 @@
 (defn mset! [me slot new-value]
   (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
   (md-reset! me slot new-value))
+
+(defn mset!x [me slot new-value]
+  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
+  (md-reset!x me slot new-value))
 
 (defn mswap! [me slot swap-fn & swap-fn-args]
   (mset! me slot (apply swap-fn (mget me slot) swap-fn-args)))
@@ -108,7 +129,7 @@
     (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (do
-      ;;(println :md-making (nth arg-list 1))
+      ;;(dp :md-making (nth arg-list 1))
       ;; (prn :make-entry-even (count arg-list) arg-list)
 
       (let [iargs (apply hash-map arg-list)
@@ -129,7 +150,7 @@
                         :mx-type (:mx-type iargs (cty/Model.))})]
         (assert (meta me))
         #_(when-not (:par @me)
-            (println :no-par!!!! me))
+            (dp :no-par!!!! me))
         (rmap-meta-setf
           [:cz me]
           (->> arg-list
@@ -145,7 +166,7 @@
 
         (with-integrity (:awaken me)
           (md-awaken me)
-          #_(println :md-awaken-complete))
+          #_(dp :md-awaken-complete))
         me))))
 
 ;;; --- family ------------------------------------
@@ -192,13 +213,13 @@
 (defn fm-navig-eq? [seek poss]
   (assert (or (atom? poss) (string? poss))
     (str "poss not ref " (string? poss)))
-  ;; (println :fm-navig-eq? (fn? seek) (keyword? seek))
+  ;; (dp :fm-navig-eq? (fn? seek) (keyword? seek))
   (cond
     (not (atom? poss))                                      ;; string child of html label?
-    (do (println :fm-navig-eq?bailnotref poss)
+    (do (dp :fm-navig-eq?-bail-not-ref poss)
         false)
 
-    (fn? seek) (do                                          ;; (println :trying-fn)
+    (fn? seek) (do                                          ;; (dp :trying-fn)
                  (seek poss))
     (keyword? seek) (do
                       ;; (trx :fm-navig-eq?sees seek (:name @poss) (mx-type poss))
@@ -290,10 +311,10 @@
       (and where what (atom? where))
       (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
                             } (apply hash-map options))]
-        ;;(println :fm-navig-opts options)
+        ;;(dp :fm-navig-opts options)
         (binding [*depender* (if (:wocd? options) nil *depender*)]
           (when (md-ref? where)
-            ;(println :f)
+            ;(dp :f)
             (or (when (:me? options)
                   (if (fm-navig-eq? what where)
                     where
@@ -435,7 +456,7 @@
 (defmacro the-kids [& tree]
   `(binding [*par* ~'me]
      (assert *par*)
-     ;;(println :bingo-par (atom? *par*))
+     ;;(dp :bingo-par (atom? *par*))
      (doall (remove nil? (flatten (list ~@tree))))))
 
 (defmacro cFkids [& tree]

@@ -1,7 +1,7 @@
 (ns tiltontec.util.core
   (:require [clojure.string :as str :refer [join]]
             [tiltontec.util.base :as utm
-             :refer [prog1 wtrx]]))
+             :refer [prog1 wtrx dp]]))
 
 (def ^:dynamic *bam* nil)
 
@@ -46,8 +46,8 @@
       "new-value:" new-value
       "failed assertion atom? on ref:" (deref ref)))
   (assert (map? @ref)
-    (str "model.util.core/rmap-setf> slot:" slot
-      "new-value:" new-value
+    (str "model.util.core/rmap-setf> slot " slot
+      "new-value " new-value
       "failed assertion map? on ref:" (deref ref)))
   (swap! ref assoc slot new-value)
   new-value)
@@ -117,7 +117,7 @@
 
 (defn pln [& args]
   (do ;; locking *out*
-    (println (join " " args))))
+    (dp (join " " args))))
 
 (defn xpln [& args])
 
@@ -129,10 +129,10 @@
 
 (defn plnk [k & r]
   (if (string? (first r))
-    (println (pr-str r))
+    (dp (pr-str r))
     (when (or (= k :force)
             (some #{k} [*plnk-keys*]))                        ;; [:qxme :addk])
-      (println (pr-str r)))))
+      (dp (pr-str r)))))
 
 (defn now []
   (.now dart:core/DateTime))

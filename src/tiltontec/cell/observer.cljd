@@ -54,7 +54,7 @@ call parameters: slot, me, new, old, and c."
    (c-observe c unbound why))
 
   ([c prior-value why]
-   (assert (c-ref? c))
+   (assert (c-ref? c) (str "c-ref? fail on c-observe" c))
    (assert (dart/is? @+pulse+ int))
    (dpx :c-observe!!!! (cinfo c))
    (rmap-setf [:pulse-observed c] @+pulse+)
