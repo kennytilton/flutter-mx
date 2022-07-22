@@ -222,8 +222,7 @@ in the CL version of Cells SETF itself is the change API dunction."
   (cond
     *defer-changes*
     (do (dp :c-reset-rejecting-undeferred! (c-slot c))
-        #_(throw (#?(:clj Exception. :cljs js/Error.)
-                   (cl-format t "c-reset!> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
+        (throw (Exception. (str "c-reset!> change  must be deferred by wrapping it in WITH-INTEGRITY"
                      (c-slot c)))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])

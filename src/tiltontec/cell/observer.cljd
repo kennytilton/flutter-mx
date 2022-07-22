@@ -10,7 +10,7 @@
      :as ut]
 
     [tiltontec.cell.base
-     :refer [c-ref? md-ref? unbound cinfo
+     :refer [c-ref? md-ref? unbound cinfo minfo
              +pulse+ c-slot c-value c-md-name
              c-model] :as cty]
 
@@ -29,12 +29,12 @@
   (get @+observe-method+ key))
 
 (defn observe [slot-name me new-val old-val c]
-  (dpx :obs-classic slot-name (cty/minfo me) new-val)
+  (dpx :obs-classic slot-name (minfo me) new-val)
   ;; todo if no state next, search up for nearest and set-State that
 
   (when-let [obs (:fx$observer @me)]
     ;; note that we carry on with generic observe after specific observe
-    (do (dpx :using-obj-observer (cty/minfo me))
+    (do (dpx :using-obj-observer (minfo me))
         (obs slot-name me new-val old-val c)))
 
   (when-let [obs (observer-get (type-cljd me))]

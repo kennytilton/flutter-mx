@@ -58,8 +58,6 @@
    (2) call observers of all slots"
   [me]
   (assert me "md-awaken is nil")
-  ;(dprn :md-awaken!!!!!!!! (cty/minfo me))
-  ;(dprn :md-awaken-deref!! (deref me))
   (prn :md-awaken-me!! me)
   (prn :md-awaken-meta!! (meta me))
   (prn :md-awaken-deref!! (deref me))
@@ -77,7 +75,6 @@
           (= c :not-found)
           ;; these need at least an initial observe
           (when (not (some #{slot} [:par :name :fx-gen :not-to-be]))
-            ;; (dp :md-awaken-blind-obs slot (cty/minfo me))
             (observe (mx-type me) slot me (slot @me) unbound nil))
           :else (c-awaken c)))))
   (rmap-meta-setf [:state me] :awake)

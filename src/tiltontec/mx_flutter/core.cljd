@@ -93,7 +93,7 @@
   (.pop (-> ctx m.Navigator/of)))
 
 (defn fx-render [ctx fx]
-  (dpx :render-entry ctx (cty/minfo fx))
+  (dpx :render-entry ctx (minfo fx))
   (cond
     (not (md-ref? fx))
     (cond
@@ -117,11 +117,12 @@
 (defn fx-state-nearest [me]
   (dpx :state-nearest-entry (minfo me))
   (when me
-    (when-let [st (or ^State? (mget me :fx$state)
-                    (fx-state-nearest (md/mpar)))]
-      (dpx :got-st st (minfo me))
-      (md/mset! me :fx$state st)                            ;; for next time
-      st)))
+    (or ^State? (mget me :fx$state)
+      (when-let [st (fx-state-nearest (md/mpar))]
+        (dp :got-nearest-st-JIT st (minfo me))
+        ;; todo memoize instead
+        ;; (md/mset! me :fx$state st)                            ;; for next time
+        st))))
 
 (defmacro when-my-state [[state-var] & body]
   `(when-let [~state-var (tiltontec.mx-flutter.core/my-state)]
@@ -151,7 +152,10 @@
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
                 (concat (keys fx-props) (keys custom-props)))
     :initState (fn [this me]                                ;; this one too
-                 (md/mset! me :fx$state this))
+                 #_ (do
+                      (dp :initstate-cb!!!!!!!!!-saves-state)
+                      (md/mset! me :fx$state this)
+                      (dp :initstate-cb!!!!!!!!!-fini)))
     :kids cFkids-form
     (concat
       (vec (apply concat (seq fx-props)))
@@ -173,14 +177,13 @@
   :extends Model
   PObserver
   (observe [this slot me new-value prior-value cell]
-    ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
     (when-not (some #{slot} [:par :name :mx-type :not-to-be :initState :fx-class :cells-flushed
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
-        (dpx :FXDartWidget-observing!!! slot new-value prior-value (cty/minfo me) (cty/cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! slot (cty/minfo me) :deref @me)
-        (dpx :FXDartWidget-observing-cell!!! slot (cty/cinfo cell) @cell)
+        (dpx :FXDartWidget-observing!!! slot new-value prior-value (minfo me) (cinfo cell))
+        (dpx :FXDartWidget-observing-md!!! slot (minfo me) :deref @me)
+        (dpx :FXDartWidget-observing-cell!!! slot (cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
@@ -359,6 +362,11 @@
 
 (deftag tiltontec.mx-flutter.core/k1-param1-stateless text m/Text)
 
+(defn record-state! [me state]
+  (dp :reco-state!! (minfo me) cty/*defer-changes* cty/*within-integrity*)
+  (prn :reco-state!! (minfo me) cty/*defer-changes* cty/*within-integrity*)
+  (md/mset!x me :fx$state state))
+
 (defmacro k1-param1-stateful [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
@@ -373,8 +381,11 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
-                           (when-let [init (mget me :initState)]
+                           (record-state! me this)
+
+                           #_ ;; HHACK
+                                   (when-let [init (mget me :initState)]
+                             (dp :calling-initstate-of (minfo me))
                              (init this me)))
                          (~'build [_# ctx]
                            (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
@@ -399,7 +410,8 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (dp :REIFY-set!fxstate (minfo me))
+                           (record-state! me this)
                            #_(when-let [init (mget me :initState)]
                                (init this me)))
                          (~'build [_# ctx]
@@ -428,7 +440,8 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (dp :REIFY-set!fxstate (minfo me))
+                           (record-state! me this)
                            (when-let [init (mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
@@ -457,7 +470,8 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (dp :REIFY-set!fxstate (minfo me))
+                           (record-state! me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
@@ -491,7 +505,8 @@
                        (reify :extends #/(w/State #_~'~fx-class m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (dp :REIFY-set!fxstate (minfo me))
+                           (record-state! me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
@@ -521,7 +536,8 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (dp :REIFY-set!fxstate (minfo me))
+                           (record-state! me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
@@ -552,7 +568,8 @@
                          ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (dp :REIFY-set!fxstate (minfo me))
+                           (record-state! me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
@@ -648,7 +665,7 @@
                          ^:mixin m/SingleTickerProviderStateMixin
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (md/mset! me :fx$state this)
+                           (record-state! me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))

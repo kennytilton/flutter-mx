@@ -8,7 +8,7 @@
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? mx-type cprn c-always-compute
              c-model mdead? c-valid? c-useds c-ref? md-ref?
-             c-state +pulse+ c-pulse-observed cinfo
+             c-state +pulse+ c-pulse-observed cinfo minfo
              *call-stack* *defer-changes*
              c-rule c-code c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
@@ -47,9 +47,9 @@
                                          [:future])]))
 
     (trx nil :reco-dep!!! :used (c-slot used) :caller (c-slot *depender*))
-    (dp :reco-dep-sees-dep @*depender*)
+    (dpx :reco-dep-sees-dep @*depender*)
     (when (dart/is? @*depender* #/(Future dynamic))
-      (dp :reco-dep-future!!!!!!!!! (await @*depender*)))
+      (dpx :reco-dep-future!!!!!!!!! (await @*depender*)))
     (rmap-setf [:useds *depender*]
       (conj (c-useds *depender*) used))
     (caller-ensure used *depender*)))
@@ -166,7 +166,7 @@
                          (ephemeral-reset c)))))
                  (when *depender*
                    (dpx :c-get-depender!! (cinfo *depender*))
-                   (dp :c-get-depender!! (meta *depender*))
+                   (dpx :c-get-depender!! (meta *depender*))
                    #_(when (and *depender* (not= :kids (c-slot *depender*)))
                        (prn :c-get-records-dependency
                          :askee (c-slot c) (mx-type (c-model c))
@@ -174,9 +174,9 @@
                            (c-slot *depender*) "/"
                            (c-md-name *depender*))))
                    (when-not (cty/c-optimized-away? *depender*)
-                     (dp :c-get-reco-dependency (cinfo c) @c (meta c))
+                     (dpx :c-get-reco-dependency (cinfo c) @c (meta c))
                      (record-dependency c)
-                     (dp :c-get-reco-dependency-cool (cinfo c)))))
+                     (dpx :c-get-reco-dependency-cool (cinfo c)))))
     (atom? c) @c
     :else c))
 
@@ -245,7 +245,7 @@
                 (dprn :exception e)
                 (dprn :error-calculating-formula (c-code c))
                 (dprn :error-calculating-cinfo (cinfo c))
-                (dprn :error-calculating-minfo (cty/minfo (c-model c)))
+                (dprn :error-calculating-minfo (minfo (c-model c)))
                 (dprn :ex-data (ex-data e))
                 ;   (dprn :ex-message (ex-message e))
                 ;  (dprn :ex-cause (ex-cause e))
@@ -259,19 +259,6 @@
           [raw-value nil])))))
 
 ;;; --- awakening ------------------------------------
-
-#_(try
-    ((c-rule c) c)
-    (catch Exception e
-      (dprn :exception e)
-      (dprn :error-calculating-formula (c-code c))
-      (dprn :error-calculating-cinfo (cinfo c))
-      (dprn :error-calculating-minfo (cty/minfo (c-model c)))
-      (dprn :ex-data (ex-data e))
-      ;   (dprn :ex-message (ex-message e))
-      ;  (dprn :ex-cause (ex-cause e))
-      (dprn :rule-calc-caught e)
-      (throw e)))
 
 (defn c-awaken [c]
   (try
@@ -308,7 +295,7 @@
 
       (dprn :error-calculating-formula (c-code c))
 
-      (dprn :error-calculating-minfo (cty/minfo (c-model c)))
+      (dprn :error-calculating-minfo (minfo (c-model c)))
       (dprn :ex-data (ex-data e))
       (throw e))))
 
@@ -361,7 +348,7 @@
             (md-slot-value-store (c-model c) (c-slot c) new-value))
           ;;(trx :val-stored new-value)
           (c-pulse-update c :slotv-assume)
-          (dp :maybe-propping (c-slot c) new-value
+          (dpx :maybe-propping (c-slot c) new-value
               :priorstate prior-state
               :propcode propagation-code
               :changed? (c-value-changed? c new-value prior-value))
@@ -374,11 +361,11 @@
             ;;
             ;; we may be overridden by a :no-propagate below, but anyway
             ;; we now can look to see if we can be optimized away
-            (dp :maybe-propping-sth-happened)
+            (dpx :maybe-propping-sth-happened)
             (let [callers (c-callers c)]                    ;; get a copy before we might optimize away
               (when-let [optimize (and (c-formula? c)
                                     (c-optimize c))]
-                (dp :VAL-ASS-sees-opti optimize (deref c) :priorc prior-c)
+                (dpx :VAL-ASS-sees-opti optimize (deref c) :priorc prior-c)
 
                 (if (= optimize :when-value-t)
                   (when (c-value c)
@@ -438,7 +425,7 @@ then clear our record of them."
           (not (c-synaptic? c))                             ;; no slot to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
 
-    (dp :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
+    (dpx :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
 
     (rmap-setf [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss the cell below.
     (rmap-meta-setf [:optimized-away c] (deref cty/+pulse+))

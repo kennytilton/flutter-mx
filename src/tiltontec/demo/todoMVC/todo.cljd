@@ -22,7 +22,6 @@
   :extends cty/Model
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
-    ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
     (dp :ToDoList-obs!! slot :new-val-> new-value)
     ))
@@ -34,7 +33,7 @@
    (md/make
      :mx-type (ToDoList.)
      :name name
-     :kids (cFn (dp :maketdl-kids-rule-sees!!!!!!! (count existing-todos) (minfo me))
+     :kids (cFn (dp :maketdl-kids-rule-sees!!! (count existing-todos) (minfo me))
              (mapv (fn [xtd]
                      (dp :make-td!!!!!!! xtd)
                      (let [{:keys [title completed ls-sid sid]} xtd]
@@ -47,7 +46,7 @@
   (assert app "at no app")
   (assert (cty/md-ref? app))
   (when-let [td-lst (tiltontec.model.core/mget app :todo-db)]
-    (dp :app-todos-sees (minfo td-lst))
+    (dpx :app-todos-sees-tdlst!!!!!!!!!!!!!!! (minfo td-lst))
     (assert (cty/md-ref? td-lst))
     (tiltontec.model.core/mget td-lst :kids)))
 
@@ -57,7 +56,6 @@
   :extends cty/Model
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
-    ;; (dprn :FXDartWidget-observing???  slot (:fx-prop-keys @me) new-value prior-value (cty/minfo me)(cty/cinfo cell))
     ;; no need to observer initial value observation, when prior is unbound
     (dp :REAL-todo-obs!!!!!!!! slot :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
     (when (= slot :sid)                                     ;; arbitrary choice
