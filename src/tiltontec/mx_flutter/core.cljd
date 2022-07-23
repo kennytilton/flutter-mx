@@ -119,8 +119,9 @@
   (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))
   (when me
     (or ^State? (mget me :fx$state)
+      ;; todo without dependency? Complete rethink?
       (when-let [st (fx-state-nearest (md/mpar))]
-        (dp :got-nearest-st-JIT st (tiltontec.cell.base/minfo me))
+        (dpx :got-nearest-st-JIT st (tiltontec.cell.base/minfo me))
         ;; todo memoize instead
         ;; (md/mset! me :fx$state st)                            ;; for next time
         st))))
