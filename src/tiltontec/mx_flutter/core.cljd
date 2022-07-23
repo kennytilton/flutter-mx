@@ -10,7 +10,7 @@
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.util.core
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.cell.base :refer [mx-type unbound minfo cinfo Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.base :refer [mx-type unbound  cinfo Model PObserver observe md-ref?] :as cty]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
@@ -31,21 +31,21 @@
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
   ([slot me ctx widget-value]
-   ;(dp :resolving slot (minfo me) widget-value)
+   ;(dp :resolving slot (tiltontec.cell.base/minfo me) widget-value)
    (cond
      (nil? widget-value)
      (do
-       ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (minfo me))
+       ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (tiltontec.cell.base/minfo me))
        nil)
 
      (dart/is? widget-value CBAsIs)
      (do
-       (dpx :fx-resolve-as-ising!!!!!!!!! slot (minfo me) widget-value)
+       (dpx :fx-resolve-as-ising!!!!!!!!! slot (tiltontec.cell.base/minfo me) widget-value)
        (.-value ^CBAsIs widget-value))
 
      (dart/is? widget-value CBToResolve)
      (let [val ^CBToResolve widget-value]
-       (dpx :fx-reso-calling-back!!!!!!! slot (minfo me) widget-value)
+       (dpx :fx-reso-calling-back!!!!!!! slot (tiltontec.cell.base/minfo me) widget-value)
        (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
          (dpx :CBToResolveyields cb-val)
          (recur slot me ctx cb-val)))
@@ -66,7 +66,7 @@
      (throw (Exception. (str "fx-resolve sees Cell! " (cinfo widget-value))))
 
      (cty/md-ref? widget-value)
-     (do                                                    ;;(dp :rfxing-md (minfo widget-value))
+     (do
        (let [fx (fx-render ctx widget-value)]
          (dpx :rfx-mdref-yielded-flutter fx)
          fx))
@@ -77,7 +77,7 @@
            (dpx :vec-rez rzd)
            rzd))
 
-     :default (do #_(dp :resolve-fall-thru-used slot (minfo me) widget-value
+     :default (do #_(dp :resolve-fall-thru-used slot (tiltontec.cell.base/minfo me) widget-value
                       (when (atom? widget-value)
                         (deref widget-value)))
                 widget-value))))
@@ -93,7 +93,7 @@
   (.pop (-> ctx m.Navigator/of)))
 
 (defn fx-render [ctx fx]
-  (dpx :render-entry ctx (minfo fx))
+  (dpx :render-entry ctx (tiltontec.cell.base/minfo fx))
   (cond
     (not (md-ref? fx))
     (cond
@@ -115,11 +115,11 @@
        ~@body)))
 
 (defn fx-state-nearest [me]
-  (dpx :state-nearest-entry (minfo me))
+  (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))
   (when me
     (or ^State? (mget me :fx$state)
       (when-let [st (fx-state-nearest (md/mpar))]
-        (dp :got-nearest-st-JIT st (minfo me))
+        (dp :got-nearest-st-JIT st (tiltontec.cell.base/minfo me))
         ;; todo memoize instead
         ;; (md/mset! me :fx$state st)                            ;; for next time
         st))))
@@ -181,21 +181,21 @@
     (when-not (some #{slot} [:par :name :mx-type :not-to-be :initState :fx-class :cells-flushed
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
-        (dpx :FXDartWidget-observing!!! slot new-value prior-value (minfo me) (cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! slot (minfo me) :deref @me)
+        (dpx :FXDartWidget-observing!!! slot new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
+        (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) :deref @me)
         (dpx :FXDartWidget-observing-cell!!! slot (cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (minfo me) state (.-mounted state))
+          (do (dpx :settingimmediatestate slot new-value #_(meta me) (md/mget me :sid) (tiltontec.cell.base/minfo me) state (.-mounted state))
               (state-set state))
           (if-let [^State state (fx-state-nearest me)]
             (do
               (dpx :obs-FXD-uses-nearest-state state (.-mounted state) :sid (md/mget me :sid)
                 :slot slot :new-prio new-value prior-value)
               (state-set state))
-            (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (minfo me))))))))
+            (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (tiltontec.cell.base/minfo me))))))))
 
 ;;; ---- sundry factories per Flutter variation ------------------
 
@@ -363,8 +363,8 @@
 (deftag tiltontec.mx-flutter.core/k1-param1-stateless text m/Text)
 
 (defn record-state! [me state]
-  (dp :reco-state!! (minfo me) cty/*defer-changes* cty/*within-integrity*)
-  (prn :reco-state!! (minfo me) cty/*defer-changes* cty/*within-integrity*)
+  (dp :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
+  (prn :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
   (md/mset!x me :fx$state state))
 
 (defmacro k1-param1-stateful [fx-class fx-props mx-props & children]
@@ -385,7 +385,7 @@
 
                            #_ ;; HHACK
                                    (when-let [init (mget me :initState)]
-                             (dp :calling-initstate-of (minfo me))
+                             (dp :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
                            (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
