@@ -27,11 +27,12 @@
                                  {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
                     :onChanged (cF (fx/->CBAsIs
                                      (fn [value]
+                                       (dp :mset!-todo-sees :defer? cty/*defer-changes* :integ? cty/*within-integrity*)
                                        (md/mset! todo :completed value))))})
        :trailing (fx/text-button                            ;; our "delete" icon on each to-do
                    {:onPressed (fx/with-ctx+as-is [me ctx]
                                  (fn []
-                                   ;; todo hhack
+                                   ;; todo NEXT hhack
                                    #_
                                    (md/mswap! (md/fasc :app) :todo-db
                                      (partial remove (fn [td]

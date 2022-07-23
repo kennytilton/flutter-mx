@@ -33,10 +33,11 @@
                                    (fx/->CBAsIs
                                      (fn [value]
 
-                                       (binding [cty/*within-integrity* nil
-                                                 cty/*depender* nil
-                                                 cty/*defer-changes* false
-                                                 cty/*call-stack* nil]
+                                       ;(binding [cty/*within-integrity* nil
+                                       ;          cty/*depender* nil
+                                       ;          cty/*defer-changes* false
+                                       ;          cty/*call-stack* nil]
+                                       (cty/with-fx-isolation
                                          (dp :onsub-running!!!????? value)
                                          (let [trimmed (str/trim value)]
                                          (if (str/blank? trimmed)
@@ -90,7 +91,7 @@
 (defn todo-toggle-all []
   (fx/visibility!
     {:visible               (cF (let [tds (todo/app-todos (fasc :app))]
-                                  (dp :toggall-sees-tds!!!!! tds)
+                                  (dpx :toggall-sees-tds!!!!! tds)
                                   (boolean (seq tds))))
      :maintainSize          true
      :maintainSemantics     false

@@ -363,8 +363,8 @@
 
 (deftag tiltontec.mx-flutter.core/k1-param1-stateless text m/Text)
 
-(defn record-state! [me state]
-  (dp :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
+(defn record-fx$state [me state]
+  (dpx :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
   (integrity/with-cc :reco-state
     (md/mset!x me :fx$state state)))
 
@@ -382,7 +382,7 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (record-state! me this)
+                           (record-fx$state me this)
 
                            #_ ;; HHACK
                                    (when-let [init (mget me :initState)]
@@ -411,7 +411,7 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (record-state! me this)
+                           (record-fx$state me this)
                            #_(when-let [init (mget me :initState)]
                                (init this me)))
                          (~'build [_# ctx]
@@ -440,8 +440,7 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (dp :REIFY-set!fxstate (tiltontec.cell.base/minfo me))
-                           (record-state! me this)
+                           (record-fx$state me this)
                            (when-let [init (mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
@@ -470,8 +469,7 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (dp :REIFY-set!fxstate (tiltontec.cell.base/minfo me))
-                           (record-state! me this)
+                           (record-fx$state me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
@@ -505,8 +503,7 @@
                        (reify :extends #/(w/State #_~'~fx-class m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (dp :REIFY-set!fxstate (tiltontec.cell.base/minfo me))
-                           (record-state! me this)
+                           (record-fx$state me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
@@ -536,8 +533,7 @@
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (dp :REIFY-set!fxstate (tiltontec.cell.base/minfo me))
-                           (record-state! me this)
+                           (record-fx$state me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
@@ -568,8 +564,7 @@
                          ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (dp :REIFY-set!fxstate (tiltontec.cell.base/minfo me))
-                           (record-state! me this)
+                           (record-fx$state me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
@@ -665,7 +660,7 @@
                          ^:mixin m/SingleTickerProviderStateMixin
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
-                           (record-state! me this)
+                           (record-fx$state me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))

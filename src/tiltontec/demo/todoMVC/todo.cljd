@@ -46,7 +46,6 @@
   (assert app "at no app")
   (assert (cty/md-ref? app))
   (when-let [td-lst (tiltontec.model.core/mget app :todo-db)]
-    (dpx :app-todos-sees-tdlst!!!!!!!!!!!!!!! (minfo td-lst))
     (assert (cty/md-ref? td-lst))
     (tiltontec.model.core/mget td-lst :kids)))
 
@@ -86,10 +85,9 @@
 
 (defn td-upsert [td]
   (dp :td-upserting!!!! @td)
-
   (assert (mget td :par))
   (let [coll-name (mget (mget td :par) :name)]
-    (dp :upserting-into!!!! coll-name @td)
+    (dp :upserting-into!!!!-coll coll-name)
     (.ensureInitialized w/WidgetsFlutterBinding)
     (if (mget td :ls-sid)
       (dp :not-yet-UPDATING-lsid!!! @td)

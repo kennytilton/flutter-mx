@@ -1,6 +1,6 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
-    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc] :as md]
+    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar] :as md]
     [tiltontec.cell.integrity :as integrity]
     [tiltontec.model.base :as mdbase]
     [tiltontec.cell.observer :refer [fn-obs]]
@@ -34,33 +34,14 @@
        }
       {:name           :app
        :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ tdlc]
-                                    (dp :tdl-obs-sees-new-future!!!!!! todos-future (minfo me)
-                                      cty/*within-integrity* cty/*defer-changes*)
                                     (.then todos-future
                                       (fn [tds]
-                                        (dp :tdl-obs-THEN-sees tds cty/*within-integrity*)
-                                        (dp :tdl-obs-THEN-sees-defer cty/*defer-changes*)
-                                        (dp :tdl-obs-THEN-sees-stack cty/*call-stack*)
-                                        (dp :tdl-obs-THEN-sees-depender cty/*depender*)
-                                        ; todo can we safely kick off a change?
-                                        (binding [cty/*within-integrity* nil
-                                                  cty/*depender* nil
-                                                  cty/*defer-changes* false
-                                                  cty/*call-stack* nil]
-                                          (dp :tdl-obs-tdlc-PRE-with-cc!!!!!!!!!!!! cty/*within-integrity*
-                                            cty/*defer-changes*)
-                                          (do ;; integrity/with-cc :load-todos
-                                            ;; should this wrap just the mset!?
-                                            (dp :tdl-obs-with-cc-dispatched cty/*within-integrity* cty/*depender*)
-
-                                            (dp :tdl-obs-with-cc-dispatched-me (when (atom? me) @me))
-                                            (dp :tdl-obs-with-cc-dispatched-depender
-                                              (when (atom? cty/*depender*) (deref cty/*depender*)))
-                                            (dp :tdl-obs-with-cc-dispatched-depender-meta (meta cty/*depender*))
+                                        (cty/with-fx-isolation
                                             (let [tdl (todo/make-todo-list "todo-db-loaded" tds)]
-                                              (dp :mset-todo-db!!!!!! (minfo tdl) cty/*within-integrity* cty/*depender*)
-                                              (let [ms (mset!x me :todo-db tdl)]
-                                                (dp :mset!-tododb-returned!!! (minfo tdl)))))))))]
+                                              (dp :tdl-got-tdl (minfo tdl))
+                                              (mset!x me :todo-db tdl)
+                                              (dp :mset!-tododb-returned!!! (minfo tdl)
+                                                :todo-ct (count (mkids tdl))))))))]
                          (dp :tdl-runs!!!!!!!!! (count cty/*call-stack*))
                          (let [rad (store/read-all-docs "todo")]
                            (dp :tdl-returns-future!!!!!! rad)
