@@ -34,7 +34,7 @@
        }
       {:name           :app
        :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ tdlc]
-                                    (dp :tdl-obs-sees-new-future!!!!!! todos-future
+                                    (dp :tdl-obs-sees-new-future!!!!!! todos-future (minfo me)
                                       cty/*within-integrity* cty/*defer-changes*)
                                     (.then todos-future
                                       (fn [tds]
@@ -60,7 +60,7 @@
                                             (let [tdl (todo/make-todo-list "todo-db-loaded" tds)]
                                               (dp :mset-todo-db!!!!!! (minfo tdl) cty/*within-integrity* cty/*depender*)
                                               (let [ms (mset!x me :todo-db tdl)]
-                                                (dp :mset!-tododb-returned!!! (qminfo tdl)))))))))]
+                                                (dp :mset!-tododb-returned!!! (minfo tdl)))))))))]
                          (dp :tdl-runs!!!!!!!!! (count cty/*call-stack*))
                          (let [rad (store/read-all-docs "todo")]
                            (dp :tdl-returns-future!!!!!! rad)
