@@ -11,6 +11,7 @@
             [tiltontec.util.core
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
             [tiltontec.cell.base :refer [mx-type unbound  cinfo Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.integrity :as integrity]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
@@ -364,8 +365,8 @@
 
 (defn record-state! [me state]
   (dp :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
-  (prn :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
-  (md/mset!x me :fx$state state))
+  (integrity/with-cc :reco-state
+    (md/mset!x me :fx$state state)))
 
 (defmacro k1-param1-stateful [fx-class fx-props mx-props & children]
   (let []
