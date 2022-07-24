@@ -35,9 +35,8 @@
       {:name           :app
        :todo-db        (cI nil)
        :todo-db-loader (cF+ [:obs (fn [_ me td-lst-future _ tdlc]
-                                    (.then td-lst-future
+                                    (.then ^#/(Future dynamic) td-lst-future
                                       (fn [tdl]
-                                        (dp :tdloader-then-gets-tdl (minfo tdl))
                                         (cty/with-fx-isolation
                                           (mset! me :todo-db tdl)))))]
                          ;; next returns an MX proxy of a to-do family, as a future

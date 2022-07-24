@@ -31,28 +31,27 @@
     {:name      :completions
      :selection (cI :all)}
     (fx/text "RSN")
-    #_
-    (let [selector me
-          choice (fn [completion-enum option$]
-                   (fx/ink-well
-                     {:onTap (fx/with-ctx+as-is [me ctx]
-                               #(mset! (md/fasc :completions) ;; dataflow trigger
-                                  :selection completion-enum))}
-                     (fx/container
-                       {:decoration (cF (when (mgetx me :selected?) ;; dependency
-                                          (m/BoxDecoration
-                                            .border (.all m/Border .color (todo/title-red) .width 0.5)
-                                            .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
-                       {:completion-enum completion-enum
-                        :selected?       (cF (= completion-enum ;; dependency
-                                               (mgetx selector :selection)))}
-                       (fx/padding
-                         {:padding ^:const (m.EdgeInsets/all 3.0)}
-                         (m/Text option$)))))]
-      (list
-        (choice :all "All")
-        (choice :active "Active")
-        (choice :done "Done")))))
+    #_(let [selector me
+            choice (fn [completion-enum option$]
+                     (fx/ink-well
+                       {:onTap (fx/with-ctx+as-is [me ctx]
+                                 #(mset! (md/fasc :completions) ;; dataflow trigger
+                                    :selection completion-enum))}
+                       (fx/container
+                         {:decoration (cF (when (mgetx me :selected?) ;; dependency
+                                            (m/BoxDecoration
+                                              .border (.all m/Border .color (todo/title-red) .width 0.5)
+                                              .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
+                         {:completion-enum completion-enum
+                          :selected?       (cF (= completion-enum ;; dependency
+                                                 (mgetx selector :selection)))}
+                         (fx/padding
+                           {:padding ^:const (m.EdgeInsets/all 3.0)}
+                           (m/Text option$)))))]
+        (list
+          (choice :all "All")
+          (choice :active "Active")
+          (choice :done "Done")))))
 
 (defn clear-completed-button []
   (fx/visibility!
@@ -69,9 +68,8 @@
     (fx/text-button
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
-                      (let [app (md/fasc :app)]
-                        (dp :clear-fnyi)
-                        ;; todo hhack
-                        #_(md/mswap! (md/fasc :app) :todo-db ;; dataflow trigger
-                            (partial remove #(mget % :completed))))))}
+                      (cty/with-fx-isolation
+                        (let [app (md/fasc :app)]
+                          (md/mswap! (mget (md/fasc :app) :todo-db) :kids
+                            (partial remove #(mget % :completed)))))))}
       (fx/text "Clear done"))))
