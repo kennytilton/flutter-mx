@@ -35,10 +35,9 @@
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         docs (do (into {} (await (.get coll))))]
-    ;; todo just take the keys of (await (.get coll))
     (dp :delete-all-COMPLETES-getting docs)
-    ;; todo maybe kick all these off and then await all?
-    (doseq [k (keys docs)
+    (await
+      (doseq [k (keys docs)
             :let [working-id (last (str/split k #"/"))]]
       ;; full key is /coll-name/id-to-use-to-get-a-doc
       (dp :kick-off-one-del working-id)
@@ -46,6 +45,6 @@
                               (.collection coll-name)
                               (.doc working-id)
                               .delete))]
-        (dp :deletion-COMPLETE-is deletion working-id)))
-    (dp :delete-all-COMPLETES-of docs)))
+        (dp :del-TD-COMPLETE-is deletion working-id))))
+    (dp :delete-all-EXIT)))
 

@@ -354,15 +354,19 @@
   ;;(read-one "todos" "3kpfwt4pp")
   ;(hack-one "todos" "3kpfwt4pp")
   (let [dall (await (store/delete-all-docs "todo"))]
-    (dp :dall!!!!! dall))
-  (dp :---POSTDELETEALL------------------------------------)
+    (dp :dall!!!!! dall)
+    (dp :---POSTDELETEALL------------------------------------)
 
-  (coll-dump :pre-test "todo")
+    (await (coll-dump :pre-test "todo"))
 
-  (dp :---------------------------------------)
-  (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false})
+    (dp :---------------------------------------)
+    (let [new-ls-id (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false})]
+      (dp :new-ls!!! new-ls-id)
+      (coll-dump :post-td-initialize-test "todo")
 
-  (coll-dump :post-td-initialize-test "todo")
+      (todo/td-rewrite "todo" {:ls-id new-ls-id :sid 43 :title "Wash Car" :completed true})
+      (coll-dump :post-rewrite "todo")
+      ))
 
   #_(let [tdl (todo/td-list-load "todo")]
       (dp :TEST-tdlistload-returns tdl (minfo tdl)))

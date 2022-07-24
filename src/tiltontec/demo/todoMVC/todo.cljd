@@ -61,6 +61,37 @@
       (.set (walk/stringify-keys new-data)))
     new-id))
 
+(defn td-rewrite [collection-name td-map]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db collection-name)
+        ls-id (:ls-id td-map)]
+    (assert ls-id "td-rewrite map must include ls-id")
+    (await (-> coll
+             (.doc ls-id)
+             (.set (walk/stringify-keys td-map))))
+    (dp :td-rewrite-COMPLETE ls-id)
+    ls-id))
+
+#_
+(defn td-upsert [td]
+  (assert (cty/md-ref? td))
+  (dpx :td-upserting!!!! (td-ls-id td) @td)
+  (assert (mget td :par))
+  (let [coll-name (mget (mget td :par) :name)]
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    (if (td-ls-id td)                                       ;; (mget td :ls-id)
+      (dp :td-upsert-FNY-not-yet-UPDATING-lsid!!! @td)
+      (let [db (.-instance ls/Localstore)
+            coll (.collection db coll-name)
+            new-id (.-id (.doc coll))
+            new-data (assoc (select-keys @td [:title :completed :sid])
+                       :ls-id new-id)]
+        (dp :td-upsert-making-new!!-NOT new-id new-data)
+        (-> coll
+          (.doc new-id)
+          (.set (walk/stringify-keys new-data)))))))
+
 (deftype ToDo []
   :extends cty/Model
   cty/PObserver
