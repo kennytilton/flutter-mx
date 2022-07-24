@@ -33,22 +33,15 @@
        :debugShowMaterialGrid      false                    ;; but fun
        }
       {:name           :app
-       :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ tdlc]
-                                    (.then todos-future
+       :todo-db        (cI nil)
+       :todo-db-loader (cF+ [:obs (fn [_ me td-lst-future _ tdlc]
+                                    (.then td-lst-future
                                       (fn [tdl]
                                         (dp :tdloader-then-gets-tdl (minfo tdl))
                                         (cty/with-fx-isolation
                                           (mset! me :todo-db tdl)))))]
-                         (dp :tdl-runs!!!!!!!!! (count cty/*call-stack*))
-                         (let [rad (todo/td-list-load "todo")]
-                           (dp :tdl-returns-rad!!!!!! rad)
-                           rad))
-       :todo-db        #_(do #_cF (let [tdl (await (todo/td-list-load "todo"))]
-                                    (dp :tododb-sees-tdl (minfo tdl) (mapv todo/td-ls-id (mkids tdl)))
-                                    tdl))
-       (cI nil
-         :obs (fn [slot me new old c]
-                (dp :todo-db-OBS!!!!!! new (when (atom? new) @new))))}
+                         ;; next returns an MX proxy of a to-do family, as a future
+                         (todo/td-list-load "todo"))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)

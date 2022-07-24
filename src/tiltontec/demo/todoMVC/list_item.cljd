@@ -27,16 +27,19 @@
                                  {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
                     :onChanged (cF (fx/->CBAsIs
                                      (fn [value]
-                                       (dp :mset!-todo-sees :defer? cty/*defer-changes* :integ? cty/*within-integrity*)
-                                       (md/mset! todo :completed value))))})
+                                       (cty/with-fx-isolation
+                                         (md/mset! todo :completed value)))))})
        :trailing (fx/text-button                            ;; our "delete" icon on each to-do
                    {:onPressed (fx/with-ctx+as-is [me ctx]
                                  (fn []
-                                   ;; todo NEXT hhack
-                                   #_
-                                   (md/mswap! (md/fasc :app) :todo-db
-                                     (partial remove (fn [td]
-                                                       (= sid (md/mget td :sid)))))))}
+                                   (cty/with-fx-isolation
+                                     (mswap! (mget (md/fasc :app) :todo-db) :kids
+                                       (fn [coll ls-id]
+                                         (dp :swap-rem-sees ls-id (map todo/td-ls-id coll))
+                                         (remove (fn [td]
+                                                   ;;(dp :check-1 ls-id :vs (todo/td-ls-id td))
+                                                   (= ls-id (todo/td-ls-id td))) coll))
+                                       (todo/td-ls-id todo)))))}
                    (fx/text {:style (p/TextStyle
                                       .fontFamily "Helvetica Neue"
                                       .color (todo/title-red)
@@ -67,12 +70,10 @@
      (if (str/blank? trimmed)
        (do
          ;; todo hhack
-         #_
-
-                 (md/mswap! (md/fasc :app) :todo-db
-           ;; todo roll this up into a todo utility
-           (partial remove (fn [td]
-                             (= sid (md/mget td :sid))))))
+         #_(md/mswap! (md/fasc :app) :todo-db
+             ;; todo roll this up into a todo utility
+             (partial remove (fn [td]
+                               (= sid (md/mget td :sid))))))
        (do
          (md/mset! todo :title trimmed)                     ;; two dataflow triggers
          (md/mset! (md/fasc :item-control) :editing? false))))))
@@ -91,7 +92,7 @@
                                               ;; spec says commit on blur...
                                               (commit-to-do-editing (md/fm* :todo-editor) todo)
                                               (md/mset! (md/fasc :item-control) :editing? false)))))}
-                    {:owner tile} ;; this scope widget is a delegate, not a child, so we record the ListTile as the "owner",
+                    {:owner tile}                           ;; this scope widget is a delegate, not a child, so we record the ListTile as the "owner",
                     ;; and modified navigation to try any owner if parent is nil while searching up the Matrix.
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
