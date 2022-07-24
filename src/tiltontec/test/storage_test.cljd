@@ -385,7 +385,7 @@
              (let [new-ls-id (await (todo/td-initialize "todo" td))]
                (dp :new-ls!!! new-ls-id)
                #_(await (coll-dump :post-td-initialize-test "todo")))))
-    #_(await (coll-dump :post-3-test "todo"))))
+    (await (coll-dump :post-3-test "todo"))))
 
 (defn test-delete-via-kids []
   (dp :test-start!!!!!!!!!!!---------------------)
@@ -424,11 +424,15 @@
 (defn test []
   ;; (test-sans-fx)
 
+  (await (test-coll-init))
+
+  (await (coll-dump :confirm-coll-init "todo"))
+
   #_(let [dall (await (store/delete-all-docs "todo"))]
       (dp :dall!!!!! dall)
       (await (coll-dump :post-delete-all "todo")))
 
-  (test-delete-via-kids)
+  ;(test-delete-via-kids)
 
 
 

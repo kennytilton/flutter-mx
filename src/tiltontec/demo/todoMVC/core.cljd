@@ -35,20 +35,20 @@
       {:name           :app
        :todo-db-loader (cF+ [:obs (fn [slot me todos-future _ tdlc]
                                     (.then todos-future
-                                      (fn [tds]
+                                      (fn [tdl]
+                                        (dp :tdloader-then-gets-tdl (minfo tdl))
                                         (cty/with-fx-isolation
-                                            (let [tdl (todo/make-todo-list "todo" tds)]
-                                              (dp :tdl-got-tdl (minfo tdl))
-                                              (mset!x me :todo-db tdl)
-                                              (dp :mset!-tododb-returned!!! (minfo tdl)
-                                                :todo-ct (count (mkids tdl))))))))]
+                                          (mset! me :todo-db tdl)))))]
                          (dp :tdl-runs!!!!!!!!! (count cty/*call-stack*))
-                         (let [rad (store/read-all-docs "todo")]
-                           (dp :tdl-returns-future!!!!!! rad)
+                         (let [rad (todo/td-list-load "todo")]
+                           (dp :tdl-returns-rad!!!!!! rad)
                            rad))
-       :todo-db        (cI nil
-                         :obs (fn [slot me new old c]
-                                (dp :todo-db-OBS!!!!!! new (when (atom? new) @new))))}
+       :todo-db        #_(do #_cF (let [tdl (await (todo/td-list-load "todo"))]
+                                    (dp :tododb-sees-tdl (minfo tdl) (mapv todo/td-ls-id (mkids tdl)))
+                                    tdl))
+       (cI nil
+         :obs (fn [slot me new old c]
+                (dp :todo-db-OBS!!!!!! new (when (atom? new) @new))))}
       (fx/scaffold
         {:appBar                  (my-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -77,10 +77,10 @@
                  :itemCount        (cF (dpx :itemco-entry cty/*within-integrity*)
                                      (dpx :itemco-dep (cinfo cty/*depender*))
                                      (let [app (fasc :app)]
-                                         (assert app "no appp")
-                                         (let [tds (todo/app-todos app)]
-                                           (dpx :itemcount-sees-tds tds)
-                                           (count tds))))
+                                       (assert app "no appp")
+                                       (let [tds (todo/app-todos app)]
+                                         (dpx :itemcount-sees-tds tds)
+                                         (count tds))))
                  :separatorBuilder (fx/->CBAsIs
                                      (fn [ctx i] (m/Divider .thickness 0.5)))
                  :itemBuilder      (cF (fx/->CBAsIs

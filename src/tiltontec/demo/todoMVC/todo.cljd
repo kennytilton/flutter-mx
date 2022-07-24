@@ -184,5 +184,5 @@
   (assert app "at no app")
   (assert (cty/md-ref? app))
   (when-let [td-lst (tiltontec.model.core/mget app :todo-db)]
-    (assert (cty/md-ref? td-lst))
-    (tiltontec.model.core/mget td-lst :kids)))
+    (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
+    (md/mkids td-lst)))
