@@ -2,11 +2,11 @@
   (:require
     [clojure.string :as str]
     [tiltontec.util.base
-     :refer [trx wtrx dprn dp dpx  prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
+     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
     [tiltontec.util.core
-     :refer [difference atom?  err rmap-setf rmap-meta-setf pln]]
+     :refer [difference atom? err rmap-setf rmap-meta-setf pln]]
     [tiltontec.cell.base
-     :refer [without-c-dependency  PObserver
+     :refer [without-c-dependency PObserver
              cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? mx-type minfo
              c-model mdead? c-valid? c-useds c-ref? md-ref?
@@ -43,6 +43,33 @@
     (if-let [c (md-cell me slot)]
       (c-get c)
       (slot @me))))
+
+#_ (defmacro def-rmap-slots [reader-prefix & slots]
+     `(do
+        ~@(map (fn [slot#]
+                 `(defn ~(symbol (str (or reader-prefix "")
+                                   slot#))
+                    [~'ref]
+                    (~(keyword slot#) @~'ref))) slots)))
+
+#_
+(defmacro def-md-slots [reader-prefix & slots]
+  `(do
+     ~@(map (fn [slot#]
+              `(defn ~(symbol (str (or reader-prefix "")
+                                slot#))
+                 [~'ref]
+                 (~(keyword slot#) @~'ref))) slots)))
+
+#_
+(defmacro def-md-slots [reader-prefix & slots]
+  `(do
+     ~@(map (fn [slot#]
+              `(defn ~(symbol (str (or reader-prefix "") slot#))
+                 [~'ref]
+                 (tiltontec.util.base/dp :defmdslot-gets slot#)
+                 (tiltontec.model.core/mget @~'ref ~(keyword slot#))))
+         slots)))
 
 (defn mgetx [me slot]
   (assert me (str "md-get passed nil for me accessing slot: " slot))

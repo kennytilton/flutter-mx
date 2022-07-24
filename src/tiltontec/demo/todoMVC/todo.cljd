@@ -36,10 +36,92 @@
      :kids (cFn (dp :maketdl-kids-rule-sees!!! (count existing-todos) (minfo me))
              (mapv (fn [xtd]
                      (dp :make-td!!!!!!! xtd)
-                     (let [{:keys [title completed ls-sid sid]} xtd]
-                       (dp :making-todo!! title completed ls-sid sid)
-                       (make-todo me title completed sid ls-sid)))
+                     (let [{:keys [title completed ls-id sid]} xtd]
+                       (make-todo me title completed sid ls-id)))
                existing-todos)))))
+
+(declare td-upsert)
+
+(defn td-ls-id [td] (mget td :ls-id))
+(defn td-sid [td] (mget td :sid))
+(defn td-title [td] (mget td :title))
+(defn td-completed [td] (mget td :completed))
+
+(defn td-initialize [collection-name td-map]
+  (dp :td-init!!! collection-name td-map)
+  (assert (not (:ls-id td-map)) "td-map already written")   ;; already written
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db collection-name)
+        new-id (.-id (.doc coll))
+        new-data (assoc td-map :ls-id new-id)]
+    (dp :td-init-making-new-LS new-id new-data)
+    (-> coll
+      (.doc new-id)
+      (.set (walk/stringify-keys new-data)))
+    new-id))
+
+(deftype ToDo []
+  :extends cty/Model
+  cty/PObserver
+  (observe [this slot me new-value prior-value cell]
+    (when (and (td-ls-id me) (not= cty/unbound prior-value))
+      ;; arbitrary choice; we really want to observe "any change"
+      (dp :FNY-UPDATE!!!!!! slot (minfo me))
+      #_(td-upsert me))))
+
+(defn make-todo
+  ([td-lst title completed]
+   (make-todo td-lst title completed
+     (swap! todo-sid inc) nil))
+  ([td-lst title completed sid ls-id]
+   (md/make
+     :par td-lst
+     :mx-type (ToDo.)
+     :sid sid
+     :ls-id (or ls-id
+              (td-initialize "todo"
+                {:sid       sid
+                 :title     title
+                 :completed completed}))
+     ;--
+     :title (cI title)
+     :completed (cI completed))))
+
+;(md/def-md-slots td- sid ls-id title completed)
+
+
+
+(defn td-upsert [td]
+  (assert (cty/md-ref? td))
+  (dpx :td-upserting!!!! (td-ls-id td) @td)
+  (assert (mget td :par))
+  (let [coll-name (mget (mget td :par) :name)]
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    (if (td-ls-id td)                                       ;; (mget td :ls-id)
+      (dp :td-upsert-FNY-not-yet-UPDATING-lsid!!! @td)
+      (let [db (.-instance ls/Localstore)
+            coll (.collection db coll-name)
+            new-id (.-id (.doc coll))
+            new-data (assoc (select-keys @td [:title :completed :sid])
+                       :ls-id new-id)]
+        (dp :td-upsert-making-new!!-NOT new-id new-data)
+        (-> coll
+          (.doc new-id)
+          (.set (walk/stringify-keys new-data)))))))
+
+;;; --- higher level ---------------------------
+
+(defn td-list-load
+  "returns a future; await to get full-blown todos"
+  [name]
+  (let [store-tds (await (store/read-all-docs name))]
+    (dp :tdlistload-sees-doc-count (count store-tds))
+    (let [td-lst (make-todo-list name store-tds)]
+      (dp :tdlistload-made-list!!!!!!!! @td-lst)
+      td-lst)))
+
+;;; --- even higher level ---------------------------------------
 
 (defn app-todos [app]
   ;; we have to wait for async load of the to-do collection from localstorage
@@ -48,57 +130,3 @@
   (when-let [td-lst (tiltontec.model.core/mget app :todo-db)]
     (assert (cty/md-ref? td-lst))
     (tiltontec.model.core/mget td-lst :kids)))
-
-(declare td-upsert)
-
-(deftype ToDo []
-  :extends cty/Model
-  cty/PObserver
-  (observe [this slot me new-value prior-value cell]
-    ;; no need to observer initial value observation, when prior is unbound
-    (dp :REAL-todo-obs!!!!!!!! slot :new new-value :sid (md/mget me :sid) (md/mget me :title) (minfo me) #_#_:prior prior-value)
-    (when (= slot :sid)                                     ;; arbitrary choice
-      (dp :REAL-todo-obs-par!!!!!!!! slot :par!!! @(:par @me))
-      (td-upsert me))))
-
-(defn make-todo
-  ([td-lst title completed]
-   (make-todo td-lst title completed (swap! todo-sid inc) nil))
-  ([td-lst title completed sid ls-sid]
-   (md/make
-     :par td-lst
-     :mx-type (ToDo.)
-     :sid sid
-     :ls-sid ls-sid                                         ;; on reload, this serves as our update vs create indicator
-     ;--
-     :title (cI title)
-     :completed (cI completed))))
-
-(defn td-list-load
-  "returns a future; await to get full-blown todos"
-  [name]
-  (let [store-tds (await (store/read-all-docs name))]
-    (dp :store-tds (count store-tds))
-    (let [td-lst (make-todo-list name store-tds)]
-      (dp :tdlistload-made-list!!!!!!!! @td-lst)
-      td-lst)))
-
-(defn td-upsert [td]
-  (dp :td-upserting!!!! @td)
-  (assert (mget td :par))
-  (let [coll-name (mget (mget td :par) :name)]
-    (dp :upserting-into!!!!-coll coll-name)
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    (if (mget td :ls-sid)
-      (dp :not-yet-UPDATING-lsid!!! @td)
-      (let [db (.-instance ls/Localstore)
-            coll (.collection db coll-name)
-            new-id (.-id (.doc coll))
-            new-data (assoc (select-keys @td [:title :completed :sid])
-                       :ls-id new-id)]
-        (dp :make-ls-new!! new-id new-data)
-        (-> coll
-          (.doc new-id)
-          (.set (walk/stringify-keys new-data)))))))
-
-

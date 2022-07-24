@@ -4,7 +4,8 @@
     ["dart:math" :as mth]
     ["dart:convert" :as convert]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.model.core :refer [mget mswap!] :as md]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar] :as md]
     ;;[tiltontec.mx-flutter.core :as fx]
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
@@ -293,9 +294,9 @@
               (do
                 (dp :deleteing!!!!!!! id)
                 (let [del-res (await (-> db
-                                  (.collection collection-name)
-                                  (.doc id)
-                                  .delete))]
+                                       (.collection collection-name)
+                                       (.doc id)
+                                       .delete))]
                   (dp :delete-returned del-res)
                   (let [doc (await (-> db
                                      (.collection collection-name)
@@ -322,20 +323,69 @@
       (dp :bingo-current! current)
       (md/mset! tl :kids
         (mapv (fn [ls-td]
-                (let [{:keys [title completed ls-sid sid]} ls-td]
-                  (todo/make-todo tl title completed sid ls-sid)))
+                (let [{:keys [title completed ls-id sid]} ls-td]
+                  (todo/make-todo tl title completed sid ls-id)))
           current))
 
       (doseq [k (mget tl :kids)]
         (dp :td-kid @k)))))
 
+(defn load-mx-db [name]
+  (dp :loading-coll-into-mx name)
+  (cty/with-fx-isolation
+    (let [tdl (todo/td-list-load "todo")]
+      (dp :tdl-got-tdl!!! tdl)
+      (dp :tdl-got-tdl!!! (minfo tdl)
+        :todo-ct (count (mkids tdl)))
+      tdl)))
+
+; so make on td just looks at ls-id and, if populated, does nothing.
+; this leaves the observer with the problem of knowing whether a slot
+; observation -- why was slot observer triggering upsert -- ok, for, update, but then
+; the "insert" capability of upsert was inappropriately available and executed.
+
 (defn test []
   ;;(read-one "todos" "3kpfwt4pp")
   ;(hack-one "todos" "3kpfwt4pp")
-  ;(store/delete-all-docs "todos")
-  ;(store/read-all-docs "todos")
-  ;(dp :all-todos!!! (await (store/read-all-docs "todo")))
-  ;(dp :tdlist!! (todo/td-list-load "todo"))
+  #_(store/delete-all-docs "todo")
+
+  (let [raw (await (store/read-all-docs "todo"))]
+    ;; (dp :all-todos-raw!!! raw)
+    (doseq [td raw]
+      (dp :await-1-SEES-td td))
+    #_(.then raw
+        (fn [docs]
+          (dp :then-1-SEES (count docs))
+          (doseq [td docs]
+            (dp :then-1-SEES-td td)))))
+
+  (dp :---------------------------------------)
+  (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false})
+
+  (let [raw (store/read-all-docs "todo")]
+    (.then raw
+      (fn [docs]
+        (doseq [td docs]
+          (dp :post-Init-SEES-td td)))))
+
+  #_(let [tdl (todo/td-list-load "todo")]
+      (dp :TEST-tdlistload-returns tdl (minfo tdl)))
+
+  #_(let [raw (store/read-all-docs "todo")]
+      (dp :all-todos-raw!!! raw)
+      (let [aw (await raw)]
+        (dp :awaited aw)
+        (dp :raw-is-now raw)
+        aw))
+
+
+
+  #_(let [td (load-mx-db "todo")]
+      (dp :mxdb! (minfo td))
+      (dp :todoct! (count (mkids td)))
+      (doseq [td (mkids td)]
+        (dp :td (minfo td))))
+
   ;(reset! todo/todo-sid 0)
   ;(test-new-todo-list)
   ;(test-old-todo-list)

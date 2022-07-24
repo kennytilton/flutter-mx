@@ -18,26 +18,24 @@
           [k (get dart-map k)]))))
 
 (defn read-all-docs [coll-name]
+  (dp :read-all-docs-entry---------)
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;;; --- read all docs ---------------------------
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
-        docs (vals (into {}
-                     (await (.get coll))))]
-    (dp :read-all-docs (count docs))
-    ;(dp :read-all-docs (vals docs))
-    (doseq [doc docs]
-        (dp :DOC!
-          (into {} doc)
-          (dart-map->cljd-map doc)))
-    (mapv dart-map->cljd-map docs))) ;; doall? mapv?
+        dart-docs (vals (into {}
+                     (await (.get coll))))
+        cljd-docs (mapv dart-map->cljd-map dart-docs)]
+    (dp :read-all-docs-sees (count cljd-docs)
+      cljd-docs)
+    cljd-docs))
 
 (defn delete-all-docs [coll-name]
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;;; --- read all docs ---------------------------
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
-        docs (into {} (await (.get coll)))]
+        docs (do (into {} (await (.get coll))))]
     ;; todo just take the keys of (await (.get coll))
     (dp :del-all docs)
     ;; todo maybe kick all these off and then await all?
