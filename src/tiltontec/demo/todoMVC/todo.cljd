@@ -3,6 +3,7 @@
     [clojure.walk :as walk]
 
     [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
     [tiltontec.model.core :refer [mget] :as md]
@@ -18,13 +19,28 @@
 
 (def todo-sid (atom 0))
 
+(declare td-delete)
+
+(defn td-ls-id [td] (mget td :ls-id))
+(defn td-sid [td] (mget td :sid))
+(defn td-title [td] (mget td :title))
+(defn td-completed [td] (mget td :completed))
+
 (deftype ToDoList []
   :extends cty/Model
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
     ;; no need to observer initial value observation, when prior is unbound
-    (dp :ToDoList-obs!! slot :new-val-> new-value)
-    ))
+
+    (case slot
+      :kids (when (not= cty/unbound prior-value)
+              (let [lost (util/difference (set prior-value) (set new-value))]
+                (dp :lost-TDs!!!! lost)
+                (dp :lost-TDs!!!! (map td-ls-id lost))
+                (await (doseq [td lost]
+                         (dp :deleting=TD (td-ls-id td))
+                         (await (td-delete "todo" (td-ls-id td)))))))
+    )))
 
 (defn make-todo-list
   ([name] (make-todo-list name nil))
@@ -42,10 +58,7 @@
 
 (declare td-upsert)
 
-(defn td-ls-id [td] (mget td :ls-id))
-(defn td-sid [td] (mget td :sid))
-(defn td-title [td] (mget td :title))
-(defn td-completed [td] (mget td :completed))
+
 
 (defn td-initialize [collection-name td-map]
   (dp :td-init!!! collection-name td-map)
@@ -78,6 +91,7 @@
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)]
     (assert ls-id "td-delete requires ls-id")
+    (dp :td-delete-START ls-id)
     (await (-> coll
              (.doc ls-id)
              .delete))

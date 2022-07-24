@@ -372,7 +372,7 @@
           (await (coll-dump :post-delete "todo"))
           )))))
 
-(defn  test-coll-init []
+(defn test-coll-init []
   (let [dall (await (store/delete-all-docs "todo"))]
     (dp :dall!!!!! dall)
     (dp :---POSTDELETEALL------------------------------------)
@@ -384,27 +384,53 @@
                        {:sid 44 :title "Wash dishes" :completed false}]]
              (let [new-ls-id (await (todo/td-initialize "todo" td))]
                (dp :new-ls!!! new-ls-id)
-               #_ (await (coll-dump :post-td-initialize-test "todo")))))
-    #_ (await (coll-dump :post-3-test "todo"))))
+               #_(await (coll-dump :post-td-initialize-test "todo")))))
+    #_(await (coll-dump :post-3-test "todo"))))
 
+(defn test-delete-via-kids []
+  (dp :test-start!!!!!!!!!!!---------------------)
+  (await (test-coll-init))
+  (dp :test-col-inittted!!!!!!!!!!!---------------------)
+  (await (coll-dump :post-test-col-init "todo"))
+
+  (let [tdl (await (todo/td-list-load "todo"))]
+    (dp :TEST-tdlistload-returns tdl (minfo tdl))
+    (doseq [k (mkids tdl)]
+      (dp :td-loaded (minfo k) (todo/td-title k)))
+    (let [td (second (mkids tdl))]
+      (dp :changing @td)
+      (let [t2 (mset! td :title "Sell car")]
+        (dp :mset-returned! t2)
+        (dp :changed-td-to-sell-car @td)
+        (doseq [k (mkids tdl)]
+          (dp :tds-post-change (todo/td-ls-id k) (todo/td-title k)))
+        ; (apply f current-value-of-atom args)
+        ; (apply remove kids args) - nope
+        ; (apply (fn [coll ls-id]
+        ;           (remove (fn [td]
+        ;                      (= ls-id (td-ls-id td))) kids args)
+        (let [delk (await (mswap! tdl :kids
+                            (fn [coll ls-id]
+                              (dp :swap-rem-sees ls-id (map todo/td-ls-id coll))
+                              (remove (fn [td]
+                                        (dp :check-1 ls-id :vs (todo/td-ls-id td))
+                                        (= ls-id (todo/td-ls-id td))) coll))
+                            (todo/td-ls-id td)))]
+          (dp :t2-remmed-from-kids---------------)
+          (dp :t2-remmed-from-kids---------------- delk)
+          (dp :t2-remmed-from-kids----------------tdl (minfo tdl))
+          (doseq [k (mkids tdl)]
+            (dp :tds-post-change (todo/td-ls-id k) (todo/td-title k))))))))
 (defn test []
   ;; (test-sans-fx)
 
-  (do
-    (await (test-coll-init))
-    (let [tdl (await (todo/td-list-load "todo"))]
-        (dp :TEST-tdlistload-returns tdl (minfo tdl))
-        (doseq [k (mkids tdl)]
-          (dp :td-loaded (minfo k) (todo/td-title k)))
-        (let [td (second (mkids tdl))]
-          (dp :changing @td)
-          (let [t2 (mset! td :title "Sell car")]
-            (dp :mset-returned! t2)
-            (dp :changed-td @td)
-            (doseq [k (mkids tdl)]
-              (dp :td-loaded (todo/td-ls-id k) (todo/td-title k))))
-          ))
-    )
+  #_(let [dall (await (store/delete-all-docs "todo"))]
+      (dp :dall!!!!! dall)
+      (await (coll-dump :post-delete-all "todo")))
+
+  (test-delete-via-kids)
+
+
 
   #_(let [tdl (todo/td-list-load "todo")]
       (dp :TEST-tdlistload-returns tdl (minfo tdl)))

@@ -24,7 +24,7 @@
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         dart-docs (vals (into {}
-                     (await (.get coll))))
+                          (await (.get coll))))
         cljd-docs (mapv dart-map->cljd-map dart-docs)]
     (dp :read-all-COMPLETES-with (count cljd-docs) (map :ls-id cljd-docs))
     cljd-docs))
@@ -35,16 +35,16 @@
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         docs (do (into {} (await (.get coll))))]
-    (dp :delete-all-COMPLETES-getting docs)
+    (dp :delete-all-COMPLETES-getting (keys docs))
     (await
       (doseq [k (keys docs)
-            :let [working-id (last (str/split k #"/"))]]
-      ;; full key is /coll-name/id-to-use-to-get-a-doc
-      (dp :kick-off-one-del working-id)
-      (let [deletion (await (-> db
-                              (.collection coll-name)
-                              (.doc working-id)
-                              .delete))]
-        (dp :del-TD-COMPLETE-is deletion working-id))))
+              :let [working-id (last (str/split k #"/"))]]
+        ;; full key is /coll-name/id-to-use-to-get-a-doc
+        (dp :kick-off-one-del working-id)
+        (let [deletion (await (-> db
+                                (.collection coll-name)
+                                (.doc working-id)
+                                .delete))]
+          (dp :del-TD-COMPLETE-is deletion working-id))))
     (dp :delete-all-EXIT)))
 
