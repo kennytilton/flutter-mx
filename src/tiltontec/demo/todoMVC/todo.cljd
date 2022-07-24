@@ -73,6 +73,17 @@
     (dp :td-rewrite-COMPLETE ls-id)
     ls-id))
 
+(defn td-delete [collection-name ls-id]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db collection-name)]
+    (assert ls-id "td-delete requires ls-id")
+    (await (-> coll
+             (.doc ls-id)
+             .delete))
+    (dp :td-delete-COMPLETE ls-id)
+    ls-id))
+
 #_
 (defn td-upsert [td]
   (assert (cty/md-ref? td))

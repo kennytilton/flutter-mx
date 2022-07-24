@@ -345,14 +345,14 @@
 ; the "insert" capability of upsert was inappropriately available and executed.
 
 (defn coll-dump [tag name]
-  (let [raw (await (store/read-all-docs name))]
-    ;; (dp :all-todos-raw!!! raw)
-    (doseq [td raw]
-      (dp :td tag td))))
+  (if-let [raw (await (store/read-all-docs name))]
+    (do
+      (dp :coll-dump-raw tag)
+      (doseq [td raw]
+        (dp :td tag td)))
+    (dp :coll-is-empty!!!!!!!!!!!!! tag name)))
 
-(defn test []
-  ;;(read-one "todos" "3kpfwt4pp")
-  ;(hack-one "todos" "3kpfwt4pp")
+(defn test-sans-fx []
   (let [dall (await (store/delete-all-docs "todo"))]
     (dp :dall!!!!! dall)
     (dp :---POSTDELETEALL------------------------------------)
@@ -360,13 +360,51 @@
     (await (coll-dump :pre-test "todo"))
 
     (dp :---------------------------------------)
-    (let [new-ls-id (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false})]
+    (let [new-ls-id (await (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false}))]
       (dp :new-ls!!! new-ls-id)
-      (coll-dump :post-td-initialize-test "todo")
+      (await (coll-dump :post-td-initialize-test "todo"))
 
-      (todo/td-rewrite "todo" {:ls-id new-ls-id :sid 43 :title "Wash Car" :completed true})
-      (coll-dump :post-rewrite "todo")
-      ))
+      (let [tdw (await (todo/td-rewrite "todo" {:ls-id new-ls-id :sid 43 :title "Wash Car" :completed true}))]
+        (dp :rewrite-tdw tdw)
+        (await (coll-dump :post-rewrite "todo"))
+        (let [tdd (await (todo/td-delete "todo" new-ls-id))]
+          (dp :tddel-tdd tdd)
+          (await (coll-dump :post-delete "todo"))
+          )))))
+
+(defn  test-coll-init []
+  (let [dall (await (store/delete-all-docs "todo"))]
+    (dp :dall!!!!! dall)
+    (dp :---POSTDELETEALL------------------------------------)
+    ;(await (coll-dump :pre-test "todo"))
+
+    (dp :---------------------------------------)
+    (await (doseq [td [{:sid 42 :title "Walk dog" :completed false}
+                       {:sid 43 :title "Wash car" :completed true}
+                       {:sid 44 :title "Wash dishes" :completed false}]]
+             (let [new-ls-id (await (todo/td-initialize "todo" td))]
+               (dp :new-ls!!! new-ls-id)
+               #_ (await (coll-dump :post-td-initialize-test "todo")))))
+    #_ (await (coll-dump :post-3-test "todo"))))
+
+(defn test []
+  ;; (test-sans-fx)
+
+  (do
+    (await (test-coll-init))
+    (let [tdl (await (todo/td-list-load "todo"))]
+        (dp :TEST-tdlistload-returns tdl (minfo tdl))
+        (doseq [k (mkids tdl)]
+          (dp :td-loaded (minfo k) (todo/td-title k)))
+        (let [td (second (mkids tdl))]
+          (dp :changing @td)
+          (let [t2 (mset! td :title "Sell car")]
+            (dp :mset-returned! t2)
+            (dp :changed-td @td)
+            (doseq [k (mkids tdl)]
+              (dp :td-loaded (todo/td-ls-id k) (todo/td-title k))))
+          ))
+    )
 
   #_(let [tdl (todo/td-list-load "todo")]
       (dp :TEST-tdlistload-returns tdl (minfo tdl)))
