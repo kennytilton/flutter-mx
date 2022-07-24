@@ -29,15 +29,14 @@
                                      (fn [value]
                                        (cty/with-fx-isolation
                                          (md/mset! todo :completed value)))))})
-       :trailing (fx/text-button                            ;; our "delete" icon on each to-do
+       :trailing (fx/text-button
+                   ;; our "delete" icon on each to-do
                    {:onPressed (fx/with-ctx+as-is [me ctx]
                                  (fn []
                                    (cty/with-fx-isolation
                                      (mswap! (mget (md/fasc :app) :todo-db) :kids
                                        (fn [coll ls-id]
-                                         (dp :swap-rem-sees ls-id (map todo/td-ls-id coll))
                                          (remove (fn [td]
-                                                   ;;(dp :check-1 ls-id :vs (todo/td-ls-id td))
                                                    (= ls-id (todo/td-ls-id td))) coll))
                                        (todo/td-ls-id todo)))))}
                    (fx/text {:style (p/TextStyle
