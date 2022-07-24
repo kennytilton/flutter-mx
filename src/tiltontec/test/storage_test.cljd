@@ -344,29 +344,25 @@
 ; observation -- why was slot observer triggering upsert -- ok, for, update, but then
 ; the "insert" capability of upsert was inappropriately available and executed.
 
+(defn coll-dump [tag name]
+  (let [raw (await (store/read-all-docs name))]
+    ;; (dp :all-todos-raw!!! raw)
+    (doseq [td raw]
+      (dp :td tag td))))
+
 (defn test []
   ;;(read-one "todos" "3kpfwt4pp")
   ;(hack-one "todos" "3kpfwt4pp")
-  #_(store/delete-all-docs "todo")
+  (let [dall (await (store/delete-all-docs "todo"))]
+    (dp :dall!!!!! dall))
+  (dp :---POSTDELETEALL------------------------------------)
 
-  (let [raw (await (store/read-all-docs "todo"))]
-    ;; (dp :all-todos-raw!!! raw)
-    (doseq [td raw]
-      (dp :await-1-SEES-td td))
-    #_(.then raw
-        (fn [docs]
-          (dp :then-1-SEES (count docs))
-          (doseq [td docs]
-            (dp :then-1-SEES-td td)))))
+  (coll-dump :pre-test "todo")
 
   (dp :---------------------------------------)
   (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false})
 
-  (let [raw (store/read-all-docs "todo")]
-    (.then raw
-      (fn [docs]
-        (doseq [td docs]
-          (dp :post-Init-SEES-td td)))))
+  (coll-dump :post-td-initialize-test "todo")
 
   #_(let [tdl (todo/td-list-load "todo")]
       (dp :TEST-tdlistload-returns tdl (minfo tdl)))

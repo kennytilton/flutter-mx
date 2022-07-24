@@ -26,8 +26,7 @@
         dart-docs (vals (into {}
                      (await (.get coll))))
         cljd-docs (mapv dart-map->cljd-map dart-docs)]
-    (dp :read-all-docs-sees (count cljd-docs)
-      cljd-docs)
+    (dp :read-all-COMPLETES-with (count cljd-docs) (map :ls-id cljd-docs))
     cljd-docs))
 
 (defn delete-all-docs [coll-name]
@@ -37,13 +36,16 @@
         coll (.collection db coll-name)
         docs (do (into {} (await (.get coll))))]
     ;; todo just take the keys of (await (.get coll))
-    (dp :del-all docs)
+    (dp :delete-all-COMPLETES-getting docs)
     ;; todo maybe kick all these off and then await all?
     (doseq [k (keys docs)
             :let [working-id (last (str/split k #"/"))]]
       ;; full key is /coll-name/id-to-use-to-get-a-doc
-      (await (-> db
-               (.collection coll-name)
-               (.doc working-id)
-               .delete)))))
+      (dp :kick-off-one-del working-id)
+      (let [deletion (await (-> db
+                              (.collection coll-name)
+                              (.doc working-id)
+                              .delete))]
+        (dp :deletion-COMPLETE-is deletion working-id)))
+    (dp :delete-all-COMPLETES-of docs)))
 
