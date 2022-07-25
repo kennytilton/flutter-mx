@@ -1,23 +1,21 @@
 (ns tiltontec.demo.todoMVC.list-item
   (:require
-    [clojure.string :as str]
-    [tiltontec.model.core :refer [mget mswap! mset!] :as md]
-    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
-    [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :as todo]
-
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/services.dart" :as srvc]
+    [clojure.string :as str]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.util.base :refer [dprn dp dpx]]))
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.model.core :refer [mget mswap! mset!] :as md]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.demo.todoMVC.todo :refer [td-ls-id td-completed] :as todo]))
 
 (defn to-do-display [todo]
-  (let [title (md/mget todo :title)
-        sid (md/mget todo :sid)]
+  (let [title (md/mget todo :title)]
     (fx/list-tile
       {:leading  (fx/check-box
                    {:value     (cF (or (md/mget todo :completed) false))
@@ -127,11 +125,12 @@
 
 (defn todo-list-item [todo]
   (fx/visibility!
-    {:key               (m/ValueKey. (md/mget todo :sid))
+    {:key               (m/ValueKey. (td-ls-id todo))
      :visible           (cF (case (md/fmuval :completions :selection)
                               :all true
+                              ;; todo convert mgets to td-*
                               :active (not (mget todo :completed))
-                              :done (mget todo :completed)))
+                              :done (td-completed todo)))
      :maintainSize      false
      :maintainAnimation true
      :maintainState     true}

@@ -317,19 +317,6 @@
       (dp :read id :got (store/dart-map->cljd-map rb))
       (dp :read id :notfound))))
 
-(defn test-old-todo-list []
-  (let [tl (todo/make-ToDoList "todos")]
-    (when-let [current (await (store/read-all-docs "todos"))]
-      (dp :bingo-current! current)
-      (md/mset! tl :kids
-        (mapv (fn [ls-td]
-                (let [{:keys [title completed ls-id sid]} ls-td]
-                  (todo/make-ToDo tl title completed sid ls-id)))
-          current))
-
-      (doseq [k (mget tl :kids)]
-        (dp :td-kid @k)))))
-
 (defn load-mx-db [name]
   (dp :loading-coll-into-mx name)
   (cty/with-fx-isolation
@@ -360,11 +347,11 @@
     (await (coll-dump :pre-test "todo"))
 
     (dp :---------------------------------------)
-    (let [new-ls-id (await (todo/td-initialize "todo" {:sid 42 :title "Walk dog" :completed false}))]
+    (let [new-ls-id (await (todo/td-initialize "todo" {:title "Walk dog" :completed false}))]
       (dp :new-ls!!! new-ls-id)
       (await (coll-dump :post-td-initialize-test "todo"))
 
-      (let [tdw (await (todo/td-rewrite "todo" {:ls-id new-ls-id :sid 43 :title "Wash Car" :completed true}))]
+      (let [tdw (await (todo/td-rewrite "todo" {:ls-id new-ls-id :title "Wash Car" :completed true}))]
         (dp :rewrite-tdw tdw)
         (await (coll-dump :post-rewrite "todo"))
         (let [tdd (await (todo/td-delete "todo" new-ls-id))]
@@ -379,9 +366,9 @@
     ;(await (coll-dump :pre-test "todo"))
 
     (dp :---------------------------------------)
-    (await (doseq [td [{:sid 42 :title "Walk dog" :completed false}
-                       {:sid 43 :title "Wash car" :completed true}
-                       {:sid 44 :title "Wash dishes" :completed false}]]
+    (await (doseq [td [{:title "Walk dog" :completed false}
+                       {:title "Wash car" :completed true}
+                       {:title "Wash dishes" :completed false}]]
              (let [new-ls-id (await (todo/td-initialize "todo" td))]
                (dp :new-ls!!! new-ls-id)
                #_(await (coll-dump :post-td-initialize-test "todo")))))

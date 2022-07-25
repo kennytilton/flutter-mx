@@ -17,12 +17,7 @@
 (defn title-red []
   (.fromRGBO m/Color 184 63 69 0.5))
 
-(def todo-sid
-  "debug aid"
-  (atom 0))
-
 (defn td-ls-id [td] (mget td :ls-id))
-(defn td-sid [td] (mget td :sid))
 (defn td-title [td] (mget td :title))
 (defn td-completed [td] (mget td :completed))
 
@@ -78,17 +73,14 @@
 
 (defn make-ToDo
   ([td-lst title completed]
-   (make-ToDo td-lst title completed
-     (swap! todo-sid inc) nil))
-  ([td-lst title completed sid ls-id]
+   (make-ToDo td-lst title completed nil))
+  ([td-lst title completed ls-id]
    (md/make
      :par td-lst
      :mx-type (ToDo.)
-     :sid sid
      :ls-id (or ls-id
               (td-initialize "todo"
-                {:sid       sid
-                 :title     title
+                {:title     title
                  :completed completed}))
      ;--
      :title (cI title)
@@ -96,7 +88,7 @@
 
 (defn ToDo-update [td]
   (let [coll-name (mget (mget td :par) :name)]
-    (td-rewrite coll-name (select-keys @td [:ls-id :title :completed :sid]))))
+    (td-rewrite coll-name (select-keys @td [:ls-id :title :completed]))))
 
 ;;; --- higher level ---------------------------
 
@@ -118,8 +110,8 @@
      :mx-type (ToDoList.)
      :name name
      :kids (cFn (mapv (fn [xtd]
-                        (let [{:keys [title completed ls-id sid]} xtd]
-                          (make-ToDo me title completed sid ls-id)))
+                        (let [{:keys [title completed ls-id]} xtd]
+                          (make-ToDo me title completed ls-id)))
                   existing-todos)))))
 
 (defn ToDoList-load
