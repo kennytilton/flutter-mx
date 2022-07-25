@@ -34,50 +34,26 @@
                                          (dp :onsub-running!!!????? value)
                                          (let [trimmed (str/trim value)]
                                            (if (str/blank? trimmed)
-                                             ;; "onsubmit" removes the edit focus on submit; not ideal. We restore
-                                             ;; for continued editing:
+                                             ;; "onsubmit" removes the edit focus on submit; we restore for continued editing:
                                              (.requestFocus ^m/FocusNode (md/mget me :focusNode))
-                                             ;; --- non-blank; save...
-                                             (do            ;; cty/without-c-dependency
-                                               (let [app (md/fasc :app)
-                                                     _ (assert app "onsub no app")
-                                                     _ (dpx :trying-to-get-todo-db!!!!-app (minfo app))
-                                                     _ (dpx :trying-to-get-todo-db!!!!-app-dep (cinfo cty/*depender*))
-                                                     td-lst (md/mget app :todo-db)]
+                                             ;; --- non-blank entry, so we save...
+                                             (let [app (md/fasc :app)
+                                                   td-lst (md/mget app :todo-db)]
+                                               (md/mset! me :value trimmed)
 
-                                                 ;; right here we are not getting back a td list structure,
-                                                 ;; which should exist even if no kids
-
-                                                 (dp :rawtdlst!!!!!!! (minfo td-lst))
-                                                 (assert td-lst "on sub no tdl")
-
-                                                 (dpx :onsub!!!! (minfo app) (minfo td-lst))
-                                                 (assert me "onsub no me")
-                                                 (assert (cty/md-ref? td-lst) (str "td-lst no mdref?" td-lst))
-                                                 (dp :asserts-ok!!!!! cty/*within-integrity* cty/*defer-changes*)
-                                                 (do        ;; integrity/with-cc :sub-todo
-                                                   (dp :setting-value-of-input-field!!! trimmed)
-                                                   (md/mset! me :value trimmed)) ;; dataflow trigger
-                                                 (let [c ^m/TextEditingController (md/mget me :controller)]
-                                                   (dp :mset-ok!!!!!-clearing c)
-                                                   (.clear ^m/TextEditingController c) ;; clear the input text field,
-                                                   ;; (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
-                                                   ;; now make the to-do, and add to _end_ of list
-                                                   (do      ;; integrity/with-cc :add-todo-to-lst
-                                                     (dpx :adding-td!! (minfo td-lst))
-                                                     (dpx :adding-td!! (minfo td-lst) :kidsnow (mkids td-lst))
-                                                     (let [kp (mkids td-lst)]
-                                                       (dp :existing-kids!! kp :raw td-lst)
-                                                       (mset! td-lst :kids (concat kp [(todo/make-todo td-lst trimmed false)]))
-                                                       (dp :fini!!!!!!!-new-td))))))))))))
+                                               (let [c ^m/TextEditingController (md/mget me :controller)]
+                                                 (.clear ^m/TextEditingController c)
+                                                 (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
+                                                 ;; now make the to-do, and add to _end_ of list using concat
+                                                 (let [kp (mkids td-lst)]
+                                                   (mset! td-lst :kids (concat kp [(todo/make-todo td-lst trimmed false)])))))))))))
                     :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
                                              (fn []
                                                (cty/with-fx-isolation
                                                  (let [value (.-text c)]
-                                                   (dpx (str "msetting todo input field: " value))
-                                                   (md/mset! me :value value))))) ;; dataflow trigger
+                                                   (md/mset! me :value value)))))
                                            c))}
       {:name  :todo-input
        :value (cI (str "test " (rand-int 99)))})))

@@ -26,7 +26,7 @@
     {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
     {:name      :completions
      :selection (cI :all)}
-    (let [selector me
+    (let [selector me ;; we give "me" a name reflecting that this widget will track the current selection
           choice (fn [completion-enum option$]
                    (fx/ink-well
                      {:onTap (fx/with-ctx+as-is [me ctx]
@@ -51,13 +51,12 @@
 
 (defn clear-completed-button []
   (fx/visibility!
-    ;; todo next: simpler visibility calls
-    ;; todo encapsulate
     {:visible           (cF (if-let [tds (todo/app-todos (fasc :app))]
                               (boolean
                                 (some #(mget % :completed) tds))
                               ;; nb might still be loading initially
                               false))
+     ;; todo next: simpler visibility calls
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}

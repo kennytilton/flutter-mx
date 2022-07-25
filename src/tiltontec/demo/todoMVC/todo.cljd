@@ -45,7 +45,6 @@
 (defn make-todo-list
   ([name] (make-todo-list name nil))
   ([name existing-todos]
-   (dp :make-tdl-entry name (count existing-todos))
    (md/make
      :mx-type (ToDoList.)
      :name name
@@ -54,17 +53,13 @@
                           (make-todo me title completed sid ls-id)))
                   existing-todos)))))
 
-(declare td-upsert)
-
 (defn td-initialize [collection-name td-map]
-  (dp :td-init!!! collection-name td-map)
   (assert (not (:ls-id td-map)) "td-map already written")   ;; already written
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)
         new-id (.-id (.doc coll))
         new-data (assoc td-map :ls-id new-id)]
-    (dp :td-init-making-new-LS new-id new-data)
     (-> coll
       (.doc new-id)
       (.set (walk/stringify-keys new-data)))
@@ -79,19 +74,30 @@
     (await (-> coll
              (.doc ls-id)
              (.set (walk/stringify-keys td-map))))
-    (dp :td-rewrite-COMPLETE ls-id)
     ls-id))
+
+(defn td-update [td]
+  (assert (cty/md-ref? td))
+  (assert (td-ls-id td))
+  (dp :td-updating!!!! (td-ls-id td) @td)
+  (assert (mget td :par))
+  (let [coll-name (mget (mget td :par) :name)]
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    (let [db (.-instance ls/Localstore)
+          coll (.collection db coll-name)
+          new-data (select-keys @td [:ls-id :title :completed :sid])]
+      (-> coll
+        (.doc (td-ls-id td))
+        (.set (walk/stringify-keys new-data))))))
 
 (defn td-delete [collection-name ls-id]
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)]
     (assert ls-id "td-delete requires ls-id")
-    (dpx :td-delete-START ls-id)
     (await (-> coll
              (.doc ls-id)
              .delete))
-    (dpx :td-delete-COMPLETE ls-id)
     ls-id))
 
 (deftype ToDo []
@@ -99,8 +105,6 @@
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
     (when (and (td-ls-id me) (not= cty/unbound prior-value))
-      ;; arbitrary choice; we really want to observe "any change"
-      (dp :FNY-UPDATE!!!!!! slot (minfo me))
       (td-update me))))
 
 (defn make-todo
@@ -120,40 +124,6 @@
      ;--
      :title (cI title)
      :completed (cI completed))))
-
-;(md/def-md-slots td- sid ls-id title completed)
-
-(defn td-update [td]
-  (assert (cty/md-ref? td))
-  (assert (td-ls-id td))
-  (dpx :td-upserting!!!! (td-ls-id td) @td)
-  (assert (mget td :par))
-  (let [coll-name (mget (mget td :par) :name)]
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    (let [db (.-instance ls/Localstore)
-          coll (.collection db coll-name)
-          new-data (select-keys @td [:ls-id :title :completed :sid])]
-      (-> coll
-        (.doc (td-ls-id td))
-        (.set (walk/stringify-keys new-data))))))
-
-(defn td-upsert [td]
-  (assert (cty/md-ref? td))
-  (dpx :td-upserting!!!! (td-ls-id td) @td)
-  (assert (mget td :par))
-  (let [coll-name (mget (mget td :par) :name)]
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    (if (td-ls-id td)                                       ;; (mget td :ls-id)
-      (dp :td-upsert-FNY-not-yet-UPDATING-lsid!!! @td)
-      (let [db (.-instance ls/Localstore)
-            coll (.collection db coll-name)
-            new-id (.-id (.doc coll))
-            new-data (assoc (select-keys @td [:title :completed :sid])
-                       :ls-id new-id)]
-        (dp :td-upsert-making-new!!-NOT new-id new-data)
-        (-> coll
-          (.doc new-id)
-          (.set (walk/stringify-keys new-data)))))))
 
 ;;; --- higher level ---------------------------
 
