@@ -17,10 +17,9 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.util.core :refer [atom?]]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare my-app-bar my-fab test-todos)
+(declare todo-app-bar todo-controls my-fab )
 
 (defn make-app []
   (let [title "todos"]
@@ -42,9 +41,8 @@
                          ;; next returns an MX proxy of a to-do family, as a future
                          (todo/td-list-load "todo"))}
       (fx/scaffold
-        {:appBar                  (my-app-bar title)
+        {:appBar                  (todo-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
-         #_#_:floatingActionButton (my-fab)
          :persistentFooterButtons [(fx/row
                                      {:mainAxisAlignment m.MainAxisAlignment/center}
                                      (fx/expanded {:flex 1} (footer/items-remaining-display))
@@ -52,31 +50,19 @@
                                      (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
         (fx/ink {:color m.Colors/white}
           (fx/column
-            (fx/row
-              ; --- they snuck a tool into the new-input area
-              (fx/expanded {:flex 1}
-                (input/todo-toggle-all))
-              ; --- the input ----
-              (fx/expanded {:flex 9}
-                (fx/padding
-                  {:padding ^:const (m.EdgeInsets/all 16.0)}
-                  (input/todo-input))))
+            (todo-controls)
             ; --- to-do list ------------------
             (fx/expanded
               ;; ^^^ required sizer to join column
               (fx/list-view+separated
                 {:padding          ^:const (m.EdgeInsets/all 0.0)
-                 :itemCount        (cF (dpx :itemco-entry cty/*within-integrity*)
-                                     (dpx :itemco-dep (cinfo cty/*depender*))
-                                     (let [app (fasc :app)]
-                                       (assert app "no appp")
-                                       (let [tds (todo/app-todos app)]
-                                         (dpx :itemcount-sees-tds tds)
-                                         (count tds))))
-                 :separatorBuilder (fx/->CBAsIs
+                 :itemCount        (cF (count (todo/app-todos (fasc :app))))
+                 :separatorBuilder (fx/as-is
                                      (fn [ctx i] (m/Divider .thickness 0.5)))
-                 :itemBuilder      (cF (fx/->CBAsIs
+                 :itemBuilder      (cF (fx/as-is
                                          (fn [ctx i]
+                                           ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
+                                           ;; aka convert FX proxy to real CLJD/Flutter widget
                                            (fx/fx-render ctx
                                              (nth (mget me :kids) i)))))}
                 {}
@@ -85,44 +71,27 @@
 
 ;;; todo credits in alert
 
-(defn my-app-bar [title]
+(defn todo-app-bar [title]
   (fx/preferred-size
     {:preferredSize (.fromHeight m/Size 100)}
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
                  :title           (fx/column
-                                    {;;:height 144
-                                     :crossAxisAlignment m.CrossAxisAlignment/end,}
-                                    (do                     ;;fx/expanded
-                                      ;;{:flex 8}
-                                      (fx/text
-                                        {:style (p/TextStyle
-                                                  .fontFamily "Helvetica Neue"
-                                                  .color (todo/title-red)
-                                                  .fontWeight m.FontWeight/w100
-                                                  .fontSize 64.0)}
-                                        (str title "/" (rand-int 99))))
-                                    ;;#_ ;; todo show about box
-                                    #_(fx/gesture-detector
-                                        {:onTap (fx/with-ctx+as-is [me ctx]
-                                                  #(do (dp :tapped!!!!!) nil))}
-                                        (fx/text
-                                          {:style (p/TextStyle
-                                                    .fontFamily "Helvetica Neue"
-                                                    .color m.Colors/black
-                                                    .backgroundColor m.Colors/cyan
-                                                    .fontWeight m.FontWeight/w100
-                                                    .fontSize 16.0)}
-                                          "?")))})))
+                                    {:crossAxisAlignment m.CrossAxisAlignment/end}
+                                    (fx/text
+                                      {:style (p/TextStyle
+                                                .fontFamily "Helvetica Neue"
+                                                .color (todo/title-red)
+                                                .fontWeight m.FontWeight/w100
+                                                .fontSize 64.0)}
+                                      title))})))
 
-(def test-todos
-  ;;[]
-  [{:title     "Wash car"
-    :completed false}
-   {:title     "Wash dog"
-    :completed true}
-   {:title     "Learn chess"
-    :completed false}
-   {:title     "X"
-    :completed false}
-   {:title     "Take nap 42"
-    :completed false}])
+(defn todo-controls []
+  (fx/row
+    ; --- they snuck a tool into the new-input area
+    (fx/expanded {:flex 1}
+      (input/todo-toggle-all))
+    ; --- the input ----
+    (fx/expanded {:flex 9}
+      (fx/padding
+        {:padding ^:const (m.EdgeInsets/all 16.0)}
+        (input/todo-input)))))

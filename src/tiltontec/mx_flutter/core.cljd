@@ -150,36 +150,23 @@
   (apply tiltontec.model.core/make
     :mx-type mx-type
     :fx$state (cI nil)
-    ;; todo move next two to meta
+    ;; todo move next to meta
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
                 (concat (keys fx-props) (keys custom-props)))
-    #_#_ :initState (fn [this me]                                ;; this one too
-                 #_ (do
-                      (dp :initstate-cb!!!!!!!!!-saves-state)
-                      (md/mset! me :fx$state this)
-                      (dp :initstate-cb!!!!!!!!!-fini)))
     :kids cFkids-form
     (concat
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
 
 (defn state-set [^State state]
-  ; the todos demo failed trying to setState a list item that was unmounted
-  ; it may be that the widget saw it needed to redraw at the same time it was getting tossed
-  ; disable this safeguard vvv and follow this sequence to recreate:
-  ;    start the todos demo
-  ;    hit clear completed to lose a td
-  ;    click "Active", but not "Done" for some reason
-  ;    get nice error from Flutter
   (if (.-mounted state)
     (.setState state (fn [] (do)))
-    (dp :NOT_SETSTATE-NOT_MOUNTED state)))
+    (dp :NOT_SETTING_STATE_NOT_MOUNTED state)))
 
 (deftype FXDartWidget []
   :extends Model
   PObserver
   (observe [this slot me new-value prior-value cell]
-    ;; no need to observer initial value observation, when prior is unbound
     (when-not (some #{slot} [:par :name :mx-type :not-to-be :initState :fx-class :cells-flushed
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
@@ -199,7 +186,7 @@
               (state-set state))
             (dp :NOT-setting-state-on-stateless slot new-value :sid (md/mget me :sid) (tiltontec.cell.base/minfo me))))))))
 
-;;; ---- sundry factories per Flutter variation ------------------
+;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
 
 (defmacro k1-child-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -716,3 +703,7 @@
   `(tiltontec.mx-flutter.core/cb-with-ctx [~me ~ctx]
      (tiltontec.mx-flutter.core/->CBAsIs
        ~callback-fn)))
+
+(defmacro as-is [callback-fn]
+  `(tiltontec.mx-flutter.core/->CBAsIs
+     ~callback-fn))
