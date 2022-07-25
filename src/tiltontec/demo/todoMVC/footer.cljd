@@ -69,7 +69,6 @@
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
                       (cty/with-fx-isolation
-                        (let [app (md/fasc :app)]
-                          (md/mswap! (mget (md/fasc :app) :todo-db) :kids
-                            (partial remove #(mget % :completed)))))))}
+                        (md/mswap! (mget (md/fasc :app) :todo-db) :kids
+                          (partial remove #(mget % :completed))))))}
       (fx/text "Clear done"))))

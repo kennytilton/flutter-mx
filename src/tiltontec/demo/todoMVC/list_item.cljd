@@ -64,15 +64,12 @@
      (commit-to-do-editing me todo (.-text tx-con))))
   ;--------
   ([me todo value]
-   (let [sid (mget todo :sid)
+   (let [ls-id (mget todo :ls-id)
          trimmed (str/trim value)]
      (if (str/blank? trimmed)
        (do
-         ;; todo hhack
-         #_(md/mswap! (md/fasc :app) :todo-db
-             ;; todo roll this up into a todo utility
-             (partial remove (fn [td]
-                               (= sid (md/mget td :sid))))))
+         (md/mswap! (mget (md/fasc :app) :todo-db) :kids
+           (partial remove (fn [td] (= ls-id (todo/td-ls-id td))))))
        (do
          (md/mset! todo :title trimmed)                     ;; two dataflow triggers
          (md/mset! (md/fasc :item-control) :editing? false))))))
@@ -87,10 +84,11 @@
                     ;; unless in a fresh scope. So we Lego in a scope.
                     {:onFocusChange (cF (fx/with-ctx+as-is [me ctx]
                                           (fn [focused?]
-                                            (when (not focused?)
-                                              ;; spec says commit on blur...
-                                              (commit-to-do-editing (md/fm* :todo-editor) todo)
-                                              (md/mset! (md/fasc :item-control) :editing? false)))))}
+                                            (cty/with-fx-isolation
+                                              (when (not focused?)
+                                                ;; spec says commit on blur...
+                                                (commit-to-do-editing (md/fm* :todo-editor) todo)
+                                                (md/mset! (md/fasc :item-control) :editing? false))))))}
                     {:owner tile}                           ;; this scope widget is a delegate, not a child, so we record the ListTile as the "owner",
                     ;; and modified navigation to try any owner if parent is nil while searching up the Matrix.
                     (fx/container
@@ -103,13 +101,14 @@
                                         :focusNode   (cF (m/FocusNode
                                                            .onKeyEvent (fn [node ^m/KeyEvent event]
                                                                          ;; spec says to abandon edit if Escape key pressed
-                                                                         (cond
-                                                                           (and (dart/is? event srvc/KeyDownEvent)
-                                                                             (= "Escape" (.-keyLabel (.-logicalKey event))))
-                                                                           (do
-                                                                             (md/mset! (md/fasc :item-control) :editing? false)
-                                                                             m/KeyEventResult.handled)
-                                                                           :else m/KeyEventResult.ignored))))
+                                                                         (cty/with-fx-isolation
+                                                                           (cond
+                                                                             (and (dart/is? event srvc/KeyDownEvent)
+                                                                               (= "Escape" (.-keyLabel (.-logicalKey event))))
+                                                                             (do
+                                                                               (md/mset! (md/fasc :item-control) :editing? false)
+                                                                               m/KeyEventResult.handled)
+                                                                             :else m/KeyEventResult.ignored)))))
                                         :decoration  (m/InputDecoration
                                                        .border (m/OutlineInputBorder
                                                                  .borderRadius ^:const (m.BorderRadius/all
@@ -118,7 +117,8 @@
                                         :onSubmitted (cF (fx/with-ctx+as-is [me ctx]
                                                            (fn [value]
                                                              ;; spec says to commit on Enter
-                                                             (commit-to-do-editing me todo value))))
+                                                             (cty/with-fx-isolation
+                                                               (commit-to-do-editing me todo value)))))
                                         :controller  (cFonce
                                                        ;; cFonce is a rarely used rule generator for a rule guaranteed
                                                        ;; to run only once, on instance initialization, even if
@@ -148,9 +148,10 @@
     (fx/gesture-detector
       {:onDoubleTap (fx/with-ctx+as-is [me ctx]
                       (fn []
-                        (when (not (mget me :editing))
-                          ;; todo fix double-taps not seen during editing
-                          (mset! me :editing? true))))}
+                        (cty/with-fx-isolation
+                          (when (not (mget me :editing))
+                            ;; todo fix double-taps not seen during editing
+                            (mset! me :editing? true)))))}
       {:name     :item-control
        :editing? (cI false)}
       (if (mget me :editing?)

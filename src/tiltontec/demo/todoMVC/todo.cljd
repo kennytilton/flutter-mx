@@ -40,7 +40,7 @@
                 (await (doseq [td lost]
                          (dp :deleting=TD (td-ls-id td))
                          (await (td-delete "todo" (td-ls-id td)))))))
-    )))
+      )))
 
 (defn make-todo-list
   ([name] (make-todo-list name nil))
@@ -49,16 +49,12 @@
    (md/make
      :mx-type (ToDoList.)
      :name name
-     :kids (cFn (dp :maketdl-kids-rule-sees!!! (count existing-todos) (minfo me))
-             (mapv (fn [xtd]
-                     (dp :make-td!!!!!!! xtd)
-                     (let [{:keys [title completed ls-id sid]} xtd]
-                       (make-todo me title completed sid ls-id)))
-               existing-todos)))))
+     :kids (cFn (mapv (fn [xtd]
+                        (let [{:keys [title completed ls-id sid]} xtd]
+                          (make-todo me title completed sid ls-id)))
+                  existing-todos)))))
 
 (declare td-upsert)
-
-
 
 (defn td-initialize [collection-name td-map]
   (dp :td-init!!! collection-name td-map)

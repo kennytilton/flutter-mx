@@ -96,9 +96,10 @@
     (fx/icon-button
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
-                      (let [todos (todo/app-todos (fasc :app))
-                            all-done? (every? (fn [td] (md/mget td :completed)) todos)]
-                        (doseq [td todos]
-                          ;; todo do all these in one change pulse
-                          (md/mset! td :completed (if all-done? false true)))))) ;; dataflow trigger
+                      (cty/with-fx-isolation
+                        (let [todos (todo/app-todos (fasc :app))
+                              all-done? (every? (fn [td] (md/mget td :completed)) todos)]
+                          (doseq [td todos]
+                            ;; todo do all these in one change pulse
+                            (md/mset! td :completed (if all-done? false true))))))) ;; dataflow trigger
        :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))

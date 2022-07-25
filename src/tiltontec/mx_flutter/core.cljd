@@ -153,7 +153,7 @@
     ;; todo move next two to meta
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
                 (concat (keys fx-props) (keys custom-props)))
-    :initState (fn [this me]                                ;; this one too
+    #_#_ :initState (fn [this me]                                ;; this one too
                  #_ (do
                       (dp :initstate-cb!!!!!!!!!-saves-state)
                       (md/mset! me :fx$state this)
@@ -384,9 +384,7 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (record-fx$state me this)
-
-                           #_ ;; HHACK
-                                   (when-let [init (mget me :initState)]
+                           (when-let [init (mget me :initState)]
                              (dp :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
