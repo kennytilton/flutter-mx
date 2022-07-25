@@ -160,11 +160,8 @@
 (defn td-list-load
   "returns a future; await to get full-blown todos"
   [name]
-  (let [store-tds (await (store/read-all-docs name))]
-    (dp :tdlistload-sees-doc-count (count store-tds))
-    (let [td-lst (make-todo-list name store-tds)]
-      (dp :tdlistload-made-list!!!!!!!! @td-lst)
-      td-lst)))
+  (make-todo-list name
+    (await (store/read-all-docs name))))
 
 ;;; --- even higher level ---------------------------------------
 

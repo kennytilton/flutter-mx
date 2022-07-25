@@ -1,29 +1,25 @@
 (ns tiltontec.demo.todoMVC.footer
   (:require
-    [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
-    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.mx-flutter.store :as store]
     [tiltontec.demo.todoMVC.todo :as todo]
 
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.util.base :refer [dprn dp dpx]]))
+    ["package:flutter/painting.dart" :as p]))
 
 (defn items-remaining-display []
   (fx/text! {}
     {:name :items-left}
     (let [tds (todo/app-todos (fasc :app))
-          _ (dp :items-rem-sees-all (count tds))
           left (remove #(mget % :completed) tds)]
-      (dpx :items-rem-sees-left (count left))
-      (str (count left) (if (= 1 (count left))
-                          " item" " items")))))
+      (str (count left) " item" (when (not= 1 (count left))
+                                  "s")))))
 
 (defn completion-filters []
   (fx/row
@@ -31,27 +27,27 @@
     {:name      :completions
      :selection (cI :all)}
     (let [selector me
-            choice (fn [completion-enum option$]
-                     (fx/ink-well
-                       {:onTap (fx/with-ctx+as-is [me ctx]
-                                 #(cty/with-fx-isolation
-                                    (mset! (md/fasc :completions) ;; dataflow trigger
-                                      :selection completion-enum)))}
-                       (fx/container
-                         {:decoration (cF (when (mget me :selected?) ;; dependency
-                                            (m/BoxDecoration
-                                              .border (.all m/Border .color (todo/title-red) .width 0.5)
-                                              .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
-                         {:completion-enum completion-enum
-                          :selected?       (cF (= completion-enum ;; dependency
-                                                 (mget selector :selection)))}
-                         (fx/padding
-                           {:padding ^:const (m.EdgeInsets/all 3.0)}
-                           (m/Text option$)))))]
-        (list
-          (choice :all "All")
-          (choice :active "Active")
-          (choice :done "Done")))))
+          choice (fn [completion-enum option$]
+                   (fx/ink-well
+                     {:onTap (fx/with-ctx+as-is [me ctx]
+                               #(cty/with-fx-isolation
+                                  (mset! (md/fasc :completions)
+                                    :selection completion-enum)))}
+                     (fx/container
+                       {:decoration (cF (when (mget me :selected?)
+                                          (m/BoxDecoration
+                                            .border (.all m/Border .color (todo/title-red) .width 0.5)
+                                            .borderRadius ^:const (m.BorderRadius/all (m.Radius/circular 4.0)))))}
+                       {:completion-enum completion-enum
+                        :selected?       (cF (= completion-enum
+                                               (mget selector :selection)))}
+                       (fx/padding
+                         {:padding ^:const (m.EdgeInsets/all 3.0)}
+                         (m/Text option$)))))]
+      (list
+        (choice :all "All")
+        (choice :active "Active")
+        (choice :done "Done")))))
 
 (defn clear-completed-button []
   (fx/visibility!
