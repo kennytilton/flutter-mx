@@ -16,8 +16,11 @@
 
 (defn to-do-display [todo]
   (assert todo "no todo todo display")
-  (let [title (td-title todo)]
+  (dp :td-entry todo @todo)
+  (prn :prn-td-entry todo @todo)
+  (let [title (todo/td-title-x todo)]
 
+    (prn :tddisp-got-title title)
     (fx/list-tile
       {:leading  (fx/check-box
                    {:value     (cF (or (td-completed todo) false))
@@ -42,7 +45,7 @@
                                       .color (todo/title-red)
                                       .fontWeight m.FontWeight/w200
                                       .fontSize 20.0)}
-                     "X"))
+                     "XX"))
 
        :title    (cF (let [ldg (md/mget me :leading)
                            #_#_ td (md/mget me :todo)]
@@ -53,7 +56,7 @@
                                          .color m.Colors/grey
                                          .decoration p.TextDecoration/lineThrough)
                                        (p/TextStyle .color m.Colors/black)))}
-                         (td-title (md/mget me :todo)))))}
+                         (todo/td-title-x todo))))}
       {:name :my-list-tile
        :todo todo})))
 
