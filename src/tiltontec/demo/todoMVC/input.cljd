@@ -4,7 +4,7 @@
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :as todo]
+    [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
 
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
@@ -54,7 +54,7 @@
 (defn todo-toggle-all []
   (fx/visibility!
     {:visible               (cF (boolean
-                                  (seq (todo/app-todos (fasc :app)))))
+                                  (seq (todo/app-todos (my-app)))))
      :maintainSize          true
      :maintainSemantics     false
      :maintainInteractivity false
@@ -65,7 +65,7 @@
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
                       (cty/with-fx-isolation
-                        (let [todos (todo/app-todos (fasc :app))
+                        (let [todos (todo/app-todos (my-app))
                               all-done? (every? (fn [td] (md/mget td :completed)) todos)]
                           (doseq [td todos]
                             ;; todo do all these in one change pulse

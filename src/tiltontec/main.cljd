@@ -6,6 +6,7 @@
             ["dart:developer" :as dev]
             ["dart:math" :as mth]
             ["dart:convert" :as convert]
+            [clojure.walk :as walk]
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.testing :as testing]
             [tiltontec.test.lazy-cells :as test-lazy]
@@ -30,21 +31,19 @@
             [tiltontec.example.x14-hero :as xhero]
             [tiltontec.example.x15-fade-widget :as xfade]
             [tiltontec.example.layout-explorer :as layo]
-            [tiltontec.demo.todoMVC.core :as todo]
-            [clojure.walk :as walk]
+            [tiltontec.demo.todoMVC.core :as td]
             ))
 
 (def version (atom nil :meta {}))
 
 (defn main []
-  #_(navo/main)
   ;;(set! r/debugPaintSizeEnabled true)
   #_ (let [tres (await (stor/test))]
     (dp :maintres tres))
 
   (material/runApp
     (fx/fx-render nil
-      (todo/make-app)))
+      (td/make-app)))
 
   ;;(widgets/debugDumpApp)
   )

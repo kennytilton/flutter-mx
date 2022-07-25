@@ -5,7 +5,7 @@
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :as todo]
+    [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
 
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
@@ -16,7 +16,7 @@
 (defn items-remaining-display []
   (fx/text! {}
     {:name :items-left}
-    (let [tds (todo/app-todos (fasc :app))
+    (let [tds (todo/app-todos (my-app))
           left (remove #(mget % :completed) tds)]
       (str (count left) " item" (when (not= 1 (count left))
                                   "s")))))
@@ -51,7 +51,7 @@
 
 (defn clear-completed-button []
   (fx/visibility!
-    {:visible           (cF (if-let [tds (todo/app-todos (fasc :app))]
+    {:visible           (cF (if-let [tds (todo/app-todos (my-app))]
                               (boolean
                                 (some #(mget % :completed) tds))
                               ;; nb might still be loading initially
