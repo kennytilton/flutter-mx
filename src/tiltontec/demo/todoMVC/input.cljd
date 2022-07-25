@@ -31,7 +31,6 @@
                                    (fx/->CBAsIs
                                      (fn [value]
                                        (cty/with-fx-isolation
-                                         (dp :onsub-running!!!????? value)
                                          (let [trimmed (str/trim value)]
                                            (if (str/blank? trimmed)
                                              ;; "onsubmit" removes the edit focus on submit; we restore for continued editing:
@@ -56,13 +55,12 @@
                                                    (md/mset! me :value value)))))
                                            c))}
       {:name  :todo-input
-       :value (cI (str "test " (rand-int 99)))})))
+       :value (cI "" #_ (str "test " (rand-int 99)))})))
 
 (defn todo-toggle-all []
   (fx/visibility!
-    {:visible               (cF (let [tds (todo/app-todos (fasc :app))]
-                                  (dpx :toggall-sees-tds!!!!! tds)
-                                  (boolean (seq tds))))
+    {:visible               (cF (boolean
+                                  (seq (todo/app-todos (fasc :app)))))
      :maintainSize          true
      :maintainSemantics     false
      :maintainInteractivity false
@@ -79,3 +77,13 @@
                             ;; todo do all these in one change pulse
                             (md/mset! td :completed (if all-done? false true))))))) ;; dataflow trigger
        :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))
+
+(defn todo-controls []
+  (fx/row
+    (fx/expanded {:flex 1}
+      (todo-toggle-all))
+    ; --- the input ----
+    (fx/expanded {:flex 9}
+      (fx/padding
+        {:padding ^:const (m.EdgeInsets/all 16.0)}
+        (todo-input)))))
