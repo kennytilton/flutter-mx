@@ -15,50 +15,44 @@
     [tiltontec.demo.todoMVC.todo :refer [my-todo-list td-ls-id td-completed td-title] :as todo]))
 
 (defn to-do-display [todo]
-  (assert todo "no todo todo display")
-  (dp :td-entry todo @todo)
-  (prn :prn-td-entry todo @todo)
-  (let [title (todo/td-title-x todo)]
+  (fx/list-tile
+    {:leading  (fx/check-box
+                 {:value     (cF (or (td-completed todo) false))
+                  :shape     (fx/rounded-rectangle-border
+                               {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
+                  :onChanged (cF (fx/->CBAsIs
+                                   (fn [value]
+                                     (cty/with-fx-isolation
+                                       (md/mset! todo :completed value)))))})
+     :trailing (fx/text-button
+                 ;; our "delete" icon on each to-do
+                 {:onPressed (fx/with-ctx+as-is [me ctx]
+                               (fn []
+                                 (cty/with-fx-isolation
+                                   (mswap! (my-todo-list) :kids
+                                     (fn [coll ls-id]
+                                       (remove (fn [td]
+                                                 (= ls-id (td-ls-id td))) coll))
+                                     (todo/td-ls-id todo)))))}
+                 (fx/text {:style (p/TextStyle
+                                    .fontFamily "Helvetica Neue"
+                                    .color (todo/title-red)
+                                    .fontWeight m.FontWeight/w200
+                                    .fontSize 20.0)}
+                   "X"))
 
-    (prn :tddisp-got-title title)
-    (fx/list-tile
-      {:leading  (fx/check-box
-                   {:value     (cF (or (td-completed todo) false))
-                    :shape     (fx/rounded-rectangle-border
-                                 {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
-                    :onChanged (cF (fx/->CBAsIs
-                                     (fn [value]
-                                       (cty/with-fx-isolation
-                                         (md/mset! todo :completed value)))))})
-       :trailing (fx/text-button
-                   ;; our "delete" icon on each to-do
-                   {:onPressed (fx/with-ctx+as-is [me ctx]
-                                 (fn []
-                                   (cty/with-fx-isolation
-                                     (mswap! (my-todo-list) :kids
-                                       (fn [coll ls-id]
-                                         (remove (fn [td]
-                                                   (= ls-id (td-ls-id td))) coll))
-                                       (todo/td-ls-id todo)))))}
-                   (fx/text {:style (p/TextStyle
-                                      .fontFamily "Helvetica Neue"
-                                      .color (todo/title-red)
-                                      .fontWeight m.FontWeight/w200
-                                      .fontSize 20.0)}
-                     "XX"))
-
-       :title    (cF (let [ldg (md/mget me :leading)
-                           #_#_ td (md/mget me :todo)]
-                       ;(assert td (str "no td in title rule for me " (minfo me) @me))
-                       (fx/text!
-                         {:style (cF (if (md/mget ldg :value)
-                                       (p/TextStyle
-                                         .color m.Colors/grey
-                                         .decoration p.TextDecoration/lineThrough)
-                                       (p/TextStyle .color m.Colors/black)))}
-                         (todo/td-title-x todo))))}
-      {:name :my-list-tile
-       :todo todo})))
+     :title    (cF (let [ldg (md/mget me :leading)
+                         #_#_ td (md/mget me :todo)]
+                     ;(assert td (str "no td in title rule for me " (minfo me) @me))
+                     (fx/text!
+                       {:style (cF (if (md/mget ldg :value)
+                                     (p/TextStyle
+                                       .color m.Colors/grey
+                                       .decoration p.TextDecoration/lineThrough)
+                                     (p/TextStyle .color m.Colors/black)))}
+                       (td-title todo))))}
+    {:name :my-list-tile
+     :todo todo}))
 
 (defn- commit-to-do-editing
   ([me todo]
