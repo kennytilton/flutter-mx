@@ -262,10 +262,10 @@
 
 (defn test-new-todo-list []
   (dp :BAM-new-todo)
-  (let [tl (todo/make-todo-list "boom")]
+  (let [tl (todo/make-ToDoList "boom")]
     (dp :back)
     (dp :bingo-td-list @tl)
-    (md/mswap! tl :kids conj (todo/make-todo tl "wash dog" false))
+    (md/mswap! tl :kids conj (todo/make-ToDo tl "wash dog" false))
     (dp :pushed!!!!!!)
     (dp :tl+1 @tl)
     (dp :k1 @(first (mget tl :kids)))
@@ -318,13 +318,13 @@
       (dp :read id :notfound))))
 
 (defn test-old-todo-list []
-  (let [tl (todo/make-todo-list "todos")]
+  (let [tl (todo/make-ToDoList "todos")]
     (when-let [current (await (store/read-all-docs "todos"))]
       (dp :bingo-current! current)
       (md/mset! tl :kids
         (mapv (fn [ls-td]
                 (let [{:keys [title completed ls-id sid]} ls-td]
-                  (todo/make-todo tl title completed sid ls-id)))
+                  (todo/make-ToDo tl title completed sid ls-id)))
           current))
 
       (doseq [k (mget tl :kids)]
@@ -333,7 +333,7 @@
 (defn load-mx-db [name]
   (dp :loading-coll-into-mx name)
   (cty/with-fx-isolation
-    (let [tdl (todo/td-list-load "todo")]
+    (let [tdl (todo/ToDoList-load "todo")]
       (dp :tdl-got-tdl!!! tdl)
       (dp :tdl-got-tdl!!! (minfo tdl)
         :todo-ct (count (mkids tdl)))
@@ -393,7 +393,7 @@
   (dp :test-col-inittted!!!!!!!!!!!---------------------)
   (await (coll-dump :post-test-col-init "todo"))
 
-  (let [tdl (await (todo/td-list-load "todo"))]
+  (let [tdl (await (todo/ToDoList-load "todo"))]
     (dp :TEST-tdlistload-returns tdl (minfo tdl))
     (doseq [k (mkids tdl)]
       (dp :td-loaded (minfo k) (todo/td-title k)))
@@ -428,68 +428,12 @@
 
   (await (coll-dump :confirm-coll-init "todo"))
 
-  #_(let [dall (await (store/delete-all-docs "todo"))]
-      (dp :dall!!!!! dall)
-      (await (coll-dump :post-delete-all "todo")))
-
-  ;(test-delete-via-kids)
-
-
-
-  #_(let [tdl (todo/td-list-load "todo")]
-      (dp :TEST-tdlistload-returns tdl (minfo tdl)))
-
-  #_(let [raw (store/read-all-docs "todo")]
-      (dp :all-todos-raw!!! raw)
-      (let [aw (await raw)]
-        (dp :awaited aw)
-        (dp :raw-is-now raw)
-        aw))
-
-
-
-  #_(let [td (load-mx-db "todo")]
-      (dp :mxdb! (minfo td))
-      (dp :todoct! (count (mkids td)))
-      (doseq [td (mkids td)]
-        (dp :td (minfo td))))
 
   ;(reset! todo/todo-sid 0)
   ;(test-new-todo-list)
   ;(test-old-todo-list)
   )
 
-
-
-#_(doseq [db-id (keys docs)]
-    (dp :deleting db-id (string? db-id))
-    (let [dres (await (-> db
-                        (.collection coll-name)
-                        (.doc db-id)
-                        .delete))]
-      (dp :dlete-says dres)))
-
-#_(let [tds (for [k (keys docs)]
-              (let [td (get docs k)]
-                (walk/keywordize-keys
-                  (into {}
-                    (for [k (keys td)]
-                      [k (get td k)])))))]
-    (dp :todos!!!! tds)
-    (doseq [td tds]
-      (dp :deleting (:ls-id td))
-      (let [dres (await (-> db
-                          (.collection "todos")
-                          (.doc (:ls-id td))
-                          .delete))]
-        (dp :dlete-says dres)))
-    #_(doseq [td tds]
-        (dp :deleting (:ls-id td))
-        (let [dres (await (-> db
-                            (.collection "todos")
-                            (.doc (:ls-id td))
-                            .delete))]
-          (dp :dlete-says dres))))
 
 #_ (def test-todos
      ;;[]

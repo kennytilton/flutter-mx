@@ -17,43 +17,18 @@
 (defn title-red []
   (.fromRGBO m/Color 184 63 69 0.5))
 
-(def todo-sid (atom 0))
-
-(declare td-delete)
+(def todo-sid
+  "debug aid"
+  (atom 0))
 
 (defn td-ls-id [td] (mget td :ls-id))
 (defn td-sid [td] (mget td :sid))
 (defn td-title [td] (mget td :title))
 (defn td-completed [td] (mget td :completed))
 
-(deftype ToDoList []
-  :extends cty/Model
-  cty/PObserver
-  (observe [this slot me new-value prior-value cell]
-    ;; no need to observer initial value observation, when prior is unbound
-
-    (case slot
-      :kids (when (not= cty/unbound prior-value)
-              (let [lost (util/difference (set prior-value) (set new-value))]
-                (dp :lost-TDs!!!! lost)
-                (dp :lost-TDs!!!! (map td-ls-id lost))
-                (await (doseq [td lost]
-                         (dp :deleting=TD (td-ls-id td))
-                         (await (td-delete "todo" (td-ls-id td)))))))
-      )))
-
-(defn make-todo-list
-  ([name] (make-todo-list name nil))
-  ([name existing-todos]
-   (md/make
-     :mx-type (ToDoList.)
-     :name name
-     :kids (cFn (mapv (fn [xtd]
-                        (let [{:keys [title completed ls-id sid]} xtd]
-                          (make-todo me title completed sid ls-id)))
-                  existing-todos)))))
-
-(defn td-initialize [collection-name td-map]
+(defn td-initialize
+  "Create a LS to-do from a CLJD map alone, returning LS id."
+  [collection-name td-map]
   (assert (not (:ls-id td-map)) "td-map already written")   ;; already written
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
@@ -65,7 +40,9 @@
       (.set (walk/stringify-keys new-data)))
     new-id))
 
-(defn td-rewrite [collection-name td-map]
+(defn td-rewrite
+  "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
+  [collection-name td-map]
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)
@@ -76,40 +53,32 @@
              (.set (walk/stringify-keys td-map))))
     ls-id))
 
-(defn td-update [td]
-  (assert (cty/md-ref? td))
-  (assert (td-ls-id td))
-  (dp :td-updating!!!! (td-ls-id td) @td)
-  (assert (mget td :par))
-  (let [coll-name (mget (mget td :par) :name)]
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    (let [db (.-instance ls/Localstore)
-          coll (.collection db coll-name)
-          new-data (select-keys @td [:ls-id :title :completed :sid])]
-      (-> coll
-        (.doc (td-ls-id td))
-        (.set (walk/stringify-keys new-data))))))
-
-(defn td-delete [collection-name ls-id]
+(defn td-delete
+  "Delete to-do data with given LS id from LS"
+  [collection-name ls-id]
+  (assert ls-id "td-delete requires ls-id")
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)]
-    (assert ls-id "td-delete requires ls-id")
     (await (-> coll
              (.doc ls-id)
              .delete))
     ls-id))
+
+;;; --- FX-level to-dos and to-do list -----------------------------------------
+
+(declare ToDo-update)
 
 (deftype ToDo []
   :extends cty/Model
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
     (when (and (td-ls-id me) (not= cty/unbound prior-value))
-      (td-update me))))
+      (ToDo-update me))))
 
-(defn make-todo
+(defn make-ToDo
   ([td-lst title completed]
-   (make-todo td-lst title completed
+   (make-ToDo td-lst title completed
      (swap! todo-sid inc) nil))
   ([td-lst title completed sid ls-id]
    (md/make
@@ -125,12 +94,38 @@
      :title (cI title)
      :completed (cI completed))))
 
+(defn ToDo-update [td]
+  (let [coll-name (mget (mget td :par) :name)]
+    (td-rewrite coll-name (select-keys @td [:ls-id :title :completed :sid]))))
+
 ;;; --- higher level ---------------------------
 
-(defn td-list-load
+(deftype ToDoList []
+  :extends cty/Model
+  cty/PObserver
+  (observe [this slot me new-value prior-value cell]
+    (case slot
+      :kids (when (not= cty/unbound prior-value)
+              (let [lost (util/difference (set prior-value) (set new-value))]
+                (await (doseq [td lost]
+                         (dp :deleting=TD (td-ls-id td))
+                         (await (td-delete "todo" (td-ls-id td))))))))))
+
+(defn make-ToDoList
+  ([name] (make-ToDoList name nil))
+  ([name existing-todos]
+   (md/make
+     :mx-type (ToDoList.)
+     :name name
+     :kids (cFn (mapv (fn [xtd]
+                        (let [{:keys [title completed ls-id sid]} xtd]
+                          (make-ToDo me title completed sid ls-id)))
+                  existing-todos)))))
+
+(defn ToDoList-load
   "returns a future; await to get full-blown todos"
   [name]
-  (make-todo-list name
+  (make-ToDoList name
     (await (store/read-all-docs name))))
 
 ;;; --- even higher level ---------------------------------------

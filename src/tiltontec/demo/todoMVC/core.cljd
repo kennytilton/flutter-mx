@@ -19,7 +19,7 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare todo-app-bar todo-controls my-fab )
+(declare todo-app-bar)
 
 (defn make-app []
   (let [title "todos"]
@@ -39,7 +39,7 @@
                                         (cty/with-fx-isolation
                                           (mset! me :todo-db tdl)))))]
                          ;; next returns an MX proxy of a to-do family, as a future
-                         (todo/td-list-load "todo"))}
+                         (todo/ToDoList-load "todo"))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -73,7 +73,7 @@
 
 (defn todo-app-bar [title]
   (fx/preferred-size
-    {:preferredSize (.fromHeight m/Size 100)}
+    {:preferredSize (.fromHeight m/Size 80)}
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
                  :title           (fx/column
                                     {:crossAxisAlignment m.CrossAxisAlignment/end}

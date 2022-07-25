@@ -3,9 +3,7 @@
     [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
-    [tiltontec.cell.integrity :as integrity]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.mx-flutter.store :as store]
     [tiltontec.demo.todoMVC.todo :as todo]
 
     ["dart:convert" :as convert]
@@ -27,25 +25,21 @@
                                    .hintText "What needs doing?"
                                    .border m.InputBorder/none
                                    .contentPadding (m.EdgeInsets/all 9.0))
-                    :onSubmitted (cF
-                                   (fx/->CBAsIs
-                                     (fn [value]
-                                       (cty/with-fx-isolation
-                                         (let [trimmed (str/trim value)]
-                                           (if (str/blank? trimmed)
-                                             ;; "onsubmit" removes the edit focus on submit; we restore for continued editing:
-                                             (.requestFocus ^m/FocusNode (md/mget me :focusNode))
-                                             ;; --- non-blank entry, so we save...
-                                             (let [app (md/fasc :app)
-                                                   td-lst (md/mget app :todo-db)]
+                    :onSubmitted (cF (fx/as-is
+                                       (fn [value]
+                                         (cty/with-fx-isolation
+                                           ;; blank or not we need to restore focus to the input per the spec
+                                           (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                           (let [trimmed (str/trim value)]
+                                             (when-not (str/blank? trimmed)
+                                               ;; --- non-blank entry, so we save, clear entry, and store
                                                (md/mset! me :value trimmed)
-
-                                               (let [c ^m/TextEditingController (md/mget me :controller)]
-                                                 (.clear ^m/TextEditingController c)
-                                                 (.requestFocus ^m/FocusNode (md/mget me :focusNode)) ;; yep. onsubmit clears focus. restore
-                                                 ;; now make the to-do, and add to _end_ of list using concat
+                                               (.clear ^m/TextEditingController
+                                                 (md/mget me :controller))
+                                               (let [app (md/fasc :app)
+                                                     td-lst (md/mget app :todo-db)]
                                                  (let [kp (mkids td-lst)]
-                                                   (mset! td-lst :kids (concat kp [(todo/make-todo td-lst trimmed false)])))))))))))
+                                                   (mset! td-lst :kids (concat kp [(todo/make-ToDo td-lst trimmed false)]))))))))))
                     :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
@@ -55,7 +49,7 @@
                                                    (md/mset! me :value value)))))
                                            c))}
       {:name  :todo-input
-       :value (cI "" #_ (str "test " (rand-int 99)))})))
+       :value (cI "" #_(str "test " (rand-int 99)))})))
 
 (defn todo-toggle-all []
   (fx/visibility!

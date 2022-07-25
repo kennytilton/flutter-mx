@@ -2,10 +2,8 @@
   (:require
     [clojure.string :as str]
     [tiltontec.model.core :refer [mget mswap! mset!] :as md]
-    [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.mx-flutter.store :as store]
     [tiltontec.demo.todoMVC.todo :as todo]
 
     ["dart:convert" :as convert]
@@ -81,7 +79,7 @@
                   (fx/focus-scope
                     ;; focus subtlety: we want the newly created TextField to autofocus, but
                     ;; the to-do input field is already focused, and autofocus does not jump those
-                    ;; unless in a fresh scope. So we Lego in a scope.
+                    ;; unless in a fresh scope. So ^^^ we throw in a scope.
                     {:onFocusChange (cF (fx/with-ctx+as-is [me ctx]
                                           (fn [focused?]
                                             (cty/with-fx-isolation
@@ -89,8 +87,9 @@
                                                 ;; spec says commit on blur...
                                                 (commit-to-do-editing (md/fm* :todo-editor) todo)
                                                 (md/mset! (md/fasc :item-control) :editing? false))))))}
-                    {:owner tile}                           ;; this scope widget is a delegate, not a child, so we record the ListTile as the "owner",
-                    ;; and modified navigation to try any owner if parent is nil while searching up the Matrix.
+                    {:owner tile}
+                    ;; ^^^ this widget is a delegate, not a child, so we record the ListTile as the "owner",
+                    ;; and modified navigation to try any owner if "parent" is nil while searching up the Matrix.
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
@@ -119,17 +118,8 @@
                                                              ;; spec says to commit on Enter
                                                              (cty/with-fx-isolation
                                                                (commit-to-do-editing me todo value)))))
-                                        :controller  (cFonce
-                                                       ;; cFonce is a rarely used rule generator for a rule guaranteed
-                                                       ;; to run only once, on instance initialization, even if
-                                                       ;; reactive values used by the rule change.
-                                                       ;; We want the rule not for reactivity, rather so we can
-                                                       ;; reference "me" (self) in the initform.
-                                                       ;; In this case we just want the initial value
-                                                       ;; so we can initialize the controller, and we do not
-                                                       ;; want to create controllers on every keystroke.
-                                                       (m/TextEditingController
-                                                         .text (md/mget me :value)))}
+                                        :controller  (cFonce (m/TextEditingController
+                                                               .text (md/mget me :value)))}
                           {:name  :todo-editor
                            :value (cI title)}))))))}
     {:todo  todo
