@@ -1,19 +1,19 @@
 (ns tiltontec.demo.todoMVC.todo
   (:require
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["dart:convert" :as convert]
+    ["package:localstore/localstore.dart" :as ls]
     [clojure.walk :as walk]
 
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
-    [tiltontec.model.core :refer [mget] :as md]
-
-    ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/material.dart" :as m]
-    ["dart:convert" :as convert]
-    ["package:localstore/localstore.dart" :as ls]
+    [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
     [tiltontec.mx-flutter.store :as store]))
 
+;;; --- should be in a utils file ----------------------
 (defn title-red []
   (.fromRGBO m/Color 184 63 69 0.5))
 
@@ -21,9 +21,18 @@
   ;; fasc "captures" 'me
   `(tiltontec.model.core/fasc :app))
 
+(defmacro my-todo-list []
+  `(tiltontec.model.core/mget (tiltontec.model.core/fasc :app) :todo-list))
+
+;;; --- handy accessors ---------------------------------
+
 (defn td-ls-id [td] (mget td :ls-id))
-(defn td-title [td] (mget td :title))
+(defn td-title [td]
+  (assert td "td-title in td is nil")
+  (mget td :title))
 (defn td-completed [td] (mget td :completed))
+
+;;; --- core LS functions re to-dos ----------------------
 
 (defn td-initialize
   "Create a LS to-do from a CLJD map alone, returning LS id."
@@ -91,7 +100,7 @@
      :completed (cI completed))))
 
 (defn ToDo-update [td]
-  (let [coll-name (mget (mget td :par) :name)]
+  (let [coll-name (mname (mpar td))]
     (td-rewrite coll-name (select-keys @td [:ls-id :title :completed]))))
 
 ;;; --- higher level ---------------------------
@@ -130,6 +139,6 @@
   ;; we have to wait for async load of the to-do collection from localstorage
   (assert app "at no app")
   (assert (cty/md-ref? app))
-  (when-let [td-lst (tiltontec.model.core/mget app :todo-db)]
+  (when-let [td-lst (tiltontec.model.core/mget app :todo-list)]
     (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
     (md/mkids td-lst)))

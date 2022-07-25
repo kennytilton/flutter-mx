@@ -12,13 +12,15 @@
     [tiltontec.model.core :refer [mget mswap! mset!] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-app td-ls-id td-completed] :as todo]))
+    [tiltontec.demo.todoMVC.todo :refer [my-todo-list td-ls-id td-completed td-title] :as todo]))
 
 (defn to-do-display [todo]
-  (let [title (md/mget todo :title)]
+  (assert todo "no todo todo display")
+  (let [title (td-title todo)]
+
     (fx/list-tile
       {:leading  (fx/check-box
-                   {:value     (cF (or (md/mget todo :completed) false))
+                   {:value     (cF (or (td-completed todo) false))
                     :shape     (fx/rounded-rectangle-border
                                  {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
                     :onChanged (cF (fx/->CBAsIs
@@ -30,10 +32,10 @@
                    {:onPressed (fx/with-ctx+as-is [me ctx]
                                  (fn []
                                    (cty/with-fx-isolation
-                                     (mswap! (mget (md/fasc :app) :todo-db) :kids
+                                     (mswap! (my-todo-list) :kids
                                        (fn [coll ls-id]
                                          (remove (fn [td]
-                                                   (= ls-id (todo/td-ls-id td))) coll))
+                                                   (= ls-id (td-ls-id td))) coll))
                                        (todo/td-ls-id todo)))))}
                    (fx/text {:style (p/TextStyle
                                       .fontFamily "Helvetica Neue"
@@ -43,14 +45,15 @@
                      "X"))
 
        :title    (cF (let [ldg (md/mget me :leading)
-                           title (md/mget (md/mget me :todo) :title)]
+                           #_#_ td (md/mget me :todo)]
+                       ;(assert td (str "no td in title rule for me " (minfo me) @me))
                        (fx/text!
                          {:style (cF (if (md/mget ldg :value)
                                        (p/TextStyle
                                          .color m.Colors/grey
                                          .decoration p.TextDecoration/lineThrough)
                                        (p/TextStyle .color m.Colors/black)))}
-                         title)))}
+                         (td-title (md/mget me :todo)))))}
       {:name :my-list-tile
        :todo todo})))
 
@@ -60,20 +63,23 @@
      (commit-to-do-editing me todo (.-text tx-con))))
   ;--------
   ([me todo value]
-   (let [ls-id (mget todo :ls-id)
+   (let [ls-id (td-ls-id todo)
          trimmed (str/trim value)]
      (if (str/blank? trimmed)
        (do
-         (md/mswap! (mget (md/fasc :app) :todo-db) :kids
-           (partial remove (fn [td] (= ls-id (todo/td-ls-id td))))))
+         (md/mswap! (my-todo-list) :kids
+           ;; todo propagate this to other mswaps
+           (partial remove (fn [td] (= ls-id (td-ls-id td))))))
        (do
          (md/mset! todo :title trimmed)                     ;; two dataflow triggers
          (md/mset! (md/fasc :item-control) :editing? false))))))
 
 (defn to-do-editor [me todo]
+  (assert todo)
   (fx/list-tile
     {:title (cF (let [tile me
-                      title (md/mget todo :title)]
+                      _ (assert todo "no todo in editor")
+                      title (td-title todo)]
                   (fx/focus-scope
                     ;; focus subtlety: we want the newly created TextField to autofocus, but
                     ;; the to-do input field is already focused, and autofocus does not jump those
@@ -129,7 +135,7 @@
      :visible           (cF (case (md/fmuval :completions :selection)
                               :all true
                               ;; todo convert mgets to td-*
-                              :active (not (mget todo :completed))
+                              :active (not (td-completed todo))
                               :done (td-completed todo)))
      :maintainSize      false
      :maintainAnimation true

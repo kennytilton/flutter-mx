@@ -5,7 +5,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar] :as md]
+    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar mkids] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
     [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
@@ -40,12 +40,12 @@
        :debugShowMaterialGrid      false                    ;; but fun
        }
       {:name           :app
-       :todo-db        (cI nil)
-       :todo-db-loader (cF+ [:obs (fn [_ me load _ _]
+       :todo-list        (cI nil)
+       :todo-list-loader (cF+ [:obs (fn [_ me load _ _]
                                     (.then ^#/(Future dynamic) load
                                       (fn [tdl]
                                         (cty/with-fx-isolation
-                                          (mset! me :todo-db tdl)))))]
+                                          (mset! me :todo-list tdl)))))]
                          ;; next returns an MX proxy of a to-do family, as a future
                          (todo/ToDoList-load "todo"))}
       (fx/scaffold
@@ -72,7 +72,7 @@
                                            ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
                                            ;; aka convert FX proxy to real CLJD/Flutter widget
                                            (fx/fx-render ctx
-                                             (nth (mget me :kids) i)))))}
+                                             (nth (mkids me) i)))))}
                 {}
                 (map item/todo-list-item
                   (todo/app-todos (my-app)))))))))))

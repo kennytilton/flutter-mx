@@ -1,16 +1,16 @@
 (ns tiltontec.demo.todoMVC.input
   (:require
-    [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
-    [tiltontec.cell.observer :refer [fn-obs]]
-    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
-    [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
-
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+
+    [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.demo.todoMVC.todo :refer [my-app my-todo-list td-completed] :as todo]
+
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [clojure.string :as str]))
@@ -29,15 +29,16 @@
                                        (fn [value]
                                          (cty/with-fx-isolation
                                            ;; blank or not we need to restore focus to the input per the spec
-                                           (.requestFocus ^m/FocusNode (md/mget me :focusNode))
+                                           (.requestFocus ^m/FocusNode (mget me :focusNode))
+                                           ;; spec says to trim, and to silently ignore blank entry
                                            (let [trimmed (str/trim value)]
                                              (when-not (str/blank? trimmed)
                                                ;; --- non-blank entry, so we save, clear entry, and store
-                                               (md/mset! me :value trimmed)
+                                               (md/mset! me :value trimmed) ;; let text proxy know its cleaned value
                                                (.clear ^m/TextEditingController
                                                  (md/mget me :controller))
-                                               (let [app (md/fasc :app)
-                                                     td-lst (md/mget app :todo-db)]
+                                               (let [app (my-app)
+                                                     td-lst (my-todo-list)]
                                                  (let [kp (mkids td-lst)]
                                                    (mset! td-lst :kids (concat kp [(todo/make-ToDo td-lst trimmed false)]))))))))))
                     :controller  (cFonce (let [c (m/TextEditingController .text (md/mget me :value))]
@@ -66,7 +67,7 @@
                     (fn []
                       (cty/with-fx-isolation
                         (let [todos (todo/app-todos (my-app))
-                              all-done? (every? (fn [td] (md/mget td :completed)) todos)]
+                              all-done? (every? td-completed todos)]
                           (doseq [td todos]
                             ;; todo do all these in one change pulse
                             (md/mset! td :completed (if all-done? false true))))))) ;; dataflow trigger

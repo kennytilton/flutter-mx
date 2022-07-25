@@ -3,9 +3,9 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
-    [tiltontec.model.core :refer [mget mset! mswap! fasc] :as md]
+    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
+    [tiltontec.demo.todoMVC.todo :refer [my-app my-todo-list td-completed] :as todo]
 
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
@@ -17,7 +17,7 @@
   (fx/text! {}
     {:name :items-left}
     (let [tds (todo/app-todos (my-app))
-          left (remove #(mget % :completed) tds)]
+          left (remove td-completed tds)]
       (str (count left) " item" (when (not= 1 (count left))
                                   "s")))))
 
@@ -53,7 +53,7 @@
   (fx/visibility!
     {:visible           (cF (if-let [tds (todo/app-todos (my-app))]
                               (boolean
-                                (some #(mget % :completed) tds))
+                                (some td-completed tds))
                               ;; nb might still be loading initially
                               false))
      ;; todo next: simpler visibility calls
@@ -64,6 +64,6 @@
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
                       (cty/with-fx-isolation
-                        (md/mswap! (mget (md/fasc :app) :todo-db) :kids
-                          (partial remove #(mget % :completed))))))}
+                        (md/mswap! (my-todo-list) :kids
+                          (partial remove td-completed)))))}
       (fx/text "Clear done"))))
