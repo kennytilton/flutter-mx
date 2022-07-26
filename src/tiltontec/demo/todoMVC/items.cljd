@@ -1,4 +1,4 @@
-(ns tiltontec.demo.todoMVC.list-item
+(ns tiltontec.demo.todoMVC.items
   (:require
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
@@ -9,10 +9,10 @@
     [clojure.string :as str]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.model.core :refer [mget mswap! mset!] :as md]
+    [tiltontec.model.core :refer [mget mswap! mset! mkids mpar] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-todo-list td-ls-id td-completed td-title] :as todo]))
+    [tiltontec.demo.todoMVC.todo :refer [my-app my-todo-list td-ls-id td-completed td-title] :as todo]))
 
 (defn to-do-display [todo]
   (fx/list-tile
@@ -149,3 +149,29 @@
       (if (mget me :editing?)
         (to-do-editor me todo)
         (to-do-display todo)))))
+
+(defn todo-items []
+  (fx/expanded
+    ;; ^^^ required sizer to join column
+    (fx/list-view+separated
+      {:padding          ^:const (m.EdgeInsets/all 0.0)
+       :itemCount        (cF (count #_ (my-todo-list) (todo/app-todos (my-app))))
+       :separatorBuilder (cF (fx/as-is
+                               ;; hhack lower thickness to 0.5 or 0.75
+                               (fn [ctx i]
+                                 (dp :building-sep i (minfo me)
+                                   (count (mkids me))
+                                   (minfo (nth (mkids me) i)))
+                                 (if (mget (nth (mkids me) i) :selected?)
+                                   (m/Divider .thickness 2.0)
+                                   (m/Divider .height 0.0 .thickness 0.0)
+                                   ))))
+       :itemBuilder      (cF (fx/as-is
+                               (fn [ctx i]
+                                 ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
+                                 ;; aka convert FX proxy to real CLJD/Flutter widget
+                                 (fx/fx-render ctx
+                                   (nth (mkids me) i)))))}
+      {}
+      (map todo-list-item
+        (todo/app-todos (my-app))))))

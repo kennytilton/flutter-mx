@@ -10,7 +10,7 @@
     [tiltontec.mx-flutter.core :as fx]
     [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
     [tiltontec.demo.todoMVC.input :as input]
-    [tiltontec.demo.todoMVC.list-item :as item]
+    [tiltontec.demo.todoMVC.items :as items]
     [tiltontec.demo.todoMVC.footer :as footer]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
@@ -60,30 +60,9 @@
           (fx/column
             (input/todo-controls)
             ; --- to-do list ------------------
-            (fx/expanded
-              ;; ^^^ required sizer to join column
-              (fx/list-view+separated
-                {:padding          ^:const (m.EdgeInsets/all 0.0)
-                 :itemCount        (cF (count (todo/app-todos (my-app))))
-                 :separatorBuilder (cF (fx/as-is
-                                         ;; hhack lower thickness to 0.5 or 0.75
-                                         (fn [ctx i]
-                                           (dp :building-sep i (minfo me)
-                                             (count (mkids me))
-                                             (minfo (nth (mkids me) i)))
-                                           (if (mget (nth (mkids me) i) :selected?)
-                                             (m/Divider .thickness 2.0)
-                                             (m/Divider .height 0.0 .thickness 0.0)
-                                             ))))
-                 :itemBuilder      (cF (fx/as-is
-                                         (fn [ctx i]
-                                           ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
-                                           ;; aka convert FX proxy to real CLJD/Flutter widget
-                                           (fx/fx-render ctx
-                                             (nth (mkids me) i)))))}
-                {}
-                (map item/todo-list-item
-                  (todo/app-todos (my-app)))))))))))
+            (items/todo-items)
+            (fx/text "Double-click to edit a todo")
+            (fx/text "by Kenny Tilton")))))))
 
 ;;; todo credits in alert
 
