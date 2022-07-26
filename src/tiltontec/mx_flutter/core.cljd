@@ -582,15 +582,9 @@
                          (apply concat kvs)))))
        nil)))
 
-;;; --- childless stateless --------------------------------------------------------
+;;; --- kids for builder ------------------------------------------------------
 
-(defmacro icon-button [& vargs]
-  (let [[fx-props mx-props] vargs]
-    `(childless-stateless m/IconButton ~fx-props ~mx-props)))
-
-
-
-(defmacro separated-ad-lib [fx-class fx-props mx-props & children]
+(defmacro kids-for-builder [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
@@ -605,13 +599,16 @@
                          (apply concat kvs)))))
        (tiltontec.model.core/cFkids ~@children))))
 
-(defmacro list-view+separated [& vargs]
-  (let [[fx-props mx-props & children] vargs]
-    `(separated-ad-lib m.ListView/separated ~fx-props ~mx-props ~@children)))
+;;; --- childless stateless --------------------------------------------------------
 
-(defmacro list-view+builder [& vargs]
-  (let [[fx-props mx-props & children] vargs]
-    `(separated-ad-lib m.ListView/builder ~fx-props ~mx-props ~@children)))
+(defmacro icon-button [& vargs]
+  (let [[fx-props mx-props] vargs]
+    `(childless-stateless m/IconButton ~fx-props ~mx-props)))
+
+;(deftag tiltontec.mx-flutter.core/childless-stateless icon-button m/IconButton)
+
+(deftag tiltontec.mx-flutter.core/kids-for-builder list-view+separated m.ListView/separated)
+(deftag tiltontec.mx-flutter.core/kids-for-builder list-view+builder m.ListView/builder)
 
 ;;; -------------------------------------------------------------
 
@@ -624,45 +621,12 @@
 (defmacro transorm+rotate-ful [fx-props mx-props & children]
   `(k1-child-stateful m.Transform/rotate ~fx-props ~mx-props ~@children))
 
-
-
 (deftag tiltontec.mx-flutter.core/k1-home-stateful material-app m/MaterialApp)
 (deftag tiltontec.mx-flutter.core/k1-param1-stateful text! m/Text)
 
 (deftag tiltontec.mx-flutter.core/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
 (deftag tiltontec.mx-flutter.core/childless-stateless list-tile m/ListTile)
 (deftag tiltontec.mx-flutter.core/childless-stateless flutter-logo m/FlutterLogo)
-
-(defmacro k1-child-stateful-ex [fx-class fx-props mx-props & children]
-  (let []
-    `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
-       ~fx-props
-       (assoc ~mx-props
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn [me ctx]
-                   (reify :extends (m/StatefulWidget
-                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
-                     (~'createState [_#]
-                       (reify :extends w/State
-                         ^:mixin m/SingleTickerProviderStateMixin
-                         (^void ~'initState [this]
-                           ;(.initState ~'^super this)
-                           (record-fx$state me this)
-                           (when-let [init (tiltontec.model.core/mget me :initState)]
-                             ;; this is where widgets can build controllers who vsync
-                             (init this me)))
-                         (~'build [_# ctx]
-                           (let [k1# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
-                                       (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-class
-                               .child k1#
-                               ~@(let [kvs (for [[k# _#] fx-props]
-                                             [(symbol (str "." (name k#)))
-                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
-                                                    (tiltontec.model.core/mget me ~k#))])]
-                                   (apply concat kvs))))))))))
-       (tiltontec.model.core/cFkids ~@children))))
 
 (deftag tiltontec.mx-flutter.core/k1-child-stateless single-child-scroll-view m/SingleChildScrollView)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless expanded m/Expanded)
@@ -673,7 +637,7 @@
 (deftag tiltontec.mx-flutter.core/k1-child-stateless align m/Align)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless ignore-pointer m/IgnorePointer)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless visibility m/Visibility)
-(deftag tiltontec.mx-flutter.core/k1-child-stateful-ex visibility! m/Visibility)
+(deftag tiltontec.mx-flutter.core/k1-child-stateful visibility! m/Visibility)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless opacity m/Opacity)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful opacity! m/Opacity)
 (deftag tiltontec.mx-flutter.core/k1-child-stateful ink m/Ink)
@@ -699,7 +663,6 @@
 
 (deftag tiltontec.mx-flutter.core/k1-child-stateless drawer m/Drawer)
 (deftag tiltontec.mx-flutter.core/k1-child-stateless sized-box m/SizedBox)
-
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
   `(tiltontec.mx-flutter.core/cb-with-ctx [~me ~ctx]
