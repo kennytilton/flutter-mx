@@ -127,6 +127,7 @@
 
 (defn todo-list-item [todo]
   (fx/visibility!
+    ;; todo try with SizedBox.shrink
     {:key               (m/ValueKey. (td-ls-id todo))
      :visible           (cF (mget me :selected?))
      :maintainSize      false
@@ -157,7 +158,7 @@
        :itemCount        (cF (count (mkids me)))
        :itemBuilder      (cF (fx/as-is
                                (fn [ctx i]
-                                 ;; we must yield a native Flutter widget ready for Flutter, so we "render",
+                                 ;; we must yield a native Flutter widget ready for Flutter, so we must "render",
                                  (fx/fx-render ctx
                                    (nth (mkids me) i)))))}
       (map todo-list-item
