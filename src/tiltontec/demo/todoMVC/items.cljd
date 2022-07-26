@@ -42,7 +42,7 @@
                    "X"))
 
      :title    (cF (let [ldg (md/mget me :leading)
-                         #_#_ td (md/mget me :todo)]
+                         #_#_td (md/mget me :todo)]
                      ;(assert td (str "no td in title rule for me " (minfo me) @me))
                      (fx/text!
                        {:style (cF (if (md/mget ldg :value)
@@ -133,10 +133,10 @@
      :maintainAnimation true
      :maintainState     true}
     {:selected? (cF (case (md/fmuval :completions :selection)
-                     :all true
-                     ;; todo convert mgets to td-*
-                     :active (not (td-completed todo))
-                     :done (td-completed todo)))}
+                      :all true
+                      ;; todo convert mgets to td-*
+                      :active (not (td-completed todo))
+                      :done (td-completed todo)))}
     (fx/gesture-detector
       {:onDoubleTap (fx/with-ctx+as-is [me ctx]
                       (fn []
@@ -150,28 +150,48 @@
         (to-do-editor me todo)
         (to-do-display todo)))))
 
+#_(fx/list-view+builder
+    {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
+     :itemCount   25
+     :itemBuilder (fx/->CBAsIs
+                    (fn [ctx i] (fake-item (odd? i))))})
+
+#_
 (defn todo-items []
   (fx/expanded
     ;; ^^^ required sizer to join column
-    (fx/list-view+separated
-      {:padding          ^:const (m.EdgeInsets/all 0.0)
-       :itemCount        (cF (count #_ (my-todo-list) (todo/app-todos (my-app))))
-       :separatorBuilder (cF (fx/as-is
-                               ;; hhack lower thickness to 0.5 or 0.75
-                               (fn [ctx i]
-                                 (dp :building-sep i (minfo me)
-                                   (count (mkids me))
-                                   (minfo (nth (mkids me) i)))
-                                 (if (mget (nth (mkids me) i) :selected?)
-                                   (m/Divider .thickness 2.0)
-                                   (m/Divider .height 0.0 .thickness 0.0)
-                                   ))))
-       :itemBuilder      (cF (fx/as-is
-                               (fn [ctx i]
-                                 ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
-                                 ;; aka convert FX proxy to real CLJD/Flutter widget
-                                 (fx/fx-render ctx
-                                   (nth (mkids me) i)))))}
+    (fx/list-view+builder
+      {:padding     ^:const (m.EdgeInsets/all 0.0)
+       :itemCount   (cF (count (mkids me) #_(my-todo-list) #_ (todo/app-todos (my-app))))
+       :itemBuilder (cF (fx/as-is
+                          (fn [ctx i]
+                            (dp :ib-entry!!!!!!! i (count (mkids me)))
+                            ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
+                            ;; aka convert FX proxy to real CLJD/Flutter widget
+                            (let [item (fx/fx-render ctx
+                                         (nth (mkids me) i))]
+                              (dp :item!!!!!! item)
+                              item))))}
       {}
       (map todo-list-item
         (todo/app-todos (my-app))))))
+
+(defn todo-items []
+    (fx/expanded
+      ;; ^^^ required sizer to join column
+      (fx/list-view+separated
+        {:padding          ^:const (m.EdgeInsets/all 0.0)
+         :itemCount        (cF (count (mkids me)))
+         :separatorBuilder (cF (fx/as-is
+                                 ;; hhack lower thickness to 0.5 or 0.75
+                                 (fn [ctx i]
+                                   (m/Divider .thickness 2.0))))
+         :itemBuilder      (cF (fx/as-is
+                                 (fn [ctx i]
+                                   ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
+                                   ;; aka convert FX proxy to real CLJD/Flutter widget
+                                   (fx/fx-render ctx
+                                     (nth (mkids me) i)))))}
+        {}
+        (map todo-list-item
+          (todo/app-todos (my-app))))))
