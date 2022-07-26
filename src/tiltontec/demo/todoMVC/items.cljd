@@ -156,25 +156,23 @@
      :itemBuilder (fx/->CBAsIs
                     (fn [ctx i] (fake-item (odd? i))))})
 
-#_
 (defn todo-items []
   (fx/expanded
     ;; ^^^ required sizer to join column
     (fx/list-view+builder
-      {:padding     ^:const (m.EdgeInsets/all 0.0)
-       :itemCount   (cF (count (mkids me) #_(my-todo-list) #_ (todo/app-todos (my-app))))
-       :itemBuilder (cF (fx/as-is
-                          (fn [ctx i]
-                            (dp :ib-entry!!!!!!! i (count (mkids me)))
-                            ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
-                            ;; aka convert FX proxy to real CLJD/Flutter widget
-                            (let [item (fx/fx-render ctx
-                                         (nth (mkids me) i))]
-                              (dp :item!!!!!! item)
-                              item))))}
+      {:padding          ^:const (m.EdgeInsets/all 0.0)
+       :itemCount        (cF (count (mkids me)))
+       :itemBuilder      (cF (fx/as-is
+                               (fn [ctx i]
+                                 ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
+                                 ;; aka convert FX proxy to real CLJD/Flutter widget
+                                 (fx/fx-render ctx
+                                   (nth (mkids me) i)))))}
       {}
       (map todo-list-item
         (todo/app-todos (my-app))))))
+
+#_
 
 (defn todo-items []
     (fx/expanded

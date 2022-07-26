@@ -588,9 +588,7 @@
   (let [[fx-props mx-props] vargs]
     `(childless-stateless m/IconButton ~fx-props ~mx-props)))
 
-(defmacro list-view+builder [& vargs]
-  (let [[fx-props mx-props] vargs]
-    `(childless-stateless m.ListView/builder ~fx-props ~mx-props)))
+
 
 (defmacro separated-ad-lib [fx-class fx-props mx-props & children]
   (let []
@@ -610,6 +608,10 @@
 (defmacro list-view+separated [& vargs]
   (let [[fx-props mx-props & children] vargs]
     `(separated-ad-lib m.ListView/separated ~fx-props ~mx-props ~@children)))
+
+(defmacro list-view+builder [& vargs]
+  (let [[fx-props mx-props & children] vargs]
+    `(separated-ad-lib m.ListView/builder ~fx-props ~mx-props ~@children)))
 
 ;;; -------------------------------------------------------------
 
