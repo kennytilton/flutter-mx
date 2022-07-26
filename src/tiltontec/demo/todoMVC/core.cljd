@@ -39,15 +39,15 @@
        :debugShowCheckedModeBanner false
        :debugShowMaterialGrid      false                    ;; but fun
        }
-      {:name           :app
+      {:name             :app
        :todo-list        (cI nil)
        :todo-list-loader (cF+ [:obs (fn [_ me load _ _]
-                                    (.then ^#/(Future dynamic) load
-                                      (fn [tdl]
-                                        (cty/with-fx-isolation
-                                          (mset! me :todo-list tdl)))))]
-                         ;; next returns an MX proxy of a to-do family, as a future
-                         (todo/ToDoList-load "todo"))}
+                                      (.then ^#/(Future dynamic) load
+                                        (fn [tdl]
+                                          (cty/with-fx-isolation
+                                            (mset! me :todo-list tdl)))))]
+                           ;; next returns an MX proxy of a to-do family, as a future
+                           (todo/ToDoList-load "todo"))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -65,8 +65,16 @@
               (fx/list-view+separated
                 {:padding          ^:const (m.EdgeInsets/all 0.0)
                  :itemCount        (cF (count (todo/app-todos (my-app))))
-                 :separatorBuilder (fx/as-is
-                                     (fn [ctx i] (m/Divider .thickness 0.5)))
+                 :separatorBuilder (cF (fx/as-is
+                                         ;; hhack lower thickness to 0.5 or 0.75
+                                         (fn [ctx i]
+                                           (dp :building-sep i (minfo me)
+                                             (count (mkids me))
+                                             (minfo (nth (mkids me) i)))
+                                           (if (mget (nth (mkids me) i) :selected?)
+                                             (m/Divider .thickness 2.0)
+                                             (m/Divider .height 0.0 .thickness 0.0)
+                                             ))))
                  :itemBuilder      (cF (fx/as-is
                                          (fn [ctx i]
                                            ;; we have to yield a native Flutter widget ready for Flutter, so we "render",

@@ -65,7 +65,6 @@
      (if (str/blank? trimmed)
        (do
          (md/mswap! (my-todo-list) :kids
-           ;; todo propagate this to other mswaps
            (partial remove (fn [td] (= ls-id (td-ls-id td))))))
        (do
          (md/mset! todo :title trimmed)                     ;; two dataflow triggers
@@ -129,14 +128,15 @@
 (defn todo-list-item [todo]
   (fx/visibility!
     {:key               (m/ValueKey. (td-ls-id todo))
-     :visible           (cF (case (md/fmuval :completions :selection)
-                              :all true
-                              ;; todo convert mgets to td-*
-                              :active (not (td-completed todo))
-                              :done (td-completed todo)))
+     :visible           (cF (mget me :selected?))
      :maintainSize      false
      :maintainAnimation true
      :maintainState     true}
+    {:selected? (cF (case (md/fmuval :completions :selection)
+                     :all true
+                     ;; todo convert mgets to td-*
+                     :active (not (td-completed todo))
+                     :done (td-completed todo)))}
     (fx/gesture-detector
       {:onDoubleTap (fx/with-ctx+as-is [me ctx]
                       (fn []
