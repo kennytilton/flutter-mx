@@ -137,53 +137,37 @@
                       :all true
                       :active (not (td-completed todo))
                       :done (td-completed todo)))}
-    (fx/gesture-detector
-      {:onDoubleTap (fx/with-ctx+as-is [me ctx]
-                      (fn []
-                        (cty/with-fx-isolation
-                          (when (not (mget me :editing))
-                            ;; todo fix double-taps not seen during editing
-                            (mset! me :editing? true)))))}
-      {:name     :item-control
-       :editing? (cI false)}
-      (if (mget me :editing?)
-        (to-do-editor me todo)
-        (to-do-display todo)))))
+    (fx/container
+      {:decoration (fx/cb-with-ctx [me context]
+                     (m/BoxDecoration
+                       .border (m/Border .top
+                                 (m/BorderSide .width 0.5
+                                   .color (-> m/Theme
+                                            (.of context)
+                                            .-dividerColor)))))}
+      (fx/gesture-detector
+        {:onDoubleTap (fx/with-ctx+as-is [me ctx]
+                        (fn []
+                          (cty/with-fx-isolation
+                            (when (not (mget me :editing))
+                              ;; todo fix double-taps and keyrepeat  not seen during editing
+                              (mset! me :editing? true)))))}
+        {:name     :item-control
+         :editing? (cI false)}
+        (if (mget me :editing?)
+          (to-do-editor me todo)
+          (to-do-display todo))))))
 
 (defn todo-items []
   (fx/expanded
     ;; ^^^ required sizer to join column
     (fx/list-view+builder
-      {:padding          ^:const (m.EdgeInsets/all 0.0)
-       :itemCount        (cF (count (mkids me)))
-       :itemBuilder      (cF (fx/as-is
-                               (fn [ctx i]
-                                 ;; we must yield a native Flutter widget ready for Flutter, so we must "render",
-                                 (fx/fx-render ctx
-                                   (nth (mkids me) i)))))}
-      (map todo-list-item
-        (todo/app-todos (my-app))))))
-
-;;; ---- archive ------------------------------------------------
-
-;; todo move to new example
-
-#_
-(defn todo-items []
-  (fx/expanded
-    ;; ^^^ required sizer to join column
-    (fx/list-view+separated
-      {:padding          ^:const (m.EdgeInsets/all 0.0)
-       :itemCount        (cF (count (mkids me)))
-       :separatorBuilder (cF (fx/as-is
-                               ;; hhack lower thickness to 0.5 or 0.75
-                               (fn [ctx i]
-                                 (m/Divider .thickness 2.0))))
-       :itemBuilder      (cF (fx/as-is
-                               (fn [ctx i]
-                                 ;; we have to yield a native Flutter widget ready for Flutter, so we "render",
-                                 ;; aka convert FX proxy to real CLJD/Flutter widget
-                                 (fx/fx-render ctx
-                                   (nth (mkids me) i)))))}
+      {:padding     ^:const (m.EdgeInsets/all 0.0)
+       :itemCount   (cF (count (mkids me)))
+       :itemBuilder (cF (fx/as-is
+                          (fn [ctx i]
+                            ;; we must yield a native Flutter widget ready for Flutter, so we must "render",
+                            (fx/fx-render ctx
+                              (nth (mkids me) i)))))}
       (map todo-list-item
         (todo/app-todos (my-app))))))
