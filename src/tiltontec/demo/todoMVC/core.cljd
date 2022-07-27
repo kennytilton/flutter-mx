@@ -15,19 +15,7 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(defn todo-app-bar [title]
-  (fx/preferred-size
-    {:preferredSize (.fromHeight m/Size 80)}
-    (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
-                 :title           (fx/column
-                                    {:crossAxisAlignment m.CrossAxisAlignment/end}
-                                    (fx/text
-                                      {:style (p/TextStyle
-                                                .fontFamily "Helvetica Neue"
-                                                .color (todo/title-red)
-                                                .fontWeight m.FontWeight/w100
-                                                .fontSize 64.0)}
-                                      title))})))
+(declare credits app-bar)
 
 (defn make-app []
   (let [title "todo"]
@@ -36,9 +24,7 @@
        :theme                      (m/ThemeData
                                      .fontFamily "Helvetica Neue"
                                      .backgroundColor (.fromRGBO m/Color 245 245 245 1))
-       :debugShowCheckedModeBanner false
-       :debugShowMaterialGrid      false                    ;; but fun
-       }
+       :debugShowCheckedModeBanner false}
       {:name             :app
        :todo-list        (cI nil)
        :todo-list-loader (cF+ [:obs (fn [_ me load _ _]
@@ -59,17 +45,36 @@
         (fx/ink {:color m.Colors/white}
           (fx/column
             (input/todo-controls)
-            ; --- to-do list ------------------
             (items/todo-items)
-           (let [faint (p/TextStyle
-                          .color m.Colors/grey
-                          .fontSize 14.0)]
-              (fx/column
-                (fx/text {:style faint}
-                  "Double-click to edit a todo")
-                (fx/text {:style faint} (str "by Kenny Tilton, v." (rand-int 99)))
-                (fx/text {:style faint}"with ClojureDart and Matrix Inside(tm)")
-                (fx/text "")))))))))
+            (about-credits)))))))
+
+;;; -------------------------------------------------------------------------------
+
+(defn todo-app-bar [title]
+  (fx/preferred-size
+    {:preferredSize (.fromHeight m/Size 80)}
+    (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
+                 :title           (fx/column
+                                    {:crossAxisAlignment m.CrossAxisAlignment/end}
+                                    (fx/text
+                                      {:style (p/TextStyle
+                                                .fontFamily "Helvetica Neue"
+                                                .color (todo/title-red)
+                                                .fontWeight m.FontWeight/w100
+                                                .fontSize 64.0)}
+                                      title))})))
+
+(defn about-credits []
+  (let [faint (p/TextStyle
+                .color m.Colors/grey
+                .fontSize 14.0)]
+    (fx/column
+      (fx/text {:style faint}
+        "Double-click to edit a todo")
+      (fx/text {:style faint} (str "by Kenny Tilton, v." (rand-int 99)))
+      (fx/text {:style faint}"Flutter \u2022 Matrix \u2022 ClojureDart")
+      ;; todo find a better way for spacing from bottom; padding? container?
+      (fx/text ""))))
 
 
 
