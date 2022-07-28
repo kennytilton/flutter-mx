@@ -14,8 +14,25 @@
 
     [tiltontec.mx-flutter.store :as store]
     [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
-    [clojure.walk :as walk]))
+    [clojure.walk :as walk]
+    ))
 
 
 (defn test []
-  (dp :prefs-test!!!!!! ))
+  (dp :prefs-test!!!!!! )
+  (dp :json? (convert/jsonEncode {"a" 42}))
+  (dp :json? (convert/jsonEncode (walk/stringify-keys {:a 42})))
+  ;(dp :json? (convert/jsonEncode {:sid 42 :title "walk dog" :completed false}))
+  (.ensureInitialized w/WidgetsFlutterBinding)
+
+  (let [prefs (await (.getInstance prefs/SharedPreferences))]
+    (dp :got-dbi! prefs)
+    ;; await prefs.setInt('counter', counter);
+    (.setInt prefs "counter" 42)
+    (.setString prefs "todo/00042" (convert/jsonEncode
+                                     (walk/stringify-keys
+                                       {:sid 42 :title "walk dog" :completed false})))
+    (let [td (.getString prefs "todo/00042")]
+      (dp :reread-raw  td )
+      (dp :reread  (convert/jsonDecode td))))
+  )
