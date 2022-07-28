@@ -1,0 +1,239 @@
+(ns tiltontec.test.sqflite-test
+  (:require
+    ["dart:developer" :as dev]
+    ["dart:math" :as mth]
+    ["dart:convert" :as convert]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar] :as md]
+    [tiltontec.mx-flutter.core :as fx]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:path/path.dart" :as path]
+    ["package:sqflite/sqflite.dart" :as sqf]
+
+    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
+    [clojure.walk :as walk]))
+
+#_(defn- ^:async db-path []
+    (let [root-path (await (sqflite/getDatabasesPath))]
+      (path/join root-path "mu.db")))
+
+#_(defn ^:async clear-db []
+    (dprint "mu.db-sqflite/clear-db")
+    (sqflite/deleteDatabase (await (db-path))))
+
+#_(defn ^:async populate-db [db]
+    (dprint "populate-db")
+    (let [^#/(sqflite/Database) db db]
+      (doseq [i (range 2)]
+        (let [m {"type" "image"
+                 "json" (convert/jsonEncode {"a" i})}
+              m (. m #/(cast String Object?))
+              id (await (.insert db "assets" m))]
+          (dprint "inserted:" id)))))
+
+(defn sqf-path [db-name]
+  (let [root-path (await (sqf/getDatabasesPath))]
+    (path/join root-path db-name)))
+
+(def +db+ (atom nil))
+
+(defn test []
+  (dp "SQFlite begin")
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [root-path (await (sqf/getDatabasesPath))]
+    (dp :path-0 (path/join root-path "organizer.db")))
+
+  (let [creation-sqls ["CREATE TABLE todo (
+                          sid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+                          , title TEXT
+                          , completed integer)"]
+        on-create (fn [^#/(sqf/Database) db _version]
+                    (dp :creating-tables)
+                    (doseq [sql creation-sqls]
+                      (dp sql)
+                      (.execute db sql)))
+        db* (await (sqf/openDatabase (await (sqf-path "organizer.db"))
+                     .version 1
+                     .onCreate on-create))]
+    (dp :dbstar db*)
+    (reset! +db+ db*))
+
+  (let [m {:title "test boolean true store in SQL"
+           :completed true}
+        m (. (walk/stringify-keys m) #/(cast String Object?))
+        _ (dp :mcast m)
+        id (await (.insert ^#/(sqf/Database) @+db+ "todo" m))]
+    (dp :inserted id))
+
+  (dp "SQFlite end"))
+
+#_ (defn ^:async populate-db [db]
+     (dprint "populate-db")
+     (let [^#/(sqflite/Database) db db]
+       (doseq [i (range 2)]
+         (let [m {"type" "image"
+                  "json" (convert/jsonEncode {"a" i})}
+               m (. m #/(cast String Object?))
+               id (await (.insert db "assets" m))]
+           (dprint "inserted:" id)))))
+
+(comment
+  (ns mu.db
+    (:require
+      [mu.utils :as u]))
+
+  (defprotocol Db
+    (init- [db opts] "***")
+    (show- [db] "dumps tables contents")
+    (save-blobby- [this bytes] "save Uint8List to blobbies table")
+    (load-blobby- [this id] "gets Uint8List future from blobbies table")
+    (get-rows- [this table opts] "get rows from table")
+    (get-row- [this table opts] "get row from table")
+    (insert- [this table row] "insert")
+    (update- [this table row] "update"))
+
+  (defn setup [ctor]
+    (u/set! :db (ctor)))
+
+  (defn init [opts]
+    (print "db.init")
+    (init- (:db @u/g) opts))
+
+  (defn show []
+    (print "db.show")
+    (show- (:db @u/g)))
+
+  (defn save-blobby [bytes]
+    (print "db.save-blobby")
+    (save-blobby- (:db @u/g) bytes))
+
+  (defn load-blobby [blobid]
+    (print "db.load-blobby")
+    (load-blobby- (:db @u/g) blobid))
+
+  (defn get-rows [table opts]
+    (print "db.get-rows")
+    (get-rows- (:db @u/g) table opts))
+
+  (defn get-row [table opts]
+    (print "db.get-row")
+    (get-row- (:db @u/g) table opts))
+
+  (defn insert [table row]
+    (print "db.insert")
+    (insert- (:db @u/g) table row))
+
+  (defn update [table row]
+    (print "db.update")
+    (update- (:db @u/g) table row))
+
+  (defprotocol Stored
+    (save [this] "insert or update")
+    (get-rows [this opts] ""))
+
+
+  ;;;;;;;;; db_sqflite.cljd
+  (ns mu.db-sqflite
+    (:require
+      ["dart:convert" :as convert]
+      ["package:path/path.dart" :as path]
+      ["package:sqflite/sqflite.dart" :as sqflite]
+      [mu.utils :as u :refer [dprint]]
+      [mu.db :as db]))
+
+  (defn- ^:async db-path []
+    (let [root-path (await (sqflite/getDatabasesPath))]
+      (path/join root-path "mu.db")))
+
+  (defn ^:async clear-db []
+    (dprint "mu.db-sqflite/clear-db")
+    (sqflite/deleteDatabase (await (db-path))))
+
+  (defn ^:async populate-db [db]
+    (dprint "populate-db")
+    (let [^#/(sqflite/Database) db db]
+      (doseq [i (range 2)]
+        (let [m {"type" "image"
+                 "json" (convert/jsonEncode {"a" i})}
+              m (. m #/(cast String Object?))
+              id (await (.insert db "assets" m))]
+          (dprint "inserted:" id)))))
+
+  (defn ^:async init* [this {clear :clear populate :populate}]
+    (when clear
+      (clear-db))
+    (let [creation-sqls ["CREATE TABLE materials(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT, desc TEXT, created INTEGER, updated INTEGER, used INTEGER, assetId INTEGER)"
+                         "CREATE TABLE assets(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, type TEXT, json TEXT, created INTEGER, updated INTEGER)"
+                         "CREATE TABLE blobbies(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, blob BLOB)"]
+          on-create (fn [^#/(sqflite/Database) db _version]
+                      (dprint "creating tables")
+                      (doseq [sql creation-sqls]
+                        (dprint sql)
+                        (.execute db sql)))
+          db* (await (sqflite/openDatabase (await (db-path))
+                       .version 1
+                       .onCreate on-create))]
+      (when populate
+        (populate-db db*))
+      (reset! (:dbatom this) db*)))
+
+  (defn ^:async show* [this]
+    (let [db ^#/(sqflite/Database) @(:dbatom this)
+          rows (await (.query db "assets"))]
+      (doseq [row rows]
+        (dprint "row:" row))))
+
+  (defn ^:async save-blobby* [this bytes]
+    (let [^#/(sqflite/Database) db @(:dbatom this)
+          m {"blob" (await bytes)}
+          id (await (.insert db "blobbies" m))]
+      (dprint "inserted blob" id)
+      id))
+
+  (defn ^:async load-blobby* [this blobid]
+    (let [^#/(sqflite/Database) db @(:dbatom this)
+          blobby (await (.query db "blobbies"
+                          .columns ["blob"]
+                          .where "id=?"
+                          .whereArgs [blobid]))]
+      (dprint "db-sqflite/load-blobby*: blobby=" blobby)
+      blobby))
+
+  (defn ^:async get-rows* [this table opts]
+    (let [^#/(sqflite/Database) db @(:dbatom this)
+          rows (await (.query db (name table)))]
+      rows))
+
+  (defn ^:async get-row* [this table opts]
+    (let [^#/(sqflite/Database) db @(:dbatom this)
+          rows (await (.query db (name table)))]
+      (when (> (count rows) 1)
+        (throw (ex-info "get-row* getting more than one row" {:opts opts})))
+      (first rows)))
+
+  (defn ^:async insert* [this table row]
+    (let [^#/(sqflite/Database) db @(:dbatom this)
+          id (await (.insert db (name table) row))]
+      id))
+
+  (defn ^:async update* [this table row]
+    (let [^#/(sqflite/Database) db @(:dbatom this)
+          _ (dprint "row pre:" row)
+          row (u/stringify-keys row)
+          _ (dprint "row post:" row)]
+      (await (.insert db (name table) row))))
+
+  (defrecord DbSqflite [dbatom] db/Db
+    (init- [this opts] (init* this opts))
+    (show- [this] (show* this))
+    (save-blobby- [this bytes] (save-blobby* this bytes))
+    (load-blobby- [this blobid] (save-blobby* this blobid))
+    (get-rows- [this table opts] (get-rows* this table opts))
+    (get-row- [this table opts] (get-row* this table opts))
+    (insert- [this table row] (insert* this table row))
+    (update- [this table row] (update* this table row)))
+
+  (defn ctor []
+    (DbSqflite (atom nil) nil {} -1)))
