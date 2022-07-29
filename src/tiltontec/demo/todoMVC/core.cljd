@@ -15,10 +15,10 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-(declare credits app-bar)
+(declare credits app-bar todo-filters)
 
 (defn make-app []
-  (let [title "todo"]
+  (let [title "todox"]
     (fx/material-app
       {:title                      title
        :theme                      (m/ThemeData
@@ -37,11 +37,7 @@
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
-         :persistentFooterButtons [(fx/row
-                                     {:mainAxisAlignment m.MainAxisAlignment/center}
-                                     (fx/expanded {:flex 1} (footer/items-remaining-display))
-                                     (fx/expanded {:flex 2} (footer/completion-filters))
-                                     (fx/expanded {:flex 1} (footer/clear-completed-button)))]}
+         :persistentFooterButtons [(todo-filters)]}
         (fx/ink {:color m.Colors/white}
           (fx/column
             (input/todo-controls)
@@ -49,6 +45,13 @@
             (about-credits)))))))
 
 ;;; -------------------------------------------------------------------------------
+
+(defn todo-filters []
+  (fx/row
+    {:mainAxisAlignment m.MainAxisAlignment/center}
+    (fx/expanded {:flex 1} (footer/items-remaining-display))
+    (fx/expanded {:flex 2} (footer/completion-filters))
+    (fx/expanded {:flex 1} (footer/clear-completed-button))))
 
 (defn todo-app-bar [title]
   (fx/preferred-size
