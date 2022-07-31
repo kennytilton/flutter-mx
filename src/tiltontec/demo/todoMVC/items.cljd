@@ -47,7 +47,7 @@
     {:leading  (completion-toggler todo)
      :trailing (delete-button todo)
      :title    (cF (let [ldg (md/mget me :leading)]
-                     (dp :title-sees-todo!! @todo)
+                     (dp :title-sees-todo!! todo)
                      (fx/text!
                        {:style (cF (if (md/mget ldg :value)
                                      (p/TextStyle
@@ -130,6 +130,7 @@
      :owner me}))
 
 (defn todo-list-item [todo]
+  (dp :tdlist-item-sees todo)
   (fx/visibility!
     ;; todo try with SizedBox.shrink
     {:key               (m/ValueKey. (td-stg-id todo))

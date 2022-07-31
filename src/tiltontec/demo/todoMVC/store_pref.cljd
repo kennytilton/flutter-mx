@@ -48,6 +48,8 @@
   "Delete to-do data with given LS id from LS"
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
+  (assert (string? stg-id) "td-delete requires stg-id")
+  ;; todo can all these just be in main?
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (await (stg/get-db))]
     (.remove ^prefs/SharedPreferences db stg-id)
@@ -76,6 +78,6 @@
         targets (await (collection-keys collection-name))]
     (dp :delete-all-docs-sees targets)
     (doseq [k targets]
-      (dp :deleting k :db db)
+      (dp :all-deleting k :db db)
       (.remove ^prefs/SharedPreferences db k))
     targets))
