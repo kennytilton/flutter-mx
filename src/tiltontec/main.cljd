@@ -1,6 +1,6 @@
 (ns tiltontec.main
   (:require ["package:flutter/material.dart" :as material]
-            ["package:flutter/widgets.dart" :as widgets]
+            ["package:flutter/widgets.dart" :as w]
             ["package:flutter/painting.dart" :as painting]
             ["package:flutter/rendering.dart" :as r]
             ["dart:developer" :as dev]
@@ -32,21 +32,26 @@
             [tiltontec.example.x15-fade-widget :as xfade]
             [tiltontec.example.layout-explorer :as layo]
             [tiltontec.demo.todoMVC.core :as td]
-            [tiltontec.test.shared-preferences-test :as prefs]
-            ))
+            [tiltontec.mx-flutter.shared-pref :as pref]
+            [tiltontec.test.shared-preferences-test :as prefs]))
 
 (def version (atom nil :meta {}))
 
 (defn main []
+  (.ensureInitialized w/WidgetsFlutterBinding)
   ;;(set! r/debugPaintSizeEnabled true)
   #_(let [tres (await (stor/test))]
       (dp :maintres tres))
 
-  ;; (prefs/test)
+  (prefs/test)
 
-  (material/runApp
+  #_ (let [pt (await (prefs/test))]
+    (dp :main-sees-pt pt @pref/+db+))
+
+
+  #_ (material/runApp
     (fx/fx-render nil
       (td/make-app)))
 
-  ;;(widgets/debugDumpApp)
+  ;;(w/debugDumpApp)
   )

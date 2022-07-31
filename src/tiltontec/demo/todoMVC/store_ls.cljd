@@ -1,0 +1,82 @@
+(ns tiltontec.demo.todoMVC.store-ls
+  (:require
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["dart:convert" :as convert]
+    ["package:localstore/localstore.dart" :as ls]
+    ["package:shared_preferences/shared_preferences.dart" :as prefs]
+    [clojure.string :as str]
+    [clojure.walk :as walk]
+
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.util.core :as util]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
+    [tiltontec.mx-flutter.store :as store]))
+
+;;; --- core localstorage functions handling to-dos as persisted maps ----------------------
+
+(defn td-initialize
+  "Create a LS to-do from a CLJD map alone, returning LS id."
+  [collection-name td-map]
+  (assert (not (:stg-id td-map)) "td-map already written")   ;; already written
+
+  ;; todo move db and coll into localstore module
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db collection-name)
+        new-id (.-id (.doc coll))
+        new-data (assoc td-map :stg-id new-id)]
+    (-> coll
+      (.doc new-id)
+      (.set (walk/stringify-keys new-data)))
+    new-id))
+
+(defn td-rewrite
+  "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
+  [collection-name td-map]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db collection-name)
+        stg-id (:stg-id td-map)]
+    (assert stg-id "td-rewrite map must include stg-id")
+    (await (-> coll
+             (.doc stg-id)
+             (.set (walk/stringify-keys td-map))))
+    stg-id))
+
+(defn td-delete
+  "Delete to-do data with given LS id from LS"
+  [collection-name stg-id]
+  (assert stg-id "td-delete requires stg-id")
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db collection-name)]
+    (await (-> coll
+             (.doc stg-id)
+             .delete))
+    stg-id))
+
+(defn read-all-docs [coll-name]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db coll-name)
+        dart-docs (vals (into {}
+                          (await (.get coll))))
+        cljd-docs (mapv util/dart-map->cljd-map dart-docs)]
+    cljd-docs))
+
+(defn delete-all-docs [coll-name]
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  ;;; --- read all docs ---------------------------
+  (let [db (.-instance ls/Localstore)
+        coll (.collection db coll-name)
+        docs (do (into {} (await (.get coll))))]
+    (await
+      (doseq [k (keys docs)
+              :let [working-id (last (str/split k #"/"))]]
+        ;; full key is /coll-name/id-to-use-to-get-a-doc
+        (await (-> db
+                 (.collection coll-name)
+                 (.doc working-id)
+                 .delete))))))

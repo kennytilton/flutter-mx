@@ -10,31 +10,6 @@
     [clojure.walk :as walk]
     [cljd.string :as str]))
 
-(defn dart-map->cljd-map [dart-map]
-  (walk/keywordize-keys
-    (into {} dart-map)))
 
-(defn read-all-docs [coll-name]
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (let [db (.-instance ls/Localstore)
-        coll (.collection db coll-name)
-        dart-docs (vals (into {}
-                          (await (.get coll))))
-        cljd-docs (mapv dart-map->cljd-map dart-docs)]
-    cljd-docs))
 
-(defn delete-all-docs [coll-name]
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;;; --- read all docs ---------------------------
-  (let [db (.-instance ls/Localstore)
-        coll (.collection db coll-name)
-        docs (do (into {} (await (.get coll))))]
-    (await
-      (doseq [k (keys docs)
-              :let [working-id (last (str/split k #"/"))]]
-        ;; full key is /coll-name/id-to-use-to-get-a-doc
-        (await (-> db
-                 (.collection coll-name)
-                 (.doc working-id)
-                 .delete))))))
 

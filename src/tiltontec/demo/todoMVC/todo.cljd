@@ -4,6 +4,7 @@
     ["package:flutter/material.dart" :as m]
     ["dart:convert" :as convert]
     ["package:localstore/localstore.dart" :as ls]
+    ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [clojure.walk :as walk]
 
     [tiltontec.util.base :refer [dprn dp dpx]]
@@ -11,7 +12,8 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
     [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
-    [tiltontec.mx-flutter.store :as store]))
+    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.demo.todoMVC.store-pref :as stg]))
 
 ;;; --- should be in a utils file ----------------------
 (defn title-red []
@@ -26,50 +28,9 @@
 
 ;;; --- handy accessors ---------------------------------
 
-(defn td-ls-id [td] (mget td :ls-id))
-(defn td-title [td] (mget td :title))
-(defn td-completed [td] (mget td :completed))
-
-;;; --- core localstorage functions handling to-dos as persisted maps ----------------------
-
-(defn td-initialize
-  "Create a LS to-do from a CLJD map alone, returning LS id."
-  [collection-name td-map]
-  (assert (not (:ls-id td-map)) "td-map already written")   ;; already written
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (let [db (.-instance ls/Localstore)
-        coll (.collection db collection-name)
-        new-id (.-id (.doc coll))
-        new-data (assoc td-map :ls-id new-id)]
-    (-> coll
-      (.doc new-id)
-      (.set (walk/stringify-keys new-data)))
-    new-id))
-
-(defn td-rewrite
-  "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
-  [collection-name td-map]
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (let [db (.-instance ls/Localstore)
-        coll (.collection db collection-name)
-        ls-id (:ls-id td-map)]
-    (assert ls-id "td-rewrite map must include ls-id")
-    (await (-> coll
-             (.doc ls-id)
-             (.set (walk/stringify-keys td-map))))
-    ls-id))
-
-(defn td-delete
-  "Delete to-do data with given LS id from LS"
-  [collection-name ls-id]
-  (assert ls-id "td-delete requires ls-id")
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (let [db (.-instance ls/Localstore)
-        coll (.collection db collection-name)]
-    (await (-> coll
-             (.doc ls-id)
-             .delete))
-    ls-id))
+(defn td-stg-id [td] (mget td :stg-id)) ;; LS only?
+(defn td-title [td] (or (mget td :title) ""))
+(defn td-completed [td] (or (mget td :completed) false))
 
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
 
@@ -79,18 +40,18 @@
   :extends cty/Model
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
-    (when (and (td-ls-id me) (not= cty/unbound prior-value))
+    (when (and (td-stg-id me) (not= cty/unbound prior-value))
       (ToDo-update me))))
 
 (defn make-ToDo
   ([td-lst title completed]
    (make-ToDo td-lst title completed nil))
-  ([td-lst title completed ls-id]
+  ([td-lst title completed stg-id]
    (md/make
      :par td-lst
      :mx-type (ToDo.)
-     :ls-id (or ls-id
-              (td-initialize "todo"
+     :stg-id (or stg-id
+              (stg/td-initialize "todo"
                 {:title     title
                  :completed completed}))
      ;--
@@ -99,7 +60,7 @@
 
 (defn ToDo-update [td]
   (let [coll-name (mname (mpar td))]
-    (td-rewrite coll-name (select-keys @td [:ls-id :title :completed]))))
+    (stg/td-rewrite coll-name (select-keys @td [:stg-id :title :completed]))))
 
 ;;; --- higher level ---------------------------
 
@@ -111,25 +72,28 @@
       :kids (when (not= cty/unbound prior-value)
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (await (doseq [td lost]
-                         (dp :deleting=TD (td-ls-id td))
-                         (await (td-delete "todo" (td-ls-id td))))))))))
+                         (dp :deleting=TD (td-stg-id td))
+                         (await (stg/td-delete "todo" (td-stg-id td))))))))))
 
 (defn make-ToDoList
   ([name] (make-ToDoList name nil))
   ([name existing-todos]
+   (dp :maketodolist-sees-existing existing-todos)
    (md/make
      :mx-type (ToDoList.)
      :name name
      :kids (cFn (mapv (fn [xtd]
-                        (let [{:keys [title completed ls-id]} xtd]
-                          (make-ToDo me title completed ls-id)))
+                        (let [{:keys [title completed stg-id]} xtd]
+                          (make-ToDo me title completed stg-id)))
                   existing-todos)))))
 
 (defn ToDoList-load
   "returns a future; await to get full-blown todos"
   [name]
-  (make-ToDoList name
-    (await (store/read-all-docs name))))
+  (let [ra (stg/read-all-docs name)]
+    (dp :tdload-sees-all ra)
+    (make-ToDoList name
+      (await ra))))
 
 ;;; --- even higher level ---------------------------------------
 

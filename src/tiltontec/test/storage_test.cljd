@@ -4,12 +4,14 @@
     ["dart:math" :as mth]
     ["dart:convert" :as convert]
     [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar] :as md]
     ;;[tiltontec.mx-flutter.core :as fx]
     ["package:localstore/localstore.dart" :as ls]
     ["package:flutter/widgets.dart" :as w]
     [tiltontec.mx-flutter.store :as store]
+    [tiltontec.demo.todoMVC.store-ls :as stg]
     [tiltontec.demo.todoMVC.todo :refer [my-app] :as todo]
     [clojure.walk :as walk]))
 
@@ -269,7 +271,7 @@
     (dp :pushed!!!!!!)
     (dp :tl+1 @tl)
     (dp :k1 @(first (mget tl :kids)))
-    (store/read-all-docs "boom")))
+    (stg/read-all-docs "boom")))
 
 
 
@@ -286,11 +288,11 @@
       (do
         (dp :doc-id id :not-found-in collection-name)
         (dp :all-follow)
-        (store/read-all-docs "todos"))
+        (stg/read-all-docs "todos"))
 
       :else (do
               (dp :raw-rb rb)
-              (dp :CLJD-map!!!! (store/dart-map->cljd-map rb))
+              (dp :CLJD-map!!!! (util/dart-map->cljd-map rb))
               (do
                 (dp :deleteing!!!!!!! id)
                 (let [del-res (await (-> db
@@ -314,7 +316,7 @@
                     (.doc id)
                     .get))]
     (if rb
-      (dp :read id :got (store/dart-map->cljd-map rb))
+      (dp :read id :got (util/dart-map->cljd-map rb))
       (dp :read id :notfound))))
 
 (defn load-mx-db [name]
@@ -326,13 +328,13 @@
         :todo-ct (count (mkids tdl)))
       tdl)))
 
-; so make on td just looks at ls-id and, if populated, does nothing.
+; so make on td just looks at stg-id and, if populated, does nothing.
 ; this leaves the observer with the problem of knowing whether a slot
 ; observation -- why was slot observer triggering upsert -- ok, for, update, but then
 ; the "insert" capability of upsert was inappropriately available and executed.
 
 (defn coll-dump [tag name]
-  (if-let [raw (await (store/read-all-docs name))]
+  (if-let [raw (await (stg/read-all-docs name))]
     (do
       (dp :coll-dump-raw tag)
       (doseq [td raw]
@@ -340,27 +342,27 @@
     (dp :coll-is-empty!!!!!!!!!!!!! tag name)))
 
 (defn test-sans-fx []
-  (let [dall (await (store/delete-all-docs "todo"))]
+  (let [dall (await (stg/delete-all-docs "todo"))]
     (dp :dall!!!!! dall)
     (dp :---POSTDELETEALL------------------------------------)
 
     (await (coll-dump :pre-test "todo"))
 
     (dp :---------------------------------------)
-    (let [new-ls-id (await (todo/td-initialize "todo" {:title "Walk dog" :completed false}))]
-      (dp :new-ls!!! new-ls-id)
+    (let [new-stg-id (await (stg/td-initialize "todo" {:title "Walk dog" :completed false}))]
+      (dp :new-ls!!! new-stg-id)
       (await (coll-dump :post-td-initialize-test "todo"))
 
-      (let [tdw (await (todo/td-rewrite "todo" {:ls-id new-ls-id :title "Wash Car" :completed true}))]
+      (let [tdw (await (stg/td-rewrite "todo" {:stg-id new-stg-id :title "Wash Car" :completed true}))]
         (dp :rewrite-tdw tdw)
         (await (coll-dump :post-rewrite "todo"))
-        (let [tdd (await (todo/td-delete "todo" new-ls-id))]
+        (let [tdd (await (stg/td-delete "todo" new-stg-id))]
           (dp :tddel-tdd tdd)
           (await (coll-dump :post-delete "todo"))
           )))))
 
 (defn test-coll-init []
-  (let [dall (await (store/delete-all-docs "todo"))]
+  (let [dall (await (stg/delete-all-docs "todo"))]
     (dp :dall!!!!! dall)
     (dp :---POSTDELETEALL------------------------------------)
     ;(await (coll-dump :pre-test "todo"))
@@ -369,8 +371,8 @@
     (await (doseq [td [{:title "Walk dog" :completed false}
                        {:title "Wash car" :completed true}
                        {:title "Wash dishes" :completed false}]]
-             (let [new-ls-id (await (todo/td-initialize "todo" td))]
-               (dp :new-ls!!! new-ls-id)
+             (let [new-stg-id (await (stg/td-initialize "todo" td))]
+               (dp :new-ls!!! new-stg-id)
                #_(await (coll-dump :post-td-initialize-test "todo")))))
     (await (coll-dump :post-3-test "todo"))))
 
@@ -390,24 +392,24 @@
         (dp :mset-returned! t2)
         (dp :changed-td-to-sell-car @td)
         (doseq [k (mkids tdl)]
-          (dp :tds-post-change (todo/td-ls-id k) (todo/td-title k)))
+          (dp :tds-post-change (todo/td-stg-id k) (todo/td-title k)))
         ; (apply f current-value-of-atom args)
         ; (apply remove kids args) - nope
-        ; (apply (fn [coll ls-id]
+        ; (apply (fn [coll stg-id]
         ;           (remove (fn [td]
-        ;                      (= ls-id (td-ls-id td))) kids args)
+        ;                      (= stg-id (td-stg-id td))) kids args)
         (let [delk (await (mswap! tdl :kids
-                            (fn [coll ls-id]
-                              (dp :swap-rem-sees ls-id (map todo/td-ls-id coll))
+                            (fn [coll stg-id]
+                              (dp :swap-rem-sees stg-id (map todo/td-stg-id coll))
                               (remove (fn [td]
-                                        (dp :check-1 ls-id :vs (todo/td-ls-id td))
-                                        (= ls-id (todo/td-ls-id td))) coll))
-                            (todo/td-ls-id td)))]
+                                        (dp :check-1 stg-id :vs (todo/td-stg-id td))
+                                        (= stg-id (todo/td-stg-id td))) coll))
+                            (todo/td-stg-id td)))]
           (dp :t2-remmed-from-kids---------------)
           (dp :t2-remmed-from-kids---------------- delk)
           (dp :t2-remmed-from-kids----------------tdl (minfo tdl))
           (doseq [k (mkids tdl)]
-            (dp :tds-post-change (todo/td-ls-id k) (todo/td-title k))))))))
+            (dp :tds-post-change (todo/td-stg-id k) (todo/td-title k))))))))
 (defn test []
   ;; (test-sans-fx)
 

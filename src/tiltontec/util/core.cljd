@@ -1,5 +1,6 @@
 (ns tiltontec.util.core
   (:require [clojure.string :as str :refer [join]]
+            [clojure.walk :as walk]
             [tiltontec.util.base :as utm
              :refer [prog1 wtrx dp]]))
 
@@ -136,6 +137,12 @@
 
 (defn now []
   (.now dart:core/DateTime))
+
+;;; --- dart maps ---------------------------
+
+(defn dart-map->cljd-map [dart-map]
+  (walk/keywordize-keys
+    (into {} dart-map)))
 
 ;;;; --- json -----------------------------
 ;#?(:cljs
