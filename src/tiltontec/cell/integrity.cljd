@@ -121,6 +121,7 @@
         :deferred-state-change
         (when-let [[defer-info task-fn] (fifo-pop (ufb-queue :change))]
           (data-pulse-next :defferred-state-chg)
+          (dp :dpnext-defer-info defer-info)
           (task-fn :change defer-info)
           (recur :tell-dependents))))))
 
