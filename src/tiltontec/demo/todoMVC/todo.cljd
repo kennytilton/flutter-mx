@@ -71,16 +71,15 @@
     (case slot
       :kids (when (not= cty/unbound prior-value)
               (let [lost (util/difference (set prior-value) (set new-value))]
-                ;; todo try without awaits
-                (await (doseq [td lost]
-                         (await (stg/td-delete "todo" (td-stg-id td))))))))))
+                (doseq [td lost]
+                  (stg/td-delete "todo" (td-stg-id td))))))))
 
 ;; todo show todos in order; add created slot
 
 ;; todo ??? move fx$state to meta and get out of dataflow
 ;;      this will entail new way to get controller
 
-;; todo can futures be handled better?
+;; todo !!!!!!!!!!!!!!!!!! can futures be handled better?
 
 (defn make-ToDoList
   ([name] (make-ToDoList name nil))

@@ -72,13 +72,27 @@
   (let [faint (p/TextStyle
                 .color m.Colors/grey
                 .fontSize 14.0)]
-    (fx/column
-      (fx/text {:style faint}
-        "Double-click to edit a todo")
-      (fx/text {:style faint} (str "by Kenneth Tilton, v." (rand-int 99)))
-      (fx/text {:style faint}"Flutter \u2022 Matrix \u2022 ClojureDart")
-      ;; todo find a better way for spacing from bottom; padding? container?
-      #_ (fx/text ""))))
-
-
+    (fx/padding
+      {:padding (m.EdgeInsets/all 16.0)}
+      {:name :credits-toggle
+       :show-credits? (cI false)}
+      (fx/column
+        (when (mget (fasc :credits-toggle) :show-credits?)
+          (fx/column
+            ;; todo does flutter let us place the style higher so referenced just once?
+            (fx/text {:style faint}
+              "Double-click to edit a todo")
+            (fx/text {:style faint}
+              "Make title blank to delete")
+            (fx/text {:style faint} (str "by Kenneth Tilton, v." (rand-int 99)))
+            (fx/text {:style faint} "Flutter \u2022 Matrix \u2022 ClojureDart")))
+        (fx/icon-button
+          {:onPressed (fx/with-ctx+as-is [me ctx]
+                        (fn []
+                          (cty/with-fx-isolation
+                            (mswap! (fasc :credits-toggle) :show-credits? not))))
+           :icon      (cF (fx/cb-with-ctx [me ctx]
+                            (let [showing? (mget (fasc :credits-toggle) :show-credits?)]
+                              (m/Icon (if showing? m.Icons/info_outline m.Icons/info)
+                                .color m.Colors/grey))))})))))
 

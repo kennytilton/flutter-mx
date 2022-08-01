@@ -31,7 +31,7 @@
 (defn td-rewrite
   "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
   [collection-name td-map]
-  (let [db (await (stg/get-db))
+  (let [db (await  (stg/get-db))
         stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
     (.setString ^prefs/SharedPreferences db stg-id
