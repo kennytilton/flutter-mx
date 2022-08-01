@@ -9,6 +9,7 @@
 (def +db+ (atom nil))
 
 (defn ^:async  ^#/(Future prefs/SharedPreferences) get-db []
+  (dp :get-db-entry-cache @+db+)
   (or @+db+
     (let [db (await (.getInstance prefs/SharedPreferences))]
       (reset! +db+ db))))
