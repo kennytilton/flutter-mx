@@ -16,7 +16,6 @@
     [clojure.walk :as walk]))
 
 (defn just-hack []
-  (.ensureInitialized w/WidgetsFlutterBinding)
   ;;; --- read all docs ---------------------------
   (let [id "1isb6j40s"
         db (.-instance ls/Localstore)
@@ -41,7 +40,6 @@
 
 
 (defn test-store-one-map []
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)]
     ;;; --- write new entry -----------------------------
     (let [coll (.collection db "todos")
@@ -69,13 +67,6 @@
                                   [k (get rb k)])))))))))
 
 (defn load-test-todos []
-  (dp :loading!!!!!!!!-todos-not)
-
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  (dp :initialized!!!!!-todos)
-
-  ;(.ensureInitialized w/WidgetsFlutterBinding)
-
   #_(let [test-todos [{:title     "Wash car"
                        :completed false}
                       {:title     "Wash dog"
@@ -273,42 +264,7 @@
     (dp :k1 @(first (mget tl :kids)))
     (stg/read-all-docs "boom")))
 
-
-
-(defn hack-one [collection-name id]
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;;; --- read all docs ---------------------------
-  (let [db (.-instance ls/Localstore)
-        rb (await (-> db
-                    (.collection collection-name)
-                    (.doc id)
-                    .get))]
-    (cond
-      (nil? rb)
-      (do
-        (dp :doc-id id :not-found-in collection-name)
-        (dp :all-follow)
-        (stg/read-all-docs "todos"))
-
-      :else (do
-              (dp :raw-rb rb)
-              (dp :CLJD-map!!!! (util/dart-map->cljd-map rb))
-              (do
-                (dp :deleteing!!!!!!! id)
-                (let [del-res (await (-> db
-                                       (.collection collection-name)
-                                       (.doc id)
-                                       .delete))]
-                  (dp :delete-returned del-res)
-                  (let [doc (await (-> db
-                                     (.collection collection-name)
-                                     (.doc id)
-                                     .get))]
-                    (dp :read-of-deleted-sees doc))))))
-    ))
-
 (defn read-one [collection-name id]
-  (.ensureInitialized w/WidgetsFlutterBinding)
   ;;; --- read all docs ---------------------------
   (let [db (.-instance ls/Localstore)
         rb (await (-> db

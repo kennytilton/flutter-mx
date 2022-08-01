@@ -18,7 +18,6 @@
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
   [collection-name td-map]
   (assert (not (:stg-id td-map)) "td-map already written")  ;; already written
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (await (stg/get-db))
         new-stg-id (str collection-name "/" (rand-int 99999999))
         new-data (assoc td-map :stg-id new-stg-id)]
@@ -32,7 +31,6 @@
 (defn td-rewrite
   "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
   [collection-name td-map]
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (await (stg/get-db))
         stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
@@ -48,7 +46,6 @@
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
   (assert (string? stg-id) "td-delete requires string stg-id")
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (await (stg/get-db))]
     (.remove ^prefs/SharedPreferences db stg-id)
     stg-id))

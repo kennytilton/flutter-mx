@@ -24,7 +24,6 @@
   (assert (not (:stg-id td-map)) "td-map already written")   ;; already written
 
   ;; todo move db and coll into localstore module
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)
         new-id (.-id (.doc coll))
@@ -37,7 +36,6 @@
 (defn td-rewrite
   "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
   [collection-name td-map]
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)
         stg-id (:stg-id td-map)]
@@ -51,7 +49,6 @@
   "Delete to-do data with given LS id from LS"
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db collection-name)]
     (await (-> coll
@@ -60,7 +57,6 @@
     stg-id))
 
 (defn read-all-docs [coll-name]
-  (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         dart-docs (vals (into {}
@@ -69,8 +65,6 @@
     cljd-docs))
 
 (defn delete-all-docs [coll-name]
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;;; --- read all docs ---------------------------
   (let [db (.-instance ls/Localstore)
         coll (.collection db coll-name)
         docs (do (into {} (await (.get coll))))]
