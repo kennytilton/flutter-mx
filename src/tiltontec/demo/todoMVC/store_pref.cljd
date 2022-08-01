@@ -36,7 +36,6 @@
   (let [db (await (stg/get-db))
         stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
-    (dp :td-rewrite-db db)
     (.setString ^prefs/SharedPreferences db stg-id
       (convert/jsonEncode
         (walk/stringify-keys
@@ -48,7 +47,7 @@
   "Delete to-do data with given LS id from LS"
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
-  (assert (string? stg-id) "td-delete requires stg-id")
+  (assert (string? stg-id) "td-delete requires string stg-id")
   ;; todo can all these just be in main?
   (.ensureInitialized w/WidgetsFlutterBinding)
   (let [db (await (stg/get-db))]
@@ -56,17 +55,11 @@
     stg-id))
 
 (defn ^:async read-all-docs [collection-name]
-  (dp :rall-entry collection-name)
   (let [db (await (stg/get-db))]
-    (dp :rall-seesdb db)
-    (let [all (await (collection-keys collection-name))]
-      (dp :allkeys!!!!! all)
-      (doall
-        (for [tdk all]
-          (do (dp :rall-doc tdk (string? tdk))
-              (let [td (.getString db tdk)]
-                (util/dart-map->cljd-map
-                  (convert/jsonDecode td)))))))))
+    (let [all-td-keys (await (collection-keys collection-name))]
+      (mapv (fn [td-key]
+              (util/dart-map->cljd-map
+                (convert/jsonDecode (.getString db td-key)))) all-td-keys))))
 
 (defn collection-keys [collection-name]
   (filter (fn [k]

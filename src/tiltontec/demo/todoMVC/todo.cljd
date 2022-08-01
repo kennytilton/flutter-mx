@@ -69,15 +69,12 @@
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
     (case slot
-      :kids (do
-              (dp :tdl-kids-obs!!! (cinfo cell) prior-value)
-              (when (not= cty/unbound prior-value)
-                (dp :tdl-obs-prior-bound!!!!!!!! (mapv minfo prior-value))
-                (let [lost (util/difference (set prior-value) (set new-value))]
-                  (dp :NOT-deleting-lost (mapv minfo lost))
-                  (await (doseq [td lost]
-                           (dp :tdl-obs-deleting-td (td-stg-id td))
-                           (await (stg/td-delete "todo" (td-stg-id td)))))))))))
+      :kids (when (not= cty/unbound prior-value)
+              (let [lost (util/difference (set prior-value) (set new-value))]
+                ;; todo try without awaits
+                (await (doseq [td lost]
+                         (await (stg/td-delete "todo" (td-stg-id td))))))))))
+
 
 ;; todo show todos in order
 
@@ -89,26 +86,18 @@
 (defn make-ToDoList
   ([name] (make-ToDoList name nil))
   ([name existing-todos]
-   (dp :maketodolist-sees-existing!!!!!!!!!!!!!!!!!!!!!!!!!! existing-todos)
    (md/make
      :mx-type (ToDoList.)
      :name name
-     :kids (cells/cFn-dbg (dp :make-ToDoList-kids-rule-runsss!!! (cinfo cell) (dissoc @cell :code))
-             (dp :make-ToDoList-kids-rule-runsss-becauseation!!!
-               cty/*causation* (map cinfo cty/*causation*))
-             (let [tmp (mapv (fn [xtd]
-                               (let [{:keys [title completed stg-id]} xtd]
-                                 (dp :make-tdl-sees-x!!! stg-id title)
-                                 (make-ToDo me title completed stg-id)))
-                         existing-todos)]
-               (dp :kids-rule-temp!! tmp)
-               tmp)))))
+     :kids (cFn (mapv (fn [xtd]
+                     (let [{:keys [title completed stg-id]} xtd]
+                       (make-ToDo me title completed stg-id)))
+               existing-todos)))))
 
 (defn ToDoList-load
   "returns a future; await to get full-blown todos"
   [name]
   (let [todos (await (stg/read-all-docs name))]
-    (dp :tdload-sees-all todos)
     (make-ToDoList name todos)))
 
 ;;; --- even higher level ---------------------------------------

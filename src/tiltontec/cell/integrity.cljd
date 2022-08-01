@@ -21,9 +21,7 @@
   ([] (data-pulse-next :anon))
   ([pulse-info]
    (when-not *one-pulse?*
-     #_ (when *dp-log*
-       (trx "dp-next> " (inc @+pulse+) pulse-info))
-     (dp :PULSE-NEXT!! pulse-info (inc @+pulse+))
+     (dpx :PULSE-NEXT!! pulse-info (inc @+pulse+))
      (swap! +pulse+ inc))))            ;; try as commute?
 
 (defn c-current? [c]
@@ -121,7 +119,7 @@
         :deferred-state-change
         (when-let [[defer-info task-fn] (fifo-pop (ufb-queue :change))]
           (data-pulse-next :defferred-state-chg)
-          (dp :dpnext-defer-info defer-info)
+          (dpx :dpnext-defer-info defer-info)
           (task-fn :change defer-info)
           (recur :tell-dependents))))))
 

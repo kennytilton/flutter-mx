@@ -25,11 +25,6 @@
       (reset! +db+ instance))))
 
 (defn ^:async  ^#/(Future prefs/SharedPreferences) get-db []
-  #_ ^prefs/SharedPreferences
-  (dp :get-db-entry!!!!!! @+db+)
   (or @+db+
-    (let [dbf (.getInstance prefs/SharedPreferences)]
-      (dp :get-db-gi-says dbf)
-      (let [db (await dbf)]
-        (dp :gdb-gets-waited db)
-        (reset! +db+ db)))))
+    (let [db (await (.getInstance prefs/SharedPreferences))]
+      (reset! +db+ db))))
