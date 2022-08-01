@@ -1,28 +1,13 @@
 (ns tiltontec.mx-flutter.shared-pref
   (:require
-    ["dart:developer" :as dev]
-    ["dart:math" :as mth]
-    ["dart:convert" :as convert]
-    ["package:flutter/widgets.dart" :as w]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
+    ;; todo merge cells NSes
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [clojure.walk :as walk]
     [cljd.string :as str]))
 
 (def +db+ (atom nil))
-
-#_ (.then ^#/(Future dynamic) load
-     (fn [tdl]
-       (cty/with-fx-isolation
-         (mset! me :todo-list tdl))))
-
-#_
-(defn db-init []
-  (.then (.getInstance prefs/SharedPreferences)
-    (fn [instance]
-      (dp :dbinit-then!!!)
-      (reset! +db+ instance))))
 
 (defn ^:async  ^#/(Future prefs/SharedPreferences) get-db []
   (or @+db+
