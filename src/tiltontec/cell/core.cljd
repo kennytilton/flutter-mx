@@ -34,7 +34,7 @@
 (defn make-cell [& kvs]
   (let [options (apply hash-map kvs)]
     (atom (merge {:value              unbound
-                  ::cty/state         :nascent
+                  :state         :nascent
                   :pulse              0
                   :pulse-last-changed 0
                   :pulse-observed     0
@@ -59,7 +59,7 @@
       (assert (some #{lazy} [true false :until-asked]) (str "make-cf sees invalid value for :lazy " lazy)))
 
     (atom (merge {:value              unbound
-                  ::cty/state         :nascent              ;; s/b :unbound?
+                  :state         :nascent              ;; s/b :unbound?
                   :pulse              0
                   :pulse-last-changed 0
                   :pulse-observed     0

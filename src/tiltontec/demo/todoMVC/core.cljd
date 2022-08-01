@@ -31,7 +31,7 @@
                                       (.then ^#/(Future dynamic) load
                                         (fn [tdl]
                                           (dp :tdloader-sees (minfo tdl))
-                                          (dp :tdloader-sees-kids (mkids tdl))
+                                          (dp :tdloader-sees-kids (mapv minfo (mkids tdl)))
                                           (cty/with-fx-isolation
                                             (mset! me :todo-list tdl)))))]
                            ;; next returns an MX proxy of a to-do family, as a future

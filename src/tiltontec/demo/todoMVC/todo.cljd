@@ -10,7 +10,7 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
+    [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
     [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
     [tiltontec.mx-flutter.store :as store]
     [tiltontec.demo.todoMVC.store-pref :as stg]))
@@ -51,10 +51,11 @@
      :par td-lst
      :mx-type (ToDo.)
      :stg-id (or stg-id
-               ;; trying cF as a way of escaping async...
-               (cF (await (stg/td-initialize "todo"
-                            {:title     title
-                             :completed completed}))))
+               ;; NOT trying cF as a way of escaping async... broke dataflow re completed anyway
+               (do (do                                      ;; HHACK await
+                     (stg/td-initialize "todo"
+                       {:title     title
+                        :completed completed}))))
      ;--
      :title (cI title)
      :completed (cI completed))))
@@ -70,24 +71,33 @@
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
     (case slot
-      :kids (when (not= cty/unbound prior-value)
-              (let [lost (util/difference (set prior-value) (set new-value))]
-                (await (doseq [td lost]
-                         (dp :tdl-obs-deleting-td (td-stg-id td))
-                         (await (stg/td-delete "todo" (td-stg-id td))))))))))
+      :kids (do
+              (dp :tdl-kids-obs!!! (cinfo cell) prior-value)
+              (when (not= cty/unbound prior-value)
+                (dp :tdl-obs-prior-bound!!!!!!!! (mapv minfo prior-value))
+                (let [lost (util/difference (set prior-value) (set new-value))]
+                  (dp :NOT-deleting-lost (mapv minfo lost))
+                  #_(await (doseq [td lost]
+                             (dp :tdl-obs-deleting-td (td-stg-id td))
+                             (await (stg/td-delete "todo" (td-stg-id td)))))))))))
 
 (defn make-ToDoList
   ([name] (make-ToDoList name nil))
   ([name existing-todos]
-   (dp :maketodolist-sees-existing existing-todos)
+   (dp :maketodolist-sees-existing!!!!!!!!!!!!!!!!!!!!!!!!!! existing-todos)
    (md/make
      :mx-type (ToDoList.)
      :name name
-     :kids (cFn (mapv (fn [xtd]
-                        (let [{:keys [title completed stg-id]} xtd]
-                          (dp :make-tdl-sees-x!!! stg-id title)
-                          (make-ToDo me title completed stg-id)))
-                  existing-todos)))))
+     :kids (cells/cFn-dbg (dp :make-ToDoList-kids-rule-runsss!!! (cinfo cell) (dissoc @cell :code))
+             (dp :make-ToDoList-kids-rule-runsss-becauseation!!!
+               cty/*causation* (map cinfo cty/*causation*))
+             (let [tmp (mapv (fn [xtd]
+                               (let [{:keys [title completed stg-id]} xtd]
+                                 (dp :make-tdl-sees-x!!! stg-id title)
+                                 (make-ToDo me title completed stg-id)))
+                         existing-todos)]
+               (dp :kids-rule-temp!! tmp)
+               tmp)))))
 
 (defn ToDoList-load
   "returns a future; await to get full-blown todos"
@@ -102,6 +112,7 @@
   (when-let [td-lst (tiltontec.model.core/mget app :todo-list)]
     ;; we have to wait for todos to be loaded from localstorage
     (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
-    (dp :apptodos-sees (minfo td-lst)
+    #_ ;; HHACK
+            (dp :apptodos-sees (minfo td-lst)
       (md/mkids td-lst))
     (md/mkids td-lst)))

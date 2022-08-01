@@ -23,6 +23,7 @@
    (when-not *one-pulse?*
      #_ (when *dp-log*
        (trx "dp-next> " (inc @+pulse+) pulse-info))
+     (dp :PULSE-NEXT!! pulse-info (inc @+pulse+))
      (swap! +pulse+ inc))))            ;; try as commute?
 
 (defn c-current? [c]
@@ -154,7 +155,7 @@
        (dp :cwi opcode *within-integrity*))
   #_ (when (and opcode (not (some #{opcode} [:awaken])))
     (dpx :cwi-entry!!!!!!! opcode *within-integrity*))
-  (wtrx (0 100 nil "cwi-begin" opcode *within-integrity*)
+  (do ;; wtrx (0 100 nil "cwi-begin" opcode *within-integrity*)
     (do ;; hun-stopped
       (do
         (cond

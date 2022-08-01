@@ -78,6 +78,8 @@
       (c-value c))
 
     ;; --- always compute --------
+    ;;  NB!! This has been solved with callbacks JIT during build
+    #_#_
     (c-always-compute c)
     ;; some Flutter props cannot be computed until a widget is built and
     ;; we have the Flutter context. An experiment to see if Cells can tolerate
@@ -121,7 +123,7 @@
     (do
       ;; we seem to need update, but check that other processing did not bring c current
       (when-not (c-current? c)
-        ;;(dp :not-current-so-calc!!!!!!! (c-slot c)(c-state c)(c-valid? c))
+        (dpx :not-current-so-calc!!!!!!! (c-slot c)(c-state c)(c-valid? c))
         ;; happens if dependent changed and its observer read/updated me
         (calculate-and-set c :evic ensurer))
       (c-value c))
@@ -161,7 +163,7 @@
                        (when (and (nil? (c-model c))
                                (= (c-state c) :nascent)
                                (> @+pulse+ (c-pulse-observed c)))
-                         (rmap-setf [::cty/state c] :awake)
+                         (rmap-setf [:state c] :awake)
                          (c-observe c prior-value :cget)
                          (ephemeral-reset c)))))
                  (when *depender*
@@ -192,7 +194,7 @@
   (do                                                       ;; cty/with-cdbg (and (= :style (c-slot c)) (= :z-counter (c-md-name c)))
     ;; (wtrx [0 20 :cnset-entry (c-slot c)]
     (dpx :--------------------- 42)
-    (dpx :calc-n-set-sees @c)
+    (cty/dpc c :calc-n-set-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
     (dpx :--------------------- 43)
     (let [[raw-value propagation-code] (calculate-and-link c)]
       ;;(trx :cn-set-sees!!!! (c-slot c) raw-value propagation-code)
@@ -228,7 +230,9 @@
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
   (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
-  (wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
+  (when (:debug @c)
+    (dpx :calc-n-link-sees!!!!!!!!!!!!!!!!!!! (dissoc @c :code)))
+  (do ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
     (binding [*depender* c
               *call-stack* (cons c *call-stack*)
               *defer-changes* true]
@@ -237,7 +241,7 @@
       (unlink-from-used c :pre-rule-clear)
       (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
 
-      (dpx :CNL-trying-formula (cinfo c))
+      (cty/dpc c :CNL-trying-formula (cinfo c))
       (let [raw-value #_((c-rule c) c)
             (try
               ((c-rule c) c)
@@ -267,8 +271,10 @@
       (cond
         (some #{(c-lazy c)} [:until-asked])
         (dp :not-awakening-lazy (cinfo c))
+
         :else (binding [*depender* nil]
-                (when-not (c-current? c)
+                (when (not (= (c-state c) :awake))
+                  (cty/dpc c :not-current???-pulses!!!!!!!!!!!!!! (c-state c) (c-pulse c) @+pulse+ (dissoc @c :code))
                   (calculate-and-set c :fn-c-awken nil))))
 
       (c-ref? c)
@@ -337,7 +343,8 @@
           ;; least honor the reset!
           ;;
           (rmap-setf [:value c] new-value)
-          (rmap-setf [::cty/state c] :awake)
+          (rmap-setf [:state c] :awake)
+          (cty/dpc c :now-awake!!!!!!!!! (dissoc @c :code))
           (cprn :new-vlue-installed (c-slot c)
             new-value
             (:value c))
@@ -427,7 +434,7 @@ then clear our record of them."
 
     (dpx :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
 
-    (rmap-setf [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss the cell below.
+    (rmap-setf [:state c] :optimized-away)             ;; leaving this for now, but we toss the cell below.
     (rmap-meta-setf [:optimized-away c] (deref cty/+pulse+))
     (c-observe c prior-value :opti-away)
 
@@ -464,7 +471,7 @@ then clear our record of them."
     (when c                                                 ;; not if optimized away
       (c-quiesce c)))
   (reset! me nil)
-  (rmap-meta-setf [::cty/state me] :dead))
+  (rmap-meta-setf [:state me] :dead))
 
 (defn not-to-be [me]
   ;; todo check existing n2b usages

@@ -56,14 +56,14 @@
     stg-id))
 
 (defn ^:async read-all-docs [collection-name]
-  (dp :readall-entry collection-name)
+  (dp :rall-entry collection-name)
   (let [db (await (stg/get-db))]
     (dp :rall-seesdb db)
     (let [all (await (collection-keys collection-name))]
       (dp :allkeys!!!!! all)
       (doall
         (for [tdk all]
-          (do (dp :radoc tdk (string? tdk))
+          (do (dp :rall-doc tdk (string? tdk))
               (let [td (.getString db tdk)]
                 (util/dart-map->cljd-map
                   (convert/jsonDecode td)))))))))

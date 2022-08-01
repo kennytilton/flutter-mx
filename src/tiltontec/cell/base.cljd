@@ -9,6 +9,8 @@
              fifo-data fifo-add rmap-setf]
      :as utc]))
 
+
+
 ;; --- the Cells beef -----------------------
 
 (def +pulse+ (atom 0))
@@ -175,10 +177,16 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-optimized-away? [c]
   (cond
     (c-ref? c) (or (not (map? @c))
-                 (not (contains? @c ::state))
+
+
+                 ;; state keyword showing with full ns so :state does not work
+
+
+
+                 (not (contains? @c :state))
                  (and (atom? c)
                    (:optimized-away (meta c)))
-                 (= :optimized-away (::state @c)))
+                 (= :optimized-away (:state @c)))
     (and (atom? c)
       (:optimized-away (meta c))) true
     :else true))
@@ -232,6 +240,11 @@ rule to get once behavior or just when fm-traversing to find someone"
                 (:fx-class @md)
                 [:hunh @md])]))))
 
+(defn dpc [c & bits]
+  (assert (c-ref? c))
+  (when (:debug @c)
+    (apply dp :DPC (cinfo c) bits)))
+
 ;; --- dependency maintenance --------------------------------
 
 (defn caller-ensure [used new-caller]
@@ -265,7 +278,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn mdead? [me]
   (if-let [m (meta me)]
-    (= :dead (::state m))
+    (= :dead (:state m))
     false))
 
 ;;---
