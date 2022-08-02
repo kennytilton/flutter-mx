@@ -275,15 +275,6 @@
       (dp :read id :got (util/dart-map->cljd-map rb))
       (dp :read id :notfound))))
 
-(defn load-mx-db [name]
-  (dp :loading-coll-into-mx name)
-  (cty/with-fx-isolation
-    (let [tdl (todo/ToDoList-load "todo")]
-      (dp :tdl-got-tdl!!! tdl)
-      (dp :tdl-got-tdl!!! (minfo tdl)
-        :todo-ct (count (mkids tdl)))
-      tdl)))
-
 ; so make on td just looks at stg-id and, if populated, does nothing.
 ; this leaves the observer with the problem of knowing whether a slot
 ; observation -- why was slot observer triggering upsert -- ok, for, update, but then

@@ -5,6 +5,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar mkids] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
@@ -12,6 +13,7 @@
     [tiltontec.demo.todoMVC.input :as input]
     [tiltontec.demo.todoMVC.items :as items]
     [tiltontec.demo.todoMVC.footer :as footer]
+    [tiltontec.demo.todoMVC.store-pref :as pref]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
@@ -26,15 +28,34 @@
                                      .backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
       {:name             :app
-       :todo-list        (cI nil)
-       :todo-list-loader (cF+ [:obs (fn [_ me load _ _]
+       :db               (cI nil)
+       :db-loader        (cF+ [:obs (fn [_ me load _ _]
                                       (.then ^#/(Future dynamic) load
-                                        (fn [tdl]
+                                        (fn [db]
                                           (cty/with-fx-isolation
-                                            (mset! me :todo-list tdl)))))]
+                                            (dp :stashed-db!!!!!! db)
+                                            (mset! me :db db)))))]
                            ;; todo new cFuture cell type
                            ;; next returns an MX proxy of a to-do family, as a future
-                           (todo/ToDoList-load "todo"))}
+                           (.getInstance prefs/SharedPreferences))
+       :todos            (cI nil)
+       :todos-loader     (cF+ [:obs (fn [_ me load _ _]
+                                      (when load
+                                        (.then ^#/(Future dynamic) load
+                                          (fn [todos]
+                                            (dp :loaders-sees-todossss!!s todos)
+                                            (cty/with-fx-isolation
+                                              (mset! me :todos todos))))))]
+                           ;; todo new cFuture cell type
+                           ;; next returns an MX proxy of a to-do family, as a future
+                           (when-let [db (mget me :db)]
+                             (binding [pref/*pref* db]
+                               ;; HHACK hardcode
+                               (pref/read-all-docs "todo"))))
+
+       :todo-list        (cF (when-let [todos (mget me :todos)]
+                               (binding [pref/*pref* (mget me :db)]
+                                 (todo/make-ToDoList "todo" todos))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
@@ -74,7 +95,7 @@
                 .fontSize 14.0)]
     (fx/padding
       {:padding (m.EdgeInsets/all 16.0)}
-      {:name :credits-toggle
+      {:name          :credits-toggle
        :show-credits? (cI false)}
       (fx/column
         (when (mget (fasc :credits-toggle) :show-credits?)

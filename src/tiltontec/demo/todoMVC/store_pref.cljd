@@ -13,15 +13,16 @@
     [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
     [tiltontec.mx-flutter.shared-pref :as stg]))
 
+(def ^:dynamic ^prefs/SharedPreferences? *pref* nil)
 
 (defn ^:async td-initialize
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
   [collection-name td-map]
   (assert (not (:stg-id td-map)) "td-map already written")  ;; already written
-  (let [db (await (stg/get-db))
-        new-stg-id (str collection-name "/" (rand-int 99999999))
+  (assert *pref* "no db in td-init")
+  (let [new-stg-id (str collection-name "/" (rand-int 99999999))
         new-data (assoc td-map :stg-id new-stg-id)]
-    (.setString db new-stg-id
+    (.setString *pref* new-stg-id
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys new-data
@@ -31,10 +32,10 @@
 (defn td-rewrite
   "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
   [collection-name td-map]
-  (let [db (await  (stg/get-db))
-        stg-id (:stg-id td-map)]
+  (let [stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
-    (.setString ^prefs/SharedPreferences db stg-id
+    (assert *pref* "no db in td-rewrite")
+    (.setString ^prefs/SharedPreferences *pref* stg-id
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys td-map
@@ -46,27 +47,34 @@
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
   (assert (string? stg-id) "td-delete requires string stg-id")
-  (let [db (await (stg/get-db))]
-    (.remove ^prefs/SharedPreferences db stg-id)
-    stg-id))
+  (assert *pref* "no db in td-delete")
+  ;; todo need these casts?
+  (.remove ^prefs/SharedPreferences *pref* stg-id)
+  stg-id)
 
-(defn ^:async read-all-docs [collection-name]
-  (let [db (await (stg/get-db))]
-    (let [all-td-keys (await (collection-keys collection-name))]
-      (mapv (fn [td-key]
-              (util/dart-map->cljd-map
-                (convert/jsonDecode (.getString db td-key)))) all-td-keys))))
+(defn read-all-docs [collection-name]
+  (assert *pref* "no db in read-all-docs")
+  (let [all-td-keys (await (collection-keys collection-name))]
+    (dp :rad-sees-keys all-td-keys)
+    (mapv (fn [td-key]
+            (util/dart-map->cljd-map
+              (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
 
 (defn collection-keys [collection-name]
-  (filter (fn [k]
-            (= collection-name (subs k 0 (count collection-name))))
-    (into #{} (.getKeys ^prefs/SharedPreferences (await (stg/get-db))))))
+  (dp :collk-sees *pref* collection-name)
+  (assert *pref* "no db in read-all-docs")
+  (let [db *pref*
+        all-keys (into #{} (.getKeys db))] ;; ^prefs/SharedPreferences
+    (dp :collk-sees-keys all-keys)
+    (filter (fn [k]
+              (dp :collk-k (count collection-name) k)
+              (= collection-name (subs k 0 (count collection-name))))
+      all-keys)))
 
 (defn delete-all-docs [collection-name]
-  (let [db (await (stg/get-db))
-        targets (await (collection-keys collection-name))]
+  (let [targets (await (collection-keys collection-name))]
     (dp :delete-all-docs-sees targets)
     (doseq [k targets]
-      (dp :all-deleting k :db db)
-      (.remove ^prefs/SharedPreferences db k))
+      (dp :all-deleting k :db *pref*)
+      (.remove ^prefs/SharedPreferences *pref* k))
     targets))
