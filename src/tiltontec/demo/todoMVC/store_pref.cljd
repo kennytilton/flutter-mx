@@ -52,9 +52,19 @@
   (.remove ^prefs/SharedPreferences *pref* stg-id)
   stg-id)
 
+(defn read-all-docs-now [collection-name]
+  (assert *pref* "no db in read-all-docs")
+  (let [all-td-keys (do ;; await
+                      (collection-keys collection-name))]
+    (dp :rad-sees-keys all-td-keys)
+    (mapv (fn [td-key]
+            (util/dart-map->cljd-map
+              (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
+
 (defn read-all-docs [collection-name]
   (assert *pref* "no db in read-all-docs")
-  (let [all-td-keys (await (collection-keys collection-name))]
+  (let [all-td-keys (await
+                      (collection-keys collection-name))]
     (dp :rad-sees-keys all-td-keys)
     (mapv (fn [td-key]
             (util/dart-map->cljd-map
