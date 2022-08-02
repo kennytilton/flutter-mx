@@ -323,47 +323,11 @@
                #_(await (coll-dump :post-td-initialize-test "todo")))))
     (await (coll-dump :post-3-test "todo"))))
 
-(defn test-delete-via-kids []
-  (dp :test-start!!!!!!!!!!!---------------------)
-  (await (test-coll-init))
-  (dp :test-col-inittted!!!!!!!!!!!---------------------)
-  (await (coll-dump :post-test-col-init "todo"))
 
-  (let [tdl (await (todo/ToDoList-load "todo"))]
-    (dp :TEST-tdlistload-returns tdl (minfo tdl))
-    (doseq [k (mkids tdl)]
-      (dp :td-loaded (minfo k) (todo/td-title k)))
-    (let [td (second (mkids tdl))]
-      (dp :changing @td)
-      (let [t2 (mset! td :title "Sell car")]
-        (dp :mset-returned! t2)
-        (dp :changed-td-to-sell-car @td)
-        (doseq [k (mkids tdl)]
-          (dp :tds-post-change (todo/td-stg-id k) (todo/td-title k)))
-        ; (apply f current-value-of-atom args)
-        ; (apply remove kids args) - nope
-        ; (apply (fn [coll stg-id]
-        ;           (remove (fn [td]
-        ;                      (= stg-id (td-stg-id td))) kids args)
-        (let [delk (await (mswap! tdl :kids
-                            (fn [coll stg-id]
-                              (dp :swap-rem-sees stg-id (map todo/td-stg-id coll))
-                              (remove (fn [td]
-                                        (dp :check-1 stg-id :vs (todo/td-stg-id td))
-                                        (= stg-id (todo/td-stg-id td))) coll))
-                            (todo/td-stg-id td)))]
-          (dp :t2-remmed-from-kids---------------)
-          (dp :t2-remmed-from-kids---------------- delk)
-          (dp :t2-remmed-from-kids----------------tdl (minfo tdl))
-          (doseq [k (mkids tdl)]
-            (dp :tds-post-change (todo/td-stg-id k) (todo/td-title k))))))))
 (defn test []
   ;; (test-sans-fx)
-
   (await (test-coll-init))
-
   (await (coll-dump :confirm-coll-init "todo"))
-
 
   ;(reset! todo/todo-sid 0)
   ;(test-new-todo-list)
