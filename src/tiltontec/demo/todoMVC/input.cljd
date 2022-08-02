@@ -9,7 +9,8 @@
     [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-app my-todo-list td-completed] :as todo]
+    [tiltontec.demo.todoMVC.store-pref :as pref]
+    [tiltontec.demo.todoMVC.todo :refer [my-app my-app-db my-todo-list td-completed] :as todo]
 
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]
@@ -37,10 +38,11 @@
                                                (md/mset! me :value trimmed) ;; let text proxy know its cleaned value
                                                (.clear ^m/TextEditingController
                                                  (md/mget me :controller))
-                                               (let [app (my-app)
-                                                     td-lst (my-todo-list)]
-                                                 (let [kp (mkids td-lst)]
-                                                   (mset! td-lst :kids (concat kp [(todo/make-ToDo td-lst trimmed false)]))))))))))
+                                               (let [td-lst (my-todo-list)]
+                                                 (binding [pref/*pref* (my-app-db)]
+                                                   (assert pref/*pref*)
+                                                   (mswap! td-lst :kids conj
+                                                     (todo/make-ToDo td-lst trimmed false))))))))))
                     :controller  (cFonce (let [c (m/TextEditingController
                                                    .text (md/mget me :value))]
                                            ;; todo package this as a reusable
