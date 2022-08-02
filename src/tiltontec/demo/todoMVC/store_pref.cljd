@@ -54,9 +54,7 @@
 
 (defn collection-docs [collection-name]
   (assert *pref* "no db in collection-docs")
-  (let [all-td-keys (do ;; await
-                      (collection-keys collection-name))]
-    (dp :colldocs-sees-keys all-td-keys)
+  (let [all-td-keys (collection-keys collection-name)]
     (mapv (fn [td-key]
             (util/dart-map->cljd-map
               (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
@@ -64,9 +62,8 @@
 (defn collection-keys [collection-name]
   (dp :collk-sees *pref* collection-name)
   (assert *pref* "no db in collection-keys")
-  (let [db *pref*
-        all-keys (into #{} (.getKeys db))] ;; ^prefs/SharedPreferences
-    (dp :collk-sees-keys all-keys)
+  (let [;; db *pref*
+        all-keys (into #{} (.getKeys *pref*))] ;; ^prefs/SharedPreferences
     (filter (fn [k]
               (dp :collk-k (count collection-name) k)
               (= collection-name (subs k 0 (count collection-name))))
