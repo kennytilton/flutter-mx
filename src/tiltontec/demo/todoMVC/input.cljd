@@ -9,7 +9,7 @@
     [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.store-pref :as pref]
+    [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]
     [tiltontec.demo.todoMVC.todo :refer [my-app my-app-db my-todo-list td-completed] :as todo]
 
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
@@ -40,7 +40,6 @@
                                                  (md/mget me :controller))
                                                (let [td-lst (my-todo-list)]
                                                  (binding [pref/*pref* (my-app-db)]
-                                                   (assert pref/*pref*)
                                                    (mswap! td-lst :kids conj
                                                      (todo/make-ToDo td-lst trimmed false))))))))))
                     :controller  (cFonce (let [c (m/TextEditingController
@@ -70,11 +69,12 @@
       {:onPressed (fx/with-ctx+as-is [me ctx]
                     (fn []
                       (cty/with-fx-isolation
-                        (let [todos (todo/app-todos (my-app))
-                              all-done? (every? td-completed todos)]
-                          (doseq [td todos]
-                            ;; todo do all these in one change pulse
-                            (md/mset! td :completed (if all-done? false true))))))) ;; dataflow trigger
+                        (binding [*pref* (my-app-db)]
+                          (let [todos (todo/app-todos (my-app))
+                                all-done? (every? td-completed todos)]
+                            (doseq [td todos]
+                              ;; todo do all these in one change pulse
+                              (md/mset! td :completed (if all-done? false true)))))))) ;; dataflow trigger
        :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))
 
 (defn todo-controls []
@@ -84,5 +84,5 @@
     ; --- the input ----
     (fx/expanded {:flex 9}
       (fx/padding
-        {:padding  (m.EdgeInsets/all 16.0)}
+        {:padding (m.EdgeInsets/all 16.0)}
         (todo-input)))))

@@ -10,8 +10,7 @@
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
-    [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
-    [tiltontec.mx-flutter.shared-pref :as stg]))
+    [tiltontec.model.core :refer [mget mpar mkids mname] :as md]))
 
 (def ^:dynamic ^prefs/SharedPreferences? *pref* nil)
 
@@ -19,7 +18,7 @@
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
   [collection-name td-map]
   (assert (not (:stg-id td-map)) "td-map already written")  ;; already written
-  (assert *pref* "no db in td-init")
+
   (let [new-stg-id (str collection-name "/" (rand-int 99999999))
         new-data (assoc td-map :stg-id new-stg-id)]
     (.setString *pref* new-stg-id
@@ -34,7 +33,7 @@
   [collection-name td-map]
   (let [stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
-    (assert *pref* "no db in td-rewrite")
+
     (.setString ^prefs/SharedPreferences *pref* stg-id
       (convert/jsonEncode
         (walk/stringify-keys
@@ -43,11 +42,8 @@
     stg-id))
 
 (defn td-delete
-  "Delete to-do data with given LS id from LS"
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
-  (assert (string? stg-id) "td-delete requires string stg-id")
-  (assert *pref* "no db in td-delete")
   ;; todo need these casts?
   (.remove ^prefs/SharedPreferences *pref* stg-id)
   stg-id)
@@ -60,19 +56,11 @@
               (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
 
 (defn collection-keys [collection-name]
-  (dp :collk-sees *pref* collection-name)
-  (assert *pref* "no db in collection-keys")
-  (let [;; db *pref*
-        all-keys (into #{} (.getKeys *pref*))] ;; ^prefs/SharedPreferences
-    (filter (fn [k]
-              (dp :collk-k (count collection-name) k)
-              (= collection-name (subs k 0 (count collection-name))))
-      all-keys)))
+  (filter (fn [k]
+            (dp :collk-k (count collection-name) k)
+            (= collection-name (subs k 0 (count collection-name))))
+    (into #{} (.getKeys *pref*))))
 
 (defn delete-all-docs [collection-name]
-  (let [targets (collection-keys collection-name)]
-    (dp :delete-all-docs-sees targets)
-    (doseq [k targets]
-      (dp :all-deleting k :db *pref*)
-      (.remove ^prefs/SharedPreferences *pref* k))
-    targets))
+  (doseq [k (collection-keys collection-name)]
+    (.remove ^prefs/SharedPreferences *pref* k)))
