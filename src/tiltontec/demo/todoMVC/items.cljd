@@ -12,7 +12,8 @@
     [tiltontec.model.core :refer [mget mswap! mset! mkids mpar] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-app my-todo-list td-stg-id td-completed td-title] :as todo]))
+    [tiltontec.demo.todoMVC.todo :refer [my-app my-app-db my-todo-list td-stg-id td-completed td-title] :as todo]
+    [tiltontec.demo.todoMVC.store-pref :as pref]))
 
 (defn- completion-toggler [todo]
   (fx/check-box
@@ -22,7 +23,9 @@
      :onChanged (cF (fx/->CBAsIs
                       (fn [value]
                         (cty/with-fx-isolation
-                          (md/mset! todo :completed value)))))}))
+                          (binding [pref/*pref* (my-app-db)]
+                            ;; todo SOON make this with-app-db
+                            (md/mset! todo :completed value))))))}))
 
 (defn- delete-button [todo]
   (fx/text-button
@@ -113,8 +116,8 @@
                                                                              :else m/KeyEventResult.ignored)))))
                                         :decoration  (m/InputDecoration
                                                        .border (m/OutlineInputBorder
-                                                                 .borderRadius  (m.BorderRadius/all
-                                                                                         (m.Radius/circular 0.0)))
+                                                                 .borderRadius (m.BorderRadius/all
+                                                                                 (m.Radius/circular 0.0)))
                                                        .contentPadding (m.EdgeInsets/all 9.0))
                                         :onSubmitted (cF (fx/with-ctx+as-is [me ctx]
                                                            (fn [value]
@@ -142,13 +145,12 @@
                       :done (td-completed todo)))}
     (fx/container
       {:decoration (fx/cb-with-ctx [me context]
-                     (m/BoxDecoration
-                       .border (m/Border .top
-                                 (m/BorderSide
-                                   .width 0.5
-                                   .color (-> m/Theme
-                                            (.of context)
-                                            .-dividerColor)))))}
+                     (m/BoxDecoration .border
+                       (m/Border .top (m/BorderSide
+                                        .width 0.5
+                                        .color (-> m/Theme
+                                                 (.of context)
+                                                 .-dividerColor)))))}
       (fx/gesture-detector
         {:onDoubleTap (fx/with-ctx+as-is [me ctx]
                         (fn []
@@ -166,7 +168,7 @@
   (fx/expanded
     ;; ^^^ required sizer to join column
     (fx/list-view+builder
-      {:padding      (m.EdgeInsets/all 0.0)
+      {:padding     (m.EdgeInsets/all 0.0)
        :itemCount   (cF (count (mkids me)))
        :itemBuilder (cF (fx/as-is
                           (fn [ctx i]
