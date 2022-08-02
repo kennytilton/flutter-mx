@@ -73,7 +73,7 @@
       all-keys)))
 
 (defn delete-all-docs [collection-name]
-  (let [targets (await (collection-keys collection-name))]
+  (let [targets (collection-keys collection-name)]
     (dp :delete-all-docs-sees targets)
     (doseq [k targets]
       (dp :all-deleting k :db *pref*)

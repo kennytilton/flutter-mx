@@ -26,8 +26,18 @@
   ;(dp :json? (convert/jsonEncode {:sid 42 :title "walk dog" :completed false}))
   ;(.ensureInitialized w/WidgetsFlutterBinding)
 
+  (let [dbf (.getInstance prefs/SharedPreferences)]
+    (dp :test-sees-dbf dbf)
+    (.then dbf
+      (fn [dbi]
+        (dp :then-sees-dbi dbi)
+        (binding [pref/*pref* dbi]
+          (dp :hello-db pref/*pref*)
+          (pref/delete-all-docs "todo")))))
 
-  (let [db ^prefs/SharedPreferences (await (stg/get-db))]
+
+
+  #_ (let [db ^prefs/SharedPreferences (await (stg/get-db))]
     (dp :got-db!!! db)
     (let [all (into #{} (.getKeys ^prefs/SharedPreferences db))]
       (dp :allkeys!!!!! all)
@@ -46,7 +56,7 @@
                 (dp :reread (convert/jsonDecode td))
                 (convert/jsonDecode td)))))))
 
-  (pref/delete-all-docs "todo")
+
 
 
   #_(let [prefs (await (.getInstance prefs/SharedPreferences))]
