@@ -39,21 +39,23 @@
 
 (defn main []
   (.ensureInitialized w/WidgetsFlutterBinding)
-  ;; todo ^^^ see if we can eliminate all the others
   ;;(set! r/debugPaintSizeEnabled true)
+
+  (material/runApp
+    (fx/fx-render nil
+      (td/make-app)))
+
   #_(let [tres (await (stor/test))]
       (dp :maintres tres))
 
-  (let [r (prefs/test)]
+  #_ (let [r (prefs/test)]
     (dp :main-says-test-done r))
 
   #_ (let [pt (await (prefs/test))]
     (dp :main-sees-pt pt @pref/+db+))
 
 
-  #_ (material/runApp
-    (fx/fx-render nil
-      (td/make-app)))
+
 
   ;;(w/debugDumpApp)
   )

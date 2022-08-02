@@ -13,7 +13,7 @@
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
     [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
     [tiltontec.mx-flutter.store :as store]
-    [tiltontec.demo.todoMVC.store-pref :as stg]))
+    [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as stg]))
 
 ;;; --- should be in a utils file ----------------------
 (defn title-red []
@@ -77,6 +77,7 @@
       :kids (when (not= cty/unbound prior-value)
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (doseq [td lost]
+                  (dp :tdl-kids-obs-deleting @td *pref*)
                   (stg/td-delete "todo" (td-stg-id td))))))))
 
 ;; todo show todos in order; add created slot

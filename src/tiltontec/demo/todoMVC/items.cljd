@@ -13,7 +13,7 @@
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
     [tiltontec.demo.todoMVC.todo :refer [my-app my-app-db my-todo-list td-stg-id td-completed td-title] :as todo]
-    [tiltontec.demo.todoMVC.store-pref :as pref]))
+    [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]))
 
 (defn- completion-toggler [todo]
   (fx/check-box
@@ -23,7 +23,7 @@
      :onChanged (cF (fx/->CBAsIs
                       (fn [value]
                         (cty/with-fx-isolation
-                          (binding [pref/*pref* (my-app-db)]
+                          (binding [*pref* (my-app-db)]
                             ;; todo SOON make this with-app-db
                             (md/mset! todo :completed value))))))}))
 
@@ -33,11 +33,12 @@
     {:onPressed (fx/with-ctx+as-is [me ctx]
                   (fn []
                     (cty/with-fx-isolation
-                      (mswap! (my-todo-list) :kids
-                        (fn [coll stg-id]
-                          (remove (fn [td]
-                                    (= stg-id (td-stg-id td))) coll))
-                        (todo/td-stg-id todo)))))}
+                      (binding [*pref* (my-app-db)]
+                        (mswap! (my-todo-list) :kids
+                          (fn [coll stg-id]
+                            (remove (fn [td]
+                                      (= stg-id (td-stg-id td))) coll))
+                          (todo/td-stg-id todo))))))}
     (fx/text {:style (p/TextStyle
                        .fontFamily "Helvetica Neue"
                        .color (todo/title-red)
@@ -68,13 +69,17 @@
   ([me todo value]
    (let [stg-id (td-stg-id todo)
          trimmed (str/trim value)]
-     (if (str/blank? trimmed)
-       (do
-         (md/mswap! (my-todo-list) :kids
-           (partial remove (fn [td] (= stg-id (td-stg-id td))))))
-       (do
-         (md/mset! todo :title trimmed)                     ;; two dataflow triggers
-         (md/mset! (md/fasc :item-control) :editing? false))))))
+     (binding [*pref* (my-app-db)]
+       (assert *pref* "no db editing")
+       (dp :pref-comm stg-id *pref*)
+       (if (str/blank? trimmed)
+         (do
+           (dp :comm-edt-tossing stg-id @todo *pref*)
+           (md/mswap! (my-todo-list) :kids
+             (partial remove (fn [td] (= stg-id (td-stg-id td))))))
+         (do
+           (md/mset! todo :title trimmed)                   ;; two dataflow triggers
+           (md/mset! (md/fasc :item-control) :editing? false)))))))
 
 (defn to-do-editor [me todo]
   (assert todo)
