@@ -36,7 +36,6 @@
                           (dart/is? newv Future)
                           (dart/is? newv #/(Future prefs/SharedPreferences))))]
              (.getInstance prefs/SharedPreferences))
-       ;;:db           (cI nil)
        #_#_ :db-loader    (cF+ [:future? true
                            :obs (fn [_ me load _ _]
                                   (.then ^#/(Future dynamic) load
@@ -45,7 +44,6 @@
                                         (dp :stashed-db!!!!!! db)
                                         (integrity/with-cc :load-todos
                                           (mset! me :db db))))))]
-                       ;; todo new cFuture cell type
                        ;; next returns an MX proxy of a to-do family, as a future
                        (.getInstance prefs/SharedPreferences))
 
@@ -125,7 +123,7 @@
                                                 .color (todo/title-red)
                                                 .fontWeight m.FontWeight/w100
                                                 .fontSize 64.0)}
-                                      title))})))
+                                      (str title (rand-int 99))))})))
 
 (defn about-credits []
   (let [faint (p/TextStyle
