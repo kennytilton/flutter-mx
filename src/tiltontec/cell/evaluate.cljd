@@ -54,7 +54,7 @@
       (conj (c-useds *depender*) used))
     (caller-ensure used *depender*)))
 
-(declare calculate-and-set))
+(declare calculate-and-set)
 
 ;; test
 
@@ -203,7 +203,8 @@
                                              ;;      do we need to clear :then? Or is opti-away not a problem
                                              ;;      since it would have happened were there no users??
                                              (rmap-meta-setf [:then? c] true)
-                                             (c-value-assume c fu-val nil)))))
+                                             (c-value-assume c fu-val nil))))
+                        (c-value-assume c nil nil))
         :else (when-not (c-optimized-away? c)
                 (assert (map? (deref c)) "calc-n-set")
                 ;; this check for optimized-away? arose because a rule using without-c-dependency
