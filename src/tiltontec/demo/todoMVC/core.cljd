@@ -32,13 +32,18 @@
        :db           (cF+ [:future? true]
                        (.getInstance prefs/SharedPreferences))
 
-       :todos        (cI nil)
-       ;; todo combine these two with cF-Until-nonnil-then-in -- might exist
-       :todos-loader (cF+ [:obs (fn [_ me todos _ _]
+       :todos        (cF+ [:future? false] ;; hhack
+                       (let [db (mget me :db)]
+                         (dp :todos-sees-db-1 db)
+                         (when (and db (dart/is? db prefs/SharedPreferences))
+                           (dp :todos-sees-prefs-db-2 db)
+                           (binding [pref/*pref* db]
+                             ;; HHACK hardcode
+                             (pref/collection-docs "todo")))))
+       #_#_ :todos-loader (cF+ [:obs (fn [_ me todos _ _]
                                   (dp :loader-obs-sees-load todos)
                                   (cty/with-fx-isolation
                                     (mset! me :todos todos)))]
-                       ;; todo new cFuture cell type
                        ;; next returns an MX proxy of a to-do family, as a future
                        (let [db (mget me :db)]
                          (dp :loader-sees-db-1 db)
