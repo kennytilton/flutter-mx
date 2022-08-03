@@ -164,8 +164,8 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (utb/def-rmap-slots c-
   me slot state input? rule pulse pulse-last-changed pulse-observed
-  useds users callers optimize ephemeral? always-compute
-  lazy synapses synaptic? code)
+  useds users callers optimize ephemeral?
+  lazy synapses synaptic? code future? then? debug)
 
 (defn c-value [c]
   (assert (atom? c))
@@ -177,13 +177,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-optimized-away? [c]
   (cond
     (c-ref? c) (or (not (map? @c))
-
-
-                 ;; state keyword showing with full ns so :state does not work
-
-
-
-                 (not (contains? @c :state))
+                 (not (contains? @c :state)) ;; random property check?
                  (and (atom? c)
                    (:optimized-away (meta c)))
                  (= :optimized-away (:state @c)))
@@ -216,12 +210,17 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-valid? [rc]
   (= :valid (c-value-state rc)))
 
-(defn cinfo [c]
-  (cond
+(defn cinfo
+  ([c] (cinfo c false))
+  ([c verbose?]
+   (cond
     (nil? c) :null-c
-    (not (atom? c)) :not-atom-c
-    (not (c-ref? c)) :not-cell-c
-    :else ((juxt c-slot-name c-md-name) c)))
+    (not (atom? c)) (if verbose? [:not-atom-c c]
+                                 :not-atom-c)
+    (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
+                       :not-cell-c)
+    :else (if verbose? [:cinfo-all @c]
+            ((juxt c-slot-name c-md-name c-future? c-value) c)))))
 
 (defn minfo
   ([md]
@@ -241,7 +240,7 @@ rule to get once behavior or just when fm-traversing to find someone"
                 [:hunh @md])]))))
 
 (defn dpc [c & bits]
-  (assert (c-ref? c))
+  (assert (c-ref? c) (str "DPC got non-c: " c))
   (when (:debug @c)
     (apply dp :DPC (cinfo c) bits)))
 

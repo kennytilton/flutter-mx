@@ -6,16 +6,16 @@
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type cprn c-always-compute
+             c-unbound? c-input? mx-type cprn
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo minfo
              *call-stack* *defer-changes*
              c-rule c-code c-me c-value-state c-callers caller-ensure
              unlink-from-callers *causation*
              c-synaptic? caller-drop c-md-name
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots c-slot-name
+             c-pulse c-pulse-last-changed c-ephemeral? c-then? c-slot c-slots c-slot-name
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-slot-owning? c-lazy dpc c-future?] :as cty]
     [tiltontec.cell.observer :refer [c-observe]]
     [tiltontec.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]))
@@ -77,19 +77,6 @@
       ;; c is valid, go ahead and return its value in case not-to-be can use it.
       (c-value c))
 
-    ;; --- always compute --------
-    ;;  NB!! This has been solved with callbacks JIT during build
-    #_#_
-    (c-always-compute c)
-    ;; some Flutter props cannot be computed until a widget is built and
-    ;; we have the Flutter context. An experiment to see if Cells can tolerate
-    ;; Cells that always compute. In this case, the formula just punts if it does not
-    ;; see a context. optimize-away has been defeated elsewhere.
-    ;; tbh, we are abusing Cells a bit here.
-    (let [prior-value (c-value c)]
-      (calculate-and-set c :evic ensurer)
-      ;; (c-observe c prior-value :get-always-compute)
-      (c-value c))
 
     ;; --- easy way out: our pulse is current ---------------
     (c-current? c)
@@ -123,7 +110,7 @@
     (do
       ;; we seem to need update, but check that other processing did not bring c current
       (when-not (c-current? c)
-        (dpx :not-current-so-calc!!!!!!! (c-slot c)(c-state c)(c-valid? c))
+        (dpx :not-current-so-calc!!!!!!! (c-slot c) (c-state c) (c-valid? c))
         ;; happens if dependent changed and its observer read/updated me
         (calculate-and-set c :evic ensurer))
       (c-value c))
@@ -194,29 +181,43 @@
   (do                                                       ;; cty/with-cdbg (and (= :style (c-slot c)) (= :z-counter (c-md-name c)))
     ;; (wtrx [0 20 :cnset-entry (c-slot c)]
     (dpx :--------------------- 42)
-    (dpx c :calc-n-set-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
+    (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
     (dpx :--------------------- 43)
     (let [[raw-value propagation-code] (calculate-and-link c)]
       ;;(trx :cn-set-sees!!!! (c-slot c) raw-value propagation-code)
-      (cprn :c-calc!!!!!!!!!!!!!!!! raw-value (c-optimized-away? c)
-        :meta-mw (meta (c-me c)))
-      (when-not (c-optimized-away? c)
-        (assert (map? (deref c)) "calc-n-set")
+      (dpc c :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
+        #_#_:meta-mw (meta (c-me c)))
 
-        ;; this check for optimized-away? arose because a rule using without-c-dependency
-        ;; can be re-entered unnoticed since that clears *call-stack*. If re-entered, a subsequent
-        ;; re-exit will be of an optimized away cell, which will have been assumed
-        ;; as part of the opti-away processing.
-        ;;(trx :calc-n-set->assume raw-value)
-        (c-value-assume c raw-value propagation-code)
-        (when-not (or (map? (deref c))
-                    (c-optimized-away? c))
-          (dp :c-NO_LONGER-map!!!!!!!!!-meta (meta c))
-          (dp :c-NO_LONGER-map!!!!!!!!! (deref c) (when (atom? (deref c))
-                                                    (deref (deref c))))
-          (assert (or (map? (deref c))
-                    (c-optimized-away? c)) "calc-n-set deref c not map or opti"))
-        ))))
+      (cond
+        (c-future? c) (do
+                        (assert (or (nil? raw-value)        ;; someday support other default future cell values, mebbe :pending
+                                  (dart/is? raw-value Future)))
+                        (dp :future!!!!! raw-value (cinfo c))
+                        (.then ^Future raw-value (fn [fu-val]
+                                           (dp :FUVAL!!!! fu-val (cinfo c))
+                                           (with-integrity [:change :future-then]
+                                             (dp :calcnset-then!!! fu-val)
+                                             ;; todo if a cfu is meant to run repeatedly as dependencies change,
+                                             ;;      do we need to clear :then? Or is opti-away not a problem
+                                             ;;      since it would have happened were there no users??
+                                             (rmap-meta-setf [:then? c] true)
+                                             (c-value-assume c fu-val nil)))))
+        :else (when-not (c-optimized-away? c)
+                (assert (map? (deref c)) "calc-n-set")
+                ;; this check for optimized-away? arose because a rule using without-c-dependency
+                ;; can be re-entered unnoticed since that "clears" *call-stack*. If re-entered, a subsequent
+                ;; re-exit will be of an optimized away cell, which will have been value-assumed
+                ;; as part of the opti-away processing.
+                ;;(trx :calc-n-set->assume raw-value)
+                (c-value-assume c raw-value propagation-code)
+                (when-not (or (map? (deref c))
+                            (c-optimized-away? c))
+                  (dp :c-NO_LONGER-map!!!!!!!!!-meta (meta c))
+                  (dp :c-NO_LONGER-map!!!!!!!!! (deref c) (when (atom? (deref c))
+                                                            (deref (deref c))))
+                  (assert (or (map? (deref c))
+                            (c-optimized-away? c)) "calc-n-set deref c not map or opti"))
+                )))))
 
 (declare unlink-from-used)
 
@@ -230,9 +231,8 @@
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
   (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
-  (when (:debug @c)
-    (dpx :calc-n-link-sees!!!!!!!!!!!!!!!!!!! (dissoc @c :code)))
-  (do ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
+  (dpc c :calc-n-link-entry!!!! (dissoc @c :code))
+  (do                                                       ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
     (binding [*depender* c
               *call-stack* (cons c *call-stack*)
               *defer-changes* true]
@@ -241,7 +241,7 @@
       (unlink-from-used c :pre-rule-clear)
       (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
 
-      (cty/dpc c :CNL-trying-formula (cinfo c))
+      (dpx c :CNL-trying-formula (cinfo c))
       (let [raw-value #_((c-rule c) c)
             (try
               ((c-rule c) c)
@@ -258,6 +258,7 @@
             prop-code? (and (c-synaptic? c)
                          (vector? raw-value)
                          (contains? (meta raw-value) :propagate))]
+        (dpc c :cn-link-got raw-value prop-code?)
         (if prop-code?
           [(first raw-value) (:propagate (meta raw-value))]
           [raw-value nil])))))
@@ -270,11 +271,11 @@
       (c-formula? c)
       (cond
         (some #{(c-lazy c)} [:until-asked])
-        (dp :not-awakening-lazy (cinfo c))
+        (dp :c-awakening-NOT-lazy (cinfo c))
 
         :else (binding [*depender* nil]
                 (when (not (= (c-state c) :awake))
-                  (cty/dpc c :not-current???-pulses!!!!!!!!!!!!!! (c-state c) (c-pulse c) @+pulse+ (dissoc @c :code))
+                  (cty/dpc c :c-awakening!!!!! (c-state c) (c-pulse c) @+pulse+ (dissoc @c :code))
                   (calculate-and-set c :fn-c-awken nil))))
 
       (c-ref? c)
@@ -329,8 +330,8 @@
 
   [c new-value propagation-code]
 
-  (assert (c-ref? c) (str "c-ref? fail " c))
-  ;; (dp :cva-entry (c-slot c) new-value)
+  (assert (c-ref? c) (str "c-ref? fail " (cinfo c true)))
+  (dpc c :cvass-entry!! (c-slot c) new-value)
   (do                                                       ;; (wtrx (0 100 :cv-ass (:slot @c) new-value)
     (prog1 new-value                                        ;; sans doubt
       (without-c-dependency
@@ -344,10 +345,10 @@
           ;;
           (rmap-setf [:value c] new-value)
           (rmap-setf [:state c] :awake)
-          (cty/dpc c :now-awake!!!!!!!!! (dissoc @c :code))
-          (cprn :new-vlue-installed (c-slot c)
+          ;; (cty/dpc c :now-awake!!!!!!!!! (dissoc @c :code))
+          (dpc c :cvass-value-installed!!!!!!!!!!!! (c-slot c)
             new-value
-            (:value c))
+            (dissoc @c :code))
           ;;
           ;; --- model maintenance ---
           (when (and (c-model c)
@@ -356,9 +357,9 @@
           ;;(trx :val-stored new-value)
           (c-pulse-update c :slotv-assume)
           (dpx :maybe-propping (c-slot c) new-value
-              :priorstate prior-state
-              :propcode propagation-code
-              :changed? (c-value-changed? c new-value prior-value))
+            :priorstate prior-state
+            :propcode propagation-code
+            :changed? (c-value-changed? c new-value prior-value))
           (when (or (not (some #{prior-state} [:valid :uncurrent]))
                   (= propagation-code true)                 ;; forcing
                   (when-not (= propagation-code false)
@@ -370,9 +371,10 @@
             ;; we now can look to see if we can be optimized away
             (dpx :maybe-propping-sth-happened)
             (let [callers (c-callers c)]                    ;; get a copy before we might optimize away
+              (dpc c :cvass-pre-opti-check (c-formula? c) (c-optimize c))
               (when-let [optimize (and (c-formula? c)
                                     (c-optimize c))]
-                (dpx :VAL-ASS-sees-opti optimize (deref c) :priorc prior-c)
+                (dpc c :cvass-opti-truthy!!! optimize (deref c) #_#_:priorc prior-c)
 
                 (if (= optimize :when-value-t)
                   (when (c-value c)
@@ -420,11 +422,13 @@ then clear our record of them."
   find a non-cell in a slot and Just Use It."
 
   [c prior-value]
-  (when (not (map? (deref c)))
-    (dp :OPTI_SEES-NOT_MAP_C (deref c)))
+  (assert (c-ref? c) "optiway-c-not-c-ref")
+
+  (dpc c :opti-away-check (c-useds c) (c-optimize c) (c-valid? c) (not (c-input? c)))
 
   (when (and (c-formula? c)
-          (not (c-always-compute c))
+          (not (and (c-future? c)
+                 (not (c-then? c)))) ;; todo test also if the then has been received
           (empty? (c-useds c))
           (c-optimize c)
           (not (c-optimized-away? c))                       ;; c-streams (FNYI) may come this way repeatedly even if optimized away
@@ -432,9 +436,9 @@ then clear our record of them."
           (not (c-synaptic? c))                             ;; no slot to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
 
-    (dpx :optimizing-away!!!! (c-slot c) (c-md-name c) (cty/cinfo c))
+    (dpc c :optimizing-away!!!! (c-slot c) (c-md-name c) :user-ct (count (c-callers c)))
 
-    (rmap-setf [:state c] :optimized-away)             ;; leaving this for now, but we toss the cell below.
+    (rmap-setf [:state c] :optimized-away)                  ;; leaving this for now, but we toss the cell below.
     (rmap-meta-setf [:optimized-away c] (deref cty/+pulse+))
     (c-observe c prior-value :opti-away)
 
@@ -543,7 +547,6 @@ then clear our record of them."
         (when-not (c-optimized-away? c)                     ;; they get observed at the time
           #_(dp :not-opti-decide-obs!!!! (c-slot-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
           (when (or (> @+pulse+ (c-pulse-observed c))
-                  (c-always-compute c)
                   (some #{(c-lazy c)}
                     [:once-asked :always true]))            ;; messy: these can get setfed/propagated twice in one pulse+
             ;; (dp :observing-unobserved-or-lazy!! (c-slot c) (c-value c))

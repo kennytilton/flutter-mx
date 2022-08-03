@@ -29,8 +29,16 @@
                                      .backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
       {:name         :app
-       :db           (cI nil)
-       :db-loader    (cF+ [:obs (fn [_ me load _ _]
+       :db (cF+ [:future? true
+                 :debug true
+                 :obs (fn [_ me newv priorv c]
+                        (dp :db-obs-is-fut-SP newv
+                          (dart/is? newv Future)
+                          (dart/is? newv #/(Future prefs/SharedPreferences))))]
+             (.getInstance prefs/SharedPreferences))
+       ;;:db           (cI nil)
+       #_#_ :db-loader    (cF+ [:future? true
+                           :obs (fn [_ me load _ _]
                                   (.then ^#/(Future dynamic) load
                                     (fn [db]
                                       (cty/with-fx-isolation
@@ -40,6 +48,33 @@
                        ;; todo new cFuture cell type
                        ;; next returns an MX proxy of a to-do family, as a future
                        (.getInstance prefs/SharedPreferences))
+
+       ; a cFuture will have a normally reactive body that evaluates to a future or nil;
+       ; when awakened, the future resulting from the initial evaluation of the body
+       ; will be "next"ed to handle the future result, and nil (or a configurable default) installed
+       ; as the cell/slot value.
+       ;
+       ; todo what if the body returns nil? 42?
+       ;
+       ; anyone asking before the next comes in gets the default and a dependency.
+       ;
+       ; when the next fires, the received value becomes the apparent cell/slot value as if by mset!, and propagates as if it
+       ; were an external input, which indeed it is as a future result. Like an XHR response.
+       ;
+       ; note that we may really want a cFasync, if an XHR and its response are close enough to futures.
+       ;
+       ; when newly evaluated, mget the cfu will:
+       ;    record a dependency relationship, if awakened by an mget
+       ;    report a value of nil;
+       ;       or we can provide a default when creating the cfu.... but why?
+       ;    set up a .then that will handle
+       ;         success by having the cfu assume the callback value, within-integrity (or do bare setf's get that automagically)
+       ;         failure by throwing an exception (or invoking an optional handler with cfutures)
+       ;  the key above is:
+       ;     running the body to get a future, but storing nil as the cell value
+       ;     setting up the "then" handler to:
+       ;         set the cell value with the callback value
+       ;         do so ^^^ such that propagation follows.
        :todos        (cI nil)
        ;; todo combine these two with cF-Until-nonnil-then-in -- might exist
        :todos-loader (cF+ [:obs (fn [_ me todos _ _]
@@ -49,9 +84,12 @@
                        ;; todo new cFuture cell type
                        ;; next returns an MX proxy of a to-do family, as a future
                        (when-let [db (mget me :db)]
-                         (binding [pref/*pref* db]
-                           ;; HHACK hardcode
-                           (pref/collection-docs "todo"))))
+                         (dp :loader-sees-db-1 db)
+                         (when (dart/is? db prefs/SharedPreferences)
+                           (dp :loader-sees-mget-db-2 db)
+                           (binding [pref/*pref* db]
+                             ;; HHACK hardcode
+                             (pref/collection-docs "todo")))))
 
        :todo-list    (cF (when-let [todos (mget me :todos)]
                            (binding [pref/*pref* (mget me :db)]

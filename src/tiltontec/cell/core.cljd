@@ -13,7 +13,7 @@
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers caller-ensure
-             c-synapses
+             c-synapses c-future?
              unlink-from-callers *causation*
              c-synaptic? caller-drop
              c-pulse c-pulse-last-changed c-ephemeral? c-slot
@@ -217,7 +217,8 @@
 (defn cset! [c new-value]
   "The moral equivalent of a Common Lisp SETF, and indeed
 in the CL version of Cells SETF itself is the change API dunction."
-  (assert c)
+  (assert (c-ref? c))
+  (assert (not (c-future? c)) (str "attempt to cset! cfuture " @c))
   ;; (dp :c-reset new-value)
   (cond
     *defer-changes*
