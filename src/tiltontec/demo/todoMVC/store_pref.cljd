@@ -56,11 +56,12 @@
               (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
 
 (defn collection-keys [collection-name]
+  (assert *pref* "no db in collection-keys")
   (filter (fn [k]
-            (dp :collk-k (count collection-name) k)
             (= collection-name (subs k 0 (count collection-name))))
     (into #{} (.getKeys *pref*))))
 
 (defn delete-all-docs [collection-name]
+  (assert *pref* "no db in delete-all-docs")
   (doseq [k (collection-keys collection-name)]
     (.remove ^prefs/SharedPreferences *pref* k)))

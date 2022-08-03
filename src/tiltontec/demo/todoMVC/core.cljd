@@ -18,62 +18,7 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.integrity :as integrity]))
 
-(declare credits app-bar todo-filters about-credits)
-
-(defn make-app []
-  (let [title "todo"]
-    (fx/material-app
-      {:title                      title
-       :theme                      (m/ThemeData
-                                     .fontFamily "Helvetica Neue"
-                                     .backgroundColor (.fromRGBO m/Color 245 245 245 1))
-       :debugShowCheckedModeBanner false}
-      {:name         :app
-       :db           (cF+ [:future? true]
-                       (.getInstance prefs/SharedPreferences))
-
-       :todos        (cF+ [:future? false] ;; hhack
-                       (let [db (mget me :db)]
-                         (dp :todos-sees-db-1 db)
-                         (when (and db (dart/is? db prefs/SharedPreferences))
-                           (dp :todos-sees-prefs-db-2 db)
-                           (binding [pref/*pref* db]
-                             ;; HHACK hardcode
-                             (pref/collection-docs "todo")))))
-       #_#_ :todos-loader (cF+ [:obs (fn [_ me todos _ _]
-                                  (dp :loader-obs-sees-load todos)
-                                  (cty/with-fx-isolation
-                                    (mset! me :todos todos)))]
-                       ;; next returns an MX proxy of a to-do family, as a future
-                       (let [db (mget me :db)]
-                         (dp :loader-sees-db-1 db)
-                         (when (dart/is? db prefs/SharedPreferences)
-                           (dp :loader-sees-mget-db-2 db)
-                           (binding [pref/*pref* db]
-                             ;; HHACK hardcode
-                             (pref/collection-docs "todo")))))
-
-       :todo-list    (cF (when-let [todos (mget me :todos)]
-                           (binding [pref/*pref* (mget me :db)]
-                             (todo/make-ToDoList "todo" todos))))}
-      (fx/scaffold
-        {:appBar                  (todo-app-bar title)
-         :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
-         :persistentFooterButtons [(todo-filters)]}
-        (fx/ink {:color m.Colors/white}
-          (fx/column
-            (input/todo-controls)
-            (items/todo-items)
-            (about-credits)))))))
-
-;;; -------------------------------------------------------------------------------
-
-(defn todo-filters []
-  (fx/row
-    {:mainAxisAlignment m.MainAxisAlignment/center}
-    (fx/expanded {:flex 1} (footer/items-remaining-display))
-    (fx/expanded {:flex 2} (footer/completion-filters))
-    (fx/expanded {:flex 1} (footer/clear-completed-button))))
+;;; --- the app bar -----------------------------------------------
 
 (defn todo-app-bar [title]
   (fx/preferred-size
@@ -88,6 +33,17 @@
                                                 .fontWeight m.FontWeight/w100
                                                 .fontSize 64.0)}
                                       (str title (rand-int 99))))})))
+
+;;; --- footer filters -------------------------------------------------
+
+(defn todo-filter-group []
+  (fx/row
+    {:mainAxisAlignment m.MainAxisAlignment/center}
+    (fx/expanded {:flex 1} (footer/items-remaining-display))
+    (fx/expanded {:flex 2} (footer/completion-filters))
+    (fx/expanded {:flex 1} (footer/clear-completed-button))))
+
+;;; --- credits --------------------------------------------------------
 
 (defn about-credits []
   (let [faint (p/TextStyle
@@ -117,3 +73,38 @@
                               (m/Icon (if showing? m.Icons/info_outline m.Icons/info)
                                 .color m.Colors/grey))))})))))
 
+;;; --- the app --------------------------------------------------------
+
+(defn make-app []
+  (let [title "todo"]
+    (fx/material-app
+      {:title                      title
+       :theme                      (m/ThemeData
+                                     .fontFamily "Helvetica Neue"
+                                     .backgroundColor (.fromRGBO m/Color 245 245 245 1))
+       :debugShowCheckedModeBanner false}
+      {:name         :app
+       :db           (cF+ [:future? true]
+                       (.getInstance prefs/SharedPreferences))
+
+       :todos        (cF ;; wait for futures from SP to complete
+                       (when-let [db (mget me :db)]
+                         (when true ;; (dart/is? db prefs/SharedPreferences)
+                           (binding [pref/*pref* db]
+                             ;; HHACK hardcode
+                             (pref/collection-docs "todo")))))
+
+       :todo-list    (cF (when-let [todos (mget me :todos)]
+                           (binding [pref/*pref* (mget me :db)]
+                             (todo/make-ToDoList "todo" todos))))}
+      (fx/scaffold
+        {:appBar                  (todo-app-bar title)
+         :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
+         :persistentFooterButtons [(todo-filter-group)]}
+        (fx/ink {:color m.Colors/white}
+          (fx/column
+            (input/todo-controls)
+            (items/todo-items)
+            (about-credits)))))))
+
+;;; -------------------------------------------------------------------------------

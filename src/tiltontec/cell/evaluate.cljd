@@ -195,14 +195,10 @@
                         (assert (or (nil? raw-value)        ;; someday support other default future cell values, mebbe :pending
                                   (dart/is? raw-value Future))
                           (str "cnset-future got non future: " raw-value dbgid dbgdata))
-                        (dp :cnset-future?? raw-value (cinfo c))
                         (when (dart/is? raw-value Future)
-                          (dp :cnset-thenning-raw!!!! )
                           (.then ^Future raw-value
                             (fn [fu-val]
-                              (dp :FUVAL!!!! fu-val (cinfo c))
                               (with-integrity [:change :future-then]
-                                (dp :calcnset-then!!! fu-val)
                                 ;; todo if a cfu is meant to run repeatedly as dependencies change,
                                 ;;      do we need to clear :then? Or is opti-away not a problem
                                 ;;      since it would have happened were there no users??
