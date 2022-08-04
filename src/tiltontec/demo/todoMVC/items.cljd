@@ -87,7 +87,7 @@
                     ;; focus subtlety: we want the newly created TextField to autofocus, but
                     ;; the to-do input field is already focused, and autofocus does not jump those
                     ;; unless in a fresh scope. So ^^^ we throw in a scope.
-                    {:onFocusChange (cF (fx/with-ctx+as-is [me ctx]
+                    {:onFocusChange (cF (cmm/with-ctx+as-is [me ctx]
                                           (fn [focused?]
                                             (cty/with-mx-isolation
                                               (when (not focused?)
@@ -150,12 +150,10 @@
                                                  (.of context)
                                                  .-dividerColor)))))}
       (fx/gesture-detector
-        {:onDoubleTap (fx/with-ctx+as-is [me ctx]
-                        (fn []
-                          (cty/with-mx-isolation
-                            (when (not (mget me :editing))
-                              ;; todo fix double-taps and keyrepeat  not seen during editing
-                              (mset! me :editing? true)))))}
+        {:onDoubleTap (as-dart-callback []
+                        (when (not (mget me :editing))
+                          ;; todo fix double-taps and keyrepeat  not seen during editing
+                          (mset! me :editing? true)))}
         {:name     :item-control
          :editing? (cI false)}
         (if (mget me :editing?)
@@ -168,7 +166,7 @@
     (fx/list-view+builder
       {:padding     (m.EdgeInsets/all 0.0)
        :itemCount   (cF (count (mkids me)))
-       :itemBuilder (cF (fx/as-is
+       :itemBuilder (cF (cmm/as-is
                           (fn [ctx i]
                             ;; we must yield a native Flutter widget ready for Flutter, so we must "render",
                             (fx/fx-render ctx
