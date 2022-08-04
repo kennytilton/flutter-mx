@@ -13,7 +13,9 @@
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
 
-    [tiltontec.demo.todoMVC.common :refer [my-app my-app-db my-todo-list] :as cmm]
+    [tiltontec.demo.todoMVC.common :as cmm
+     :refer [my-app my-app-db my-todo-list with-db as-dart-callback]]
+
     [tiltontec.demo.todoMVC.todo :refer [td-stg-id td-completed td-title] :as todo]
     [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]))
 
@@ -22,25 +24,18 @@
     {:value     (cF (or (td-completed todo) false))
      :shape     (fx/rounded-rectangle-border
                   {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
-     :onChanged (cF (fx/->CBAsIs
-                      (fn [value]
-                        (cty/with-mx-isolation
-                          (binding [*pref* (my-app-db)]
-                            ;; todo SOON make this with-app-db
-                            (md/mset! todo :completed value))))))}))
+     :onChanged (cF (as-dart-callback [value]
+                      (md/mset! todo :completed value)))}))
 
 (defn- delete-button [todo]
   (fx/text-button
     ;; our "delete" icon on each to-do
-    {:onPressed (fx/with-ctx+as-is [me ctx]
-                  (fn []
-                    (cty/with-mx-isolation
-                      (binding [*pref* (my-app-db)]
-                        (mswap! (my-todo-list) :kids
-                          (fn [coll stg-id]
-                            (remove (fn [td]
-                                      (= stg-id (td-stg-id td))) coll))
-                          (todo/td-stg-id todo))))))}
+    {:onPressed (as-dart-callback []
+                  (mswap! (my-todo-list) :kids
+                    (fn [coll stg-id]
+                      (remove (fn [td]
+                                (= stg-id (td-stg-id td))) coll))
+                    (todo/td-stg-id todo)))}
     (fx/text {:style (p/TextStyle
                        .fontFamily "Helvetica Neue"
                        .color (cmm/title-red)
@@ -73,7 +68,6 @@
          trimmed (str/trim value)]
      (binding [*pref* (my-app-db)]
        (assert *pref* "no db editing")
-       (dp :pref-comm stg-id *pref*)
        (if (str/blank? trimmed)
          (do
            (dp :comm-edt-tossing stg-id @todo *pref*)
@@ -126,11 +120,8 @@
                                                                  .borderRadius (m.BorderRadius/all
                                                                                  (m.Radius/circular 0.0)))
                                                        .contentPadding (m.EdgeInsets/all 9.0))
-                                        :onSubmitted (cF (fx/with-ctx+as-is [me ctx]
-                                                           (fn [value]
-                                                             ;; spec says to commit on Enter
-                                                             (cty/with-mx-isolation
-                                                               (commit-to-do-editing me todo value)))))
+                                        :onSubmitted (cF (as-dart-callback [value]
+                                                           (commit-to-do-editing me todo value)))
                                         :controller  (cFonce (m/TextEditingController
                                                                .text (md/mget me :value)))}
                           {:name  :todo-editor
