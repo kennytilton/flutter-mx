@@ -185,16 +185,6 @@
                 (dp :cwi-bypassing-integrity!!! opcode defer-info @wi-depth))
               (action opcode defer-info)))
 
-
-          ; we are within-integrity so tdl gets deferred but then we never
-          ; run finbiz. (Try wrapping just the mset!x.)
-          ; So:
-          ; make sure we feel w/i should be true. Are callbacks seeing
-          ; an old binding? If not, fix that.
-          ;
-          ; If so, who is doing the binding and why do they miss finbiz?
-          ;
-
           :else (binding [*within-integrity* true
                           *defer-changes* false]
                   (swap! wi-depth inc)

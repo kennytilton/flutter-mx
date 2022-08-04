@@ -1,23 +1,16 @@
 (ns tiltontec.demo.todoMVC.store-pref
   (:require
-    ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/material.dart" :as m]
-    ["dart:convert" :as convert]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
-    [clojure.walk :as walk]
-
-    [tiltontec.util.base :refer [dprn dp dpx]]
+    ["dart:convert" :as convert]
     [tiltontec.util.core :as util]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
-    [tiltontec.model.core :refer [mget mpar mkids mname] :as md]))
+    [clojure.walk :as walk]))
 
 (def ^:dynamic ^prefs/SharedPreferences? *pref* nil)
 
 (defn td-initialize
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
   [collection-name td-map]
-  (assert (not (:stg-id td-map)) "td-map already written")  ;; already written
+  (assert (not (:stg-id td-map)) "td-init sees stg-id suggesting td already written")
   (assert (:created-at td-map) "td-init requires created-at prop")
 
   (let [new-stg-id (str collection-name "/" (rand-int 99999999)) ;; todo use uid

@@ -1,0 +1,23 @@
+(ns tiltontec.demo.todoMVC.common
+  (:require
+    ["dart:convert" :as convert]
+    ["package:shared_preferences/shared_preferences.dart" :as prefs]
+    [tiltontec.model.core :refer [mget mset! mswap! fasc mkids mpar mkids] :as md]
+    [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
+    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.demo.todoMVC.todo :as todo]
+    [tiltontec.demo.todoMVC.store-pref :as pref]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.integrity :as integrity]))
+
+(defmacro with-db [db & body]
+  `(binding [tiltontec.demo.todoMVC.store-pref/*pref* ~db]
+     ~@body))
+
+(defmacro as-dart-callback [& body]
+  `(tiltontec.mx-flutter.core/with-ctx+as-is [~'me ~'ctx]
+     (fn []
+       (tiltontec.cell.base/with-fx-isolation
+         (binding [tiltontec.demo.todoMVC.store-pref/*pref* (tiltontec.demo.todoMVC.todo/my-app-db)]
+           ~@body)))))

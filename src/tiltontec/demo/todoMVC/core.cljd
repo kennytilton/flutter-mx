@@ -6,9 +6,10 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
-    [tiltontec.model.core :refer [mget mset! mset!x mswap! fasc mkids mpar mkids] :as md]
+    [tiltontec.model.core :refer [mget mset! mswap! fasc mkids mpar mkids] :as md]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.demo.todoMVC.common :refer [with-db as-dart-callback]]
     [tiltontec.demo.todoMVC.todo :as todo]
     [tiltontec.demo.todoMVC.input :as input]
     [tiltontec.demo.todoMVC.items :as items]
@@ -57,6 +58,7 @@
         (when (mget (fasc :credits-toggle) :show-credits?)
           (fx/column
             ;; todo does flutter let us place the style higher so referenced just once?
+            ;; todo generate in loop
             (fx/text {:style faint}
               "Double-click to edit a todo")
             (fx/text {:style faint}
@@ -64,9 +66,12 @@
             (fx/text {:style faint} (str "by Kenneth Tilton, v." (rand-int 99)))
             (fx/text {:style faint} "Flutter \u2022 Matrix \u2022 ClojureDart")))
         (fx/icon-button
-          {:onPressed (fx/with-ctx+as-is [me ctx]
+          {:onPressed (as-dart-callback
+                        (mswap! (fasc :credits-toggle) :show-credits? not))
+                        #_ (fx/with-ctx+as-is [me ctx]
                         (fn []
                           (cty/with-fx-isolation
+                            (dp :yep-onpressed!!!!)
                             (mswap! (fasc :credits-toggle) :show-credits? not))))
            :icon      (cF (fx/cb-with-ctx [me ctx]
                             (let [showing? (mget (fasc :credits-toggle) :show-credits?)]
@@ -87,19 +92,17 @@
        :db           (cF+ [:future? true]
                        (.getInstance prefs/SharedPreferences))
 
-       :todos        (cF ;; wait for futures from SP to complete
+       :todos        (cF ;; wait for future from SP ^^ to complete
                        (when-let [db (mget me :db)]
-                         (when true ;; (dart/is? db prefs/SharedPreferences)
-                           (binding [pref/*pref* db]
-                             ;; HHACK hardcode
-                             (pref/collection-docs "todo")))))
+                         (with-db db
+                          (pref/collection-docs "todo"))))
 
        :todo-list    (cF (when-let [todos (mget me :todos)]
-                           (binding [pref/*pref* (mget me :db)]
+                           ;; ^^^ waits on future indirectly
+                           (with-db (mget me :db)
                              (todo/make-ToDoList "todo" todos))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
-         :backgroundColor         (.fromRGBO m/Color 245 245 245 1)
          :persistentFooterButtons [(todo-filter-group)]}
         (fx/ink {:color m.Colors/white}
           (fx/column

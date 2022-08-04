@@ -119,39 +119,12 @@
          ;; but has " (str (keys @me))
           )))))
 
-(defn md-reset!x [me slot new-value]
-  ;; (dp :md-reset slot )
-  (assert me)
-  (if-let [c (md-cell me slot)]
-    (do
-      (dpx :md-reset!x-gotc! slot (cinfo c))
-      (c-reset! c new-value))
-    (do
-      (if (contains? @me slot)
-        (err str "change not mediated by cell " slot "/" (mx-type me))
-        (err str "change to slot not mediated by cell and map lacks slot "
-          slot "
-         ;; but has " (str (keys @me))
-          )))))
-
 (defn mset! [me slot new-value]
   (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
   (md-reset! me slot new-value))
 
-(defn mset!x [me slot new-value]
-  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
-  (md-reset!x me slot new-value))
-
 (defn mswap! [me slot swap-fn & swap-fn-args]
   (mset! me slot (apply swap-fn (mget me slot) swap-fn-args)))
-
-(defn backdoor-reset!? [me slot new-value]
-  (if-let [c (md-cell me slot)]
-    (c-reset! c new-value)
-    (rmap-setf [slot me] new-value)))
-
-(defn backdoor-reset! [me slot new-value]
-  (rmap-setf [slot me] new-value))
 
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
@@ -159,9 +132,6 @@
     (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (do
-      ;;(dp :md-making (nth arg-list 1))
-      ;; (prn :make-entry-even (count arg-list) arg-list)
-
       (let [iargs (apply hash-map arg-list)
             me (atom
                  (let [mdmap (merge {:par *par*}

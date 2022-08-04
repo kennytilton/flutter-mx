@@ -54,7 +54,7 @@
   ([td-lst title completed]
    (make-ToDo td-lst title completed nil nil))
   ([td-lst title completed stg-id created-at]
-   (let [epoch-now (or created-at
+   (let [created-at (or created-at
                      (.-millisecondsSinceEpoch (.now DateTime)))]
      (md/make
        :par td-lst
@@ -62,9 +62,9 @@
        :stg-id (or stg-id
                  (stg/td-initialize "todo"
                    {:title      title
-                    :created-at epoch-now
+                    :created-at created-at
                     :completed  completed}))
-       :created-at epoch-now
+       :created-at created-at
        ;--
        :title (cI title)
        :completed (cI completed)))))
@@ -84,11 +84,6 @@
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (doseq [td lost]
                   (stg/td-delete "todo" (td-stg-id td))))))))
-
-;; todo show todos in order; add created slot
-
-
-;;;;            we are in the middle of this ^^^^^^^
 
 ;; todo ??? move fx$state to meta and get out of dataflow
 ;;      this will entail new way to get controller
