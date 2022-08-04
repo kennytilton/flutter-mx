@@ -66,16 +66,14 @@
   ([me todo value]
    (let [stg-id (td-stg-id todo)
          trimmed (str/trim value)]
-     (binding [*pref* (my-app-db)]
+     (with-db (my-app-db)
        (assert *pref* "no db editing")
-       (if (str/blank? trimmed)
-         (do
-           (dp :comm-edt-tossing stg-id @todo *pref*)
-           (md/mswap! (my-todo-list) :kids
-             (partial remove (fn [td] (= stg-id (td-stg-id td))))))
-         (do
-           (md/mset! todo :title trimmed)                   ;; two dataflow triggers
-           (md/mset! (md/fasc :item-control) :editing? false)))))))
+       (cond
+         (str/blank? trimmed) (md/mswap! (my-todo-list) :kids
+                                (partial remove (fn [td] (= stg-id (td-stg-id td)))))
+         :else (do
+                 (md/mset! todo :title trimmed)             ;; two dataflow triggers
+                 (md/mset! (md/fasc :item-control) :editing? false)))))))
 
 (defn to-do-editor [me todo]
   (assert todo)
@@ -87,13 +85,11 @@
                     ;; focus subtlety: we want the newly created TextField to autofocus, but
                     ;; the to-do input field is already focused, and autofocus does not jump those
                     ;; unless in a fresh scope. So ^^^ we throw in a scope.
-                    {:onFocusChange (cF (cmm/with-ctx+as-is [me ctx]
-                                          (fn [focused?]
-                                            (cty/with-mx-isolation
-                                              (when (not focused?)
-                                                ;; spec says commit on blur...
-                                                (commit-to-do-editing (md/fm* :todo-editor) todo)
-                                                (md/mset! (md/fasc :item-control) :editing? false))))))}
+                    {:onFocusChange (cF (as-dart-callback [focused?]
+                                          (when (not focused?)
+                                            ;; spec says commit on blur...
+                                            (commit-to-do-editing (md/fm* :todo-editor) todo)
+                                            (md/mset! (md/fasc :item-control) :editing? false))))}
                     {:owner tile}
                     ;; ^^^ this widget is a delegate, not a child, so we record the ListTile as the "owner",
                     ;; and modified navigation to try any owner if "parent" is nil while searching up the Matrix.
