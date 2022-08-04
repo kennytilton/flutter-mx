@@ -2,6 +2,7 @@
   (:require
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     ["dart:convert" :as convert]
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
     [clojure.walk :as walk]))
 
@@ -45,6 +46,7 @@
 (defn collection-docs [collection-name]
   (assert *pref* "no db in collection-docs")
   (let [all-td-keys (collection-keys collection-name)]
+    (dp :colldocs-all-keys collection-name collection-keys)
     (mapv (fn [td-key]
             (util/dart-map->cljd-map
               (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
