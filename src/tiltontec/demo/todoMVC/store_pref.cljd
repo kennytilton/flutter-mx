@@ -18,14 +18,15 @@
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
   [collection-name td-map]
   (assert (not (:stg-id td-map)) "td-map already written")  ;; already written
+  (assert (:created-at td-map) "td-init requires created-at prop")
 
-  (let [new-stg-id (str collection-name "/" (rand-int 99999999))
+  (let [new-stg-id (str collection-name "/" (rand-int 99999999)) ;; todo use uid
         new-data (assoc td-map :stg-id new-stg-id)]
     (.setString *pref* new-stg-id
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys new-data
-            [:stg-id :title :completed]))))
+            [:stg-id :created-at :title :completed]))))
     new-stg-id))
 
 (defn td-rewrite
@@ -38,7 +39,7 @@
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys td-map
-            [:stg-id :title :completed]))))
+            [:stg-id :created-at :title :completed]))))
     stg-id))
 
 (defn td-delete

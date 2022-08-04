@@ -12,7 +12,7 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
     [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
-    [tiltontec.mx-flutter.store :as store]
+    [tiltontec.mx-flutter.localstorage :as store]
     [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as stg]))
 
 ;;; --- should be in a utils file ----------------------
@@ -33,9 +33,11 @@
 
 ;;; --- handy accessors ---------------------------------
 
+;; todo try with rmap-slots
 (defn td-stg-id [td] (mget td :stg-id))                     ;; LS only?
 (defn td-title [td] (or (mget td :title) ""))
 (defn td-completed [td] (or (mget td :completed) false))
+(defn td-created-at [td] (or (mget td :created-at) false))
 
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
 
@@ -50,22 +52,26 @@
 
 (defn make-ToDo
   ([td-lst title completed]
-   (make-ToDo td-lst title completed nil))
-  ([td-lst title completed stg-id]
-   (md/make
-     :par td-lst
-     :mx-type (ToDo.)
-     :stg-id (or stg-id
-               (stg/td-initialize "todo"
-                 {:title     title
-                  :completed completed}))
-     ;--
-     :title (cI title)
-     :completed (cI completed))))
+   (make-ToDo td-lst title completed nil nil))
+  ([td-lst title completed stg-id created-at]
+   (let [epoch-now (or created-at
+                     (.-millisecondsSinceEpoch (.now DateTime)))]
+     (md/make
+       :par td-lst
+       :mx-type (ToDo.)
+       :stg-id (or stg-id
+                 (stg/td-initialize "todo"
+                   {:title      title
+                    :created-at epoch-now
+                    :completed  completed}))
+       :created-at epoch-now
+       ;--
+       :title (cI title)
+       :completed (cI completed)))))
 
 (defn ToDo-update [td]
   (let [coll-name (mname (mpar td))]
-    (stg/td-rewrite coll-name (select-keys @td [:stg-id :title :completed]))))
+    (stg/td-rewrite coll-name (select-keys @td [:stg-id :created-at :title :completed]))))
 
 ;;; --- higher level ---------------------------
 
@@ -81,6 +87,9 @@
 
 ;; todo show todos in order; add created slot
 
+
+;;;;            we are in the middle of this ^^^^^^^
+
 ;; todo ??? move fx$state to meta and get out of dataflow
 ;;      this will entail new way to get controller
 
@@ -91,9 +100,9 @@
      :mx-type (ToDoList.)
      :name name
      :kids (cFn (mapv (fn [xtd]
-                     (let [{:keys [title completed stg-id]} xtd]
-                       (make-ToDo me title completed stg-id)))
-               existing-todos)))))
+                        (let [{:keys [title completed stg-id created-at]} xtd]
+                          (make-ToDo me title completed stg-id created-at)))
+                  existing-todos)))))
 
 
 ;;; --- even higher level ---------------------------------------
