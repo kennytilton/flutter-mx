@@ -6,7 +6,7 @@
     [tiltontec.model.core :refer [mget mset! mswap! fasc mkids mpar mkids] :as md]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :refer [in-my-context] :as fx]
-    [tiltontec.demo.todoMVC.common :refer [with-db as-dart-callback]]
+    [tiltontec.demo.todoMVC.common :refer [my-app-db with-db as-dart-callback] :as cmm]
     [tiltontec.demo.todoMVC.todo :as todo]
     [tiltontec.demo.todoMVC.input :as input]
     [tiltontec.demo.todoMVC.items :as items]
@@ -26,7 +26,7 @@
                                     (fx/text
                                       {:style (p/TextStyle
                                                 .fontFamily "Helvetica Neue"
-                                                .color (todo/title-red)
+                                                .color (cmm/title-red)
                                                 .fontWeight m.FontWeight/w100
                                                 .fontSize 64.0)}
                                       title))})))
@@ -60,7 +60,7 @@
                "by Kenny Tilton"
                "Flutter \u2022 Matrix \u2022 ClojureDart"])))
         (fx/icon-button
-          {:onPressed (as-dart-callback
+          {:onPressed (as-dart-callback []
                         (mswap! (fasc :credits-toggle) :show-credits? not))
 
            :icon      (cF (in-my-context [me ctx]
@@ -82,14 +82,14 @@
        :db        (cF+ [:future? true]
                     (.getInstance prefs/SharedPreferences))
 
-       :todos     (cF (when-let [db (mget me :db)]
+       :todos     (cF (when-let [db (my-app-db)]
                         ;; wait for future from SP ^^ to complete
                         (with-db db
                           (pref/collection-docs "todo"))))
 
        :todo-list (cF (when-let [todos (mget me :todos)]
                         ;; ^^^ waits todos who wait on future db
-                        (with-db (mget me :db)
+                        (with-db (my-app-db)
                           (todo/make-ToDoList "todo" todos))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)

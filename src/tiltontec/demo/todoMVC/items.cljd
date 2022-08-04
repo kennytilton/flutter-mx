@@ -12,7 +12,9 @@
     [tiltontec.model.core :refer [mget mswap! mset! mkids mpar] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.todo :refer [my-app my-app-db my-todo-list td-stg-id td-completed td-title] :as todo]
+
+    [tiltontec.demo.todoMVC.common :refer [my-app my-app-db my-todo-list] :as cmm]
+    [tiltontec.demo.todoMVC.todo :refer [td-stg-id td-completed td-title] :as todo]
     [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]))
 
 (defn- completion-toggler [todo]
@@ -22,7 +24,7 @@
                   {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
      :onChanged (cF (fx/->CBAsIs
                       (fn [value]
-                        (cty/with-fx-isolation
+                        (cty/with-mx-isolation
                           (binding [*pref* (my-app-db)]
                             ;; todo SOON make this with-app-db
                             (md/mset! todo :completed value))))))}))
@@ -32,7 +34,7 @@
     ;; our "delete" icon on each to-do
     {:onPressed (fx/with-ctx+as-is [me ctx]
                   (fn []
-                    (cty/with-fx-isolation
+                    (cty/with-mx-isolation
                       (binding [*pref* (my-app-db)]
                         (mswap! (my-todo-list) :kids
                           (fn [coll stg-id]
@@ -41,7 +43,7 @@
                           (todo/td-stg-id todo))))))}
     (fx/text {:style (p/TextStyle
                        .fontFamily "Helvetica Neue"
-                       .color (todo/title-red)
+                       .color (cmm/title-red)
                        .fontWeight m.FontWeight/w200
                        .fontSize 20.0)}
       "X")))
@@ -93,7 +95,7 @@
                     ;; unless in a fresh scope. So ^^^ we throw in a scope.
                     {:onFocusChange (cF (fx/with-ctx+as-is [me ctx]
                                           (fn [focused?]
-                                            (cty/with-fx-isolation
+                                            (cty/with-mx-isolation
                                               (when (not focused?)
                                                 ;; spec says commit on blur...
                                                 (commit-to-do-editing (md/fm* :todo-editor) todo)
@@ -111,7 +113,7 @@
                                         :focusNode   (cF (m/FocusNode
                                                            .onKeyEvent (fn [node ^m/KeyEvent event]
                                                                          ;; spec says to abandon edit if Escape key pressed
-                                                                         (cty/with-fx-isolation
+                                                                         (cty/with-mx-isolation
                                                                            (cond
                                                                              (and (dart/is? event srvc/KeyDownEvent)
                                                                                (= "Escape" (.-keyLabel (.-logicalKey event))))
@@ -127,7 +129,7 @@
                                         :onSubmitted (cF (fx/with-ctx+as-is [me ctx]
                                                            (fn [value]
                                                              ;; spec says to commit on Enter
-                                                             (cty/with-fx-isolation
+                                                             (cty/with-mx-isolation
                                                                (commit-to-do-editing me todo value)))))
                                         :controller  (cFonce (m/TextEditingController
                                                                .text (md/mget me :value)))}
@@ -159,7 +161,7 @@
       (fx/gesture-detector
         {:onDoubleTap (fx/with-ctx+as-is [me ctx]
                         (fn []
-                          (cty/with-fx-isolation
+                          (cty/with-mx-isolation
                             (when (not (mget me :editing))
                               ;; todo fix double-taps and keyrepeat  not seen during editing
                               (mset! me :editing? true)))))}

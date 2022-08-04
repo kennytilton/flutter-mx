@@ -9,8 +9,8 @@
     [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]
-    [tiltontec.demo.todoMVC.todo :refer [my-app my-app-db my-todo-list td-completed] :as todo]
+    [tiltontec.demo.todoMVC.common :refer [my-app my-app-db my-todo-list with-db as-dart-callback] :as cmm]
+    [tiltontec.demo.todoMVC.todo :refer [td-completed] :as todo]
 
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]
@@ -26,28 +26,26 @@
                                    .hintText "What needs doing?"
                                    .border m.InputBorder/none
                                    .contentPadding (m.EdgeInsets/all 9.0))
-                    :onSubmitted (cF (fx/as-is
-                                       (fn [value]
-                                         (cty/with-fx-isolation
-                                           ;; blank or not we need to restore focus to the input per the spec
-                                           (.requestFocus ^m/FocusNode (mget me :focusNode))
-                                           ;; spec says to trim, and to silently ignore blank entry
-                                           (let [trimmed (str/trim value)]
-                                             (when-not (str/blank? trimmed)
-                                               ;; --- non-blank entry, so we save, clear entry, and store
-                                               (md/mset! me :value trimmed) ;; let text proxy know its cleaned value
-                                               (.clear ^m/TextEditingController
-                                                 (md/mget me :controller))
-                                               (let [td-lst (my-todo-list)]
-                                                 (binding [pref/*pref* (my-app-db)]
-                                                   (mswap! td-lst :kids conj
-                                                     (todo/make-ToDo td-lst trimmed false))))))))))
+                    :onSubmitted (cF (as-dart-callback [value]
+                                       ;; blank or not we need to restore focus to the input per the spec
+                                       (.requestFocus ^m/FocusNode (mget me :focusNode))
+                                       ;; spec says to trim, and to silently ignore blank entry
+                                       (let [trimmed (str/trim value)]
+                                         (when-not (str/blank? trimmed)
+                                           ;; --- non-blank entry, so we save, clear entry, and store
+                                           (md/mset! me :value trimmed) ;; let text proxy know its cleaned value
+                                           (.clear ^m/TextEditingController
+                                             (md/mget me :controller))
+                                           (let [td-lst (my-todo-list)]
+                                             (with-db (my-app-db)
+                                               (mswap! td-lst :kids conj
+                                                 (todo/make-ToDo td-lst trimmed false))))))))
                     :controller  (cFonce (let [c (m/TextEditingController
                                                    .text (md/mget me :value))]
                                            ;; todo package this as a reusable
                                            (.addListener c
                                              (fn []
-                                               (cty/with-fx-isolation
+                                               (cty/with-mx-isolation
                                                  (let [value (.-text c)]
                                                    (md/mset! me :value value)))))
                                            c))}
@@ -66,15 +64,12 @@
      :maintainState         true
      }
     (fx/icon-button
-      {:onPressed (fx/with-ctx+as-is [me ctx]
-                    (fn []
-                      (cty/with-fx-isolation
-                        (binding [*pref* (my-app-db)]
-                          (let [todos (todo/app-todos (my-app))
-                                all-done? (every? td-completed todos)]
-                            (doseq [td todos]
-                              ;; todo do all these in one change pulse
-                              (md/mset! td :completed (if all-done? false true)))))))) ;; dataflow trigger
+      {:onPressed (as-dart-callback []
+                    (let [todos (todo/app-todos (my-app))
+                          all-done? (every? td-completed todos)]
+                      (doseq [td todos]
+                        ;; todo do all these in one change pulse
+                        (md/mset! td :completed (if all-done? false true)))))
        :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))
 
 (defn todo-controls []
