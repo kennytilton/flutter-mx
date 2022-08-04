@@ -17,8 +17,7 @@
     [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]))
 
 (defn items-remaining-display []
-  (fx/text! {}
-    {:name :items-left}
+  (fx/text!
     (let [tds (todo/app-todos (my-app))
           left (remove td-completed tds)]
       (str (count left) " item" (when (not= 1 (count left))
@@ -32,17 +31,15 @@
     (let [selector me                                       ;; we bind "me" more readably
           choice (fn [completion-enum option$]
                    (fx/ink-well
-                     {:onTap (fx/with-ctx+as-is [me ctx]
-                               #(cty/with-mx-isolation
+                     {:onTap (as-dart-callback []
                                   (mset! (md/fasc :completions)
-                                    :selection completion-enum)))}
+                                    :selection completion-enum))}
                      (fx/container
                        {:decoration (cF (when (mget me :selected?)
                                           (m/BoxDecoration
                                             .border (.all m/Border .color (cmm/title-red) .width 0.5)
                                             .borderRadius (m.BorderRadius/all (m.Radius/circular 4.0)))))}
-                       {:completion-enum completion-enum
-                        :selected?       (cF (= completion-enum
+                       {:selected?       (cF (= completion-enum
                                                (mget selector :selection)))}
                        (fx/padding
                          {:padding (m.EdgeInsets/all 3.0)}
@@ -55,7 +52,7 @@
 (defn clear-completed-button []
   (fx/visibility!
     {:visible           (cF (if-let [tds (todo/app-todos (my-app))]
-                              (boolean
+                              (boolean ;; FL wants explicit boolean
                                 (some td-completed tds))
                               ;; nb might still be loading initially
                               false))
@@ -64,10 +61,7 @@
      :maintainAnimation true
      :maintainState     true}
     (fx/text-button
-      {:onPressed (fx/with-ctx+as-is [me ctx]
-                    (fn []
-                      (cty/with-mx-isolation
-                        (binding [*pref* (my-app-db)]
-                          (md/mswap! (my-todo-list) :kids
-                            (partial remove td-completed))))))}
+      {:onPressed (as-dart-callback []
+                    (md/mswap! (my-todo-list) :kids
+                      (partial remove td-completed)))}
       (fx/text "Clear done"))))
