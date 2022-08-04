@@ -31,7 +31,7 @@
               {:name  :input-a
                :value (cI nil :obs (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
-            (fx/text-field {:onChanged (fx/cb-with-ctx [me ctx]
+            (fx/text-field {:onChanged (fx/in-my-context [me ctx]
                                          (fx/->CBAsIs
                                            #(md/mset! me :value %)))}
               {:name       :input-b

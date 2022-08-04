@@ -101,7 +101,7 @@
       {:opacity (mget (md/fasc :fab) :expand-animation)}
       (action-button
         :icon (:icon action)
-        :onPressed (fx/cb-with-ctx [me ctx]
+        :onPressed (fx/in-my-context [me ctx]
                      (fx/->CBAsIs
                        #(show-action ctx action)))))))
 
@@ -123,13 +123,13 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape         (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
-                :color        (fx/cb-with-ctx [me ctx]
+                :color        (fx/in-my-context [me ctx]
                                 (-> (m.Theme/of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     (fx/cb-with-ctx [me ctx]
+       :color     (fx/in-my-context [me ctx]
                     (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
@@ -144,7 +144,7 @@
                                #(md/mswap! (md/fasc :fab par) :open? not))} {}
           (fx/padding {:padding  (m.EdgeInsets/all 8.0)} {}
             (fx/icon {:icon  m.Icons/close
-                      :color (fx/cb-with-ctx [me ctx]
+                      :color (fx/in-my-context [me ctx]
                                (.-primaryColor (m.Theme/of ctx)))} {})))))))
 
 (defn- tap-to-open-fab [par]

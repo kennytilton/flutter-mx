@@ -110,7 +110,7 @@
               (rmap-meta-setf [:fx-dom fx] g)
               g))))
 
-(defmacro cb-with-ctx [[me-var ctx-var] & body]
+(defmacro in-my-context [[me-var ctx-var] & body]
   `(tiltontec.mx-flutter.core/->CBToResolve
      (fn [~me-var ~ctx-var]
        ~@body)))
@@ -666,7 +666,7 @@
 (deftag tiltontec.mx-flutter.core/k1-child-stateless sized-box m/SizedBox)
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tiltontec.mx-flutter.core/cb-with-ctx [~me ~ctx]
+  `(tiltontec.mx-flutter.core/in-my-context [~me ~ctx]
      (tiltontec.mx-flutter.core/->CBAsIs
        ~callback-fn)))
 

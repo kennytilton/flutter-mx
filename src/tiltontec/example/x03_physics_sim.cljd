@@ -37,7 +37,7 @@
                         (fn [^m/DragDownDetails details]
                           (when-let [c (fx/my-controller)]
                             (.stop c)))))
-     :onPanUpdate (fx/cb-with-ctx [me ctx]
+     :onPanUpdate (fx/in-my-context [me ctx]
                     (fx/->CBAsIs
                       (fn [^m/DragUpdateDetails details]
                         (let [size (.-size (MediaQuery/of ctx))]
@@ -46,7 +46,7 @@
                                (m/Alignment
                                  (/ (-> details .-delta .-dx) (/ (.-width size) 2))
                                  (/ (-> details .-delta .-dy) (/ (.-height size) 2)))))))))
-     :onPanEnd    (cF (fx/cb-with-ctx [me ctx]
+     :onPanEnd    (cF (fx/in-my-context [me ctx]
                         (fx/->CBAsIs
                           (fn [^m/DragEndDetails details]
                             (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond))))))}

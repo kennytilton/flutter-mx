@@ -9,7 +9,7 @@
     {:appBar (fx/app-bar {:title (fx/text "Second Route")})}
     (fx/center
       (fx/elevated-button
-        {:onPressed (fx/cb-with-ctx [me ctx]
+        {:onPressed (fx/in-my-context [me ctx]
                       (fx/->CBAsIs
                         (fn ^void []
                           (fx/ctx-page-pop ctx)
@@ -23,7 +23,7 @@
       {:appBar (fx/app-bar {:title (fx/text "First Route")})}
       (fx/center
         (fx/elevated-button
-          {:onPressed (fx/cb-with-ctx [me ctx]
+          {:onPressed (fx/in-my-context [me ctx]
                         (fx/->CBAsIs
                           #(fx/ctx-page-push ctx second-route)))}
           (fx/text "Open route"))))))

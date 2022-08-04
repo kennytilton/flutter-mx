@@ -6,7 +6,7 @@
 (def detail-screen
   (fx/scaffold
     (fx/gesture-detector
-      {:onTap (fx/cb-with-ctx [me ctx]
+      {:onTap (fx/in-my-context [me ctx]
                 (fx/->CBAsIs
                   #(do (.pop (m.Navigator/of ctx)) nil)))}
       (fx/center
@@ -21,7 +21,7 @@
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text "Main Screen")})}
         (fx/gesture-detector
-          {:onTap (fx/cb-with-ctx [me ctx]
+          {:onTap (fx/in-my-context [me ctx]
                     (fx/->CBAsIs
                       #(do
                          (.push (m.Navigator/of ctx)

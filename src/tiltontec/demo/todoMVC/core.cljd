@@ -1,14 +1,11 @@
 (ns tiltontec.demo.todoMVC.core
   (:require
-    ["dart:convert" :as convert]
-    ["package:localstore/localstore.dart" :as ls]
-    ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [tiltontec.model.core :refer [mget mset! mswap! fasc mkids mpar mkids] :as md]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
-    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.core :refer [in-my-context] :as fx]
     [tiltontec.demo.todoMVC.common :refer [with-db as-dart-callback]]
     [tiltontec.demo.todoMVC.todo :as todo]
     [tiltontec.demo.todoMVC.input :as input]
@@ -16,8 +13,7 @@
     [tiltontec.demo.todoMVC.footer :as footer]
     [tiltontec.demo.todoMVC.store-pref :as pref]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.integrity :as integrity]))
+    [tiltontec.util.base :refer [dprn dp dpx]]))
 
 ;;; --- the app bar -----------------------------------------------
 
@@ -33,7 +29,7 @@
                                                 .color (todo/title-red)
                                                 .fontWeight m.FontWeight/w100
                                                 .fontSize 64.0)}
-                                      (str title (rand-int 99))))})))
+                                      title))})))
 
 ;;; --- footer filters -------------------------------------------------
 
@@ -58,25 +54,19 @@
         (when (mget (fasc :credits-toggle) :show-credits?)
           (fx/column
             ;; todo does flutter let us place the style higher so referenced just once?
-            ;; todo generate in loop
-            (fx/text {:style faint}
-              "Double-click to edit a todo")
-            (fx/text {:style faint}
-              "Make title blank to delete")
-            (fx/text {:style faint} (str "by Kenneth Tilton, v." (rand-int 99)))
-            (fx/text {:style faint} "Flutter \u2022 Matrix \u2022 ClojureDart")))
+            (mapv #(fx/text {:style faint} %)
+              ["Double-click to edit a todo"
+               "Make title blank to delete"
+               "by Kenny Tilton"
+               "Flutter \u2022 Matrix \u2022 ClojureDart"])))
         (fx/icon-button
           {:onPressed (as-dart-callback
                         (mswap! (fasc :credits-toggle) :show-credits? not))
-                        #_ (fx/with-ctx+as-is [me ctx]
-                        (fn []
-                          (cty/with-fx-isolation
-                            (dp :yep-onpressed!!!!)
-                            (mswap! (fasc :credits-toggle) :show-credits? not))))
-           :icon      (cF (fx/cb-with-ctx [me ctx]
-                            (let [showing? (mget (fasc :credits-toggle) :show-credits?)]
-                              (m/Icon (if showing? m.Icons/info_outline m.Icons/info)
-                                .color m.Colors/grey))))})))))
+
+           :icon      (cF (in-my-context [me ctx]
+                            (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
+                                      m.Icons/info_outline m.Icons/info)
+                              .color m.Colors/grey)))})))))
 
 ;;; --- the app --------------------------------------------------------
 
@@ -88,19 +78,19 @@
                                      .fontFamily "Helvetica Neue"
                                      .backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
-      {:name         :app
-       :db           (cF+ [:future? true]
-                       (.getInstance prefs/SharedPreferences))
+      {:name      :app
+       :db        (cF+ [:future? true]
+                    (.getInstance prefs/SharedPreferences))
 
-       :todos        (cF ;; wait for future from SP ^^ to complete
-                       (when-let [db (mget me :db)]
-                         (with-db db
+       :todos     (cF (when-let [db (mget me :db)]
+                        ;; wait for future from SP ^^ to complete
+                        (with-db db
                           (pref/collection-docs "todo"))))
 
-       :todo-list    (cF (when-let [todos (mget me :todos)]
-                           ;; ^^^ waits on future indirectly
-                           (with-db (mget me :db)
-                             (todo/make-ToDoList "todo" todos))))}
+       :todo-list (cF (when-let [todos (mget me :todos)]
+                        ;; ^^^ waits todos who wait on future db
+                        (with-db (mget me :db)
+                          (todo/make-ToDoList "todo" todos))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todo-filter-group)]}
@@ -109,5 +99,3 @@
             (input/todo-controls)
             (items/todo-items)
             (about-credits)))))))
-
-;;; -------------------------------------------------------------------------------
