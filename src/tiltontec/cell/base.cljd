@@ -33,10 +33,10 @@ rule to get once behavior or just when fm-traversing to find someone"
 (def +client-q-handler+ (atom nil))
 
 (defmacro with-mx-isolation [& body]
-  `(binding [cty/*within-integrity* nil
-             cty/*depender* nil
-             cty/*defer-changes* false
-             cty/*call-stack* nil]
+  `(binding [tiltontec.cell.base/*within-integrity* nil
+             tiltontec.cell.base/*depender* nil
+             tiltontec.cell.base/*defer-changes* false
+             tiltontec.cell.base/*call-stack* nil]
      ~@body))
 
 (def unbound (gensym "unbound-cell-value"))
@@ -233,10 +233,9 @@ rule to get once behavior or just when fm-traversing to find someone"
                             :atom-not-md-c)
      :else (if false ;; verbose
              [(:name @md) (meta md)]
-             [(:fx-class @md)
-              (mx-type md)
+             [:minfo :fxc (:fx-class @md)
+              :mxtype (mx-type md)
               (or (:name @md)
-                (:fx-class @md)
                 [:hunh @md])]))))
 
 (defn dpc [c & bits]

@@ -6,10 +6,11 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/services.dart" :as srvc]
+    ["package:http/http.dart" :as dht]
     [clojure.string :as str]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.model.core :refer [mget mswap! mset! mkids mpar] :as md]
+    [tiltontec.model.core :refer [mget mswap! mset! md-reset! mkids mpar] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
 
@@ -41,11 +42,11 @@
                                      (tiltontec.model.core/fasc :app) :db))
                       #_ (tiltontec.model.core/mget
                         (tiltontec.model.core/fasc :app) :db)
-                      (dp :del-sees-app-db (my-app-db))
+                      (dpx :del-sees-app-db (my-app-db))
                       (binding [tiltontec.demo.todoMVC.store-pref/*pref* (tiltontec.demo.todoMVC.common/my-app-db)]
                         (do
                           (assert *pref* "no pref todo delete X")
-                          (dp :del-todo-sees-db!!!!!!!!!!!!!!!!!!!!!!! *pref*)
+                          (dpx :del-todo-sees-db!!!!!!!!!!!!!!!!!!!!!!! *pref*)
                           (mswap! (my-todo-list) :kids
                             (fn [coll stg-id]
                               (remove (fn [td]
@@ -66,25 +67,44 @@
                        .fontSize 20.0)}
       "X")))
 
+(defn events-lookup [title]
+  (let [ae-uri (.https Uri "api.fda.gov" "drug/event.json"
+                 {"limit"  "3"
+                  "search" (str "patient.drug.openfda.brand_name:"
+                             title)})
+        response (dht/get ae-uri)]
+    (dp :events-lookup-r response)
+    response))
+
 (defn to-do-display [todo]
+  ;; todo URGENT why runs for every todo when one deleted?
+  (dp :tododisplay-for (td-title todo))
   (fx/list-tile
     {:leading  (completion-toggler todo)
      :trailing (delete-button todo)
-     :title    (cF (let [ldg (md/mget me :leading)]
+     :title    (cF (let [tile me
+                         ldg (md/mget tile :leading)]
                      (fx/text!
-                       {:style (cF+ [:debug false]
-                                 (dp :style-entry (md/mget todo :aes) (md/mget ldg :value) (md/mget todo :title))
-                                 (if (md/mget ldg :value)
-                                   (p/TextStyle
-                                     .color m.Colors/grey
-                                     .decoration p.TextDecoration/lineThrough)
-                                   (p/TextStyle .color
-                                     (if (md/mget todo :aes)
-                                       m.Colors/red
-                                       m.Colors/blue))))}
+                       {:style (cF (if (md/mget ldg :value)
+                                     (p/TextStyle
+                                       .color m.Colors/grey
+                                       .decoration p.TextDecoration/lineThrough)
+                                     (p/TextStyle .color
+                                       (if (md/mget tile :aes)
+                                         m.Colors/red
+                                         m.Colors/blue))))}
                        (td-title todo))))}
     {:name :my-list-tile
-     :todo todo}))
+     :todo todo
+     :ae-lookup (cF+ [;; :debug true
+                      :obs (fn [_ me newv priorv c]
+                             (let [res (await newv)]
+                               ;; todo new or existing macro vvvv
+                               (cty/with-mx-isolation
+                                 (binding [*pref* (mget (md/fasc :app) :db)]
+                                   (md-reset! me :aes (= 200 (.-statusCode ^dht/Response res)))))))]
+                  (events-lookup (mget todo :title)))
+     :aes (cI nil)}))
 
 (defn- commit-to-do-editing
   ([me todo]

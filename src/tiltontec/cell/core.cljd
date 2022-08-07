@@ -8,12 +8,12 @@
     [tiltontec.cell.base
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? unbound
+             c-unbound? c-input? unbound dpc
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers caller-ensure
-             c-synapses c-future?
+             c-synapses c-future? cinfo
              unlink-from-callers *causation*
              c-synaptic? caller-drop
              c-pulse c-pulse-last-changed c-ephemeral? c-slot
@@ -34,7 +34,7 @@
 (defn make-cell [& kvs]
   (let [options (apply hash-map kvs)]
     (atom (merge {:value              unbound
-                  :state         :nascent
+                  :state              :nascent
                   :pulse              0
                   :pulse-last-changed 0
                   :pulse-observed     0
@@ -59,7 +59,7 @@
       (assert (some #{lazy} [true false :until-asked]) (str "make-cf sees invalid value for :lazy " lazy)))
 
     (atom (merge {:value              unbound
-                  :state         :nascent              ;; s/b :unbound?
+                  :state              :nascent              ;; s/b :unbound?
                   :pulse              0
                   :pulse-last-changed 0
                   :pulse-observed     0
@@ -218,20 +218,26 @@
   "The moral equivalent of a Common Lisp SETF, and indeed
 in the CL version of Cells SETF itself is the change API dunction."
   (assert (c-ref? c))
+  (dpc c :cset!!!!!!! new-value (cinfo c) :fut? (c-future? c)
+    :defer? *defer-changes*
+    :winteg? cty/*within-integrity*
+    @c)
   (assert (not (c-future? c)) (str "attempt to cset! cfuture " @c))
-  ;; (dp :c-reset new-value)
+
   (cond
     *defer-changes*
     (do (dp :c-reset-rejecting-undeferred! (c-slot c))
         (throw (Exception. (str "c-reset!> change  must be deferred by wrapping it in WITH-INTEGRITY. Slot: "
-                     (c-slot c) " :me " @(c-model c)))))
+                             (c-slot c) " :me " @(c-model c)))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
     (c-value-assume c new-value nil)
     ;-------------------------------------------
     :else
-    (with-integrity (:change (c-slot c))
-      (c-value-assume c new-value nil))))
+    (do (dpc c :cset!!!-integrity!!!!!!!!! new-value (cinfo c))
+        (with-integrity (:change (c-slot c))
+          (dpc c :cset!-pre-ass-fires!!! (cinfo c) new-value)
+          (c-value-assume c new-value nil)))))
 
 (defn c-reset! [c new-value]
   (cset! c new-value))

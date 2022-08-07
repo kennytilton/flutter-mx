@@ -107,9 +107,11 @@
 
 (defn md-reset! [me slot new-value]
   ;; (dp :md-reset slot )
-  (assert me)
+  (assert me "no me passed to md-reset!")
+  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
   (if-let [c (md-cell me slot)]
-    (do                                                     ;; (dp :gotc!)
+    (do
+      (dpx :md-reset-gotc!!! @c)
       (c-reset! c new-value))
     (do
       (if (contains? @me slot)

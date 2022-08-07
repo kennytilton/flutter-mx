@@ -171,6 +171,7 @@
               ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
               (when (and opcode (not (some #{opcode} [:awaken])))
                 (dpx :cwi-deferred!!!! opcode @wi-depth))
+              (dpx :cwi-deferred!!! opcode (cty/cinfo defer-info)(cty/minfo defer-info) defer-info)
               (ufb-add opcode [defer-info action]))
 
             ;; thus by not supplying an opcode one can get something
