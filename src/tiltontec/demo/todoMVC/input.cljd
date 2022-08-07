@@ -46,8 +46,7 @@
                                            (.addListener c
                                              (fn []
                                                (cty/with-mx-isolation
-                                                 (let [value (.-text c)]
-                                                   (md/mset! me :value value)))))
+                                                 (md/mset! me :value (.-text c)))))
                                            c))}
       {:name  :todo-input
        :value (cI "" #_(str "test " (rand-int 99)))})))
@@ -56,7 +55,6 @@
   (fx/visibility!
     {:visible               (cF (boolean
                                   (seq (todo/app-todos (my-app)))))
-     ;; todo see if we need all this
      :maintainSize          true
      :maintainSemantics     false
      :maintainInteractivity false

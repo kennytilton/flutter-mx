@@ -6,6 +6,8 @@
             ["dart:developer" :as dev]
             ["dart:math" :as mth]
             ["dart:convert" :as convert]
+
+            ["package:http/http.dart" :as dht]
             [clojure.walk :as walk]
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.testing :as testing]
@@ -39,19 +41,55 @@
   ;;(set! r/debugPaintSizeEnabled true)
 
   (material/runApp
-    (fx/fx-render nil
-      (td/make-app)))
+      (fx/fx-render nil
+        (td/make-app)))
 
   #_(let [tres (await (stor/test))]
       (dp :maintres tres))
 
-  #_ (let [r (prefs/test)]
-    (dp :main-says-test-done r))
+  #_(let [r (prefs/test)]
+      (dp :main-says-test-done r))
 
-  #_ (let [pt (await (prefs/test))]
-    (dp :main-sees-pt pt @pref/+db+))
+  #_(let [pt (await (prefs/test))]
+      (dp :main-sees-pt pt @pref/+db+))
+
+  #_ (let [ae-url "https://api.fda.gov/drug/event.json?
+                    search=patient.drug.openfda.brand_name:~(~a~)&limit=3"
+        ae-uri (.https Uri "api.fda.gov" "drug/event.json"
+                 {"limit"  "3"
+                  "search" "patient.drug.openfda.brand_name:Advil"})]
+    (dp :ae-uri ae-uri)
+    (let [r (dht/get ae-uri)]
+      (dp :aerwaw r)
+      (.then ^Future? r (fn []
+                 (dp :fnv!!!!!!!!!!)))
+      #_
+      (let [rr (await r)]
+        (dp :rr rr)
+        (dp :status-c (.-statusCode rr))
+        (dp :body (.-bodyBytes rr))
+        (let [bbu8 (walk/keywordize-keys
+                     (into {}                               ;; converts Dart map to cljd map
+                       (convert/jsonDecode
+                         (.decode convert/utf8 (.-bodyBytes rr)))))]
+          (dp :-----------------------)
+          (dp :utf8-bodybytes bbu8)
+          (dp :-----------------------)
+          (let [rs (:results bbu8)]
+            (doseq [r rs]
+              (dp :fda! r)))
+
+          (dp :--------------------)
+          (let [m (walk/keywordize-keys (into {} (:meta bbu8)))]
+            (dp :meta m)
+            (dp :meta-res (walk/keywordize-keys (into {} (:results m))))
+            )
+          )))
 
 
+    #_#_(dp :ae!!!!!!!!!!!!!!!!!!!!!)
+            (let [aer (dht/get ae-url)]
+              (dp :raw-aer!!! aer)))
 
 
   ;;(w/debugDumpApp)

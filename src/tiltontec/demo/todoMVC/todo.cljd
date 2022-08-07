@@ -3,15 +3,19 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["dart:convert" :as convert]
-    ["package:localstore/localstore.dart" :as ls]
+    ["package:http/http.dart" :as dht]
+    ;;["package:localstore/localstore.dart" :as ls]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [clojure.walk :as walk]
 
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.util.core :as util]
+
+    [tiltontec.util.core
+     :refer [difference atom? err rmap-setf rmap-meta-setf pln] :as util]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.integrity :as integrity]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
-    [tiltontec.model.core :refer [mget mpar mkids mname] :as md]
+    [tiltontec.model.core :refer [mget mpar mkids mname mset! mswap!] :as md]
     [tiltontec.mx-flutter.localstorage :as store]
     [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as stg]))
 
@@ -20,9 +24,53 @@
 ;; todo try with rmap-slots
 (defn td-stg-id [td] (mget td :stg-id))                     ;; LS only?
 (defn td-title [td] (or (mget td :title) ""))
+(defn td-events [td] (mget td :events))
 (defn td-completed [td] (or (mget td :completed) false))
 (defn td-created-at [td] (or (mget td :created-at) false))
 
+(defn events-lookup [title]
+  (let [ae-uri (.https Uri "api.fda.gov" "drug/event.json"
+                 {"limit"  "3"
+                  "search" (str "patient.drug.openfda.brand_name:"
+                             title)})
+        response (dht/get ae-uri)]
+    (dp :events-lookup-r response)
+    response))
+
+#_(let [ae-url "https://api.fda.gov/drug/event.json?
+                    search=patient.drug.openfda.brand_name:~(~a~)&limit=3"
+        ae-uri (.https Uri "api.fda.gov" "drug/event.json"
+                 {"limit"  "3"
+                  "search" "patient.drug.openfda.brand_name:Advil"})]
+    (dp :ae-uri ae-uri)
+    (let [r (dht/get ae-uri)]
+      (dp :aerwaw r)
+      (let [rr (await r)]
+        (dp :rr rr)
+        (dp :status-c (.-statusCode rr))
+        (dp :body (.-bodyBytes rr))
+        (let [bbu8 (walk/keywordize-keys
+                     (into {}                               ;; converts Dart map to cljd map
+                       (convert/jsonDecode
+                         (.decode convert/utf8 (.-bodyBytes rr)))))]
+          (dp :-----------------------)
+          (dp :utf8-bodybytes bbu8)
+          (dp :-----------------------)
+          (let [rs (:results bbu8)]
+            (doseq [r rs]
+              (dp :fda! r)))
+
+          (dp :--------------------)
+          (let [m (walk/keywordize-keys (into {} (:meta bbu8)))]
+            (dp :meta m)
+            (dp :meta-res (walk/keywordize-keys (into {} (:results m))))
+            )
+          )))
+
+
+    #_#_(dp :ae!!!!!!!!!!!!!!!!!!!!!)
+            (let [aer (dht/get ae-url)]
+              (dp :raw-aer!!! aer)))
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
 
 (declare ToDo-update)
@@ -39,7 +87,7 @@
    (make-ToDo td-lst title completed nil nil))
   ([td-lst title completed stg-id created-at]
    (let [created-at (or created-at
-                     (.-millisecondsSinceEpoch (.now DateTime)))]
+                      (.-millisecondsSinceEpoch (.now DateTime)))]
      (md/make
        :par td-lst
        :mx-type (ToDo.)
@@ -49,6 +97,13 @@
                     :created-at created-at
                     :completed  completed}))
        :created-at created-at
+       :ae-lookup (cF+ [;; :debug true
+                        :obs (fn [_ me newv priorv c]
+                               (let [res (await newv)]
+                                 (dp :aes!!! (= 200 (.-statusCode ^dht/Response res)))
+                                 (mset! me :aes (= 200 (.-statusCode ^dht/Response res)))))]
+                    (events-lookup title))
+       :aes (cI nil :debug false)
        ;--
        :title (cI title)
        :completed (cI completed)))))

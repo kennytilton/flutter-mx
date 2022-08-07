@@ -30,7 +30,30 @@
 (defn- delete-button [todo]
   (fx/text-button
     ;; our "delete" icon on each to-do
-    {:onPressed (as-dart-callback []
+    {:onPressed (tiltontec.demo.todoMVC.common/with-ctx+as-is [me ctx]
+                  (fn []
+                    (dp :onpressed!!!-called!!!!!)
+                    (tiltontec.cell.base/with-mx-isolation
+                      (dp :del-iso-0)
+                      (dp :del-iso-me (minfo me))
+                      (dp :del-app (minfo (tiltontec.model.core/fasc :app)))
+                      (dp :del-app-db (tiltontec.model.core/mget
+                                     (tiltontec.model.core/fasc :app) :db))
+                      #_ (tiltontec.model.core/mget
+                        (tiltontec.model.core/fasc :app) :db)
+                      (dp :del-sees-app-db (my-app-db))
+                      (binding [tiltontec.demo.todoMVC.store-pref/*pref* (tiltontec.demo.todoMVC.common/my-app-db)]
+                        (do
+                          (assert *pref* "no pref todo delete X")
+                          (dp :del-todo-sees-db!!!!!!!!!!!!!!!!!!!!!!! *pref*)
+                          (mswap! (my-todo-list) :kids
+                            (fn [coll stg-id]
+                              (remove (fn [td]
+                                        (= stg-id (td-stg-id td))) coll))
+                            (todo/td-stg-id todo)))))))}
+    #_ {:onPressed (as-dart-callback []
+                  (assert *pref* "no pref todo delete X")
+                  (dp :del-todo-sees-db!!!!!!!!!!!!!!!!!!!!!!! *pref*)
                   (mswap! (my-todo-list) :kids
                     (fn [coll stg-id]
                       (remove (fn [td]
@@ -49,11 +72,16 @@
      :trailing (delete-button todo)
      :title    (cF (let [ldg (md/mget me :leading)]
                      (fx/text!
-                       {:style (cF (if (md/mget ldg :value)
-                                     (p/TextStyle
-                                       .color m.Colors/grey
-                                       .decoration p.TextDecoration/lineThrough)
-                                     (p/TextStyle .color m.Colors/black)))}
+                       {:style (cF+ [:debug false]
+                                 (dp :style-entry (md/mget todo :aes) (md/mget ldg :value) (md/mget todo :title))
+                                 (if (md/mget ldg :value)
+                                   (p/TextStyle
+                                     .color m.Colors/grey
+                                     .decoration p.TextDecoration/lineThrough)
+                                   (p/TextStyle .color
+                                     (if (md/mget todo :aes)
+                                       m.Colors/red
+                                       m.Colors/blue))))}
                        (td-title todo))))}
     {:name :my-list-tile
      :todo todo}))
@@ -127,7 +155,7 @@
 
 (defn todo-list-item [todo]
   (fx/visibility!
-    ;; todo try with SizedBox.shrink
+    ;; try with SizedBox.shrink
     {:key               (m/ValueKey. (td-stg-id todo))
      :visible           (cF (mget me :selected?))
      :maintainSize      false

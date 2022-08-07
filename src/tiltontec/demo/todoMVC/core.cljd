@@ -80,19 +80,14 @@
        :debugShowCheckedModeBanner false}
       {:name      :app
        :db        (cF+ [:future? true]
+                    ;; we make the DB component of the app a reactive property since we receive it as a future
                     (.getInstance prefs/SharedPreferences))
 
-       :todos     (cF (when-let [db (mget me :db)]          ;; todo have fasc take option to include me so we can use my-app-db
-                        ;; wait for future from SP ^^ to complete
+       :todo-list (cF (when-let [db (mget me :db)]
+                        ;; ^^^ effectively waits on future db
                         (with-db db
-                          (dp :checking-todos db)
-                          (pref/collection-docs "todo"))))
-
-       :todo-list (cF (when-let [todos (mget me :todos)]
-                        ;; ^^^ waits todos who wait on future db
-                        (dp :got-todos! todos)
-                        (with-db (mget me :db)
-                          (todo/make-ToDoList "todo" todos))))}
+                          (todo/make-ToDoList "todo"
+                            (pref/collection-docs "todo")))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todo-filter-group)]}
