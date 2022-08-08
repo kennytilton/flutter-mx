@@ -15,7 +15,7 @@
              c-synaptic? caller-drop c-md-name
              c-pulse c-pulse-last-changed c-ephemeral? c-then? c-slot c-slots c-slot-name
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy dpc c-future?] :as cty]
+             *c-prop-depth* md-slot-owning? c-lazy dpc c-async?] :as cty]
     [tiltontec.cell.observer :refer [c-observe]]
     [tiltontec.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]))
@@ -191,7 +191,7 @@
         #_#_:meta-mw (meta (c-me c)))
 
       (cond
-        (c-future? c) (do
+        (c-async? c) (do
                         (assert (or (nil? raw-value)        ;; someday support other default future cell values, mebbe :pending
                                   (dart/is? raw-value Future))
                           (str "cnset-future got non future: " raw-value dbgid dbgdata))
@@ -203,7 +203,8 @@
                                 ;;      do we need to clear :then? Or is opti-away not a problem
                                 ;;      since it would have happened were there no users??
                                 (rmap-meta-setf [:then? c] true)
-                                (c-value-assume c fu-val nil)))))
+                                (c-value-assume c (if-let [and-then (:and-then? @c)]
+                                                    (and-then c fu-val) fu-val) nil)))))
                         (c-value-assume c nil nil))
         :else (when-not (c-optimized-away? c)
                 (assert (map? (deref c)) "calc-n-set")
@@ -429,7 +430,7 @@ then clear our record of them."
   (dpc c :opti-away-check (c-useds c) (c-optimize c) (c-valid? c) (not (c-input? c)))
 
   (when (and (c-formula? c)
-          (not (and (c-future? c)
+          (not (and (c-async? c)
                  (not (c-then? c))))                        ;; todo test also if the then has been received
           (empty? (c-useds c))
           (c-optimize c)

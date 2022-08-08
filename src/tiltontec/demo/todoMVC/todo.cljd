@@ -8,7 +8,7 @@
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [clojure.walk :as walk]
 
-    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.util.base :refer [dprn dp dpx] :as utb]
 
     [tiltontec.util.core
      :refer [difference atom? err rmap-setf rmap-meta-setf pln] :as util]
@@ -21,12 +21,14 @@
 
 ;;; --- handy accessors ---------------------------------
 
+(utb/def-rmap-slots td-
+ stg-id  completed created-at)
+
 ;; todo try with rmap-slots
-(defn td-stg-id [td] (mget td :stg-id))                     ;; LS only?
+;(defn td-stg-id [td] (mget td :stg-id))                     ;; LS only?
 (defn td-title [td] (or (mget td :title) ""))
-(defn td-events [td] (mget td :events))
-(defn td-completed [td] (or (mget td :completed) false))
-(defn td-created-at [td] (or (mget td :created-at) false))
+;(defn td-completed [td] (or (mget td :completed) false))
+;(defn td-created-at [td] (or (mget td :created-at) false))
 
 #_(let [ae-url "https://api.fda.gov/drug/event.json?
                     search=patient.drug.openfda.brand_name:~(~a~)&limit=3"
@@ -131,3 +133,43 @@
     ;; we have to wait for todos to be loaded from localstorage
     (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
     (md/mkids td-lst)))
+
+;;; --- vvv archive vvv -----------------------------------------
+
+#_ (let [ae-url "https://api.fda.gov/drug/event.json?
+                    search=patient.drug.openfda.brand_name:~(~a~)&limit=3"
+         ae-uri (.https Uri "api.fda.gov" "drug/event.json"
+                  {"limit"  "3"
+                   "search" "patient.drug.openfda.brand_name:Advil"})]
+     (dp :ae-uri ae-uri)
+     (let [r (dht/get ae-uri)]
+       (dp :aerwaw r)
+       (.then ^Future? r (fn []
+                           (dp :fnv!!!!!!!!!!)))
+       #_
+               (let [rr (await r)]
+                 (dp :rr rr)
+                 (dp :status-c (.-statusCode rr))
+                 (dp :body (.-bodyBytes rr))
+                 (let [bbu8 (walk/keywordize-keys
+                              (into {}                               ;; converts Dart map to cljd map
+                                (convert/jsonDecode
+                                  (.decode convert/utf8 (.-bodyBytes rr)))))]
+                   (dp :-----------------------)
+                   (dp :utf8-bodybytes bbu8)
+                   (dp :-----------------------)
+                   (let [rs (:results bbu8)]
+                     (doseq [r rs]
+                       (dp :fda! r)))
+
+                   (dp :--------------------)
+                   (let [m (walk/keywordize-keys (into {} (:meta bbu8)))]
+                     (dp :meta m)
+                     (dp :meta-res (walk/keywordize-keys (into {} (:results m))))
+                     )
+                   )))
+
+
+     #_#_(dp :ae!!!!!!!!!!!!!!!!!!!!!)
+             (let [aer (dht/get ae-url)]
+               (dp :raw-aer!!! aer)))

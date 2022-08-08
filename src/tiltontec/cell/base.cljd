@@ -165,7 +165,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (utb/def-rmap-slots c-
   me slot state input? rule pulse pulse-last-changed pulse-observed
   useds users callers optimize ephemeral?
-  lazy synapses synaptic? code future? then? debug)
+  lazy synapses synaptic? code async? then? debug)
 
 (defn c-value [c]
   (assert (atom? c))
@@ -220,7 +220,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
                        :not-cell-c)
     :else (if verbose? [:cinfo-all @c]
-            ((juxt c-slot-name c-md-name c-future? c-value) c)))))
+            ((juxt c-slot-name c-md-name c-async? c-value) c)))))
 
 (defn minfo
   ([md]

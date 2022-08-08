@@ -32,8 +32,6 @@
   (fx/text-button
     ;; our "delete" icon on each to-do
     {:onPressed (as-dart-callback []
-                  (assert *pref* "no pref todo delete X")
-                  (dp :del-todo-sees-db!!!!!!!!!!!!!!!!!!!!!!! *pref*)
                   (mswap! (my-todo-list) :kids
                     (fn [coll stg-id]
                       (remove (fn [td]
@@ -45,14 +43,6 @@
                        .fontWeight m.FontWeight/w200
                        .fontSize 20.0)}
       "X")))
-
-(defn events-lookup [title]
-  (let [ae-uri (.https Uri "api.fda.gov" "drug/event.json"
-                 {"limit"  "3"
-                  "search" (str "patient.drug.openfda.brand_name:"
-                             title)})
-        response (dht/get ae-uri)]
-    response))
 
 (defn to-do-display [todo]
   ;; todo URGENT why runs for every todo when one deleted?
@@ -68,21 +58,19 @@
                                        .color m.Colors/grey
                                        .decoration p.TextDecoration/lineThrough)
                                      (p/TextStyle .color
-                                       (if (md/mget tile :aes-exist?)
+                                       (if (md/mget tile :fda-events?)
                                          m.Colors/red
                                          m.Colors/blue))))}
                        (td-title todo))))}
-    {:name :my-list-tile
-     :todo todo
-     :ae-lookup (cF+ [;; :debug true
-                      :obs (fn [_ me newv priorv c]
-                             (let [res (await newv)]
-                               ;; todo new or existing macro vvvv
-                               (cty/with-mx-isolation
-                                 (binding [*pref* (mget (md/fasc :app) :db)]
-                                   (md-reset! me :aes-exist? (= 200 (.-statusCode ^dht/Response res)))))))]
-                  (events-lookup (mget todo :title)))
-     :aes-exist? (cI nil)}))
+    {:name        :my-list-tile
+     :todo        todo
+     :fda-events? (cF+ [:async? true
+                        :and-then? (fn [c lookup]
+                                     (= 200 (.-statusCode ^dht/Response lookup)))]
+                    (dht/get (.https Uri "api.fda.gov" "drug/event.json"
+                               {"limit"  "1"
+                                "search" (str "patient.drug.openfda.brand_name:"
+                                           (mget todo :title))})))}))
 
 (defn- commit-to-do-editing
   ([me todo]
@@ -93,7 +81,6 @@
    (let [stg-id (td-stg-id todo)
          trimmed (str/trim value)]
      (with-db (my-app-db)
-       (assert *pref* "no db editing")
        (cond
          (str/blank? trimmed) (md/mswap! (my-todo-list) :kids
                                 (partial remove (fn [td] (= stg-id (td-stg-id td)))))
@@ -109,7 +96,7 @@
                       title (td-title todo)]
                   (fx/focus-scope
                     ;; focus subtlety: we want the newly created TextField to autofocus, but
-                    ;; the to-do input field is already focused, and autofocus does not jump those
+                    ;; the to-do input field is already focused, and autofocus does not jump to those
                     ;; unless in a fresh scope. So ^^^ we throw in a scope.
                     {:onFocusChange (cF (as-dart-callback [focused?]
                                           (when (not focused?)
@@ -165,12 +152,11 @@
                       :done (td-completed todo)))}
     (fx/container
       {:decoration (fx/in-my-context [me context]
+                     ;; list with separator cannot hid separator when item hidden, so
+                     ;; we fake a separator with a top border on the container
                      (m/BoxDecoration .border
-                       (m/Border .top (m/BorderSide
-                                        .width 0.5
-                                        .color (-> m/Theme
-                                                 (.of context)
-                                                 .-dividerColor)))))}
+                       (m/Border .top (m/BorderSide .width 0.5
+                                        .color (.-dividerColor (.of m/Theme context))))))}
       (fx/gesture-detector
         {:onDoubleTap (as-dart-callback []
                         (when (not (mget me :editing))
@@ -184,13 +170,13 @@
 
 (defn todo-items []
   (fx/expanded
-    ;; ^^^ required sizer to join column
+    ;; ^^^ sizer is required to join column, which demands children know their size
     (fx/list-view+builder
       {:padding     (m.EdgeInsets/all 0.0)
        :itemCount   (cF (count (mkids me)))
        :itemBuilder (cF (cmm/as-is
                           (fn [ctx i]
-                            ;; we must yield a native Flutter widget ready for Flutter, so we must "render",
+                            ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                             (fx/fx-render ctx
                               (nth (mkids me) i)))))}
       (map todo-list-item
