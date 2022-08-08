@@ -39,13 +39,10 @@
 (defn md-get [me slot]
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (when (atom? me)
-    #_(when (and (= slot :style) (= :z-counter (md-name me)))
-        (prn :md-get-sees!!!!!!!! slot (md-name me)
-          (cinfo (md-cell me slot))))
-    (if-let [c (md-cell me slot)]
-      (c-get c)
-      (slot @me))))
+  (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing slot: " slot " :me " me))
+  (if-let [c (md-cell me slot)]
+    (c-get c)
+    (slot @me)))
 
 #_ (defmacro def-rmap-slots [reader-prefix & slots]
      `(do
@@ -73,6 +70,14 @@
                  (tiltontec.util.base/dp :defmdslot-gets slot#)
                  (tiltontec.model.core/mget @~'ref ~(keyword slot#))))
          slots)))
+
+(defmacro def-mx-slots [reader-prefix & slots]
+  `(do
+     ~@(map (fn [slot#]
+              `(defn ~(symbol (str (or reader-prefix "")
+                                slot#))
+                 [~'ref]
+                 (tiltontec.model.core/mget ~'ref ~(keyword slot#)))) slots)))
 
 (defn mgetx [me slot]
   (assert me (str "md-get passed nil for me accessing slot: " slot))
