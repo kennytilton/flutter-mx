@@ -6,7 +6,7 @@
     [tiltontec.model.core :refer [mget mset! mswap! fasc mkids mpar mkids] :as md]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :refer [in-my-context] :as fx]
-    [tiltontec.demo.todoMVC.common :refer [my-app-db with-db as-dart-callback] :as cmm]
+    [tiltontec.demo.todoMVC.common :refer [as-dart-callback] :as cmm]
     [tiltontec.demo.todoMVC.todo :as todo]
     [tiltontec.demo.todoMVC.input :as input]
     [tiltontec.demo.todoMVC.items :as items]
@@ -80,15 +80,19 @@
                                      .backgroundColor (.fromRGBO m/Color 245 245 245 1))
        :debugShowCheckedModeBanner false}
       {:name      :app
-       :db        (cF+ [:async? true]
+       :db        (cF+ [:async? true
+                        :obs (fn [_ me new-db _ _]
+                               (dp :new-db!!!!!!!! new-db)
+                               (reset! pref/+DB+ new-db))]
                     ;; we make the DB component of the app a reactive property since we receive it as a future
                     (.getInstance prefs/SharedPreferences))
 
        :todo-list (cF (when-let [db (mget me :db)]
+                        ;; ^^^ cannot use global DB which is ot reactive
                         ;; ^^^ effectively waits on future db
-                        (with-db db
-                          (todo/make-ToDoList "todo"
-                            (pref/collection-docs "todo")))))}
+                        (assert (pref/DB) "DB not populated")
+                        (todo/make-ToDoList "todo"
+                          (pref/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todo-filter-group)]}

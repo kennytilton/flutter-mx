@@ -9,7 +9,7 @@
     [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.common :refer [my-app my-app-db my-todo-list with-db as-dart-callback] :as cmm]
+    [tiltontec.demo.todoMVC.common :refer [my-app my-todo-list as-dart-callback] :as cmm]
     [tiltontec.demo.todoMVC.todo :refer [td-completed] :as todo]
 
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
@@ -37,9 +37,8 @@
                                            (.clear ^m/TextEditingController
                                              (md/mget me :controller))
                                            (let [td-lst (my-todo-list)]
-                                             (with-db (my-app-db)
-                                               (mswap! td-lst :kids conj
-                                                 (todo/make-ToDo td-lst trimmed false))))))))
+                                             (mswap! td-lst :kids conj
+                                               (todo/make-ToDo td-lst trimmed false)))))))
                     :controller  (cFonce (let [c (m/TextEditingController
                                                    .text (md/mget me :value))]
                                            ;; todo package this as a reusable

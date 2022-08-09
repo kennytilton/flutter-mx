@@ -17,12 +17,12 @@
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
     [tiltontec.model.core :refer [mget mpar mkids mname mset! md-reset! mswap!] :as md]
     [tiltontec.mx-flutter.localstorage :as store]
-    [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as stg]))
+    [tiltontec.demo.todoMVC.store-pref :as stg]))
 
 ;;; --- handy accessors ---------------------------------
 
 (md/def-mx-slots td-
- stg-id title completed created-at)
+  stg-id title completed created-at)
 
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
 
@@ -50,6 +50,15 @@
                     :created-at created-at
                     :completed  completed}))
        :created-at created-at
+       :ae-events? (cF+ [:async? true
+                         :obs (fn [_ me aes? _ _]
+                                (dp :todo-sees aes? (mget me :title)))
+                         :and-then? (fn [c lookup]
+                                      (= 200 (.-statusCode ^dht/Response lookup)))]
+                     (dht/get (.https Uri "api.fda.gov" "drug/event.json"
+                                {"limit"  "1"
+                                 "search" (str "patient.drug.openfda.brand_name:"
+                                            (mget me :title))})))
 
        ;--
        :title (cI title)
@@ -96,40 +105,39 @@
 
 ;;; --- vvv archive vvv -----------------------------------------
 
-#_ (let [ae-url "https://api.fda.gov/drug/event.json?
+#_(let [ae-url "https://api.fda.gov/drug/event.json?
                     search=patient.drug.openfda.brand_name:~(~a~)&limit=3"
-         ae-uri (.https Uri "api.fda.gov" "drug/event.json"
-                  {"limit"  "3"
-                   "search" "patient.drug.openfda.brand_name:Advil"})]
-     (dp :ae-uri ae-uri)
-     (let [r (dht/get ae-uri)]
-       (dp :aerwaw r)
-       (.then ^Future? r (fn []
-                           (dp :fnv!!!!!!!!!!)))
-       #_
-               (let [rr (await r)]
-                 (dp :rr rr)
-                 (dp :status-c (.-statusCode rr))
-                 (dp :body (.-bodyBytes rr))
-                 (let [bbu8 (walk/keywordize-keys
-                              (into {}                               ;; converts Dart map to cljd map
-                                (convert/jsonDecode
-                                  (.decode convert/utf8 (.-bodyBytes rr)))))]
-                   (dp :-----------------------)
-                   (dp :utf8-bodybytes bbu8)
-                   (dp :-----------------------)
-                   (let [rs (:results bbu8)]
-                     (doseq [r rs]
-                       (dp :fda! r)))
+        ae-uri (.https Uri "api.fda.gov" "drug/event.json"
+                 {"limit"  "3"
+                  "search" "patient.drug.openfda.brand_name:Advil"})]
+    (dp :ae-uri ae-uri)
+    (let [r (dht/get ae-uri)]
+      (dp :aerwaw r)
+      (.then ^Future? r (fn []
+                          (dp :fnv!!!!!!!!!!)))
+      #_(let [rr (await r)]
+          (dp :rr rr)
+          (dp :status-c (.-statusCode rr))
+          (dp :body (.-bodyBytes rr))
+          (let [bbu8 (walk/keywordize-keys
+                       (into {}                             ;; converts Dart map to cljd map
+                         (convert/jsonDecode
+                           (.decode convert/utf8 (.-bodyBytes rr)))))]
+            (dp :-----------------------)
+            (dp :utf8-bodybytes bbu8)
+            (dp :-----------------------)
+            (let [rs (:results bbu8)]
+              (doseq [r rs]
+                (dp :fda! r)))
 
-                   (dp :--------------------)
-                   (let [m (walk/keywordize-keys (into {} (:meta bbu8)))]
-                     (dp :meta m)
-                     (dp :meta-res (walk/keywordize-keys (into {} (:results m))))
-                     )
-                   )))
+            (dp :--------------------)
+            (let [m (walk/keywordize-keys (into {} (:meta bbu8)))]
+              (dp :meta m)
+              (dp :meta-res (walk/keywordize-keys (into {} (:results m))))
+              )
+            )))
 
 
-     #_#_(dp :ae!!!!!!!!!!!!!!!!!!!!!)
-             (let [aer (dht/get ae-url)]
-               (dp :raw-aer!!! aer)))
+    #_#_(dp :ae!!!!!!!!!!!!!!!!!!!!!)
+            (let [aer (dht/get ae-url)]
+              (dp :raw-aer!!! aer)))

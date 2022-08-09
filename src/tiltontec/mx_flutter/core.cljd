@@ -163,9 +163,9 @@
    (state-set state nil))
   ([^State state me]
   (if (.-mounted state)
-    (do (dp :setting-state!!!! state (cty/minfo me))
+    (do (dpx :setting-state!!!! state (cty/minfo me))
         (.setState state (fn [] (do))))
-    (dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
+    (dpx :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
 (deftype FXDartWidget []
   :extends Model
@@ -181,14 +181,14 @@
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dp :FXDWO-settingimmediatestate slot new-value #_(meta me)  (cty/minfo me) (.-mounted state))
+          (do (dpx :FXDWO-settingimmediatestate slot new-value #_(meta me)  (cty/minfo me) (.-mounted state))
               (state-set state me))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dp :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
+              (dpx :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
                 :slot slot :new-prio new-value prior-value)
               (state-set state me))
-            (dp :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
+            (dpx :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
               #_ @me)))))))
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------

@@ -6,7 +6,8 @@
     [tiltontec.util.core :as util]
     [clojure.walk :as walk]))
 
-(def ^:dynamic ^prefs/SharedPreferences? *pref* nil)
+(def +DB+ (atom nil)) ;; just a cache, not reactive
+(defn ^prefs/SharedPreferences? DB [] (deref +DB+))
 
 (defn td-initialize
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
@@ -16,7 +17,7 @@
 
   (let [new-stg-id (str collection-name "/" (rand-int 99999999)) ;; todo use uid
         new-data (assoc td-map :stg-id new-stg-id)]
-    (.setString *pref* new-stg-id
+    (.setString (DB) new-stg-id
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys new-data
@@ -29,7 +30,7 @@
   (let [stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
 
-    (.setString ^prefs/SharedPreferences *pref* stg-id
+    (.setString  (DB) stg-id
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys td-map
@@ -39,23 +40,23 @@
 (defn td-delete
   [collection-name stg-id]
   (assert stg-id "td-delete requires stg-id")
-  (.remove  *pref* stg-id)
+  (.remove  (DB) stg-id)
   stg-id)
 
 (defn collection-docs [collection-name]
-  (assert *pref* "no db in collection-docs")
+  (assert (DB) "no db in collection-docs")
   (let [all-td-keys (collection-keys collection-name)]
     (mapv (fn [td-key]
             (util/dart-map->cljd-map
-              (convert/jsonDecode (.getString *pref* td-key)))) all-td-keys)))
+              (convert/jsonDecode (.getString (DB) td-key)))) all-td-keys)))
 
 (defn collection-keys [collection-name]
-  (assert *pref* "no db in collection-keys")
+  (assert (DB) "no db in collection-keys")
   (filter (fn [k]
             (= collection-name (subs k 0 (count collection-name))))
-    (into #{} (.getKeys *pref*))))
+    (into #{} (.getKeys (DB)))))
 
 (defn delete-all-docs [collection-name]
-  (assert *pref* "no db in delete-all-docs")
+  (assert (DB) "no db in delete-all-docs")
   (doseq [k (collection-keys collection-name)]
-    (.remove ^prefs/SharedPreferences *pref* k)))
+    (.remove ^prefs/SharedPreferences (DB) k)))

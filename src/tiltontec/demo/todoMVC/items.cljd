@@ -15,10 +15,9 @@
     [tiltontec.mx-flutter.core :as fx]
 
     [tiltontec.demo.todoMVC.common :as cmm
-     :refer [my-app my-app-db my-todo-list with-db as-dart-callback]]
+     :refer [my-app my-todo-list as-dart-callback]]
 
-    [tiltontec.demo.todoMVC.todo :refer [td-stg-id td-completed td-title] :as todo]
-    [tiltontec.demo.todoMVC.store-pref :refer [*pref*] :as pref]))
+    [tiltontec.demo.todoMVC.todo :refer [td-stg-id td-completed td-title] :as todo]))
 
 (defn- completion-toggler [todo]
   (fx/check-box
@@ -32,7 +31,7 @@
   (fx/text-button
     ;; our "delete" icon on each to-do
     {:onPressed (as-dart-callback []
-                  (dp :del-pressed!!!!!!! (td-title todo ))
+                  (dpx :del-pressed!!!!!!! (td-title todo ))
                   (mswap! (my-todo-list) :kids
                     (fn [coll stg-id]
                       (remove (fn [td]
@@ -46,32 +45,22 @@
       "X")))
 
 (defn to-do-display [todo]
-  ;; todo URGENT why runs for every todo when one deleted?
-  (dp :tododisplay-for (td-title todo) (:title @todo) @todo)
   (fx/list-tile
     {:leading  (completion-toggler todo)
      :trailing (delete-button todo)
-     :title    (cF (let [tile me
-                         ldg (md/mget tile :leading)]
+     :title    (cF (let [comp-toggle (md/mget me :leading)]
                      (fx/text!
-                       {:style (cF (if (md/mget ldg :value)
+                       {:style (cF (if (md/mget comp-toggle :value)
                                      (p/TextStyle
                                        .color m.Colors/grey
                                        .decoration p.TextDecoration/lineThrough)
                                      (p/TextStyle .color
-                                       (if (md/mget tile :fda-events?)
+                                       (if (mget todo :ae-events?)
                                          m.Colors/red
                                          m.Colors/blue))))}
                        (td-title todo))))}
     {:name        :my-list-tile
-     :todo        todo
-     :fda-events? (cF+ [:async? true
-                        :and-then? (fn [c lookup]
-                                     (= 200 (.-statusCode ^dht/Response lookup)))]
-                    (dht/get (.https Uri "api.fda.gov" "drug/event.json"
-                               {"limit"  "1"
-                                "search" (str "patient.drug.openfda.brand_name:"
-                                           (mget todo :title))})))}))
+     :todo        todo}))
 
 (defn- commit-to-do-editing
   ([me todo]
@@ -81,13 +70,12 @@
   ([me todo value]
    (let [stg-id (td-stg-id todo)
          trimmed (str/trim value)]
-     (with-db (my-app-db)
-       (cond
-         (str/blank? trimmed) (md/mswap! (my-todo-list) :kids
-                                (partial remove (fn [td] (= stg-id (td-stg-id td)))))
-         :else (do
-                 (md/mset! todo :title trimmed)             ;; two dataflow triggers
-                 (md/mset! (md/fasc :item-control) :editing? false)))))))
+     (cond
+       (str/blank? trimmed) (md/mswap! (my-todo-list) :kids
+                              (partial remove (fn [td] (= stg-id (td-stg-id td)))))
+       :else (do
+               (md/mset! todo :title trimmed)             ;; two dataflow triggers
+               (md/mset! (md/fasc :item-control) :editing? false))))))
 
 (defn to-do-editor [me todo]
   (assert todo)
@@ -177,7 +165,7 @@
        :itemCount   (cF (count (mkids me)))
        :itemBuilder (cF (cmm/as-is
                           (fn [ctx i]
-                            (dp :td-item-builder i)
+                            (dpx :td-item-builder i)
                             ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                             (fx/fx-render ctx
                               (nth (mkids me) i)))))}
