@@ -4,7 +4,6 @@
     ["package:flutter/material.dart" :as m]
     ["dart:convert" :as convert]
     ["package:http/http.dart" :as dht]
-    ;;["package:localstore/localstore.dart" :as ls]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [clojure.walk :as walk]
 
@@ -78,9 +77,6 @@
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (doseq [td lost]
                   (stg/td-delete "todo" (td-stg-id td))))))))
-
-;; todo ??? move fx$state to meta and get out of dataflow
-;;      this will entail new way to get controller
 
 (defn make-ToDoList
   ([name] (make-ToDoList name nil))

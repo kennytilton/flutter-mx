@@ -22,20 +22,6 @@
   (when-not (nil? sought)
     (some #{sought} coll)))
 
-#?(:cljs
-   (defn uuidv4 []
-     (letfn [(hex [] (.toString (rand-int 16) 16))]
-       (let [rhex (.toString (bit-or 0x8 (bit-and 0x3 (rand-int 16))) 16)]
-         (uuid
-           (str (hex) (hex) (hex) (hex)
-             (hex) (hex) (hex) (hex) "-"
-             (hex) (hex) (hex) (hex) "-"
-             "4"   (hex) (hex) (hex) "-"
-             rhex  (hex) (hex) (hex) "-"
-             (hex) (hex) (hex) (hex)
-             (hex) (hex) (hex) (hex)
-             (hex) (hex) (hex) (hex)))))))
-
 ;; --- refs with maps conveniences -------------------
 
 (defn atom? [x]

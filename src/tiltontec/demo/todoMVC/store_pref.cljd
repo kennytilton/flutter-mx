@@ -2,6 +2,7 @@
   (:require
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     ["dart:convert" :as convert]
+    ["package:uuid/uuid.dart" :as uu]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.util.core :as util]
     [clojure.walk :as walk]))
@@ -9,13 +10,19 @@
 (def +DB+ (atom nil)) ;; just a cache, not reactive
 (defn ^prefs/SharedPreferences? DB [] (deref +DB+))
 
+(def +uuid+ (atom nil))
+(defn ^uu/Uuid UUID []
+  (or (deref +uuid+)
+    (uu/Uuid)))
+
 (defn td-initialize
   "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
   [collection-name td-map]
   (assert (not (:stg-id td-map)) "td-init sees stg-id suggesting td already written")
   (assert (:created-at td-map) "td-init requires created-at prop")
 
-  (let [new-stg-id (str collection-name "/" (rand-int 99999999)) ;; todo use uid
+  (let [new-stg-id (str collection-name "/" (.v4 (UUID))) ;; todo use uid
+        _ (dp :todo-key!!! new-stg-id)
         new-data (assoc td-map :stg-id new-stg-id)]
     (.setString (DB) new-stg-id
       (convert/jsonEncode
