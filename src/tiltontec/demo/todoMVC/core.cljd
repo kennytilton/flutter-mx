@@ -19,7 +19,7 @@
 
 (defn todo-app-bar [title]
   (fx/preferred-size
-    {:preferredSize (.fromHeight m/Size 80)}
+    {:preferredSize (.fromHeight m/Size 72)}
     (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
                  :title           (fx/column
                                     {:crossAxisAlignment m.CrossAxisAlignment/end}
@@ -82,15 +82,16 @@
       {:name      :app
        :db        (cF+ [:async? true
                         :obs (fn [_ me new-db _ _]
-                               (dp :new-db!!!!!!!! new-db)
+                               ;; the reactive :db cell is handy during lifecycle initialization
+                               ;; but more convenient to demo simplicity as a global resource.
                                (reset! pref/+DB+ new-db))]
                     ;; we make the DB component of the app a reactive property since we receive it as a future
                     (.getInstance prefs/SharedPreferences))
 
        :todo-list (cF (when-let [db (mget me :db)]
-                        ;; ^^^ cannot use global DB which is ot reactive
-                        ;; ^^^ effectively waits on future db
-                        (assert (pref/DB) "DB not populated")
+                        ;; ^^^ cannot use global DB which is not reactive
+                        ;; next we make sure cell :db makes it into cache DB:
+                        (assert (pref/DB) (str "DB not populated but cell :db is: " db))
                         (todo/make-ToDoList "todo"
                           (pref/collection-docs "todo"))))}
       (fx/scaffold
