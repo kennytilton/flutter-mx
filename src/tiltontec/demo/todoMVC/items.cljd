@@ -32,6 +32,7 @@
   (fx/text-button
     ;; our "delete" icon on each to-do
     {:onPressed (as-dart-callback []
+                  (dp :del-pressed!!!!!!! (td-title todo ))
                   (mswap! (my-todo-list) :kids
                     (fn [coll stg-id]
                       (remove (fn [td]
@@ -176,6 +177,7 @@
        :itemCount   (cF (count (mkids me)))
        :itemBuilder (cF (cmm/as-is
                           (fn [ctx i]
+                            (dp :td-item-builder i)
                             ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                             (fx/fx-render ctx
                               (nth (mkids me) i)))))}

@@ -158,10 +158,14 @@
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
 
-(defn state-set [^State state]
+(defn state-set
+  ([^State state]
+   (state-set state nil))
+  ([^State state me]
   (if (.-mounted state)
-    (.setState state (fn [] (do)))
-    (dp :NOT_SETTING_STATE_NOT_MOUNTED state)))
+    (do (dp :setting-state!!!! state (cty/minfo me))
+        (.setState state (fn [] (do))))
+    (dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
 (deftype FXDartWidget []
   :extends Model
@@ -171,20 +175,20 @@
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! slot new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) :deref @me)
+        (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) #_#_ :deref @me)
         (dpx :FXDartWidget-observing-cell!!! slot (cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :settingimmediatestate slot new-value #_(meta me)  (tiltontec.cell.base/minfo me) state (.-mounted state))
-              (state-set state))
+          (do (dp :FXDWO-settingimmediatestate slot new-value #_(meta me)  (cty/minfo me) (.-mounted state))
+              (state-set state me))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dpx :obs-FXD-uses-nearest-state state (.-mounted state)
+              (dp :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
                 :slot slot :new-prio new-value prior-value)
-              (state-set state))
-            (dpx :NOT-setting-state-on-stateless slot new-value (tiltontec.cell.base/minfo me)
+              (state-set state me))
+            (dp :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
               #_ @me)))))))
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
@@ -585,7 +589,7 @@
 
 ;;; --- kids for builder ------------------------------------------------------
 
-(defmacro kids-for-builder [fx-class fx-props mx-props & children]
+(defmacro  kids-for-builder [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.mx-flutter.core/make-fx (new FXDartWidget)
        ~fx-props
