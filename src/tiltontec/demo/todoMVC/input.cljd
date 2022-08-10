@@ -32,7 +32,7 @@
                                        ;; spec says to trim, and to silently ignore blank entry
                                        (let [trimmed (str/trim value)]
                                          (when-not (str/blank? trimmed)
-                                           ;; --- non-blank entry, so we save, clear entry, and store
+                                           ;; --- we have a non-blank entry, so we save, clear entry, and store
                                            (md/mset! me :value trimmed) ;; let text proxy know its cleaned value
                                            (.clear ^m/TextEditingController
                                              (md/mget me :controller))
@@ -48,7 +48,7 @@
                                                  (md/mset! me :value (.-text c)))))
                                            c))}
       {:name  :todo-input
-       :value (cI "" #_(str "test " (rand-int 99)))})))
+       :value (cI "")})))
 
 (defn todo-toggle-all []
   (fx/visibility!

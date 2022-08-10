@@ -30,6 +30,9 @@
   :extends cty/Model
   cty/PObserver
   (observe [this slot me new-value prior-value cell]
+    ;; the initial observe, signified by prior value unbound,
+    ;; is just of the MX to-do being awakened after being loaded
+    ;; from the DB, even new to-dos, so no need to update DB,
     (when (and (td-stg-id me) (not= cty/unbound prior-value))
       (ToDo-update me))))
 
@@ -89,50 +92,9 @@
                           (make-ToDo me title completed stg-id created-at)))
                   existing-todos)))))
 
-
-;;; --- even higher level ---------------------------------------
-
 (defn app-todos [app]
   (when-let [td-lst (tiltontec.model.core/mget app :todo-list)]
     ;; we have to wait for todos to be loaded
     (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
     (md/mkids td-lst)))
 
-;;; --- vvv archive vvv -----------------------------------------
-
-#_(let [ae-url "https://api.fda.gov/drug/event.json?
-                    search=patient.drug.openfda.brand_name:~(~a~)&limit=3"
-        ae-uri (.https Uri "api.fda.gov" "drug/event.json"
-                 {"limit"  "3"
-                  "search" "patient.drug.openfda.brand_name:Advil"})]
-    (dp :ae-uri ae-uri)
-    (let [r (dht/get ae-uri)]
-      (dp :aerwaw r)
-      (.then ^Future? r (fn []
-                          (dp :fnv!!!!!!!!!!)))
-      #_(let [rr (await r)]
-          (dp :rr rr)
-          (dp :status-c (.-statusCode rr))
-          (dp :body (.-bodyBytes rr))
-          (let [bbu8 (walk/keywordize-keys
-                       (into {}                             ;; converts Dart map to cljd map
-                         (convert/jsonDecode
-                           (.decode convert/utf8 (.-bodyBytes rr)))))]
-            (dp :-----------------------)
-            (dp :utf8-bodybytes bbu8)
-            (dp :-----------------------)
-            (let [rs (:results bbu8)]
-              (doseq [r rs]
-                (dp :fda! r)))
-
-            (dp :--------------------)
-            (let [m (walk/keywordize-keys (into {} (:meta bbu8)))]
-              (dp :meta m)
-              (dp :meta-res (walk/keywordize-keys (into {} (:results m))))
-              )
-            )))
-
-
-    #_#_(dp :ae!!!!!!!!!!!!!!!!!!!!!)
-            (let [aer (dht/get ae-url)]
-              (dp :raw-aer!!! aer)))

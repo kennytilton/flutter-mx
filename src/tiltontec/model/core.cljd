@@ -26,6 +26,12 @@
     [tiltontec.cell.evaluate :refer [c-get c-awaken not-to-be]]
     [tiltontec.model.base :refer [md-cell md-install-cell md-awaken]]))
 
+(defmacro pme [& mas]
+  `(when true ;;  (= :login (:name (deref ~'me)))
+     (dp (mx-type ~'me)
+       (:tag (deref ~'me))
+       (:name (deref ~'me)) ~@mas)))
+
 (def matrix
   "Each app will populate this with the root of its application matrix."
   (atom nil))
@@ -43,33 +49,6 @@
   (if-let [c (md-cell me slot)]
     (c-get c)
     (slot @me)))
-
-#_ (defmacro def-rmap-slots [reader-prefix & slots]
-     `(do
-        ~@(map (fn [slot#]
-                 `(defn ~(symbol (str (or reader-prefix "")
-                                   slot#))
-                    [~'ref]
-                    (~(keyword slot#) @~'ref))) slots)))
-
-#_
-(defmacro def-md-slots [reader-prefix & slots]
-  `(do
-     ~@(map (fn [slot#]
-              `(defn ~(symbol (str (or reader-prefix "")
-                                slot#))
-                 [~'ref]
-                 (~(keyword slot#) @~'ref))) slots)))
-
-#_
-(defmacro def-md-slots [reader-prefix & slots]
-  `(do
-     ~@(map (fn [slot#]
-              `(defn ~(symbol (str (or reader-prefix "") slot#))
-                 [~'ref]
-                 (tiltontec.util.base/dp :defmdslot-gets slot#)
-                 (tiltontec.model.core/mget @~'ref ~(keyword slot#))))
-         slots)))
 
 (defmacro def-mx-slots [reader-prefix & slots]
   `(do

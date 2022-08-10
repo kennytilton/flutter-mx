@@ -81,17 +81,24 @@
        :debugShowCheckedModeBanner false}
       {:name      :app
        :db        (cF+ [:async? true
+                        ; ^^^ the formula computes a value of nil then awaits the future
+                        ; and, when received, reactively "computes" the received value as
+                        ; a new matrix input.
                         :obs (fn [_ me new-db _ _]
-                               ;; the reactive :db cell is handy during lifecycle initialization
-                               ;; but more convenient to demo simplicity as a global resource.
-                               (reset! pref/+DB+ new-db))]
+                               ;; the reactive :db cell is handy during lifecycle initialization, but
+                               ;; more convenient as a global resource. It's a demo, OK?
+                               (pref/DB! new-db))]
                     ;; we make the DB component of the app a reactive property since we receive it as a future
                     (.getInstance prefs/SharedPreferences))
 
        :todo-list (cF (when-let [db (mget me :db)]
-                        ;; ^^^ cannot use global DB which is not reactive
-                        ;; next we make sure cell :db makes it into cache DB:
+                        ;; ^^^ we cannot use global DB, which is not reactive. It is just a handy global cache.
+                        ;; But we cannot do our work until the db is established, so our rule reads the reactive :db cell.
+                        ;;
+                        ;; Next,we make sure cell :db makes it into cache DB, since that
+                        ;; is where all the code looks. Just a sanity check.
                         (assert (pref/DB) (str "DB not populated but cell :db is: " db))
+                        ;; Now we can load any existing todos from storage...
                         (todo/make-ToDoList "todo"
                           (pref/collection-docs "todo"))))}
       (fx/scaffold
