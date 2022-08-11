@@ -136,6 +136,16 @@
 (defmacro my-controller []
   `^m/AnimationController? (tiltontec.model.core/mget ~'me :controller))
 
+(defn standard-text-value-controller [me]
+  ;; usage: (fx/text {:controller (cF (standard-text-value-controller me))}....
+  (let [c (m/TextEditingController
+            .text (md/mget me :value))]
+    (.addListener c
+      (fn []
+        (cty/with-mx-isolation
+          (md/mset! me :value (.-text c)))))
+    c))
+
 (defmacro my-animation []
   ;; uncast since type will vary
   `(tiltontec.model.core/mget ~'me :animation))

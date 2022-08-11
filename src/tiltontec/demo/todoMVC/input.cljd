@@ -16,6 +16,8 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [clojure.string :as str]))
 
+
+
 (defn todo-input []
   (fx/material {:elevation   20.0
                 :color       m.Colors/white
@@ -39,14 +41,7 @@
                                            (let [td-lst (my-todo-list)]
                                              (mswap! td-lst :kids conj
                                                (todo/make-ToDo td-lst trimmed false)))))))
-                    :controller  (cFonce (let [c (m/TextEditingController
-                                                   .text (md/mget me :value))]
-                                           ;; todo package this as a reusable
-                                           (.addListener c
-                                             (fn []
-                                               (cty/with-mx-isolation
-                                                 (md/mset! me :value (.-text c)))))
-                                           c))}
+                    :controller  (cFonce (fx/standard-text-value-controller me))}
       {:name  :todo-input
        :value (cI "")})))
 

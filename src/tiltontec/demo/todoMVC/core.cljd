@@ -11,7 +11,7 @@
     [tiltontec.demo.todoMVC.input :as input]
     [tiltontec.demo.todoMVC.items :as items]
     [tiltontec.demo.todoMVC.footer :as footer]
-    [tiltontec.demo.todoMVC.store-pref :as pref]
+    [tiltontec.demo.todoMVC.persist :as stg]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
@@ -87,7 +87,7 @@
                         :obs (fn [_ me new-db _ _]
                                ;; the reactive :db cell is handy during lifecycle initialization, but
                                ;; more convenient as a global resource. It's a demo, OK?
-                               (pref/DB! new-db))]
+                               (stg/DB! new-db))]
                     ;; we make the DB component of the app a reactive property since we receive it as a future
                     (.getInstance prefs/SharedPreferences))
 
@@ -97,10 +97,10 @@
                         ;;
                         ;; Next,we make sure cell :db makes it into cache DB, since that
                         ;; is where all the code looks. Just a sanity check.
-                        (assert (pref/DB) (str "DB not populated but cell :db is: " db))
+                        (assert (stg/DB) (str "DB not populated but cell :db is: " db))
                         ;; Now we can load any existing todos from storage...
                         (todo/make-ToDoList "todo"
-                          (pref/collection-docs "todo"))))}
+                          (stg/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todos-dashboard)]}
@@ -124,11 +124,11 @@
       {:name      :app
        :db        (cF+ [:async? true
                         :obs (fn [_ me new-db _ _]
-                               (pref/DB! new-db))]
+                               (stg/DB! new-db))]
                     (.getInstance prefs/SharedPreferences))
        :todo-list (cF (when-let [db (mget me :db)]
                         (todo/make-ToDoList "todo"
-                          (pref/collection-docs "todo"))))}
+                          (stg/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todos-dashboard)]}
