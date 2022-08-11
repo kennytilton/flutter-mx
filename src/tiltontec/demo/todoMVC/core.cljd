@@ -15,8 +15,9 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-;;; --- the app bar -----------------------------------------------
+;;;;;; --- Components first ------------------------------------------
 
+;;; --- the app bar -----------------------------------------------
 (defn todo-app-bar [title]
   (fx/preferred-size
     {:preferredSize (.fromHeight m/Size 72)}
@@ -32,7 +33,6 @@
                                       title))})))
 
 ;;; --- footer filters -------------------------------------------------
-
 (defn todos-dashboard []
   (fx/row
     {:mainAxisAlignment m.MainAxisAlignment/center}
@@ -41,9 +41,9 @@
     (fx/expanded {:flex 1} (footer/clear-completed-button))))
 
 ;;; --- credits --------------------------------------------------------
-
 (defn about-credits []
   (let [faint (p/TextStyle
+                ;; todo does flutter let us place the style higher so referenced just once?
                 .color m.Colors/grey
                 .fontSize 14.0)]
     (fx/padding
@@ -53,7 +53,6 @@
       (fx/column
         (when (mget (fasc :credits-toggle) :show-credits?)
           (fx/column
-            ;; todo does flutter let us place the style higher so referenced just once?
             (mapv #(fx/text {:style faint} %)
               ["Double-click a todo to edit."
                "Make title blank to delete."
@@ -63,13 +62,12 @@
         (fx/icon-button
           {:onPressed (as-dart-callback []
                         (mswap! (fasc :credits-toggle) :show-credits? not))
-
            :icon      (cF (in-my-context [me ctx]
                             (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
                                       m.Icons/info_outline m.Icons/info)
                               .color m.Colors/grey)))})))))
 
-;;; --- the app --------------------------------------------------------
+;;;;;; --- the app --------------------------------------------------------
 
 (defn make-app []
   (let [title "todo"]
@@ -118,15 +116,13 @@
   (let [title "todo"]
     (fx/material-app
       {:title                      title
-       :theme                      (m/ThemeData
-                                     .fontFamily "Helvetica Neue"
-                                     .backgroundColor (.fromRGBO m/Color 245 245 245 1))}
+       :theme                      app-theme}
       {:name      :app
        :db        (cF+ [:async? true
-                        :obs (fn [_ me new-db _ _]
+                        :obs (fn [_ _ new-db _ _]
                                (stg/DB! new-db))]
                     (.getInstance prefs/SharedPreferences))
-       :todo-list (cF (when-let [db (mget me :db)]
+       :todo-list (cF (when (mget me :db)
                         (todo/make-ToDoList "todo"
                           (stg/collection-docs "todo"))))}
       (fx/scaffold
