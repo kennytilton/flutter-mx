@@ -7,7 +7,7 @@
     [tiltontec.util.core :as util]
     [clojure.walk :as walk]))
 
-(def +DB+ (atom nil)) ;; just a cache, not reactive
+(def +DB+ (atom nil)) ;; nb. just a cache, not reactive
 (defn ^prefs/SharedPreferences? DB [] (deref +DB+))
 (defn ^prefs/SharedPreferences? DB! [db] (reset! +DB+ db))
 
@@ -37,7 +37,6 @@
   [collection-name td-map]
   (let [stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
-
     (.setString  (DB) stg-id
       (convert/jsonEncode
         (walk/stringify-keys

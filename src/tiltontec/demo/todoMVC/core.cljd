@@ -109,3 +109,31 @@
             (input/todo-controls)
             (items/todo-items)
             (about-credits)))))))
+
+(def app-theme (m/ThemeData
+                 .fontFamily "Helvetica Neue"
+                 .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
+
+(defn make-app []
+  (let [title "todo"]
+    (fx/material-app
+      {:title                      title
+       :theme                      (m/ThemeData
+                                     .fontFamily "Helvetica Neue"
+                                     .backgroundColor (.fromRGBO m/Color 245 245 245 1))}
+      {:name      :app
+       :db        (cF+ [:async? true
+                        :obs (fn [_ me new-db _ _]
+                               (pref/DB! new-db))]
+                    (.getInstance prefs/SharedPreferences))
+       :todo-list (cF (when-let [db (mget me :db)]
+                        (todo/make-ToDoList "todo"
+                          (pref/collection-docs "todo"))))}
+      (fx/scaffold
+        {:appBar                  (todo-app-bar title)
+         :persistentFooterButtons [(todos-dashboard)]}
+        (fx/ink {:color m.Colors/white}
+          (fx/column
+            (input/todo-controls)
+            (items/todo-items)
+            (about-credits)))))))

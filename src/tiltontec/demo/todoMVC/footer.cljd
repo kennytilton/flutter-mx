@@ -31,15 +31,15 @@
           choice (fn [completion-enum option$]
                    (fx/ink-well
                      {:onTap (as-dart-callback []
-                                  (mset! (md/fasc :completions)
-                                    :selection completion-enum))}
+                               (mset! (md/fasc :completions)
+                                 :selection completion-enum))}
                      (fx/container
                        {:decoration (cF (when (mget me :selected?)
                                           (m/BoxDecoration
                                             .border (.all m/Border .color (cmm/title-red) .width 0.5)
                                             .borderRadius (m.BorderRadius/all (m.Radius/circular 4.0)))))}
-                       {:selected?       (cF (= completion-enum
-                                               (mget selector :selection)))}
+                       {:selected? (cF (= completion-enum
+                                         (mget selector :selection)))}
                        (fx/padding
                          {:padding (m.EdgeInsets/all 3.0)}
                          (m/Text option$)))))]
@@ -51,14 +51,15 @@
 (defn clear-completed-button []
   (fx/visibility!
     {:visible           (cF (if-let [tds (todo/app-todos (my-app))]
-                              (boolean ;; FL wants explicit boolean
+                              (boolean                      ;; FL wants explicit boolean
                                 (some td-completed tds))
                               ;; nb might still be loading initially
                               false))
      ;; todo ugh; can all this be avoided?
      :maintainSize      true
      :maintainAnimation true
-     :maintainState     true}
+     :maintainState     true
+     }
     (fx/text-button
       {:onPressed (as-dart-callback []
                     (md/mswap! (my-todo-list) :kids
