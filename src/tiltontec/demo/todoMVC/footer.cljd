@@ -8,7 +8,7 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
-    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.model.core :refer [mget mset! mswap! mkids] :as md]
     [tiltontec.mx-flutter.core :as fx]
 
     [tiltontec.demo.todoMVC.common :as cmm
@@ -17,36 +17,53 @@
 
 (defn items-remaining-display []
   (fx/text!
-    (let [tds (todo/app-todos (my-app))
-          left (remove td-completed tds)]
-      (str (count left) " item" (when (not= 1 (count left))
-                                  "s")))))
+    (str ""                                                 ;; force non-null string, as required by Flutter Text
+      (when-let [td-lst (my-todo-list)]
+        (let [remaining (remove td-completed (mkids td-lst))]
+          (str (count remaining)
+            " item"
+            ;; the spec is clear about the smart "s" detail
+            (when (not= 1 (count remaining)) "s")))))))
 
 (defn completion-filters []
   (fx/row
-    {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
-    {:name      :completions
+    {;; map one is for Flutter widget properties, using Flutter camelCase keywords
+     :mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+    {;; map two is for application semantics
+     ;; naming MX objects lets search the application "database" symbolically
+     :name      :completions
+     ;; the prototype nature of MX lets us define state as needed by any app widget.
+     ;; Here we see that widget named ":completions", property ":selection", will be the
+     ;; app source of truth for that user option.
      :selection (cI :all)}
-    (let [selector me                                       ;; we bind "me" more readably
-          choice (fn [completion-enum option$]
+    ;; further expressions yield children for the Flutter row. FlutterMX provides the ":children" property.
+    (let [selector me
+          ;; ^^^ just binding "me" more readably
+          choice (fn [completion-enum label]
                    (fx/ink-well
                      {:onTap (as-dart-callback []
-                               (mset! (md/fasc :completions)
+                               (mset! selector
+                                 ;; ^^^ lexical scope is a big Lisp win
                                  :selection completion-enum))}
                      (fx/container
-                       {:decoration (cF (when (mget me :selected?)
-                                          (m/BoxDecoration
-                                            .border (.all m/Border .color (cmm/title-red) .width 0.5)
-                                            .borderRadius (m.BorderRadius/all (m.Radius/circular 4.0)))))}
-                       {:selected? (cF (= completion-enum
-                                         (mget selector :selection)))}
+                       {:decoration (cF                     ;; we can compute "Flutter" properties as well as app semantic properties
+                                      (when (mget me :selected?)
+                                        ;; next we see a "native" Flutter object can be mingled with FMX objects
+                                        (m/BoxDecoration
+                                          .border (.all m/Border .color (cmm/title-red) .width 0.5)
+                                          .borderRadius (m.BorderRadius/all (m.Radius/circular 4.0)))))}
+                       {:selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
+                                     ;; so it can be used directly by the decoration rule ^^^.
+                                     (= completion-enum
+                                       (mget selector :selection)))}
                        (fx/padding
                          {:padding (m.EdgeInsets/all 3.0)}
-                         (m/Text option$)))))]
-      (list
-        (choice :all "All")
-        (choice :active "Active")
-        (choice :done "Done")))))
+                         ;; note again that a native Flutter m/Text can be mingled with FMX, here
+                         ;; an m/Text will become the :child of an FMX padding widget.
+                         (m/Text label)))))]
+      [(choice :all "All")
+       (choice :active "Active")
+       (choice :done "Done")])))
 
 (defn clear-completed-button []
   (fx/visibility!
@@ -55,7 +72,6 @@
                                 (some td-completed tds))
                               ;; nb might still be loading initially
                               false))
-     ;; todo ugh; can all this be avoided?
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true

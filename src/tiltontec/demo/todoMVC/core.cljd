@@ -56,7 +56,7 @@
             (mapv #(fx/text {:style faint} %)
               ["Double-click a todo to edit."
                "Make title blank to delete."
-               "Red indicates hits on FDA.gov."
+               "Red indicates meaningless hits on FDA.gov."
                "by Kenny Tilton"
                "Flutter \u2022 Matrix \u2022 ClojureDart"])))
         (fx/icon-button
@@ -67,22 +67,24 @@
                                       m.Icons/info_outline m.Icons/info)
                               .color m.Colors/grey)))})))))
 
+(def app-theme (m/ThemeData
+                 .fontFamily "Helvetica Neue"
+                 .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
+
 ;;;;;; --- the app --------------------------------------------------------
 
 (defn make-app []
   (let [title "todo"]
     (fx/material-app
       {:title                      title
-       :theme                      (m/ThemeData
-                                     .fontFamily "Helvetica Neue"
-                                     .backgroundColor (.fromRGBO m/Color 245 245 245 1))
+       :theme                      app-theme
        :debugShowCheckedModeBanner false}
       {:name      :app
        :db        (cF+ [:async? true
                         ; ^^^ the formula computes a value of nil then awaits the future
                         ; and, when received, reactively "computes" the received value as
                         ; a new matrix input.
-                        :obs (fn [_ me new-db _ _]
+                        :watch (fn [_ me new-db _ _]
                                ;; the reactive :db cell is handy during lifecycle initialization, but
                                ;; more convenient as a global resource. It's a demo, OK?
                                (stg/DB! new-db))]
@@ -108,9 +110,7 @@
             (items/todo-items)
             (about-credits)))))))
 
-(def app-theme (m/ThemeData
-                 .fontFamily "Helvetica Neue"
-                 .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
+
 
 (defn make-app []
   (let [title "todo"]
@@ -119,7 +119,7 @@
        :theme                      app-theme}
       {:name      :app
        :db        (cF+ [:async? true
-                        :obs (fn [_ _ new-db _ _]
+                        :watch (fn [_ _ new-db _ _]
                                (stg/DB! new-db))]
                     (.getInstance prefs/SharedPreferences))
        :todo-list (cF (when (mget me :db)

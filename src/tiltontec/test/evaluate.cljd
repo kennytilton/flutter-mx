@@ -157,24 +157,24 @@
                  (swap! obs assoc slot
                    (inc (slot @obs 0))))
 
-        aa (cI 1 :slot :aa :obs podobs)
-        a7 (cI 7 :slot :a7 :obs podobs)
+        aa (cI 1 :slot :aa :watch podobs)
+        a7 (cI 7 :slot :a7 :watch podobs)
         _ (dp :starting-cF+)
-        a70 (cF+ [:slot :a70 :obs podobs]
+        a70 (cF+ [:slot :a70 :watch podobs]
               (logrun :a70)
               (* 10 (cr a7)))
-        bb (cF+ [:slot :bb :obs podobs]
+        bb (cF+ [:slot :bb :watch podobs]
              (logrun :bb)
              (cr aa))
-        cc (cF+ [:slot :cc :obs podobs]
+        cc (cF+ [:slot :cc :watch podobs]
              (logrun :cc)
              (* 10 (cr aa)))
-        dd (cF+ [:slot :dd :obs podobs]
+        dd (cF+ [:slot :dd :watch podobs]
              (logrun :dd)
              (if (even? (cr bb))
                (* 10 (cr cc))
                42))
-        ee (cF+ [:slot :ee :obs podobs]
+        ee (cF+ [:slot :ee :watch podobs]
              (logrun :ee)
              (+ (cr a70) (cr bb) (* 10000 (cr dd))))
         verify-p-current (fn []
@@ -270,8 +270,8 @@
 
   (let [ob (atom 0)
         b (cI 2 :slot :bb
-            :obs (fn-obs
-                   (dp :obs-bb!! new old)
+            :watch (fn-obs
+                   (dp :watch-bb!! new old)
                    (swap! ob inc))
             :unchanged-if (fn [n p]
                             (dp :ucif-sees n p)

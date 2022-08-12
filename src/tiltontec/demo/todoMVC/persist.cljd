@@ -22,8 +22,7 @@
   (assert (not (:stg-id td-map)) "td-init sees stg-id suggesting td already written")
   (assert (:created-at td-map) "td-init requires created-at prop")
 
-  (let [new-stg-id (str collection-name "/" (.v4 (UUID))) ;; todo use uid
-        _ (dp :todo-key!!! new-stg-id)
+  (let [new-stg-id (str collection-name "/" (.v4 (UUID)))
         new-data (assoc td-map :stg-id new-stg-id)]
     (.setString (DB) new-stg-id
       (convert/jsonEncode

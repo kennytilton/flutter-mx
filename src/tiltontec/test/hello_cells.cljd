@@ -47,7 +47,7 @@
         {:name "World"
          :action (cI nil
                    :slot :v-action
-                   :obs ;; short for observer
+                   :watch ;; short for observer
                    (fn [slot me new old c]
                      (reset! obs-action new)
                      (dp :observing slot new old)))}]
@@ -63,7 +63,7 @@
                      (dp :observing slot new old))
         v {:name "World"
            :action (cI nil :slot :v-action
-                     :obs obs-action)}]
+                     :watch obs-action)}]
 
     (assert (nil? (c-get (:action v))))
     (assert (nil? @action))
@@ -78,10 +78,10 @@
 (defn hw-04 []
   (let [r-action (cI nil
                    :slot :r-action
-                   :obs gobs)
+                   :watch gobs)
         r-loc (make-c-formula
                 :slot :r-loc
-                :obs gobs
+                :watch gobs
                 :rule (fn [c]
                         (case (c-get r-action)
                           :leave :away
@@ -100,14 +100,14 @@
                      (dp slot new old))
         v {:name "World"
            :action (cI nil :slot :v-action
-                     :obs obs-action)}
+                     :watch obs-action)}
         r-action (cI nil)
-        r-loc (cF+ [:obs (fn-obs (when new (trx :honey-im new)))]
+        r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
                 (case (c-get r-action)
                   :leave :away
                   :return :home
                   :missing))
-        r-response (cF+ [:obs (fn-obs (trx :r-resp new))]
+        r-response (cF+ [:watch (fn-obs (trx :r-resp new))]
                      (when (= :home (c-get r-loc))
                        (when-let [act (c-get (:action v))]
                          (case act
@@ -125,14 +125,14 @@
            :action (cI nil
                      :slot :v-action
                      :ephemeral? true
-                     :obs obs-action)}
+                     :watch obs-action)}
         r-action (cI nil)
-        r-loc (cF+ [:obs (fn-obs (when new (trx :honey-im new)))]
+        r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
                 (case (c-get r-action)
                   :leave :away
                   :return :home
                   :missing))
-        r-response (cF+ [:obs (fn-obs (trx :r-response new))
+        r-response (cF+ [:watch (fn-obs (trx :r-response new))
                          :ephemeral? true]
                      (when (= :home (c-get r-loc))
                        (when-let [act (c-get (:action v))]
@@ -152,14 +152,14 @@
            :action (cI nil
                      :slot :v-action
                      :ephemeral? true
-                     :obs obs-action)}
+                     :watch obs-action)}
         r-action (cI nil)
-        r-loc (cF+ [:obs (fn-obs (when new (trx :honey-im new)))]
+        r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
                 (case (c-get r-action)
                   :leave :away
                   :return :home
                   :missing))
-        r-response (cF+ [:obs (fn-obs (when new
+        r-response (cF+ [:watch (fn-obs (when new
                                         (trx :r-response new)))
                          :ephemeral? true
                          ]
@@ -167,10 +167,10 @@
                        (when-let [act (c-get (:action v))]
                          (case act
                            :knock-knock "hello, world"))))
-        alarm (cF+ [:obs (fn-obs
+        alarm (cF+ [:watch (fn-obs
                            (trx :telling-alarm-api new))]
                 (if (= :home (c-get r-loc)) :off :on))
-        alarm-do (cF+ [:obs (fn-obs
+        alarm-do (cF+ [:watch (fn-obs
                               (case new
                                 :call-police (trx :auto-dialing-911)
                                 nil))]

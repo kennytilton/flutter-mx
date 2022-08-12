@@ -56,7 +56,7 @@
      :step             (/ 90.0 (dec (count actions)))
      :open?            (cI initial-open?
                          ;; reactive "observers" are how changed values become app behavior
-                         :obs (fn [prop-name me new-value prior-value cell]
+                         :watch (fn [prop-name me new-value prior-value cell]
                                 (when-let [c (fx/my-controller)] ;; not until first render installation
                                   (if new-value
                                     (.forward c)

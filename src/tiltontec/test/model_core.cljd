@@ -233,17 +233,17 @@
                             :moniker "World"
                             :action (cI nil
                                       :ephemeral? true
-                                      :obs (fn [slot me new old c]
+                                      :watch (fn [slot me new old c]
                                              (when new (trx :visitor-did new)))))
                           (md/make
                             :name :resident
                             :action (cI nil :ephemeral? true)
-                            :location (cF+ [:obs (fn-obs (when new (trx :honey-im new)))]
+                            :location (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
                                         (case (md-get me :action)
                                           :leave :away
                                           :return :home
                                           :missing))
-                            :response (cF+ [:obs (fn-obs (when new
+                            :response (cF+ [:watch (fn-obs (when new
                                                            (trx :r-response new)))
                                             :ephemeral? true]
                                         (when (= :home (md-get me :location))
@@ -252,10 +252,10 @@
                                               :knock-knock "hello, world")))))
                           (md/make
                             :name :alarm
-                            :on-off (cF+ [:obs (fn-obs
+                            :on-off (cF+ [:watch (fn-obs
                                                  (trx :telling-alarm-api new))]
                                       (if (= :home (mdv! :resident :location)) :off :on))
-                            :activity (cF+ [:obs (fn-obs
+                            :activity (cF+ [:watch (fn-obs
                                                    (case new
                                                      :call-police (trx :auto-dialing-911)
                                                      nil))]

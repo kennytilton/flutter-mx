@@ -27,12 +27,12 @@
   (let [xo (atom 0)
         a (cI 0)
         runs (atom 0)
-       #_#_  x (cF_ [:obs (fn-obs (swap! xo inc))]
+       #_#_  x (cF_ [:watch (fn-obs (swap! xo inc))]
             (swap! runs inc)
             (dp :x-ran-runs-now @runs)
             (+ (c-get a) 40))
         x (make-c-formula
-            :obs (fn-obs ;;(dp :obs-incing-xo!!!!!!!!!)
+            :watch (fn-obs ;;(dp :watch-incing-xo!!!!!!!!!)
                    (swap! xo inc))
             :value tiltontec.cell.base/unbound
             :lazy :until-asked
@@ -62,7 +62,7 @@
   (let [xo (atom 0)
         xr (atom 0)
         a (cI 0)
-        x (c_F [:obs (fn-obs (swap! xo inc))]
+        x (c_F [:watch (fn-obs (swap! xo inc))]
             (swap! xr inc)
             (+ (c-get a) 40))]
     (assert (= unbound (:value @x)))
@@ -86,7 +86,7 @@
         xr (atom 0)
         a (cI 0 :slot :aaa)
         x (cF+ [:slot :xxx
-                :obs (fn-obs (swap! xo inc))
+                :watch (fn-obs (swap! xo inc))
                 :optimize :when-value-t]
             (swap! xr inc)
             (trx nil :reading-a!!!)
@@ -115,13 +115,13 @@
         ctx (atom nil)
         a (cI 0)
         runs (atom 0)
-        #_#_  x (cF_ [:obs (fn-obs (swap! xo inc))]
+        #_#_  x (cF_ [:watch (fn-obs (swap! xo inc))]
                   (swap! runs inc)
                   (dp :x-ran-runs-now @runs)
                   (+ (c-get a) 40))
         x (make-c-formula
             :slot :xxx
-            :obs (fn-obs ;;(dp :obs-incing-xo!!! new old)
+            :watch (fn-obs ;;(dp :watch-incing-xo!!! new old)
                    (swap! xo inc))
             :value tiltontec.cell.base/unbound
             ;; todo make sure not optimized away

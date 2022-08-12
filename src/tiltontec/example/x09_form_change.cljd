@@ -7,8 +7,7 @@
      :refer [cF cFonce cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fasc fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx]
-    [tiltontec.demo.todoMVC.common :as cmm
-     :refer [my-app my-todo-list as-dart-callback]]
+    [tiltontec.demo.todoMVC.common :as cmm] ;; todo refactor
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
     ["package:flutter/material.dart" :as m
@@ -30,7 +29,7 @@
                               (fn [text]
                                 (md/mset! me :value text)))}
               {:name  :input-a
-               :value (cI nil :obs (fn [slot me newv priorv c]
+               :value (cI nil :watch (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
             (fx/text-field {:onChanged (fx/in-my-context [me ctx]
                                          (fx/->CBAsIs

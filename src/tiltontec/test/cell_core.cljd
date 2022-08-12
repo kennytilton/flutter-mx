@@ -142,7 +142,7 @@
   (let [boct (atom 0)
         b (cI nil
             :slot :b
-            :obs (fn-obs
+            :watch (fn-obs
                    (dp :b-obs-runs!!!)
                    (swap! boct inc))
             :ephemeral? true)
@@ -150,7 +150,7 @@
         crun (atom 0)
         cobs (atom 0)
         c (cF+ [:slot :c
-                :obs (fn-obs (swap! cobs inc))]
+                :watch (fn-obs (swap! cobs inc))]
             (trx nil :bingo)
             (swap! crun inc)
             (prog1
