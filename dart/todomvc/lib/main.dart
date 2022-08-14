@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todomvc/footer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -53,7 +54,7 @@ class _TodoMVCState extends State<TodoMVC> {
                     fontSize: 64.0))),
       ),
       body: Center(
-       child: Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
@@ -66,19 +67,20 @@ class _TodoMVCState extends State<TodoMVC> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _incrementCounter,
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ),
       persistentFooterButtons: [
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.settings),
-          SizedBox(width: 5),
-          Icon(Icons.exit_to_app),
-          SizedBox(width: 10)
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+          Expanded(flex: 1, child: ItemsRemaining()),
+          Expanded(flex: 2, child: Text('Filters')),
+          Expanded(flex: 1, child: Icon(Icons.exit_to_app)),
         ])
       ],
     );
   }
 }
+
+
