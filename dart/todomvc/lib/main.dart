@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todomvc/footer.dart';
-
+import 'common.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'todo',
       theme: ThemeData(
           fontFamily: "Helvetica Neue",
-          backgroundColor: Color.fromARGB(1, 245, 245, 245)),
+          backgroundColor: titleRed()), // Color.fromARGB(1, 245, 245, 245)),
       home: const TodoMVC(title: 'todo'),
     );
   }
@@ -75,7 +75,7 @@ class _TodoMVCState extends State<TodoMVC> {
       persistentFooterButtons: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
           Expanded(flex: 1, child: ItemsRemaining()),
-          Expanded(flex: 2, child: Text('Filters')),
+          Expanded(flex: 2, child: CompletionFilters()),
           Expanded(flex: 1, child: Icon(Icons.exit_to_app)),
         ])
       ],
