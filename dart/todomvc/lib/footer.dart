@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'common.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ItemsRemaining extends StatefulWidget {
   const ItemsRemaining({Key? key}) : super(key: key);
@@ -25,6 +26,7 @@ class _ItemsRemainingState extends State<ItemsRemaining> {
 }
 
 // --- filters ------------------------------------------
+enum FilterOption { done, active, all }
 
 class CompletionFilters extends StatefulWidget {
   const CompletionFilters({Key? key}) : super(key: key);
@@ -33,19 +35,12 @@ class CompletionFilters extends StatefulWidget {
   State<CompletionFilters> createState() => _CompletionFiltersState();
 }
 
-enum FilterOption { done, active, all }
-
 // --- the radio group/row of filters -----------------------------------
+
+ValueNotifier<FilterOption> completion_choice = ValueNotifier( FilterOption.active);
 
 class _CompletionFiltersState extends State<CompletionFilters> {
   String name = "completions";
-  FilterOption completion_choice = FilterOption.all;
-
-  void _setFilter(FilterOption choice) {
-    setState(() {
-      completion_choice = choice;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,26 +70,21 @@ class CompletionFilter extends StatefulWidget {
 }
 
 class _CompletionFilterState extends State<CompletionFilter> {
-  bool selected = false;
-
-  void _toggleSelected() {
-    setState(() {
-      selected = !selected;
-    });
-  }
-
+  // todo function for (widget.choice == completion_choice.value )
   @override
   Widget build(BuildContext context) {
     return InkWell(
         onTap: () {
-          String nextStatus = selected ? "OFF" : "ON";
-          print("Filter was tapped, will next be $nextStatus");
-          _toggleSelected();
+          String hunh = widget.label;
+          print("Filter $hunh was tapped");
+          completion_choice.value = widget.choice;
         },
         child: Container(
             decoration: BoxDecoration(
                 border:
-                    Border.all(color: titleRed(), width: selected ? 1.5 : 0.0),
+                    Border.all(
+                        color: titleRed(),
+                        width: (widget.choice == completion_choice.value) ? 1.5 : 0.0),
                 borderRadius: BorderRadius.all(Radius.circular(4.0))),
             child: Padding(
                 padding: EdgeInsets.all(3.0), child: Text(widget.label))));
