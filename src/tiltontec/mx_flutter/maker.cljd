@@ -144,6 +144,267 @@
                                    (apply concat kvs))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
+(defmacro k1-child-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     .child (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                              (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro k1-content-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     .content (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                                (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+
+(defmacro children-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     .children (mapv (partial tiltontec.mx-flutter.core/fx-render ctx) (md/md-kids me))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.model.core/mget me ~k#)])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro childless-stateless [fx-class fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       nil)))
+
+(defmacro k1-param1-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+
+(defmacro k1-param1-stateful [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (tiltontec.mx-flutter.maker/record-fx$state me this)
+                           (when-let [init (mget me :initState)]
+                             (dp :calling-initstate-of (tiltontec.cell.base/minfo me))
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (~fx-class (tiltontec.mx-flutter.core/fx-render ctx (first (tiltontec.model.core/md-kids me)))
+                             ~@(let [kvs (for [[k# _#] fx-props]
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                               (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+(defmacro childless-stateful [fx-class fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (tiltontec.mx-flutter.maker/record-fx$state me this)
+                           #_(when-let [init (mget me :initState)]
+                               (init this me)))
+                         (~'build [_# ctx]
+                           (~fx-class
+                             ~@(let [kvs (for [[k# _#] fx-props]
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                               (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))))))))
+       nil)))
+
+
+(defmacro prop-param1-childless-stateful [p1-prop-name fx-class fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (tiltontec.mx-flutter.maker/record-fx$state me this)
+                           (when-let [init (mget me :initState)]
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (~fx-class (tiltontec.mx-flutter.core/fx-resolve :ico-prop me ctx
+                                        (tiltontec.model.core/mget me ~p1-prop-name))
+                             ~@(let [kvs (for [[k# _#] (dissoc fx-props p1-prop-name)]
+                                           [(symbol (str "." (name k#)))
+                                            `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                               (tiltontec.model.core/mget me ~k#))])]
+                                 (apply concat kvs)))))))))
+       nil)))
+
+
+(defmacro k1-body-stateful [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (tiltontec.mx-flutter.maker/record-fx$state me this)
+                           (when-let [init (tiltontec.model.core/mget me :initState)]
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (let [bod# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                                        (first (tiltontec.model.core/md-kids me)))]
+                             (~fx-class
+                               ;; todo throw error if they specify :body explicitly, for now
+                               .body bod#
+                               ~@(let [kvs (for [[k# _#] fx-props]
+                                             [(symbol (str "." (name k#)))
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                                 (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+
+(defmacro k1-home-stateful [fx-class fx-props mx-props & children]
+  (let []
+    ;(assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
+    ;(assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (reify :extends (m/StatefulWidget
+                                     .key (tiltontec.mx-flutter.core/fx-resolve me ctx
+                                            (tiltontec.model.core/mget me :key)))
+                     (~'createState [_#]
+                       (reify :extends w/State
+                         (^void ~'initState [this]
+                           ;(.initState ~'^super this)
+                           (tiltontec.mx-flutter.maker/record-fx$state me this)
+                           (when-let [init (tiltontec.model.core/mget me :initState)]
+                             ;; this is where widgets can build controllers who vsync
+                             (init this me)))
+                         (~'build [_# ctx]
+                           (let [bod# (tiltontec.mx-flutter.core/fx-resolve :kid1 me ctx
+                                        (first (tiltontec.model.core/md-kids me)))]
+                             (~fx-class
+                               .home bod#
+                               ~@(let [kvs (for [[k# _#] fx-props]
+                                             [(symbol (str "." (name k#))) ;;k#
+                                              `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                                 (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
+       (tiltontec.model.core/cFkids ~@children))))
+
+
+
+(defmacro prop-param1-childless-stateless [prop fx-class fx-props mx-props]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class (tiltontec.mx-flutter.core/fx-resolve ~prop me ctx
+                                (tiltontec.model.core/mget me ~prop))
+                     ~@(let [kvs (for [[k# _#] (dissoc fx-props prop)]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       nil)))
+
+;;; --- kids for builder ------------------------------------------------------
+
+(defmacro  kids-for-builder [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.mx-flutter.maker/make-fx (new tiltontec.mx-flutter.maker/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (~fx-class
+                     ~@(let [kvs (for [[k# _#] fx-props]
+                                   [(symbol (str "." (name k#)))
+                                    `(tiltontec.mx-flutter.core/fx-resolve ~k# me ctx
+                                       (tiltontec.model.core/mget me ~k#))])]
+                         (apply concat kvs)))))
+       (tiltontec.model.core/cFkids ~@children))))
+
 ;;; -------------------------------------------------------------
 
 (defmacro sized-box+expand-ful [fx-props mx-props & children]
