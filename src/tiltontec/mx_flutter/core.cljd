@@ -15,7 +15,7 @@
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
-            [tiltontec.mx-flutter.maker :as mk]))
+            [tiltontec.mx-flutter.factory :as mk]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
@@ -167,14 +167,14 @@
        `(~'~factory ~@(when ~param-property
                         [~param-property]) ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
 
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless material m/Material)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless fade-transition m/FadeTransition)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless ink-well m/InkWell)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless container m/Container)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless card m/Card)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless padding m/Padding)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless center m/Center)
-(deftag tiltontec.mx-flutter.maker/k1-body-stateful scaffold m/Scaffold)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless material m/Material)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless fade-transition m/FadeTransition)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless ink-well m/InkWell)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless container m/Container)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless card m/Card)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless padding m/Padding)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless center m/Center)
+(deftag tiltontec.mx-flutter.factory/k1-body-stateful scaffold m/Scaffold)
 
 (defmacro deftagnokids [factory mx-name fx-class]
   `(defmacro ~mx-name [& vargs#]
@@ -182,82 +182,82 @@
      (let [[fx-props# mx-props#] vargs#]
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props#))))
 
-(deftagnokids tiltontec.mx-flutter.maker/childless-stateless app-bar m/AppBar)
-(deftag tiltontec.mx-flutter.maker/childless-stateless data-table m/DataTable)
+(deftagnokids tiltontec.mx-flutter.factory/childless-stateless app-bar m/AppBar)
+(deftag tiltontec.mx-flutter.factory/childless-stateless data-table m/DataTable)
 
 
 
 (defmacro alert-dialog [fx-props mx-props & children]
-  `(tiltontec.mx-flutter.maker/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
+  `(tiltontec.mx-flutter.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
 
-(deftag tiltontec.mx-flutter.maker/k1-param1-stateless text m/Text)
+(deftag tiltontec.mx-flutter.factory/k1-param1-stateless text m/Text)
 
 
 
 
-(deftag tiltontec.mx-flutter.maker/childless-stateful text-field m/TextField)
-(deftag tiltontec.mx-flutter.maker/childless-stateful check-box m/Checkbox)
+(deftag tiltontec.mx-flutter.factory/childless-stateful text-field m/TextField)
+(deftag tiltontec.mx-flutter.factory/childless-stateful check-box m/Checkbox)
 
 
-(deftag tiltontec.mx-flutter.maker/prop-param1-childless-stateful icon m/Icon :icon)
+(deftag tiltontec.mx-flutter.factory/prop-param1-childless-stateful icon m/Icon :icon)
 
 
 ;; todo does snackbar still need this custom macro?
-(deftag tiltontec.mx-flutter.maker/make-fx-snackbar snack-bar m/SnackBar)
+(deftag tiltontec.mx-flutter.factory/make-fx-snackbar snack-bar m/SnackBar)
 
 ;;; --- childless stateless --------------------------------------------------------
 
 (defmacro icon-button [& vargs]
   (let [[fx-props mx-props] vargs]
-    `(tiltontec.mx-flutter.maker/childless-stateless m/IconButton ~fx-props ~mx-props)))
+    `(tiltontec.mx-flutter.factory/childless-stateless m/IconButton ~fx-props ~mx-props)))
 
-;(deftag tiltontec.mx-flutter.maker/childless-stateless icon-button m/IconButton)
+;(deftag tiltontec.mx-flutter.factory/childless-stateless icon-button m/IconButton)
 
-(deftag tiltontec.mx-flutter.maker/kids-for-builder list-view+separated m.ListView/separated)
-(deftag tiltontec.mx-flutter.maker/kids-for-builder list-view+builder m.ListView/builder)
+(deftag tiltontec.mx-flutter.factory/kids-for-builder list-view+separated m.ListView/separated)
+(deftag tiltontec.mx-flutter.factory/kids-for-builder list-view+builder m.ListView/builder)
 
-(deftag tiltontec.mx-flutter.maker/k1-home-stateful material-app m/MaterialApp)
-(deftag tiltontec.mx-flutter.maker/k1-param1-stateful text! m/Text)
+(deftag tiltontec.mx-flutter.factory/k1-home-stateful material-app m/MaterialApp)
+(deftag tiltontec.mx-flutter.factory/k1-param1-stateful text! m/Text)
 
-(deftag tiltontec.mx-flutter.maker/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
-(deftag tiltontec.mx-flutter.maker/childless-stateless list-tile m/ListTile)
-(deftag tiltontec.mx-flutter.maker/childless-stateless flutter-logo m/FlutterLogo)
+(deftag tiltontec.mx-flutter.factory/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
+(deftag tiltontec.mx-flutter.factory/childless-stateless list-tile m/ListTile)
+(deftag tiltontec.mx-flutter.factory/childless-stateless flutter-logo m/FlutterLogo)
 
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless single-child-scroll-view m/SingleChildScrollView)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless expanded m/Expanded)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless preferred-size m/PreferredSize)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless animated-opacity m/AnimatedOpacity)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless drawer-header m/DrawerHeader)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless floating-action-button m/FloatingActionButton)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless align m/Align)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless ignore-pointer m/IgnorePointer)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless visibility m/Visibility)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful visibility! m/Visibility)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless opacity m/Opacity)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful opacity! m/Opacity)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful ink m/Ink)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful focus m/Focus)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless single-child-scroll-view m/SingleChildScrollView)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless expanded m/Expanded)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless preferred-size m/PreferredSize)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless animated-opacity m/AnimatedOpacity)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless drawer-header m/DrawerHeader)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless floating-action-button m/FloatingActionButton)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless align m/Align)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless ignore-pointer m/IgnorePointer)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless visibility m/Visibility)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful visibility! m/Visibility)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless opacity m/Opacity)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful opacity! m/Opacity)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful ink m/Ink)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful focus m/Focus)
 
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful hero m/Hero)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful gesture-detector m/GestureDetector)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful elevated-button m/ElevatedButton)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful default-tab-controller m/DefaultTabController)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful hero m/Hero)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful gesture-detector m/GestureDetector)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful elevated-button m/ElevatedButton)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful default-tab-controller m/DefaultTabController)
 
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful focus m/Focus)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful focus-scope m/FocusScope)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful text-button m/TextButton)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful animated-builder m/AnimatedBuilder)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateful animated-container m/AnimatedContainer)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful focus m/Focus)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful focus-scope m/FocusScope)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful text-button m/TextButton)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful animated-builder m/AnimatedBuilder)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateful animated-container m/AnimatedContainer)
 
-(deftag tiltontec.mx-flutter.maker/children-stateless stack m/Stack)
-(deftag tiltontec.mx-flutter.maker/children-stateless column m/Column)
-(deftag tiltontec.mx-flutter.maker/children-stateless row m/Row)
-(deftag tiltontec.mx-flutter.maker/children-stateless list-view m/ListView)
-(deftag tiltontec.mx-flutter.maker/children-stateless grid-view+count m.GridView/count)
+(deftag tiltontec.mx-flutter.factory/children-stateless stack m/Stack)
+(deftag tiltontec.mx-flutter.factory/children-stateless column m/Column)
+(deftag tiltontec.mx-flutter.factory/children-stateless row m/Row)
+(deftag tiltontec.mx-flutter.factory/children-stateless list-view m/ListView)
+(deftag tiltontec.mx-flutter.factory/children-stateless grid-view+count m.GridView/count)
 
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless drawer m/Drawer)
-(deftag tiltontec.mx-flutter.maker/k1-child-stateless sized-box m/SizedBox)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless drawer m/Drawer)
+(deftag tiltontec.mx-flutter.factory/k1-child-stateless sized-box m/SizedBox)
 
 

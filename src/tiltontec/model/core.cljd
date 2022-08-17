@@ -358,7 +358,7 @@
 ;  :me? false
 ;  :inside? false :must? false :up? true)
 
-(defmacro my-val []
+(defmacro my-value []
   `(mget ~'me :value))
 
 (defmacro fmu [name & [me]]
@@ -381,6 +381,14 @@
        (fm-navig #(do                                       ;;(dp :fm*-sees (= name# (md-get % :name)) (minfo %))
                     (= name# (md-get % :name)))
          ~me-ref :me? true :up? true :inside? true))))
+
+(defmacro fm*val [name & [slot me]]
+  (let [slot (or slot ':value)
+        me-ref (or me 'me)]
+    `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
+                    ~me-ref :me? true :up? true :inside? true)]
+       (assert other# (str "fm*val did not find other named " ~name " seeking property " ~slot))
+       (mget other# ~slot))))
 
 (defmacro fmuv [slot name & [me]]
   (let [me-ref (or me 'me)]
