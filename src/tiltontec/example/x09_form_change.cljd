@@ -6,7 +6,7 @@
     [tiltontec.cell.core :as cell
      :refer [cF cFonce cI]]
     [tiltontec.model.core :refer [make mget md-kids cFkids fasc fmuv] :as md]
-    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.mx-flutter.core :refer [as-dart-callback] :as fx]
     [tiltontec.demo.todoMVC.common :as cmm] ;; todo refactor
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
@@ -25,15 +25,13 @@
           (fx/column
             {:mainAxisAlignment MainAxisAlignment/center}
             (fx/text-field
-              {:onChanged (cmm/with-ctx+as-is [me ctx]
-                              (fn [text]
-                                (md/mset! me :value text)))}
+              {:onChanged (as-dart-callback [text]
+                            (md/mset! me :value text))}
               {:name  :input-a
                :value (cI nil :watch (fn [slot me newv priorv c]
                                      (dp (str "First text field: " newv))))})
-            (fx/text-field {:onChanged (fx/in-my-context [me ctx]
-                                         (fx/->CBAsIs
-                                           #(md/mset! me :value %)))}
+            (fx/text-field {:onChanged (as-dart-callback [text]
+                                         (md/mset! me :value text))}
               {:name       :input-b
                :value      (cI "And then...?")
                :controller (cFonce (let [c (m/TextEditingController .text (mget me :value))]

@@ -5,8 +5,8 @@
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.core :as cell :refer [cF cI]]
     [tiltontec.model.core :refer [mget fmuv] :as md]
-    [tiltontec.demo.todoMVC.common :refer [as-dart-callback] :as cmm]
-    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.demo.todoMVC.common :as cmm]
+    [tiltontec.mx-flutter.core :refer [as-dart-callback] :as fx]
     [tiltontec.mx-flutter.factory :as fmk]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
@@ -68,15 +68,14 @@
        :clipBehavior m.Clip/none}
       (tap-to-close-fab me)
       ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-      (doall (do
-               (map-indexed
-                 (fn [i action]
-                   (expanding-action-button me
-                     :direction-degrees (* i (fmuv :step :fab))
-                     :max-distance distance
-                     :progress-key :expand-animation
-                     :action action))
-                 actions)))
+      (doall (map-indexed
+               (fn [i action]
+                 (expanding-action-button me
+                   :direction-degrees (* i (fmuv :step :fab))
+                   :max-distance distance
+                   :progress-key :expand-animation
+                   :action action))
+               actions))
       (tap-to-open-fab me))))
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]

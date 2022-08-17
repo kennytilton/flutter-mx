@@ -260,4 +260,8 @@
 (deftag tiltontec.mx-flutter.factory/k1-child-stateless drawer m/Drawer)
 (deftag tiltontec.mx-flutter.factory/k1-child-stateless sized-box m/SizedBox)
 
-
+(defmacro as-dart-callback [[& cb-params] & body]
+  `(tiltontec.demo.todoMVC.common/with-ctx+as-is [~'me ~'ctx]
+     (fn [~@cb-params]
+       (tiltontec.cell.base/with-mx-isolation
+         ~@body))))

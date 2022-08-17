@@ -1,5 +1,6 @@
 (ns tiltontec.example.x03-physics-sim
   (:require
+    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.cell.core :as cell :refer [cF cI]]
     [tiltontec.model.core :refer [make mx-par mget md-kids cFkids fmu fmuv] :as md]
     [tiltontec.mx-flutter.core :as fx]
@@ -57,6 +58,7 @@
      :dispose       (fn [this me]
                       ;; todo test that this is being called
                       (when-let [con (fx/my-controller)]
+                        (dp :x03-disposing!!! con)
                         (.dispose con)))}
     (fx/align
       {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
