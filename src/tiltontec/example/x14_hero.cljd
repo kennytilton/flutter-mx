@@ -1,18 +1,17 @@
 (ns tiltontec.example.x14-hero
   "FlutterMX port of CLJD Faithful port of https://docs.flutter.dev/cookbook/navigation/hero-animations"
   (:require ["package:flutter/material.dart" :as m]
-            [tiltontec.mx-flutter.core :as fx]))
+            [tiltontec.mx-flutter.core :as fx]
+            [tiltontec.demo.todoMVC.common :refer [as-dart-callback] :as cmm]))
 
 (def detail-screen
   (fx/scaffold
     (fx/gesture-detector
-      {:onTap (fx/in-my-context [me ctx]
-                (fx/->CBAsIs
-                  #(do (.pop (m.Navigator/of ctx)) nil)))}
+      {:onTap (as-dart-callback []
+                (.pop (m.Navigator/of ctx)))}
       (fx/center
         (fx/hero {:tag "imageHero"}
-          (m/Image .image (m/AssetImage "image/einstein.jpeg"))
-         #_  (m.Image/network "https://picsum.photos/250?image=9"))))))
+          (m/Image .image (m/AssetImage "image/einstein.jpeg")))))))
 
 (defn make-app []
   (let []
@@ -21,15 +20,12 @@
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text "Main Screen")})}
         (fx/gesture-detector
-          {:onTap (fx/in-my-context [me ctx]
-                    (fx/->CBAsIs
-                      #(do
-                         (.push (m.Navigator/of ctx)
-                           (#/(m/MaterialPageRoute Object)
-                             .builder (fn [_]
-                                        (fx/fx-resolve me ctx
-                                          detail-screen))))
-                         nil)))}
+          {:onTap (as-dart-callback []
+                    (.push (m.Navigator/of ctx)
+                      (#/(m/MaterialPageRoute Object)
+                        .builder (fn [_]
+                                   (fx/fx-resolve me ctx
+                                     detail-screen)))))}
           (fx/hero {:tag "imageHero"}
             ;; required a pubspec.yaml "assets:" entry and add a path to a JPEG,
-             (m/Image .image (m/AssetImage "image/john.png"))))))))
+            (m/Image .image (m/AssetImage "image/john.png"))))))))
