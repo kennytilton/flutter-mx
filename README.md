@@ -1,4 +1,4 @@
-# Matrix for ClojureDart
+# Matrix for Flutter, via ClojureDart
 
 Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE14sd2MGLJW35qeuJynmTRjqpUL3SbIUhOiS4TihjyZ9iTVRoCJkoQAvD_BwE&gclsrc=aw.ds) with [ClojureDart](https://github.com/Tensegritics/ClojureDart) and [Matrix](https://github.com/kennytilton/matrix), a generic, fine-grained, transparent, reactive state manager.
 
@@ -6,7 +6,7 @@ Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE
 
 ## Getting Started on Mac OS X
 
-We begin with the [ClojureDart "Getting started"](https://github.com/Tensegritics/ClojureDartPreview/blob/main/doc/flutter-quick-start.md).
+We begin with the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md).
 
 In our case, we spent a day upgrading XCode and sorting out the Dart and Flutter set-up, and then getting the CLJD "Hello world" running. The resulting project is how this project was created.
 
