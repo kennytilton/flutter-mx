@@ -18,8 +18,7 @@
       {:mainAxisAlignment MainAxisAlignment/center}
       {:name  :counter-col
        :value (cF (let [app (md/fm-ascendant :counter-app me :must? true)]
-                    (assert app "no find app")
-                    (get-in (md/mget app :flux-store) [:counters counter-key])))}
+                    (get-in (mget app :flux-store) [:counters counter-key])))}
       (fx/text (str/capitalize (name counter-key)))
       (fx/text {:style (TextStyle
                          .color m.Colors/cyan
@@ -27,7 +26,7 @@
         (str (md/fmuval :counter-col)))
       (fx/elevated-button
         {:onPressed (fx/as-dart-callback []
-                      (md/mswap! (md/fm-ascendant :counter-app me)
+                      (mswap! (md/fm-ascendant :counter-app me)
                         :flux-store update-in [:counters counter-key] inc))}
         (fx/text "+")))))
 
