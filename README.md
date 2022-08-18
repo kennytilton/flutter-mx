@@ -9,14 +9,14 @@ See our Wiki! (Soon)
 
 If you just want to run the thing...
 
-### 0. Preparing environment, on Mac OS X
+#### 0. Preparing environment, on Mac OS X
 
 First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @Tilton on that Slack or the Flutter Community Slack.
 
-### 1. Download this repo
+#### 1. Download this repo
 `git clone` this [mxFlutter repo](https://github.com/kennytilton/mxflutter).
 
-### 2. Running the sample app.
+#### 2. Running the sample app.
 
 In a terminal:
 * `cd flutter-mx`, or wherever you cloned it;
@@ -40,6 +40,15 @@ You should also see our "hello, world" app in the sim:
 Mr. Kernighan co-authored "The C Programming Language" with Dennis Ritchie, and contributed the bit on "hello, world".
 
 The code for `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
+
+#### 3. Running other examples.
+
+To try a different example:
+1. edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `xhello` in `(xhello/make-app)` to one of the namespaces listed above in the NS requires.
+2. switch back to the terminal where the app was launched and hit RETURN, once you see the app has been rebuilt. It just takes a few seconds.
+3. Check the sim to see the new app.
+
+
 
 ### Workflow
 Here is how I work:
