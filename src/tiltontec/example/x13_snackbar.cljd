@@ -3,29 +3,25 @@
   (:require
     ["package:flutter/material.dart" :as m]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.mx-flutter.core :as fx]))
+    [tiltontec.mx-flutter.core
+     :refer [snack-bar material-app scaffold center elevated-button text app-bar fx-render as-dart-callback]]))
 
 ;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/snackbar
 ;;           ^^^ Copyright 2022 by Tensegritics, Eclipse
 
 (defn make-app []
-  (let [title "Snackbar Demo 2"]
-    (fx/material-app
+  (let [title (str "Snackbar Demo #" (rand-int 99))]
+    (material-app
       {:title title}
-      (fx/scaffold
-        {:appBar (fx/app-bar
-                   {:title (fx/text title)})}
-        (fx/center
-          (fx/elevated-button
-            {:onPressed (fx/in-my-context [me ctx]
-                          (fx/->CBAsIs
-                            (fn []
-                              (.showSnackBar (m.ScaffoldMessenger/of ctx)
-                                (fx/fx-render ctx
-                                  (fx/snack-bar
-                                    {:action  (m/SnackBarAction
-                                                .label "Undo!"
-                                                .onPressed (fn [] (dart:core/print :UNDO!!!!!)))
-                                     :content (fx/text "Yay! A SnackBar!")})))
-                              nil)))}
-            (fx/text "Show text")))))))
+      (scaffold
+        {:appBar (app-bar {:title (text title)})}
+        (center
+          (elevated-button
+            {:onPressed (as-dart-callback []
+                          (.showSnackBar (m.ScaffoldMessenger/of ctx)
+                            (fx-render ctx
+                              (snack-bar {:action  (m/SnackBarAction
+                                                     .label "Undo!"
+                                                     .onPressed (fn [] (dart:core/print :UNDO!!!!!)))
+                                          :content (text "Yay! A SnackBar!")}))))}
+            (text "Show text")))))))

@@ -11,16 +11,3 @@
 
 (defmacro my-todo-list []
   `(tiltontec.model.core/mget (tiltontec.model.core/fasc :app) :todo-list))
-
-;;; ---------------------------------------------------
-;;; the dance between Flutter and MX is a bit intricate
-;;; these macros try to hide the plumbing without being obscure.
-
-(defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tiltontec.mx-flutter.core/in-my-context [~me ~ctx]
-     (tiltontec.mx-flutter.core/->CBAsIs
-       ~callback-fn)))
-
-(defmacro as-is [callback-fn]
-  `(tiltontec.mx-flutter.core/->CBAsIs
-     ~callback-fn))

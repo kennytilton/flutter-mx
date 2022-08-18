@@ -260,8 +260,22 @@
 (deftag tiltontec.mx-flutter.factory/k1-child-stateless drawer m/Drawer)
 (deftag tiltontec.mx-flutter.factory/k1-child-stateless sized-box m/SizedBox)
 
+
+;;; ---------------------------------------------------
+;;; the dance between Flutter and MX is a bit intricate
+;;; these macros try to hide the plumbing without being obscure.
+
+(defmacro with-ctx+as-is [[me ctx] callback-fn]
+  `(tiltontec.mx-flutter.core/in-my-context [~me ~ctx]
+     (tiltontec.mx-flutter.core/->CBAsIs
+       ~callback-fn)))
+
+(defmacro as-is [callback-fn]
+  `(tiltontec.mx-flutter.core/->CBAsIs
+     ~callback-fn))
+
 (defmacro as-dart-callback [[& cb-params] & body]
-  `(tiltontec.demo.todoMVC.common/with-ctx+as-is [~'me ~'ctx]
+  `(tiltontec.mx-flutter.core/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
        (tiltontec.cell.base/with-mx-isolation
          ~@body))))
