@@ -37,6 +37,10 @@ You should also see our "hello, world" app in the sim:
 
 ![FMX Hello World screenshot](image/hello-world-app.jpg)
 
+Mr. Kernighan co-authored "The C Programming Language" with Dennis Ritchie, and contributed the bit on "hello, world".
+
+The code for `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
+
 ### Workflow
 Here is how I work:
 
@@ -51,4 +55,4 @@ Here is how I work:
 * * switch to the build terminal and hit Return to trigger a sim reload;
 * * check the Flutter console for print output.
 
-Ping @kennytilton on #clojurians Slack for help!
+Ping @tilton on #clojurians or #fluttercommunity Slack for help!
