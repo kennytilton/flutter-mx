@@ -3,37 +3,38 @@
     [clojure.string :as str]
     [tiltontec.cell.core :refer [cF]]
     [tiltontec.model.core :refer [mget mset! mswap!] :as md]
-    [tiltontec.mx-flutter.core :as fx]
+    [tiltontec.flutter-mx.core :as fx
+     :refer [scaffold app-bar text center column hero material-app]]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
 
 (defn make-app []
-   (fx/material-app
-    {:title "FlutterMX Hello World"
-     :theme (cF
+   (material-app
+    {:title "Flutter/MX Hello World, Teal"
+     :theme (cF ;; A goofy display of a computed property depending on another property.
               (m/ThemeData .primarySwatch
                 (let [ttl (mget me :title)]
                   (cond
                     (str/includes? ttl "Teal") m.Colors/teal
                     (str/includes? ttl "Red") m.Colors/red
                     :else m.Colors/blue))))}
-    (fx/scaffold
-      {:appBar (fx/app-bar
-                 {:title (m/Text "Welcome to FlutterMX")})}
-      (fx/center
-        (fx/column
+    (scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "Welcome to Flutter/MX")})}
+      (center
+        (column
           {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
-          (fx/hero {:tag "imageHero"}
-            (m/Image .image (m/AssetImage "image/kernighan.jpeg")
-              .height 512))
-          (fx/text {:overflow p.TextOverflow/ellipsis
-                    :style    (p/TextStyle
-                                .color m.Colors/cyan
-                                .fontSize 16.0)}
-            "Brian Kernighan")
-          (fx/text {:overflow p.TextOverflow/ellipsis
+          (text {:overflow p.TextOverflow/ellipsis
                     :style    (p/TextStyle
                                 .color m.Colors/cyan
                                 .fontSize 32.0)}
-            "hello, world\\n"))))))
+            "hello, world\\n")
+          (hero {:tag "imageHero"}
+            (m/Image .image (m/AssetImage "image/kernighan.jpeg")
+              .height 512))
+          (text {:overflow p.TextOverflow/ellipsis
+                    :style    (p/TextStyle
+                                .color m.Colors/cyan
+                                .fontSize 16.0)}
+            "Brian Kernighan"))))))

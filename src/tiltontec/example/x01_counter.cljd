@@ -2,7 +2,7 @@
   (:require
     [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
     [tiltontec.model.core :refer [mget mset! mswap! fm*] :as md]
-    [tiltontec.mx-flutter.core :refer [as-dart-callback] :as fx]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
@@ -14,16 +14,19 @@
     (fx/scaffold
       {:appBar               (fx/app-bar
                                {:title (cF (let [ctr (fm* :z-counter)]
+                                             (assert ctr "ctr nope")
                                              ;; true reactivity, albeit pointless
                                              (fx/text! {} {:name :appbartitle}
                                                (str "Counter = " (md/mget ctr :value)))))})
        ;; todo have not-to-be call not-to-be on these non-kid leaves
-       :floatingActionButton (cF (fx/floating-action-button
-                                   ;; the FAB shows a "+". It increments the count where the count lives.
-                                   {:onPressed (as-dart-callback []
-                                                 (mswap! (fm* :z-counter) :value inc))
-                                    :tooltip "Increment"}
-                                   (m/Icon m.Icons/add .color m.Colors/black)))}
+       :floatingActionButton (cF (let [z-ctr (fm* :z-counter)]
+                                   (fx/floating-action-button
+                                     ;; the FAB shows a "+". It increments the count where the count lives.
+                                     {:onPressed (as-dart-callback []
+                                                   (assert z-ctr "No zcounter 2")
+                                                   (mswap! z-ctr :value inc))
+                                      :tooltip "Increment"}
+                                     (m/Icon m.Icons/add .color m.Colors/black))))}
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
