@@ -22,11 +22,13 @@ In a terminal:
 * `cd flutter-mx`, or wherever you cloned it;
 * start a sim: `open -a Simulator`
 
-TIP: If you forget that step, the next command will run for ages and open a tab in your browser. Start over. 
+TIP: If you forget the above step, the next command will run for ages and open a tab in your browser. Start over. 
+
+Next, we build the app and start a "watch" to rebuild when the source changes, so this next command does not return. Use Control-C to kill the process when through exploring:
 
 * `clj -M -m cljd.build flutter`
 
-This ^^^ command does not return. After thirty seconds you should see these last lines of output:
+After thirty seconds you should see these last lines of output:
 ```
 An Observatory debugger and profiler on iPhone 12 is available at: http://127.0.0.1:61081/v17dEYvUuuQ=/
 The Flutter DevTools debugger and profiler on iPhone 12 is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:61081/v17dEYvUuuQ=/
@@ -44,10 +46,12 @@ The code for `hello-world` is [here](https://github.com/kennytilton/flutter-mx/b
 #### 3. Running other examples.
 
 To try a different example:
-1. edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `xhello` in `(xhello/make-app)` to one of the namespaces listed above in the NS requires.
-2. switch back to the terminal where the app was launched and hit RETURN, once you see the app has been rebuilt. It just takes a few seconds.
+1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `xhello` in `(xhello/make-app)` to one of the namespaces listed above in the NS requires. Try `xcounter` to see the standard Flutter Counter app, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md)
+2. Now switch back to the terminal where the app was launched and hit RETURN, once you see the app has been rebuilt. It just takes a few seconds.
 3. Check the sim to see the new app.
 
+Here is a TodoMVC screenshot:
+![f/mx TodoMVC screenshot](image/hello-world-app.jpg)
 
 
 ### Workflow
