@@ -50,9 +50,9 @@ To try a different example:
 2. Now switch back to the terminal where the app was launched and hit RETURN, once you see the app has been rebuilt. It just takes a few seconds.
 3. Check the sim to see the new app.
 
-Here is a TodoMVC screenshot:
-![f/mx TodoMVC screenshot](image/hello-world-app.jpg)
+Here is a TodoMVC medium screenshot:
 
+![f/mx TodoMVC screenshot](image/todomvc-app.jpeg)
 
 ### Workflow
 Here is how I work:
@@ -61,7 +61,7 @@ Here is how I work:
 * edit this project in IntelliJ+Cursive, with the Flutter plug-in installed;
 * * I told IntelliJ to use clj formatting for .cljd files; more Cursive support is on the way;
 * after changes I save in IntelliJ and look at the "build" terminal for errors;
-* if I am curious some CLJD issue, like how to run the Math `abs` method, I do this:
+* if I am curious about some CLJD issue, such as how to run the Math `abs` method, I do this:
 * * add snippets of code to the main function, after the test suite runner;
 * * save;
 * * check the "build" for errors;
