@@ -18,7 +18,7 @@
             [clojure.string :as str]))
 
 (defn record-fx$state [me state]
-  (dpx :reco-state!! (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
+  (dpx :recording-state (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
   (integrity/with-cc :reco-state
     (md/mset! me :fx$state state)))
 
@@ -53,7 +53,7 @@
    (state-set state nil))
   ([^State state me]
    (if (.-mounted state)
-     (do (dp :setting-state!!!! state (cty/minfo me))
+     (do (dpx :setting-state state (cty/minfo me))
          (.setState state (fn [] (do))))
      (dpx :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
