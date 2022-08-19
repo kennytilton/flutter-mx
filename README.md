@@ -54,13 +54,16 @@ Here is a TodoMVC medium screenshot:
 
 ![f/mx TodoMVC screenshot](image/todomvc-app.jpeg)
 
+Our `TodoMVC` extends the spec and adds a lookup of any entry on OpenFDA, and sets the type to red if the lookup succeeds. There is no point to this, except we get to demonstrate how to make something like XHR reactive, handling the async aspect gracefully.
+
 ### Workflow
-Here is how I work:
+Here is how I work. We will extend this section greatly as we help others get started on Matrix:
 
 * start with the above;
 * edit this project in IntelliJ+Cursive, with the Flutter plug-in installed;
-* * I told IntelliJ to use clj formatting for .cljd files; more Cursive support is on the way;
-* after changes I save in IntelliJ and look at the "build" terminal for errors;
+* * IMPORTANT: tell IntelliJ to use clj formatting for .cljd files; more Cursive support is on the way;
+* after making changes, I save in IntelliJ and look at the "build" terminal for errors;
+* if all is well, I switch to the terminal and just hit ENTER to see the changed app;
 * if I am curious about some CLJD issue, such as how to run the Math `abs` method, I do this:
 * * add snippets of code to the main function, after the test suite runner;
 * * save;
