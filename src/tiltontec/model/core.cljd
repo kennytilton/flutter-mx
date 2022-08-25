@@ -27,7 +27,7 @@
     [tiltontec.model.base :refer [md-cell md-install-cell md-awaken]]))
 
 (defmacro pme [& mas]
-  `(when true ;;  (= :login (:name (deref ~'me)))
+  `(when true                                               ;;  (= :login (:name (deref ~'me)))
      (dp (mx-type ~'me)
        (:tag (deref ~'me))
        (:name (deref ~'me)) ~@mas)))
@@ -198,10 +198,28 @@
       :not-to-be fm-not-to-be
       arg-list)))
 
+;;; -------------------------------------------------------------------------
+;;;      Navigation
+;;;
+(def ^:dynamic *fn-navig-trace* nil)
+
+(defn fm-tracing? [key]
+  (some #{key :all} *fn-navig-trace*))
+
+(defn fmdp [key & mas]
+  (when (fm-tracing? key)
+    (apply dp mas)))
+
+(defmacro navdbg [option & body]
+  `(let [options# ~option]
+     (binding [*fn-navig-trace* (if (sequential? options#)
+                                  options# (vector options#))]
+       (do ~@body))))
+
 (defn fm-navig-eq? [seek poss]
   (assert (or (atom? poss) (string? poss))
     (str "poss not ref " (string? poss)))
-  ;; (dp :fm-navig-eq? (fn? seek) (keyword? seek))
+  (fmdp :eq :fm-navig-eq? (fn? seek) (keyword? seek) (minfo poss))
   (cond
     (not (atom? poss))                                      ;; string child of html label?
     (do (dp :fm-navig-eq?-bail-not-ref poss)
@@ -237,24 +255,6 @@
           (when (:must? options)
             (err :fm-ascendant-must-failed what where options)))))))
 
-(defn fm-ascendant-dbg [what where & options]
-  (dp :fasc-entry what (minfo where) options)
-  (when (and where what)
-    (let [options (merge {:me? false :wocd? true}
-                    (apply hash-map options))]
-      (binding [*depender* (if (:wocd? options) nil *depender*)]
-        (or (and (:me? options)
-              (fm-navig-eq? what where)
-              where)
-
-          (if-let [par (:par @where)]
-            (fm-ascendant-dbg what par
-              :me? true)
-            (dp :no-par!!!!! (minfo where)))
-
-          (when (:must? options)
-            (err :fm-ascendant-must-failed what where options)))))))
-
 (defn nextsib [mx]
   (without-c-dependency
     (loop [sibs (md-kids (mx-par mx))]
@@ -273,23 +273,24 @@
           :default
           (recur (rest sibs)))))))
 
-
 (defn fm-navig-hosted? [what where prop]
   (assert (md-ref? where))
+  (fmdp :host :navhosted-entry prop what (minfo where))
   (when-let [it (mget where prop)]
+    (fmdp :host :navhosted-gotit prop what (minfo where))
     (cond
-      (md-ref? it) (do (dpx :BAM!!!!-checking-hosted!! prop (minfo it))
+      (md-ref? it) (do (fmdp :host :checking-hosted!! prop (minfo it))
                        (fm-navig what it
                          :me? true :inside? true :up? false))
-      (sequential? it) (do (dpx :BAM!!!!-checking-hosted-seq!! (map minfo it))
+      (sequential? it) (do (dp :BAM!!!!-checking-hosted-seq!! (map minfo it))
                            (some (fn [it]
                                    (fm-navig what it
                                      :me? true :inside? true :up? false)) it))
-      :else (when it (dpx :ignoring-prop-val it)))))
+      :else (when it (dp :ignoring-prop-val it)))))
 
 (defn fm-navig [what where & options]
   (do                                                       ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (md-ref? where) (minfo where)))
-    ;;(dprn :navig-options options)
+    (fmdp :all :navig-options options)
     (cond
       (> *trdeep* 16)
       (do (dprn :NAVIG-BAILING-at-depth *trdeep*)
@@ -302,13 +303,14 @@
         ;;(dp :fm-navig-opts options)
         (binding [*depender* (if (:wocd? options) nil *depender*)]
           (when (md-ref? where)
-            ;(dp :f)
             (or (when (:me? options)
+                  (fmdp :me :nav-sees-me?-true (minfo where))
                   (if (fm-navig-eq? what where)
                     where
                     (some (partial fm-navig-hosted? what where)
-                      ;; todo what is this next pFB hardcode about? leftover debug?
-                      (keep #{:persistentFooterButtons} (:fx$ikeys @where)))))
+                      ;; todo rework how delegates access full mx
+                      (keep #{:persistentFooterButtons
+                              :floatingActionButton} (:fx$ikeys @where)))))
 
               (and (:inside? options)
                 (if-let [kids (md-get where :kids)]
@@ -324,14 +326,23 @@
 
               (and (:up? options)
                 (if-let [par (:par @where)]
-                  (do                                       ;; (dprn :navig-up! (minfo par))
+                  (do
+                    (fmdp :up :navig-uppar! (minfo par))
                     (fm-navig what par
                       :up? true
                       :me? true
                       :skip where
                       :inside? true))
-                  (do (dpx :no-up-from (minfo where))
-                      false)))
+                  (if-let [host (:host @where)]
+                    (do
+                      (fmdp :up :navig-uphost! (minfo host))
+                      (fm-navig what host
+                        :up? true
+                        :me? true
+                        :skip where
+                        :inside? true))
+                    (do (dpx :no-up-from (minfo where))
+                        false))))
 
               (when (:must? options)
                 (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))))))
@@ -377,18 +388,19 @@
   ;; this needs to look for more than just name
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       ;; (dp :fm*-start-after name#)
-       (fm-navig #(do                                       ;;(dp :fm*-sees (= name# (md-get % :name)) (minfo %))
+       (tiltontec.model.core/fmdp :fm*-start-after name#)
+       (tiltontec.model.core/fm-navig #(do
+                    (tiltontec.model.core/fmdp :fm*-sees (= name# (md-get % :name)) (minfo %))
                     (= name# (md-get % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
 (defmacro fm*val [name & [slot me]]
   (let [slot (or slot ':value)
         me-ref (or me 'me)]
-    `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
+    `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/md-get node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
        (assert other# (str "fm*val did not find other named " ~name " seeking property " ~slot))
-       (mget other# ~slot))))
+       (tiltontec.model.core/mget other# ~slot))))
 
 (defmacro fmuv [slot name & [me]]
   (let [me-ref (or me 'me)]

@@ -5,28 +5,24 @@
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]))
+    ["package:flutter/painting.dart" :as p]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]))
 
 (defn make-app []
   (fx/material-app
-    {:title "Welcome to mxFlutter World"
+    {:title "Flutter/MX Counter Demo"
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     (fx/scaffold
-      {:appBar               (fx/app-bar
-                               {:title (cF (let [ctr (fm* :z-counter)]
-                                             (assert ctr "ctr nope")
-                                             ;; true reactivity, albeit pointless
-                                             (fx/text! {} {:name :appbartitle}
-                                               (str "Counter = " (md/mget ctr :value)))))})
-       ;; todo have not-to-be call not-to-be on these non-kid leaves
-       :floatingActionButton (cF (let [z-ctr (fm* :z-counter)]
-                                   (fx/floating-action-button
-                                     ;; the FAB shows a "+". It increments the count where the count lives.
-                                     {:onPressed (as-dart-callback []
-                                                   (assert z-ctr "No zcounter 2")
-                                                   (mswap! z-ctr :value inc))
-                                      :tooltip "Increment"}
-                                     (m/Icon m.Icons/add .color m.Colors/black))))}
+      {:appBar (fx/app-bar
+                 {:title (m/Text "Welcome to Flutter/MX World")})
+       :floatingActionButton
+       (cF (fx/floating-action-button
+             {:onPressed (as-dart-callback []
+                           (mswap! (fm* :z-counter) :value inc))
+              :tooltip   "Increment"}
+             {:host me} ;; todo: can we inject this automatically?
+             (m/Icon m.Icons/add .color m.Colors/black)))}
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
@@ -34,10 +30,9 @@
                              .fontSize 18.0)}
             "You clicked the button this many times:")
           (fx/text!
-            {:style (fx/in-my-context [_ ctx]
+            {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
-             ;;  "in place" state: the counter widget is where the count resides.
              :value (cI 0)}
             (str (md/my-value))))))))
 
