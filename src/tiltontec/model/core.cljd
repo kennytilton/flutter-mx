@@ -81,10 +81,10 @@
         (c-get c)
         (slot @me))))
 
-(def ^:dynamic *par* nil)
+(def ^:dynamic *md-parent* nil)
 
 (defmacro with-par [meform & body]
-  `(binding [tiltontec.model.core/*par* ~meform]
+  `(binding [tiltontec.model.core/*md-parent* ~meform]
      ~@body))
 
 ;;; --- accessors ----
@@ -120,7 +120,7 @@
     (do
       (let [iargs (apply hash-map arg-list)
             me (atom
-                 (let [mdmap (merge {:par *par*}
+                 (let [mdmap (merge {:parent *md-parent*}
                                (->> arg-list
                                  (partition 2)
                                  (filter (fn [[slot v]]
@@ -135,14 +135,14 @@
                  :meta {:state   :nascent
                         :mx-type (:mx-type iargs (cty/Model.))})]
         (assert (meta me))
-        #_(when-not (:par @me)
+        #_(when-not (:parent @me)
             (dp :no-par!!!! me))
         (rmap-meta-setf
           [:cz me]
           (->> arg-list
             (partition 2)
             (filter (fn [[slot v]]
-                      (when-not (some #{slot} [:par :name :mx-type :not-to-be
+                      (when-not (some #{slot} [:parent :name :mx-type :not-to-be
                                                :fx$ikeys :fx$notifier :fx$observer])
                         (md-install-cell me slot v))))
             (map vec)
@@ -159,8 +159,8 @@
 
 (defn md-kids [me] (md-get me :kids))
 (defn mkids [me] (md-get me :kids))
-(defn mx-par [me] (md-get me :par))
-(defn mpar [me] (md-get me :par))
+(defn mx-par [me] (md-get me :parent))
+(defn mpar [me] (md-get me :parent))
 
 (defn fm-not-to-be [me]
   (doseq [k (md-kids me)]
@@ -185,7 +185,7 @@
 
 (defmacro mpar [& [me]]
   (let [me (or me 'me)]
-    `(:par @~me)))
+    `(:parent @~me)))
 
 (defn make-family [& arg-list]
   (cond
@@ -245,7 +245,7 @@
               (fm-navig-eq? what where)
               where)
 
-          (if-let [par (:par @where)]
+          (if-let [par (:parent @where)]
             (fm-ascendant what par
               :me? true)
             (when-let [owner (:owner @where)]
@@ -282,7 +282,7 @@
       (md-ref? it) (do (fmdp :host :checking-hosted!! prop (minfo it))
                        (fm-navig what it
                          :me? true :inside? true :up? false))
-      (sequential? it) (do (dp :BAM!!!!-checking-hosted-seq!! (map minfo it))
+      (sequential? it) (do (fmdp :checking-hosted-seq!! (map minfo it))
                            (some (fn [it]
                                    (fm-navig what it
                                      :me? true :inside? true :up? false)) it))
@@ -325,7 +325,7 @@
                   (trx nil :inside-no-kids (:name @where))))
 
               (and (:up? options)
-                (if-let [par (:par @where)]
+                (if-let [par (:parent @where)]
                   (do
                     (fmdp :up :navig-uppar! (minfo par))
                     (fm-navig what par
@@ -463,9 +463,9 @@
     (conj (fm-ancestry par) par)))
 
 (defmacro the-kids [& tree]
-  `(binding [*par* ~'me]
-     (assert *par*)
-     ;;(dp :bingo-par (atom? *par*))
+  `(binding [*md-parent* ~'me]
+     (assert *md-parent*)
+     ;;(dp :bingo-par (atom? *md-parent*))
      (doall (remove nil? (flatten (list ~@tree))))))
 
 (defmacro cFkids [& tree]
@@ -484,7 +484,7 @@
       (map-indexed
         (fn [idx kid-value]
           (or (and x-kids (get x-kids kid-value))
-            (binding [*par* me]
+            (binding [*md-parent* me]
               (k-factory me kid-value))))
         (md-get me :kid-values)))))
 

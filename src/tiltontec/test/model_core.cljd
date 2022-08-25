@@ -36,7 +36,7 @@
                     (when (md-get me :kon)
                       (vector
                         (md/make
-                          :par me
+                          :parent me
                           :name :konzo
                           :kzo (cI 3))))))]
     (assert (not (some #{:mx-type} (keys @u))))
@@ -56,18 +56,18 @@
             :name :uni
             :kids (cF (vector
                         (md/make
-                          :par me
+                          :parent me
                           :name :aa)
                         (md/make
-                          :par me
+                          :parent me
                           :name :bb
                           :kids (cF (vector
                                       (md/make
-                                        :par me
+                                        :parent me
                                         :name :bba)
 
                                       (md/make
-                                        :par me
+                                        :parent me
                                         :name :bbb)))))))]
     ;; (assert (fm-navig :bba u :inside? true :must? true))
     ;; (assert (thrown-with-msg?
@@ -92,17 +92,17 @@
             :kids (cF (remove nil?
                         (vector
                           (md/make
-                            :par me
+                            :parent me
                             :name :aa
                             :aa42 (cF (* 2 (mdv! :bb :bb21)))
                             :aa3 (cI 3))
                           (when (md-get me :kon)
                             (md/make
-                              :par me
+                              :parent me
                               :name :konzo
                               :kzo (cI 3)))
                           (md/make
-                            :par me
+                            :parent me
                             :name :bb
                             :bb21 (cF (* 7 (mdv! :aa :aa3))))))))]
     (assert (= 63 (md-get u :u63)))
