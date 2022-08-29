@@ -2,7 +2,7 @@
   (:require
     [tiltontec.util.base
      :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-slots def-rmap-meta-slots]]
-    [tiltontec.util.core :refer [ err rmap-setf rmap-meta-setf]]
+    [tiltontec.util.core :refer [err rmap-setf rmap-meta-setf]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? mx-type observe
@@ -23,6 +23,10 @@
 
     [tiltontec.cell.evaluate :refer [c-get c-awaken]]
     ))
+
+(def ^:dynamic *md-host*
+  "used for navigation above `me` for delegate MX nodes with no parent, such as an appBar"
+  nil)
 
 (def-rmap-slots md-
   name)
@@ -63,20 +67,21 @@
 
   (assert (= :nascent (md-state me)))
   (rmap-meta-setf [:state me] :awakening)
-  (doall
-    (for [slot (keys @me)]
-      ;; next is tricky: if slot is in :cz but nil, it has been
-      ;; optimized-away and observed then in the rare case
-      ;; it gets optimized away on other than the initial
-      ;; value.
-      (when-let [c (slot (md-cz me) :not-found)]
-        (cond
-          (= c :not-found)
-          ;; these need at least an initial observe
-          (when (not (some #{slot} [:parent :name :fx-gen :not-to-be]))
-            (observe (mx-type me) slot me (slot @me) unbound nil))
-          :else (when-not (= (c-state c) :awake) ;; might have happened already
-                  (c-awaken c))))))
+  (binding [*md-host* me]
+    (doall
+      (for [slot (keys @me)]
+        ;; next is tricky: if slot is in :cz but nil, it has been
+        ;; optimized-away and observed then in the rare case
+        ;; it gets optimized away on other than the initial
+        ;; value.
+        (when-let [c (slot (md-cz me) :not-found)]
+          (cond
+            (= c :not-found)
+            ;; these need at least an initial observe
+            (when (not (some #{slot} [:parent :name :fx-gen :not-to-be]))
+              (observe (mx-type me) slot me (slot @me) unbound nil))
+            :else (when-not (= (c-state c) :awake)          ;; might have happened already
+                    (c-awaken c)))))))
   (rmap-meta-setf [:state me] :awake)
   me)
 

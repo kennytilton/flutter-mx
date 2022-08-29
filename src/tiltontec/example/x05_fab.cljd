@@ -1,4 +1,4 @@
- (ns tiltontec.example.x05-fab
+(ns tiltontec.example.x05-fab
   (:require
     ["dart:math" :as math]
     [cljd.flutter.alpha :as f]
@@ -14,7 +14,7 @@
 (declare fake-item expandable-fab show-action action-button)
 
 (defn make-app []
-  (fx/material-app {:title                      "Expandable Fab"}
+  (fx/material-app {:title "Expandable Fab"}
     {:name :mat-app}
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
@@ -46,7 +46,7 @@
      :controller       (cF (fx/when-my-state [state]
                              (m/AnimationController
                                .value (if initial-open? 1.0 0.0)
-                               .duration  (dart:core/Duration .milliseconds 250)
+                               .duration (dart:core/Duration .milliseconds 250)
                                .vsync state)))
      :expand-animation (cF (when-let [c (fx/my-controller)]
                              (m/CurvedAnimation
@@ -58,10 +58,10 @@
      :open?            (cI initial-open?
                          ;; reactive "observers" are how changed values become app behavior
                          :watch (fn [prop-name me new-value prior-value cell]
-                                (when-let [c (fx/my-controller)] ;; not until first render installation
-                                  (if new-value
-                                    (.forward c)
-                                    (.reverse c)))))}
+                                  (when-let [c (fx/my-controller)] ;; not until first render installation
+                                    (if new-value
+                                      (.forward c)
+                                      (.reverse c)))))}
     (fx/stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
@@ -80,23 +80,21 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (mget (md/fasc :fab) :expand-animation)
-     :builder   (fx/->CBAsIs
-                  ;; "as is"? We need a callback for Flutter itself to call, so this next fn is passed thru "as is"
-                  (fn [ctx child]
-                    (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
-                          offset (m.Offset/fromDirection
-                                   (* direction-degrees (/ math/pi 180.00))
-                                   (* (.-value progress) max-distance))]
-                      ;; N.B! alpha widgets are welcome at leaves of the MX tree...
-                      (f/widget
-                        (f/nest
-                          (m/Positioned
-                            .right (+ 4.0 (.-dx offset))
-                            .bottom (+ 4.0 (.-dy offset)))
-                          (m.Transform/rotate
-                            .angle (* (- 1.0 (.-value progress))
-                                     math/pi 0.5))
-                          child)))))}
+     :builder   (as-dart-callback [ctx child]
+                  (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
+                        offset (m.Offset/fromDirection
+                                 (* direction-degrees (/ math/pi 180.00))
+                                 (* (.-value progress) max-distance))]
+                    ;; N.B! alpha widgets are welcome at leaves of the MX tree...
+                    (f/widget
+                      (f/nest
+                        (m/Positioned
+                          .right (+ 4.0 (.-dx offset))
+                          .bottom (+ 4.0 (.-dy offset)))
+                        (m.Transform/rotate
+                          .angle (* (- 1.0 (.-value progress))
+                                   math/pi 0.5))
+                        child))))}
     (fx/fade-transition
       {:opacity (mget (md/fasc :fab) :expand-animation)}
       (action-button
@@ -116,12 +114,12 @@
                  (fx/alert-dialog
                    {:actions [(m/TextButton
                                 .onPressed #(-> ctx m.Navigator/of .pop)
-                                .child  (m/Text "CLOSE"))]}
+                                .child (m/Text "CLOSE"))]}
                    {}
                    (fx/text {} {} (:title action)))))))
 
 (defn action-button [& {:keys [onPressed icon]}]
-  (fx/material {:shape         (m/CircleBorder)
+  (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m.Clip/antiAlias
                 :color        (fx/in-my-context [me ctx]
                                 (-> (m.Theme/of ctx) .-colorScheme .-secondary))
@@ -136,12 +134,12 @@
   (fx/sized-box {:width  56.0
                  :height 56.0}
     (fx/center
-      (fx/material {:shape         (m/CircleBorder)
+      (fx/material {:shape        (m/CircleBorder)
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         (fx/ink-well {:onTap (as-dart-callback []
                                (md/mswap! (md/fasc :fab par) :open? not))}
-          (fx/padding {:padding  (m.EdgeInsets/all 8.0)}
+          (fx/padding {:padding (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
                       :color (fx/in-my-context [me ctx]
                                (.-primaryColor (m.Theme/of ctx)))} {})))))))
@@ -154,13 +152,13 @@
        :transform          (cF (if (mget (md/fasc :fab par) :open?)
                                  (m.Matrix4/diagonal3Values 0.7 0.7 1.0)
                                  (m.Matrix4/diagonal3Values 1.0 1.0 1.0)))
-       :duration            (dart:core/Duration .milliseconds 250)
-       :curve               (m/Interval 0.0 0.5 .curve m.Curves/easeOut)}
+       :duration           (dart:core/Duration .milliseconds 250)
+       :curve              (m/Interval 0.0 0.5 .curve m.Curves/easeOut)}
       (fx/animated-opacity
         {:opacity  (cF (if (mget (md/fasc :fab par) :open?)
                          0.0 1.0))
-         :curve     (m/Interval 0.25 1.0 .curve m.Curves/easeInOut)
-         :duration  (dart:core/Duration .milliseconds 250)}
+         :curve    (m/Interval 0.25 1.0 .curve m.Curves/easeInOut)
+         :duration (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
           {:onPressed (as-dart-callback []
                         (md/mswap! (md/fasc :fab par) :open? not))}
@@ -168,17 +166,17 @@
 
 (defn fake-item [is-big?]
   (m/Container
-    .margin  (m.EdgeInsets/symmetric .vertical 8.0 .horizontal 24.0)
+    .margin (m.EdgeInsets/symmetric .vertical 8.0 .horizontal 24.0)
     .height (if is-big? 128.0 36.0)
     .decoration (m/BoxDecoration
-                  .borderRadius  (m.BorderRadius/all (m.Radius/circular 8.0))
+                  .borderRadius (m.BorderRadius/all (m.Radius/circular 8.0))
                   .color (.-shade300 m.Colors/cyan))))
 
 #_;; this below is the above converted to "apply". The Dart equivalent works, but not this
         (dart:core.Function/apply m/Container nil
-          ^#/(Map Symbol dynamic) {:margin  (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+          ^#/(Map Symbol dynamic) {:margin (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
                                    :height (if is-big? 128.0 36.0)
                                    :decoration
                                    (m/BoxDecoration
-                                     :borderRadius  (m.BorderRadius/all (m.Radius/circular 8.0))
+                                     :borderRadius (m.BorderRadius/all (m.Radius/circular 8.0))
                                      :color (.-shade300 Colors/pink))})
