@@ -22,7 +22,9 @@ In a terminal:
 * `cd flutter-mx`, or wherever you cloned it;
 * start a sim: `open -a Simulator`
 
-TIP: If you forget the above step, the next command will run for ages and open a tab in your browser. Start over. 
+You should see a Simulator appear. I get an iPhone 12 by default. Explore the `open` command for alternatives.
+
+BEWARE! If you forget the above step to open a simulator, the next command will run for ages and _open a tab in your browser_. Close everything and start over. 
 
 Next, we build the app and start a "watch" to rebuild when the source changes, so this next command does not return. Use Control-C to kill the process when through exploring:
 
