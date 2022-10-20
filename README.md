@@ -11,7 +11,7 @@ If you just want to run the thing...
 
 #### 0. Prepare your ClojureDart working set-up, on Mac OS X
 
-First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @Tilton on that Slack or the Flutter Community Slack.
+First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennyilton on that Slack or the Flutter Community Slack.
 
 #### 1. Clone this repo
 `git clone https://github.com/kennytilton/flutter-mx`
