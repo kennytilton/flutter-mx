@@ -58,11 +58,14 @@ To try a different example:
 4. Now hit RETURN.
 5. Check the sim to see the new app.
 
+#### 5. More on the Flutter/MX version of TodoMVC
 Here is a TodoMVC medium screenshot:
 
 ![f/mx TodoMVC screenshot](image/todomvc-app.jpeg)
 
-Our `TodoMVC` extends the spec and adds a lookup of any entry on OpenFDA, and sets the text color of the Todo to red if the lookup succeeds. There is no point to this, except as a demonstration of how to make a non-reactive API such as XHR reactive, thus handling async gracefully.
+Our `TodoMVC` extends the official spec to include a bit of async handling, in the form of an XHR request: we require an async XHR lookup of the text of a ToDo against the [OpenFDA](https://open.fda.gov/) Adverse Events registry. If the lookup succeeds, the text color of the Todo must be set to red. There is no point to this, except as a demonstration of how to make a non-reactive API such as XHR reactive, thus handling async gracefully.
+
+Well, it also demonstrates the power of reactive programming: if we _change_ a ToDo item, a new lookup is triggered automatically, and the text color gets reconsidered automatically once the new lookup responds.
 
 ### Workflow
 Here is how I work. We will extend this section greatly as we help others get started on Matrix:
