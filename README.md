@@ -5,7 +5,7 @@ Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE
 ## Documentation
 Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or just ping @kennytilton on the #clojurians or #fluttercommunity Slacks and we can pair to get you rolling.
 
-## Running the demos/examples
+## Quick Start
 
 If you just want to run the thing...
 
