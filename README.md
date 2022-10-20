@@ -3,7 +3,7 @@
 Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE14sd2MGLJW35qeuJynmTRjqpUL3SbIUhOiS4TihjyZ9iTVRoCJkoQAvD_BwE&gclsrc=aw.ds) with [ClojureDart](https://github.com/Tensegritics/ClojureDart) and [Matrix](https://github.com/kennytilton/matrix), a generic, fine-grained, transparent, reactive state manager.
 
 ## Documentation
-See our Wiki! (Soon)
+Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or just ping @kennytilton on the #clojurians or #fluttercommunity Slacks and we can pair to get you rolling.
 
 ## Running the demos/examples
 
@@ -79,4 +79,4 @@ Here is how I work. We will extend this section greatly as we help others get st
 * * switch to the build terminal and hit Return to trigger a sim reload;
 * * check the Flutter console for print output.
 
-Ping @tilton on #clojurians or #fluttercommunity Slack for help!
+Ping @kennytilton on #clojurians or #fluttercommunity Slack for help!
