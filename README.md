@@ -36,20 +36,18 @@ HEADS UP! This next command does not return. Use Control-C to kill the process w
 
 * `clj -M -m cljd.build flutter`
 
-After thirty seconds you should see these last lines of output:
+After a few minutes (just the first time, thirty seconds on subsequent start-ups) you should see these last lines of output:
 ```
 An Observatory debugger and profiler on iPhone 12 is available at: http://127.0.0.1:61081/v17dEYvUuuQ=/
 The Flutter DevTools debugger and profiler on iPhone 12 is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:61081/v17dEYvUuuQ=/
 ```
-Visit either debugger at the URLs shown, if you like. We just work off the output in the "watch" terminal session.
-
-You should also see our "hello, world" app in the sim:
+Now check the simulator you opened earlier. You should see our "hello, world" app in the sim:
 
 ![FMX Hello World screenshot](image/hello-world-app.jpg)
 
 Mr. Kernighan co-authored "The C Programming Language" with Dennis Ritchie, and contributed the bit on "hello, world".
 
-The code for our `f/mx` `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
+The code for our `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
 
 #### 4. Running other examples.
 
