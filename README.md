@@ -32,7 +32,7 @@ In a terminal:
 
 Next, we build the app and start a "watch" to rebuild when the source changes.
 
-n.b! This next command does not return. Use Control-C to kill the process when through exploring:
+HEADS UP! This next command does not return. Use Control-C to kill the process when through exploring:
 
 * `clj -M -m cljd.build flutter`
 
@@ -41,7 +41,7 @@ After thirty seconds you should see these last lines of output:
 An Observatory debugger and profiler on iPhone 12 is available at: http://127.0.0.1:61081/v17dEYvUuuQ=/
 The Flutter DevTools debugger and profiler on iPhone 12 is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:61081/v17dEYvUuuQ=/
 ```
-Visit either debugger at the URLs shown if you like. We get by on the console output.
+Visit either debugger at the URLs shown, if you like. We just work off the output in the "watch" terminal session.
 
 You should also see our "hello, world" app in the sim:
 
@@ -49,20 +49,22 @@ You should also see our "hello, world" app in the sim:
 
 Mr. Kernighan co-authored "The C Programming Language" with Dennis Ritchie, and contributed the bit on "hello, world".
 
-The code for `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
+The code for our `f/mx` `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
 
 #### 4. Running other examples.
 
 To try a different example:
-1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `xhello` in `(xhello/make-app)` to one of the namespaces listed above in the NS requires. Try `xcounter` to see the standard Flutter Counter app, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md)
-2. Now switch back to the terminal where the app was launched and hit RETURN, once you see the app has been rebuilt. It just takes a few seconds.
-3. Check the sim to see the new app.
+1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `xhello` in `(xhello/make-app)` to one of the namespaces listed above in the NS requires. Try `xcounter` to see the standard Flutter Counter app, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
+2. Save your changes.
+3. Now switch back to the "watch" terminal and wait a few seconds until you see that the app has been rebuilt.
+4. Now hit RETURN.
+5. Check the sim to see the new app.
 
 Here is a TodoMVC medium screenshot:
 
 ![f/mx TodoMVC screenshot](image/todomvc-app.jpeg)
 
-Our `TodoMVC` extends the spec and adds a lookup of any entry on OpenFDA, and sets the type to red if the lookup succeeds. There is no point to this, except we get to demonstrate how to make something like XHR reactive, handling the async aspect gracefully.
+Our `TodoMVC` extends the spec and adds a lookup of any entry on OpenFDA, and sets the text color of the Todo to red if the lookup succeeds. There is no point to this, except as a demonstration of how to make a non-reactive API such as XHR reactive, thus handling async gracefully.
 
 ### Workflow
 Here is how I work. We will extend this section greatly as we help others get started on Matrix:
