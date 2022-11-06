@@ -52,7 +52,7 @@ The code for our `hello-world` is [here](https://github.com/kennytilton/flutter-
 #### 4. Running other examples.
 
 To try a different example:
-1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `xhello` in `(xhello/make-app)` to one of the namespaces listed above in the NS requires. Try `xcounter` to see the standard Flutter Counter app, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
+1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `hello` in `(hello/make-app)` to one of the namespaces listed above in the NS requires. Try `xcounter` to see the standard Flutter Counter app, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
 2. Save your changes.
 3. Now switch back to the "watch" terminal and wait a few seconds until you see that the app has been rebuilt.
 4. Now hit RETURN.
