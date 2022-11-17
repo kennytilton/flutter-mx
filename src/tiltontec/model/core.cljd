@@ -100,18 +100,28 @@
       (c-reset! c new-value))
     (do
       (if (contains? @me slot)
-        (err str "change not mediated by cell " slot "/" (mx-type me))
-        (err str "change to slot not mediated by cell and map lacks slot "
-          slot "
-         ;; but has " (str (keys @me))
-          )))))
+        (err str
+          "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/md-reset! to the property '" slot "', which is not mediated by any cell.\n"
+          "...> if such post-make mutation is in fact required, wrap the initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
+          "...> look for MXAPI_ILLEGAL_MUTATE_NONCELL in the Errors documentation for  more details.\n"
+          "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me slot :no-such-slot) "].\n"
+          "...> FYI: instance is of type " (mx-type me) ".\n"
+          "...> FYI: full instance is " @me "\n"
+          "...> FYI: instance meta is " (meta me) "\n.")
+        (err str
+          "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent slot \"" slot "\".\n"
+          "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))))
 
 (defn mset! [me slot new-value]
   (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
   (md-reset! me slot new-value))
 
 (defn mswap! [me slot swap-fn & swap-fn-args]
-  (mset! me slot (apply swap-fn (mget me slot) swap-fn-args)))
+  (if (contains? @me slot)
+    (mset! me slot (apply swap-fn (mget me slot) swap-fn-args))
+    (err str
+      "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent slot \"" slot "\".\n"
+      "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
 
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
