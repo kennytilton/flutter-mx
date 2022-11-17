@@ -7,7 +7,8 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]))
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.integrity :as integrity]))
 
 (defn make-app []
   (fx/material-app
@@ -19,8 +20,6 @@
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
-                           (mset! (fm* :z-counter) :value 42)
-                           #_
                            (mswap! (fm* :z-counter) :value inc))
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
@@ -34,8 +33,5 @@
             {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
-             :value (cI 0 :watch (fn [slot me new old cell]
-                                   (with-cc :valchg (mset! me :v2 42))))
-             :v2 (cI 0 :watch (fn [slot me new old cell]
-                                (dp :v2watch-sees slot new)))}
+             :value (cI 0)}
             (str (md/my-value))))))))
