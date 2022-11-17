@@ -6,7 +6,7 @@
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type cprn
+             c-unbound? c-input? mx-type cprn c-code$
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo minfo
              *call-stack* *defer-changes*
@@ -235,13 +235,28 @@
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
   (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
-  ;(dpc c :calc-n-link-entry!!!! (dissoc @c :code))
+
+  ;; first check for cycles
+  (when (some #{c} *call-stack*)
+    (let [me (c-model c)
+          slot (c-slot-name c)]
+      (err str
+        "MXAPI_COMPUTE_CYCLE_DETECTED> cyclic dependency detected while computing slot '"
+        slot "' of model '" (c-md-name c) "'.\n"
+        "...> formula for " slot ":\n"
+        (c-code$ c)
+        "\n...> full cell: \n"
+        @c
+        "\n\n...> callstack, latest first: \n"
+        (str/join "\n" (mapv (fn [cd]
+                               (str "....> md-name:" (c-md-name cd) " slot: "(c-slot-name cd)
+                                 "\n....>    code:" (c-code$ cd)))
+                         *call-stack*)))))
+
   (do                                                       ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
     (binding [*depender* c
               *call-stack* (cons c *call-stack*)
               *defer-changes* true]
-      (assert (= c (first *call-stack*)) "callstack binding FAIL!!!")
-      (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
       (unlink-from-used c :pre-rule-clear)
       (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
 
