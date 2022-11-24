@@ -6,7 +6,7 @@
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type cprn
+             c-unbound? c-input? mx-type cprn c-code$
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo minfo
              *call-stack* *defer-changes*
@@ -192,20 +192,27 @@
 
       (cond
         (c-async? c) (do
-                        (assert (or (nil? raw-value)        ;; someday support other default future cell values, mebbe :pending
-                                  (dart/is? raw-value Future))
-                          (str "cnset-future got non future: " raw-value dbgid dbgdata))
-                        (when (dart/is? raw-value Future)
-                          (.then ^Future raw-value
-                            (fn [fu-val]
-                              (with-integrity [:change :future-then]
-                                ;; todo if a cfu is meant to run repeatedly as dependencies change,
-                                ;;      do we need to clear :then? Or is opti-away not a problem
-                                ;;      since it would have happened were there no users??
-                                (rmap-meta-setf [:then? c] true)
-                                (c-value-assume c (if-let [and-then (:and-then? @c)]
-                                                    (and-then c fu-val) fu-val) nil)))))
-                        (c-value-assume c nil nil))
+                       (assert (or (nil? raw-value)         ;; someday support other default future cell values, mebbe :pending
+                                 (dart/is? raw-value Future))
+                         (str "cnset-future got non future: " raw-value dbgid dbgdata))
+
+                       (if (dart/is? raw-value Future)
+                         (do
+                           (dp :got-future :defchg cty/*defer-changes* :wii cty/*within-integrity*)
+                           (.then ^Future raw-value
+                             (fn [fu-val]
+                               ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
+                               (with-integrity [:change :future-then]
+                                 ;; todo if a cfu is meant to run repeatedly as dependencies change,
+                                 ;;      do we need to clear :then? Or is opti-away not a problem
+                                 ;;      since it would have happened were there no users??
+                                 (rmap-meta-setf [:then? c] true)
+                                 (c-value-assume c (if-let [and-then (:and-then? @c)]
+                                                     (and-then c fu-val) fu-val) nil))))
+                           ;; forcing nil pending future
+                           ;; TODO support :pending-future-placeholder-value and force that instead
+                           (c-value-assume c nil propagation-code))
+                         (c-value-assume c nil propagation-code)))
         :else (when-not (c-optimized-away? c)
                 (assert (map? (deref c)) "calc-n-set")
                 ;; this check for optimized-away? arose because a rule using without-c-dependency
@@ -235,13 +242,28 @@
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
   (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
-  ;(dpc c :calc-n-link-entry!!!! (dissoc @c :code))
+
+  ;; first check for cycles
+  (when (some #{c} *call-stack*)
+    (let [me (c-model c)
+          slot (c-slot-name c)]
+      (err str
+        "MXAPI_COMPUTE_CYCLE_DETECTED> cyclic dependency detected while computing slot '"
+        slot "' of model '" (c-md-name c) "'.\n"
+        "...> formula for " slot ":\n"
+        (c-code$ c)
+        "\n...> full cell: \n"
+        @c
+        "\n\n...> callstack, latest first: \n"
+        (str/join "\n" (mapv (fn [cd]
+                               (str "....> md-name:" (c-md-name cd) " slot: " (c-slot-name cd)
+                                 "\n....>    code:" (c-code$ cd)))
+                         *call-stack*)))))
+
   (do                                                       ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
     (binding [*depender* c
               *call-stack* (cons c *call-stack*)
               *defer-changes* true]
-      (assert (= c (first *call-stack*)) "callstack binding FAIL!!!")
-      (assert (= c *depender*) "binding c to *depender* failed: in body, c <> *depender*")
       (unlink-from-used c :pre-rule-clear)
       (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
 

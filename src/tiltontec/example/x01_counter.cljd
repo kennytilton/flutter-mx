@@ -1,6 +1,7 @@
 (ns tiltontec.example.x01-counter
   (:require
     [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
+    [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.model.core :refer [mget mset! mswap! fm*] :as md]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
@@ -11,6 +12,7 @@
     [tiltontec.cell.integrity :as integrity]))
 
 (defn make-app []
+  (dp :hunh)
   (fx/material-app
     {:title "Flutter/MX Counter Demo"
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
@@ -20,6 +22,7 @@
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
+                           (dp :bump-zc!!)
                            (mswap! (fm* :z-counter) :value inc))
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}

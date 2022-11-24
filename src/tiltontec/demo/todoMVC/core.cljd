@@ -84,11 +84,14 @@
                         ; ^^^ the formula computes a value of nil then awaits the future
                         ; and, when received, reactively "computes" the received value as
                         ; a new matrix input.
-                        :watch (fn [_ me new-db _ _]
-                               ;; the reactive :db cell is handy during lifecycle initialization, but
-                               ;; more convenient as a global resource. It's a demo, OK?
-                               (stg/DB! new-db))]
+                        :watch (fn [_ me new-db prior-db _]
+                                 ;; the reactive :db cell is handy during lifecycle initialization, but
+                                 ;; more convenient as a global resource. It's a demo, OK?
+                                 (dp :got-new-DB!! (= new-db prior-db)
+                                   new-db :prior prior-db :same?! (= new-db prior-db))
+                                 (stg/DB! new-db))]
                     ;; we make the DB component of the app a reactive property since we receive it as a future
+                    (dp :calling-get-shared!! cache)
                     (.getInstance prefs/SharedPreferences))
 
        :todo-list (cF (when-let [db (mget me :db)]
@@ -110,25 +113,3 @@
             (items/todo-items)
             (about-credits)))))))
 
-#_
-(defn make-app []
-  (let [title "todo"]
-    (fx/material-app
-      {:title                      title
-       :theme                      app-theme}
-      {:name      :app
-       :db        (cF+ [:async? true
-                        :watch (fn [_ _ new-db _ _]
-                               (stg/DB! new-db))]
-                    (.getInstance prefs/SharedPreferences))
-       :todo-list (cF (when (mget me :db)
-                        (todo/make-ToDoList "todo"
-                          (stg/collection-docs "todo"))))}
-      (fx/scaffold
-        {:appBar                  (todo-app-bar title)
-         :persistentFooterButtons [(todos-dashboard)]}
-        (fx/ink {:color m.Colors/white}
-          (fx/column
-            (input/todo-controls)
-            (items/todo-items)
-            (about-credits)))))))
