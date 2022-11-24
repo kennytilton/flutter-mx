@@ -52,6 +52,7 @@
 (defn collection-docs [collection-name]
   (assert (DB) "no db in collection-docs")
   (let [all-td-keys (collection-keys collection-name)]
+    (dp :coll-docs>-keys all-td-keys)
     (mapv (fn [td-key]
             (util/dart-map->cljd-map
               (convert/jsonDecode (.getString (DB) td-key)))) all-td-keys)))
