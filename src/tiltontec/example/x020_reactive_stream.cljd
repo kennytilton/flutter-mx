@@ -22,12 +22,11 @@
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
-                           (dp :bump-zc!!)
-                           (.add (.-sink ^#/(async/StreamController String) (mget me :clicks)) "ping"))
+                           (.add (.-sink ^#/(async/StreamController String) (mget me :messages)) "ping"))
               :tooltip   "Increment"}
              {
               :name :clicker-fab
-              :clicks (new #/(async/StreamController String))
+              :messages (new #/(async/StreamController String))
               }
              (m/Icon m.Icons/add .color m.Colors/black)))}
       (fx/center
@@ -35,7 +34,7 @@
           {:mainAxisAlignment m.MainAxisAlignment/center}
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
-            "You clicked the button this many times:")
+            "Traffic so far:")
           (fx/text!
             {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
@@ -43,17 +42,10 @@
              :click-source (cF+ [;; todo validate options, ie :watch, not :obs
                                  :watch (fn [_ me ^#/(async/StreamController String) new-source _ _]
                                         ;; todo when old unlisten
-                                        (dp :click-source-obs-sees new-source)
                                         (.listen (.-stream ^#/(async/StreamController String) new-source)
                                           (fn [^String msg]
-                                            (dp :BAM!-heard msg)
                                             (with-integrity [:change :click-heard]
-                                              (mswap! me :clicks-heard inc)))))]
-                             (let [fab (fm* :clicker-fab)]
-                               (dp :found-fab!!!!!!! @fab)
-                               (assert fab)
-                               (assert (mget fab :clicks))
-                               (dp :found-fab-clicks!!!!!!! (mget fab :clicks))
-                               (mget fab :clicks)))
-             :clicks-heard (cI 0)}
-            (str "heard " (or (mget me :clicks-heard) "silence"))))))))
+                                              (mswap! me :messages-heard inc)))))]
+                             (mget (fm* :clicker-fab) :messages))
+             :messages-heard (cI 0)}
+            (str "msgs heard " (mget me :messages-heard))))))))
