@@ -1,0 +1,59 @@
+(ns tiltontec.example.x020-reactive-stream
+  (:require
+    ["dart:async" :as async]
+    [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
+    [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.model.core :refer [mget mset! mswap! fm*] :as md]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.integrity :refer [with-integrity]]))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Flutter/MX Counter Demo"
+     :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+    (fx/scaffold
+      {:appBar (fx/app-bar
+                 {:title (m/Text "Welcome to Flutter/MX World")})
+       :floatingActionButton
+       (cF (fx/floating-action-button
+             {:onPressed (as-dart-callback []
+                           (dp :bump-zc!!)
+                           (.add (.-sink ^#/(async/StreamController String) (mget me :clicks)) "ping"))
+              :tooltip   "Increment"}
+             {
+              :name :clicker-fab
+              :clicks (new #/(async/StreamController String))
+              }
+             (m/Icon m.Icons/add .color m.Colors/black)))}
+      (fx/center
+        (fx/column
+          {:mainAxisAlignment m.MainAxisAlignment/center}
+          (fx/text {:style (p/TextStyle .color m.Colors/black
+                             .fontSize 18.0)}
+            "You clicked the button this many times:")
+          (fx/text!
+            {:style (fx/in-my-context [me ctx]
+                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+            {:name  :z-counter
+             :click-source (cF+ [;; todo validate options, ie :watch, not :obs
+                                 :watch (fn [_ me ^#/(async/StreamController String) new-source _ _]
+                                        ;; todo when old unlisten
+                                        (dp :click-source-obs-sees new-source)
+                                        (.listen (.-stream ^#/(async/StreamController String) new-source)
+                                          (fn [^String msg]
+                                            (dp :BAM!-heard msg)
+                                            (with-integrity [:change :click-heard]
+                                              (mswap! me :clicks-heard inc)))))]
+                             (let [fab (fm* :clicker-fab)]
+                               (dp :found-fab!!!!!!! @fab)
+                               (assert fab)
+                               (assert (mget fab :clicks))
+                               (dp :found-fab-clicks!!!!!!! (mget fab :clicks))
+                               (mget fab :clicks)))
+             :clicks-heard (cI 0)}
+            (str "heard " (or (mget me :clicks-heard) "silence"))))))))
