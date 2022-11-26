@@ -1,6 +1,7 @@
 (ns tiltontec.example.x020-reactive-stream
   (:require
     ["dart:async" :as async]
+    [clojure.string :as str]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.model.core :refer [mget mset! mswap! fm*] :as md]
@@ -14,38 +15,41 @@
 
 (defn make-app []
   (fx/material-app
-    {:title "Flutter/MX Counter Demo"
+    {:title "Flutter/MX Stream Demo"
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     (fx/scaffold
       {:appBar (fx/app-bar
-                 {:title (m/Text "Welcome to Flutter/MX World")})
+                 {:title (m/Text "Talking to Myself")})
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
-                           (.add (.-sink ^#/(async/StreamController String) (mget me :messages)) "ping"))
-              :tooltip   "Increment"}
+                           (.add (.-sink ^#/(async/StreamController String) (mget me :message))
+                             (rand-nth
+                               (str/split  "four score and seven years ago our forefathers brought forth"
+                                 #" "))))
+              :tooltip   "Send message"}
              {
-              :name :clicker-fab
-              :messages (new #/(async/StreamController String))
+              :name :msg-send
+              :message (new #/(async/StreamController String))
               }
-             (m/Icon m.Icons/add .color m.Colors/black)))}
+             (m/Icon m.Icons/chat .color m.Colors/black)))}
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
           (fx/text {:style (p/TextStyle .color m.Colors/black
-                             .fontSize 18.0)}
-            "Traffic so far:")
+                             .fontSize 36.0)}
+            "Message received:")
           (fx/text!
             {:style (fx/in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                      (.-headline3 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
-             :click-source (cF+ [;; todo validate options, ie :watch, not :obs
-                                 :watch (fn [_ me ^#/(async/StreamController String) new-source _ _]
-                                        ;; todo when old unlisten
+             :msg-source (cF+ [;; todo validate options, ie :watch, not :obs
+                                 :watch (fn [_ me ^#/(async/StreamController String) new-source old-source _]
+                                        ;; todo when old-source, unlisten it
                                         (.listen (.-stream ^#/(async/StreamController String) new-source)
                                           (fn [^String msg]
-                                            (with-integrity [:change :click-heard]
-                                              (mswap! me :messages-heard inc)))))]
-                             (mget (fm* :clicker-fab) :messages))
-             :messages-heard (cI 0)}
-            (str "msgs heard " (mget me :messages-heard))))))))
+                                            (with-integrity [:change :msg-rcvd]
+                                              (mset! me :message-rcvd msg)))))]
+                             (mget (fm* :msg-send) :message))
+             :message-rcvd (cI "<none>")}
+            (mget me :message-rcvd)))))))
