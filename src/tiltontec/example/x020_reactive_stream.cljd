@@ -13,6 +13,12 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]))
 
+(def gettysburgh-address
+  (str/split (str "Four score and seven years ago our fathers brought forth on this continent comma"
+               " a new nation comma"
+               " conceived in Liberty comma"
+               " and dedicated to the proposition that all men are created equal stop") #" "))
+
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Stream Demo"
@@ -23,14 +29,18 @@
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
-                           (.add (.-sink ^#/(async/StreamController String) (mget me :message))
-                             (rand-nth
-                               (str/split  "four score and seven years ago our forefathers brought forth"
-                                 #" "))))
-              :tooltip   "Send message"}
+                           (mswap! me :offset #(if % (inc %) 0)))
+              :tooltip   "Send next word of message, looping at end"}
              {
-              :name :msg-send
-              :message (new #/(async/StreamController String))
+              :name       :msg-sender
+              :offset     (cI nil)
+              :next-word  (cF+ [:watch (fn [_ me new-word _ _]
+                                         (when new-word
+                                           (.add (.-sink ^#/(async/StreamController String) (mget me :msg-stream))
+                                             new-word)))]
+                            (when-let [offset (mget me :offset)]
+                              (nth gettysburgh-address (mod offset (count gettysburgh-address)))))
+              :msg-stream (new #/(async/StreamController String))
               }
              (m/Icon m.Icons/chat .color m.Colors/black)))}
       (fx/center
@@ -42,14 +52,14 @@
           (fx/text!
             {:style (fx/in-my-context [me ctx]
                       (.-headline3 (.-textTheme (m.Theme/of ctx))))}
-            {:name  :z-counter
-             :msg-source (cF+ [;; todo validate options, ie :watch, not :obs
+            {:msg-source   (cF+ [;; todo support either :obs or :watch for observers
+                                 ;; todo new Stream Cell type, or :stream? option a la :sync?
                                  :watch (fn [_ me ^#/(async/StreamController String) new-source old-source _]
-                                        ;; todo when old-source, unlisten it
-                                        (.listen (.-stream ^#/(async/StreamController String) new-source)
-                                          (fn [^String msg]
-                                            (with-integrity [:change :msg-rcvd]
-                                              (mset! me :message-rcvd msg)))))]
-                             (mget (fm* :msg-send) :message))
+                                          ;; todo when old-source, unlisten it
+                                          (.listen (.-stream ^#/(async/StreamController String) new-source)
+                                            (fn [^String msg]
+                                              (with-integrity [:change :msg-rcvd]
+                                                (mset! me :message-rcvd msg)))))]
+                             (mget (fm* :msg-sender) :msg-stream))
              :message-rcvd (cI "<none>")}
             (mget me :message-rcvd)))))))

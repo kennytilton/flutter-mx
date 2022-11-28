@@ -29,6 +29,7 @@
   (get @+observe-method+ key))
 
 (defn observe [slot-name me new-val old-val c]
+  (assert me (str "model observe invoked for standalone cell? " (cinfo c)))
   (dpx :watch-classic slot-name (minfo me) new-val)
   ;; todo if no state next, search up for nearest and set-State that
 
@@ -58,17 +59,19 @@ call parameters: slot, me, new, old, and c."
    (assert (dart/is? @+pulse+ int))
    (dpx :c-observe!!!! (cinfo c))
    (rmap-setf [:pulse-observed c] @+pulse+)
-   ;; we do observes specified for types or slots...
-   (observe (c-slot c) (c-model c) (c-value c) prior-value c)
 
-   (when-let [mx-type (cty/mx-type (c-model c))]
-     ;(prn :observing-mx-type mx-type why)
-     (cty/observe mx-type (c-slot c) (c-model c) (c-value c) prior-value c))
+   (when-let [me (c-model c)] ;; not in standalone cells, mostly in test suite
+     ;; we do observes specified for types or slots...
+     (observe (c-slot c) me (c-value c) prior-value c)
+
+     (when-let [mx-type (cty/mx-type (c-model c))]
+       ;(prn :observing-mx-type mx-type why)
+       (cty/observe mx-type (c-slot c) me (c-value c) prior-value c)))
 
    ;; ...and also do observes specified ad hoc on the cI/cF call.
    ;; nb that we do not want ad hoc observers to shadow those specified generically
    ;; indeed, in Lisp observers are progn methods -- they all run.
-   (when-let [cell-observer (:watch @c)]
+   (when-let [cell-observer (:obs @c)]
      #_(dp :cell-specific-obs!!!!!! why (cinfo c))
      (cell-observer (c-slot c) (c-model c) (c-value c) prior-value c))))
 

@@ -142,7 +142,7 @@
   (let [boct (atom 0)
         b (cI nil
             :slot :b
-            :watch (fn-obs
+            :obs (fn-obs
                    (dp :b-obs-runs!!!)
                    (swap! boct inc))
             :ephemeral? true)
@@ -150,7 +150,7 @@
         crun (atom 0)
         cobs (atom 0)
         c (cF+ [:slot :c
-                :watch (fn-obs (swap! cobs inc))]
+                :obs (fn-obs (swap! cobs inc))]
             (trx nil :bingo)
             (swap! crun inc)
             (prog1
@@ -166,6 +166,7 @@
     (assert (= 1 @crun @cobs))
     (assert (nil? (:value @b)))
 
+    (dp :eph-1-setup-ok)
     (do
       (c-reset! b "Mom")
       (assert (= "Hi Mom" (c-get c)))
@@ -173,6 +174,7 @@
       (assert (= 2 @crun @cobs))
       (assert (nil? (c-value b)))
       (assert (nil? (:value @b))))
+    (dp :eph-1-test-1-ok)
 
     (do
       (c-reset! b "Mom")

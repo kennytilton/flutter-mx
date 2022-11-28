@@ -27,7 +27,7 @@
   (let [bingo (atom false)
         c (cF+ [:slot :bingo
                 :watch (fn-obs
-                       (reset! bingo true))]
+                         (reset! bingo true))]
             (+ 40 2))]
     (assert (dart/is? (mx-type c) cty/CellFormula))
     (assert (= (c-value-state c) :unbound))
@@ -37,15 +37,16 @@
     (assert (not (c-valid? c)))
     (assert (nil? (c-model c)))
     (assert (= (c-get c) 42))
-    (assert (= 42 @c)) ;; ie, optimized-away
+    (assert (= 42 @c))                                      ;; ie, optimized-away
     (assert @bingo)
     ))
 
-(def bingo2 (atom false))
-
 (defn test-input []
-  (let [c (cI 42 :slot :bingo2
-            :watch (fn-obs (reset! bingo2 true)))]
+  (let [bingo2 (atom 0)
+        c (cI 42 :slot :bingo2
+            :watch (fn-obs
+                     (dp :test-input-obs-runs!!!)
+                     (swap! bingo2 inc)))]
     (assert (dart/is? (mx-type c) cty/Cell))
     (assert (= (c-value-state c) :valid))
     (assert (= #{} (c-callers c)))
@@ -54,23 +55,28 @@
     (assert (nil? (c-model c)))
     (assert (= :bingo2 (c-slot c) (c-slot-name c)))
     (assert (= (c-get c) 42))
-    (assert (= false @bingo2))
-    ))
+    (assert (= 1 @bingo2))
+
+    (c-reset! c 54)
+    (assert (= (c-get c) 54))
+    (assert (= 2 @bingo2))))
 
 (defn t-custom-obs []
   (let [bobs (atom nil)
         b (cI 2 :slot :bb
             :watch (fn-obs
-                   (trx nil slot me new old)
-                   (reset! bobs new)))
+                     (dp :watch-b slot me new old)
+                     (reset! bobs new)))
         cobs (atom nil)
         c (cF+ [:watch (fn-obs [slot me new old c]
-                       (trx slot me new old)
-                       (reset! cobs new))]
+                         (trx slot me new old)
+                         (reset! cobs new))]
             (* 10 (c-get b)))]
     (do
+      (dp :MX-built!------------------)
+      (assert (= @bobs nil) (str "@bobs not nil: " @bobs))
       (assert (= (c-get b) 2))
-      (assert (= @bobs nil))
+      (assert (= @bobs 2) (str "@bobs not nil: " @bobs))
       (assert (= (c-get c) 20))
       (assert (= @cobs 20))
       (c-reset! b 3)
