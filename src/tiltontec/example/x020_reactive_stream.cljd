@@ -13,8 +13,11 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]))
 
+;;; n.b. The astute reader may realize that our use here of the Dart stream could be replaced with a Cell dependency.
+;;; That is true. We just want to demonstrate how an _external_ stream can be woven into the MX dataflow.
+
 (def the-second-coming
-  ;; with apologies to William Butler Yeats, but we need a duplicate sequence
+  ;; with apologies to William Butler Yeats, we need a duplicate word sequence to make a point
   (str/split (str "Turning Turning in the widening gyre"
                " The falcon cannot hear the falconer;"
                " Things fall apart; the centre cannot hold;"
@@ -29,10 +32,6 @@
                  {:title (m/Text "Talking to Myself")})
        :floatingActionButton
        (cF (fx/floating-action-button
-             ;; A lot of logic below supports the simple idea that we do not want to "send" a word
-             ;; until the user clicks the SMS icon. So we do not start at zero offset, which would
-             ;; effectively launch the first word into the stream; instead we start at nil and check
-             ;; in a couple of places if we even have a numeric offset.
              {:onPressed (as-dart-callback []
                            ;; as-dart-callback jumps thru necessary interesting hoops
                            ;; to get this code to run when the user presses this widget.
@@ -41,36 +40,76 @@
              {
               :name       :msg-sender
               :offset     (cI nil)
-              ;; if we start at zero, we would broadcast the first word during app startup. Ugh.
+              ;; tl;dr: the rest of our implementation will fire off a word as soon as :offset is valid, so start at
+              ;; a null value and let the user kick things off.
+              ;;
+              ;; if we start at zero, the rest of our design would broadcast the first word during app startup. Ugh.
               ;; We _could_ model this differently. This is where the MX programmer can be creative.
-              ;; Another option might be to have the word stream start as "off", in which case a starting
-              ;; offset of zero would be fine: when the stream was turned on, the first word would be sent.
+              ;; Another option might be to give this message sender a new on-off property initialized to :off,
+              ;; in which case a starting offset of zero would be fine: when the stream was turned on,
+              ;; _then_ the first word would be sent.
+              ;;
+              ;; Moral: new MX developers need to think and design in terms of declarative, automatic state flow.
+              ;; The good news is that this is fun, and usually Just Works.
+              ;;
               :next-word  (cF+ [:ephemeral? true
-                                ;; "ephemeral" means fleeting. MX uses :ephemeral? to flag state akin to events,
-                                ;; things which happen, take effect (propagate thru the DAG), and then are no more.
+                                ;; tl;dr Have MX treat this property more like an event stream, so consecutive
+                                ;; duplicate values ("Turning Turning...") are not ignored (the usual dataflow optimization).
+                                ;;
+                                ;; Try This: make that ^^^ ":ephemeral? false" instead. Then we get only one "Turning".
+                                ;;
+                                ;; "ephemeral" means fleeting. MX models can uses :ephemeral? properties to model
+                                ;; events: things which happen, take effect (propagate thru the DAG), and then are no more.
                                 ;; Put another way, they are points in _causation_ time, with no duration.
                                 ;; After propagation the property appears as nil, but this is not
                                 ;; through a reactive state change from something to nil; the MX internals
                                 ;; revert the property to nil internally, without propagation, invisibly to
                                 ;; the reactive application rules and the property observer.
+                                ;;
                                 :watch (fn [_ me new-word _ _]
-                                         ;; It is great that the next-word _property_ populates each time the offset
-                                         ;; changes, but the Dart stream is not an MX mechanism. It is a pure
-                                         ;; Dart mechanism, outside the Matrix. Observers/watches exist precisely
-                                         ;; to give MX dataflow effect outside itself, so apps do things.
+                                         ;; tl;dr: We use a watch to connect MX state change to the Dart stream,
+                                         ;; feeding any new reactive property value into the Dart stream.
+                                         ;;
+                                         ;; It is great that the next-word property populates each time the offset
+                                         ;; changes, but the Dart stream will not know that. It is a pure
+                                         ;; Dart mechanism, outside the Matrix.
+                                         ;;
+                                         ;; Observers/watches exist precisely to give MX dataflow efficacy
+                                         ;; _outside_ itself, so apps do things. We usually call this "gluing", and
+                                         ;; also might speak of "lifting" streams into the Matrix.
+                                         ;;
                                          (when new-word
+                                           ;; Aside: this watch is accessing other MX state via MGET! Not a problem;
+                                           ;; MX internals guarantee the state found will be consistent with the
+                                           ;; state being watched.
                                            (.add (.-sink ^#/(async/StreamController String) (mget me :msg-stream))
                                              new-word)))]
                             (when-let [offset (mget me :offset)]
+                              ;; Aside: there would be no harm in repeating the form (mget me :offset).
+                              ;; The code just seems a whisker cleaner using when-let to avoid the repetition.
                               (nth the-second-coming (mod offset (count the-second-coming)))))
-              :msg-stream (new #/(async/StreamController String))
+              :msg-stream
+              ;; nb. No formula wrapper is _required_ by MX. In this case the property value can be generated in-line.
+              (new #/(async/StreamController String))
               }
-             (m/Icon m.Icons/chat .color m.Colors/white)))}
+             (m/Icon m.Icons/chat .color
+               ;; Just having fun toggling the color, but the astute reader may be surprised this works
+               ;; without being wrapped in a `cF` formula wrapper.
+               ;;
+               ;; Actually, it is. For MX lifecycle reasons, f/mx widget macros _always_ wrap their children in formulas.
+               ;; And if no dependencies are detected, any formula is silently GCed so the DAG does not grow needlessly,
+               ;; which in exceptional cases has been a performance issue.
+               (if (mget me :offset)
+                 m.Colors/white
+                 m.Colors/black))))}
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 36.0)}
+            ;; tl;dr We need to document the mechanisms, here FMU or "family search up". by which one widget tracks down
+            ;; another widget to get one of its properties.
+            ;;
             ;; Next we use FMU, short for "family search Up", instead of FM*, which searches everywhere, up and down.
             ;; This is one place in Matrix that requires careful coding. If we change this next to FM* (try it!),
             ;; we will hit an exception informing us that we are creating a cycle, namely:
@@ -85,8 +124,10 @@
                       ;; access to the Flutter context is not straightforward.
                       ;; Macro `in-my-context` handles the complexity of accessing the context.
                       (.-headline3 (.-textTheme (m.Theme/of ctx))))}
-            ;; We pause to call out what we have seen before: next we are able to provide a generic text proxy instance
-            ;; with several custom attributes. This is the prototype model of objects.
+            ;; tl;dr: Matrix supports the prototype model.
+            ;;
+            ;; We pause to call out what we have seen before: next we are able to provide
+            ;; a generic text proxy instance with several custom attributes. This is the prototype model of objects.
             ;; The prototype model avoids the OO trap of forever having to subclass instances when we need to extend
             ;; their capabilities, to achieve desired app behavior.
             {:name :msg-recipient
@@ -99,15 +140,20 @@
                                           ;; Super. But, now we need to do some wiring to connect the non-MX stream to the MX DAG.
                                           ;; 1. listen to the stream and...
                                           ;; 2. ...provide a listener which writes to an "input" Cell in the DAG.
+                                          ;; todo check if we need integrity isolation
                                           (.listen (.-stream ^#/(async/StreamController String) new-source)
                                             (fn [^String msg]
-                                              (with-integrity [:change :msg-rcvd]
-                                                (mset! me :msg-rcvd msg)))))]
+                                              (mset! me :msg-rcvd msg))))]
                              (mget (fm* :msg-sender) :msg-stream))
 
-             :msg-rcvd (cI "<none>"
-                         ;; again we flag a property as state _events_
-                         :ephemeral? true)
+             :msg-rcvd
+             ;; this value will be from outside MX dataflow, specifically a Dart stream,
+             ;; so we make it an "input" Cell, "input" from the perspective of the Matrix.
+             ;; Now instead of its value coming from a formula, we will MSET! it from procedural code,
+             ;; in this case the stream .LISTEN callback.
+             (cI "<none>"
+               ;; again we flag a property as a sink for state _events_
+               :ephemeral? true)
 
              :msg-ct (cF (when-let [msg (mget me :msg-rcvd)]
                            (when-not (or (str/blank? msg)
@@ -116,4 +162,7 @@
                              ;; _do_ have access to their prior value calculated in the anaphor "cache".
                              (if _cache (inc _cache) 1))))
              }
+            ;; Next we follow the HTML pattern in which everything is a child, even where
+            ;; the "child" will be the content of a Flutter Text, the constructor first parameter.
+            ;; f/mx prefers the syntactic regularity of HTML.
             (mget me :msg-rcvd)))))))
