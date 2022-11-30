@@ -4,7 +4,7 @@
     [clojure.string :as str]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
     [tiltontec.cell.observer :refer [fn-obs]]
-    [tiltontec.model.core :refer [mget mset! mswap! fm*] :as md]
+    [tiltontec.model.core :refer [mget mset! mswap! fm* fmu] :as md]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -13,11 +13,11 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]))
 
-(def gettysburgh-address
-  (str/split (str "Four score and seven years ago our fathers brought forth on this continent comma"
-               " a new nation comma"
-               " conceived in Liberty comma"
-               " and dedicated to the proposition that all men are created equal stop") #" "))
+(def the-second-coming
+  (str/split (str "Turning and turning in the widening gyre"
+               " The falcon cannot hear the falconer;"
+               " Things fall apart; the centre cannot hold;"
+               " Mere anarchy is loosed upon the world.") #" "))
 
 (defn make-app []
   (fx/material-app
@@ -34,32 +34,57 @@
              {
               :name       :msg-sender
               :offset     (cI nil)
-              :next-word  (cF+ [:watch (fn [_ me new-word _ _]
+              :next-word  (cF+ [:unchanged-if (fn [a b] false)
+                                ;; The default test for unchanged-if is =. In Clojure, = goes by content. So...
+                                ;; ...if a phrase includes the same word twice in a row ("We had had enough."),
+                                ;; by default the second occurrence would not get sent.
+                                ;;
+                                ;; In this use case we know we _always_ want
+                                ;; to send the nth word when n the offset changes, so our test always
+                                ;; indicates change, ie, unchanged is false.
+                                :watch (fn [_ me new-word _ _]
                                          (when new-word
                                            (.add (.-sink ^#/(async/StreamController String) (mget me :msg-stream))
                                              new-word)))]
                             (when-let [offset (mget me :offset)]
-                              (nth gettysburgh-address (mod offset (count gettysburgh-address)))))
+                              (nth the-second-coming (mod offset (count the-second-coming)))))
               :msg-stream (new #/(async/StreamController String))
               }
-             (m/Icon m.Icons/chat .color m.Colors/black)))}
+             (m/Icon m.Icons/chat .color m.Colors/white)))}
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 36.0)}
-            "Message received:")
+            ;; Next we use FMU, short for "search Up", instead of FM*, which searches everywhere, up and down.
+            ;; This is one place in Matrix that requires careful coding. If we change this next to FM* (try it!),
+            ;; we will hit an exception informing us that we are creating a cycle:
+            ;;   this string we are building becomes an MX "kid" of the text proxy;
+            ;;   to compute this kid, we ask MX to search the whole MX for :msg-recipient;
+            ;;   the search utility then asks for this child, which is in the middle of being computed(!);
+            ;; That is a cycle. We avoid it by telling the utility to search only above this node.
+            (str "Message " (or (mget (fmu :msg-recipient) :msg-ct) "not") " received:"))
+
           (fx/text!
             {:style (fx/in-my-context [me ctx]
                       (.-headline3 (.-textTheme (m.Theme/of ctx))))}
-            {:msg-source   (cF+ [;; todo support either :obs or :watch for observers
-                                 ;; todo new Stream Cell type, or :stream? option a la :sync?
+            {:name :msg-recipient
+             :msg-source   (cF+ [;; todo new Stream Cell type, or :stream? option a la :sync?
                                  :watch (fn [_ me ^#/(async/StreamController String) new-source old-source _]
                                           ;; todo when old-source, unlisten it
                                           (.listen (.-stream ^#/(async/StreamController String) new-source)
                                             (fn [^String msg]
                                               (with-integrity [:change :msg-rcvd]
-                                                (mset! me :message-rcvd msg)))))]
+                                                (mset! me :msg-rcvd msg)))))]
                              (mget (fm* :msg-sender) :msg-stream))
-             :message-rcvd (cI "<none>")}
-            (mget me :message-rcvd)))))))
+
+             :msg-rcvd (cI "<none>"
+                         ;; again we have to override the usual MX optimization of
+                         ;; not propagating unchanged "new" values, or we will not propagate to dependents
+                         :unchanged-if (fn [a b] false))
+
+             :msg-ct (cF (when-not (= (mget me :msg-rcvd) "<none>")
+                           ;; normally formulae calculate without regard to the past, but they
+                           ;; _do_ have access to the prior value calculated in the anaphor "cache".
+                           (if cache (inc cache) 1)))}
+            (mget me :msg-rcvd)))))))
