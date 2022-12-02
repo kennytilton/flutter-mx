@@ -11,7 +11,7 @@ If you just want to run the thing...
 
 #### 0. Prepare your ClojureDart working set-up, on Mac OS X
 
-First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennyilton on that Slack or the Flutter Community Slack.
+First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennytilton on that Slack or the Flutter Community Slack.
 
 #### 1. Clone this repo
 `git clone https://github.com/kennytilton/flutter-mx`
@@ -23,7 +23,7 @@ In a terminal:
 
 You should see a Simulator appear. I get an iPhone 12 by default. Explore the `open` command for alternatives.
 
-BEWARE! If you forget this step to open a simulator, the next command will run for ages and _open a tab in your browser_. Close everything and start over. 
+BEWARE! If you forget the step above to open a simulator, the next command will run for ages and _open a tab in your browser_. Close everything and start over. 
 
 #### 3. Run the sample app.
 
