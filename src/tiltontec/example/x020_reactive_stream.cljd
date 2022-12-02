@@ -142,7 +142,6 @@
                                           ;; Super. But, now we need to do some wiring to connect the non-MX stream to the MX DAG.
                                           ;; 1. listen to the stream and...
                                           ;; 2. ...provide a listener which writes to an "input" Cell in the DAG.
-                                          ;; todo check if we need integrity isolation
                                           (.listen (.-stream ^#/(async/StreamController String) new-source)
                                             (fn [^String msg]
                                               (mset! me :msg-rcvd msg))))]
