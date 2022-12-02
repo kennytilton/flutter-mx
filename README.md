@@ -15,7 +15,7 @@ First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tense
 
 #### 1. Clone this repo
 `git clone https://github.com/kennytilton/flutter-mx`
-t
+
 #### 2. Start a simulator. (Our focus so far has been mobile.)
 
 In a terminal:
@@ -23,7 +23,7 @@ In a terminal:
 
 You should see a Simulator appear. I get an iPhone 12 by default. Explore the `open` command for alternatives.
 
-BEWARE! If you forget this step to open a simulator, the next command will run for ages and _open a tab in your browser_. Close everything and start over. 
+BEWARE! If you forget the step above to open a simulator, the next command will run for ages and _open a tab in your browser_. Close everything and start over. 
 
 #### 3. Run the sample app.
 
