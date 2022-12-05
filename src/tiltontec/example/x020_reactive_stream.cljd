@@ -28,7 +28,7 @@
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     (fx/scaffold
       {:appBar (fx/app-bar
-                 {:title (m/Text "Reactive Streams Demo")})
+                 {:title (m/Text "Reactive Stream Demo")})
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
@@ -109,13 +109,6 @@
           {:mainAxisAlignment m.MainAxisAlignment/center}
           {:name :column-1}
 
-          #_ (fx/text {:style (p/TextStyle .color m.Colors/blue
-                             .fontSize 18.0)}
-            {:full-text (cF (conj
-                              (if (= _cache cty/unbound) [] _cache)
-                              (mget (fmu :msg-recipient) :msg-rcvd)))}
-            (str/join " " (mget me :full-text)))
-
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 36.0)}
             ;; tl;dr We need to document the MX navigation mechanisms, here FMU or "family search up". by which
@@ -182,5 +175,12 @@
             ;; the "child" will be the content of a Flutter Text, in pure Flutter provided as
             ;; the first parameter to the Text constructor.
             (mget me :msg-rcvd))
+
+          (fx/text {:style (p/TextStyle .color m.Colors/blue
+                                .fontSize 18.0)}
+               {:full-text (cF (conj
+                                 (if (= _cache cty/unbound) [] _cache)
+                                 (mget (fmu :msg-recipient) :msg-rcvd)))}
+               (str/join " " (remove #{"<none>"} (mget me :full-text))))
 
           )))))
