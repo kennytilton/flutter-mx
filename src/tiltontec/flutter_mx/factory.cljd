@@ -10,12 +10,28 @@
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.util.core
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.cell.base :refer [mx-type unbound  cinfo Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.base :refer [mx-type unbound cinfo Model PObserver observe md-ref?] :as cty]
             [tiltontec.cell.integrity :as integrity]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [clojure.string :as str]))
+
+;;; --- Flutter refs of fx models -----------------------------
+
+(defn call-with-flutter-ref [me factory]
+  (let [ref (factory)]
+    (dp :cwref!!!!!! ref)
+    (rmap-meta-setf [:fx$flutter-ref me] ref)
+    ref))
+
+(defmacro with-flutter-ref [& body]
+  `(call-with-flutter-ref me (fn [] ~@body)))
+
+(defn flutter-ref [me]
+  (:fx$flutter-ref (meta me)))
+
+;;; --------------------
 
 (defn record-fx$state [me state]
   (dpx :recording-state (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
@@ -66,13 +82,13 @@
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! slot new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) #_#_ :deref @me)
+        (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) #_#_:deref @me)
         (dpx :FXDartWidget-observing-cell!!! slot (cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :FXDWO-settingimmediatestate slot new-value #_(meta me)  (cty/minfo me) (.-mounted state))
+          (do (dpx :FXDWO-settingimmediatestate slot new-value #_(meta me) (cty/minfo me) (.-mounted state))
               (state-set state me))
           (if-let [^State state (fx-state-nearest me)]
             (do
@@ -80,7 +96,7 @@
                 :slot slot :new-prio new-value prior-value)
               (state-set state me))
             (dpx :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
-              #_ @me)))))))
+              #_@me)))))))
 
 ;;; --- the maker macros ---------------------------------------------------
 
@@ -99,19 +115,20 @@
                                          (apply concat kvs)))
                      ^#/(w/State ~fx-class #_m/SnackBar)
                      (~'createState [_#]
-                       (reify :extends #/(w/State #_ ~fx-class m/SnackBar)
+                       (reify :extends #/(w/State #_~fx-class m/SnackBar)
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
                            (when-let [init (tiltontec.model.core/mget me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
-                           (~fx-class                     ;; /SnackBar
-                             ~@(let [kvs (for [[k# _#] fx-props]
-                                           [(symbol (str "." (name k#)))
-                                            `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
-                                               (tiltontec.model.core/mget me ~k#))])]
-                                 (apply concat kvs)))))))))
+                           (with-flutter-ref
+                             (~fx-class                     ;; /SnackBar
+                               ~@(let [kvs (for [[k# _#] fx-props]
+                                             [(symbol (str "." (name k#)))
+                                              `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
+                                                 (tiltontec.model.core/mget me ~k#))])]
+                                   (apply concat kvs))))))))))
        nil)))
 
 (defmacro k1-child-stateful [fx-class fx-props mx-props & children]
@@ -136,13 +153,14 @@
                          (~'build [_# ctx]
                            (let [k1# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/md-kids me)))]
-                             (~fx-class
-                               .child k1#
-                               ~@(let [kvs (for [[k# _#] fx-props]
-                                             [(symbol (str "." (name k#)))
-                                              `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
-                                                 (tiltontec.model.core/mget me ~k#))])]
-                                   (apply concat kvs))))))))))
+                             (with-flutter-ref
+                               (~fx-class
+                                 .child k1#
+                                 ~@(let [kvs (for [[k# _#] fx-props]
+                                               [(symbol (str "." (name k#)))
+                                                `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
+                                                   (tiltontec.model.core/mget me ~k#))])]
+                                     (apply concat kvs)))))))))))
        (tiltontec.model.core/cFkids ~@children))))
 
 (defmacro k1-child-stateless [fx-class fx-props mx-props & children]
@@ -152,14 +170,15 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn [me ctx]
-                   (~fx-class
-                     .child (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
-                              (first (tiltontec.model.core/md-kids me)))
-                     ~@(let [kvs (for [[k# _#] fx-props]
-                                   [(symbol (str "." (name k#)))
-                                    `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
-                                       (tiltontec.model.core/mget me ~k#))])]
-                         (apply concat kvs)))))
+                   (with-flutter-ref
+                     (~fx-class
+                       .child (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
+                                (first (tiltontec.model.core/md-kids me)))
+                       ~@(let [kvs (for [[k# _#] fx-props]
+                                     [(symbol (str "." (name k#)))
+                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
+                                         (tiltontec.model.core/mget me ~k#))])]
+                           (apply concat kvs))))))
        (tiltontec.model.core/cFkids ~@children))))
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & children]
@@ -390,7 +409,7 @@
 
 ;;; --- kids for builder ------------------------------------------------------
 
-(defmacro  kids-for-builder [fx-class fx-props mx-props & children]
+(defmacro kids-for-builder [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
        ~fx-props
