@@ -18,12 +18,10 @@
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     (fx/scaffold
       {:appBar (fx/app-bar
-                 {:title (m/Text "Hello Flutter/MX World")})
+                 {:title (m/Text "Flutter/MX Counter")})
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
-                           (dp :bump-zc!! (minfo me))
-                           (dp :reff!! (:fx$flutter-ref (meta me)))
                            (mswap! (fm* :z-counter) :value inc))
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
@@ -32,7 +30,7 @@
           {:mainAxisAlignment m.MainAxisAlignment/center}
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
-            "You have clicked the button this many times:")
+            "We have clicked the button this many times:")
           (fx/text!
             {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}

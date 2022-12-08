@@ -266,3 +266,20 @@
 (defmacro my-app []
   ;; fasc "captures" 'me
   `(tiltontec.model.core/fasc :app))
+
+;;; --- hot reload support --------------------
+
+(defmacro wrap-stateless [widget-expression]
+  `(reify :extends (w/StatelessWidget)
+     (~'build [self# ctx#] ~widget-expression)))
+
+(defmacro wrap-unique-key [widget-expression]
+  `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
+     (~'createState [_#]
+       (reify :extends w/State
+         (~'build [_# ctx]
+           ~widget-expression)))))
+
+(defmacro run-app [widget-expression]
+  `(m/runApp
+     (wrap-stateless (wrap-unique-key ~widget-expression))))

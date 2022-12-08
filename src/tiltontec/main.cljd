@@ -28,23 +28,23 @@
     [tiltontec.example.x14-hero :as hero]
     [tiltontec.example.x15-fade-widget :as fade]
     [tiltontec.example.x020-reactive-stream :as rxjs]
-    [tiltontec.example.layout-explorer :as layo] ;; buggy
+    [tiltontec.example.layout-explorer :as layo]            ;; buggy
     [tiltontec.demo.todoMVC.core :as todo]))
 
-(defmacro wrap-stateless [widget-expression]
-  `(reify :extends (w/StatelessWidget)
-     (~'build [self# ctx#] ~widget-expression)))
-
-(defmacro wrap-unique-key [widget-expression]
-  `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
-     (~'createState [_#]
-       (reify :extends w/State
-         (~'build [_# ctx]
-           ~widget-expression)))))
-
-(defmacro run-app [widget-expression]
-  `(m/runApp
-     (wrap-stateless (wrap-unique-key ~widget-expression))))
+;(defmacro wrap-stateless [widget-expression]
+;  `(reify :extends (w/StatelessWidget)
+;     (~'build [self# ctx#] ~widget-expression)))
+;
+;(defmacro wrap-unique-key [widget-expression]
+;  `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
+;     (~'createState [_#]
+;       (reify :extends w/State
+;         (~'build [_# ctx]
+;           ~widget-expression)))))
+;
+;(defmacro run-app [widget-expression]
+;  `(m/runApp
+;     (wrap-stateless (wrap-unique-key ~widget-expression))))
 
 (defn main []
   (.ensureInitialized w/WidgetsFlutterBinding)
@@ -53,25 +53,23 @@
 
   ;; --- Your REPL code here! -----------------------
 
-  (m/runApp
-    (wrap-stateless
-      (wrap-unique-key
-        (fx/fx-render nil
-          ;; Change the ns/ vvv and rebuild to see a different example.
-          (counter/make-app))))))
-
-#_ (defn main []
-  (.ensureInitialized w/WidgetsFlutterBinding)
-
-  ;; (testing/run-tests)
-
-  ;; --- Your REPL code here! -----------------------
-
-  (m/runApp
+  (fx/run-app
     (fx/fx-render nil
       ;; Change the ns/ vvv and rebuild to see a different example.
-      (todo/make-app)))
-  )
+      (hello/make-app))))
+
+#_(defn main []
+    (.ensureInitialized w/WidgetsFlutterBinding)
+
+    ;; (testing/run-tests)
+
+    ;; --- Your REPL code here! -----------------------
+
+    (m/runApp
+      (fx/fx-render nil
+        ;; Change the ns/ vvv and rebuild to see a different example.
+        (todo/make-app)))
+    )
 
 ;; (set! r/debugPaintSizeEnabled true)
 ;; (w/debugDumpApp)
