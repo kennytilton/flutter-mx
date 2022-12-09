@@ -182,7 +182,6 @@
 (defmacro alert-dialog [fx-props mx-props & children]
   `(tiltontec.flutter-mx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
-(deftag tiltontec.flutter-mx.factory/k1-param1-stateless text m/Text)
 (deftag tiltontec.flutter-mx.factory/childless-stateful text-field m/TextField)
 (deftag tiltontec.flutter-mx.factory/childless-stateful check-box m/Checkbox)
 
@@ -193,26 +192,28 @@
 
 ;;; --- tagleaf --------------------------------------------
 
-(defmacro konly-param1-stateless [fx-class fx-props mx-props only-kid]
-  (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
-       ~fx-props
-       (assoc ~mx-props
-         :_param-1 (tiltontec.cell.core/cF ~only-kid)
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn [me ctx]
-                   (with-flutter-ref
-                     (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
-                                  (mget me :_param-1))
-                       ~@(let [kvs (for [[k# _#] fx-props]
-                                     [(symbol (str "." (name k#)))
-                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
-                                         (tiltontec.model.core/mget me ~k#))])]
-                           (apply concat kvs))))))
-       ;; todo teach make-fx it does not need children
-       nil)))
+(defmacro deftagleaf [factory mx-name fx-class]
+  `(defmacro ~mx-name [& vargs#]
+     (let [[fx-props# mx-props# param-1#]
+           (cond
+             (nil? vargs#)
+             nil
 
-;(deftag tiltontec.flutter-mx.factory/konly-param1-stateless textex m/Text)
+             (not (map? (first vargs#)))
+             ; just param
+             (list nil nil (first vargs#))
+
+             (map? (second vargs#))
+             ; full spec kids optional
+             vargs#
+
+             :else
+             ;; first is fx props, no mx props, maybe kids
+             (list (first vargs#) nil (last vargs#)))]
+       `(~'~factory  ~'~fx-class ~fx-props# ~mx-props# ~param-1#))))
+
+(deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
+(deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateful text! m/Text)
 
 ;;; --- childless stateless --------------------------------------------------------
 
@@ -224,7 +225,7 @@
 (deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
 
 (deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
-(deftag tiltontec.flutter-mx.factory/k1-param1-stateful text! m/Text)
+
 
 (deftag tiltontec.flutter-mx.factory/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
 (deftag tiltontec.flutter-mx.factory/childless-stateless list-tile m/ListTile)
