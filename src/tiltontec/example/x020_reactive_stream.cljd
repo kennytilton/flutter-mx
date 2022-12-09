@@ -121,7 +121,7 @@
             ;;   - to compute this kid, we ask MX to search the _whole_ MX for :msg-recipient;
             ;;   - the search utility then asks this text widget for its child, which is being computed(!);
             ;; That is a cycle. We avoid it by telling the utility to search only above this node.
-            (str "MesXsage " (or (mget (fmu :msg-recipient) :msg-ct) "not") " received:"))
+            (str "Message " (or (mget (fmu :msg-recipient) :msg-ct) "not") " received:"))
 
           (fx/text!
             {:style (fx/in-my-context [me ctx]
@@ -181,6 +181,7 @@
                {:full-text (cF (conj
                                  (if (= _cache cty/unbound) [] _cache)
                                  (mget (fmu :msg-recipient) :msg-rcvd)))}
-               (str/join " " (remove #{"<none>"} (mget me :full-text))))
-
-          )))))
+            (let [poem (remove #{"<none>"} (mget me :full-text))]
+              (if (seq poem)
+                (str/join " " poem)
+                "nothing yet"))))))))
