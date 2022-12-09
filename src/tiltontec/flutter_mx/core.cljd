@@ -191,6 +191,29 @@
 ;; todo does snackbar still need this custom macro?
 (deftag tiltontec.flutter-mx.factory/make-fx-snackbar snack-bar m/SnackBar)
 
+;;; --- tagleaf --------------------------------------------
+
+(defmacro konly-param1-stateless [fx-class fx-props mx-props only-kid]
+  (let []
+    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :_param-1 (tiltontec.cell.core/cF ~only-kid)
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (with-flutter-ref
+                     (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
+                                  (mget me :_param-1))
+                       ~@(let [kvs (for [[k# _#] fx-props]
+                                     [(symbol (str "." (name k#)))
+                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
+                                         (tiltontec.model.core/mget me ~k#))])]
+                           (apply concat kvs))))))
+       ;; todo teach make-fx it does not need children
+       nil)))
+
+;(deftag tiltontec.flutter-mx.factory/konly-param1-stateless textex m/Text)
+
 ;;; --- childless stateless --------------------------------------------------------
 
 (defmacro icon-button [& vargs]
