@@ -109,7 +109,9 @@
           {:mainAxisAlignment m.MainAxisAlignment/center}
           {:name :column-1}
 
-          (fx/text {:style (p/TextStyle .color m.Colors/blue
+          (fx/text
+            ;; this version is up here to confirm FMU does not hit a bogus cycle error
+            {:style (p/TextStyle .color m.Colors/blue
                                .fontSize 18.0)}
             {:full-text (cF (conj
                               (if (= _cache cty/unbound) [] _cache)
@@ -194,10 +196,4 @@
             (let [poem (remove #{"<none>"} (mget me :full-text))]
               (if (seq poem)
                 (str/join " " poem)
-                "cool nothing yet")))
-
-          (fx/text "just the string")
-          (fx/text
-            {:style (p/TextStyle .color m.Colors/red
-                      .fontSize 18.0)}
-            "Zt woiks!"))))))
+                "The Second Coming, by Wm Butler Yeats"))))))))
