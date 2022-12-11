@@ -1,0 +1,68 @@
+(ns tiltontec.demo.todoMVC.persist
+  (:require
+    ["package:shared_preferences/shared_preferences.dart" :as prefs]
+    ["dart:convert" :as convert]
+    ["package:uuid/uuid.dart" :as uu]
+    [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.util.core :as util]
+    [clojure.walk :as walk]))
+
+(def +DB+ (atom nil)) ;; nb. just a cache, not reactive
+(defn ^prefs/SharedPreferences? DB [] (deref +DB+))
+(defn ^prefs/SharedPreferences? DB! [db] (reset! +DB+ db))
+
+(def +uuid+ (atom nil))
+(defn ^uu/Uuid UUID []
+  (or (deref +uuid+)
+    (uu/Uuid)))
+
+(defn td-initialize
+  "Create a SharedPrefs to-do from a CLJD map alone, returning prefs key."
+  [collection-name td-map]
+  (assert (not (:stg-id td-map)) "td-init sees stg-id suggesting td already written")
+  (assert (:created-at td-map) "td-init requires created-at prop")
+
+  (let [new-stg-id (str collection-name "/" (.v4 (UUID)))
+        new-data (assoc td-map :stg-id new-stg-id)]
+    (.setString (DB) new-stg-id
+      (convert/jsonEncode
+        (walk/stringify-keys
+          (select-keys new-data
+            [:stg-id :created-at :title :completed]))))
+    new-stg-id))
+
+(defn td-rewrite
+  "Update an LS to-do given only a CLJD map of its properties. Must include LS id."
+  [collection-name td-map]
+  (let [stg-id (:stg-id td-map)]
+    (assert stg-id "td-rewrite map must include stg-id")
+    (.setString  (DB) stg-id
+      (convert/jsonEncode
+        (walk/stringify-keys
+          (select-keys td-map
+            [:stg-id :created-at :title :completed]))))
+    stg-id))
+
+(defn td-delete
+  [collection-name stg-id]
+  (assert stg-id "td-delete requires stg-id")
+  (.remove  (DB) stg-id)
+  stg-id)
+
+(defn collection-docs [collection-name]
+  (assert (DB) "no db in collection-docs")
+  (let [all-td-keys (collection-keys collection-name)]
+    (mapv (fn [td-key]
+            (util/dart-map->cljd-map
+              (convert/jsonDecode (.getString (DB) td-key)))) all-td-keys)))
+
+(defn collection-keys [collection-name]
+  (assert (DB) "no db in collection-keys")
+  (filter (fn [k]
+            (= collection-name (subs k 0 (count collection-name))))
+    (into #{} (.getKeys (DB)))))
+
+(defn delete-all-docs [collection-name]
+  (assert (DB) "no db in delete-all-docs")
+  (doseq [k (collection-keys collection-name)]
+    (.remove ^prefs/SharedPreferences (DB) k)))
