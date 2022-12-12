@@ -58,6 +58,8 @@ To try a different example:
 4. Now hit RETURN.
 5. Check the sim to see the new app.
 
+More examples, including translations of the rest of the [ClojureDart samples](https://github.com/Tensegritics/ClojureDart/blob/main/samples/README.md), can be found in our [Flutter/MX Sandbox](https://github.com/kennytilton/flutter-mx-sandbox) repo.
+
 #### 5. More on the Flutter/MX version of TodoMVC
 Here is a TodoMVC medium screenshot:
 
