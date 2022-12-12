@@ -1,0 +1,100 @@
+(ns tiltontec.example.mathpaper
+  (:require
+    [clojure.string :as str]
+    [tiltontec.cell.core :refer [cF]]
+    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.flutter-mx.core :as fx
+     :refer [scaffold app-bar text center column hero material-app]]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tex/flutter_tex.dart" :as tk]))
+
+; (m/Stack
+;    .alignment m/Alignment.bottomRight
+;    .clipBehavior m/Clip.none
+;    .children (concat [tap-to-close-fab]
+
+(def pythag "When \\(a \\ne 0 \\), there are two solutions to \\(ax^2 + bx + c = 0\\)")
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Hello World, Teal"
+     :debugShowCheckedModeBanner false
+     :theme (m/ThemeData .primarySwatch
+              m.Colors/red)}
+    (scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "Mathpaper(tm)")})}
+      (center
+        (column
+          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+          (text {:overflow p.TextOverflow/ellipsis
+                 :style    (p/TextStyle
+                             .color m.Colors/cyan
+                             .fontSize 64.0)}
+            "2+2")
+          (tk/TeXView
+            .child (tk/TeXViewColumn
+                     .children [(tk/TeXViewInkWell
+                                 .id "id_0"
+                                 .child (tk/TeXViewColumn
+                                          .children [(tk/TeXViewDocument "<center><h2>MathPaper&trade;</h2></center>"
+                                                       #_#_ .style (tk/TeXViewStyle
+                                                                .textAlign (.-Center tk/TeXViewTextAlign)))
+                                                     (tk/TeXViewDocument pythag
+                                                       .style (.fromCSS tk/TeXViewStyle
+                                                                (str "padding:15px;"
+                                                                  "color:black;"
+                                                                  "background:beige")))]))])
+            .style (tk/TeXViewStyle
+                     .elevation 10
+                     .borderRadius (.all tk/TeXViewBorderRadius 25)
+                     .border (.all tk/TeXViewBorder (tk/TeXViewBorderDecoration
+                                                   .borderColor m.Colors/blue
+                                                   .borderStyle tk.TeXViewBorderStyle/solid
+                                                   .borderWidth 5)))))))))
+
+;    style: TeXViewStyle(
+;      elevation: 10,
+;      borderRadius: TeXViewBorderRadius.all(25),
+;      border: TeXViewBorder.all(TeXViewBorderDecoration(
+;          borderColor: Colors.blue,
+;          borderStyle: TeXViewBorderStyle.solid,
+;          borderWidth: 5)),
+;      backgroundColor: Colors.white,
+
+; TeXView(
+;    child: TeXViewColumn(children: [
+;      TeXViewInkWell(
+;        id: "id_0",
+;        child: TeXViewColumn(children: [
+;          TeXViewDocument(r"""<h2>Flutter \( \rm\\TeX \)</h2>""",
+;              style: TeXViewStyle(textAlign: TeXViewTextAlign.Center)),
+;          TeXViewContainer(
+;            child: TeXViewImage.network(
+;                'https://raw.githubusercontent.com/shah-xad/flutter_tex/master/example/assets/flutter_tex_banner.png'),
+;            style: TeXViewStyle(
+;              margin: TeXViewMargin.all(10),
+;              borderRadius: TeXViewBorderRadius.all(20),
+;            ),
+;          ),
+;          TeXViewDocument(r"""<p>
+;                       When \(a \ne 0 \), there are two solutions to \(ax^2 + bx + c = 0\) and they are
+;                       $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$</p>""",
+;              style: TeXViewStyle.fromCSS(
+;                  'padding: 15px; color: white; background: green'))
+;        ]),
+;      )
+;    ]),
+;    style: TeXViewStyle(
+;      elevation: 10,
+;      borderRadius: TeXViewBorderRadius.all(25),
+;      border: TeXViewBorder.all(TeXViewBorderDecoration(
+;          borderColor: Colors.blue,
+;          borderStyle: TeXViewBorderStyle.solid,
+;          borderWidth: 5)),
+;      backgroundColor: Colors.white,
+;    ),
+;   ),
+;  )
