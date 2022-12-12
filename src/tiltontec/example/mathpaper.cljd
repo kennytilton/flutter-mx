@@ -15,7 +15,9 @@
 ;    .clipBehavior m/Clip.none
 ;    .children (concat [tap-to-close-fab]
 
-(def pythag "When \\(a \\ne 0 \\), there are two solutions to \\(ax^2 + bx + c = 0\\)")
+(def pythag (str "When \\(a \\ne 0 \\), there are two solutions"
+              " to \\(ax^2 + bx + c = 0\\)"
+              " and they are\n; $$x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}.$$"))
 
 (defn make-app []
   (material-app
@@ -29,7 +31,7 @@
       (center
         (column
           {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
-          (text {:overflow p.TextOverflow/ellipsis
+          #_ (text {:overflow p.TextOverflow/ellipsis
                  :style    (p/TextStyle
                              .color m.Colors/cyan
                              .fontSize 64.0)}
@@ -39,12 +41,12 @@
                      .children [(tk/TeXViewInkWell
                                  .id "id_0"
                                  .child (tk/TeXViewColumn
-                                          .children [(tk/TeXViewDocument "<center><h2>MathPaper&trade;</h2></center>"
+                                          .children [(tk/TeXViewDocument "<center><h2>MathXPaper&trade;</h2></center>"
                                                        #_#_ .style (tk/TeXViewStyle
                                                                 .textAlign (.-Center tk/TeXViewTextAlign)))
                                                      (tk/TeXViewDocument pythag
                                                        .style (.fromCSS tk/TeXViewStyle
-                                                                (str "padding:15px;"
+                                                                (str "padding:30px;"
                                                                   "color:black;"
                                                                   "background:beige")))]))])
             .style (tk/TeXViewStyle
