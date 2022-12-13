@@ -37,11 +37,17 @@
         (column
           {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
           {:name  :tex-pair
-           :value (cI sum2
+           :value (cI pythag
                     :watch (fn [slot me newv priorv c]
                              (dp (str "value Tek: " newv))))}
           (fx/text-field
             {:controller (cFonce (fx/standard-text-value-controller me))
+             ;;:keyboardType m.TextInputType/multiline
+             :maxLines 10
+             #_#_ :style (p/TextStyle
+                      ;; todo does flutter let us place the style higher so referenced just once?
+                      ;;.color m.Colors/grey
+                      .fontSize 18.0)
              :decoration (m/InputDecoration
                            .labelText "Raw TeX"
                            .helperText "Your LaTeX here!"
