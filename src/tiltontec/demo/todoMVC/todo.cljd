@@ -11,7 +11,7 @@
 
     [tiltontec.util.core
      :refer [difference atom? err rmap-setf rmap-meta-setf pln] :as util]
-    [tiltontec.cell.matrix :as mx]
+    [tiltontec.cell.matrix :refer [PObserver observe] :as mx]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.integrity :as integrity]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
@@ -31,7 +31,7 @@
 
 (deftype ToDo []
   :extends cty/Model
-  mx/PObserver
+  PObserver
   (observe [this slot me new-value prior-value cell]
     ;; the initial observe, signified by prior value unbound,
     ;; is just of the MX to-do being awakened after being loaded

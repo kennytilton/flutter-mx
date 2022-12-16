@@ -5,7 +5,7 @@
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
     [tiltontec.util.core
      :refer [difference atom? err rmap-setf rmap-meta-setf pln]]
-    [tiltontec.cell.matrix :as mx]
+    [tiltontec.cell.matrix :refer [PObserver observe]  :as mx]
     [tiltontec.cell.base
      :refer [without-c-dependency
              cells-init c-optimized-away? c-formula? c-value c-optimize
@@ -192,7 +192,7 @@
 
 (deftype Family []
   :extends cty/Model
-  mx/PObserver
+  PObserver
   (observe [this slot me new-value prior-value cell]
     (dp :family-obs slot)
     (when (= slot :kids)

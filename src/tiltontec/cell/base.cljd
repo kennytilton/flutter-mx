@@ -9,7 +9,7 @@
              fifo-data fifo-add rmap-setf]
      :as utc]
 
-    [tiltontec.cell.matrix :as mx]))
+    [tiltontec.cell.matrix :refer [PObserver observe] :as mx]))
 
 
 
@@ -136,7 +136,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (deftype Model []
   :extends mx/MXImplementer
-  mx/PObserver
+  PObserver
   (observe [this slot me new-value prior-value cell]
     #_ (dp :Model-not-observing (cinfo cell))))
 
