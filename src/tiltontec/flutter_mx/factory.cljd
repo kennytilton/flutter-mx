@@ -56,7 +56,7 @@
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
-    :mx-type mx-type
+    ::cty/type mx-type
     :fx$state (cI nil)
     ;; todo move next to meta
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
@@ -71,32 +71,33 @@
    (state-set state nil))
   ([^State state me]
    (if (.-mounted state)
-     (do (dpx :setting-state state (cty/minfo me))
+     (do (dp :setting-state state (cty/minfo me))
          (.setState state (fn [] (do))))
-     (dpx :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
+     (dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
 (deftype FXDartWidget []
   :extends Model
-  mx/PObserver
+  tiltontec.cell.matrix/PObserver
   (observe [this slot me new-value prior-value cell]
-    (when-not (some #{slot} [:parent :name :mx-type :not-to-be :initState :fx-class :cells-flushed
+    (dp :fxdw-obs slot)
+    (when-not (some #{slot} [:parent :name ::cty/type :not-to-be :initState :fx-class :cells-flushed
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
-        (dpx :FXDartWidget-observing!!! slot new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
+        (dp :FXDartWidget-observing!!! slot new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
         (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) #_#_:deref @me)
         (dpx :FXDartWidget-observing-cell!!! slot (cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :FXDWO-settingimmediatestate slot new-value #_(meta me) (cty/minfo me) (.-mounted state))
+          (do (dp :FXDWO-settingimmediatestate slot new-value #_(meta me) (cty/minfo me) (.-mounted state))
               (state-set state me))
           (if-let [^State state (fx-state-nearest me)]
             (do
-              (dpx :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
+              (dp :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
                 :slot slot :new-prio new-value prior-value)
               (state-set state me))
-            (dpx :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
+            (dp :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
               #_@me)))))))
 
 ;;; --- the maker macros ---------------------------------------------------
@@ -272,6 +273,7 @@
                              (dp :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
+                           (dp :konly-param1-stateful-build-entry)
                            (with-flutter-ref
                              (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
                                           (mget me :_param-1))

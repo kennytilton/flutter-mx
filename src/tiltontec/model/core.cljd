@@ -46,7 +46,7 @@
 (defn md-get [me slot]
   ;; (trx :md-get slot me)
   (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing slot: " slot " :me " me))
+  (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing slot: " slot " :me " @me))
   (if-let [c (md-cell me slot)]
     (c-get c)
     (slot @me)))
@@ -127,7 +127,7 @@
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
   (cond
-    (odd? (count arg-list)) (apply make :mx-type arg-list)
+    (odd? (count arg-list)) (apply make ::cty/type arg-list)
     :else
     (do
       (let [iargs (apply hash-map arg-list)
@@ -137,7 +137,7 @@
                                (->> arg-list
                                  (partition 2)
                                  (filter (fn [[slot v]]
-                                           (not (= :mx-type slot))))
+                                           (not (= ::cty/type slot))))
                                  (map (fn [[k v]]
                                         (vector k (if (c-ref? v)
                                                     unbound
@@ -147,7 +147,7 @@
                    mdmap)
                  :meta {:state   :nascent
                         ;; todo pull more fx$s into meta
-                        :mx-type (:mx-type iargs (cty/Model.))})]
+                        ::cty/type (:mx-type iargs (cty/Model.))})]
         (assert (meta me))
         #_(when-not (:parent @me)
             (dp :no-par!!!! me))
@@ -156,7 +156,7 @@
           (->> arg-list
             (partition 2)
             (filter (fn [[slot v]]
-                      (when-not (some #{slot} [:parent :name :mx-type :not-to-be
+                      (when-not (some #{slot} [:parent :name ::cty/type :not-to-be
                                                :fx$ikeys :fx$notifier :fx$observer])
                         (md-install-cell me slot v))))
             (map vec)
@@ -194,6 +194,7 @@
   :extends cty/Model
   mx/PObserver
   (observe [this slot me new-value prior-value cell]
+    (dp :family-obs slot)
     (when (= slot :kids)
       (fm-kids-observe slot me new-value prior-value cell))))
 
@@ -205,10 +206,10 @@
   (cond
     ;; if arg-list is odd we assume they started with a Family subtype
     ;; used mostly for regression tests
-    (odd? (count arg-list)) (apply make-family :mx-type arg-list)
+    (odd? (count arg-list)) (apply make-family ::cty/type arg-list)
     :else
     (apply make
-      :mx-type (Family.)
+      ::cty/type (Family.)
       :not-to-be fm-not-to-be
       arg-list)))
 

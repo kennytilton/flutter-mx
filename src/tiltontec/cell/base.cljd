@@ -138,11 +138,17 @@ rule to get once behavior or just when fm-traversing to find someone"
   :extends mx/MXImplementer
   mx/PObserver
   (observe [this slot me new-value prior-value cell]
-    #_ (prn :Model-not-observing (cinfo cell))))
+    #_ (dp :Model-not-observing (cinfo cell))))
 
 (defn mx-type [it]
   (when-let [m (meta it)]
-    (:mx-type m)))
+    (::type m)))
+
+(defn md-type [md]
+  (assert (and md (atom? md) (map? @md))
+    (str "md-type> argument null or not atom or not map deref: " md))
+  (when-let [m (meta md)]
+    (::type m)))
 
 (deftype Cell []
   :extends mx/MXImplementer)
@@ -273,9 +279,10 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;; --- defmodel rizing ---------------------
 
 (defn md-ref? [x]
-  ;;(trx :md-ref?-sees x)
+  #_ (when (and x (atom? x))
+    (dp :md-ref-sees (md-type x) (meta x)))
   (and x (atom? x)
-    (dart/is? (mx-type x) Model)))
+    (dart/is? (md-type x) Model)))
 
 
 ;; --- mdead? ---

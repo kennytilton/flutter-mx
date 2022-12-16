@@ -1,7 +1,7 @@
 (ns tiltontec.cell.observer
   (:require
     [tiltontec.util.base
-     :refer [trx dpx dp type-cljd]]
+     :refer [trx dpx dp]]
 
     [tiltontec.util.core
      :refer [cl-find set-ify atom? err
@@ -39,8 +39,8 @@
     (do (dpx :using-obj-observer (minfo me))
         (obs slot-name me new-val old-val c)))
 
-  (when-let [obs (observer-get (type-cljd me))]
-    (do (prn :using-type-obs slot-name (type-cljd me))
+  (when-let [obs (observer-get (cty/mx-type me))]
+    (do (prn :using-type-obs slot-name (cty/mx-type me))
         (obs slot-name me new-val old-val c))))
 
 (defmacro fn-obs
@@ -65,9 +65,9 @@ call parameters: slot, me, new, old, and c."
      ;; we do observes specified for types or slots...
      (observe (c-slot c) me (c-value c) prior-value c)
 
-     (when-let [mx-type (cty/mx-type (c-model c))]
+     (when-let [md-type (cty/md-type (c-model c))]
        ;(prn :observing-mx-type mx-type why)
-       (mx/observe mx-type (c-slot c) me (c-value c) prior-value c)))
+       (mx/observe md-type (c-slot c) me (c-value c) prior-value c)))
 
    ;; ...and also do observes specified ad hoc on the cI/cF call.
    ;; nb that we do not want ad hoc observers to shadow those specified generically

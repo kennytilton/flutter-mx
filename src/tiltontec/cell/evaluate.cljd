@@ -135,7 +135,7 @@
     (c-ref? c) (prog1
                  (with-integrity ()
                    (let [prior-value (c-value c)]
-                     #_(dp :cget-to-evic (c-slot c) (mx-type (c-model c)))
+                     #_(dp :cget-to-evic (c-slot c) (md-type (c-model c)))
                      #_(when (and *depender* (not= :kids (c-slot *depender*)))
                          (prn :c-get-sees-depender
                            (str "asker= "
@@ -160,7 +160,7 @@
                    (dpx :c-get-depender!! (meta *depender*))
                    #_(when (and *depender* (not= :kids (c-slot *depender*)))
                        (prn :c-get-records-dependency
-                         :askee (c-slot c) (mx-type (c-model c))
+                         :askee (c-slot c) (md-type (c-model c))
                          (str "asker= "
                            (c-slot *depender*) "/"
                            (c-md-name *depender*))))
@@ -265,7 +265,7 @@
               *call-stack* (cons c *call-stack*)
               *defer-changes* true]
       (unlink-from-used c :pre-rule-clear)
-      (assert (c-rule c) (str "No rule in %s type %s" (:slot c) (mx-type c)))
+      (assert (c-rule c) (str "No rule in %s type %s" (:slot @c) (cty/c-type c)))
 
       (dpx c :CNL-trying-formula (cinfo c))
       (let [raw-value #_((c-rule c) c)

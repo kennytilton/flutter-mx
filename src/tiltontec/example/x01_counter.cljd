@@ -22,6 +22,7 @@
        :floatingActionButton
        (cF (fx/floating-action-button
              {:onPressed (as-dart-callback []
+                           (dp :counting!!!!)
                            (mswap! (fm* :z-counter) :value inc))
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
@@ -35,5 +36,7 @@
             {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
-             :value (cI 0)}
-            (str (md/my-value))))))))
+             :value (cI 0 :watch (fn [slot me new old c]
+                                   (dp :bam-val new)))}
+            (do (dp :new-value??? (md/my-value))
+                (str (md/my-value)))))))))
