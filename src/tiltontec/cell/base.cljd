@@ -7,7 +7,9 @@
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf]
-     :as utc]))
+     :as utc]
+
+    [tiltontec.cell.matrix :as mx]))
 
 
 
@@ -132,16 +134,12 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;(derive ::cell ::object)
 ;(derive ::c-formula ::cell)
 
-(defprotocol PObserver
-  (observe [this slot me new-value prior-value cell]))
-
-(deftype MXImplementer [])
 
 ;; (declare cinfo)
 
 (deftype Model []
-  :extends MXImplementer
-  PObserver
+  :extends mx/MXImplementer
+  mx/PObserver
   (observe [this slot me new-value prior-value cell]
     #_ (prn :Model-not-observing (cinfo cell))))
 
@@ -150,7 +148,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (:mx-type m)))
 
 (deftype Cell []
-  :extends MXImplementer)
+  :extends mx/MXImplementer)
 
 (deftype CellFormula []
   :extends Cell)

@@ -9,7 +9,9 @@
              :refer [TextStyle]]
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.util.core :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.cell.base :refer [mx-type unbound  cinfo Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.matrix :as mx]
+            [tiltontec.cell.matrix :as mx]
+            [tiltontec.cell.base :refer [mx-type unbound  cinfo Model md-ref?] :as cty]
             [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
             [tiltontec.flutter-mx.factory :as mk]))
 
@@ -17,12 +19,12 @@
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
   ;; treated as callback to MX to get the resolved value.
-  :extends cty/MXImplementer)
+  :extends mx/MXImplementer)
 
 (deftype CBToResolve [value]
   ;; tells fx-resolve to call the mx value as a function of ctx and me.
   ;; used where app needs to see the Flutter context to decide a value
-  :extends cty/MXImplementer)
+  :extends mx/MXImplementer)
 
 (defn fx-resolve
   ([me ctx widget-value]

@@ -10,7 +10,8 @@
             [tiltontec.util.base :refer [dprn dp dpx]]
             [tiltontec.util.core
              :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.cell.base :refer [mx-type unbound cinfo Model PObserver observe md-ref?] :as cty]
+            [tiltontec.cell.matrix :as mx]
+            [tiltontec.cell.base :refer [mx-type unbound cinfo Model md-ref?] :as cty]
             [tiltontec.cell.integrity :as integrity]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
@@ -76,7 +77,7 @@
 
 (deftype FXDartWidget []
   :extends Model
-  PObserver
+  mx/PObserver
   (observe [this slot me new-value prior-value cell]
     (when-not (some #{slot} [:parent :name :mx-type :not-to-be :initState :fx-class :cells-flushed
                              :fx$state :fx$ikeys :fx$notifier :fx$observer])

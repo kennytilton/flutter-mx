@@ -8,6 +8,7 @@
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-setf]
      :as ut]
+    [tiltontec.cell.matrix :as mx]
 
     [tiltontec.cell.base
      :refer [c-ref? md-ref? unbound cinfo minfo
@@ -66,7 +67,7 @@ call parameters: slot, me, new, old, and c."
 
      (when-let [mx-type (cty/mx-type (c-model c))]
        ;(prn :observing-mx-type mx-type why)
-       (cty/observe mx-type (c-slot c) me (c-value c) prior-value c)))
+       (mx/observe mx-type (c-slot c) me (c-value c) prior-value c)))
 
    ;; ...and also do observes specified ad hoc on the cI/cF call.
    ;; nb that we do not want ad hoc observers to shadow those specified generically
