@@ -134,9 +134,6 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;(derive ::cell ::object)
 ;(derive ::c-formula ::cell)
 
-
-;; (declare cinfo)
-
 (deftype Model []
   :extends mx/MXImplementer
   mx/PObserver
@@ -153,12 +150,19 @@ rule to get once behavior or just when fm-traversing to find someone"
 (deftype CellFormula []
   :extends Cell)
 
-(defn c-formula? [c]
-  (dart/is? (mx-type c) CellFormula))
+(defn c-type [c]
+  (assert (and c (atom? c) (map? @c))
+    (str "c-type> argument null or not atom or not map deref: " c))
+  (when-let [m (meta c)]
+    (::type m)))
 
 (defn c-ref? [c]
-  (and c (atom? c) (map? @c)
-    (dart/is? (mx-type c) Cell)))
+  (when (and c (atom? c) (map? @c))
+    (dart/is? (c-type c) Cell)))
+
+(defn c-formula? [c]
+  (when (and c (atom? c) (map? @c))
+    (dart/is? (c-type c) CellFormula)))
 
 (utb/def-rmap-slots c-
   me slot state input? rule pulse pulse-last-changed pulse-observed
