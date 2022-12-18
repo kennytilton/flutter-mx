@@ -1,0 +1,140 @@
+(ns tiltontec.test.dtvm-admin
+  (:require ["package:flutter_blue_plus/flutter_blue_plus.dart" :as
+             ble]
+            ["dart:core" :as dc]
+            [tiltontec.util.base :refer [dp dpx]]
+            [tiltontec.cell.core :refer [cF cF+ cI]]
+            [tiltontec.cell.base
+             :refer [cells-init c-optimized-away? c-formula? c-value c-optimize
+                     c-unbound? c-input? c-model mdead? c-valid? c-useds c-ref? md-ref?
+                     c-state +pulse+ c-pulse-observed
+                     *call-stack* *defer-changes* unbound
+                     c-rule c-me c-value-state c-callers caller-ensure
+                     unlink-from-callers *causation*
+                     c-slot-name c-synaptic? caller-drop
+                     c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
+                     *depender* *not-to-be*
+                     *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+            [tiltontec.model.core :refer [mget mset! mswap! the-kids mdv! md-get fm! make md-reset!] :as md]
+            [tiltontec.cell.integrity :refer [with-integrity with-cc]]))
+
+(defn obs-slot-new [slot-name me new-value prior-value cell]
+  (prn slot-name :now new-value))
+
+(def patcher-state (atom {}))
+
+(def exposed-inner-mx (atom nil))
+
+(defn connect! [^ble/BluetoothDevice device]
+  (when-not (get @patcher-state :connection-in-progress?)
+    (dc/print [:connecting! device])
+    (swap! patcher-state assoc :connection-in-progress? true)
+    (with-cc :mini-mx-test
+      (mset! @exposed-inner-mx :connected? true))
+    (.connect device)
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+    (.disconnect device)))
+
+(defn gen-device-mx [scan-candidates]
+  (dp :gendev-mx scan-candidates)
+  (mapv (fn [ sr]
+          (let [ device (:device sr)
+                device-mx (md/make
+                            :device (cI  device)
+                            :device-name (cF (:name device))
+                            :manufacturer-data (cI :manufacturerData )
+                            :device-id 42
+                            :status (cI nil)
+                            :connected? true #_ (cF (let [status (mget me :status)]
+                                              (= :ble-connected status))))]
+            #_ (.listen (.-state device)
+              (fn [state]
+                (mset! device-mx :status state)))
+            device-mx))
+    scan-candidates))
+
+(def bluetooth
+  (md/make
+    :target (cI "PBVM")
+    :scanning? (cI nil)
+    :connection-in-progress? (cI false)
+    :eager-connect (cI true)
+    :device-candidates (cF+ [:watch (fn dc-watch [slot-name me new-value prior-value cell]
+                                      (dc/print [:de--------------------------------------------------------------------------------- slot-name me new-value prior-value cell])
+                                      (when (first new-value)
+                                        (dc/print  [:new-values (mapv deref new-value)]))
+                                      (dc/print [:devcandis-callers (mapv cty/cinfo (cty/c-callers cell))]))]
+                         (let [scan-candidates (md-get me :scan-candidates)]
+                           (dp :dve-candis-sees scan-candidates)
+                           (when (seq scan-candidates)
+                             (dp :dve-candis-sees-seq scan-candidates)
+                             (gen-device-mx scan-candidates))))
+    :scan-candidates (cI nil
+                       :ephemeral? true
+                       :watch (fn candidate-watch [slot-name me new-value prior-value cell]
+                                (when (and (mget me :target)
+                                        (mget me :eager-connect)
+                                        (first new-value))
+                                  (dc/print [:-expect-connection-attempt (.-device (first new-value))])
+                                  (when-let [device (-> (first new-value)
+                                                      :device)]
+                                    (with-cc :connecting-to-device
+                                      (connect! device))))))
+
+    :connections (cF+ [:watch (fn [_ _ _ _ cell]
+                                (dc/print [:connections-used (deref (first (cty/c-useds cell)))
+                                           :useds (mapv tiltontec.cell.base/cinfo (c-useds cell))]))]
+                   (let [devices (mget me :device-candidates)]
+                     (dc/print [:devices devices])
+                     (doall (filter (fn [device]
+                                      (dc/print [:device device])
+                                      (mget device :connected?))
+                              devices))))
+
+    :some-connections? (cF (pos? (count (mget me :connections))))))
+
+
+(def ^ble/FlutterBluePlus flutterBlue (.instance ble/FlutterBluePlus))
+
+(defn scan! [timeout & {:keys [eager-connect target ensure-service-id]}]
+  (dp :scan!!!!!!!!!!)
+  (let [sub (-> flutterBlue
+              .-scanResults
+              (.listen (fn scan-watch [results]
+                         (let [candidates (if target
+                                            (filter (fn matches-target [^ble/ScanResult result]
+                                                      (when result
+                                                        (= target (-> result ^ble/BluetoothDevice .-device .-name))))
+                                              results)
+                                            results)]
+                           (mset! bluetooth :scan-candidates candidates))
+                         nil)))]
+
+    sub))
+
+(comment (scan! :eager-connect true :target "PBVM"))
+
+(defn stop-scan! []
+  (when (mget bluetooth :scanning?)
+    (.stopScan flutterBlue)
+    (mset! bluetooth :scanning? false)))
+
+(defn listen-for-notifications [^ble/BluetoothCharacteristic characteristic cb]
+  (.setNotifyValue (await characteristic) true)
+  (-> characteristic
+    .-value
+    (.listen (fn [value] (cb value)))))
+
+

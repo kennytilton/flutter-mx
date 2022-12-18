@@ -31,16 +31,16 @@
 
 (defn observe [slot-name me new-val old-val c]
   (assert me (str "model observe invoked for standalone cell? " (cinfo c)))
-  (dpx :watch-classic slot-name (minfo me) new-val)
+  (dp :watch-oskool slot-name (minfo me) new-val)
   ;; todo if no state next, search up for nearest and set-State that
 
   (when-let [obs (:fx$observer @me)]
     ;; note that we carry on with generic observe after specific observe
-    (do (dp :using-obj-observer (minfo me))
+    (do (dp :oskool-using-obj-observer (minfo me))
         (obs slot-name me new-val old-val c)))
 
   (when-let [obs (observer-get (cty/mx-type me))]
-    (do (dp :using-type-obs slot-name (cty/mx-type me))
+    (do (dp :oskool-using-type-obs slot-name (cty/mx-type me))
         (obs slot-name me new-val old-val c))))
 
 (defmacro fn-obs
@@ -66,7 +66,7 @@ call parameters: slot, me, new, old, and c."
      (observe (c-slot c) me (c-value c) prior-value c)
 
      (when-let [md-type (cty/md-type (c-model c))]
-       ;(prn :observing-mx-type mx-type why)
+       (dp :observing-md-type!!! md-type why)
        (mx/observe md-type (c-slot c) me (c-value c) prior-value c)))
 
    ;; ...and also do observes specified ad hoc on the cI/cF call.
