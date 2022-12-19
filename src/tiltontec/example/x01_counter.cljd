@@ -29,6 +29,11 @@
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
+          (fx/text
+            ;; having this extra display stresses navigation, so we keep it
+            {:style (fx/in-my-context [me ctx]
+                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+            (str (* 2 (mget (md/fmu :z-counter) :value))))
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
             "We have clicked the button this many times:")
