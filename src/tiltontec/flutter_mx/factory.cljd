@@ -71,7 +71,7 @@
    (state-set state nil))
   ([^State state me]
    (if (.-mounted state)
-     (do (dp :setting-state state (cty/minfo me))
+     (do (dpx :setting-state state (cty/minfo me))
          (.setState state (fn [] (do))))
      (dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
@@ -270,10 +270,10 @@
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
                            (when-let [init (mget me :initState)]
-                             (dp :calling-initstate-of (tiltontec.cell.base/minfo me))
+                             (dpx :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
-                           (dp :konly-param1-stateful-build-entry)
+                           (dpx :konly-param1-stateful-build-entry)
                            (with-flutter-ref
                              (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
                                           (mget me :_param-1))

@@ -35,6 +35,15 @@ rule to get once behavior or just when fm-traversing to find someone"
 (def +client-q-handler+ (atom nil))
 
 (defmacro with-mx-isolation [& body]
+  `(do
+     (tiltontec.util.base/dp :mxiso-ignoring!!!!!!!!!! tiltontec.cell.base/*within-integrity*
+                                    tiltontec.cell.base/*depender*
+                                    tiltontec.cell.base/*defer-changes*
+                                    tiltontec.cell.base/*call-stack*)
+     ~@body))
+
+#_
+(defmacro with-mx-isolation [& body]
   `(binding [tiltontec.cell.base/*within-integrity* nil
              tiltontec.cell.base/*depender* nil
              tiltontec.cell.base/*defer-changes* false
