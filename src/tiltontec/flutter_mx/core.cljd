@@ -128,7 +128,7 @@
             .text (md/mget me :value))]
     (.addListener c
       (fn []
-        (cty/WITHOUT-mx-isolation
+        (cty/with-mx-isolation
           (md/mset! me :value (.-text c)))))
     c))
 
@@ -284,7 +284,7 @@
 (defmacro as-dart-callback [[& cb-params] & body]
   `(tiltontec.flutter-mx.core/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
-       (tiltontec.cell.base/WITHOUT-mx-isolation
+       (tiltontec.cell.base/with-mx-isolation
          ~@body))))
 
 (defmacro my-app []
