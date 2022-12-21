@@ -5,7 +5,7 @@
     [tiltontec.util.core
      :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
     [tiltontec.cell.base
-     :refer [without-c-dependency pcell c-optimized-away? c-formula? c-value c-optimize
+     :refer [without-c-dependency with-mx-isolation pcell c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? mx-type cprn c-code$
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo minfo
@@ -202,13 +202,14 @@
                            (.then ^Future raw-value
                              (fn [fu-val]
                                ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
-                               (with-integrity [:change :future-then]
-                                 ;; todo if a cfu is meant to run repeatedly as dependencies change,
-                                 ;;      do we need to clear :then? Or is opti-away not a problem
-                                 ;;      since it would have happened were there no users??
-                                 (rmap-meta-setf [:then? c] true)
-                                 (c-value-assume c (if-let [and-then (:and-then? @c)]
-                                                     (and-then c fu-val) fu-val) nil))))
+                               (with-mx-isolation
+                                 (with-integrity [:change :future-then]
+                                   ;; todo if a cfu is meant to run repeatedly as dependencies change,
+                                   ;;      do we need to clear :then? Or is opti-away not a problem
+                                   ;;      since it would have happened were there no users??
+                                   (rmap-meta-setf [:then? c] true)
+                                   (c-value-assume c (if-let [and-then (:and-then? @c)]
+                                                       (and-then c fu-val) fu-val) nil)))))
                            ;; forcing nil pending future
                            ;; TODO support :pending-future-placeholder-value and force that instead
                            (c-value-assume c nil propagation-code))
