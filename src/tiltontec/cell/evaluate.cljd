@@ -143,6 +143,55 @@
                      (prog1
 
                        (let [ev (ensure-value-is-current c :c-read nil)]
+                         (dp :c-get-ensured!!! (c-state c) ev)
+                         ;; (when (= (c-slot c) :title) (dp :evic ev))
+                         ev)
+                       ;; this is new here, intended to awaken standalone cells JIT
+                       ;; /do/ might be better inside evic, or test here
+                       ;; to see if c-model is nil? (trying latter...)
+                       (when (and (nil? (c-model c))
+                               (= (c-state c) :nascent)
+                               (> @+pulse+ (c-pulse-observed c)))
+                         (dp :c-get-observe!!!!!!!!!!! (c-state c))
+                         (rmap-setf [:state c] :awake)
+                         (c-observe c prior-value :cget)
+                         (ephemeral-reset c)))))
+                 (when *depender*
+                   (dpx :c-get-depender!! (cinfo *depender*))
+                   (dpx :c-get-depender!! (meta *depender*))
+                   #_(when (and *depender* (not= :kids (c-slot *depender*)))
+                       (prn :c-get-records-dependency
+                         :askee (c-slot c) (md-type (c-model c))
+                         (str "asker= "
+                           (c-slot *depender*) "/"
+                           (c-md-name *depender*))))
+                   (when-not (cty/c-optimized-away? *depender*)
+                     (dpx :c-get-reco-dependency (cinfo c) @c (meta c))
+                     (record-dependency c)
+                     (dpx :c-get-reco-dependency-cool (cinfo c)))))
+    (atom? c) @c
+    :else c))
+#_
+(defn c-get
+  "The API for determing the value associated with a Cell.
+  Ensures value is current, records any dependent, and
+  notices if a standalone  cell has never been observed."
+
+  [c]
+
+  (cond
+    (c-ref? c) (prog1
+                 (with-integrity ()
+                   (let [prior-value (c-value c)]
+                     #_(dp :cget-to-evic (c-slot c) (md-type (c-model c)))
+                     #_(when (and *depender* (not= :kids (c-slot *depender*)))
+                         (prn :c-get-sees-depender
+                           (str "asker= "
+                             (c-slot *depender*) "/"
+                             (c-md-name *depender*))))
+                     (prog1
+
+                       (let [ev (ensure-value-is-current c :c-read nil)]
                          ;; (when (= (c-slot c) :title) (dp :evic ev))
                          ev)
                        ;; this is new here, intended to awaken standalone cells JIT
