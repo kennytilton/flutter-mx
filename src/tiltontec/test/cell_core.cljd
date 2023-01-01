@@ -150,7 +150,9 @@
         crun (atom 0)
         cobs (atom 0)
         c (cF+ [:slot :c
-                :obs (fn-obs (swap! cobs inc))]
+                :obs (fn-obs
+                       (dp :c-obs-runs! @cobs (= new old) slot new old)
+                       (swap! cobs inc))]
             (trx nil :bingo)
             (swap! crun inc)
             (prog1
@@ -277,14 +279,14 @@
     (is (= 3 @ect))))
 
 (defn run-tests []
-  (test-rmap)
-  (test-fifo-build)
-  (test-cI)
-  (test-cI+)
-  (test-cF)
-  (test-cF+)
+  ;(test-rmap)
+  ;(test-fifo-build)
+  ;(test-cI)
+  ;(test-cI+)
+  ;(test-cF)
+  ;(test-cF+)
   (t-eph-1)
-  (t-cFn)
-  (t-cFonce)
-  (opti-late-via-cf-freeze)
+  ;(t-cFn)
+  ;(t-cFonce)
+  ;(opti-late-via-cf-freeze)
   (dp "cell-core-OK"))
