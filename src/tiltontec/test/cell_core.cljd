@@ -150,6 +150,7 @@
         crun (atom 0)
         cobs (atom 0)
         c (cF+ [:slot :c
+                :debug true
                 :obs (fn-obs
                        (dp :c-obs-runs!!! @cobs new old)
                        (swap! cobs inc))]
@@ -169,6 +170,7 @@
     (assert (nil? (:value @b)))
 
     (dp :eph-1-setup-ok)
+
     (do
       (creset! b "Mom")
       (assert (= "Hi Mom" (c-get c)))
