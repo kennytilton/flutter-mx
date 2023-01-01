@@ -14,12 +14,17 @@ If you just want to run the thing...
 First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennytilton on that Slack or the Flutter Community Slack.
 
 #### 1. Clone this repo
-`git clone https://github.com/kennytilton/flutter-mx`
+```bash
+git clone https://github.com/kennytilton/flutter-mx
+```
 
 #### 2. Start a simulator. (Our focus so far has been mobile.)
 
 In a terminal:
-* start a sim: `open -a Simulator`
+* start a sim: 
+```bash
+open -a Simulator
+```
 
 You should see a Simulator appear. I get an iPhone 12 by default. Explore the `open` command for alternatives.
 
@@ -27,14 +32,15 @@ BEWARE! If you forget the step above to open a simulator, the next command will 
 
 #### 3. Run the sample app.
 
-In a terminal:
-* `cd flutter-mx`, or wherever you cloned it;
+In a terminal: `cd flutter-mx`, or wherever you cloned it;
 
 Next, we build the app and start a "watch" to rebuild when the source changes.
 
 HEADS UP! This next command does not return. Use Control-C to kill the process when through exploring:
 
-* `clj -M -m cljd.build flutter`
+```bash
+clj -M -m cljd.build flutter
+```
 
 After a few minutes (just the first time, thirty seconds on subsequent start-ups) you should see these last lines of output:
 ```
