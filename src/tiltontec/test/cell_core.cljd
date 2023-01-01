@@ -143,18 +143,14 @@
         b (cI nil
             :slot :b
             :obs (fn-obs
-                   (dp :b-obs-runs!!! @boct new old)
                    (swap! boct inc))
             :ephemeral? true)
         _ (c-awaken b)
         crun (atom 0)
         cobs (atom 0)
         c (cF+ [:slot :c
-                :debug true
                 :obs (fn-obs
-                       (dp :c-obs-runs!!! @cobs new old)
                        (swap! cobs inc))]
-            (dp :c-runs!!! @crun)
             (swap! crun inc)
             (prog1
               (str "Hi " (c-get b))
@@ -169,8 +165,6 @@
     (assert (= 1 @crun @cobs))
     (assert (nil? (:value @b)))
 
-    (dp :eph-1-setup-ok)
-
     (do
       (creset! b "Mom")
       (assert (= "Hi Mom" (c-get c)))
@@ -178,60 +172,6 @@
       (assert (= 2 @crun @cobs))
       (assert (nil? (c-value b)))
       (assert (nil? (:value @b))))
-    (dp :eph-1-test-1-ok)
-
-    (do
-      (creset! b "Mom")
-      (assert (= "Hi Mom" (c-get c)))
-      (assert (= 3 @boct))
-      (assert (= 3 @crun))
-      (assert (= 2 @cobs))
-      (assert (nil? (c-value b)))
-      (assert (nil? (:value @b))))
-    (dp :t-eph-1-OK)))
-
-#_
-(defn t-eph-1 []
-  (cells-init)
-  (data-pulse-next)
-  (let [boct (atom 0)
-        b (cI nil
-            :slot :b
-            :obs (fn-obs
-                   (dp :b-obs-runs!!!)
-                   (swap! boct inc))
-            :ephemeral? true)
-        _ (c-awaken b)
-        crun (atom 0)
-        cobs (atom 0)
-        c (cF+ [:slot :c
-                :obs (fn-obs
-                       (dp :c-obs-runs! @cobs (= new old) slot new old)
-                       (swap! cobs inc))]
-            (trx nil :bingo)
-            (swap! crun inc)
-            (prog1
-              (str "Hi " (c-get b))
-              (trx nil :cellread!! @b)))]
-    (assert (c-rule c) "Early no rule")
-    (assert (nil? (c-value b)))
-    (assert (= :valid (c-value-state b)))
-    (assert (c-valid? b))
-    (assert (c-valid? b))
-    (assert (= "Hi " (c-get c)))
-    (assert (= 1 @boct))
-    (assert (= 1 @crun @cobs))
-    (assert (nil? (:value @b)))
-
-    (dp :eph-1-setup-ok)
-    (do
-      (creset! b "Mom")
-      (assert (= "Hi Mom" (c-get c)))
-      (assert (= 2 @boct))
-      (assert (= 2 @crun @cobs))
-      (assert (nil? (c-value b)))
-      (assert (nil? (:value @b))))
-    (dp :eph-1-test-1-ok)
 
     (do
       (creset! b "Mom")
