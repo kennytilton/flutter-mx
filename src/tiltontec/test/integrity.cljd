@@ -20,7 +20,7 @@
      :refer [ fn-obs]]
 
     [tiltontec.cell.core
-     :refer [cF cF+ c-reset-next! cI c-reset! cset!]]
+     :refer [cF cF+ c-reset-next! cI creset! cset!]]
     ))
 
 (defn obsdbg []
@@ -61,7 +61,7 @@
       (assert (= (c-get loc) :missing))
       (assert (= 1 @+pulse+))
 
-      (c-reset! act :leave)
+      (creset! act :leave)
       (assert (= 3 @+pulse+))
       )))
 
@@ -77,8 +77,8 @@
                          #_  ;; fails on empty str or sth
                              (assert (thrown-with-msg?
                                    #?(:clj Exception :cljs js/Error)
-                                   #"c-reset!> change"
-                                   (c-reset! act :leave)))
+                                   #"creset!> change"
+                                   (creset! act :leave)))
                          (when-not (= new :missing)
                            (c-reset-next! alarm (case new
                                                   :home :off
@@ -120,7 +120,7 @@
     (assert (= (c-get sib) 1))
     (assert (= (:useds @sib) #{sia}))
     (assert (not @rsic))
-    (c-reset! sia 1)
+    (creset! sia 1)
     (assert (= 2 (:value @sib)))
     (assert (= (c-get sib) 2))))
 
@@ -182,7 +182,7 @@
     (do
       (reset! obs false)
       (reset! run false))
-    (c-reset! sia 2)
+    (creset! sia 2)
     (assert (= (c-get sib) 42))
     (assert (= (c-get sic) 21))
     (assert (not @obs))

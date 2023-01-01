@@ -20,7 +20,7 @@
     [tiltontec.cell.observer
      :refer [ fn-obs]]
     [tiltontec.cell.core
-     :refer [cF cF+ c-reset-next! cFonce cFn cI c-reset! make-cell make-c-formula]]
+     :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell make-c-formula]]
     [tiltontec.cell.evaluate :refer [c-get c-awaken]]))
 
 (defn hw-01 []
@@ -52,7 +52,7 @@
                      (reset! obs-action new)
                      (dp :observing slot new old)))}]
     (assert (=  (c-get (:name v)) "World"))
-    (c-reset! (:action v) "knocks")
+    (creset! (:action v) "knocks")
     (assert (=  (c-get (:action v)) "knocks"))
     (assert (= "knocks" @obs-action))))
 
@@ -68,7 +68,7 @@
     (assert (nil? (c-get (:action v))))
     (assert (nil? @action))
 
-    (c-reset! (:action v) "knock-knock")
+    (creset! (:action v) "knock-knock")
     (assert (= "knock-knock" @action))
     (assert (= (c-get (:action v)) "knock-knock"))))
 
@@ -90,7 +90,7 @@
     (c-awaken r-loc)
     (assert (= :missing (:value @r-loc)))
     (dp :---about-to-leave------------------)
-    (c-reset! r-action :leave)
+    (creset! r-action :leave)
     (dp :---left------------------)
     (assert (= :away (c-get r-loc)))))
 
@@ -113,8 +113,8 @@
                          (case act
                            :knock-knock "hello, world"))))]
     (assert (nil? (c-get r-response)))
-    (c-reset! (:action v) :knock-knock)
-    (c-reset! r-action :return)
+    (creset! (:action v) :knock-knock)
+    (creset! r-action :return)
     (assert (= :home (c-get r-loc)))))
 
 (defn hello-world []
@@ -139,10 +139,10 @@
                          (case act
                            :knock-knock "hello, world"))))]
     (assert (nil? (c-get r-response)))
-    (c-reset! (:action v) :knock-knock)
-    (c-reset! r-action :return)
+    (creset! (:action v) :knock-knock)
+    (creset! r-action :return)
     (assert (= :home (c-get r-loc)))
-    (c-reset! (:action v) :knock-knock)))
+    (creset! (:action v) :knock-knock)))
 
 (defn hello-world-2 []
   (dp :--go------------------)
@@ -181,12 +181,11 @@
                          nil))))]
     (map c-awaken [alarm-do r-response r-loc (:action v)])
     (assert (= :missing (:value @r-loc)))
-    (c-reset! (:action v) :knock-knock)
-    (c-reset! (:action v) :smashing-window)
-    (c-reset! r-action :return)
+    (creset! (:action v) :knock-knock)
+    (creset! (:action v) :smashing-window)
+    (creset! r-action :return)
     (assert (= :home (c-get r-loc)))
-    (c-reset! (:action v) :knock-knock)
-    ))
+    (creset! (:action v) :knock-knock)))
 
 (defn run-tests []
   (hw-01)

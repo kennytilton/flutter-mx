@@ -19,7 +19,7 @@
     [tiltontec.cell.observer
      :refer [ fn-obs]]
     [tiltontec.cell.core
-     :refer [cF cF+ c_F cF_ cI c-reset! c-fn make-c-formula]]))
+     :refer [cF cF+ c_F cF_ cI creset! c-fn make-c-formula]]))
 
 
 (defn solid-lazy []
@@ -50,7 +50,7 @@
       (assert (= 40 x) (str "x not 40: " x)))
     (assert (= 1 @runs) (str "solid test runs not 1, instead: " @runs))
     (assert (= 1 @xo))
-    (c-reset! a 100)
+    (creset! a 100)
     (assert (= 2 @xo))
     (assert (= 140 (:value @x)))
     (assert (= 140 (c-get x)))
@@ -73,7 +73,7 @@
     (assert (= 40 (c-get x)))
     (assert (= 1 @xo))
     (assert (= 1 @xr))
-    (c-reset! a 100)
+    (creset! a 100)
     (assert (= 2 @xo))
     (assert (= 2 @xr))
     (assert (= 140 (:value @x)))
@@ -97,12 +97,12 @@
                 (+ av 40))))]
     (assert (nil? (c-get x)))
     (assert (= #{a} (c-useds x)))
-    (c-reset! a 1)
+    (creset! a 1)
     (trx nil :reset-finished!!!!!!!!!!)
     (assert (nil? (c-get x)))
     (assert (= #{a} (c-useds x)))
     (trx nil :reset-2-beginning!!!!!!!!!!!!)
-    (c-reset! a 2)
+    (creset! a 2)
     (trx nil :reset-2-finished!!!!!!!!!!)
     (assert (= 42 (c-get x)))
     (assert (empty? (c-useds x)))
@@ -155,7 +155,7 @@
       (assert (= 40 x) (str "2. x not 40: " x)))
     (assert (= 3 @runs))
     (assert (= 2 @xo) (str "always a xo is not 2 it is " @xo))
-    (c-reset! a 100)
+    (creset! a 100)
     (assert (= 3 @xo) (str "always b xo is not 3 it is " @xo))
     (assert (= 4 @runs) (str "always runs is not 3 it is " @runs))
     (assert (= 140 (:value @x)) (str "always internal x is not 140 it is " (:value @x)))
