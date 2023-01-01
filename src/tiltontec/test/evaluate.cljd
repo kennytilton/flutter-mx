@@ -23,7 +23,7 @@
              *depender* *not-to-be*
              *c-prop-depth* md-slot-owning? c-lazy] :as cty]
     [tiltontec.cell.core
-     :refer [ make-cell cI cF cFn cFonce cF+ cF+n c-reset!]]
+     :refer [ make-cell cI cF cFn cFonce cF+ cF+n creset!]]
     [tiltontec.cell.observer
      :refer [fn-obs]]
     [tiltontec.cell.integrity
@@ -100,7 +100,7 @@
       (assert (= 1 @dct))
       (assert (= 1 @cct)))
 
-    (c-reset! b 3)
+    (creset! b 3)
     (assert (= (c-get d) 43/3))
     (assert (= (c-get c) 43))
     (assert (= (c-get b) 3))
@@ -222,7 +222,7 @@
         (assert (and (keyword? k)
               (= 0 v))))
 
-      (c-reset! aa (inc (cr aa)))
+      (creset! aa (inc (cr aa)))
 
       ; check which rules ran
       ;
@@ -252,7 +252,7 @@
       (assert (= #{:bb :cc} (c-slots dd :useds)))
 
       (verify-p-current)
-      (c-reset! aa (inc (cr aa)))
+      (creset! aa (inc (cr aa)))
 
       ; :aa hence :bb now odd so :dd goes back to 42
       ;
@@ -291,13 +291,13 @@
     (assert (= 1 @cct))
 
 
-    (c-reset! b 4)
+    (creset! b 4)
     (assert (= (c-get c) 42))
     (assert (= (c-get b) 4))
     (assert (= 1 @ob))
     (assert (= 1 @cct))
 
-    (c-reset! b 5)
+    (creset! b 5)
     (assert (= (c-get c) 45))
     (assert (= (c-get b) 5))
     (assert (= 2 @ob))

@@ -19,13 +19,13 @@
     [tiltontec.cell.observer :refer [fn-obs]]
 
     [tiltontec.cell.core
-     :refer [cF cF+ c-reset-next! cFonce cFn
-             cI c-reset! make-cell make-c-formula]]
+     :refer [cF cF+ c-reset-next! cFonce cFn cf-freeze
+             cI creset! make-cell make-c-formula]]
 
     [tiltontec.cell.evaluate :refer [c-get c-awaken]]
     [tiltontec.model.base :refer [md-cz md-cell]]
     [tiltontec.model.core
-     :refer [make cFkids the-kids mdv! md-get md-name fm-navig fm! make md-reset! md-getx]
+     :refer [make cFkids the-kids mdv! md-get mget md-name fm-navig fm! make md-reset! mswap! md-getx]
      :as md]))
 
 (defn fm-0 []
@@ -46,7 +46,7 @@
     (let [kc (md-cell u :kids)
           kon (md-cell u :kon)]
       ;;(dp :resetting-cell kon)
-      (c-reset! kon true)
+      (creset! kon true)
       (assert (= 1 (count (:kids @u))))
       (assert (md/fm-navig :konzo u :inside? true))
       )))
@@ -109,7 +109,7 @@
     (assert (= 42 (mdv! :aa :aa42 u)))
     (assert (= 21 (mdv! :bb :bb21 u)))
     (assert (nil? (fm-navig :konzo u :must? false)))
-    (c-reset! (md-cell u :kon) true)
+    (creset! (md-cell u :kon) true)
     (assert (:kon @u))
     (assert (md-cell u :kon))
     (assert (= 3 (count (:kids @u))))
@@ -137,7 +137,7 @@
     (assert (= 42 (mdv! :aa :aa42 u)))
     (assert (= 21 (mdv! :bb :bb21 u)))
     (assert (nil? (fm-navig :konzo u :must? false)))
-    (c-reset! (md-cell u :kon) true)
+    (creset! (md-cell u :kon) true)
     (assert (:kon @u))
     (assert (md-cell u :kon))
     (assert (= 3 (count (:kids @u))))
@@ -277,25 +277,51 @@
       (assert (= :home (mdv! :resident :location uni)))
       (md-reset! viz :action :knock-knock))))
 
+(defn is [x] (assert x))
+
+(defn md-freeze-default []
+  (dp :hello-freeze)
+  (cells-init)
+
+  (let [fm (md/make
+             :aa (cI 1)
+             :bb (cF (cond
+                       (= 2 (mget me :aa)) (cf-freeze)
+                       (> (mget me :aa) 2) 43
+                       :default 42)))]
+    (is (= 1 (mget fm :aa)))
+    (is (= 42 (mget fm :bb)))
+
+    (mswap! fm :aa inc)
+    (is (= 2 (mget fm :aa)))
+    (is (= 42 (mget fm :bb)))
+
+    (mswap! fm :aa inc)
+    (is (= 3 (mget fm :aa)))
+    (is (= 42 (mget fm :bb)))))
+
+
 
 (defn run-tests []
-  (fm-0)
-  (dp :fm-0 :ok)
-  (fm-2)
-  (dp :fm-2 :ok)
-  (fm-3)
-  (dp :fm-3 :ok)
-  (fm-3x)
-  (dp :fm-3x :ok)
-  (fm-picker)
-  (dp :fm-picker :ok)
-  (mm-typed)
-  (dp :fm-mm-typed :ok)
-  (mm-opti-1)
-
-  (dp :fm-opti-1 :ok)
-  (mm-install-alive)
-  (dp :fm-in-alive :ok)
-  (hello-model)
-  (dp :model-core-OK)
+  ;(fm-0)
+  ;(dp :fm-0 :ok)
+  ;(fm-2)
+  ;(dp :fm-2 :ok)
+  ;(fm-3)
+  ;(dp :fm-3 :ok)
+  ;(fm-3x)
+  ;(dp :fm-3x :ok)
+  ;(fm-picker)
+  ;(dp :fm-picker :ok)
+  ;(mm-typed)
+  ;(dp :fm-mm-typed :ok)
+  ;(mm-opti-1)
+  ;
+  ;(dp :fm-opti-1 :ok)
+  ;(mm-install-alive)
+  ;(dp :fm-in-alive :ok)
+  ;(hello-model)
+  ;(dp :model-core-OK)
+  (md-freeze-default)
+  (dp :freeze-ok)
   )

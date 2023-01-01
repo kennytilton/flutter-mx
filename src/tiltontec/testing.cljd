@@ -18,8 +18,8 @@
 
 (defn run-tests []
   (dp :start-tests)
-  (test-cell-core/run-tests)
-  (dp :cell-core-ok)
+  (do (test-cell-core/run-tests)
+      (dp :cell-core-ok))
   (hello-cells/run-tests)
   (dp :hello-cells-ok)
   (test-eval/run-tests)
@@ -35,5 +35,6 @@
   (fm-kids/run-tests)
   (dp :fm-kids-ok)
   ; TODO synapses (test-syn/run-tests)
+  (hello-cells/run-tests)
   (dp "testing-OK"))
 

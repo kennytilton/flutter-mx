@@ -32,9 +32,9 @@
 ; todo: stand-alone cells with observers should be observed when they are made
 
 (def +valid-input-options+  #{:obs :watch :slot :ephemeral? :unchanged-if
-                              :value :input?})
+                              :value :input? :debug})
 (def +valid-formula-options+ #{:obs :watch :slot :input? :lazy :optimize :ephemeral? :unchanged-if
-                               :code :value :rule :async? :and-then?})
+                               :code :value :rule :async? :and-then? :debug})
 
 (defn c-options-canonicalize [options allowed]
   (loop [[k v & more] options
@@ -227,6 +227,12 @@
      :rule (c-fn ~@body)
      ~@keys))
 
+(defmacro cf-freeze [& [value]]
+  (let [value-ref (or value '_cache)]
+    `(do
+       (rmap-setf [:optimize ~'_cell] :freeze)
+       ~value-ref)))
+
 (defn cI [value & option-kvs]
   (apply make-cell
     :value value
@@ -260,7 +266,7 @@ in the CL version of Cells SETF itself is the change API dunction."
          #_ (err (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
                    (c-slot c))))
     (do (dp :c-reset-rejecting-undeferred! (c-slot c))
-        (throw (Exception. (str "c-reset!> change  must be deferred by wrapping it in WITH-INTEGRITY. Slot: "
+        (throw (Exception. (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. Slot: "
                              (c-slot c) " :me " @(c-model c)))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
@@ -272,7 +278,7 @@ in the CL version of Cells SETF itself is the change API dunction."
           (dpc c :cset!-pre-ass-fires!!! (cinfo c) new-value)
           (c-value-assume c new-value nil)))))
 
-(defn c-reset! [c new-value]
+(defn creset! [c new-value]
   (cset! c new-value))
 
 (defn cswap! [c swap-fn & swap-fn-args]
@@ -282,7 +288,7 @@ in the CL version of Cells SETF itself is the change API dunction."
   "Observers should have side-effects only outside the
 cell-mediated model, but it can be useful to have an observer
 kick off further change to the model. To achieve this we
-allow an observer to explicitly queue a c-reset! for
+allow an observer to explicitly queue a creset! for
 execution as soon as the current change is manifested."
   `(cond
      (not *within-integrity*)

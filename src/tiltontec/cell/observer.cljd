@@ -58,7 +58,6 @@ call parameters: slot, me, new, old, and c."
   ([c prior-value why]
    (assert (c-ref? c) (str "c-ref? fail on c-observe" c))
    (assert (dart/is? @+pulse+ int))
-   (dpx :c-observe!!!! (cinfo c))
    (rmap-setf [:pulse-observed c] @+pulse+)
 
    (when-let [me (c-model c)] ;; not in standalone cells, mostly in test suite
@@ -73,7 +72,6 @@ call parameters: slot, me, new, old, and c."
    ;; nb that we do not want ad hoc observers to shadow those specified generically
    ;; indeed, in Lisp observers are progn methods -- they all run.
    (when-let [cell-observer (:obs @c)]
-     #_(dp :cell-specific-obs!!!!!! why (cinfo c))
      (cell-observer (c-slot c) (c-model c) (c-value c) prior-value c))))
 
 

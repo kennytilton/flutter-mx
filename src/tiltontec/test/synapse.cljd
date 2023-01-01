@@ -22,7 +22,7 @@
     [tiltontec.cell.synapse :refer [with-synapse]]
 
     [tiltontec.cell.core
-     :refer [cF cF+ c_F cF_ cI c-reset! make-c-formula
+     :refer [cF cF+ c_F cF_ cI creset! make-c-formula
              c-fn]]
     ))
 
@@ -45,7 +45,7 @@
             y)]
     (dp :warm-up (c-get z))
     (doseq [n (range max)]
-      (c-reset! x n))
+      (creset! x n))
     (assert (= @z-runs (count (filter even? (range max))))))
   (dp :non-syn-even-OK))
 
@@ -70,7 +70,7 @@
                 (first x)))]
     (dp :warm-up (c-get z))
     (doseq [n (range max)]
-      (c-reset! x n))
+      (creset! x n))
     (assert (= @syn-runs (count (range max))))
     (assert (= @z-runs (count (filter even? (range max)))))))
 
@@ -104,18 +104,18 @@
     (assert (= @alarm-runs 0))
     (assert (nil? (c-get alarm)))
 
-    (do (c-reset! x 0)
+    (do (creset! x 0)
         (reset-runs)
-        (c-reset! x 1)
+        (creset! x 1)
         (assert (= @syn-runs 1))
         (assert (= @alarm-runs 1))
         (assert (= :off (c-get alarm))))
 
-    (do (c-reset! x 0)
+    (do (creset! x 0)
         (reset-runs)
-        (c-reset! x 1)
-        (c-reset! x 2)
-        (c-reset! x -5)
+        (creset! x 1)
+        (creset! x 2)
+        (creset! x -5)
         (assert (= @syn-runs 3))
         (assert (= @alarm-runs 3))
         (assert (= :on (c-get alarm))))))
@@ -154,22 +154,22 @@
         (assert (= @alarm-runs 1))
         (assert (= :off (c-get alarm))))
 
-    (do (c-reset! x 0)
+    (do (creset! x 0)
         (reset-runs)
-        (c-reset! x 1)
+        (creset! x 1)
         (assert (= @syn-runs 1))
         (assert (= @alarm-runs 0))
         (assert (= :off (c-get alarm))))
 
     (let [max 5]
-      (c-reset! x -1)
+      (creset! x -1)
       (reset-runs)
       (doseq [n (range max)]
-        (c-reset! x n))
+        (creset! x n))
       (assert (= @syn-runs max))
       (assert (= @alarm-runs 1))
       (assert (= :off (c-get alarm)))
-      (c-reset! x 6)
+      (creset! x 6)
       (assert (= :on (c-get alarm))))))
 
 (defn synaptic-grouping []
@@ -193,7 +193,7 @@
                 g))]
     (dp :warm-up (c-get y))
     (doseq [n (range 10)]
-      (c-reset! x n))
+      (creset! x n))
 
     (assert (= (c-get y) [6 7 8]))))
 
