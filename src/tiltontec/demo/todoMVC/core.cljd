@@ -84,10 +84,14 @@
                         ; ^^^ the formula computes a value of nil then awaits the future
                         ; and, when received, reactively "computes" the received value as
                         ; a new matrix input.
+                        :optimize false
+                        ;; ^^^ this rule serves as a constructor, so has no dependencies, but
+                        ; if we allow optimization to proceed normally it will think it can trash this cell
+                        ; but async? cells get a lot more handling, including reactive handling
                         :watch (fn [_ me new-db _ _]
-                               ;; the reactive :db cell is handy during lifecycle initialization, but
-                               ;; more convenient as a global resource. It's a demo, OK?
-                               (stg/DB! new-db))]
+                                 ;; the reactive :db cell is handy for timing during lifecycle initialization, but
+                                 ;; more convenient as a global resource, so we echo the new-db to a global
+                                 (stg/DB! new-db))]
                     ;; we make the DB component of the app a reactive property since we receive it as a future
                     (.getInstance prefs/SharedPreferences))
 
@@ -110,25 +114,24 @@
             (items/todo-items)
             (about-credits)))))))
 
-#_
-(defn make-app []
-  (let [title "todo"]
-    (fx/material-app
-      {:title                      title
-       :theme                      app-theme}
-      {:name      :app
-       :db        (cF+ [:async? true
-                        :watch (fn [_ _ new-db _ _]
-                               (stg/DB! new-db))]
-                    (.getInstance prefs/SharedPreferences))
-       :todo-list (cF (when (mget me :db)
-                        (todo/make-ToDoList "todo"
-                          (stg/collection-docs "todo"))))}
-      (fx/scaffold
-        {:appBar                  (todo-app-bar title)
-         :persistentFooterButtons [(todos-dashboard)]}
-        (fx/ink {:color m.Colors/white}
-          (fx/column
-            (input/todo-controls)
-            (items/todo-items)
-            (about-credits)))))))
+#_(defn make-app []
+    (let [title "todo"]
+      (fx/material-app
+        {:title title
+         :theme app-theme}
+        {:name      :app
+         :db        (cF+ [:async? true
+                          :watch (fn [_ _ new-db _ _]
+                                   (stg/DB! new-db))]
+                      (.getInstance prefs/SharedPreferences))
+         :todo-list (cF (when (mget me :db)
+                          (todo/make-ToDoList "todo"
+                            (stg/collection-docs "todo"))))}
+        (fx/scaffold
+          {:appBar                  (todo-app-bar title)
+           :persistentFooterButtons [(todos-dashboard)]}
+          (fx/ink {:color m.Colors/white}
+            (fx/column
+              (input/todo-controls)
+              (items/todo-items)
+              (about-credits)))))))

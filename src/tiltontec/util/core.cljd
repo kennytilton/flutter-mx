@@ -38,10 +38,10 @@
     (str "model.util.core/rmap-setf> slot:" slot
       "new-value:" new-value
       "failed assertion atom? on ref:" (deref ref)))
-  (assert (map? @ref)
+  (assert (map? (deref ref))
     (str "model.util.core/rmap-setf> slot " slot
-      "new-value " new-value
-      "failed assertion map? on ref:" (deref ref)))
+      " new-value " new-value
+      " failed assertion map? on ref: " (or (deref ref) ":NIL") " <<<"))
   (swap! ref assoc slot new-value)
   new-value)
 
