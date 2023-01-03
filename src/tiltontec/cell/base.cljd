@@ -283,7 +283,8 @@ rule to get once behavior or just when fm-traversing to find someone"
   (swap! used assoc :callers (disj (c-callers used) caller)))
 
 (defn unlink-from-callers [c]
-  (for [caller (c-callers c)]
+  (doseq [caller (c-callers c)]
+    (swap! caller assoc :useds (remove #{c} (c-useds caller)))
     (caller-drop c caller))
   (rmap-setf [:callers c] nil))
 

@@ -507,8 +507,8 @@ then clear our record of them."
 
     ;; let callers know they need not check us for currency again
     (doseq [caller (seq (c-callers c))]
-      (rmap-setf [:useds caller] (disj (c-useds caller) c))
-
+      ;; (rmap-setf [:useds caller] (disj (c-useds caller) c))
+      (swap! caller assoc :useds (remove #{c} (c-useds caller)))
       (caller-drop c caller)
       ;;; (trc "nested opti" c caller)
       ;;(optimize-away?! caller) ;; rare but it happens when rule says (or .cache ...)
