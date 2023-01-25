@@ -9,10 +9,9 @@
              c-unbound? c-input? mx-type cprn c-code$
              c-model mdead? c-valid? c-useds c-ref? md-ref?
              c-state +pulse+ c-pulse-observed cinfo minfo
-             *call-stack* *defer-changes*
-             c-rule c-code c-me c-value-state c-callers caller-ensure
-             unlink-from-callers *causation*
-             c-synaptic? caller-drop c-md-name
+             *call-stack* *defer-changes* dependency-drop
+             c-rule c-code c-me c-value-state c-callers dependency-record
+             unlink-from-callers *causation* c-synaptic? c-md-name
              c-pulse c-pulse-last-changed c-ephemeral? c-then? c-slot c-slots c-slot-name
              *depender* *not-to-be*
              *c-prop-depth* md-slot-owning? c-lazy dpc c-async?] :as cty]
@@ -52,7 +51,7 @@
       (dpx :reco-dep-future!!!!!!!!! (await @*depender*)))
     (rmap-setf [:useds *depender*]
       (conj (c-useds *depender*) used))
-    (caller-ensure used *depender*)))
+    (dependency-record used)))
 
 ;; (declare calculate-and-set)
 
@@ -527,7 +526,7 @@ then clear our record of them."
     (doseq [caller (seq (c-callers c))]
       ;; (rmap-setf [:useds caller] (disj (c-useds caller) c))
       (swap! caller assoc :useds (remove #{c} (c-useds caller)))
-      (caller-drop c caller)
+      (dependency-drop c caller)
       ;;; (trc "nested opti" c caller)
       ;;(optimize-away?! caller) ;; rare but it happens when rule says (or .cache ...)
       (ensure-value-is-current caller :opti-used c))        ;; this will get round to optimizing

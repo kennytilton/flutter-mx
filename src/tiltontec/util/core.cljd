@@ -33,6 +33,21 @@
 (defn atom? [x]
   (dart/is? x cljd.core/Atom))
 
+(defn mut-set!
+  ([mut slot new-value] (mut-set! mut slot new-value nil))
+  ([mut slot new-value tag]
+   (assert (atom? mut)
+     (pln "util.core/mut-set!> slot:" slot :tag tag
+       "new-value:" new-value
+       "failed assertion any-ref? on ref:" mut))
+   (when-not (map? @mut)
+     (pln "util.core/mut-set!> slot:" slot :tag tag
+       "new-value:" (or new-value :NIL)
+       "failed assertion map? on ref:" @mut)
+     (assert false))
+   (swap! mut assoc slot new-value)
+   new-value))
+
 (defn rmap-setf [[slot ref] new-value]
   (assert (atom? ref)
     (str "model.util.core/rmap-setf> slot:" slot
