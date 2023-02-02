@@ -133,7 +133,7 @@
                                    (apply concat kvs))))))))))
        nil)))
 
-(defmacro k1-child-stateful [fx-class fx-props mx-props & children]
+(defmacro k1-child-stateful [fx-class fx-props mx-props child]
   (let []
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
        ~fx-props
@@ -163,9 +163,9 @@
                                                 `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
                                                    (tiltontec.model.core/mget me ~k#))])]
                                      (apply concat kvs)))))))))))
-       (tiltontec.model.core/cFkids ~@children))))
+       (tiltontec.model.core/cFkids ~child))))
 
-(defmacro k1-child-stateless [fx-class fx-props mx-props & children]
+(defmacro k1-child-stateless [fx-class fx-props mx-props child]
   (let []
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
        ~fx-props
@@ -181,9 +181,9 @@
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
                                          (tiltontec.model.core/mget me ~k#))])]
                            (apply concat kvs))))))
-       (tiltontec.model.core/cFkids ~@children))))
+       (tiltontec.model.core/cFkids ~child))))
 
-(defmacro k1-content-stateless [fx-class fx-props mx-props & children]
+(defmacro k1-content-stateless [fx-class fx-props mx-props child]
   (let []
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
        ~fx-props
@@ -199,8 +199,7 @@
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
                                          (tiltontec.model.core/mget me ~k#))])]
                            (apply concat kvs))))))
-       (tiltontec.model.core/cFkids ~@children))))
-
+       (tiltontec.model.core/cFkids ~child))))
 
 (defmacro children-stateless [fx-class fx-props mx-props & children]
   (let []
@@ -373,7 +372,7 @@
        (tiltontec.model.core/cFkids ~body))))
 
 
-(defmacro k1-home-stateful [fx-class fx-props mx-props & children]
+(defmacro k1-home-stateful [fx-class fx-props mx-props home]
   (let []
     ;(assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
     ;(assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
@@ -404,7 +403,7 @@
                                               `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
                                                  (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs)))))))))))
-       (tiltontec.model.core/cFkids ~@children))))
+       (tiltontec.model.core/cFkids ~home))))
 
 
 
