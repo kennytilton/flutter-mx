@@ -11,6 +11,30 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.integrity :as integrity]))
 
+
+;; without styling
+#_(defn make-app []
+    (fx/material-app
+      {:title "Flutter/MX Counter Demo"
+       :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+      (fx/scaffold
+        {:appBar               (fx/app-bar
+                                 {:title (m/Text "Flutter/MX Counter")})
+         :floatingActionButton (cF (fx/floating-action-button
+                                     {:onPressed (as-dart-callback []
+                                                   (mswap! (fm* :z-counter) :value inc))
+                                      :tooltip   "Increment"}
+                                     (m/Icon m.Icons/add)))}
+
+        (fx/center
+          (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
+            (fx/text "You have pushed (+) this many times:")
+            (fx/text {:style (fx/in-my-context [me ctx]
+                               (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+              {:name  :z-counter
+               :value (cI 0)}
+              (str (md/my-value))))))))
+;; with styles
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Counter Demo"
@@ -27,18 +51,45 @@
       (fx/center
         (fx/column
           {:mainAxisAlignment m.MainAxisAlignment/center}
-          (fx/text
-            ;; having this extra display stresses navigation, so we keep it
-            {:style (fx/in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-            (str (* 2 (mget (md/fmu :z-counter) :value))))
+
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
-            "We clicked half this ^^^ many times:")
+            "You have clicked (+) this many times:")
           (fx/text
             {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
-            (do (dpx :new-value??? (md/my-value))
-                (str (md/my-value)))))))))
+            (str (md/my-value))))))))
+
+#_;; a stressier version
+        (defn make-app []
+          (fx/material-app
+            {:title "Flutter/MX Counter Demo"
+             :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+            (fx/scaffold
+              {:appBar (fx/app-bar
+                         {:title (m/Text "Flutter/MX Counter")})
+               :floatingActionButton
+               (cF (fx/floating-action-button
+                     {:onPressed (as-dart-callback []
+                                   (mswap! (fm* :z-counter) :value inc))
+                      :tooltip   "Increment"}
+                     (m/Icon m.Icons/add .color m.Colors/black)))}
+              (fx/center
+                (fx/column
+                  {:mainAxisAlignment m.MainAxisAlignment/center}
+                  (fx/text
+                    ;; having this extra display stresses navigation, so we keep it
+                    {:style (fx/in-my-context [me ctx]
+                              (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                    (str (* 2 (mget (md/fmu :z-counter) :value))))
+                  (fx/text {:style (p/TextStyle .color m.Colors/black
+                                     .fontSize 18.0)}
+                    "We clicked half this ^^^ many times:")
+                  (fx/text
+                    {:style (fx/in-my-context [me ctx]
+                              (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                    {:name  :z-counter
+                     :value (cI 0)}
+                    (str (md/my-value))))))))

@@ -340,8 +340,10 @@
                                  (apply concat kvs))))))))))
        nil)))
 
-(defmacro k1-body-stateful [fx-class fx-props mx-props & children]
+(defmacro k1-body-stateful [fx-class fx-props mx-props body]
   (let []
+    (assert (not (contains? fx-props :body))
+      (str "For " fx-class ", provide the body as (the only) child widget, not as a parameter."))
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
        ~fx-props
        (assoc ~mx-props
@@ -362,14 +364,13 @@
                                         (first (tiltontec.model.core/md-kids me)))]
                              (with-flutter-ref
                                (~fx-class
-                               ;; todo throw error if they specify :body explicitly, for now
                                .body bod#
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [(symbol (str "." (name k#)))
                                               `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
                                                  (tiltontec.model.core/mget me ~k#))])]
                                    (apply concat kvs)))))))))))
-       (tiltontec.model.core/cFkids ~@children))))
+       (tiltontec.model.core/cFkids ~body))))
 
 
 (defmacro k1-home-stateful [fx-class fx-props mx-props & children]
