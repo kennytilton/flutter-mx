@@ -86,21 +86,20 @@
 (defn finish-business []
   (dpx :fin-biz-entry @cty/+stop+)
   (un-stopped
-    (loop [tag :tell-dependents]
+    (loop [tag "tell-dependents"]
       (case tag
-        :tell-dependents
-        (do (do ;; p :telldeps
-              (ufb-do :tell-dependents))
+        "tell-dependents"
+        (do
+            (ufb-do :tell-dependents)
             (ufb-do :awaken)
 
             (recur
               (if (fifo-peek (ufb-queue-ensure :tell-dependents))
-                :tell-dependents
-                :handle-clients)))
+                "tell-dependents"
+                "handle-clients")))
 
-        :handle-clients
+        "handle-clients"
         (do
-          (plnk :handle-clients!!!)
           (when-let [clientq (ufb-queue :client)]
             (if-let [cqh @+client-q-handler+]
               (cqh clientq)
@@ -108,20 +107,22 @@
 
             (recur
               (if (fifo-peek (ufb-queue :client))
-                (do (plnk :re-handling-clients!!!!)
-                    :handle-clients)
-                :ephemeral-reset))))
+                "handle-clients"
+                "ephemeral-reset"))))
 
-        :ephemeral-reset
+        "ephemeral-reset"
         (do (ufb-do :ephemeral-reset)
-            (recur :deferred-state-change))
+            (recur "deferred-state-change"))
 
-        :deferred-state-change
+        "deferred-state-change"
         (when-let [[defer-info task-fn] (fifo-pop (ufb-queue :change))]
-          (data-pulse-next :defferred-state-chg)
+          (data-pulse-next :deferred-state-chg)
           (dpx :dpnext-defer-info defer-info)
           (task-fn :change defer-info)
-          (recur :tell-dependents))))))
+          (recur "tell-dependents"))
+
+        (do (dprn :INTEG-finbiz-unexpected-tag!!! tag)
+            (throw (Exception. (str "finbiz sees unexpected case tag!!! <" tag ">"))))))))
 
 ;(declare call-with-integrity)
 
