@@ -1,11 +1,8 @@
 (ns tiltontec.demo.todoMVC.footer
   (:require
-    ["dart:convert" :as convert]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.model.core :refer [mget mset! mswap! mkids] :as md]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
@@ -37,7 +34,8 @@
      :selection (cI :all)}
     ;; further expressions yield children for the Flutter row. FlutterMX provides the ":children" property.
     (let [selector me
-          ;; ^^^ just binding "me" more readably
+          ;; ^^^ just binding "me" more readably, and to have it handy in nested rules
+          ;; where "me" is no longer this :completions object, so they do not have to navigate to it.
           choice (fn [completion-enum label]
                    (fx/ink-well
                      {:onTap (as-dart-callback []
@@ -73,8 +71,7 @@
                               false))
      :maintainSize      true
      :maintainAnimation true
-     :maintainState     true
-     }
+     :maintainState     true}
     (fx/text-button
       {:onPressed (as-dart-callback []
                     (md/mswap! (my-todo-list) :kids

@@ -2,7 +2,6 @@
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["dart:convert" :as convert]
     ["package:http/http.dart" :as dht]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [clojure.walk :as walk]
@@ -26,23 +25,26 @@
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
 
 (defn ToDo-update [td]
-  (let [coll-name (mname (mpar td))]
-    (stg/td-rewrite coll-name (select-keys @td [:stg-id :created-at :title :completed]))))
+  (stg/td-rewrite
+    (select-keys @td [:stg-id :created-at :title :completed])))
 
 (deftype ToDo []
   :extends cty/Model
   PObserver
   (observe [this slot me new-value prior-value cell]
     ;; the initial observe, signified by prior value unbound,
-    ;; is just of the MX to-do being awakened after being loaded
+    ;; is of the MX to-do being awakened after being loaded
     ;; from the DB, even new to-dos, so no need to update DB,
     (when (and (td-stg-id me) (not= cty/unbound prior-value))
       (ToDo-update me))))
 
 (defn make-ToDo
   ([td-lst title completed]
+   ;; brand new...
    (make-ToDo td-lst title completed nil nil))
+
   ([td-lst title completed stg-id created-at]
+   ;; create MX proxy to-do
    (let [created-at (or created-at
                       (.-millisecondsSinceEpoch (.now DateTime)))]
      (md/make
@@ -68,8 +70,6 @@
        :title (cI title)
        :completed (cI completed)))))
 
-
-
 ;;; --- higher level ---------------------------
 
 (deftype ToDoList []
@@ -80,7 +80,7 @@
       :kids (when (not= cty/unbound prior-value)
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (doseq [td lost]
-                  (stg/td-delete "todo" (td-stg-id td)))))
+                  (stg/td-delete (td-stg-id td)))))
       nil)))
 
 (defn make-ToDoList
@@ -96,7 +96,7 @@
 
 (defn app-todos [app]
   (when-let [td-lst (tiltontec.model.core/mget app :todo-list)]
-    ;; we have to wait for todos to be loaded
+    ;; we have to wait for todos to be loaded asynchronously
     (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
     (md/mkids td-lst)))
 

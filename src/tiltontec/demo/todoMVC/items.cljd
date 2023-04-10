@@ -1,6 +1,5 @@
 (ns tiltontec.demo.todoMVC.items
   (:require
-    ["dart:convert" :as convert]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -84,7 +83,7 @@
                   (fx/focus-scope
                     ;; focus subtlety: we want the newly created TextField to autofocus, but
                     ;; the to-do input field is already focused, and autofocus does not jump to those
-                    ;; unless in a fresh scope. So ^^^ we throw in a scope.
+                    ;; unless in a fresh scope. So ^^^ we throw in a fresh scope.
                     {:onFocusChange (cF (as-dart-callback [focused?]
                                           (when (not focused?)
                                             ;; spec says commit on blur...
