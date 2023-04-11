@@ -31,11 +31,11 @@
     stg-id))
 
 (defn td-initialize
-  "Create a SharedPrefs to-do from a CLJD map alone,
-   returning prefs key."
+  "Create a SharedPrefs to-do from a CLJD map alone.
+  Returns the unique storage key generated for the data."
   [collection-name td-map]
-  (assert (not (:stg-id td-map)) "td-init sees stg-id suggesting td already written")
-  (assert (:created-at td-map) "td-init requires created-at prop")
+  (when-let [stg-id (:stg-id td-map)]
+    (throw (Exception. (str "td-initialize> sees :stg-id " stg-id ", suggesting td already written"))))
 
   (let [new-stg-id (str collection-name "/" (.v4 (UUID)))]
     (td-store
@@ -47,7 +47,7 @@
    Map must contain non-nil :stg-id."
   [td-map]
   (assert (:stg-id td-map)
-    "td-rewrite map must include stg-id")
+    "td-rewrite> map must include stg-id")
   (td-store td-map)
   (:stg-id td-map))
 
