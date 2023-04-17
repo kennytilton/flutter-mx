@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as str]
     [tiltontec.util.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [minfo]]
     [tiltontec.cell.core :refer [cF cF+ cI cFonce]]
     [tiltontec.model.core :refer [mget mset! mswap! fmuval] :as md]
 
@@ -43,9 +44,9 @@
           (fx/text-field
             {:controller (cFonce (fx/standard-text-value-controller me))
              ;;:keyboardType m.TextInputType/multiline
-             :maxLines 10
-             :style (p/TextStyle
-                      .fontSize 24.0)
+             :maxLines   10
+             :style      (p/TextStyle
+                           .fontSize 24.0)
              :decoration (m/InputDecoration
                            .labelText "Raw TeX"
                            .helperText "Your LaTeX here!"
@@ -56,36 +57,35 @@
             {:name  :raw-tex
              :value (cF (fmuval :tex-pair))})
 
-          (tk/TeXView
-            .child (tk/TeXViewColumn
-                     .children
-                     [(tk/TeXViewInkWell
-                        .id "id_0"
-                        .child (tk/TeXViewColumn
-                                 .children
-                                 [(tk/TeXViewDocument "<h2>MathPaper&trade;</h2>"
-                                    .style (tk/TeXViewStyle
-                                             .backgroundColor m.Colors/grey
-                                             .contentColor m.Colors/white
-                                             .textAlign tk.TeXViewTextAlign/center))
-                                  ; styling via tk styling:
-                                  (tk/TeXViewDocument (let []
-                                                        ;; wow, this works. Just have to grok "me"
-                                                        (md/mget me :value))
-                                    .style (tk/TeXViewStyle
-                                             .padding (.all tk/TeXViewPadding 10)
-                                             .fontStyle (tk/TeXViewFontStyle
-                                                          .fontSize 28)
-                                             .backgroundColor (-> m/Colors
-                                                                .-amber
-                                                                .-shade50)
-                                             .contentColor m.Colors/black
-                                             .textAlign tk.TeXViewTextAlign/left))]))])
-            .style (tk/TeXViewStyle
-                     .elevation 10
-                     .borderRadius (.all tk/TeXViewBorderRadius 10)
-                     .border (.all tk/TeXViewBorder (tk/TeXViewBorderDecoration
-                                                      .borderColor m.Colors/blueGrey
-                                                      .borderStyle tk.TeXViewBorderStyle/solid
-                                                      .borderWidth 5)))))))))
-
+          (fx/ignore-pointer
+            {:ignoring true}
+            (tk/TeXView
+              .child (tk/TeXViewColumn
+                       .children
+                       [(tk/TeXViewInkWell
+                          .id "id_0"
+                          ;;.onTap (fn [^String id] #_(dp :tapped id)) "IgnorePointer" better.
+                          .child (tk/TeXViewColumn
+                                   .children
+                                   [(tk/TeXViewDocument "<h2>MathPaper&trade;</h2>"
+                                      .style (tk/TeXViewStyle
+                                               .backgroundColor m.Colors/grey
+                                               .contentColor m.Colors/white
+                                               .textAlign tk.TeXViewTextAlign/center))
+                                    (tk/TeXViewDocument (mget (md/fmuinc :tex-pair) :value)
+                                      .style (tk/TeXViewStyle
+                                               .padding (.all tk/TeXViewPadding 10)
+                                               .fontStyle (tk/TeXViewFontStyle
+                                                            .fontSize 28)
+                                               .backgroundColor (-> m/Colors
+                                                                  .-amber
+                                                                  .-shade50)
+                                               .contentColor m.Colors/black
+                                               .textAlign tk.TeXViewTextAlign/left))]))])
+              .style (tk/TeXViewStyle
+                       .elevation 10
+                       .borderRadius (.all tk/TeXViewBorderRadius 10)
+                       .border (.all tk/TeXViewBorder (tk/TeXViewBorderDecoration
+                                                        .borderColor m.Colors/blueGrey
+                                                        .borderStyle tk.TeXViewBorderStyle/solid
+                                                        .borderWidth 5))))))))))

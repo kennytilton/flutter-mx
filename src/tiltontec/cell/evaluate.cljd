@@ -322,7 +322,8 @@
       (unlink-from-used c :pre-rule-clear)
       (assert (c-rule c) (str "No rule in %s type %s" (:slot @c) (cty/c-type c)))
 
-      (dpx c :CNL-trying-formula (cinfo c))
+      ;(dp c :CNL-trying-formula (cinfo c))
+      ;(dp c :CNL-trying-formula-code (c-code$ c))
       (let [raw-value #_((c-rule c) c)
             (try
               ((c-rule c) c)
@@ -356,7 +357,7 @@
 
         :else (binding [*depender* nil]
                 (when (not (= (c-state c) :awake))
-                  (dpx :c-awakening!!!!! (c-state c) (c-pulse c) @+pulse+ (dissoc @c :code))
+                  ;(dp :c-awakening!!!!! (c-state c) (c-pulse c) @+pulse+ (cinfo c))
                   (calculate-and-set c :fn-c-awken nil))))
 
       (c-ref? c)
