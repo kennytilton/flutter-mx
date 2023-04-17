@@ -24,7 +24,7 @@
     [tiltontec.cell.evaluate :refer [not-to-be not-to-be-self]]
     [tiltontec.cell.core
      :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell]]
-    [tiltontec.cell.evaluate :refer [c-get c-awaken not-to-be]]
+    [tiltontec.cell.evaluate :refer [cget c-awaken not-to-be]]
     [tiltontec.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
 
 (defmacro pme [& mas]
@@ -48,7 +48,7 @@
   (assert me (str "md-get passed nil for me accessing prop: " prop))
   (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing prop: " prop " :me " @me))
   (if-let [c (md-cell me prop)]
-    (c-get c)
+    (cget c)
     (prop @me)))
 
 (defmacro def-mx-props [reader-prefix & slots]
@@ -68,22 +68,42 @@
       (do (dp :got-cell! (cinfo c))
           (when (atom? c)
             (dp :got-c-atom!! (deref c)))
-          (c-get c))
+          (cget c))
       (prop @me))))
 
-(defn mget [me prop]
-  (dpx :mget-entry prop :of (when me (minfo me)))
-  (md-get me prop))
+;(defn mget [me prop]
+;  (dpx :mget-entry prop :of (when me (minfo me)))
+;  (md-get me prop))
 
-(defn md-getx [tag me prop]
-  (mgetx me prop)
-  #_(wtrx [0 100 (str "md-getx " tag prop (mx-type me))]
+(defn mget [me prop]
+  (assert me (str "mget passed nil for me accessing prop: " prop))
+  (assert (cty/md-ref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+  (if (not (contains? @me prop))
+    (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
+      ;(dp :mget prop (minfo me))
+      (throw (Exception. (str  "MXAPI_ILLEGAL_GET_NO_SUCH_prop> mget was attempted on non-existent prop \"" prop "\"."
+        "\n...> FYI: known props are" (keys @me)
+        "\n...> FYI: use mget? if prop might not exist.")))
+      nil)
+    (let [dbg? false]
+      (when dbg?
+        (prn :mget-sees-c? (cinfo (md-cell me prop)))
+        (prn :me-prop (prop @me)))
       (if-let [c (md-cell me prop)]
-        (c-get c)
-        (prop @me))))
+        (cget c)
+        (prop @me)))))
+
+(defn mget?
+  ([me prop]
+   (mget? me prop nil))
+  ([me prop alt-val]
+   (assert me (str "mget passed nil for me accessing prop: " prop))
+   (assert (cty/md-ref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+   (if (contains? @me prop)
+     (mget me prop)
+     alt-val)))
 
 (def ^:dynamic *md-parent* nil)
-
 
 (defmacro with-par [meform & body]
   `(binding [tiltontec.model.core/*md-parent* ~meform]

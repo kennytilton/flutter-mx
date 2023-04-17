@@ -15,7 +15,7 @@
              *depender* *not-to-be*
              *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity ufb-add]]
-    [tiltontec.cell.evaluate :refer [c-get cget]]
+    [tiltontec.cell.evaluate :refer [cget cget]]
     [tiltontec.cell.observer
      :refer [ fn-obs]]
 
@@ -42,12 +42,12 @@
                                  :home :off
                                  :away :on
                                  (err (str "unexpected loc " new))))))]
-                (case (c-get act)
+                (case (cget act)
                   :leave :away
                   :return :home
                   :missing))
           alarm-speak (cF+ [:watch (fn-obs
-                                   (assert (= (c-get alarm) (case (c-get act)
+                                   (assert (= (cget alarm) (case (cget act)
                                                           :return :off
                                                           :leave :on
                                                           :undefined)))
@@ -55,10 +55,10 @@
                                          (c-pulse act)
                                          (c-pulse loc)
                                          (c-pulse c))))]
-                        (str "alarm-speak sees act " (c-get act)))]
-      (assert (= (c-get alarm) :undefined))
+                        (str "alarm-speak sees act " (cget act)))]
+      (assert (= (cget alarm) :undefined))
       (assert (= 1 @+pulse+))
-      (assert (= (c-get loc) :missing))
+      (assert (= (cget loc) :missing))
       (assert (= 1 @+pulse+))
 
       (creset! act :leave)
@@ -84,13 +84,13 @@
                                                   :home :off
                                                   :away :on
                                                   (err (str "unexpected loc %s" new))))))]
-              (case (c-get act)
+              (case (cget act)
                 :leave :away
                 :return :home
                 :missing))
         alarm-speak (cF+ [:watch (fn-obs
-                                 (dp :alarm-speak (c-get act) :sees (c-get alarm) (c-get loc))
-                                 (assert (= (c-get alarm) (case (c-get act)
+                                 (dp :alarm-speak (cget act) :sees (cget alarm) (cget loc))
+                                 (assert (= (cget alarm) (case (cget act)
                                                         :return :off
                                                         :leave :on
                                                         :undefined)))
@@ -98,10 +98,10 @@
                                        (c-pulse act)
                                        (c-pulse loc)
                                        (c-pulse c))))]
-                      (str "alarm-speak sees act " (c-get act)))]
-    (assert (= (c-get alarm) :undefined))
+                      (str "alarm-speak sees act " (cget act)))]
+    (assert (= (cget alarm) :undefined))
     (assert (= 1 @+pulse+))
-    (assert (= (c-get loc) :missing))
+    (assert (= (cget loc) :missing))
     (assert (= 1 @+pulse+))
 
 
@@ -113,16 +113,16 @@
   (let [sia (cI 0)
         rsic (atom false)
         sic (cF (reset! rsic true)
-              (+ 42 (c-get sia)))
-        fsia #(c-get sia)
+              (+ 42 (cget sia)))
+        fsia #(cget sia)
         sib (cF (or (+ 1 (fsia))
-                  (c-get sic)))]
-    (assert (= (c-get sib) 1))
+                  (cget sic)))]
+    (assert (= (cget sib) 1))
     (assert (= (:useds @sib) #{sia}))
     (assert (not @rsic))
     (creset! sia 1)
     (assert (= 2 (:value @sib)))
-    (assert (= (c-get sib) 2))))
+    (assert (= (cget sib) 2))))
 
 (defn obs-sees-current []
   ;
@@ -169,22 +169,22 @@
 
         obs (atom false)
         sib (cF+ [:watch (fn-obs (reset! obs true))]
-              (if (even? (c-get sia))
+              (if (even? (cget sia))
                 42
                 10))
         run (atom false)
         sic (cF (reset! run true)
-              (/ (c-get sib) 2))]
-    (assert (= (c-get sib) 42))
-    (assert (= (c-get sic) 21))
+              (/ (cget sib) 2))]
+    (assert (= (cget sib) 42))
+    (assert (= (cget sic) 21))
     (assert @obs)
     (assert @run)
     (do
       (reset! obs false)
       (reset! run false))
     (creset! sia 2)
-    (assert (= (c-get sib) 42))
-    (assert (= (c-get sic) 21))
+    (assert (= (cget sib) 42))
+    (assert (= (cget sic) 21))
     (assert (not @obs))
     (assert (not @run))))
 

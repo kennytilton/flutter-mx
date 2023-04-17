@@ -15,7 +15,7 @@
             [tiltontec.cell.integrity :as integrity]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
-            [tiltontec.model.core :refer [make mget md-kids mswap! cFkids] :as md]
+            [tiltontec.model.core :refer [make mget mget? md-kids mswap! cFkids] :as md]
             [clojure.string :as str]))
 
 ;;; --- Flutter refs of fx models -----------------------------
@@ -42,7 +42,7 @@
 (defn fx-state-nearest [me]
   (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))
   (when me
-    (or ^State? (mget me :fx$state)
+    (or ^State? (mget? me :fx$state)
       ;; todo without dependency? Complete rethink?
       (when-let [st (fx-state-nearest (md/mpar))]
         (dpx :got-nearest-st-JIT st (tiltontec.cell.base/minfo me))
@@ -86,10 +86,10 @@
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
         (dpx :FXDartWidget-observing-md!!! prop (tiltontec.cell.base/minfo me) #_#_:deref @me)
         (dpx :FXDartWidget-observing-cell!!! prop (cinfo cell) @cell)
-        (when-let [noter (mget me :fx$notifier)]
+        (when-let [noter (mget? me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
-        (if-let [^State state (mget me :fx$state)]
+        (if-let [^State state (mget? me :fx$state)]
           (do (dpx :FXDWO-settingimmediatestate prop new-value #_(meta me) (cty/minfo me) (.-mounted state))
               (state-set state me))
           (if-let [^State state (fx-state-nearest me)]
@@ -121,7 +121,7 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (tiltontec.model.core/mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
                            (with-flutter-ref
@@ -142,14 +142,14 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      .key (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
+                                            (tiltontec.model.core/mget? me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (tiltontec.model.core/mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget? me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]
@@ -262,13 +262,13 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      .key (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
+                                            (tiltontec.model.core/mget? me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (mget me :initState)]
+                           (when-let [init (mget? me :initState)]
                              (dpx :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
@@ -292,13 +292,13 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      .key (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
+                                            (tiltontec.model.core/mget? me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           #_(when-let [init (mget me :initState)]
+                           #_(when-let [init (mget? me :initState)]
                                (init this me)))
                          (~'build [_# ctx]
                            (with-flutter-ref
@@ -320,13 +320,13 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      .key (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
+                                            (tiltontec.model.core/mget? me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (mget me :initState)]
+                           (when-let [init (mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
                            (with-flutter-ref
@@ -350,13 +350,13 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      .key (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
+                                            (tiltontec.model.core/mget? me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (tiltontec.model.core/mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
                            (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
@@ -383,13 +383,13 @@
          :fx-gen (fn [me ctx]
                    (reify :extends (m/StatefulWidget
                                      .key (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                            (tiltontec.model.core/mget me :key)))
+                                            (tiltontec.model.core/mget? me :key)))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (tiltontec.model.core/mget me :initState)]
+                           (when-let [init (tiltontec.model.core/mget? me :initState)]
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]

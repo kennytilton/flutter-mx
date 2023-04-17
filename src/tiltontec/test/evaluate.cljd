@@ -28,7 +28,7 @@
      :refer [fn-obs]]
     [tiltontec.cell.integrity
      :refer [with-integrity data-pulse-next]]
-    [tiltontec.cell.evaluate :refer [c-get cget c-value-assume c-awaken
+    [tiltontec.cell.evaluate :refer [cget cget c-value-assume c-awaken
                                      record-dependency ensure-value-is-current]]))
 
 (defn test-input []
@@ -41,7 +41,7 @@
     (assert (c-valid? c))
     (assert (nil? (c-model c)))
     (assert (= :bingo (c-prop c) (c-prop-name c)))
-    (assert (= (c-get c) 42))
+    (assert (= (cget c) 42))
     (dp :test-input-OK)))
 
 (defn t-formula []
@@ -53,8 +53,8 @@
     (assert (not (c-input? c)))
     (assert (not (c-valid? c)))
     (assert (nil? (c-model c)))
-    (trx nil :readddd (c-get c))
-    (assert (= (c-get c) 42))
+    (trx nil :readddd (cget c))
+    (assert (= (cget c) 42))
     (dp :t-formula-OK)))
 
 (defn t-formula-2 []
@@ -62,13 +62,13 @@
         cct (atom 0)
         dct (atom 0)
         c (cF (swap! cct inc)
-            (+ 40 (c-get b)))
+            (+ 40 (cget b)))
         d (cF (swap! dct inc)
-            (/ (c-get c)
-              (c-get b)))]
-    (assert (= (c-get d) 21))
-    (assert (= (c-get c) 42))
-    (assert (= (c-get b) 2))
+            (/ (cget c)
+              (cget b)))]
+    (assert (= (cget d) 21))
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
     (assert (= 1 @dct))
     (assert (= 1 @cct))
     (assert (= 0 (count (c-useds b))))
@@ -88,22 +88,22 @@
         dct (atom 0)
         c (cF+ [:prop :cc]
             (swap! cct inc)
-            (+ 40 (c-get b)))
+            (+ 40 (cget b)))
         d (cF+ [:prop :dd]
             (swap! dct inc)
-            (/ (c-get c)
-              (c-get b)))]
+            (/ (cget c)
+              (cget b)))]
     (do
-      (assert (= (c-get d) 21))
-      (assert (= (c-get c) 42))
-      (assert (= (c-get b) 2))
+      (assert (= (cget d) 21))
+      (assert (= (cget c) 42))
+      (assert (= (cget b) 2))
       (assert (= 1 @dct))
       (assert (= 1 @cct)))
 
     (creset! b 3)
-    (assert (= (c-get d) 43/3))
-    (assert (= (c-get c) 43))
-    (assert (= (c-get b) 3))
+    (assert (= (cget d) 43/3))
+    (assert (= (cget c) 43))
+    (assert (= (cget b) 3))
     (assert (= 2 @dct))
     (assert (= 2 @cct))
 
@@ -151,7 +151,7 @@
         logrun #(logit run %)
 
         cr (fn [c]
-             (c-get c))
+             (cget c))
 
         podobs (fn [prop me new old c]
                  (swap! obs assoc prop
@@ -284,29 +284,29 @@
         cct (atom 0)
         c (cF+ [:prop :cc]
             (swap! cct inc)
-            (+ 40 (c-get b)))]
-    (assert (= (c-get c) 42))
-    (assert (= (c-get b) 2))
+            (+ 40 (cget b)))]
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
     (assert (= 1 @ob))
     (assert (= 1 @cct))
 
 
     (creset! b 4)
-    (assert (= (c-get c) 42))
-    (assert (= (c-get b) 4))
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 4))
     (assert (= 1 @ob))
     (assert (= 1 @cct))
 
     (creset! b 5)
-    (assert (= (c-get c) 45))
-    (assert (= (c-get b) 5))
+    (assert (= (cget c) 45))
+    (assert (= (cget b) 5))
     (assert (= 2 @ob))
     (assert (= 2 @cct)))
   (dp :t-cell-unchanged-test-OK))
 
 (defn opti-away []
   (let [aa (cF 42)]
-    (assert (= 42 (c-get aa)))
+    (assert (= 42 (cget aa)))
     (dp :aa @aa)
     (assert (c-optimized-away? aa))
     (assert (= 42 @aa)))
