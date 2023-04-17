@@ -12,10 +12,10 @@
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
-             c-slot-name c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.observer
      :refer [ fn-obs]]
@@ -46,11 +46,11 @@
         v ;;"visitor"
         {:name "World"
          :action (cI nil
-                   :slot :v-action
+                   :prop :v-action
                    :watch ;; short for observer
-                   (fn [slot me new old c]
+                   (fn [prop me new old c]
                      (reset! obs-action new)
-                     (dp :observing slot new old)))}]
+                     (dp :observing prop new old)))}]
     (assert (=  (c-get (:name v)) "World"))
     (creset! (:action v) "knocks")
     (assert (=  (c-get (:action v)) "knocks"))
@@ -58,11 +58,11 @@
 
 (defn hw-03 []
   (let [action (atom nil)
-        obs-action (fn [slot me new old c]
+        obs-action (fn [prop me new old c]
                      (reset! action new)
-                     (dp :observing slot new old))
+                     (dp :observing prop new old))
         v {:name "World"
-           :action (cI nil :slot :v-action
+           :action (cI nil :prop :v-action
                      :watch obs-action)}]
 
     (assert (nil? (c-get (:action v))))
@@ -72,15 +72,15 @@
     (assert (= "knock-knock" @action))
     (assert (= (c-get (:action v)) "knock-knock"))))
 
-(defn gobs [slot me new old c]
-  (dp :gobs> slot new old))
+(defn gobs [prop me new old c]
+  (dp :gobs> prop new old))
 
 (defn hw-04 []
   (let [r-action (cI nil
-                   :slot :r-action
+                   :prop :r-action
                    :watch gobs)
         r-loc (make-c-formula
-                :slot :r-loc
+                :prop :r-loc
                 :watch gobs
                 :rule (fn [c]
                         (case (c-get r-action)
@@ -96,10 +96,10 @@
 
 (defn hw-05 []
   (dp :--go------------------)
-  (let [obs-action (fn [slot me new old c]
-                     (dp slot new old))
+  (let [obs-action (fn [prop me new old c]
+                     (dp prop new old))
         v {:name "World"
-           :action (cI nil :slot :v-action
+           :action (cI nil :prop :v-action
                      :watch obs-action)}
         r-action (cI nil)
         r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
@@ -119,11 +119,11 @@
 
 (defn hello-world []
   (dp :--go------------------)
-  (let [obs-action (fn [slot me new old c]
-                     (dp slot new old))
+  (let [obs-action (fn [prop me new old c]
+                     (dp prop new old))
         v {:name "World"
            :action (cI nil
-                     :slot :v-action
+                     :prop :v-action
                      :ephemeral? true
                      :watch obs-action)}
         r-action (cI nil)
@@ -146,11 +146,11 @@
 
 (defn hello-world-2 []
   (dp :--go------------------)
-  (let [obs-action (fn [slot me new old c]
+  (let [obs-action (fn [prop me new old c]
                      (when new (trx visitor-did new)))
         v {:name "World"
            :action (cI nil
-                     :slot :v-action
+                     :prop :v-action
                      :ephemeral? true
                      :watch obs-action)}
         r-action (cI nil)

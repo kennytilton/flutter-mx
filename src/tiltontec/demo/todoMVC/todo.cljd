@@ -19,7 +19,7 @@
 
 ;;; --- handy accessors ---------------------------------
 
-(md/def-mx-slots td-
+(md/def-mx-props td-
   stg-id title completed created-at)
 
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
@@ -31,7 +31,7 @@
 (deftype ToDo []
   :extends cty/Model
   PObserver
-  (observe [this slot me new-value prior-value cell]
+  (observe [this prop me new-value prior-value cell]
     ;; the initial observe, signified by prior value unbound,
     ;; is of the MX to-do being awakened after being loaded
     ;; from the DB, even new to-dos, so no need to update DB,
@@ -58,7 +58,7 @@
        :created-at created-at
        :ae-events? (cF+ [:async? true
                          ; optional chance to filter async response before it
-                         ; gets set as the mx slot value
+                         ; gets set as the mx prop value
                          :and-then? (fn [c lookup]
                                       (= 200 (.-statusCode ^dht/Response lookup)))]
                      (dht/get (.https Uri "api.fda.gov" "drug/event.json"
@@ -75,8 +75,8 @@
 (deftype ToDoList []
   :extends cty/Model
   mx/PObserver
-  (observe [this slot me new-value prior-value cell]
-    (case slot
+  (observe [this prop me new-value prior-value cell]
+    (case prop
       :kids (when (not= cty/unbound prior-value)
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (doseq [td lost]

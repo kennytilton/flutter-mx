@@ -78,26 +78,26 @@
 (deftype FXDartWidget []
   :extends Model
   PObserver
-  (observe [this slot me new-value prior-value cell]
-    (dpx :fxdw-obs slot)
-    (when-not (some #{slot} [:parent :name ::cty/type :not-to-be :initState :fx-class :cells-flushed
+  (observe [this prop me new-value prior-value cell]
+    (dpx :fxdw-obs prop)
+    (when-not (some #{prop} [:parent :name ::cty/type :not-to-be :initState :fx-class :cells-flushed
                              :fxx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
-        (dpx :FXDartWidget-observing!!! slot new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! slot (tiltontec.cell.base/minfo me) #_#_:deref @me)
-        (dpx :FXDartWidget-observing-cell!!! slot (cinfo cell) @cell)
+        (dpx :FXDartWidget-observing!!! prop new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
+        (dpx :FXDartWidget-observing-md!!! prop (tiltontec.cell.base/minfo me) #_#_:deref @me)
+        (dpx :FXDartWidget-observing-cell!!! prop (cinfo cell) @cell)
         (when-let [noter (mget me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
 
         (if-let [^State state (mget me :fx$state)]
-          (do (dpx :FXDWO-settingimmediatestate slot new-value #_(meta me) (cty/minfo me) (.-mounted state))
+          (do (dpx :FXDWO-settingimmediatestate prop new-value #_(meta me) (cty/minfo me) (.-mounted state))
               (state-set state me))
           (if-let [^State state (fx-state-nearest me)]
             (do
               (dpx :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
-                :slot slot :new-prio new-value prior-value)
+                :prop prop :new-prio new-value prior-value)
               (state-set state me))
-            (dpx :FXDWO-NOT-setting-state-on-utterly-stateless slot new-value (cty/minfo me)
+            (dpx :FXDWO-NOT-setting-state-on-utterly-stateless prop new-value (cty/minfo me)
               #_@me)))))))
 
 ;;; --- the maker macros ---------------------------------------------------

@@ -29,25 +29,25 @@
 (defn fx-resolve
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
-  ([slot me ctx widget-value]
-   ;(dp :resolving slot (tiltontec.cell.base/minfo me) widget-value)
+  ([prop me ctx widget-value]
+   ;(dp :resolving prop (tiltontec.cell.base/minfo me) widget-value)
    (cond
      (nil? widget-value)
      (do
-       ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! slot (tiltontec.cell.base/minfo me))
+       ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! prop (tiltontec.cell.base/minfo me))
        nil)
 
      (dart/is? widget-value CBAsIs)
      (do
-       (dpx :fx-resolve-as-ising!!!!!!!!! slot (tiltontec.cell.base/minfo me) widget-value)
+       (dpx :fx-resolve-as-ising!!!!!!!!! prop (tiltontec.cell.base/minfo me) widget-value)
        (.-value ^CBAsIs widget-value))
 
      (dart/is? widget-value CBToResolve)
      (let [val ^CBToResolve widget-value]
-       (dpx :fx-reso-calling-back!!!!!!! slot (tiltontec.cell.base/minfo me) widget-value)
+       (dpx :fx-reso-calling-back!!!!!!! prop (tiltontec.cell.base/minfo me) widget-value)
        (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
          (dpx :CBToResolveyields cb-val)
-         (recur slot me ctx cb-val)))
+         (recur prop me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
      (do
@@ -59,7 +59,7 @@
        (dpx :fxres-calling-fn?-blind widget-value)
        (let [v (widget-value me ctx)]
          (dpx :recuring-unwrapped-fn?-return-val v)
-         (recur slot me ctx v)))
+         (recur prop me ctx v)))
 
      (cty/c-ref? widget-value)
      (throw (Exception. (str "fx-resolve sees Cell! " (cinfo widget-value))))
@@ -76,7 +76,7 @@
            (dpx :vec-rez rzd)
            rzd))
 
-     :default (do #_(dp :resolve-fall-thru-used slot (tiltontec.cell.base/minfo me) widget-value
+     :default (do #_(dp :resolve-fall-thru-used prop (tiltontec.cell.base/minfo me) widget-value
                       (when (atom? widget-value)
                         (deref widget-value)))
                 widget-value))))

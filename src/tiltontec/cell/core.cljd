@@ -4,7 +4,7 @@
 
     [tiltontec.util.core :refer [err rmap-setf]]
     [tiltontec.util.base
-     :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-slots def-rmap-meta-slots]]
+     :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
     [tiltontec.cell.base
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
@@ -16,9 +16,9 @@
              c-synapses c-async? cinfo
              unlink-from-callers *causation*
              c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
 
     [tiltontec.cell.observer
      :refer [fn-obs]]
@@ -31,9 +31,9 @@
 
 ; todo: stand-alone cells with observers should be observed when they are made
 
-(def +valid-input-options+  #{:obs :watch :slot :ephemeral? :unchanged-if
+(def +valid-input-options+  #{:obs :watch :prop :ephemeral? :unchanged-if
                               :value :input? :debug})
-(def +valid-formula-options+ #{:obs :watch :slot :input? :lazy :optimize :ephemeral? :unchanged-if
+(def +valid-formula-options+ #{:obs :watch :prop :input? :lazy :optimize :ephemeral? :unchanged-if
                                :code :value :rule :async? :and-then? :debug})
 
 (defn c-options-canonicalize [options allowed]
@@ -103,12 +103,12 @@
   `(fn [~c]
      (let [~'me (tiltontec.cell.base/c-model ~c)
            ~'_cell ~c
-           ~'_slot-name (tiltontec.cell.base/c-slot ~c)
+           ~'_slot-name (tiltontec.cell.base/c-prop ~c)
            ~'_cache (tiltontec.cell.base/c-value ~c)]
        ~@body)))
 
 (defmacro c-fn [& body]
-  `(c-fn-var (~'slot-c#) ~@body))
+  `(c-fn-var (~'prop-c#) ~@body))
 
 (defmacro cF [& body]
   `(make-c-formula
@@ -253,28 +253,28 @@ in the CL version of Cells SETF itself is the change API dunction."
 
   (cond
     *defer-changes*
-    #_ (let [slot (c-slot-name c)
+    #_ (let [prop (c-prop-name c)
              me (c-model c)]
          (err str
-           "MXAPI_UNDEFERRED_CHANGE> undeferred mswap!/mset!/md-reset! to the property '" slot "' by an observer detected."
+           "MXAPI_UNDEFERRED_CHANGE> undeferred mswap!/mset!/md-reset! to the property '" prop "' by an observer detected."
            "...> such mutations must be wrapped by WITH-INTEGRITY, must conveniently with macro WITH-CC."
            "...> look for MXAPI_UNDEFERRED_CHANGE in the Errors documentation for  more details.\n"
-           "...> FYI: intended new value is [" new-value "]; current value is [" (get @me slot :no-such-slot) "].\n"
+           "...> FYI: intended new value is [" new-value "]; current value is [" (get @me prop :no-such-prop) "].\n"
            "...> FYI: instance is of type " (type-cljc me) ".\n"
            "...> FYI: full instance is " @me "\n"
            "...> FYI: instance meta is " (meta me) "\n.")
          #_ (err (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
-                   (c-slot c))))
-    (do (dp :c-reset-rejecting-undeferred! (c-slot c))
-        (throw (Exception. (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. Slot: "
-                             (c-slot c) " :me " @(c-model c)))))
+                   (c-prop c))))
+    (do (dp :c-reset-rejecting-undeferred! (c-prop c))
+        (throw (Exception. (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
+                             (c-prop c) " :me " @(c-model c)))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
     (c-value-assume c new-value nil)
     ;-------------------------------------------
     :else
     (do (dpc c :cset!!!-integrity!!!!!!!!! new-value (cinfo c))
-        (with-integrity (:change (c-slot c))
+        (with-integrity (:change (c-prop c))
           (dpc c :cset!-pre-ass-fires!!! (cinfo c) new-value)
           (c-value-assume c new-value nil)))))
 
@@ -293,7 +293,7 @@ execution as soon as the current change is manifested."
   `(cond
      (not *within-integrity*)
      (throw (Exception. (str "c-reset-next!> deferred change to %s not under WITH-INTEGRITY supervision."
-                          (c-slot ~f-c))))
+                          (c-prop ~f-c))))
      ;---------------------------------------------
      :else
      (tiltontec.cell.integrity/ufb-add :change

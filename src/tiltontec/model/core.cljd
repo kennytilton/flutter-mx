@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [tiltontec.util.base
-     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-slots]]
+     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props]]
     [tiltontec.util.core
      :refer [difference atom? err rmap-setf rmap-meta-setf pln]]
     [tiltontec.cell.matrix :refer [PObserver observe]  :as mx]
@@ -16,9 +16,9 @@
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
              c-synaptic? cinfo
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.observer :refer [observe observer-register fn-obs]]
     [tiltontec.cell.evaluate :refer [not-to-be not-to-be-self]]
@@ -43,44 +43,44 @@
 (defn mname [me]
   (:name @me))
 
-(defn md-get [me slot]
-  ;; (trx :md-get slot me)
-  (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing slot: " slot " :me " @me))
-  (if-let [c (md-cell me slot)]
+(defn md-get [me prop]
+  ;; (trx :md-get prop me)
+  (assert me (str "md-get passed nil for me accessing prop: " prop))
+  (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing prop: " prop " :me " @me))
+  (if-let [c (md-cell me prop)]
     (c-get c)
-    (slot @me)))
+    (prop @me)))
 
-(defmacro def-mx-slots [reader-prefix & slots]
+(defmacro def-mx-props [reader-prefix & slots]
   `(do
-     ~@(map (fn [slot#]
+     ~@(map (fn [prop#]
               `(defn ~(symbol (str (or reader-prefix "")
-                                slot#))
+                                prop#))
                  [~'ref]
-                 (tiltontec.model.core/mget ~'ref ~(keyword slot#)))) slots)))
+                 (tiltontec.model.core/mget ~'ref ~(keyword prop#)))) slots)))
 
-(defn mgetx [me slot]
-  (assert me (str "md-get passed nil for me accessing slot: " slot))
-  (dp :MGX-getting slot :from (minfo me) :me me :nil (nil? me))
+(defn mgetx [me prop]
+  (assert me (str "md-get passed nil for me accessing prop: " prop))
+  (dp :MGX-getting prop :from (minfo me) :me me :nil (nil? me))
   (when (atom? me)
     (dp :me-is-atom!)
-    (if-let [c (md-cell me slot)]
+    (if-let [c (md-cell me prop)]
       (do (dp :got-cell! (cinfo c))
           (when (atom? c)
             (dp :got-c-atom!! (deref c)))
           (c-get c))
-      (slot @me))))
+      (prop @me))))
 
-(defn mget [me slot]
-  (dpx :mget-entry slot :of (when me (minfo me)))
-  (md-get me slot))
+(defn mget [me prop]
+  (dpx :mget-entry prop :of (when me (minfo me)))
+  (md-get me prop))
 
-(defn md-getx [tag me slot]
-  (mgetx me slot)
-  #_(wtrx [0 100 (str "md-getx " tag slot (mx-type me))]
-      (if-let [c (md-cell me slot)]
+(defn md-getx [tag me prop]
+  (mgetx me prop)
+  #_(wtrx [0 100 (str "md-getx " tag prop (mx-type me))]
+      (if-let [c (md-cell me prop)]
         (c-get c)
-        (slot @me))))
+        (prop @me))))
 
 (def ^:dynamic *md-parent* nil)
 
@@ -91,37 +91,37 @@
 
 ;;; --- accessors ----
 
-(defn md-reset! [me slot new-value]
-  ;; (dp :md-reset slot )
+(defn md-reset! [me prop new-value]
+  ;; (dp :md-reset prop )
   (assert me "no me passed to md-reset!")
-  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
-  (if-let [c (md-cell me slot)]
+  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," prop))
+  (if-let [c (md-cell me prop)]
     (do
       (dpx :md-reset-gotc!!! @c)
       (creset! c new-value))
     (do
-      (if (contains? @me slot)
+      (if (contains? @me prop)
         (err str
-          "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/md-reset! to the property '" slot "', which is not mediated by any cell.\n"
+          "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/md-reset! to the property '" prop "', which is not mediated by any cell.\n"
           "...> if such post-make mutation is in fact required, wrap the initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
           "...> look for MXAPI_ILLEGAL_MUTATE_NONCELL in the Errors documentation for  more details.\n"
-          "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me slot :no-such-slot) "].\n"
+          "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me prop :no-such-prop) "].\n"
           "...> FYI: instance is of type " (mx-type me) ".\n"
           "...> FYI: full instance is " @me "\n"
           "...> FYI: instance meta is " (meta me) "\n.")
         (err str
-          "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent slot \"" slot "\".\n"
+          "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent prop \"" prop "\".\n"
           "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))))
 
-(defn mset! [me slot new-value]
-  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," slot))
-  (md-reset! me slot new-value))
+(defn mset! [me prop new-value]
+  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," prop))
+  (md-reset! me prop new-value))
 
-(defn mswap! [me slot swap-fn & swap-fn-args]
-  (if (contains? @me slot)
-    (mset! me slot (apply swap-fn (mget me slot) swap-fn-args))
+(defn mswap! [me prop swap-fn & swap-fn-args]
+  (if (contains? @me prop)
+    (mset! me prop (apply swap-fn (mget me prop) swap-fn-args))
     (err str
-      "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent slot \"" slot "\".\n"
+      "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent prop \"" prop "\".\n"
       "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
 
 (defn make [& arg-list]
@@ -136,8 +136,8 @@
                                      :host *md-host*}
                                (->> arg-list
                                  (partition 2)
-                                 (filter (fn [[slot v]]
-                                           (not (= ::cty/type slot))))
+                                 (filter (fn [[prop v]]
+                                           (not (= ::cty/type prop))))
                                  (map (fn [[k v]]
                                         (vector k (if (c-ref? v)
                                                     unbound
@@ -155,10 +155,10 @@
           [:cz me]
           (->> arg-list
             (partition 2)
-            (filter (fn [[slot v]]
-                      (when-not (some #{slot} [:parent :name ::cty/type :not-to-be
+            (filter (fn [[prop v]]
+                      (when-not (some #{prop} [:parent :name ::cty/type :not-to-be
                                                :fx$ikeys :fx$notifier :fx$observer])
-                        (md-install-cell me slot v))))
+                        (md-install-cell me prop v))))
             (map vec)
             (into {})))
 
@@ -183,7 +183,7 @@
       (prn :fm-n2b-kid!! @k)
       (not-to-be k))))
 
-(defn fm-kids-observe [slot-name me newk oldk c]
+(defn fm-kids-observe [prop-name me newk oldk c]
   (when-not (= oldk unbound)
     (let [lostks (difference (set oldk) (set newk))]
       (when-not (empty? lostks)
@@ -193,9 +193,9 @@
 (deftype Family []
   :extends cty/Model
   PObserver
-  (observe [this slot me new-value prior-value cell]
-    (when (= slot :kids)
-      (fm-kids-observe slot me new-value prior-value cell))))
+  (observe [this prop me new-value prior-value cell]
+    (when (= prop :kids)
+      (fm-kids-observe prop me new-value prior-value cell))))
 
 (defmacro mpar [& [me]]
   (let [me (or me 'me)]
@@ -369,9 +369,9 @@
 (defn fm! [what where]
   (fm-navig what where :me? false :inside? true :must? true :up? true))
 
-(defmacro mdv! [what slot & [me]]
+(defmacro mdv! [what prop & [me]]
   (let [me (or me 'me)]
-    `(md-get (tiltontec.model.core/fm! ~what ~me) ~slot)))
+    `(md-get (tiltontec.model.core/fm! ~what ~me) ~prop)))
 
 (defn mxu-find-name
   "Search up the matrix from node 'where' looking for element with given name"
@@ -416,28 +416,28 @@
                     (= name# (md-get % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
-(defmacro fm*val [name & [slot me]]
-  (let [slot (or slot ':value)
+(defmacro fm*val [name & [prop me]]
+  (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/md-get node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
-       (assert other# (str "fm*val did not find other named " ~name " seeking property " ~slot))
-       (tiltontec.model.core/mget other# ~slot))))
+       (assert other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.model.core/mget other# ~prop))))
 
-(defmacro fmuv [slot name & [me]]
+(defmacro fmuv [prop name & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~slot))
-       (mget other# ~slot))))
+       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (mget other# ~prop))))
 
-(defmacro fmuval [name & [slot me]]
-  (let [slot (or slot ':value)
+(defmacro fmuval [name & [prop me]]
+  (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~slot))
-       (mget other# ~slot))))
+       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (mget other# ~prop))))
 
 (defn mxu-find-id
   "Search up the matrix from node 'where' looking for element with given id"
@@ -472,11 +472,11 @@
 (defn fmov
   ([me id-name]
    (fmov me id-name :value))
-  ([me id-name slot-name]
+  ([me id-name prop-name]
    (when-let [mx (fmo me id-name)]
-     (if (contains? @mx slot-name)
-       (mget mx slot-name)
-       (throw (str "fmov> " id-name " lacks " slot-name " property"))))))
+     (if (contains? @mx prop-name)
+       (mget mx prop-name)
+       (throw (str "fmov> " id-name " lacks " prop-name " property"))))))
 
 ;;; --- ancestry ----
 (defn fm-ancestry [me]

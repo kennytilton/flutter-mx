@@ -4,23 +4,23 @@
 (defn trc [x]
   (dart:core/print (str "trx> " x)))
 
-;; --- easy access to maps in refs, BYPASSING mget (use def-mx-slots for that) ----
+;; --- easy access to maps in refs, BYPASSING mget (use def-mx-props for that) ----
 
-(defmacro def-rmap-slots [reader-prefix & slots]
+(defmacro def-rmap-props [reader-prefix & slots]
   `(do
-     ~@(map (fn [slot#]
+     ~@(map (fn [prop#]
               `(defn ~(symbol (str (or reader-prefix "")
-                                slot#))
+                                prop#))
                  [~'ref]
-                 (~(keyword slot#) @~'ref))) slots)))
+                 (~(keyword prop#) @~'ref))) slots)))
 
-(defmacro def-rmap-meta-slots [reader-prefix & slots]
+(defmacro def-rmap-meta-props [reader-prefix & slots]
   `(do
-     ~@(map (fn [slot#]
+     ~@(map (fn [prop#]
               `(defn ~(symbol (str (or reader-prefix "")
-                                slot#))
+                                prop#))
                  [~'ref]
-                 (~(keyword slot#) (meta ~'ref)))) slots)))
+                 (~(keyword prop#) (meta ~'ref)))) slots)))
 
 ;; ---- debug print statement hacks ---------------------
 
@@ -97,7 +97,7 @@
         [:bound *trdeep*] [:rans (if (= *txran* new-ran) :ok :RAND_BAD_TOO!!!!!!!!!!!!!!!)] :info (rest trxargs))
 
       (assert (= *txran* new-ran))
-      (assert (= *trdeep* new-depth)) ;; bindingfail #1 happens on slot name :zq3 but not :zq, starting value at unbound (the symbol)
+      (assert (= *trdeep* new-depth)) ;; bindingfail #1 happens on prop name :zq3 but not :zq, starting value at unbound (the symbol)
 
       (cond
         (<= lo *trdeep* hi)

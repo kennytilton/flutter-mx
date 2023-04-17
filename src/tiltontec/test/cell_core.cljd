@@ -2,7 +2,7 @@
   (:require
     ["dart:developer" :as dev]
     [tiltontec.util.base :as ub
-     :refer [def-rmap-slots trx dp prog1]]
+     :refer [def-rmap-props trx dp prog1]]
     [tiltontec.util.core
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
@@ -16,12 +16,12 @@
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
-             c-synapses c-slot-name
+             c-synapses c-prop-name
              unlink-from-callers *causation*
              c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.core
      :refer [make-cell cI cF cFn cFonce cF+ cF+n cf-freeze creset! cswap!]]
     [tiltontec.cell.observer
@@ -32,7 +32,7 @@
                                      record-dependency ensure-value-is-current]]
     ))
 
-(def-rmap-slots jj- boom)
+(def-rmap-props jj- boom)
 
 (defn test-rmap []
   (let [x (atom {:value 0 :boom 42})]
@@ -74,7 +74,7 @@
 
 (defn test-input-cell []
   (let [c (make-cell
-            :slot :mol
+            :prop :mol
             :value 42)]
     (assert (dart/is? (mx-type c) cty/Cell))
     (assert (= (c-value c) 42))
@@ -82,7 +82,7 @@
     (assert (= #{} (c-callers c)))
     (assert (c-input? c))
     (assert (nil? (c-model c)))
-    (assert (= :mol (c-slot c))))
+    (assert (= :mol (c-prop c))))
   (dp :test-input-cell-OK))
 
 (defn test-cI []
@@ -97,7 +97,7 @@
   (dp :test-cI-OK))
 
 (defn test-cI+ []
-  (let [c (cI 42 :slot :cool)]
+  (let [c (cI 42 :prop :cool)]
     (assert (dart/is? (mx-type c) cty/Cell))
     (assert (c-ref? c))
     (assert (= (c-value c) 42))
@@ -105,7 +105,7 @@
     (assert (= #{} (c-callers c)))
     (assert (c-input? c))
     (assert (nil? (c-model c)))
-    (assert (= :cool (c-slot c)(c-slot-name c)))
+    (assert (= :cool (c-prop c)(c-prop-name c)))
     (dp :test-cI+-OK)))
 
 (defn test-cF []
@@ -121,7 +121,7 @@
     (dp :test-cF-OK)))
 
 (defn test-cF+ []
-  (let [c (cF+ (:optimize false :slot :bingo)
+  (let [c (cF+ (:optimize false :prop :bingo)
             (+ 40 2))]
     (assert (dart/is? (mx-type c) cty/CellFormula))
     (assert (c-ref? c))
@@ -133,7 +133,7 @@
     (assert (not (c-input? c)))
     (assert (nil? (c-model c)))
     (assert (not (c-optimize c)))
-    (assert (= :bingo (c-slot c)(c-slot-name c)))
+    (assert (= :bingo (c-prop c)(c-prop-name c)))
     (dp :test-cF+-OK)))
 
 (defn t-eph-1 []
@@ -141,14 +141,14 @@
   (data-pulse-next)
   (let [boct (atom 0)
         b (cI nil
-            :slot :b
+            :prop :b
             :obs (fn-obs
                    (swap! boct inc))
             :ephemeral? true)
         _ (c-awaken b)
         crun (atom 0)
         cobs (atom 0)
-        c (cF+ [:slot :c
+        c (cF+ [:prop :c
                 :obs (fn-obs
                        (swap! cobs inc))]
             (swap! crun inc)
@@ -187,8 +187,8 @@
   (cells-init)
   (data-pulse-next)
 
-  (let [a (cI 42 :slot :aa)
-        b (cFn [:slot :bb]
+  (let [a (cI 42 :prop :aa)
+        b (cFn [:prop :bb]
             (/ (c-get a) 2))
         c (cF (+ 1 (c-get b)))]
     (assert (= 21 (c-get b)))
@@ -199,8 +199,8 @@
   (dp :t-cFn-OK))
 
 (defn t-cFonce []
-  (let [a (cI 42 :slot :aa)
-        b (cFonce [:slot :bb]
+  (let [a (cI 42 :prop :aa)
+        b (cFonce [:prop :bb]
             (/ (c-get a) 2))]
     (dp :bbb b)
     (assert (= 21 (c-get b)))
@@ -219,17 +219,17 @@
   ; cell has no dependencies.
   (cells-init)
 
-  (let [a (cI 1 :slot :aa)
-        b (cF+ [:slot :bb]
+  (let [a (cI 1 :prop :aa)
+        b (cF+ [:prop :bb]
             42)                                             ;; should optimize away
-        c (cF+ [:slot :cc]
+        c (cF+ [:prop :cc]
             (inc (c-get b)))                                ;; should recursively optimize away, since b should
-        d (cF+ [:slot :dd]
+        d (cF+ [:prop :dd]
             (if (< (c-get a) 3)
               (+ (c-get a) (c-get b) (c-get c))
               17))
         ect (atom 0)
-        e (cF+ [:slot :ee]
+        e (cF+ [:prop :ee]
             (swap! ect inc)
             (if (< (c-get a) 3)
               (+ (c-get a) (c-get b) (c-get c))

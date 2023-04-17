@@ -1,7 +1,7 @@
 (ns tiltontec.cell.base
   (:require
     [tiltontec.util.base :as utb
-     :refer [def-rmap-slots dp]]
+     :refer [def-rmap-props dp]]
 
     [tiltontec.util.core
      :refer [cl-find set-ify atom? err
@@ -86,7 +86,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (def ^:dynamic +stop+ (atom false)) ;; emergency brake
 
 (defmacro pcell [tag c]
-  `(dp :pcell ~tag (c-slot ~c)(c-state ~c)))
+  `(dp :pcell ~tag (c-prop ~c)(c-state ~c)))
 
 ;; --- procedure division ----------------------
 
@@ -128,7 +128,7 @@ rule to get once behavior or just when fm-traversing to find someone"
      ~@body))
 
 (defn ustack$ [tag] ;; debug aid
-  (str tag "ustack> "(vec (map (fn [c] (:slot @c)) *call-stack*))))
+  (str tag "ustack> "(vec (map (fn [c] (:prop @c)) *call-stack*))))
 
 (defn c-assert
   ([assertion] (when-not assertion
@@ -155,7 +155,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (deftype Model []
   :extends mx/MXImplementer
   PObserver
-  (observe [this slot me new-value prior-value cell]
+  (observe [this prop me new-value prior-value cell]
     #_ (dp :Model-not-observing (cinfo cell))))
 
 (defn mx-type [it]
@@ -188,8 +188,8 @@ rule to get once behavior or just when fm-traversing to find someone"
   (when (and c (atom? c) (map? @c))
     (dart/is? (c-type c) CellFormula)))
 
-(utb/def-rmap-slots c-
-  me slot state input? rule pulse pulse-last-changed pulse-observed
+(utb/def-rmap-props c-
+  me prop state input? rule pulse pulse-last-changed pulse-observed
   useds users callers optimize ephemeral?
   lazy synapses synaptic? code async? then? debug)
 
@@ -224,8 +224,8 @@ rule to get once behavior or just when fm-traversing to find someone"
       "anon")
     "no-md"))
 
-(defn c-slot-name [rc]
-  (:slot @rc))
+(defn c-prop-name [rc]
+  (:prop @rc))
 
 (defn c-value-state [rc]
   (let [v (c-value rc)]
@@ -250,7 +250,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
                        :not-cell-c)
     :else (if verbose? [:cinfo-all @c]
-            ((juxt c-slot-name c-md-name c-async? c-value) c)))))
+            ((juxt c-prop-name c-md-name c-async? c-value) c)))))
 
 (defn minfo
   ([md]
@@ -297,10 +297,10 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;; debug aids --------------
 
-(defn c-slots [c k]
+(defn c-props [c k]
   (assert (c-ref? c) (str "cslots c-ref? fail " ))
   ;; set conversion as convenience to test code
-  (set (map c-slot (k @c))))
+  (set (map c-prop (k @c))))
 
 ;; --- defmodel rizing ---------------------
 
@@ -322,10 +322,10 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;(set! *print-level* 3) ;; cells are recursive data for now
 
-(defn md-slot-owning?
-  "Signifies whether the given slot is a host or owning property, meaning
+(defn md-prop-owning?
+  "Signifies whether the given prop is a host or owning property, meaning
   its value should be GCed and navigation might want to go here."
-  [class-name slot-name]
+  [class-name prop-name]
   ;; todo resurrect if needed, or clean up altogether
   false)
 

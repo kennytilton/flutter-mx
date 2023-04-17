@@ -11,10 +11,10 @@
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
-             c-slot-name c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.observer :refer [fn-obs]]
 
@@ -31,7 +31,7 @@
 (defn fm-0 []
   (cells-init)
   (let [u (md/make-family
-            :kon (cI false :slot :kon)
+            :kon (cI false :prop :kon)
             :kids (cF ;;(trx :kids-run! *depender*)
                     (when (md-get me :kon)
                       (vector
@@ -208,7 +208,7 @@
     (assert (= #{:action :loc :bogus :bogus-e} (set (keys (md-cz res)))))
     (assert (every? #(= res (c-me  %))  (vals (md-cz res))))
     (assert (= #{:action :loc :bogus :bogus-e}
-          (set (map #(c-slot %)
+          (set (map #(c-prop %)
                  (vals (md-cz res))))))
     (assert (= "Bob" (:name @res)))
     (assert (= "Bob" (md-name res)))
@@ -233,7 +233,7 @@
                             :moniker "World"
                             :action (cI nil
                                       :ephemeral? true
-                                      :watch (fn [slot me new old c]
+                                      :watch (fn [prop me new old c]
                                              (when new (trx :visitor-did new)))))
                           (md/make
                             :name :resident

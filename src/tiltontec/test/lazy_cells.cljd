@@ -10,10 +10,10 @@
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
-             c-slot-name c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.evaluate :refer [c-get]]
     [tiltontec.cell.observer
@@ -86,8 +86,8 @@
   (cells-init)
   (let [xo (atom 0)
         xr (atom 0)
-        a (cI 0 :slot :aaa)
-        x (cF+ [:slot :xxx
+        a (cI 0 :prop :aaa)
+        x (cF+ [:prop :xxx
                 :watch (fn-obs (swap! xo inc))
                 :optimize :when-value-t]
             (swap! xr inc)
@@ -124,7 +124,7 @@
                   (dp :x-ran-runs-now @runs)
                   (+ (c-get a) 40))
         x (make-c-formula
-            :slot :xxx
+            :prop :xxx
             :watch (fn-obs ;;(dp :watch-incing-xo!!! new old)
                    (swap! xo inc))
             :value tiltontec.cell.base/unbound

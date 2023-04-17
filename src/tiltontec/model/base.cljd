@@ -1,7 +1,7 @@
 (ns tiltontec.model.base
   (:require
     [tiltontec.util.base
-     :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-slots def-rmap-meta-slots]]
+     :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
     [tiltontec.util.core :refer [err rmap-setf rmap-meta-setf]]
     [tiltontec.cell.matrix :as mx]
     [tiltontec.cell.base
@@ -13,9 +13,9 @@
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation* c-md-name
              c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot c-slots
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
 
     [tiltontec.cell.evaluate :refer [c-get c-awaken]]
     ))
@@ -23,39 +23,39 @@
 ;(deftype ModelEx []
 ;  :extends mx/MXImplementer
 ;  mx/PObserver
-;  (observe [this slot me new-value prior-value cell]
+;  (observe [this prop me new-value prior-value cell]
 ;    #_ (prn :Model-not-observing (cinfo cell))))
 
 (def ^:dynamic *md-host*
   "used for navigation above `me` for delegate MX nodes with no parent, such as an appBar"
   nil)
 
-(def-rmap-slots md-
+(def-rmap-props md-
   name)
 
-(def-rmap-meta-slots md-
+(def-rmap-meta-props md-
   state cz)
 
-(defn md-cell [me slot]
-  (slot (md-cz me)))
+(defn md-cell [me prop]
+  (prop (md-cz me)))
 
 ;;; --- md initialization ---
 
 ;; (declare md-awaken)
 
-(defn md-install-cell [me slot c]
+(defn md-install-cell [me prop c]
   ;; note that c might not be a Cell; it is a misnomer
   (cond
     (c-ref? c) (do
                  (swap! c assoc
-                   :slot slot
+                   :prop prop
                    :me me)
-                 (rmap-setf [slot me]
+                 (rmap-setf [prop me]
                    (when (c-input? c)
                      (c-value c)))
                  true)
     :else (do
-            (rmap-setf [slot me] c)
+            (rmap-setf [prop me] c)
             false)))
 
 (defn md-awaken
@@ -71,17 +71,17 @@
   (rmap-meta-setf [:state me] :awakening)
   (binding [*md-host* me]
     (doall
-      (for [slot (keys @me)]
-        ;; next is tricky: if slot is in :cz but nil, it has been
+      (for [prop (keys @me)]
+        ;; next is tricky: if prop is in :cz but nil, it has been
         ;; optimized-away and observed then in the rare case
         ;; it gets optimized away on other than the initial
         ;; value.
-        (when-let [c (slot (md-cz me) :not-found)]
+        (when-let [c (prop (md-cz me) :not-found)]
           (cond
             (= c :not-found)
             ;; these need at least an initial observe
-            (when (not (some #{slot} [:parent :name :fx-gen :not-to-be]))
-              (mx/observe (mx-type me) slot me (slot @me) unbound nil))
+            (when (not (some #{prop} [:parent :name :fx-gen :not-to-be]))
+              (mx/observe (mx-type me) prop me (prop @me) unbound nil))
             :else (when-not (= (c-state c) :awake)          ;; might have happened already
                     (c-awaken c)))))))
   (rmap-meta-setf [:state me] :awake)

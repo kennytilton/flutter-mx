@@ -11,10 +11,10 @@
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
-             c-slot-name c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-slot
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
              *depender* *not-to-be*
-             *c-prop-depth* md-slot-owning? c-lazy] :as cty]
+             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.evaluate :refer [c-get]]
     [tiltontec.cell.observer :refer [fn-obs]]
 
@@ -25,7 +25,7 @@
 (defn t-formula []
   (cells-init)
   (let [bingo (atom false)
-        c (cF+ [:slot :bingo
+        c (cF+ [:prop :bingo
                 :watch (fn-obs
                          (reset! bingo true))]
             (+ 40 2))]
@@ -43,7 +43,7 @@
 
 (defn test-input []
   (let [bingo2 (atom 0)
-        c (cI 42 :slot :bingo2
+        c (cI 42 :prop :bingo2
             :watch (fn-obs
                      (dp :test-input-obs-runs!!!)
                      (swap! bingo2 inc)))]
@@ -53,7 +53,7 @@
     (assert (c-input? c))
     (assert (c-valid? c))
     (assert (nil? (c-model c)))
-    (assert (= :bingo2 (c-slot c) (c-slot-name c)))
+    (assert (= :bingo2 (c-prop c) (c-prop-name c)))
     (assert (= (c-get c) 42))
     (assert (= 1 @bingo2))
 
@@ -63,13 +63,13 @@
 
 (defn t-custom-obs []
   (let [bobs (atom nil)
-        b (cI 2 :slot :bb
+        b (cI 2 :prop :bb
             :watch (fn-obs
-                     (dp :watch-b slot me new old)
+                     (dp :watch-b prop me new old)
                      (reset! bobs new)))
         cobs (atom nil)
-        c (cF+ [:watch (fn-obs [slot me new old c]
-                         (trx slot me new old)
+        c (cF+ [:watch (fn-obs [prop me new old c]
+                         (trx prop me new old)
                          (reset! cobs new))]
             (* 10 (c-get b)))]
     (do
