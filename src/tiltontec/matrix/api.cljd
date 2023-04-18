@@ -1,7 +1,9 @@
 (ns tiltontec.matrix.api
   (:require
+    [tiltontec.cell.base :as cb]
     [tiltontec.model.core :as md]))
 
+(def unbound cb/unbound)
 ;;; --- accessors -----------------------------------
 
 (defn mset! [me prop new-value]
@@ -18,6 +20,9 @@
 
 ;;; --- navigation ---------------------------------
 
+(defn mname [me]
+  (:name @me))
+
 (defn mkids [me] (tiltontec.model.core/mget? me :kids))
 
 (defmacro mpar [& [me]]
@@ -26,7 +31,6 @@
 
 (defn fm-navig [what where & options]
   (apply md/fm-navig what where options))
-
 
 (defmacro fasc "Search strictly up"
   ;; todo -- conform to CLJC version
@@ -189,6 +193,11 @@
     where :me? false :up? true :inside? false))
 
 ;;; --- f/mx issues ----------------------------------------------
+(defn md-ref? [x]
+  (cb/md-ref? x))
+
+(defn make [& arg-list]
+  (apply tiltontec.model.core/make arg-list))
 
 (defmacro with-mx-isolation [& body]
   `(binding [tiltontec.cell.base/*within-integrity* nil
@@ -196,3 +205,11 @@
              tiltontec.cell.base/*defer-changes* false
              tiltontec.cell.base/*call-stack* nil]
      ~@body))
+
+(defmacro def-mx-props [reader-prefix & slots]
+  `(do
+     ~@(map (fn [prop#]
+              `(defn ~(symbol (str (or reader-prefix "")
+                                prop#))
+                 [~'ref]
+                 (tiltontec.model.core/mget ~'ref ~(keyword prop#)))) slots)))

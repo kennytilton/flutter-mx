@@ -218,7 +218,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-model [rc]
   (:me @rc))
 
-(defn c-md-name [c]
+(defn c-mname [c]
   (if-let [md (c-model c)]
     (or (:name @md)
       "anon")
@@ -250,7 +250,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
                        :not-cell-c)
     :else (if verbose? [:cinfo-all @c]
-            ((juxt c-prop-name c-md-name c-async? c-value) c)))))
+            ((juxt c-prop-name c-mname c-async? c-value) c)))))
 
 (defn minfo
   ([md]

@@ -10,16 +10,17 @@
 
     [tiltontec.util.core
      :refer [difference atom? err rmap-setf rmap-meta-setf pln] :as util]
-    [tiltontec.cell.matrix :refer [PObserver observe] :as mx]
+    [tiltontec.cell.matrix :refer [PObserver observe] :as cmx]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.cell.integrity :as integrity]
     [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
-    [tiltontec.model.core :refer [mget mpar mkids mname mset!  mswap!] :as md]
+    ;[tiltontec.model.core :refer [mget mpar mkids mname mset!  mswap!] :as md]
+    [tiltontec.matrix.api :refer [mget mpar mkids mname mset!  mswap! mkids make] :as mx]
     [tiltontec.demo.todoMVC.persist :as stg]))
 
 ;;; --- handy accessors ---------------------------------
 
-(md/def-mx-props td-
+(mx/def-mx-props td-
   stg-id title completed created-at)
 
 ;;; --- FX-level to-dos and to-do list -----------------------------------------
@@ -35,7 +36,7 @@
     ;; the initial observe, signified by prior value unbound,
     ;; is of the MX to-do being awakened after being loaded
     ;; from the DB, even new to-dos, so no need to update DB,
-    (when (and (td-stg-id me) (not= cty/unbound prior-value))
+    (when (and (td-stg-id me) (not= mx/unbound prior-value))
       (ToDo-update me))))
 
 (defn make-ToDo
@@ -47,7 +48,7 @@
    ;; create MX proxy to-do
    (let [created-at (or created-at
                       (.-millisecondsSinceEpoch (.now DateTime)))]
-     (md/make
+     (mx/make
        :parent td-lst
        ::cty/type (ToDo.)
        :stg-id (or stg-id
@@ -74,10 +75,10 @@
 
 (deftype ToDoList []
   :extends cty/Model
-  mx/PObserver
+  cmx/PObserver
   (observe [this prop me new-value prior-value cell]
     (case prop
-      :kids (when (not= cty/unbound prior-value)
+      :kids (when (not= mx/unbound prior-value)
               (let [lost (util/difference (set prior-value) (set new-value))]
                 (doseq [td lost]
                   (stg/td-delete (td-stg-id td)))))
@@ -86,7 +87,7 @@
 (defn make-ToDoList
   ([name] (make-ToDoList name nil))
   ([name existing-todos]
-   (md/make
+   (mx/make
      ::cty/type (ToDoList.)
      :name name
      :kids (cFn (mapv (fn [xtd]
@@ -97,6 +98,6 @@
 (defn app-todos [app]
   (when-let [td-lst (tiltontec.model.core/mget app :todo-list)]
     ;; we have to wait for todos to be loaded asynchronously
-    (assert (cty/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
-    (md/mkids td-lst)))
+    (assert (mx/md-ref? td-lst) (str "app-todos> td-lst not md-ref? " td-lst))
+    (mkids td-lst)))
 

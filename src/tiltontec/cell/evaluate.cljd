@@ -11,7 +11,7 @@
              c-state +pulse+ c-pulse-observed cinfo minfo
              *call-stack* *defer-changes* dependency-drop
              c-rule c-code c-me c-value-state c-callers dependency-record
-             unlink-from-callers *causation* c-synaptic? c-md-name
+             unlink-from-callers *causation* c-synaptic? c-mname
              c-pulse c-pulse-last-changed c-ephemeral? c-then? c-prop c-props c-prop-name
              *depender* *not-to-be*
              *c-prop-depth* md-prop-owning? c-lazy dpc c-async?] :as cty]
@@ -138,7 +138,7 @@
                          (prn :cget-sees-depender
                            (str "asker= "
                              (c-prop *depender*) "/"
-                             (c-md-name *depender*))))
+                             (c-mname *depender*))))
                      (prog1
 
                        (let [ev (ensure-value-is-current c :c-read nil)]
@@ -162,7 +162,7 @@
                          :askee (c-prop c) (md-type (c-model c))
                          (str "asker= "
                            (c-prop *depender*) "/"
-                           (c-md-name *depender*))))
+                           (c-mname *depender*))))
                    (when-not (cty/c-optimized-away? *depender*)
                      (dpx :cget-reco-dependency (cinfo c) @c (meta c))
                      (record-dependency c)
@@ -176,7 +176,7 @@
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
-  (do                                                       ;; cty/with-cdbg (and (= :style (c-prop c)) (= :z-counter (c-md-name c)))
+  (do                                                       ;; cty/with-cdbg (and (= :style (c-prop c)) (= :z-counter (c-mname c)))
     ;; (wtrx [0 20 :cnset-entry (c-prop c)]
     (dpx :--------------------- 42)
     (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
@@ -254,14 +254,14 @@
           prop (c-prop-name c)]
       (err str
         "MXAPI_COMPUTE_CYCLE_DETECTED> cyclic dependency detected while computing prop '"
-        prop "' of model '" (c-md-name c) "'.\n"
+        prop "' of model '" (c-mname c) "'.\n"
         "...> formula for " prop ":\n"
         (c-code$ c)
         "\n...> full cell: \n"
         @c
         "\n\n...> callstack, latest first: \n"
         (str/join "\n" (mapv (fn [cd]
-                               (str "....> md-name:" (c-md-name cd) " prop: " (c-prop-name cd)
+                               (str "....> mname:" (c-mname cd) " prop: " (c-prop-name cd)
                                  "\n....>    code:" (c-code$ cd)))
                          *call-stack*)))))
 

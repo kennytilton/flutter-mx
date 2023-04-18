@@ -37,9 +37,6 @@
   "Each app will populate this with the root of its application matrix."
   (atom nil))
 
-(defn md-name [me]
-  (:name @me))
-
 (defn mname [me]
   (:name @me))
 
@@ -50,30 +47,6 @@
   (if-let [c (md-cell me prop)]
     (cget c)
     (prop @me)))
-
-(defmacro def-mx-props [reader-prefix & slots]
-  `(do
-     ~@(map (fn [prop#]
-              `(defn ~(symbol (str (or reader-prefix "")
-                                prop#))
-                 [~'ref]
-                 (tiltontec.model.core/mget ~'ref ~(keyword prop#)))) slots)))
-
-(defn mgetx [me prop]
-  (assert me (str "md-get passed nil for me accessing prop: " prop))
-  (dp :MGX-getting prop :from (minfo me) :me me :nil (nil? me))
-  (when (atom? me)
-    (dp :me-is-atom!)
-    (if-let [c (md-cell me prop)]
-      (do (dp :got-cell! (cinfo c))
-          (when (atom? c)
-            (dp :got-c-atom!! (deref c)))
-          (cget c))
-      (prop @me))))
-
-;(defn mget [me prop]
-;  (dpx :mget-entry prop :of (when me (minfo me)))
-;  (md-get me prop))
 
 (defn mget [me prop]
   (assert me (str "mget passed nil for me accessing prop: " prop))
