@@ -6,16 +6,11 @@
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [clojure.walk :as walk]
 
-    [tiltontec.util.base :refer [dprn dp dpx] :as utb]
-
-    [tiltontec.util.core
-     :refer [difference atom? err rmap-setf rmap-meta-setf pln] :as util]
+    [tiltontec.util.core :as util]
     [tiltontec.cell.matrix :refer [PObserver observe] :as cmx]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.cell.integrity :as integrity]
-    [tiltontec.cell.core :refer [cF cFn cF+ cF_ cI c_F cFonce] :as cells]
-    ;[tiltontec.model.core :refer [mget mpar mkids mname mset!  mswap!] :as md]
-    [tiltontec.matrix.api :refer [mget mpar mkids mname mset!  mswap! mkids make] :as mx]
+    [tiltontec.cell.base :as cb]
+
+    [tiltontec.matrix.api :refer [cFn cF+ cI mget mkids mkids] :as mx]
     [tiltontec.demo.todoMVC.persist :as stg]))
 
 ;;; --- handy accessors ---------------------------------
@@ -30,7 +25,7 @@
     (select-keys @td [:stg-id :created-at :title :completed])))
 
 (deftype ToDo []
-  :extends cty/Model
+  :extends cb/Model
   PObserver
   (observe [this prop me new-value prior-value cell]
     ;; the initial observe, signified by prior value unbound,
@@ -74,7 +69,7 @@
 ;;; --- higher level ---------------------------
 
 (deftype ToDoList []
-  :extends cty/Model
+  :extends cb/Model
   cmx/PObserver
   (observe [this prop me new-value prior-value cell]
     (case prop
