@@ -2,15 +2,12 @@
   (:require
     ["dart:async" :as async]
     [clojure.string :as str]
-    [tiltontec.cell.core :refer [cF cF+ cF_ cI]]
-    [tiltontec.cell.observer :refer [fn-obs]]
-    [tiltontec.model.core :refer [mget mset! mswap! fm* fmu] :as md]
+
+    [tiltontec.matrix.api :refer [unbound cF cF+ cI mget mset! mswap! fm* fmu] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]))
+    ["package:flutter/painting.dart" :as p]))
 
 ;;; n.b. The astute reader may realize that our use here of the Dart stream could be replaced with a Cell dependency.
 ;;; That is true. We just want to demonstrate how an _external_ stream can be woven into MX dataflow.
@@ -114,7 +111,7 @@
             {:style (p/TextStyle .color m.Colors/blue
                                .fontSize 18.0)}
             {:full-text (cF (conj
-                              (if (= _cache cty/unbound) [] _cache)
+                              (if (= _cache mx/unbound) [] _cache)
                               (mget (fmu :msg-recipient) :msg-rcvd)))}
             (let [poem (remove #{"<none>"} (mget me :full-text))]
               (if (seq poem)
@@ -191,7 +188,7 @@
           (fx/text {:style (p/TextStyle .color m.Colors/blue
                                 .fontSize 18.0)}
                {:full-text (cF (conj
-                                 (if (= _cache cty/unbound) [] _cache)
+                                 (if (= _cache mx/unbound) [] _cache)
                                  (mget (fmu :msg-recipient) :msg-rcvd)))}
             (let [poem (remove #{"<none>"} (mget me :full-text))]
               (if (seq poem)
