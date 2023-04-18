@@ -15,7 +15,7 @@
             [tiltontec.cell.integrity :as integrity]
 
             [tiltontec.cell.core :as cell :refer [cF cF+ cI cF_]]
-            [tiltontec.model.core :refer [make mget mget? md-kids mswap! cFkids] :as md]
+            [tiltontec.model.core :refer [make mget mget? mkids mswap! cFkids] :as md]
             [clojure.string :as str]))
 
 ;;; --- Flutter refs of fx models -----------------------------
@@ -154,7 +154,7 @@
                              (init this me)))
                          (~'build [_# ctx]
                            (let [k1# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
-                                       (first (tiltontec.model.core/md-kids me)))]
+                                       (first (tiltontec.model.core/mkids me)))]
                              (with-flutter-ref
                                (~fx-class
                                  .child k1#
@@ -175,7 +175,7 @@
                    (with-flutter-ref
                      (~fx-class
                        .child (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
-                                (first (tiltontec.model.core/md-kids me)))
+                                (first (tiltontec.model.core/mkids me)))
                        ~@(let [kvs (for [[k# _#] fx-props]
                                      [(symbol (str "." (name k#)))
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
@@ -193,7 +193,7 @@
                    (with-flutter-ref
                      (~fx-class
                        .content (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
-                                  (first (tiltontec.model.core/md-kids me)))
+                                  (first (tiltontec.model.core/mkids me)))
                        ~@(let [kvs (for [[k# _#] fx-props]
                                      [(symbol (str "." (name k#)))
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
@@ -210,7 +210,7 @@
          :fx-gen (fn [me ctx]
                    (with-flutter-ref
                      (~fx-class
-                       .children (mapv (partial tiltontec.flutter-mx.core/fx-render ctx) (md/md-kids me))
+                       .children (mapv (partial tiltontec.flutter-mx.core/fx-render ctx) (md/mkids me))
                        ~@(let [kvs (for [[k# _#] fx-props]
                                      [(symbol (str "." (name k#)))
                                       `(tiltontec.model.core/mget me ~k#)])]
@@ -360,7 +360,7 @@
                              (init this me)))
                          (~'build [_# ctx]
                            (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
-                                        (first (tiltontec.model.core/md-kids me)))]
+                                        (first (tiltontec.model.core/mkids me)))]
                              (with-flutter-ref
                                (~fx-class
                                .body bod#
@@ -394,7 +394,7 @@
                              (init this me)))
                          (~'build [_# ctx]
                            (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
-                                        (first (tiltontec.model.core/md-kids me)))]
+                                        (first (tiltontec.model.core/mkids me)))]
                              (with-flutter-ref
                                (~fx-class
                                .home bod#

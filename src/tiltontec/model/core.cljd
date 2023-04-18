@@ -187,13 +187,11 @@
 
 ;;; --- family ------------------------------------
 
-(defn md-kids [me] (md-get me :kids))
 (defn mkids [me] (md-get me :kids))
-(defn mx-par [me] (md-get me :parent))
 (defn mpar [me] (md-get me :parent))
 
 (defn fm-not-to-be [me]
-  (doseq [k (md-kids me)]
+  (doseq [k (mkids me)]
     (when (md-ref? k)
       ;; ^^^ mxWeb allows string children
       (prn :fm-n2b-kid!! @k)
@@ -287,7 +285,7 @@
 
 (defn nextsib [mx]
   (without-c-dependency
-    (loop [sibs (md-kids (mx-par mx))]
+    (loop [sibs (mkids (mpar mx))]
       (when sibs
         (if (= mx (first sibs))
           (second sibs)
@@ -295,7 +293,7 @@
 
 (defn prevsib [mx]
   (without-c-dependency
-    (loop [sibs (md-kids (mx-par mx))]
+    (loop [sibs (mkids (mpar mx))]
       (when sibs
         (cond
           (= mx (first sibs)) nil
@@ -497,7 +495,7 @@
 ;;; --- ancestry ----
 (defn fm-ancestry [me]
   (assert (md-ref? me))
-  (when-let [par (mx-par me)]
+  (when-let [par (mpar me)]
     (conj (fm-ancestry par) par)))
 
 (defmacro the-kids [& tree]

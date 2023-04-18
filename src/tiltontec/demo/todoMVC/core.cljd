@@ -15,7 +15,7 @@
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
     [tiltontec.util.base :refer [dprn dp dpx]]))
 
-;;;;;; --- Components first ------------------------------------------
+;;; --- Components first ------------------------------------------
 
 ;;; --- the app bar -----------------------------------------------
 (defn todo-app-bar [title]
@@ -45,7 +45,12 @@
   (let [faint (p/TextStyle
                 ;; todo does flutter let us place the style higher so referenced just once?
                 .color m.Colors/grey
-                .fontSize 14.0)]
+                .fontSize 14.0)
+        credits ["Double-click a todo to edit."
+                 "Make title blank to delete. Or click the big red X."
+                 "Red indicates meaningless hits on FDA.gov."
+                 "by Kenny Tilton"
+                 "Flutter \u2022 Matrix \u2022 ClojureDart"]]
     (fx/padding
       {:padding (m.EdgeInsets/all 16.0)}
       {:name          :credits-toggle
@@ -53,12 +58,7 @@
       (fx/column
         (when (mget (fasc :credits-toggle) :show-credits?)
           (fx/column
-            (mapv #(fx/text {:style faint} %)
-              ["Double-click a todo to edit."
-               "Make title blank to delete. Or click the big red X."
-               "Red indicates meaningless hits on FDA.gov."
-               "by Kenny Tilton"
-               "Flutter \u2022 Matrix \u2022 ClojureDart"])))
+            (mapv #(fx/text {:style faint} %) credits)))
         (fx/icon-button
           {:onPressed (as-dart-callback []
                         (mswap! (fasc :credits-toggle) :show-credits? not))
@@ -78,7 +78,7 @@
     (fx/material-app
       {:title                      title
        :theme                      app-theme
-       :debugShowCheckedModeBanner false}
+       :debugShowCheckedModeBanner true}
       {:name      :app
        :db        (cF+ [:async? true
                         ; ^^^ the formula computes a value of nil then awaits the future
@@ -97,10 +97,11 @@
 
        :todo-list (cF (when-let [db (mget me :db)]
                         ;; ^^^ we cannot use global DB, which is not reactive. It is just a handy global cache.
-                        ;; But we cannot do our work until the db is established, so our rule reads the reactive :db cell.
+                        ;; But we cannot do our work until the db is established, so our rule reads
+                        ;; the reactive :db cell.
                         ;;
                         ;; Next,we make sure cell :db makes it into cache DB, since that
-                        ;; is where all the code looks. Just a sanity check.
+                        ;; is where all the code looks. Just a sanity check. This fires during some hot reloads,
                         (assert (stg/DB) (str "DB not populated but cell :db is: " db))
                         ;; Now we can load any existing todos from storage...
                         (todo/make-ToDoList "todo"
@@ -113,25 +114,3 @@
             (input/todo-controls)
             (items/todo-items)
             (about-credits)))))))
-
-#_(defn make-app []
-    (let [title "todo"]
-      (fx/material-app
-        {:title title
-         :theme app-theme}
-        {:name      :app
-         :db        (cF+ [:async? true
-                          :watch (fn [_ _ new-db _ _]
-                                   (stg/DB! new-db))]
-                      (.getInstance prefs/SharedPreferences))
-         :todo-list (cF (when (mget me :db)
-                          (todo/make-ToDoList "todo"
-                            (stg/collection-docs "todo"))))}
-        (fx/scaffold
-          {:appBar                  (todo-app-bar title)
-           :persistentFooterButtons [(todos-dashboard)]}
-          (fx/ink {:color m.Colors/white}
-            (fx/column
-              (input/todo-controls)
-              (items/todo-items)
-              (about-credits)))))))
