@@ -25,7 +25,7 @@
     [tiltontec.cell.evaluate :refer [cget c-awaken]]
     [tiltontec.model.base :refer [md-cz md-cell]]
     [tiltontec.model.core
-     :refer [make cFkids the-kids mdv! md-get mget md-name fm-navig fm! make md-reset! mswap!]
+     :refer [make cFkids the-kids mdv! md-get mget md-name fm-navig fm! make mset! mswap!]
      :as md]))
 
 (defn fm-0 []
@@ -220,7 +220,7 @@
     (assert (= :missing (:loc @res)))
     (assert (= 1 @bct))
     (reset! bct 0)
-    (md-reset! res :action :return)
+    (mset! res :action :return)
     (assert (= :home (:loc @res)))
     (assert (zero? @bct))
     ))
@@ -270,12 +270,12 @@
       (assert (not (nil? rez)))
       (assert (not (nil? (md-cell rez :action))))
       (assert (= :missing (mdv! :resident :location uni)))
-      (md-reset! viz :action :knock-knock)
-      (md-reset! viz :action :smashing-window)
+      (mset! viz :action :knock-knock)
+      (mset! viz :action :smashing-window)
       (assert (not (nil? (md-cell rez :action))))
-      (md-reset! rez :action :return)
+      (mset! rez :action :return)
       (assert (= :home (mdv! :resident :location uni)))
-      (md-reset! viz :action :knock-knock))))
+      (mset! viz :action :knock-knock))))
 
 (defn is [x] (assert x))
 

@@ -24,7 +24,7 @@
     [tiltontec.cell.evaluate :refer [cget ]]
     [tiltontec.model.base :refer [md-cz md-cell]]
     [tiltontec.model.core
-     :refer [the-kids mdv! md-get  fm! make md-reset!]
+     :refer [the-kids mdv! md-get  fm! make mset!]
      :as md]
     ))
 
@@ -44,14 +44,14 @@
     (assert (empty? (md-get f :kids)))
 
     (do
-      (md-reset! f :ee 3)
+      (mset! f :ee 3)
       (assert (not (empty? (md-get f :kids))))
       (assert (= 42 (mdv! :yep :value f)))
 
       (dp :ok-42!!!!!!!!)
       (let [dmw (first (md-get f :kids))]
         (assert (md-ref? dmw))
-        (md-reset! f :ee 0)
+        (mset! f :ee 0)
         (assert (empty? (md-get f :kids)))
 
         (dp :dmw @dmw :meta (meta dmw))
