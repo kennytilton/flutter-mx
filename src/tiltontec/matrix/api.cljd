@@ -1,0 +1,102 @@
+(ns tiltontec.matrix.api
+  (:require
+    [tiltontec.model.core :as md]))
+
+;;; --- accessors -----------------------------------
+
+(defn mset! [me prop new-value]
+  (md/mset! me prop new-value))
+
+(defn mswap! [me prop swap-fn & swap-fn-args]
+  (apply md/mswap! me prop swap-fn swap-fn-args))
+
+(defn mget [me prop]
+  (md/mget me prop))
+
+(defn mget? [me prop & [alt-value]]
+  (md/mget? me prop alt-value))
+
+;;; --- navigation ---------------------------------
+
+(defn mkids [me] (mget? me :kids))
+(defmacro mpar [& [me]]
+  (let [me (or me 'me)]
+    `(:parent @~me)))
+
+(defn fm-navig [what where & options]
+  (apply md/fm-navig what where options))
+
+
+(defmacro fasc "Search strictly up"
+  ;; todo -- conform to CLJC version
+  [name & [me]]
+  (let [me-ref (or me 'me)]
+    `(let [name# ~name]
+       (tiltontec.model.core/fm-ascendant name# ~me-ref))))
+;
+;(defmacro fmu [name & [me]]
+;  "Search matrix ascendents from node 'me' (defaulting to 'me in current scope) looking for element with given name"
+;  (let [me-ref (or me 'me)]
+;    `(let [name# ~name]
+;       (tiltontec.model.core/fm-navig #(= name# (tiltontec.model.core/mget? % :name))
+;         ~me-ref :me? false :up? true :inside? false))))
+;
+;(defn fm!
+;  "Search matrix ascendents and descendents from node 'where', for 'what', throwing an error when not found"
+;  [what where]
+;  (md/fm! what where))
+;
+;(defn mxu-find-type
+;  "Search matrix ascendants from node 'me' for first with given tag"
+;  [me type]
+;  (assert me)
+;  (fasc (fn [visited]
+;          (= type (mx-type visited))) me))
+;
+;(defmacro mdv!
+;  "Search matrix ascendents from node 'me' looking for `what`, and extract `slot`"
+;  [what slot & [me]]
+;  (let [me (or me 'me)]
+;    `(tiltontec.model.core/mget (tiltontec.model.core/fm! ~what ~me) ~slot)))
+
+;;; --- cell factories -----------------------------------------
+
+(defn cI [value & option-kvs]
+  (apply tiltontec.cell.core/make-cell
+    :value value
+    :input? true
+    option-kvs))
+
+(defmacro cF [& body]
+  `(tiltontec.cell.core/make-c-formula
+     :code '~body
+     :rule (tiltontec.cell.core/c-fn ~@body)))
+
+(defmacro cF+ [[& options] & body]
+  `(tiltontec.cell.core/make-c-formula
+     ~@options
+     :code '~body
+     :rule (tiltontec.cell.core/c-fn ~@body)))
+
+(defmacro cFn [& body]
+  `(tiltontec.cell.core/make-c-formula
+     :code '(tiltontec.cell.base/without-c-dependency ~@body)
+     :input? true
+     :rule (tiltontec.cell.core/c-fn (tiltontec.cell.base/without-c-dependency ~@body))))
+
+(defmacro cF+n [[& options] & body]
+  `(tiltontec.cell.core/make-c-formula
+     ~@options
+     :code '(tiltontec.cell.base/without-c-dependency ~@body)
+     :input? true
+     :rule (tiltontec.cell.core/c-fn (tiltontec.cell.base/without-c-dependency ~@body))))
+
+(defmacro cFonce [& body]
+  `(tiltontec.cell.core/make-c-formula
+     :code '(tiltontec.cell.base/without-c-dependency ~@body)
+     :input? nil
+     :rule (tiltontec.cell.core/c-fn (tiltontec.cell.base/without-c-dependency ~@body))))
+
+(defmacro cF1 [& body]
+  `(tiltontec.cell.core/cFonce ~@body))
+
