@@ -4,8 +4,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
-    [tiltontec.model.core :refer [fasc mget mset! mswap! mkids] :as md]
-    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+    [tiltontec.matrix.api :refer [cF cI cFonce mget  mswap! mset!]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
     [tiltontec.demo.todoMVC.common :refer [ my-todo-list ] :as cmm]
     [tiltontec.demo.todoMVC.todo :refer [td-completed] :as todo]))
@@ -18,9 +17,9 @@
         (let [trimmed (str/trim value)]
           (when-not (str/blank? trimmed)
             ;; --- we have a non-blank entry, so we save, clear entry, and store
-            (md/mset! me :value trimmed) ;; let text proxy know its cleaned value
+            (mset! me :value trimmed) ;; let text proxy know its cleaned value
             (.clear ^m/TextEditingController
-              (md/mget me :controller))
+              (mget me :controller))
             (let [td-lst (my-todo-list)]
               (mswap! td-lst :kids conj
                 (todo/make-ToDo td-lst trimmed false))))))))
@@ -57,7 +56,7 @@
                           all-done? (every? td-completed todos)]
                       (doseq [td todos]
                         ;; todo do all these in one change pulse
-                        (md/mset! td :completed (if all-done? false true)))))
+                        (mset! td :completed (if all-done? false true)))))
        :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))
 
 (defn todo-controls []
