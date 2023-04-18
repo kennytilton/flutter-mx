@@ -56,7 +56,7 @@
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
-    ::cty/type mx-type
+    :mx-type mx-type
     :fx$state (cI nil)
     ;; todo move next to meta
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
@@ -80,7 +80,7 @@
   PObserver
   (observe [this prop me new-value prior-value cell]
     (dpx :fxdw-obs prop)
-    (when-not (some #{prop} [:parent :name ::cty/type :not-to-be :initState :fx-class :cells-flushed
+    (when-not (some #{prop} [:parent :name :mx-type :not-to-be :initState :fx-class :cells-flushed
                              :fxx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))

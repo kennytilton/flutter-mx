@@ -160,13 +160,13 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn mx-type [it]
   (when-let [m (meta it)]
-    (::type m)))
+    (:mx-type m)))
 
 (defn md-type [md]
   (assert (and md (atom? md) (map? @md))
     (str "md-type> argument null or not atom or not map deref: " md))
   (when-let [m (meta md)]
-    (::type m)))
+    (:mx-type m)))
 
 (deftype Cell []
   :extends mx/MXImplementer)
@@ -178,7 +178,7 @@ rule to get once behavior or just when fm-traversing to find someone"
   (assert (and c (atom? c) (map? @c))
     (str "c-type> argument null or not atom or not map deref: " c))
   (when-let [m (meta c)]
-    (::type m)))
+    (:mx-type m)))
 
 (defn c-ref? [c]
   (when (and c (atom? c) (map? @c))

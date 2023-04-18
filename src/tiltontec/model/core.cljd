@@ -116,7 +116,7 @@
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
   (cond
-    (odd? (count arg-list)) (apply make ::cty/type arg-list)
+    (odd? (count arg-list)) (apply make :mx-type arg-list)
     :else
     (do
       (let [iargs (apply hash-map arg-list)
@@ -126,7 +126,7 @@
                                (->> arg-list
                                  (partition 2)
                                  (filter (fn [[prop v]]
-                                           (not (= ::cty/type prop))))
+                                           (not (= :mx-type prop))))
                                  (map (fn [[k v]]
                                         (vector k (if (c-ref? v)
                                                     unbound
@@ -136,7 +136,7 @@
                    mdmap)
                  :meta {:state   :nascent
                         ;; todo pull more fx$s into meta
-                        ::cty/type (::cty/type iargs (cty/Model.))})]
+                        :mx-type (:mx-type iargs (cty/Model.))})]
         (assert (meta me))
         #_(when-not (:parent @me)
             (dp :no-par!!!! me))
@@ -145,7 +145,7 @@
           (->> arg-list
             (partition 2)
             (filter (fn [[prop v]]
-                      (when-not (some #{prop} [:parent :name ::cty/type :not-to-be
+                      (when-not (some #{prop} [:parent :name :mx-type :not-to-be
                                                :fx$ikeys :fx$notifier :fx$observer])
                         (md-install-cell me prop v))))
             (map vec)
@@ -192,10 +192,10 @@
   (cond
     ;; if arg-list is odd we assume they started with a Family subtype
     ;; used mostly for regression tests
-    (odd? (count arg-list)) (apply make-family ::cty/type arg-list)
+    (odd? (count arg-list)) (apply make-family :mx-type arg-list)
     :else
     (apply make
-      ::cty/type (Family.)
+      :mx-type (Family.)
       :not-to-be fm-not-to-be
       arg-list)))
 
