@@ -7,9 +7,11 @@
     ["package:http/http.dart" :as dht]
     [clojure.string :as str]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.model.core :refer [mget mswap! mset! mset! mkids mpar] :as md]
-    [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
+
+    [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fasc
+                                  cF cI cFonce with-mx-isolation]]
+    ;[tiltontec.model.core :refer [mget?] :as md]
+    ;[tiltontec.cell.core :refer [cF cF+ cF_ cI c_F cFonce]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
 
     [tiltontec.demo.todoMVC.common :as cmm
@@ -23,7 +25,7 @@
      :shape     (fx/rounded-rectangle-border
                   {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
      :onChanged (cF (as-dart-callback [value]
-                      (md/mset! todo :completed value)))}))
+                      (mset! todo :completed value)))}))
 
 (defn- delete-button [todo]
   (fx/text-button
@@ -45,9 +47,9 @@
   (fx/list-tile
     {:leading  (completion-toggler todo)
      :trailing (delete-button todo)
-     :title    (cF (let [comp-toggle (md/mget me :leading)]
+     :title    (cF (let [comp-toggle (mget me :leading)]
                      (fx/text!
-                       {:style (cF (if (md/mget comp-toggle :value)
+                       {:style (cF (if (mget comp-toggle :value)
                                      (p/TextStyle
                                        .color m.Colors/grey
                                        .decoration p.TextDecoration/lineThrough)
@@ -68,11 +70,11 @@
    (let [stg-id (td-stg-id todo)
          trimmed (str/trim value)]
      (cond
-       (str/blank? trimmed) (md/mswap! (my-todo-list) :kids
+       (str/blank? trimmed) (mswap! (my-todo-list) :kids
                               (partial remove (fn [td] (= stg-id (td-stg-id td)))))
        :else (do
-               (md/mset! todo :title trimmed)             ;; two dataflow triggers
-               (md/mset! (md/fasc :item-control) :editing? false))))))
+               (mset! todo :title trimmed)             ;; two dataflow triggers
+               (mset! (fasc :item-control) :editing? false))))))
 
 (defn to-do-editor [me todo]
   (assert todo)
@@ -87,8 +89,8 @@
                     {:onFocusChange (cF (as-dart-callback [focused?]
                                           (when (not focused?)
                                             ;; spec says commit on blur...
-                                            (commit-to-do-editing (md/fm* :todo-editor) todo)
-                                            (md/mset! (md/fasc :item-control) :editing? false))))}
+                                            (commit-to-do-editing (fm* :todo-editor) todo)
+                                            (mset! (fasc :item-control) :editing? false))))}
                     {:owner tile}
                     ;; ^^^ this widget is a delegate, not a child, so we record the ListTile as the "owner",
                     ;; and modified navigation to try any owner if "parent" is nil while searching up the Matrix.
@@ -107,7 +109,7 @@
                                                                              (and (dart/is? event srvc/KeyDownEvent)
                                                                                (= "Escape" (.-keyLabel (.-logicalKey event))))
                                                                              (do
-                                                                               (md/mset! (md/fasc :item-control) :editing? false)
+                                                                               (mset! (fasc :item-control) :editing? false)
                                                                                m/KeyEventResult.handled)
                                                                              :else m/KeyEventResult.ignored)))))
                                         :decoration  (m/InputDecoration
@@ -118,7 +120,7 @@
                                         :onSubmitted (cF (as-dart-callback [value]
                                                            (commit-to-do-editing me todo value)))
                                         :controller  (cFonce (m/TextEditingController
-                                                               .text (md/mget me :value)))}
+                                                               .text (mget me :value)))}
                           {:name  :todo-editor
                            :value (cI title)}))))))}
     {:todo  todo
@@ -132,7 +134,7 @@
      :maintainSize      false
      :maintainAnimation true
      :maintainState     true}
-    {:selected? (cF (case (md/fmuval :completions :selection)
+    {:selected? (cF (case (fmuval :completions :selection)
                       :all true
                       :active (not (td-completed todo))
                       :done (td-completed todo)))}
@@ -162,7 +164,6 @@
        :itemCount   (cF (count (mkids me)))
        :itemBuilder (cF (fx/as-is
                           (fn [ctx i]
-                            (dpx :td-item-builder i)
                             ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                             (fx/fx-render ctx
                               (nth (mkids me) i)))))}

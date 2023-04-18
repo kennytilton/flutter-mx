@@ -268,14 +268,14 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (mget? me :initState)]
+                           (when-let [init (tiltontec.model.core/mget? me :initState)]
                              (dpx :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
                            (dpx :konly-param1-stateful-build-entry)
                            (with-flutter-ref
                              (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
-                                          (mget me :_param-1))
+                                          (tiltontec.model.core/mget me :_param-1))
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [(symbol (str "." (name k#)))
                                               `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
@@ -326,7 +326,7 @@
                          (^void ~'initState [this]
                            ;(.initState ~'^super this)
                            (tiltontec.flutter-mx.factory/record-fx$state me this)
-                           (when-let [init (mget? me :initState)]
+                           (when-let [init (tiltontec.model.core/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
                            (with-flutter-ref

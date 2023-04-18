@@ -390,7 +390,7 @@
 (defn mxu-find-name
   "Search up the matrix from node 'where' looking for element with given name"
   [where name]
-  (fm-navig #(= name (md-get % :name))
+  (fm-navig #(= name (mget? % :name))
     where :me? false :up? true :inside? false))
 
 ;(md/fm-navig :z-counter me
@@ -403,14 +403,14 @@
 (defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (fm-navig #(= name# (md-get % :name))
+       (fm-navig #(= name# (mget? % :name))
          ~me-ref :me? false :up? true :inside? false))))
 
 (defmacro fmuinc [name & [me]]
   ;; fmu "inclusive" of the starting node "me"
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (fm-navig #(= name# (md-get % :name))
+       (fm-navig #(= name# (mget? % :name))
          ~me-ref :me? true :up? true :inside? false))))
 
 (defmacro fasc "Search strictly up"
@@ -427,20 +427,20 @@
        (tiltontec.model.core/fm-navig #(do
                     #_ (tiltontec.model.core/fmdp :fm*-sees (= name# (tiltontec.model.core/md-get % :name))
                       (tiltontec.cell.base/minfo %))
-                    (= name# (md-get % :name)))
+                    (= name# (mget? % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
 (defmacro fm*val [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
-    `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/md-get node# :name)))
+    `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/mget? node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
        (assert other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuv [prop name & [me]]
   (let [me-ref (or me 'me)]
-    `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
+    `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
        (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
@@ -448,7 +448,7 @@
 (defmacro fmuval [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
-    `(let [other# (fm-navig (fn [node#] (= ~name (md-get node# :name)))
+    `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
        (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
