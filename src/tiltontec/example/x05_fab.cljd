@@ -2,7 +2,7 @@
   (:require
     ["dart:math" :as math]
     [cljd.flutter.alpha :as f]
-    [tiltontec.matrix.api :refer [cF cI mget fmuv] :as md]
+    [tiltontec.matrix.api :refer [cF cI mget fmuv] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     [tiltontec.flutter-mx.factory :as fmk]
     ["package:flutter/widgets.dart" :as w]
@@ -76,9 +76,9 @@
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
-    {:animation (mget (md/fasc :fab) :expand-animation)
+    {:animation (mget (mx/fasc :fab) :expand-animation)
      :builder   (as-dart-callback [ctx child]
-                  (let [progress ^m/CurvedAnimation (mget (md/fasc :fab) :expand-animation)
+                  (let [progress ^m/CurvedAnimation (mget (mx/fasc :fab) :expand-animation)
                         offset (m.Offset/fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
                                  (* (.-value progress) max-distance))]
@@ -93,7 +93,7 @@
                                    math/pi 0.5))
                         child))))}
     (fx/fade-transition
-      {:opacity (mget (md/fasc :fab) :expand-animation)}
+      {:opacity (mget (mx/fasc :fab) :expand-animation)}
       (action-button
         :icon (:icon action)
         :onPressed (fx/in-my-context [me ctx]
@@ -135,7 +135,7 @@
                     :clipBehavior m.Clip/antiAlias
                     :elevation    4.0}
         (fx/ink-well {:onTap (as-dart-callback []
-                               (md/mswap! (md/fasc :fab par) :open? not))}
+                               (mx/mswap! (mx/fasc :fab par) :open? not))}
           (fx/padding {:padding (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
                       :color (fx/in-my-context [me ctx]
@@ -143,22 +143,22 @@
 
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
-    {:ignoring (mget (md/fasc :fab par) :open?)}
+    {:ignoring (mget (mx/fasc :fab par) :open?)}
     (fx/animated-container
       {:transformAlignment m.Alignment/center
-       :transform          (cF (if (mget (md/fasc :fab par) :open?)
+       :transform          (cF (if (mget (mx/fasc :fab par) :open?)
                                  (m.Matrix4/diagonal3Values 0.7 0.7 1.0)
                                  (m.Matrix4/diagonal3Values 1.0 1.0 1.0)))
        :duration           (dart:core/Duration .milliseconds 250)
        :curve              (m/Interval 0.0 0.5 .curve m.Curves/easeOut)}
       (fx/animated-opacity
-        {:opacity  (cF (if (mget (md/fasc :fab par) :open?)
+        {:opacity  (cF (if (mget (mx/fasc :fab par) :open?)
                          0.0 1.0))
          :curve    (m/Interval 0.25 1.0 .curve m.Curves/easeInOut)
          :duration (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
           {:onPressed (as-dart-callback []
-                        (md/mswap! (md/fasc :fab par) :open? not))}
+                        (mx/mswap! (mx/fasc :fab par) :open? not))}
           (fx/icon {:icon m.Icons/create}))))))
 
 (defn fake-item [is-big?]

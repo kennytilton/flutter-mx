@@ -1,7 +1,7 @@
 (ns tiltontec.example.x03-physics-sim
   (:require
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.matrix.api :refer [make mpar mget mkids cF cI cFkids fmu fmuv] :as md]
+    [tiltontec.matrix.api :refer [make mpar mget mkids cF cI cFkids fmu fmuv] :as mx]
     [tiltontec.flutter-mx.core :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
@@ -28,7 +28,7 @@
         simulation (p/SpringSimulation spring 0 1 (- unit-velocity))]
     (doto controller
       .clearListeners
-      (.addListener #(md/mset! me :dragAlignment (.-value animation))) ;; <==== dataflow trigger
+      (.addListener #(mx/mset! me :dragAlignment (.-value animation))) ;; <==== dataflow trigger
       (.animateWith simulation))))
 
 (defn draggable-card [& {:keys [drag-child]}]
@@ -41,7 +41,7 @@
                     (fx/->CBAsIs
                       (fn [^m/DragUpdateDetails details]
                         (let [size (.-size (MediaQuery/of ctx))]
-                          (md/mswap! me :dragAlignment
+                          (mx/mswap! me :dragAlignment
                             #(.+ ^m/Alignment %
                                (m/Alignment
                                  (/ (-> details .-delta .-dx) (/ (.-width size) 2))
@@ -60,7 +60,7 @@
                         (dp :x03-disposing!!! con)
                         (.dispose con)))}
     (fx/align
-      {:alignment (cF (md/mdv! :draggable-card :dragAlignment))}
+      {:alignment (cF (mx/mdv! :draggable-card :dragAlignment))}
       (fx/card drag-child))))
 
 (defn make-app []

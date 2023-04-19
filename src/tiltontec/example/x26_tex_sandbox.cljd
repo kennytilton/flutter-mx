@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.matrix.api :refer [cF cI cFonce mget mset! mswap! fmuval] :as md]
+    [tiltontec.matrix.api :refer [cF cI cFonce mget mset! mswap! fmuval] :as mx]
 
     [tiltontec.flutter-mx.core :as fx
      :refer [as-dart-callback scaffold app-bar text center column hero material-app]]
@@ -51,7 +51,7 @@
                            .border (m/OutlineInputBorder))
              :autofocus  true
              :onChanged  (as-dart-callback [text]
-                           (md/mset! (md/fmu :tex-pair) :value text))}
+                           (mx/mset! (mx/fmu :tex-pair) :value text))}
             {:name  :raw-tex
              :value (cF (fmuval :tex-pair))})
 
@@ -70,7 +70,7 @@
                                                .backgroundColor m.Colors/grey
                                                .contentColor m.Colors/white
                                                .textAlign tk.TeXViewTextAlign/center))
-                                    (tk/TeXViewDocument (mget (md/fmuinc :tex-pair) :value)
+                                    (tk/TeXViewDocument (mget (mx/fmuinc :tex-pair) :value)
                                       .style (tk/TeXViewStyle
                                                .padding (.all tk/TeXViewPadding 10)
                                                .fontStyle (tk/TeXViewFontStyle

@@ -1,6 +1,6 @@
 (ns tiltontec.example.x01-counter
   (:require
-    [tiltontec.matrix.api :refer [cF cI mget  mswap! fm*] :as md]
+    [tiltontec.matrix.api :refer [cF cI mget  mswap! fm*] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -28,7 +28,7 @@
                                (.-headline4 (.-textTheme (m.Theme/of ctx))))}
               {:name  :z-counter
                :value (cI 0)}
-              (str (md/my-value))))))))
+              (str (mx/my-value))))))))
 ;; with styles
 (defn make-app []
   (fx/material-app
@@ -55,7 +55,7 @@
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
-            (str (md/my-value))))))))
+            (str (mx/my-value))))))))
 
 #_;; a stressier version
         (defn make-app []
@@ -78,7 +78,7 @@
                     ;; having this extra display stresses navigation, so we keep it
                     {:style (fx/in-my-context [me ctx]
                               (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-                    (str (* 2 (mget (md/fmu :z-counter) :value))))
+                    (str (* 2 (mget (mx/fmu :z-counter) :value))))
                   (fx/text {:style (p/TextStyle .color m.Colors/black
                                      .fontSize 18.0)}
                     "We clicked half this ^^^ many times:")
@@ -87,4 +87,4 @@
                               (.-headline4 (.-textTheme (m.Theme/of ctx))))}
                     {:name  :z-counter
                      :value (cI 0)}
-                    (str (md/my-value))))))))
+                    (str (mx/my-value))))))))
