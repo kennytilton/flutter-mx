@@ -7,23 +7,23 @@
              :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
-            [tiltontec.util.base :refer [dprn dp dpx]]
-            [tiltontec.util.core :refer [atom? rmap-setf err rmap-meta-setf set-ify difference]]
-            [tiltontec.cell.matrix :as mx]
-            [tiltontec.cell.base :refer [mx-type unbound  cinfo Model md-ref?] :as cty]
-            [tiltontec.model.core :refer [make mget mkids mswap! cFkids] :as md]
+            [tiltontec.util.base :refer [dp dpx]]
+            [tiltontec.util.core :refer [atom?]]
+            [tiltontec.cell.base :refer [cinfo Model] :as cty]
+            [tiltontec.cell.matrix :as cmx]
+            [tiltontec.matrix.api :refer [rmap-setf  rmap-meta-setf md-ref? make mget mkids mswap! cFkids] :as mx]
             [tiltontec.flutter-mx.factory :as mk]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
   ;; treated as callback to MX to get the resolved value.
-  :extends mx/MXImplementer)
+  :extends cmx/MXImplementer)
 
 (deftype CBToResolve [value]
   ;; tells fx-resolve to call the mx value as a function of ctx and me.
   ;; used where app needs to see the Flutter context to decide a value
-  :extends mx/MXImplementer)
+  :extends cmx/MXImplementer)
 
 (defn fx-resolve
   ([me ctx widget-value]
@@ -119,24 +119,24 @@
   (m.Navigator/of ctx))
 
 (defmacro my-controller []
-  `^m/AnimationController? (tiltontec.model.core/mget ~'me :controller))
+  `^m/AnimationController? (tiltontec.matrix.api/mget ~'me :controller))
 
 (defn standard-text-value-controller [me]
   ;; usage: (fx/text {:controller (cF (standard-text-value-controller me))}....
   (let [c (m/TextEditingController
-            .text (md/mget me :value))]
+            .text (mx/mget me :value))]
     (.addListener c
       (fn []
         (cty/with-mx-isolation
-          (md/mset! me :value (.-text c)))))
+          (mx/mset! me :value (.-text c)))))
     c))
 
 (defmacro my-animation []
   ;; uncast since type will vary
-  `(tiltontec.model.core/mget ~'me :animation))
+  `(tiltontec.matrix.api/mget ~'me :animation))
 
 (defmacro my-state []
-  `(tiltontec.model.core/mget ~'me :fx$state))
+  `(tiltontec.matrix.api/mget ~'me :fx$state))
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
 
@@ -289,7 +289,7 @@
 
 (defmacro my-app []
   ;; fasc "captures" 'me
-  `(tiltontec.model.core/fasc :app))
+  `(tiltontec.matrix.api/fasc :app))
 
 ;;; --- hot reload support --------------------
 
