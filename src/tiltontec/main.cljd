@@ -4,6 +4,8 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as foundation]
+
+    ;["dart:io" :as io]
     [clojure.walk :as walk]
     [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.testing :as testing]
@@ -20,15 +22,27 @@
     [tiltontec.example.layout-explorer :as layo]            ;; buggy
     [tiltontec.demo.todoMVC.core :as todo]
     [tiltontec.example.x26-tex-sandbox :as x26]
+    [tiltontec.example.x29-popup-menu :as x29]
     [tiltontec.alpha2.counter :as a2counter]))
+
+;; import 'package:flutter/foundation.dart' show kIsWeb;
+;
+;void main() {
+;  if (kIsWeb) {
+;    print('Running on the web!');
+;  } else {
+;    print('Running on a mobile or desktop app!');
+;  }
+;}
 
 (defn main []
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;; alpha example (a2counter/main)
+
   (fx/run-app
     (fx/fx-render nil
       ;; Change the namespace below and rebuild to see a different example.
-      (hello/make-app)))
+      (x29/make-app)))
 
   ;;(testing/run-tests)
 

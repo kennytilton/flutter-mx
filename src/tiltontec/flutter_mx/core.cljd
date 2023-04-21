@@ -99,10 +99,10 @@
                  (dpx :render-sees-not-md-ref?-passing-thru fx)
                  fx))
     :else (let [gen (mget fx :fx-gen)]
-            (dpx :render-sees-gen!! gen)
+            (dp :render-sees-gen!! gen)
             (assert gen "OBAD: fx-render of model finds no fx-gen: ")
             (let [g (gen fx ctx)]
-              (dpx :render-genned!!! g)
+              (dp :render-genned!!! g)
               (rmap-meta-setf [:fx-dom fx] g)
               g))))
 
@@ -241,6 +241,8 @@
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless align m/Align)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless visibility m/Visibility)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful visibility! m/Visibility)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateful popup-menu-button m/PopupMenuButton)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateful popup-menu-item m/PopupMenuItem)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless opacity m/Opacity)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful opacity! m/Opacity)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful ink m/Ink)
