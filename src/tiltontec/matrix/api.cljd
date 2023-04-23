@@ -1,10 +1,19 @@
 (ns tiltontec.matrix.api
   (:require
+    [clojure.string :as str]
     [tiltontec.util.core :as util]
     [tiltontec.cell.base :as cb]
     [tiltontec.model.core :as md]))
 
 (def unbound cb/unbound)
+
+(defn dp [& bits]
+  (cb/without-c-dependency
+    (dart:core/print (str/join " " (list* :DPR>
+                                     (map #(if (nil? %) :NIL %) bits))))))
+
+(defmacro dpx [& bits]
+  `(do))
 
 (defn rmap-meta-setf [[prop ref] new-value]
   (assert (meta ref))

@@ -5,26 +5,19 @@
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/services.dart" :as srvc]
     ["package:http/http.dart" :as dht]
+    ["package:flutter/foundation.dart" :as fnd]
     [clojure.string :as str]
+
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
 
     [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fasc
-                                  cF cI cFonce with-mx-isolation]]
+                                  cF cI cFonce with-mx-isolation dp dpx]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
 
     [tiltontec.demo.todoMVC.common :as cmm
-     :refer [ my-todo-list ]]
+     :refer [my-todo-list]]
 
     [tiltontec.demo.todoMVC.todo :refer [td-stg-id td-completed td-title] :as todo]))
-
-; (if kIsWeb
-;                          (dp :a "Web!!!!!!!!!")
-;                          (dp :b "Mobile or desk!!!!!!"))
-;                        (dp :web!!!!!!!!! kIsWeb)
-;                        (dp :android!!!!! io/Platform.isAndroid)
-;                        (dp :ios!!!! io/Platform.isIOS)
-;                        (dp :macOS!!!! io/Platform.isMacOS)
-;                        (dp :windows!!!!! io/Platform.isWindows)
 
 (defn- completion-toggler [todo]
   (fx/check-box
@@ -35,20 +28,24 @@
                       (mset! todo :completed value)))}))
 
 (defn- delete-button [todo]
-  (fx/text-button
-    ;; our "delete" icon on each to-do
-    {:onPressed (as-dart-callback []
-                  (mswap! (my-todo-list) :kids
-                    (fn [coll stg-id]
-                      (remove (fn [td]
-                                (= stg-id (td-stg-id td))) coll))
-                    (todo/td-stg-id todo)))}
-    (fx/text {:style (p/TextStyle
-                       .fontFamily "Helvetica Neue"
-                       .color (cmm/title-red)
-                       .fontWeight m.FontWeight/w200
-                       .fontSize 20.0)}
-      "X")))
+  (fx/visibility!
+    {:visible (cF (or
+                    (fx/is-mobile)
+                    (mget (fasc :item-control) :hovered?)))}
+    (fx/text-button
+      ;; our "delete" icon on each to-do
+      {:onPressed (as-dart-callback []
+                    (mswap! (my-todo-list) :kids
+                      (fn [coll stg-id]
+                        (remove (fn [td]
+                                  (= stg-id (td-stg-id td))) coll))
+                      (todo/td-stg-id todo)))}
+      (fx/text {:style (p/TextStyle
+                         .fontFamily "Helvetica Neue"
+                         .color (cmm/title-red)
+                         .fontWeight m.FontWeight/w200
+                         .fontSize 20.0)}
+        "X"))))
 
 (defn to-do-display [todo]
   (fx/list-tile
@@ -65,8 +62,8 @@
                                          m.Colors/red
                                          m.Colors/blue))))}
                        (td-title todo))))}
-    {:name        :my-list-tile
-     :todo        todo}))
+    {:name :my-list-tile
+     :todo todo}))
 
 (defn- commit-to-do-editing
   ([me todo]
@@ -80,7 +77,7 @@
        (str/blank? trimmed) (mswap! (my-todo-list) :kids
                               (partial remove (fn [td] (= stg-id (td-stg-id td)))))
        :else (do
-               (mset! todo :title trimmed)             ;; two dataflow triggers
+               (mset! todo :title trimmed)                  ;; two dataflow triggers
                (mset! (fasc :item-control) :editing? false))))))
 
 (defn to-do-editor [me todo]
@@ -144,7 +141,8 @@
     {:selected? (cF (case (fmuval :completions :selection)
                       :all true
                       :active (not (td-completed todo))
-                      :done (td-completed todo)))}
+                      :done (td-completed todo)))
+     :hovered?  (cI false)}
     (fx/container
       {:decoration (fx/in-my-context [me context]
                      ;; list with separator cannot hid separator when item hidden, so
@@ -156,12 +154,24 @@
         {:onDoubleTap (as-dart-callback []
                         (when (not (mget me :editing))
                           ;; todo fix double-taps and keyrepeat  not seen during editing
-                          (mset! me :editing? true)))}
+                          (mset! me :editing? true)))
+         #_#_:onExit (as-dart-callback [e]
+                       (dp :enter!! e))}
         {:name     :item-control
+         :hovered? (cI false :watch (fn [_ _ val _ _]
+                                      (dp :hovered?? val)))
          :editing? (cI false)}
         (if (mget me :editing?)
           (to-do-editor me todo)
-          (to-do-display todo))))))
+          (fx/mouse-region
+            {:onEnter (as-dart-callback [e]
+                        (mset! (fasc :item-control) :hovered? true))
+             :onHover (as-dart-callback [e]
+                        ;; just in case the mouse starts in the rgn
+                        (mset! (fasc :item-control) :hovered? true))
+             :onExit  (as-dart-callback [e]
+                        (mset! (fasc :item-control) :hovered? false))}
+            (to-do-display todo)))))))
 
 (defn todo-items []
   (fx/expanded

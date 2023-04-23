@@ -1,18 +1,21 @@
 (ns tiltontec.flutter-mx.core
-  (:require [clojure.string :as str]
-            ["package:flutter/material.dart" :as m
-             :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
-                     FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
-            ["package:flutter/widgets.dart" :as w
-             :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
-            ["package:flutter/painting.dart" :as p
-             :refer [TextStyle]]
-            [tiltontec.util.base :refer [dp dpx]]
-            [tiltontec.util.core :refer [atom?]]
-            [tiltontec.cell.base :refer [cinfo Model] :as cty]
-            [tiltontec.cell.matrix :as cmx]
-            [tiltontec.matrix.api :refer [rmap-setf  rmap-meta-setf md-ref? make mget mkids mswap! cFkids] :as mx]
-            [tiltontec.flutter-mx.factory :as mk]))
+  (:require
+    ["dart:io" :as io]
+    ["package:flutter/foundation.dart" :as fnd]
+    ["package:flutter/material.dart" :as m
+     :refer [MaterialApp Widget Scaffold MainAxisAlignment Colors Theme
+             FloatingActionButton Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/widgets.dart" :as w
+     :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
+    ["package:flutter/painting.dart" :as p
+     :refer [TextStyle]]
+    [clojure.string :as str]
+    [tiltontec.util.base :refer [dp dpx]]
+    [tiltontec.util.core :refer [atom?]]
+    [tiltontec.cell.base :refer [cinfo Model] :as cty]
+    [tiltontec.cell.matrix :as cmx]
+    [tiltontec.matrix.api :refer [rmap-setf rmap-meta-setf md-ref? make mget mkids mswap! cFkids] :as mx]
+    [tiltontec.flutter-mx.factory :as mk]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
@@ -163,6 +166,8 @@
 
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless material m/Material)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless fade-transition m/FadeTransition)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateless listener w/Listener)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateless mouse-region w/MouseRegion)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless ink-well m/InkWell)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless ignore-pointer w/IgnorePointer)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless absorb-pointer w/AbsorbPointer)
@@ -211,7 +216,7 @@
              :else
              ;; first is fx props, no mx props, maybe kids
              (list (first vargs#) nil (last vargs#)))]
-       `(~'~factory  ~'~fx-class ~fx-props# ~mx-props# ~param-1#))))
+       `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~param-1#))))
 
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateful text! m/Text)
@@ -309,3 +314,28 @@
 (defmacro run-app [widget-expression]
   `(m/runApp
      (wrap-stateless (wrap-unique-key ~widget-expression))))
+
+;;; --- environment ------------------------
+
+(defn is-web []
+  fnd/kIsWeb)
+
+(defn is-mobile []
+  (and (not (is-web))
+    ;; we cannot ask about Platform if on Web, so first ^^ we rule that out
+    (or io/Platform.isAndroid
+      io/Platform.isIOS
+      io/Platform.isLinux)))
+
+(defn is-desktop []
+  (or io/Platform.isMacOS
+    io/Platform.isWindows
+    io/Platform.isLinux))
+
+(defn platform-category []
+  (cond
+    (is-web) :web
+    (is-desktop) :desktop
+    (is-mobile) :mobile
+    io/Platform.isFuchsia :fuchsia
+    :else :unknown))
