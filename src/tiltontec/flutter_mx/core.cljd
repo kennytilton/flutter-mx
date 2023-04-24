@@ -317,25 +317,24 @@
 
 ;;; --- environment ------------------------
 
-(defn is-web []
+(defn is-web? []
   fnd/kIsWeb)
 
-(defn is-mobile []
-  (and (not (is-web))
+(defn is-mobile? []
+  (and (not (is-web?))
     ;; we cannot ask about Platform if on Web, so first ^^ we rule that out
     (or io/Platform.isAndroid
-      io/Platform.isIOS
-      io/Platform.isLinux)))
+      io/Platform.isIOS)))
 
-(defn is-desktop []
+(defn is-desktop? []
   (or io/Platform.isMacOS
     io/Platform.isWindows
     io/Platform.isLinux))
 
 (defn platform-category []
   (cond
-    (is-web) :web
-    (is-desktop) :desktop
-    (is-mobile) :mobile
+    (is-web?) :web
+    (is-desktop?) :desktop
+    (is-mobile?) :mobile
     io/Platform.isFuchsia :fuchsia
     :else :unknown))

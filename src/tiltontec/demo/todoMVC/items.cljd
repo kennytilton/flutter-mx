@@ -25,7 +25,7 @@
 (defn- delete-button [todo]
   (fx/visibility!
     {:visible (cF (or
-                    (fx/is-mobile)
+                    (fx/is-mobile?)
                     (mget (fasc :item-control) :hovered?)))}
     (fx/text-button
       ;; our "delete" icon on each to-do
@@ -55,7 +55,8 @@
                                      (if (mget todo :ae-events?)
                                        m.Colors/red
                                        m.Colors/blue))))}
-                     (td-title todo)))}
+                     (or (td-title todo)
+                       "notitle bug")))}
     {:name :my-list-tile
      :todo todo}))
 
