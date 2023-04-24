@@ -5,18 +5,13 @@
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/services.dart" :as srvc]
     ["package:http/http.dart" :as dht]
-    ["package:flutter/foundation.dart" :as fnd]
     [clojure.string :as str]
-
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-
     [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fasc
                                   cF cI cFonce with-mx-isolation dp dpx]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
-
     [tiltontec.demo.todoMVC.common :as cmm
      :refer [my-todo-list]]
-
     [tiltontec.demo.todoMVC.todo :refer [td-stg-id td-completed td-title] :as todo]))
 
 (defn- completion-toggler [todo]
@@ -51,17 +46,16 @@
   (fx/list-tile
     {:leading  (completion-toggler todo)
      :trailing (delete-button todo)
-     :title    (cF (let [comp-toggle (mget me :leading)]
-                     (fx/text!
-                       {:style (cF (if (mget comp-toggle :value)
-                                     (p/TextStyle
-                                       .color m.Colors/grey
-                                       .decoration p.TextDecoration/lineThrough)
-                                     (p/TextStyle .color
-                                       (if (mget todo :ae-events?)
-                                         m.Colors/red
-                                         m.Colors/blue))))}
-                       (td-title todo))))}
+     :title    (cF (fx/text!
+                     {:style (cF (if (mget todo :completed)
+                                   (p/TextStyle
+                                     .color m.Colors/grey
+                                     .decoration p.TextDecoration/lineThrough)
+                                   (p/TextStyle .color
+                                     (if (mget todo :ae-events?)
+                                       m.Colors/red
+                                       m.Colors/blue))))}
+                     (td-title todo)))}
     {:name :my-list-tile
      :todo todo}))
 
@@ -141,8 +135,7 @@
     {:selected? (cF (case (fmuval :completions :selection)
                       :all true
                       :active (not (td-completed todo))
-                      :done (td-completed todo)))
-     :hovered?  (cI false)}
+                      :done (td-completed todo)))}
     (fx/container
       {:decoration (fx/in-my-context [me context]
                      ;; list with separator cannot hid separator when item hidden, so
@@ -154,12 +147,9 @@
         {:onDoubleTap (as-dart-callback []
                         (when (not (mget me :editing))
                           ;; todo fix double-taps and keyrepeat  not seen during editing
-                          (mset! me :editing? true)))
-         #_#_:onExit (as-dart-callback [e]
-                       (dp :enter!! e))}
+                          (mset! me :editing? true)))}
         {:name     :item-control
-         :hovered? (cI false :watch (fn [_ _ val _ _]
-                                      (dp :hovered?? val)))
+         :hovered? (cI false)
          :editing? (cI false)}
         (if (mget me :editing?)
           (to-do-editor me todo)
