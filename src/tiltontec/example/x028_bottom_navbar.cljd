@@ -1,131 +1,62 @@
 (ns tiltontec.example.x028-bottom-navbar
   (:require
     [clojure.string :as str]
-    [tiltontec.matrix.api :refer [dp cF mget cI cF mset! mswap! fmu]]
+    [tiltontec.matrix.api :refer [dp cF mget cI cF mset! mswap! fmu mkids] :as mx]
     [tiltontec.flutter-mx.core :as fx
      :refer [scaffold app-bar text center column hero material-app]]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
 
-(def diagram-state (atom nil))
-
-(defn pan-update [^m/DragUpdateDetails details]
-  (dart:core/print "pan update")
-  (do
-    (swap! diagram-state (fn [^#/(List (List m/Offset)) {:keys [lines]}]
-                           (dp :ok)))
-    nil))
-
-; static const TextStyle optionStyle =
-;      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-;  static const List<Widget> _widgetOptions = <Widget>[
-;    Text(
-;      'Index 0: Home',
-;      style: optionStyle,
-;    ),
+(defn cl-position
+  ([value coll key]
+   (loop [[f & more] coll
+          idx 0]
+     (cond
+       (nil? f) nil
+       (= value (get f key)) idx
+       :else (recur more (inc idx))))))
 
 (defn make-app []
   (material-app
-    {:title                      "Flutter/MX Hello World, Teal"
+    {:title                      "Bottom Nav Bar Demo"
      :debugShowCheckedModeBanner false}
     (scaffold
-      {:appBar (app-bar
-                 {:title (m/Text "BottomNavigationBar Sample")})
-       :bottomNavigationBar
-       (fx/bottom-navigation-bar
-         {:currentIndex      (cF (mget (fmu :top-scaff) :scaffx))
-          :selectedItemColor (.-shade800 m.Colors/amber)
-          :onTap (cF (fn [i]
-                   (dp :bott-tap!!!! i me)
-                   (mset! (fmu :top-scaff) :scaffx i)))}
-         (fx/bottom-navigation-bar-item
-           {:icon  (m/Icon m/Icons.home)
-            :label "Home"})
-         (fx/bottom-navigation-bar-item
-           {:icon  (m/Icon m/Icons.business)
-            :label "Business"})
-         (fx/bottom-navigation-bar-item
-           {:icon  (m/Icon m/Icons.school)
-            :label "School"}))}
-      {:name :top-scaff
-       :scaffx (cI 1)}
+      {:appBar              (app-bar
+                              {:title (m/Text "BottomNavigationBar Demo")})
+       :bottomNavigationBar (fx/bottom-navigation-bar
+                              ;; this ^^^ works as stateless, but s/b stateful. todo Try as stateful
+                              {:currentIndex      (cF (let [scaff (fmu :top-scaff)]
+                                                        (cl-position (mget scaff :current-page-id)
+                                                          (mget scaff :pages)
+                                                          :page-id)))
+                               :selectedItemColor (.-shade800 m.Colors/amber)
+                               :onTap             (cF (fn [i]
+                                                        ;; todo why doesn't as-dart-callback work?
+                                                        (let [item (nth (mkids me) i)]
+                                                          (mset! (fmu :top-scaff) :current-page-id
+                                                            (mget item :page-id)))))}
+                              (mapv (fn [{:keys [page-id icon label]}]
+                                      (fx/bottom-navigation-bar-item
+                                        {:icon  icon
+                                         :label label}
+                                        {:page-id page-id}))
+                                (mget (fmu :top-scaff) :pages)))}
+      {:name    :top-scaff
+       :current-page-id (cI :home)
+       :pages   [{:page-id :home
+                  :icon    (m/Icon m/Icons.home)
+                  :label   "Home"}
+                 {:page-id :business
+                  :icon    (m/Icon m/Icons.business)
+                  :label   "Business"}
+                 {:page-id :school
+                  :icon    (m/Icon m/Icons.school)
+                  :label   "School"}]}
       (center
         (column
           {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
-          (text {:style    (p/TextStyle
-                             .fontWeight m.FontWeight/bold
-                             .fontSize 30.0)}
-            (str "Index "(mget (fmu :top-scaff) :scaffx))))))))
-
-#_ (m/BottomNavigationBar                               ;; fx/bottom-navigation-bar
-     .currentIndex 0
-     .selectedItemColor (.-shade800 m.Colors/amber)
-     .onTap (fn [i]
-              (dp :bott-tap!!!! i))
-     .items [(w/BottomNavigationBarItem
-               .icon (m/Icon m/Icons.home)
-               .label "Home")
-             (w/BottomNavigationBarItem
-               .icon (m/Icon m/Icons.business)
-               .label "Business")
-             (w/BottomNavigationBarItem
-               .icon (m/Icon m/Icons.school)
-               .label "School")])
-
-;class _MyStatefulWidgetState extends State<MyStatefulWidget> {
-;  int _selectedIndex = 0;
-;  static const TextStyle optionStyle =
-;      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-;  static const List<Widget> _widgetOptions = <Widget>[
-;    Text(
-;      'Index 0: Home',
-;      style: optionStyle,
-;    ),
-;    Text(
-;      'Index 1: Business',
-;      style: optionStyle,
-;    ),
-;    Text(
-;      'Index 2: School',
-;      style: optionStyle,
-;    ),
-;  ];
-;
-;  void _onItemTapped(int index) {
-;    setState(() {
-;      _selectedIndex = index;
-;    });
-;  }
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    return Scaffold(
-;      appBar: AppBar(
-;        title: const Text('BottomNavigationBar Sample'),
-;      ),
-;      body: Center(
-;        child: _widgetOptions.elementAt(_selectedIndex),
-;      ),
-;      bottomNavigationBar: BottomNavigationBar(
-;        items: const <BottomNavigationBarItem>[
-;          BottomNavigationBarItem(
-;            icon: Icon(Icons.home),
-;            label: 'Home',
-;          ),
-;          BottomNavigationBarItem(
-;            icon: Icon(Icons.business),
-;            label: 'Business',
-;          ),
-;          BottomNavigationBarItem(
-;            icon: Icon(Icons.school),
-;            label: 'School',
-;          ),
-;        ],
-;        currentIndex: _selectedIndex,
-;        selectedItemColor: Colors.amber[800],
-;        onTap: _onItemTapped,
-;      ),
-;    );
-;  }
-;}
+          (text {:style (p/TextStyle
+                          .fontWeight m.FontWeight/bold
+                          .fontSize 30.0)}
+            (str "Nav page " (mget (fmu :top-scaff) :current-page-id))))))))
