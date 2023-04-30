@@ -8,28 +8,28 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
 
-(defn cl-position
-  ([value coll key]
-   (loop [[f & more] coll
-          idx 0]
-     (cond
-       (nil? f) nil
-       (= value (get f key)) idx
-       :else (recur more (inc idx))))))
+;;; Refined version of https://api.flutter.dev/flutter/material/BottomNavigationBar-class.html
+
+(defn cl-position-if [coll test]
+  (loop [[elt & more] coll
+         idx 0]
+    (cond
+      (nil? elt) nil
+      (test elt) idx
+      :else (recur more (inc idx)))))
 
 (defn make-app []
   (material-app
-    {:title                      "Bottom Nav Bar Demo"
-     :debugShowCheckedModeBanner false}
+    {:title "Bottom Nav Bar Demo"}
     (scaffold
       {:appBar              (app-bar
-                              {:title (m/Text "BottomNavigationBar Demo")})
+                              {:title (m/Text "Bottom Navigation Bar Demo")})
        :bottomNavigationBar (fx/bottom-navigation-bar
                               ;; this ^^^ works as stateless, but s/b stateful. todo Try as stateful
-                              {:currentIndex      (cF (let [scaff (fmu :top-scaff)]
-                                                        (cl-position (mget scaff :current-page-id)
-                                                          (mget scaff :pages)
-                                                          :page-id)))
+                              {:currentIndex      (cF (let [scaff (fmu :top-scaff)
+                                                            curr-id (mget scaff :current-page-id)]
+                                                        (cl-position-if (mget scaff :pages)
+                                                          (fn [page] (= curr-id (:page-id page))))))
                                :selectedItemColor (.-shade800 m.Colors/amber)
                                :onTap             (cF (fn [i]
                                                         ;; todo why doesn't as-dart-callback work?
@@ -41,22 +41,23 @@
                                         {:icon  icon
                                          :label label}
                                         {:page-id page-id}))
-                                (mget (fmu :top-scaff) :pages)))}
-      {:name    :top-scaff
+                                ;; todo why does not fasc work in next?
+                                (mget (mx/fmu :top-scaff) :pages)))}
+      {:name            :top-scaff
        :current-page-id (cI :home)
-       :pages   [{:page-id :home
-                  :icon    (m/Icon m/Icons.home)
-                  :label   "Home"}
-                 {:page-id :business
-                  :icon    (m/Icon m/Icons.business)
-                  :label   "Business"}
-                 {:page-id :school
-                  :icon    (m/Icon m/Icons.school)
-                  :label   "School"}]}
+       :pages           [{:page-id :home
+                          :icon    (m/Icon m/Icons.home)
+                          :label   "Home"}
+                         {:page-id :business
+                          :icon    (m/Icon m/Icons.business)
+                          :label   "Business"}
+                         {:page-id :school
+                          :icon    (m/Icon m/Icons.school)
+                          :label   "School"}]}
       (center
         (column
           {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
           (text {:style (p/TextStyle
                           .fontWeight m.FontWeight/bold
                           .fontSize 30.0)}
-            (str "Nav page " (mget (fmu :top-scaff) :current-page-id))))))))
+            (str "Nav page " (mget (mx/fasc :top-scaff) :current-page-id))))))))
