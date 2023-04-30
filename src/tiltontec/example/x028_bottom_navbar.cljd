@@ -1,7 +1,7 @@
 (ns tiltontec.example.x028-bottom-navbar
   (:require
     [clojure.string :as str]
-    [tiltontec.matrix.api :refer [dp cF mget cI cF mset! mswap!]]
+    [tiltontec.matrix.api :refer [dp cF mget cI cF mset! mswap! fmu]]
     [tiltontec.flutter-mx.core :as fx
      :refer [scaffold app-bar text center column hero material-app]]
     ["package:flutter/widgets.dart" :as w]
@@ -17,6 +17,14 @@
                            (dp :ok)))
     nil))
 
+; static const TextStyle optionStyle =
+;      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+;  static const List<Widget> _widgetOptions = <Widget>[
+;    Text(
+;      'Index 0: Home',
+;      style: optionStyle,
+;    ),
+
 (defn make-app []
   (material-app
     {:title                      "Flutter/MX Hello World, Teal"
@@ -25,39 +33,12 @@
       {:appBar (app-bar
                  {:title (m/Text "BottomNavigationBar Sample")})
        :bottomNavigationBar
-       #_ (m/BottomNavigationBar                               ;; fx/bottom-navigation-bar
-         .currentIndex 0
-         .selectedItemColor (.-shade800 m.Colors/amber)
-         .onTap (fn [i]
-                  (dp :bott-tap!!!! i))
-         .items [(w/BottomNavigationBarItem
-                   .icon (m/Icon m/Icons.home)
-                   .label "Home")
-                 (w/BottomNavigationBarItem
-                   .icon (m/Icon m/Icons.business)
-                   .label "Business")
-                 (w/BottomNavigationBarItem
-                   .icon (m/Icon m/Icons.school)
-                   .label "School")])
        (fx/bottom-navigation-bar
-         {:currentIndex      (cI 2)
+         {:currentIndex      (cF (mget (fmu :top-scaff) :scaffx))
           :selectedItemColor (.-shade800 m.Colors/amber)
           :onTap (cF (fn [i]
                    (dp :bott-tap!!!! i me)
-                   (mset! me :currentIndex i)
-                   ))
-          #_ (fx/->CBAsIs
-            (fn [i] (dp :tap!??!! i)))
-          #_
-          (fx/as-is
-            (fn [i] (dp :tap!??!! i)))
-          #_
-          (fx/in-my-context [me ctx]
-            (fx/->CBAsIs
-              (fn [i] (dp :tap!??!! i))))
-          #_
-          (fx/as-dart-callback [i]
-                               (dp :bott-tap!!!! i))}
+                   (mset! (fmu :top-scaff) :scaffx i)))}
          (fx/bottom-navigation-bar-item
            {:icon  (m/Icon m/Icons.home)
             :label "Home"})
@@ -67,14 +48,30 @@
          (fx/bottom-navigation-bar-item
            {:icon  (m/Icon m/Icons.school)
             :label "School"}))}
+      {:name :top-scaff
+       :scaffx (cI 1)}
       (center
         (column
           {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
-          (text {:overflow p.TextOverflow/ellipsis
-                 :style    (p/TextStyle
-                             .color m.Colors/cyan
-                             .fontSize 32.0)}
-            "hello, world\\n"))))))
+          (text {:style    (p/TextStyle
+                             .fontWeight m.FontWeight/bold
+                             .fontSize 30.0)}
+            (str "Index "(mget (fmu :top-scaff) :scaffx))))))))
+
+#_ (m/BottomNavigationBar                               ;; fx/bottom-navigation-bar
+     .currentIndex 0
+     .selectedItemColor (.-shade800 m.Colors/amber)
+     .onTap (fn [i]
+              (dp :bott-tap!!!! i))
+     .items [(w/BottomNavigationBarItem
+               .icon (m/Icon m/Icons.home)
+               .label "Home")
+             (w/BottomNavigationBarItem
+               .icon (m/Icon m/Icons.business)
+               .label "Business")
+             (w/BottomNavigationBarItem
+               .icon (m/Icon m/Icons.school)
+               .label "School")])
 
 ;class _MyStatefulWidgetState extends State<MyStatefulWidget> {
 ;  int _selectedIndex = 0;
