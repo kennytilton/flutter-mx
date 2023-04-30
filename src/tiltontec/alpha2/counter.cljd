@@ -25,10 +25,12 @@
         m/Center
         (m/Column .mainAxisAlignment m/MainAxisAlignment.center)
         .children
-        [(fx/fx-render nil
-           (fx/text (str "You have pushed the button this many times:")))
+        [
+         ;;; ^^^ embedding an f/mx widget in a cljd/flutter component
          (m/Text "You have pushed the button this many times:")
          (f/widget
            :get {{{:flds [displayLarge]} .-textTheme} m/Theme}
            :watch [N counter]
-           (m/Text (str N) .style displayLarge))]))))
+           (m/Text (str N) .style displayLarge))
+         (fx/fx-render nil
+           (fx/text (str "Look, ma! An f/mx widget!")))]))))

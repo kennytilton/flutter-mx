@@ -255,6 +255,7 @@
 
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful hero m/Hero)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful gesture-detector m/GestureDetector)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateful dismissible w/Dismissible)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful elevated-button m/ElevatedButton)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful default-tab-controller m/DefaultTabController)
 
@@ -270,6 +271,9 @@
 (deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
 (deftag tiltontec.flutter-mx.factory/children-stateless list-view m/ListView)
 (deftag tiltontec.flutter-mx.factory/children-stateless grid-view+count m.GridView/count)
+
+(deftag tiltontec.flutter-mx.factory/items-stateless bottom-navigation-bar m/BottomNavigationBar)
+(deftag tiltontec.flutter-mx.factory/childless-stateless bottom-navigation-bar-item w/BottomNavigationBarItem)
 
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless drawer m/Drawer)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
@@ -327,9 +331,11 @@
       io/Platform.isIOS)))
 
 (defn is-desktop? []
-  (or io/Platform.isMacOS
-    io/Platform.isWindows
-    io/Platform.isLinux))
+  (and (not (is-web?))
+    ;; we cannot ask about Platform if on Web, so first ^^ we rule that out
+    (or io/Platform.isMacOS
+      io/Platform.isWindows
+      io/Platform.isLinux)))
 
 (defn platform-category []
   (cond

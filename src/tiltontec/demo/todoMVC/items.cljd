@@ -22,6 +22,11 @@
      :onChanged (cF (as-dart-callback [value]
                       (mset! todo :completed value)))}))
 
+(defn todo-delete-callback [todo tag]
+  (as-dart-callback [& [direction]]
+    (todo/ToDoList-delete! (my-todo-list)
+      (todo/td-stg-id todo))))
+
 (defn- delete-button [todo]
   (fx/visibility!
     {:visible (cF (or
@@ -29,12 +34,7 @@
                     (mget (fasc :item-control) :hovered?)))}
     (fx/text-button
       ;; our "delete" icon on each to-do
-      {:onPressed (as-dart-callback []
-                    (mswap! (my-todo-list) :kids
-                      (fn [coll stg-id]
-                        (remove (fn [td]
-                                  (= stg-id (td-stg-id td))) coll))
-                      (todo/td-stg-id todo)))}
+      {:onPressed (todo-delete-callback todo :item-del-button)}
       (fx/text {:style (p/TextStyle
                          .fontFamily "Helvetica Neue"
                          .color (cmm/title-red)
@@ -126,43 +126,46 @@
      :owner me}))
 
 (defn todo-list-item [todo]
-  (fx/visibility!
-    ;; try with SizedBox.shrink?
-    {:key               (m/ValueKey. (td-stg-id todo))
-     :visible           (cF (mget me :selected?))
-     :maintainSize      false
-     :maintainAnimation true
-     :maintainState     true}
-    {:selected? (cF (case (fmuval :completions :selection)
-                      :all true
-                      :active (not (td-completed todo))
-                      :done (td-completed todo)))}
-    (fx/container
-      {:decoration (fx/in-my-context [me context]
-                     ;; list with separator cannot hid separator when item hidden, so
-                     ;; we fake a separator with a top border on the container
-                     (m/BoxDecoration .border
-                       (m/Border .top (m/BorderSide .width 0.5
-                                        .color (.-dividerColor (.of m/Theme context))))))}
-      (fx/gesture-detector
-        {:onDoubleTap (as-dart-callback []
-                        (when (not (mget me :editing))
-                          ;; todo fix double-taps and keyrepeat  not seen during editing
-                          (mset! me :editing? true)))}
-        {:name     :item-control
-         :hovered? (cI false)
-         :editing? (cI false)}
-        (if (mget me :editing?)
-          (to-do-editor me todo)
-          (fx/mouse-region
-            {:onEnter (as-dart-callback [e]
-                        (mset! (fasc :item-control) :hovered? true))
-             :onHover (as-dart-callback [e]
-                        ;; just in case the mouse starts in the rgn
-                        (mset! (fasc :item-control) :hovered? true))
-             :onExit  (as-dart-callback [e]
-                        (mset! (fasc :item-control) :hovered? false))}
-            (to-do-display todo)))))))
+  (fx/dismissible
+    {:key         (m/ValueKey. (td-stg-id todo))
+     :direction   w/DismissDirection.horizontal
+     :onDismissed (todo-delete-callback todo :swipe-dismissed)
+     }
+    (fx/visibility!
+      ;; try with SizedBox.shrink?
+      {:visible           (cF (mget me :selected?))
+       :maintainSize      false
+       :maintainAnimation true
+       :maintainState     true}
+      {:selected? (cF (case (fmuval :completions :selection)
+                        :all true
+                        :active (not (td-completed todo))
+                        :done (td-completed todo)))}
+      (fx/container
+        {:decoration (fx/in-my-context [me context]
+                       ;; list with separator cannot hide separator when item hidden, so
+                       ;; we fake a separator with a top border on the container
+                       (m/BoxDecoration .border
+                         (m/Border .top (m/BorderSide .width 0.5
+                                          .color (.-dividerColor (.of m/Theme context))))))}
+        (fx/gesture-detector
+          {:onDoubleTap (as-dart-callback []
+                          (when (not (mget me :editing?))
+                            ;; todo fix double-taps and keyrepeat  not seen during editing
+                            (mset! me :editing? true)))}
+          {:name     :item-control
+           :hovered? (cI false)
+           :editing? (cI false)}
+          (letfn [(hover-cb [hovered?]
+                    (as-dart-callback [e]
+                      (mset! (fasc :item-control) :hovered? hovered?)))]
+            (fx/mouse-region
+              {:onEnter (hover-cb true)
+               :onHover (hover-cb true)
+               :onExit  (hover-cb false)}
+              (if (mget (fasc :item-control) :editing?)
+                (to-do-editor me todo)
+                (to-do-display todo)))))))))
 
 (defn todo-items []
   (fx/expanded

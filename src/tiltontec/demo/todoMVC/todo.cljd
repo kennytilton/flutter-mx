@@ -4,13 +4,12 @@
     ["package:flutter/material.dart" :as m]
     ["package:http/http.dart" :as dht]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
-    [clojure.walk :as walk]
 
     [tiltontec.util.core :as util]
     [tiltontec.cell.matrix :refer [PObserver observe] :as cmx]
     [tiltontec.cell.base :as cb]
 
-    [tiltontec.matrix.api :refer [cFn cF+ cI mget mkids mkids] :as mx]
+    [tiltontec.matrix.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
     [tiltontec.demo.todoMVC.persist :as stg]))
 
 ;;; --- handy accessors ---------------------------------
@@ -89,6 +88,10 @@
                         (let [{:keys [title completed stg-id created-at]} xtd]
                           (make-ToDo me title completed stg-id created-at)))
                   existing-todos)))))
+
+(defn ToDoList-delete! [todo-list stg-id]
+  (mswap! todo-list :kids
+    (partial remove (fn [td] (= stg-id (td-stg-id td))))))
 
 (defn app-todos [app]
   (when-let [td-lst (tiltontec.model.core/mget app :todo-list)]

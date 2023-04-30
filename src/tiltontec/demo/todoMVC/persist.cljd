@@ -7,7 +7,7 @@
     [tiltontec.util.core :as util]
     [clojure.walk :as walk]))
 
-(def +DB+ (atom nil)) ;; n.b. just a cache, NOT reactive
+(def +DB+ (atom nil))                                       ;; n.b. just a cache, NOT reactive
 (defn ^prefs/SharedPreferences? DB [] (deref +DB+))
 (defn ^prefs/SharedPreferences? DB! [db] (reset! +DB+ db))
 
@@ -23,7 +23,7 @@
   [td-map]
   (let [stg-id (:stg-id td-map)]
     (assert stg-id "td-rewrite map must include stg-id")
-    (.setString  (DB) stg-id
+    (.setString (DB) stg-id
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys td-map
@@ -55,25 +55,24 @@
   "Deletes storage associated with stg-id."
   [stg-id]
   (assert stg-id "td-delete> stg-id argument is nil. s/b string ID.")
-  (.remove  (DB) stg-id)
+  (.remove (DB) stg-id)
   stg-id)
 
 ;;; --- collection-level utilities -------------
 
 (defn collection-docs [collection-name]
-  (assert (DB) "no db in collection-docs")
   (let [all-td-keys (collection-keys collection-name)]
     (mapv (fn [td-key]
             (util/dart-map->cljd-map
-              (convert/jsonDecode (.getString (DB) td-key)))) all-td-keys)))
+              (convert/jsonDecode (.getString (DB) td-key))))
+      all-td-keys)))
 
 (defn collection-keys [collection-name]
-  (assert (DB) "no db in collection-keys")
-  (filter (fn [k]
-            (= collection-name (subs k 0 (count collection-name))))
-    (into #{} (.getKeys (DB)))))
+  (into #{}
+    (filter #(= collection-name
+               (subs % 0 (count collection-name)))
+      (.getKeys (DB)))))
 
 (defn collection-delete-all [collection-name]
-  (assert (DB) "no db in delete-all-docs")
   (doseq [k (collection-keys collection-name)]
-    (.remove ^prefs/SharedPreferences (DB) k)))
+    (td-delete k)))

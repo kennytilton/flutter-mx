@@ -1,0 +1,134 @@
+(ns tiltontec.example.x028-bottom-navbar
+  (:require
+    [clojure.string :as str]
+    [tiltontec.matrix.api :refer [dp cF mget cI cF mset! mswap!]]
+    [tiltontec.flutter-mx.core :as fx
+     :refer [scaffold app-bar text center column hero material-app]]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+(def diagram-state (atom nil))
+
+(defn pan-update [^m/DragUpdateDetails details]
+  (dart:core/print "pan update")
+  (do
+    (swap! diagram-state (fn [^#/(List (List m/Offset)) {:keys [lines]}]
+                           (dp :ok)))
+    nil))
+
+(defn make-app []
+  (material-app
+    {:title                      "Flutter/MX Hello World, Teal"
+     :debugShowCheckedModeBanner false}
+    (scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "BottomNavigationBar Sample")})
+       :bottomNavigationBar
+       #_ (m/BottomNavigationBar                               ;; fx/bottom-navigation-bar
+         .currentIndex 0
+         .selectedItemColor (.-shade800 m.Colors/amber)
+         .onTap (fn [i]
+                  (dp :bott-tap!!!! i))
+         .items [(w/BottomNavigationBarItem
+                   .icon (m/Icon m/Icons.home)
+                   .label "Home")
+                 (w/BottomNavigationBarItem
+                   .icon (m/Icon m/Icons.business)
+                   .label "Business")
+                 (w/BottomNavigationBarItem
+                   .icon (m/Icon m/Icons.school)
+                   .label "School")])
+       (fx/bottom-navigation-bar
+         {:currentIndex      (cI 2)
+          :selectedItemColor (.-shade800 m.Colors/amber)
+          :onTap (cF (fn [i]
+                   (dp :bott-tap!!!! i me)
+                   (mset! me :currentIndex i)
+                   ))
+          #_ (fx/->CBAsIs
+            (fn [i] (dp :tap!??!! i)))
+          #_
+          (fx/as-is
+            (fn [i] (dp :tap!??!! i)))
+          #_
+          (fx/in-my-context [me ctx]
+            (fx/->CBAsIs
+              (fn [i] (dp :tap!??!! i))))
+          #_
+          (fx/as-dart-callback [i]
+                               (dp :bott-tap!!!! i))}
+         (fx/bottom-navigation-bar-item
+           {:icon  (m/Icon m/Icons.home)
+            :label "Home"})
+         (fx/bottom-navigation-bar-item
+           {:icon  (m/Icon m/Icons.business)
+            :label "Business"})
+         (fx/bottom-navigation-bar-item
+           {:icon  (m/Icon m/Icons.school)
+            :label "School"}))}
+      (center
+        (column
+          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+          (text {:overflow p.TextOverflow/ellipsis
+                 :style    (p/TextStyle
+                             .color m.Colors/cyan
+                             .fontSize 32.0)}
+            "hello, world\\n"))))))
+
+;class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+;  int _selectedIndex = 0;
+;  static const TextStyle optionStyle =
+;      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+;  static const List<Widget> _widgetOptions = <Widget>[
+;    Text(
+;      'Index 0: Home',
+;      style: optionStyle,
+;    ),
+;    Text(
+;      'Index 1: Business',
+;      style: optionStyle,
+;    ),
+;    Text(
+;      'Index 2: School',
+;      style: optionStyle,
+;    ),
+;  ];
+;
+;  void _onItemTapped(int index) {
+;    setState(() {
+;      _selectedIndex = index;
+;    });
+;  }
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return Scaffold(
+;      appBar: AppBar(
+;        title: const Text('BottomNavigationBar Sample'),
+;      ),
+;      body: Center(
+;        child: _widgetOptions.elementAt(_selectedIndex),
+;      ),
+;      bottomNavigationBar: BottomNavigationBar(
+;        items: const <BottomNavigationBarItem>[
+;          BottomNavigationBarItem(
+;            icon: Icon(Icons.home),
+;            label: 'Home',
+;          ),
+;          BottomNavigationBarItem(
+;            icon: Icon(Icons.business),
+;            label: 'Business',
+;          ),
+;          BottomNavigationBarItem(
+;            icon: Icon(Icons.school),
+;            label: 'School',
+;          ),
+;        ],
+;        currentIndex: _selectedIndex,
+;        selectedItemColor: Colors.amber[800],
+;        onTap: _onItemTapped,
+;      ),
+;    );
+;  }
+;}
