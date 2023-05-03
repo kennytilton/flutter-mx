@@ -18,35 +18,12 @@
                         (fn [ctx box-constraint]
                           (fx/fx-render ctx
                             ; now we can play in f/mx world....
-                            (let [fsz (* 0.1 (.-maxHeight box-constraint))]
-                              (fx/text
-                                {:style (p/TextStyle
-                                          .color m.Colors/cyan
-                                          .fontSize (* 0.1 (.-maxHeight box-constraint)))}
-                                (str "Fontsize " (/(int (* 10 fsz)) 10)))))))}))))))
-
-#_(defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
-    (fx/animated-builder
-      {:animation (mget (mx/fasc :fab) :expand-animation)
-       :builder   (as-dart-callback [ctx child]
-                    (let [progress ^m/CurvedAnimation (mget (mx/fasc :fab) :expand-animation)
-                          offset (m.Offset/fromDirection
-                                   (* direction-degrees (/ math/pi 180.00))
-                                   (* (.-value progress) max-distance))]
-                      ;; N.B! alpha widgets are welcome at leaves of the MX tree...
-                      (f/widget
-                        (f/nest
-                          (m/Positioned
-                            .right (+ 4.0 (.-dx offset))
-                            .bottom (+ 4.0 (.-dy offset)))
-                          (m.Transform/rotate
-                            .angle (* (- 1.0 (.-value progress))
-                                     math/pi 0.5))
-                          child))))}
-      (fx/fade-transition
-        {:opacity (mget (mx/fasc :fab) :expand-animation)}
-        (action-button
-          :icon (:icon action)
-          :onPressed (fx/in-my-context [me ctx]
-                       (fx/->CBAsIs
-                         #(show-action ctx action)))))))
+                            (fx/text
+                              {:style (cF (p/TextStyle
+                                            .color (mget me :font-color)
+                                            .fontSize (mget me :font-size)))}
+                              {:font-size (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                               :font-color (cF (cond
+                                                 (> (mget me :font-size) 50) m.Colors/red
+                                                 :else m.Colors/cyan))}
+                              (str "Fontsize " (/(int (* 10 (mget me :font-size))) 10))))))}))))))
