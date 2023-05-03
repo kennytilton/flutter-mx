@@ -7,7 +7,7 @@
     ["package:http/http.dart" :as dht]
     [clojure.string :as str]
     [tiltontec.cell.base :refer [cinfo minfo] :as cty]
-    [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fasc
+    [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fmu fasc
                                   cF cI cFonce with-mx-isolation dp dpx]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
     [tiltontec.demo.todoMVC.common :as cmm
@@ -27,11 +27,13 @@
     (todo/ToDoList-delete! (my-todo-list)
       (todo/td-stg-id todo))))
 
+(comment
+  )
 (defn- delete-button [todo]
   (fx/visibility!
     {:visible (cF (or
                     (fx/is-mobile?)
-                    (mget (fasc :item-control) :hovered?)))}
+                    (mget (fmu :item-control) :hovered?)))}
     (fx/text-button
       ;; our "delete" icon on each to-do
       {:onPressed (todo-delete-callback todo :item-del-button)}
@@ -86,7 +88,8 @@
                     ;; the to-do input field is already focused, and autofocus does not jump to those
                     ;; unless in a fresh scope. So ^^^ we throw in a fresh scope.
                     {:onFocusChange (cF (as-dart-callback [focused?]
-                                          (when (not focused?)
+                                          (dp :focuschange!!! @me title focused? (mget (fmu :item-control) :editing?))
+                                          (when #_ (mget (fmu :item-control) :editing?) (not focused?)
                                             ;; spec says commit on blur...
                                             (commit-to-do-editing (fm* :todo-editor) todo)
                                             (mset! (fasc :item-control) :editing? false))))}
@@ -166,6 +169,12 @@
               (if (mget (fasc :item-control) :editing?)
                 (to-do-editor me todo)
                 (to-do-display todo)))))))))
+
+(comment
+  (fx/mouse-region
+    {:onEnter (as-dart-callback [e]
+                (mset! (fasc :item-control) :hovered? hovered?))}
+    ))
 
 (defn todo-items []
   (fx/expanded
