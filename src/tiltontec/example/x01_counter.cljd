@@ -4,7 +4,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.matrix.api :refer [cF cI cFn cFonce mpar mget  mset! mswap! fm*] :as mx]
+    [tiltontec.matrix.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm*] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
 
 (defn make-app []
@@ -12,24 +12,38 @@
     {:title "Flutter/MX Counter Demo"
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     (fx/scaffold
-      {:appBar (fx/app-bar
-                 {:title (m/Text "Flutter/MX Counter")})
-       :floatingActionButton
-       (cF (fx/floating-action-button
-             {:onPressed (as-dart-callback []
-                           (mswap! (fm* :z-counter) :value inc))
-              :tooltip   "Increment"}
-             (m/Icon m.Icons/add .color m.Colors/black)))}
+      {:appBar               (fx/app-bar
+                               {:title (m/Text "Flutter/MX Counter")})
+       :floatingActionButton (cF (fx/floating-action-button
+                                   {:onPressed (as-dart-callback []
+                                                 (mswap! (fm* :z-counter) :value inc))
+                                    :tooltip   "Increment"}
+                                   (m/Icon m.Icons/add .color m.Colors/black)))}
       (fx/center
-        (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
-
+        ;; see below for the same but using the Column widget and
+        ;; a sized-box to achieve spacing, which seems off.
+        (fx/wrap {:direction m.Axis/vertical
+                  :crossAxisAlignment m.WrapCrossAlignment/center
+                  :spacing   14}
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
             "You have clicked (+) this many times:")
-          (fx/sized-box {:height 14.0})
           (fx/text
             {:style (fx/in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
             (str (mx/my-value))))))))
+
+#_(fx/center
+    (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
+      (fx/text {:style (p/TextStyle .color m.Colors/black
+                         .fontSize 18.0)}
+        "You have clicked (+) this many times:")
+      (fx/sized-box {:height 14.0})
+      (fx/text
+        {:style (fx/in-my-context [me ctx]
+                  (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+        {:name  :z-counter
+         :value (cI 0)}
+        (str (mx/my-value)))))
