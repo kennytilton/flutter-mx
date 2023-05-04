@@ -213,6 +213,27 @@
                            (apply concat kvs))))))
        (tiltontec.matrix.api/cFkids ~@children))))
 
+(defmacro items-stateless [fx-class fx-props mx-props & children]
+  (let []
+    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn [me ctx]
+                   (with-flutter-ref
+                     (~fx-class
+                       .items (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
+                                (tiltontec.matrix.api/mkids me))
+                       ~@(let [kvs (for [[k# _#] fx-props]
+                                     [(symbol (str "." (name k#)))
+                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
+                                         (tiltontec.matrix.api/mget me ~k#))]
+                                     #_
+                                     [(symbol (str "." (name k#)))
+                                      `(tiltontec.matrix.api/mget me ~k#)])]
+                           (apply concat kvs))))))
+       (tiltontec.matrix.api/cFkids ~@children))))
+
 (defmacro items-stateful [fx-class fx-props mx-props & children]
   (let []
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
