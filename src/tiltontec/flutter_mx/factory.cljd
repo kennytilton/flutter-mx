@@ -209,7 +209,8 @@
                                    (tiltontec.matrix.api/mkids me))
                        ~@(let [kvs (for [[k# _#] fx-props]
                                      [(symbol (str "." (name k#)))
-                                      `(tiltontec.matrix.api/mget me ~k#)])]
+                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx
+                                         (tiltontec.model.core/mget me ~k#))])]
                            (apply concat kvs))))))
        (tiltontec.matrix.api/cFkids ~@children))))
 
