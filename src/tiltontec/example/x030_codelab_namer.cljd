@@ -1,14 +1,43 @@
-(ns tiltontec.example.x029_layout_builder
+(ns tiltontec.example.x030-codelab-namer
   (:require
     ["dart:math" :as math]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.matrix.api :refer [dp cF cI mget fmuv] :as mx]
+    ["package:english_words/english_words.dart" :as en]
+    [tiltontec.matrix.api :refer [dp cF cFn cI mget mset! mswap! fasc fmu fmuv] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
 
+; (defn big-card [^english/WordPair pair]
+;  (f/widget
+;    :get {{{:flds [primary onPrimary]} .-colorScheme
+;           {:flds [displayMedium]} .-textTheme} m/Theme}
+;    (m/Card .color primary)
+;    (m/Padding .padding (m/EdgeInsets.all 20))
+;    (m/Text (.-asLowerCase pair)
+;            .style (.copyWith displayMedium .color onPrimary)
+;            .semanticsLabel (.-asPascalCase pair))))
+
+(defn big-card [^en/WordPair word-pair]
+  (fx/card {:color (fx/in-my-context [me ctx]
+                     (-> (m.Theme/of ctx) .-colorScheme .-primary))}
+    (fx/padding {:padding (m/EdgeInsets.all 20)}
+      (fx/text {:style (fx/in-my-context [me ctx]
+                         (.copyWith (.-displayMedium (.-textTheme (m.Theme/of ctx)))
+                           .color (-> (m.Theme/of ctx) .-colorScheme .-onPrimary)))
+                :semanticsLabel (.-asPascalCase word-pair)}
+        (.-asLowerCase word-pair)))))
+
 (defn generator-page []
-  (fx/text "gen page"))
+  (fx/center
+    (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
+      (big-card (mget (fasc :app) :word-pair))
+      (fx/sized-box {:height 10})
+      (fx/row {:mainAxisSize m.MainAxisSize/min}
+        (fx/text "like")
+        (fx/sized-box {:width 10})
+        (fx/text "next")))))
+
 (defn favorites-page []
   (fx/text "fav page"))
 
@@ -20,29 +49,32 @@
                 .useMaterial3 true
                 .colorScheme (m/ColorScheme.fromSeed
                                .seedColor m/Colors.cyanAccent))}
-      {:name :app
-       :selected-index (cI 0)}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})}
+        {:name :app
+         :word-pair (cFn (en/WordPair.random))
+         :favorites (cI nil)}
         (fx/row
           (fx/safe-area
             (fx/navigation-rail
-              {:extended false
-               :selectedIndex (cF (mget (fasc :app) :selected-index))
-               :destinations [(m/NavigationRailDestination
-                                .icon (m.Icon m.Icons/home)
-                                .label (m.Text "Home"))
-                              (m/NavigationRailDestination
-                                .icon (m.Icon m.Icons/home)
-                                .label (m.Text "Home"))]
-               .onDestinationSelected (as-dart-callback [value]
-                                        (mset! (fasc :app) :selected-index value))}))
+              {:extended              false
+               :selectedIndex         (cI 0)
+               :onDestinationSelected (as-dart-callback [value]
+                                        (mset! me :selectedIndex value))}
+              {:name :nav}
+              (m/NavigationRailDestination
+                .icon (m/Icon m/Icons.home)
+                .label (m/Text "Home"))
+              (m/NavigationRailDestination
+                .icon (m/Icon m/Icons.favorite)
+                .label (m/Text "Favorites"))))
           (fx/expanded
             (fx/container
-              {:color (.-primaryContainer
-                        (.-colorScheme
-                          (.of m/Theme context)))}
-              (case (mget (fasc :app) :selected-index)
+              {:color (fx/in-my-context [me context]
+                        (.-primaryContainer
+                          (.-colorScheme
+                            (.of m/Theme context))))}
+              (case (mget (fmu :nav) :selectedIndex)
                 0 (generator-page)
                 1 (favorites-page)
                 (fx/text (str "Bad page "))))))))))
