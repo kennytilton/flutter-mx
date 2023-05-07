@@ -3,12 +3,11 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/foundation.dart" :as foundation]
+    ["package:flutter/foundation.dart" :as f]
 
     ;["dart:io" :as io]
-    [clojure.walk :as walk]
+
     [tiltontec.alpha2.counter :as a2c]
-    [tiltontec.util.base :refer [dprn dp dpx]]
     [tiltontec.testing :as testing]
     [tiltontec.test.lazy-cells :as test-lazy]
     [tiltontec.flutter-mx.core :as fx]
@@ -16,30 +15,31 @@
     [tiltontec.example.x00-hello-world :as hello]
     [tiltontec.example.x01-counter :as counter]
     [tiltontec.example.x05-fab :as x05]
-
-    [tiltontec.example.x020-reactive-stream :as x20]
-    [tiltontec.example.x028-bottom-navbar :as x028]
     [tiltontec.example.x029_layout_builder :as x029]
     [tiltontec.example.x030_codelab_namer :as x030]
     [tiltontec.example.layout-explorer :as layo]            ;; buggy
-    [tiltontec.demo.todoMVC.core :as todo]
-    ))
+    [tiltontec.demo.todoMVC.core :as todo]))
 
 (defn main []
   (.ensureInitialized w/WidgetsFlutterBinding)
-  ;; alpha example
-  ;; (a2c/main)
-
   (fx/run-app
     (fx/fx-render nil
-      ;; Change the namespace below and rebuild to see a different example.
-      (x030/make-app)))
+      ;; Change the namespace below to one above and rebuild to see a different example.
+      (counter/make-app))))
 
-  ;;(testing/run-tests)
-
-  ;; --- Your REPL code here! -----------------------
-
-  )
+; (defn main []
+;  (.ensureInitialized w/WidgetsFlutterBinding)
+;  ;; alpha example
+;  ;; (a2c/main)
+;
+;  (fx/run-app
+;    (fx/fx-render nil
+;      ;; Change the namespace below and rebuild to see a different example.
+;      (todo/make-app)))
+;
+;  ;;(testing/run-tests)
+;
+;  )
 
 ;; (set! r/debugPaintSizeEnabled true)
 ;; (w/debugDumpApp)

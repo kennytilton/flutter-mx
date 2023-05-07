@@ -169,6 +169,20 @@
     `(let [name# ~name]
        (tiltontec.model.core/fm-ascendant name# ~me-ref))))
 
+(defmacro fmav "Search strictly up and mget value"
+  [name prop-name & [me]]
+  (let [me-ref (or me 'me)]
+    `(let [name# ~name
+           md# (tiltontec.model.core/fm-ascendant name# ~me-ref)]
+       (if (nil? md#)
+         (throw (str "fascv> did not find model " name#
+                  " searching up from " (tiltontec.model.core/mname md#)
+                  " seeking property " ~prop-name " value."))
+         (if (contains? @md# ~prop-name)
+           (tiltontec.model.core/mget md# ~prop-name)
+           (throw (str "fascv> " ~name " lacks " ~prop-name " property")))
+         (mget md# ~prop-name)))))
+
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
     (mxu-find-id me id-name)
@@ -198,7 +212,7 @@
        (assert other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
-(defmacro fmuv [prop name & [me]]
+(defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]

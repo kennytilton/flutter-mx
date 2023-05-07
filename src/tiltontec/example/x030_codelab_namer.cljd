@@ -1,45 +1,58 @@
 (ns tiltontec.example.x030-codelab-namer
   (:require
-    ["dart:math" :as math]
-    ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
     ["package:english_words/english_words.dart" :as en]
     [tiltontec.matrix.api :refer [dp cF cFn cI mget mset! mswap! fasc fmu fmuv] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
-
-; (defn big-card [^english/WordPair pair]
-;  (f/widget
-;    :get {{{:flds [primary onPrimary]} .-colorScheme
-;           {:flds [displayMedium]} .-textTheme} m/Theme}
-;    (m/Card .color primary)
-;    (m/Padding .padding (m/EdgeInsets.all 20))
-;    (m/Text (.-asLowerCase pair)
-;            .style (.copyWith displayMedium .color onPrimary)
-;            .semanticsLabel (.-asPascalCase pair))))
 
 (defn big-card [^en/WordPair word-pair]
   (fx/card {:color (fx/in-my-context [me ctx]
                      (-> (m.Theme/of ctx) .-colorScheme .-primary))}
     (fx/padding {:padding (m/EdgeInsets.all 20)}
-      (fx/text {:style (fx/in-my-context [me ctx]
-                         (.copyWith (.-displayMedium (.-textTheme (m.Theme/of ctx)))
-                           .color (-> (m.Theme/of ctx) .-colorScheme .-onPrimary)))
+      (fx/text {:style          (fx/in-my-context [me ctx]
+                                  (.copyWith (.-displayMedium (.-textTheme (m.Theme/of ctx)))
+                                    .color (-> (m.Theme/of ctx) .-colorScheme .-onPrimary)))
                 :semanticsLabel (.-asPascalCase word-pair)}
-        (.-asLowerCase word-pair)))))
+        (.-asCamelCase word-pair)))))
 
 (defn generator-page []
   (fx/center
     (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
       (big-card (mget (fasc :app) :word-pair))
-      (fx/sized-box {:height 10})
-      (fx/row {:mainAxisSize m.MainAxisSize/min}
-        (fx/text "like")
-        (fx/sized-box {:width 10})
-        (fx/text "next")))))
+      (m/SizedBox .height 10)
+      (fx/row {:mainAxisSize m/MainAxisSize.min}
+        (fx/elevated-button+icon
+          {:label     (fx/text "Like")
+           :icon      (cF (if ((mx/fmav :app :favorites)
+                               (mx/fmav :app :word-pair))
+                            (m/Icon m/Icons.favorite)
+                            (m/Icon m/Icons.favorite_border)))
+           :onPressed (as-dart-callback []
+                        (let [word-pair (mx/fmav :app :word-pair)
+                              favs (mx/fmav :app :favorites)]
+                          (mswap! (fasc :app) :favorites
+                            (if (favs word-pair)
+                              disj conj) word-pair)))})
+        (m/SizedBox .width 10)
+        (fx/elevated-button
+          {:onPressed (as-dart-callback []
+                        (mset! (fasc :app) :word-pair (en/WordPair.random)))}
+          (fx/text "Next"))))))
 
-(defn favorites-page []
-  (fx/text "fav page"))
+(defn favorites-page [favs]
+  (if (empty? favs)
+    (fx/center
+      (fx/text "No favorites yet."))
+    (fx/list-view
+      (fx/padding
+        {:padding (m/EdgeInsets.all 20)}
+        (fx/text (str "You have " (count favs) " favorite"
+                   (if (= 1 (count favs)) ":" "s:"))))
+      (doall (for [fav favs]
+               (fx/list-tile
+                 {:leading (m/Icon m/Icons.favorite)
+                  :title   (m/Text (.-asCamelCase ^en/WordPair fav))}))))))
 
 (defn make-app []
   (let [title "Codelab: Namer App"]
@@ -51,9 +64,9 @@
                                .seedColor m/Colors.cyanAccent))}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})}
-        {:name :app
-         :word-pair (cFn (en/WordPair.random))
-         :favorites (cI nil)}
+        {:name      :app
+         :word-pair (cI (en/WordPair.random))
+         :favorites (cI #{})}
         (fx/row
           (fx/safe-area
             (fx/navigation-rail
@@ -62,218 +75,16 @@
                :onDestinationSelected (as-dart-callback [value]
                                         (mset! me :selectedIndex value))}
               {:name :nav}
-              (m/NavigationRailDestination
-                .icon (m/Icon m/Icons.home)
-                .label (m/Text "Home"))
-              (m/NavigationRailDestination
-                .icon (m/Icon m/Icons.favorite)
-                .label (m/Text "Favorites"))))
+              (doall (for [[icon label] [[m/Icons.home "Home"]
+                                         [m/Icons.favorite "Favorites"]]]
+                       (m/NavigationRailDestination
+                         .icon (m/Icon icon)
+                         .label (m/Text label))))))
           (fx/expanded
             (fx/container
-              {:color (fx/in-my-context [me context]
-                        (.-primaryContainer
-                          (.-colorScheme
-                            (.of m/Theme context))))}
-              (case (mget (fmu :nav) :selectedIndex)
+              {:color (fx/in-my-context [me ctx]
+                        (-> (m.Theme/of ctx) .-colorScheme .-primaryContainer))}
+              (case (fmuv :nav :selectedIndex)
                 0 (generator-page)
-                1 (favorites-page)
-                (fx/text (str "Bad page "))))))))))
-
-; import 'package:english_words/english_words.dart';
-
-;class MyApp extends StatelessWidget {
-;  const MyApp({super.key});
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    return ChangeNotifierProvider(
-;      create: (context) => MyAppState(),
-;      child: MaterialApp(
-;        title: 'Namer App',
-;        theme: ThemeData(
-;          useMaterial3: true,
-;          colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyanAccent),
-;        ),
-;        home: MyHomePage(),
-;      ),
-;    );
-;  }
-;}
-;
-;class MyAppState extends ChangeNotifier {
-;  var current = WordPair.random();
-;
-;  void getNext() {
-;    current = WordPair.random();
-;    notifyListeners();
-;  }
-;
-;  var favorites = <WordPair>[];
-;
-;  void toggleFavorite() {
-;    if (favorites.contains(current)) {
-;      favorites.remove(current);
-;    } else {
-;      favorites.add(current);
-;    }
-;    notifyListeners();
-;  }
-;}
-;
-;class MyHomePage extends StatefulWidget {
-;  @override
-;  State<MyHomePage> createState() => _MyHomePageState();
-;}
-;
-;class _MyHomePageState extends State<MyHomePage> {
-;  var selectedIndex = 0;
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    Widget page;
-;    switch (selectedIndex) {
-;      case 0:
-;        page = GeneratorPage();
-;        break;
-;      case 1:
-;        page = FavoritesPage();
-;        break;
-;      default:
-;        throw UnimplementedError('no widget for $selectedIndex');
-;    }
-;    return Scaffold(
-;      body: Row(
-;        children: [
-;          SafeArea(
-;            child: NavigationRail(
-;              extended: false,
-;              destinations: [
-;                NavigationRailDestination(
-;                  icon: Icon(Icons.home),
-;                  label: Text('Home'),
-;                ),
-;                NavigationRailDestination(
-;                  icon: Icon(Icons.favorite),
-;                  label: Text('Favorites'),
-;                ),
-;              ],
-;              selectedIndex: selectedIndex,
-;              onDestinationSelected: (value) {
-;                setState(() {
-;                  selectedIndex = value;
-;                });
-;              },
-;            ),
-;          ),
-;          Expanded(
-;            child: Container(
-;              color: Theme.of(context).colorScheme.primaryContainer,
-;              child: page,
-;            ),
-;          ),
-;        ],
-;      ),
-;    );
-;  }
-;}
-;
-;class FavoritesPage extends StatelessWidget {
-;  @override
-;  Widget build(BuildContext context) {
-;    var appState = context.watch<MyAppState>();
-;
-;    if (appState.favorites.isEmpty) {
-;      return Center(
-;        child: Text('No favorites yet.'),
-;      );
-;    }
-;
-;    return ListView(
-;      children: [
-;        Padding(
-;          padding: const EdgeInsets.all(20),
-;          child: Text('You have '
-;              '${appState.favorites.length} favorites:'),
-;        ),
-;        for (var pair in appState.favorites)
-;          ListTile(
-;            leading: Icon(Icons.favorite),
-;            title: Text(pair.asLowerCase),
-;          ),
-;      ],
-;    );
-;  }
-;}
-;
-;class GeneratorPage extends StatelessWidget {
-;  @override
-;  Widget build(BuildContext context) {
-;    var appState = context.watch<MyAppState>();
-;    var pair = appState.current;
-;
-;    IconData icon;
-;    if (appState.favorites.contains(pair)) {
-;      icon = Icons.favorite;
-;    } else {
-;      icon = Icons.favorite_border;
-;    }
-;
-;    return Center(
-;      child: Column(
-;        mainAxisAlignment: MainAxisAlignment.center,
-;        children: [
-;          BigCard(pair: pair),
-;          SizedBox(height: 10),
-;          Row(
-;            mainAxisSize: MainAxisSize.min,
-;            children: [
-;              ElevatedButton.icon(
-;                onPressed: () {
-;                  appState.toggleFavorite();
-;                },
-;                icon: Icon(icon),
-;                label: Text('Like'),
-;              ),
-;              SizedBox(width: 10),
-;              ElevatedButton(
-;                onPressed: () {
-;                  appState.getNext();
-;                },
-;                child: Text('Next'),
-;              ),
-;            ],
-;          ),
-;        ],
-;      ),
-;    );
-;  }
-;}
-;
-;
-;class BigCard extends StatelessWidget {
-;  const BigCard({
-;    super.key,
-;    required this.pair,
-;  });
-;
-;  final WordPair pair;
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    final theme = Theme.of(context);
-;    final style = theme.textTheme.displayMedium!.copyWith(
-;      color: theme.colorScheme.onPrimary,
-;    );
-;
-;    return Card (
-;      color: theme.colorScheme.primary,
-;      child: Padding(
-;        padding: const EdgeInsets.all(20.0),
-;        child: Text(
-;          pair.asCamelCase,
-;          style: style,
-;          semanticsLabel: "${pair.first} ${pair.second}",),
-;      ),
-;    );
-;  }
-;}
+                1 (favorites-page
+                    (fmuv :app :favorites))))))))))

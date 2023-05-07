@@ -411,7 +411,7 @@
        (assert other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
-(defmacro fmuv [prop name & [me]]
+(defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
