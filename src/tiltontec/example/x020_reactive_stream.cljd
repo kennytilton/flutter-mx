@@ -5,6 +5,7 @@
     [tiltontec.cell.core :refer [cF cF+ cF+n cF_ cI]]
     [tiltontec.cell.observer :refer [fn-obs]]
     [tiltontec.model.core :refer [mget mset! mswap! fm* fmu] :as md]
+    [tiltontec.matrix.api :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -21,6 +22,9 @@
                " The falcon cannot hear the falconer;"
                " Things fall apart; the centre cannot hold;"
                " Mere anarchy is loosed upon the world.") #" "))
+
+(defn the-string [s]
+  (when (string? s) s))
 
 (defn make-app []
   (fx/material-app
@@ -61,22 +65,21 @@
             {:name     :msg-recipient
              :msg-rcvd (cF+n [:ephemeral? true
                               :watch (fn [_ me new-source old-source _]
-                                       (when-let [stream (:stream new-source)]
-                                         (.listen (.-stream ^#/(async/StreamController String) stream)
+                                       (when (= old-source mx/unbound)
+                                         (.listen (.-stream ^#/(async/StreamController String) new-source)
                                            (fn [^String msg]
-                                             (mset! me :msg-rcvd {:msg msg})))))]
-                         {:stream (mget (fm* :msg-sender) :msg-stream)})
-             :msg-ct   (cF (when-let [msg (:msg (mget me :msg-rcvd))]
-                             (when (string? msg)
-                               (when-not (or (str/blank? msg)
-                                           (= msg "<none>"))
-                                 (if _cache (inc _cache) 1)))))}
-            (let [{:keys [msg]} (mget me :msg-rcvd)]
-              (if (string? msg) msg "RSN")))
+                                             (mset! me :msg-rcvd msg)))))]
+                         (mget (fm* :msg-sender) :msg-stream))
+             :msg-ct   (cF (when-let [msg (the-string (mget me :msg-rcvd))]
+                             (when-not (or (str/blank? msg)
+                                         (= msg "<none>"))
+                               (if _cache (inc _cache) 1))))}
+            (or (the-string (mget me :msg-rcvd))
+              "RSN"))
 
           (fx/text {:style (p/TextStyle .color m.Colors/blue
                              .fontSize 18.0)}
             {:full-text (cF (conj
                               (if (= _cache cty/unbound) [] _cache)
-                              (:msg (mget (fmu :msg-recipient) :msg-rcvd))))}
+                              (the-string (mget (fmu :msg-recipient) :msg-rcvd))))}
             (str/join " " (remove #{"<none>"} (mget me :full-text)))))))))
