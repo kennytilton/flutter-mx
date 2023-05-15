@@ -1,18 +1,20 @@
 (ns tiltontec.test.evaluate
   (:require
     ["dart:developer" :as dev]
-    [tiltontec.util.base :as ub
+    [tiltontec.matrix.foundation :refer [mx-type]]
+    [tiltontec.matrix.base :as ub
      :refer [def-rmap-props  trx dp prog1 *trx?*]]
-    [tiltontec.util.core
+    [tiltontec.matrix.util
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
-             fifo-data fifo-add rmap-setf]
+             fifo-data fifo-add rmap-set!]
      :as utc]
+    [tiltontec.model.peek :refer [minfo md-ref?]]
     [tiltontec.cell.base
-     :refer [without-c-dependency mx-type cells-init
+     :refer [without-c-dependency  cells-init
              c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? unbound
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-model  c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
@@ -20,8 +22,7 @@
              unlink-from-callers *causation*
              c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
-             *depender* *not-to-be*
-             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
+             c-lazy] :as cty]
     [tiltontec.cell.core
      :refer [ make-cell cI cF cFn cFonce cF+ cF+n creset!]]
     [tiltontec.cell.observer

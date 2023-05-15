@@ -1,23 +1,22 @@
 (ns tiltontec.model.base
   (:require
-    [tiltontec.util.base
+    [tiltontec.matrix.foundation :refer [observe]]
+    [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
-    [tiltontec.util.core :refer [err rmap-setf rmap-meta-setf]]
-    [tiltontec.cell.matrix :as mx]
+    [tiltontec.matrix.util :refer [  err rmap-set! rmap-meta-set!]]
+
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-unbound? c-input?
+             c-model  c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed c-assert
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation* c-mname
-             c-synaptic?
-             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
-             *depender* *not-to-be*
-             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
-
+             c-synaptic? c-quiesce!
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-lazy] :as cty]
     [tiltontec.cell.evaluate :refer [cget c-awaken]]
+    [tiltontec.model.peek :refer [minfo md-type md-ref?  mname *md-quiescing*]]
     ))
 
 (def ^:dynamic *md-host*
@@ -44,12 +43,12 @@
                  (swap! c assoc
                    :prop prop
                    :me me)
-                 (rmap-setf [prop me]
+                 (rmap-set! [prop me]
                    (when (c-input? c)
                      (c-value c)))
                  true)
     :else (do
-            (rmap-setf [prop me] c)
+            (rmap-set! [prop me] c)
             false)))
 
 (defn md-awaken
@@ -62,7 +61,7 @@
   ;(prn :md-awaken-deref!! (deref me))
 
   (assert (= :nascent (md-state me)))
-  (rmap-meta-setf [:state me] :awakening)
+  (rmap-meta-set! [:state me] :awakening)
   (binding [*md-host* me]
     (doall
       (for [prop (keys @me)]
@@ -74,15 +73,42 @@
           (cond
             (= c :not-found)
             ;; these need at least an initial observe
-            (when (not (some #{prop} [:parent :name :fx-gen :not-to-be]))
-              (mx/observe (mx-type me) prop me (prop @me) unbound nil))
+            (when (not (some #{prop} [:parent :name :fx-gen :on-quiesce]))
+              (observe (md-type me) prop me (prop @me) unbound nil))
             :else (when-not (= (c-state c) :awake)          ;; might have happened already
                     (c-awaken c)))))))
-  (rmap-meta-setf [:state me] :awake)
+  (rmap-meta-set! [:state me] :awake)
   me)
 
 
+;; --- md-quiesce --
 
+(defn md-quiesce-self [me]
+  (doseq [c (vals (:cz (meta me)))]
+    (when c                                                 ;; not if optimized away
+      (c-quiesce! c)))
 
+  (doseq [k (keys @me)]
+    (when-not (some #{k} [:parent :host])
+      (when-let [v (get @me k)]
+        (when (or (md-ref? v)
+                (and (coll? v) (md-ref? (first v))))
+          (dp :blindly-md-quiescing k)
+          (md-quiesce (get @me k))))))
 
+  (reset! me (concat [:quiesced] ((juxt mname md-type) me)))
+  (rmap-meta-set! [:state me] :quiesced))
+
+(defn md-quiesce [me]
+  ;; todo check existing n2b usages
+  ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
+  (wtrx [0 999 :mdqui (minfo me)]
+    (binding [*md-quiescing* true]
+      (cond
+        (coll? me) (doseq [elt me]
+                     (md-quiesce elt))
+        :else (when (md-ref? me)
+                (when-let [n2b (get @me :on-quiesce)]
+                  (n2b me))
+                (md-quiesce-self me))))))
 

@@ -1,7 +1,7 @@
-(ns tiltontec.util.core
+(ns tiltontec.matrix.util
   (:require [clojure.string :as str :refer [join]]
             [clojure.walk :as walk]
-            [tiltontec.util.base :as utm
+            [tiltontec.matrix.base :as utm
              :refer [prog1 wtrx dp]]))
 
 (defn now []
@@ -48,19 +48,23 @@
    (swap! mut assoc prop new-value)
    new-value))
 
-(defn rmap-setf [[prop ref] new-value]
+(defn rmap-set! [[prop ref] new-value]
   (assert (atom? ref)
-    (str "model.util.core/rmap-setf> prop:" prop
+    (str "model.util.core/rmap-set!> prop:" prop
       "new-value:" new-value
       "failed assertion atom? on ref:" (deref ref)))
+  (assert (not= :dead-c (deref ref))
+    (str "rmap-set!> setting prop " prop
+      " new-value " new-value
+      " sees :dead-c cell"))
   (assert (map? (deref ref))
-    (str "model.util.core/rmap-setf> prop " prop
+    (str "model.util.core/rmap-set!> prop " prop
       " new-value " new-value
       " failed assertion map? on ref: " (or (deref ref) ":NIL") " <<<"))
   (swap! ref assoc prop new-value)
   new-value)
 
-(defn rmap-meta-setf [[prop ref] new-value]
+(defn rmap-meta-set! [[prop ref] new-value]
   (assert (meta ref))
   (alter-meta! ref assoc prop new-value)
   new-value)
@@ -170,5 +174,4 @@
 
 (defn difference [s so]
   (set (remove so s)))
-
 

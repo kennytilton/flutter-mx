@@ -10,23 +10,24 @@
     ["package:flutter/painting.dart" :as p
      :refer [TextStyle]]
     [clojure.string :as str]
-    [tiltontec.util.base :refer [dp dpx]]
-    [tiltontec.util.core :refer [atom?]]
-    [tiltontec.cell.base :refer [cinfo Model] :as cty]
-    [tiltontec.cell.matrix :as cmx]
-    [tiltontec.matrix.api :refer [rmap-setf rmap-meta-setf md-ref? make mget mkids mswap! cFkids] :as mx]
+    [tiltontec.matrix.foundation :as mxf]
+    [tiltontec.matrix.base :refer [dp dpx]]
+    [tiltontec.matrix.util :refer [atom?]]
+    [tiltontec.model.peek :refer [Model md-ref?]]
+    [tiltontec.cell.base :refer [cinfo ] :as cty]
+    [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set!  make mget mkids mswap! cFkids] :as mx]
     [tiltontec.flutter-mx.factory :as mk]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
   ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
   ;; treated as callback to MX to get the resolved value.
-  :extends cmx/MXImplementer)
+  :extends mxf/MXImplementer)
 
 (deftype CBToResolve [value]
   ;; tells fx-resolve to call the mx value as a function of ctx and me.
   ;; used where app needs to see the Flutter context to decide a value
-  :extends cmx/MXImplementer)
+  :extends mxf/MXImplementer)
 
 (defn fx-resolve
   ([me ctx widget-value]
@@ -66,7 +67,7 @@
      (cty/c-ref? widget-value)
      (throw (Exception. (str "fx-resolve sees Cell! " (cinfo widget-value))))
 
-     (cty/md-ref? widget-value)
+     (md-ref? widget-value)
      (do
        (let [fx (fx-render ctx widget-value)]
          (dpx :rfx-mdref-yielded-flutter fx)
@@ -106,7 +107,7 @@
             (assert gen "OBAD: fx-render of model finds no fx-gen: ")
             (let [g (gen fx ctx)]
               (dpx :render-genned!!! g)
-              (rmap-meta-setf [:fx-dom fx] g)
+              (rmap-meta-set! [:fx-dom fx] g)
               g))))
 
 (defmacro in-my-context [[me-var ctx-var] & body]

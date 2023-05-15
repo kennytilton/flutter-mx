@@ -1,4 +1,4 @@
-(ns tiltontec.util.base
+(ns tiltontec.matrix.base
   (:require [clojure.string :as str]))
 
 (defn trc [x]
@@ -27,7 +27,7 @@
 (def ^:dynamic *trx?* true)
 
 #_
-    (alter-var-root #'*trx?* not)
+        (alter-var-root #'*trx?* not)
 
 (def ^:dynamic *trc-ensure* nil)
 (def ^:dynamic *trx-path-id* nil)
@@ -88,17 +88,9 @@
 
 (defn call-wtrx [fn lo hi trxargs]
   (let [orig-depth *trdeep*
-        new-depth (+ 1 orig-depth)
-        new-ran (rand-int 999)]
-    (binding [*trdeep* new-depth
-              *txran* new-ran]
-      #_ (dprn :WTRX (first trxargs)
-        (if (= *trdeep* new-depth) :ok :BADDEPTH!!!!) [:orig orig-depth] [:new new-depth]
-        [:bound *trdeep*] [:rans (if (= *txran* new-ran) :ok :RAND_BAD_TOO!!!!!!!!!!!!!!!)] :info (rest trxargs))
-
-      (assert (= *txran* new-ran))
-      (assert (= *trdeep* new-depth)) ;; bindingfail #1 happens on prop name :zq3 but not :zq, starting value at unbound (the symbol)
-
+        new-depth (+ 1 orig-depth)]
+    (binding [*trdeep* new-depth]
+      (assert (= *trdeep* new-depth))
       (cond
         (<= lo *trdeep* hi)
         (apply call-trc trxargs)

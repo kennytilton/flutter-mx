@@ -1,15 +1,16 @@
 (ns tiltontec.cell.base
   (:require
-    [tiltontec.util.base :as utb
-     :refer [def-rmap-props dp]]
+    [tiltontec.model.peek :refer [md-ref?]]
+    [tiltontec.matrix.base :as utb
+     :refer [ def-rmap-props dp]]
 
-    [tiltontec.util.core
+    [tiltontec.matrix.util
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
-             fifo-data fifo-add rmap-setf mut-set!]
+             fifo-data fifo-add rmap-set! mut-set!]
      :as utc]
 
-    [tiltontec.cell.matrix :refer [PObserver observe] :as mx]))
+    [tiltontec.matrix.foundation :refer [PObserver observe] :as mx]))
 
 
 
@@ -40,7 +41,7 @@ rule to get once behavior or just when fm-traversing to find someone"
              tiltontec.cell.base/*depender*
              tiltontec.cell.base/*defer-changes*
              tiltontec.cell.base/*call-stack*)
-       (tiltontec.util.base/dp :DANGER-mx-iso-ignoring!!!!!!!!! tiltontec.cell.base/*within-integrity*
+       (tiltontec.matrix.base/dp :DANGER-mx-iso-ignoring!!!!!!!!! tiltontec.cell.base/*within-integrity*
                                     tiltontec.cell.base/*depender*
                                     tiltontec.cell.base/*defer-changes*
                                     tiltontec.cell.base/*call-stack*))
@@ -48,7 +49,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defmacro with-mx-isolation [& body]
   `(do
-     #_ (tiltontec.util.base/dp :mx-iso-overriding!!!S
+     #_ (tiltontec.matrix.base/dp :mx-iso-overriding!!!S
        tiltontec.cell.base/*within-integrity*
        tiltontec.cell.base/*depender*
        tiltontec.cell.base/*defer-changes*
@@ -65,7 +66,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (def uncurrent (gensym "uncurrent-formulaic-value"))
 
-(def ^:dynamic *not-to-be* false)
+
 (def ^:dynamic *unfinished-business* nil)
 (def ^:dynamic *within-integrity* false)
 
@@ -148,26 +149,6 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;; ------------------------------------------------------
 
-;(derive ::model ::object)
-;(derive ::cell ::object)
-;(derive ::c-formula ::cell)
-
-(deftype Model []
-  :extends mx/MXImplementer
-  PObserver
-  (observe [this prop me new-value prior-value cell]
-    #_ (dp :Model-not-observing (cinfo cell))))
-
-(defn mx-type [it]
-  (when-let [m (meta it)]
-    (:mx-type m)))
-
-(defn md-type [md]
-  (assert (and md (atom? md) (map? @md))
-    (str "md-type> argument null or not atom or not map deref: " md))
-  (when-let [m (meta md)]
-    (:mx-type m)))
-
 (deftype Cell []
   :extends mx/MXImplementer)
 
@@ -175,10 +156,30 @@ rule to get once behavior or just when fm-traversing to find someone"
   :extends Cell)
 
 (defn c-type [c]
-  (assert (and c (atom? c) (map? @c))
+  (assert (and c (atom? c))
     (str "c-type> argument null or not atom or not map deref: " c))
   (when-let [m (meta c)]
-    (:mx-type m)))
+    (:mx-type m))) ;; not a typo! "mx" covers model and cell
+
+;; --- c-quiesce! -----------
+
+(defn c-quiesce! [c]
+  (assert c)
+  (dp :c-quiesce!!! (cinfo c))
+  (when-not false                                           ;; (c-quiesced? c)
+    (assert (not (c-quiesced? c))
+      (str "c-quiesce> already dead " (cinfo c)))
+    (when-let [onq (:on-quiesce @c)]
+      (onq c))
+    (unlink-from-callers c)
+    (unlink-from-used c :quiesce)
+    (reset! c (concat [:quiesced] ((juxt c-prop-name c-mname) c)))))
+
+(defn c-quiesced? [ref]
+  (assert (atom? ref)
+    (str "util.core/rmap-quiesced?> failed assertion atom? on ref:" ref))
+  (and (coll? @ref)
+    (= :quiesced (first @ref))))
 
 (defn c-ref? [c]
   (when (and c (atom? c) (map? @c))
@@ -249,24 +250,9 @@ rule to get once behavior or just when fm-traversing to find someone"
                                  :not-atom-c)
     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
                        :not-cell-c)
+    (c-quiesced? c) [:deadc> @c]
     :else (if verbose? [:cinfo-all @c]
             ((juxt c-prop-name c-mname c-async? c-value) c)))))
-
-(defn minfo
-  ([md]
-   (minfo md false))
-  ([md verbose]
-   (cond
-     (nil? md) :null-md
-     (not (atom? md)) :not-atom-md
-     (not (md-ref? md)) (do (dp :atom-not-md-c @md)
-                            :atom-not-md-c)
-     :else (if false ;; verbose
-             [(:name @md) (meta md)]
-             [:minfo :fxc (:fx-class @md)
-              :mxtype (mx-type md)
-              (or (:name @md)
-                :anon #_ [:hunh @md])]))))
 
 (defn dpc [c & bits]
   (assert (c-ref? c) (str "DPC got non-c: " c bits))
@@ -302,25 +288,8 @@ rule to get once behavior or just when fm-traversing to find someone"
   ;; set conversion as convenience to test code
   (set (map c-prop (k @c))))
 
-;; --- defmodel rizing ---------------------
-
-(defn md-ref? [x]
-  #_ (when (and x (atom? x))
-    (dp :md-ref-sees (md-type x) (meta x)))
-  (and x (atom? x)
-    (dart/is? (md-type x) Model)))
-
-
-;; --- mdead? ---
-
-(defn mdead? [me]
-  (if-let [m (meta me)]
-    (= :dead (:state m))
-    false))
 
 ;;---
-
-;(set! *print-level* 3) ;; cells are recursive data for now
 
 (defn md-prop-owning?
   "Signifies whether the given prop is a host or owning property, meaning

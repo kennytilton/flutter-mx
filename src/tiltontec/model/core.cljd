@@ -1,31 +1,32 @@
 (ns tiltontec.model.core
   (:require
     [clojure.string :as str]
-    [tiltontec.util.base
+    [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props]]
-    [tiltontec.util.core
-     :refer [difference atom? err rmap-setf rmap-meta-setf pln]]
-    [tiltontec.cell.matrix :refer [PObserver observe]  :as mx]
+    [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
+    [tiltontec.matrix.util
+     :refer [difference atom? err rmap-set! rmap-meta-set! pln]]
+
     [tiltontec.cell.base
      :refer [without-c-dependency
              cells-init c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? mx-type minfo
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-unbound? c-input?
+             c-model  c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
              c-synaptic? cinfo
              c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
-             *depender* *not-to-be*
-             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
+             *depender*  c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.observer :refer [observe observer-register fn-obs]]
-    [tiltontec.cell.evaluate :refer [not-to-be not-to-be-self]]
+
     [tiltontec.cell.core
      :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell]]
-    [tiltontec.cell.evaluate :refer [cget c-awaken not-to-be]]
-    [tiltontec.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
+    [tiltontec.cell.evaluate :refer [cget c-awaken ]]
+    [tiltontec.model.peek :refer [Model minfo md-ref?]]
+    [tiltontec.model.base :refer [ md-quiesce md-quiesce-self md-cell md-install-cell md-awaken *md-host*]]))
 
 (defmacro pme [& mas]
   `(when true                                               ;;  (= :login (:name (deref ~'me)))
@@ -37,20 +38,9 @@
   "Each app will populate this with the root of its application matrix."
   (atom nil))
 
-(defn mname [me]
-  (:name @me))
-
-(defn md-get [me prop]
-  ;; (trx :md-get prop me)
-  (assert me (str "md-get passed nil for me accessing prop: " prop))
-  (assert (cty/md-ref? me) (str "md-get passed non-md-ref? for me accessing prop: " prop " :me " @me))
-  (if-let [c (md-cell me prop)]
-    (cget c)
-    (prop @me)))
-
 (defn mget [me prop]
   (assert me (str "mget passed nil for me accessing prop: " prop))
-  (assert (cty/md-ref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+  (assert (md-ref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
   (if (not (contains? @me prop))
     (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
       ;(dp :mget prop (minfo me))
@@ -71,7 +61,7 @@
    (mget? me prop nil))
   ([me prop alt-val]
    (assert me (str "mget passed nil for me accessing prop: " prop))
-   (assert (cty/md-ref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+   (assert (md-ref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
    (if (contains? @me prop)
      (mget me prop)
      alt-val)))
@@ -87,7 +77,7 @@
 (defn mset! [me prop new-value]
   ;; (dp :md-reset prop )
   (assert me "no me passed to mset!")
-  (assert (cty/md-ref? me) (str "mset me not md-ref but: " (minfo me) "," prop))
+  (assert (md-ref? me) (str "mset me not md-ref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
     (do
       (dpx :md-reset-gotc!!! @c)
@@ -136,16 +126,16 @@
                    mdmap)
                  :meta {:state   :nascent
                         ;; todo pull more fx$s into meta
-                        :mx-type (:mx-type iargs (cty/Model.))})]
+                        :mx-type (:mx-type iargs (Model.))})]
         (assert (meta me))
         #_(when-not (:parent @me)
             (dp :no-par!!!! me))
-        (rmap-meta-setf
+        (rmap-meta-set!
           [:cz me]
           (->> arg-list
             (partition 2)
             (filter (fn [[prop v]]
-                      (when-not (some #{prop} [:parent :name :mx-type :not-to-be
+                      (when-not (some #{prop} [:parent :name :mx-type :on-quiesce
                                                :fx$ikeys :fx$notifier :fx$observer])
                         (md-install-cell me prop v))))
             (map vec)
@@ -160,25 +150,28 @@
 
 ;;; --- family ------------------------------------
 
-(defn mkids [me] (md-get me :kids))
-(defn mpar [me] (md-get me :parent))
+(defn mkids [me] (mget me :kids))
+(defn mkids? [me] (mget? me :kids))
+(defn mpar [me] (mget me :parent))
 
-(defn fm-not-to-be [me]
-  (doseq [k (mkids me)]
+(defn fm-quiesce [me]
+  (dp :fm-quiesce!! (minfo me))
+  (doseq [k (mkids? me)]
     (when (md-ref? k)
       ;; ^^^ mxWeb allows string children
-      (prn :fm-n2b-kid!! @k)
-      (not-to-be k))))
+      (prn :fm-quiesce-kid (minfo k))
+      (md-quiesce k))))
 
 (defn fm-kids-observe [prop-name me newk oldk c]
   (when-not (= oldk unbound)
     (let [lostks (difference (set oldk) (set newk))]
       (when-not (empty? lostks)
         (doseq [k lostks]
-          (not-to-be k))))))
+          (md-quiesce k))))))
 
+;; todo are we using Family?
 (deftype Family []
-  :extends cty/Model
+  :extends Model
   PObserver
   (observe [this prop me new-value prior-value cell]
     (when (= prop :kids)
@@ -189,6 +182,7 @@
     `(:parent @~me)))
 
 (defn make-family [& arg-list]
+  (dp :make-fanily!!!)
   (cond
     ;; if arg-list is odd we assume they started with a Family subtype
     ;; used mostly for regression tests
@@ -196,7 +190,7 @@
     :else
     (apply make
       :mx-type (Family.)
-      :not-to-be fm-not-to-be
+      :on-quiesce fm-quiesce
       arg-list)))
 
 ;;; -------------------------------------------------------------------------
@@ -309,12 +303,13 @@
                   (if (fm-navig-eq? what where)
                     where
                     (some (partial fm-navig-hosted? what where)
+                      ;; todo should navig be restricted to custom props and :kids?
                       ;; todo rework how delegates access full mx
                       (keep #{:persistentFooterButtons
                               :floatingActionButton} (:fx$ikeys @where)))))
 
               (and (:inside? options)
-                (if-let [kids (md-get where :kids)]
+                (if-let [kids (mget? where :kids)]
                   (do
                     (if-let [netkids (remove #{(:skip options)} kids)]
                       (do
@@ -358,7 +353,7 @@
 
 (defmacro mdv! [what prop & [me]]
   (let [me (or me 'me)]
-    `(md-get (tiltontec.model.core/fm! ~what ~me) ~prop)))
+    `(mget (tiltontec.model.core/fm! ~what ~me) ~prop)))
 
 (defn mxu-find-name
   "Search up the matrix from node 'where' looking for element with given name"
@@ -398,7 +393,7 @@
     `(let [name# ~name]
        (tiltontec.model.core/fmdp :fm*-start-after name#)
        (tiltontec.model.core/fm-navig #(do
-                    #_ (tiltontec.model.core/fmdp :fm*-sees (= name# (tiltontec.model.core/md-get % :name))
+                    #_ (tiltontec.model.core/fmdp :fm*-sees (= name# (tiltontec.model.core/mget % :name))
                       (tiltontec.cell.base/minfo %))
                     (= name# (mget? % :name)))
          ~me-ref :me? true :up? true :inside? true))))
@@ -429,7 +424,7 @@
 (defn mxu-find-id
   "Search up the matrix from node 'where' looking for element with given id"
   [where id]
-  (fm-navig #(= id (md-get % :id))
+  (fm-navig #(= id (mget % :id))
     where :me? false :up? true :inside? false))
 
 (defn mxu-find-type
@@ -441,14 +436,14 @@
 
 (defn fmi-w-class [where class]
   (fm-navig #(when (atom? %)
-               (= class (md-get % :class)))
+               (= class (mget % :class)))
     where :inside? true :up? false))
 
 (defn mxi-find
   "Search matrix below node 'where' for node with property and value"
   [where property value]
   (fm-navig #(when (atom? %)
-               (= value (md-get % property)))
+               (= value (mget % property)))
     where :inside? true :up? false))
 
 (defn fmo [me id-name]
@@ -481,12 +476,12 @@
   `(cF (the-kids ~@tree)))
 
 (defn kid-values-kids [me x-kids]
-  (let [k-key (md-get me :kid-key)
+  (let [k-key (mget me :kid-key)
         _ (assert k-key)
         x-kids (when (not= x-kids unbound)
                  (into {} (for [k x-kids]
                             [(k-key k) k])))
-        k-factory (md-get me :kid-factory)]
+        k-factory (mget me :kid-factory)]
     (assert (and k-factory))
 
     (doall
@@ -495,5 +490,5 @@
           (or (and x-kids (get x-kids kid-value))
             (binding [*md-parent* me]
               (k-factory me kid-value))))
-        (md-get me :kid-values)))))
+        (mget me :kid-values)))))
 

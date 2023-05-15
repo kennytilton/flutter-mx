@@ -6,7 +6,8 @@
     ["package:flutter/services.dart" :as srvc]
     ["package:http/http.dart" :as dht]
     [clojure.string :as str]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]
+    [tiltontec.cell.base :refer [cinfo] :as cty]
+    [tiltontec.model.peek :refer [minfo]]
     [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fmu fasc
                                   cF cI cFonce with-mx-isolation dp dpx]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
@@ -27,8 +28,6 @@
     (todo/ToDoList-delete! (my-todo-list)
       (todo/td-stg-id todo))))
 
-(comment
-  )
 (defn- delete-button [todo]
   (fx/visibility!
     {:visible (cF (or
@@ -169,12 +168,6 @@
               (if (mget (fasc :item-control) :editing?)
                 (to-do-editor me todo)
                 (to-do-display todo)))))))))
-
-(comment
-  (fx/mouse-region
-    {:onEnter (as-dart-callback [e]
-                (mset! (fasc :item-control) :hovered? hovered?))}
-    ))
 
 (defn todo-items []
   (fx/expanded

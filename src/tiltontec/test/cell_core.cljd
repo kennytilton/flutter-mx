@@ -1,18 +1,20 @@
 (ns tiltontec.test.cell-core
   (:require
     ["dart:developer" :as dev]
-    [tiltontec.util.base :as ub
+    [tiltontec.matrix.foundation :refer [ mx-type]]
+    [tiltontec.matrix.base :as ub
      :refer [def-rmap-props trx dp prog1]]
-    [tiltontec.util.core
+    [tiltontec.model.peek :refer [minfo md-ref?]]
+    [tiltontec.matrix.util
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
-             fifo-data fifo-add rmap-setf]
+             fifo-data fifo-add rmap-set! ]
      :as utc]
     [tiltontec.cell.base
-     :refer [without-c-dependency mx-type cells-init
+     :refer [without-c-dependency  cells-init
              c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? unbound cinfo
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-model c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
@@ -20,8 +22,7 @@
              unlink-from-callers *causation*
              c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
-             *depender* *not-to-be*
-             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
+             c-lazy] :as cty]
     [tiltontec.cell.core
      :refer [make-cell cI cF cFn cFonce cF+ cF+n cf-freeze creset! cswap!]]
     [tiltontec.cell.observer
@@ -39,14 +40,14 @@
     (assert (= 42 (jj-boom x)))
     (assert (= 0 (:value @x)))
 
-    (rmap-setf [:value x] 42)
+    (rmap-set! [:value x] 42)
     (assert (= 42 (:value @x)))
 
-    (assert (let [j (rmap-setf [:value x] 43)]
+    (assert (let [j (rmap-set! [:value x] 43)]
               ;(trx nil :xxx x @x (:value @x))
               ;(trx nil :j j (type j))
               (= 43 j)))
-    (assert (= 44 (do (rmap-setf [:value x] 44))))
+    (assert (= 44 (do (rmap-set! [:value x] 44))))
     (dp :test-rmap-OK)))
 
 (defn test-fifo-build []

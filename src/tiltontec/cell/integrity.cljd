@@ -1,8 +1,8 @@
 (ns tiltontec.cell.integrity
   (:require
-    [tiltontec.util.base
+    [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx]]
-    [tiltontec.util.core
+    [tiltontec.matrix.util
      :refer [ensure-vec err pln plnk fifo-add fifo-peek fifo-pop cl-find]]
     [tiltontec.cell.base
      :refer [pcell un-stopped +pulse+ c-pulse c-optimized-away?
@@ -166,10 +166,10 @@
           (if opcode
             (prog1
               :deferred-to-ufb-1
-              ;; SETF is supposed to return the value being installed
-              ;; in the place, but if the SETF is deferred we return
+              ;; set! is supposed to return the value being installed
+              ;; in the place, but if the set! is deferred we return
               ;; something that will help someone who tries to use
-              ;; the setf'ed value figure out what is going on:
+              ;; the set!'ed value figure out what is going on:
               ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
               (when (and opcode (not (some #{opcode} [:awaken])))
                 (dpx :cwi-deferred!!!! opcode @wi-depth))

@@ -7,10 +7,15 @@
              :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
-            [tiltontec.util.base :refer [dprn dp dpx]]
-            [tiltontec.cell.matrix :refer [PObserver observe] :as cmx]
-            [tiltontec.cell.base :refer [cinfo Model] :as cty]
-            [tiltontec.matrix.api :refer [rmap-meta-setf md-ref? make mget mget? mkids mswap! cI cFkids] :as mx]
+            [tiltontec.matrix.base :refer [ dprn dp dpx]]
+            [tiltontec.matrix.util
+             :refer [ atom? rmap-set! err rmap-meta-set! set-ify difference]]
+            [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
+
+            [tiltontec.model.peek :refer [minfo Model]]
+            [tiltontec.cell.base :refer [cinfo ] :as cty]
+            [tiltontec.model.base :refer [md-quiesce]]
+            [tiltontec.matrix.api :refer [rmap-meta-set! md-ref? make mget mget? mkids mswap! cI cFkids] :as mx]
             [clojure.string :as str]))
 
 ;;; --- Flutter refs of fx models -----------------------------
@@ -18,7 +23,7 @@
 (defn call-with-flutter-ref [me factory]
   (let [ref (factory)]
     ;; (dp :cwref!!!!!! ref)
-    (rmap-meta-setf [:fx$flutter-ref me] ref)
+    (rmap-meta-set! [:fx$flutter-ref me] ref)
     ref))
 
 (defmacro with-flutter-ref [& body]
@@ -46,14 +51,13 @@
         st))))
 
 ;;; --- make fx ------------------------------------------
-;; todo have not-to-be call not-to-be on these non-kid leaves
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
   (dpx :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
     :mx-type mx-type
     :fx$state (cI nil)
-    ;; todo move next to meta
+    ;; todo move ^^^ and next to meta
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
                 (concat (keys fx-props) (keys custom-props)))
     :kids cFkids-form
@@ -70,19 +74,35 @@
          (.setState state (fn [] (do))))
      #_(dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
+(defn md-quiesce-lost [new-value prior-value]
+  ;; sloppy
+  (cond
+    (md-ref? prior-value) (do (dp :mdq-lost-nails-md)
+                              (md-quiesce prior-value))
+    (coll? new-value) (cond
+                        (coll? prior-value)
+                        (let [lostks (difference (set prior-value) (set new-value))]
+                          (when-not (empty? lostks)
+                            (doseq [k lostks]
+                              (when (md-ref? k)
+                                (md-quiesce k)))))
+                        :else (when-not (some #{prior-value} new-value)
+                                (md-quiesce prior-value)))))
+
 (deftype FXDartWidget []
   :extends Model
   PObserver
   (observe [this prop me new-value prior-value cell]
     (dpx :fxdw-obs prop)
-    (when-not (some #{prop} [:parent :name :mx-type :not-to-be :initState :fx-class :cells-flushed
-                             :fxx$state :fx$ikeys :fx$notifier :fx$observer])
+    (when-not (some #{prop} [:parent :name :mx-type :on-quiesce :initState :fx-class :cells-flushed
+                             :fx$state :fx$ikeys :fx$notifier :fx$observer])
       (when-not (= prior-value cty/unbound)
-        (dpx :FXDartWidget-observing!!! prop new-value prior-value (tiltontec.cell.base/minfo me) (cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! prop (tiltontec.cell.base/minfo me) #_#_:deref @me)
+        (dp :FXDartWidget-observing!!! prop new-value prior-value (minfo me) (cinfo cell))
+        (dpx :FXDartWidget-observing-md!!! prop (minfo me) #_#_:deref @me)
         (dpx :FXDartWidget-observing-cell!!! prop (cinfo cell) @cell)
         (when-let [noter (mget? me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
+        (md-quiesce-lost new-value prior-value)
 
         (if-let [^State state (mget? me :fx$state)]
           (do (dpx :FXDWO-settingimmediatestate prop new-value #_(meta me) (cty/minfo me) (.-mounted state))
@@ -94,6 +114,13 @@
               (state-set state me))
             (dpx :FXDWO-NOT-setting-state-on-utterly-stateless prop new-value (cty/minfo me)
               #_@me)))))))
+
+;(deftype FXDartWidgetFamily []
+;  :extends FXDartWidget
+;  PObserver
+;  (observe [this prop me new-value prior-value cell]
+;    (dp :FXDartWidgetFamily-obs!!!! prop)
+;    (FXDartWidget/observe prop me new-value prior-value cell)))
 
 ;;; --- the maker macros ---------------------------------------------------
 

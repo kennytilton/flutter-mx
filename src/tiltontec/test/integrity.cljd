@@ -1,19 +1,18 @@
 (ns tiltontec.test.integrity
   (:require
-    [tiltontec.util.base :refer [trx dp prog1]]
-    [tiltontec.util.core :refer [ err]]
+    [tiltontec.matrix.base :refer [trx dp prog1]]
+    [tiltontec.matrix.util :refer [ err]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-model  c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
              c-prop-name c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
-             *depender* *not-to-be*
-             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
+             c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity ufb-add]]
     [tiltontec.cell.evaluate :refer [cget cget]]
     [tiltontec.cell.observer
@@ -21,6 +20,7 @@
 
     [tiltontec.cell.core
      :refer [cF cF+ c-reset-next! cI creset! cset!]]
+    [tiltontec.model.peek :refer [md-ref?]]
     ))
 
 (defn obsdbg []
@@ -28,7 +28,7 @@
   )
 
 
-(defn obs-setf []
+(defn obs-set! []
   (cells-init)
   (assert (zero? @+pulse+))
   (do ;;binding [*dp-log* true]
@@ -68,7 +68,7 @@
 ;; -----------------------------------------------------------------
 
 
-(defn obs-setf-bad-caught []
+(defn obs-set!-bad-caught []
   (cells-init)
 
   (let [alarm (cI :undefined :watch (obsdbg))
@@ -189,8 +189,8 @@
     (assert (not @run))))
 
 (defn run-tests []
-  (obs-setf)
-  (obs-setf-bad-caught)
+  (obs-set!)
+  (obs-set!-bad-caught)
   (see-into-fn)
   (obs-sees-current)
   (no-prop-no-obs)

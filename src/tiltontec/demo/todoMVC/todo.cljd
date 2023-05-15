@@ -5,11 +5,12 @@
     ["package:http/http.dart" :as dht]
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
 
-    [tiltontec.util.core :as util]
-    [tiltontec.cell.matrix :refer [PObserver observe] :as cmx]
+    [tiltontec.matrix.util :as util]
+    [tiltontec.matrix.foundation :refer [PObserver observe MXImplementer] :as cmx]
     [tiltontec.cell.base :as cb]
 
     [tiltontec.matrix.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
+    [tiltontec.model.peek :refer [Model]]
     [tiltontec.demo.todoMVC.persist :as stg]))
 
 ;;; --- handy accessors ---------------------------------
@@ -24,7 +25,7 @@
     (select-keys @td [:stg-id :created-at :title :completed])))
 
 (deftype ToDo []
-  :extends cb/Model
+  :extends Model
   PObserver
   (observe [this prop me new-value prior-value cell]
     ;; the initial observe, signified by prior value unbound,
@@ -68,8 +69,8 @@
 ;;; --- higher level ---------------------------
 
 (deftype ToDoList []
-  :extends cb/Model
-  cmx/PObserver
+  :extends Model
+  PObserver
   (observe [this prop me new-value prior-value cell]
     (case prop
       :kids (when (not= mx/unbound prior-value)

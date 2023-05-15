@@ -1,7 +1,7 @@
 (ns tiltontec.cell.synapse
   (:require
-    [tiltontec.util.base :refer [dp]]
-    [tiltontec.util.core :refer [pln rmap-setf]]
+    [tiltontec.matrix.base :refer [dp]]
+    [tiltontec.matrix.util :refer [ pln rmap-set!]]
 
     [tiltontec.cell.base
      :refer [*depender* c-synapses c-prop c-useds]]
@@ -9,7 +9,7 @@
     [tiltontec.cell.integrity
      :refer [with-integrity]]
 
-    [tiltontec.cell.evaluate :refer [not-to-be cget c-value-assume
+    [tiltontec.cell.evaluate :refer [ cget c-value-assume
                                      record-dependency ensure-value-is-current]]
 
     [tiltontec.cell.observer :refer [fn-obs]]
@@ -38,7 +38,7 @@
                               :synaptic? true
                               :rule (c-fn ~@body)))]
                       ;;(dp :built-synapse!!!!!!!!!!!!!!!! ~synapse-id @new-syn#)
-                      (rmap-setf [:synapses *depender*]
+                      (rmap-set! [:synapses *depender*]
                         (conj (c-synapses *depender*) new-syn#))
                       (record-dependency new-syn#)        ;; needed?!!!!
                       ;; (dp :made-syn!!!!!!!!!!!! @new-syn#)
@@ -57,7 +57,7 @@
         synapse (or existing-syn
                   (let [new-syn (cell-factory)]
                     (dp :building-synapse ~synapse-id)
-                    (rmap-setf [:synapses *depender*]
+                    (rmap-set! [:synapses *depender*]
                       (conj (c-synapses *depender*) new-syn))
                     (record-dependency new-syn)           ;; needed?!!!!
                     new-syn))

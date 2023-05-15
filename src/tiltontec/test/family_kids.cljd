@@ -1,20 +1,20 @@
 (ns tiltontec.test.family-kids
   (:require
-    [tiltontec.util.base
+    [tiltontec.matrix.foundation :refer [ mx-type]]
+    [tiltontec.matrix.base
      :refer [trx dp prog1 *trx?*]]
-    [tiltontec.util.core :refer [ err]]
+    [tiltontec.matrix.util :refer [ err]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-model  c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
              c-prop-name c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
-             *depender* *not-to-be*
-             *c-prop-depth* md-prop-owning? c-lazy] :as cty]
+             c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.observer
      :refer [ fn-obs]]
@@ -22,9 +22,10 @@
      :refer [cF cF+ c-reset-next! cFonce cFn
              cI creset! make-cell make-c-formula]]
     [tiltontec.cell.evaluate :refer [cget ]]
+    [tiltontec.model.peek :refer [md-ref?]]
     [tiltontec.model.base :refer [md-cz md-cell]]
     [tiltontec.model.core
-     :refer [the-kids mdv! md-get  fm! make mset!]
+     :refer [the-kids mdv! mget  fm! make mset!]
      :as md]
     ))
 
@@ -32,27 +33,27 @@
   (let [f (md/make-family
             :ee (cI 2)
             :kids (cF (the-kids
-                        (when (odd? (md-get me :ee))
+                        (when (odd? (mget me :ee))
                           (md/make
                             :name :yep
                             :value (cF (do
                                          (let [par (:parent @me)]
-                                           (let [ee (md-get par :ee)]
+                                           (let [ee (mget par :ee)]
                                              (* 14 ee))))))))))]
-    (assert (dart/is? (cty/mx-type f) md/Family)
+    (assert (dart/is? (mx-type f) md/Family)
       (str "k-notq2be bad family"))
-    (assert (empty? (md-get f :kids)))
+    (assert (empty? (mget f :kids)))
 
     (do
       (mset! f :ee 3)
-      (assert (not (empty? (md-get f :kids))))
+      (assert (not (empty? (mget f :kids))))
       (assert (= 42 (mdv! :yep :value f)))
 
       (dp :ok-42!!!!!!!!)
-      (let [dmw (first (md-get f :kids))]
+      (let [dmw (first (mget f :kids))]
         (assert (md-ref? dmw))
         (mset! f :ee 0)
-        (assert (empty? (md-get f :kids)))
+        (assert (empty? (mget f :kids)))
 
         (dp :dmw @dmw :meta (meta dmw))
         ;; todo get kids observe to quiesce kids

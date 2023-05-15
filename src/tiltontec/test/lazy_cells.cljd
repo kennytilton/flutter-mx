@@ -1,25 +1,25 @@
 (ns tiltontec.test.lazy-cells
   (:require
-    [tiltontec.util.base
+    [tiltontec.matrix.base
      :refer [trx dp prog1]]
     [tiltontec.cell.base
      :refer [without-c-dependency c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?  cells-init
-             c-model mdead? c-valid? c-useds c-ref? md-ref?
+             c-model  c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation*
              c-prop-name c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
-             *depender* *not-to-be*
              *c-prop-depth* md-prop-owning? c-lazy] :as cty]
     [tiltontec.cell.integrity :refer [with-integrity]]
     [tiltontec.cell.evaluate :refer [cget]]
     [tiltontec.cell.observer
      :refer [ fn-obs]]
     [tiltontec.cell.core
-     :refer [cF cF+ c_F cF_ cI creset! c-fn make-c-formula]]))
+     :refer [cF cF+ c_F cF_ cI creset! c-fn make-c-formula]]
+    [tiltontec.model.peek :refer [md-ref?]]))
 
 
 (defn solid-lazy []

@@ -1,19 +1,21 @@
 (ns tiltontec.cell.observer
   (:require
-    [tiltontec.util.base
+    [tiltontec.matrix.foundation :refer [observe mx-type]]
+    [tiltontec.matrix.base
      :refer [trx dpx dp]]
 
-    [tiltontec.util.core
+    [tiltontec.matrix.util
      :refer [cl-find set-ify atom? err
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
-             fifo-data fifo-add rmap-setf]
+             fifo-data fifo-add rmap-set!]
      :as ut]
-    [tiltontec.cell.matrix :as mx]
 
     [tiltontec.cell.base
-     :refer [c-ref? md-ref? unbound cinfo minfo
+     :refer [c-ref? unbound cinfo
              +pulse+ c-prop c-value c-mname
              c-model] :as cty]
+
+    [tiltontec.model.peek :refer [md-type md-ref? minfo]]
 
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]))
@@ -39,8 +41,8 @@
     (do (dpx :oskool-using-obj-observer (minfo me))
         (obs prop-name me new-val old-val c)))
 
-  (when-let [obs (observer-get (cty/mx-type me))]
-    (do (dpx :oskool-using-type-obs prop-name (cty/mx-type me))
+  (when-let [obs (observer-get (mx-type me))]
+    (do (dpx :oskool-using-type-obs prop-name (mx-type me))
         (obs prop-name me new-val old-val c))))
 
 (defmacro fn-obs
@@ -58,15 +60,15 @@ call parameters: prop, me, new, old, and c."
   ([c prior-value why]
    (assert (c-ref? c) (str "c-ref? fail on c-observe" c))
    (assert (dart/is? @+pulse+ int))
-   (rmap-setf [:pulse-observed c] @+pulse+)
+   (rmap-set! [:pulse-observed c] @+pulse+)
 
    (when-let [me (c-model c)] ;; not in standalone cells, mostly in test suite
      ;; we do observes specified for types or slots...
      (observe (c-prop c) me (c-value c) prior-value c)
 
-     (when-let [md-type (cty/md-type (c-model c))]
+     (when-let [md-type (md-type (c-model c))]
        (dpx :observing-md-type!!! md-type why)
-       (mx/observe md-type (c-prop c) me (c-value c) prior-value c)))
+       (observe md-type (c-prop c) me (c-value c) prior-value c)))
 
    ;; ...and also do observes specified ad hoc on the cI/cF call.
    ;; nb that we do not want ad hoc observers to shadow those specified generically

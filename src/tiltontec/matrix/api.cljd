@@ -1,8 +1,9 @@
 (ns tiltontec.matrix.api
   (:require
     [clojure.string :as str]
-    [tiltontec.util.core :as util]
+    [tiltontec.matrix.util :as util]
     [tiltontec.cell.base :as cb]
+    [tiltontec.model.peek :as mpeek]
     [tiltontec.model.core :as md]))
 
 (def unbound cb/unbound)
@@ -14,22 +15,11 @@
 (defmacro dpx [& bits]
   `(do))
 
-(defn rmap-meta-setf [[prop ref] new-value]
-  (assert (meta ref))
-  (alter-meta! ref assoc prop new-value)
-  new-value)
+(defn rmap-meta-set! [[prop ref] new-value]
+  (util/rmap-meta-set! [prop ref] new-value))
 
-(defn rmap-setf [[prop ref] new-value]
-  (assert (util/atom? ref)
-    (str "model.util.core/rmap-setf> prop:" prop
-      "new-value:" new-value
-      "failed assertion atom? on ref:" (deref ref)))
-  (assert (map? (deref ref))
-    (str "model.util.core/rmap-setf> prop " prop
-      " new-value " new-value
-      " failed assertion map? on ref: " (or (deref ref) ":NIL") " <<<"))
-  (swap! ref assoc prop new-value)
-  new-value)
+(defn rmap-set! [[prop ref] new-value]
+  (util/rmap-set! [prop ref] new-value))
 
 ;;; --- accessors -----------------------------------
 
@@ -176,7 +166,7 @@
            md# (tiltontec.model.core/fm-ascendant name# ~me-ref)]
        (if (nil? md#)
          (throw (str "fascv> did not find model " name#
-                  " searching up from " (tiltontec.model.core/mname md#)
+                  " searching up from " (tiltontec.model.peek/mname md#)
                   " seeking property " ~prop-name " value."))
          (if (contains? @md# ~prop-name)
            (tiltontec.model.core/mget md# ~prop-name)
@@ -235,7 +225,7 @@
 
 ;;; --- f/mx issues ----------------------------------------------
 (defn md-ref? [x]
-  (cb/md-ref? x))
+  (mpeek/md-ref? x))
 
 (defn make [& arg-list]
   (apply tiltontec.model.core/make arg-list))
@@ -270,3 +260,11 @@
 (defmacro without-integrity [& body]
   `(tiltontec.cell.integrity/without-integrity
      ~@body))
+
+;;; --- debug -------------------------------
+
+(defn minfo
+  ([md]
+   (minfo md false))
+  ([md verbose]
+   (mpeek/minfo md verbose)))

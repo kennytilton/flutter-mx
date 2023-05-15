@@ -2,16 +2,19 @@
   (:require
     ["dart:async" :as async]
     [clojure.string :as str]
+    [tiltontec.matrix.util :refer [rmap-set!]]
+    [tiltontec.cell.base :refer [cinfo ]]
     [tiltontec.cell.core :refer [cF cF+ cF+n cF_ cI]]
     [tiltontec.cell.observer :refer [fn-obs]]
+    [tiltontec.model.peek :refer [minfo md-ref?]]
     [tiltontec.model.core :refer [mget mset! mswap! fm* fmu] :as md]
     [tiltontec.matrix.api :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.util.base :refer [dprn dp dpx]]
-    [tiltontec.cell.base :refer [cinfo minfo] :as cty]))
+    [tiltontec.matrix.base :refer [dprn dp dpx]]
+    [tiltontec.cell.base :refer [cinfo ] :as cty]))
 
 ;;; n.b. The astute reader may realize that our use here of the Dart stream could be replaced with a Cell dependency.
 ;;; That is true. We just want to demonstrate how an _external_ stream can be woven into MX dataflow.
@@ -59,23 +62,42 @@
                              .fontSize 36.0)}
             (str "Message " (or (mget (fmu :msg-recipient) :msg-ct) "not") " received:"))
 
-          (fx/text
-            {:style (fx/in-my-context [me ctx]
-                      (.-headline3 (.-textTheme (m.Theme/of ctx))))}
-            {:name     :msg-recipient
-             :msg-rcvd (cF+n [:ephemeral? true
-                              :watch (fn [_ me new-source old-source _]
-                                       (when (= old-source mx/unbound)
-                                         (.listen (.-stream ^#/(async/StreamController String) new-source)
-                                           (fn [^String msg]
-                                             (mset! me :msg-rcvd msg)))))]
-                         (mget (fm* :msg-sender) :msg-stream))
-             :msg-ct   (cF (when-let [msg (the-string (mget me :msg-rcvd))]
-                             (when-not (or (str/blank? msg)
-                                         (= msg "<none>"))
-                               (if _cache (inc _cache) 1))))}
-            (or (the-string (mget me :msg-rcvd))
-              "RSN"))
+          (fx/check-box
+            {:value     (cI true :watch (fn [_ me newv _ _]
+                                          (dp :listening-now newv)))
+             :shape     (fx/rounded-rectangle-border
+                          {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
+             :onChanged (cF (as-dart-callback [value]
+                              (mswap! me :value not)))}
+            {:name :listening})
+
+          (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
+            (let [listening? (mget (fmu :listening) :value)]
+              (when listening?
+                (fx/text
+                  {:style (fx/in-my-context [me ctx]
+                            (.-headline3 (.-textTheme (m.Theme/of ctx))))}
+                  {:name     :msg-recipient
+                   :msg-rcvd (cF+n [:ephemeral? true
+                                    :on-quiesce (fn [cell]
+                                                  (dp :rcvd-on-quiesce!!! (cinfo cell))
+                                                  (when-let [sub (:subscription @cell)]
+                                                    (dp :rcvd-cancelling-sub!!!!!! sub)
+                                                    (.cancel ^#/(async/StreamSubscription String) (:subscription @cell))))
+                                    :watch (fn [_ me new-source old-source cell]
+                                             (when (= old-source mx/unbound)
+                                               (let [sub (.listen (.-stream ^#/(async/StreamController String) new-source)
+                                                           (fn [^String msg]
+                                                             (mset! me :msg-rcvd msg)))]
+                                                 (rmap-set! [:subscription cell] sub)
+                                                 (dp :got-sub!!!!!!! sub))))]
+                               (mget (fm* :msg-sender) :msg-stream))
+                   :msg-ct   (cF (when-let [msg (the-string (mget me :msg-rcvd))]
+                                   (when-not (or (str/blank? msg)
+                                               (= msg "<none>"))
+                                     (if _cache (inc _cache) 1))))}
+                  (or (the-string (mget me :msg-rcvd))
+                    "RSN")))))
 
           (fx/text {:style (p/TextStyle .color m.Colors/blue
                              .fontSize 18.0)}
