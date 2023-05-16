@@ -109,6 +109,7 @@
 
 (defn md-quiesce! [me]
   ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
+  #_ ;; HHACK fails on todo clear-completed
   (wtrx [0 999 :mdq-entry (minfo me)]
     (binding [*md-quiescing* true]
       (cond
