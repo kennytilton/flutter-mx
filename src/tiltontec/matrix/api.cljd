@@ -46,6 +46,10 @@
   (let [me (or me 'me)]
     `(:parent @~me)))
 
+(defmacro with-par [meform & body]
+  `(tiltontec.model.core/with-par ~meform
+     ~@body))
+
 (defn fm-navig [what where & options]
   (apply md/fm-navig what where options))
 
@@ -224,8 +228,11 @@
     where :me? false :up? true :inside? false))
 
 ;;; --- f/mx issues ----------------------------------------------
-(defn md-ref? [x]
-  (mpeek/md-ref? x))
+(defn mref?
+  ([x]
+   (mref? x :anon))
+  ([x tag]
+   (mpeek/mref? x tag)))
 
 (defn make [& arg-list]
   (apply tiltontec.model.core/make arg-list))

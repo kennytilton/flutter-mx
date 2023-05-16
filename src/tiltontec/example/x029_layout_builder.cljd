@@ -4,7 +4,8 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.matrix.api :refer [dp cF cI mget fmuv] :as mx]
+    ;[tiltontec.model.core :refer [with-par]]
+    [tiltontec.matrix.api :refer [with-par dp cF cI mget fasc fmuv minfo] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
 
 (defn make-app []
@@ -12,18 +13,22 @@
     (fx/material-app {:title title}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})}
+        {:name :scaffo
+         :scaff-color m.Colors/red}
         (fx/center
           (fx/layout-builder
-            {:builder (fx/->CBAsIs
-                        (fn [ctx box-constraint]
-                          (fx/fx-render ctx
-                            ; now we can play in f/mx world....
+            {:builder (as-dart-callback [ctx box-constraint]
+                        (dp :layo-builder-sees-me (minfo me))
+                        (fx/fx-render ctx
+                          ; now we can play in f/mx world....
+                          (with-par me
                             (fx/text
                               {:style (cF (p/TextStyle
                                             .color (mget me :font-color)
                                             .fontSize (mget me :font-size)))}
-                              {:font-size (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                              {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
                                :font-color (cF (cond
-                                                 (> (mget me :font-size) 50) m.Colors/red
+                                                 (> (mget me :font-size) 50)
+                                                 (mget (fasc :scaffo) :scaff-color) ;; m.Colors/red
                                                  :else m.Colors/cyan))}
-                              (str "Fontsize " (/(int (* 10 (mget me :font-size))) 10))))))}))))))
+                              (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10))))))}))))))

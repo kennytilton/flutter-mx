@@ -6,7 +6,7 @@
     [tiltontec.cell.base :refer [cinfo ]]
     [tiltontec.cell.core :refer [cF cF+ cF+n cF_ cI]]
     [tiltontec.cell.observer :refer [fn-obs]]
-    [tiltontec.model.peek :refer [minfo md-ref?]]
+    [tiltontec.model.peek :refer [minfo mref?]]
     [tiltontec.model.core :refer [mget mset! mswap! fm* fmu] :as md]
     [tiltontec.matrix.api :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
@@ -84,13 +84,11 @@
                                     :on-quiesce (fn [cell]
                                                   (when-let [sub (:subscription @cell)]
                                                     (.cancel
-                                                      ;; ^#/(async/StreamSubscription String)
+                                                      ^#/(async/StreamSubscription void)
                                                       (:subscription @cell))))
                                     :watch (fn [_ me new-source old-source cell]
                                              (when (= old-source mx/unbound)
-                                               (let [sub (.listen (.-stream ^async/StreamController
-                                                                    ;; ^#/(async/StreamController String)
-                                                                    new-source)
+                                               (let [sub (.listen (.-stream ^async/StreamController new-source)
                                                            (fn [^String msg]
                                                              (mset! me :msg-rcvd msg)))]
                                                  (rmap-set! [:subscription cell] sub)

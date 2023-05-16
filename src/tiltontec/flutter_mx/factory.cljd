@@ -7,15 +7,15 @@
              :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
-            [tiltontec.matrix.base :refer [ dprn dp dpx]]
+            [tiltontec.matrix.base :refer [wtrx dprn dp dpx]]
             [tiltontec.matrix.util
-             :refer [ atom? rmap-set! err rmap-meta-set! set-ify difference]]
+             :refer [atom? rmap-set! err rmap-meta-set! set-ify difference]]
             [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
 
             [tiltontec.model.peek :refer [minfo Model]]
-            [tiltontec.cell.base :refer [cinfo ] :as cty]
-            [tiltontec.model.base :refer [md-quiesce]]
-            [tiltontec.matrix.api :refer [rmap-meta-set! md-ref? make mget mget? mkids mswap! cI cFkids] :as mx]
+            [tiltontec.cell.base :refer [cinfo c-model] :as cty]
+            [tiltontec.model.base :refer [md-quiesce!]]
+            [tiltontec.matrix.api :refer [rmap-meta-set! mref? make mget mget? mkids mswap! cI cFkids] :as mx]
             [clojure.string :as str]))
 
 ;;; --- Flutter refs of fx models -----------------------------
@@ -74,20 +74,24 @@
          (.setState state (fn [] (do))))
      #_(dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
 
-(defn md-quiesce-lost [new-value prior-value]
+(defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
-  (cond
-    (md-ref? prior-value) (do (dp :mdq-lost-nails-md)
-                              (md-quiesce prior-value))
-    (coll? new-value) (cond
-                        (coll? prior-value)
-                        (let [lostks (difference (set prior-value) (set new-value))]
-                          (when-not (empty? lostks)
-                            (doseq [k lostks]
-                              (when (md-ref? k)
-                                (md-quiesce k)))))
-                        :else (when-not (some #{prior-value} new-value)
-                                (md-quiesce prior-value)))))
+  (when prior-value
+    (cond
+      (mref? prior-value) (wtrx [0 999 :mdq-lost-solo (cinfo cell) :prior (minfo prior-value)]
+                            (md-quiesce! prior-value))
+      (coll? new-value) (cond
+                          (coll? prior-value)
+                          (let [lostks (difference (set prior-value) (set new-value))]
+                            (when-not (empty? lostks)
+                              (doseq [k lostks]
+                                (when (mref? k)
+                                  (wtrx [0 999 :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
+                                    (md-quiesce! k))))))
+                          :else (when (mref? prior-value)
+                                  (when-not (some #{prior-value} new-value)
+                                    (wtrx [0 999 :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
+                                      (md-quiesce! prior-value))))))))
 
 (deftype FXDartWidget []
   :extends Model
@@ -102,7 +106,7 @@
         (dpx :FXDartWidget-observing-cell!!! prop (cinfo cell) @cell)
         (when-let [noter (mget? me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
-        (md-quiesce-lost new-value prior-value)
+        (md-quiesce-lost! cell new-value prior-value)
 
         (if-let [^State state (mget? me :fx$state)]
           (do (dpx :FXDWO-settingimmediatestate prop new-value #_(meta me) (cty/minfo me) (.-mounted state))
@@ -266,7 +270,7 @@
                              (~fx-class
                                ~(symbol (str "." (name target-prop-name)))
                                (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
-                                                 (tiltontec.matrix.api/mkids me))
+                                 (tiltontec.matrix.api/mkids me))
                                ~@(let [kvs (for [[k# _#] fx-props]
                                              [(symbol (str "." (name k#)))
                                               `(tiltontec.flutter-mx.core/fx-resolve ~k# me ctx

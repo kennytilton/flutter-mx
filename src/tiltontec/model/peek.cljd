@@ -5,7 +5,7 @@
     [tiltontec.matrix.foundation :refer [MXImplementer PObserver mx-type]]))
 
 (defn dp [& bits]
-  (when-not false ;; (nil? (first bits))
+  (when-not false                                           ;; (nil? (first bits))
     (dart:core/print (str/join " - " (list* :DP
                                        (map #(if (nil? %) :NIL %) bits))))))
 
@@ -16,29 +16,38 @@
   :extends MXImplementer
   PObserver
   (observe [this prop me new-value prior-value cell]
-    #_ (dp :Model-not-observing (cinfo cell))))
+    #_(dp :Model-not-observing (cinfo cell))))
 
-(defn md-type [md]
-  (assert (and md (atom? md) (map? @md))
-    (str "md-type> argument null or not atom or not map deref: " md))
-  (mx-type md))
+(defn md-type
+  ([md] (md-type md :anon))
+  ([md tag]
+   (assert md
+     (str "md-type> argument null: " tag))
+   (assert (atom? md)
+     (str "md-type> argument not atom " md tag))
+   (assert (map? @md)
+     (str "md-type> argument atom not map deref: " @md "<<<<deref: " tag))
+   (mx-type md)))
 
 (defn mname [me]
   (:name @me))
 
 ;; --- defmodel rizing ---------------------
 
-(defn md-ref? [x]
-  #_ (when (and x (atom? x))
-       (dp :md-ref-sees (md-type x) (meta x)))
-  (and x (atom? x)
-    (dart/is? (md-type x) Model)))
+(defn mref?
+  ([x]
+   (mref? x :anon))
+  #_(when (and x (atom? x))
+      (dp :mref-sees (md-type x) (meta x)))
+  ([x tag]
+   (and x (atom? x)
+     (dart/is? (md-type x tag) Model))))
 
 ;; --- md-quiesced? ---
 
 (defn md-quiesced? [me]
   (if-let [m (meta me)]
-    (= :dead (:state m))  ;;; HHHACK redundant?
+    (= :dead (:state m))                                    ;;; HHHACK redundant?
     false))
 
 (defn minfo
@@ -48,14 +57,14 @@
    (cond
      (nil? md) :null-md
      (not (atom? md)) :not-atom-md
-     (not (md-ref? md)) (do (dp :atom-not-md-c @md)
-                            :atom-not-md-c)
-     :else (if false ;; verbose
+     (not (mref? md)) (do (dp :atom-not-md-c @md)
+                          :atom-not-md-c)
+     :else (if false                                        ;; verbose
              [(:name @md) (meta md)]
              [:minfo :fxc (:fx-class @md)
               :mxtype (mx-type md)
               (or (:name @md)
-                :anon #_ [:hunh @md])]))))
+                :anon #_[:hunh @md])]))))
 
 ;; --- quiescing --------------------
 

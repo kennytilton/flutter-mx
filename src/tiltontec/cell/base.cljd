@@ -1,6 +1,6 @@
 (ns tiltontec.cell.base
   (:require
-    [tiltontec.model.peek :refer [md-ref?]]
+    [tiltontec.model.peek :refer [mref?]]
     [tiltontec.matrix.base :as utb
      :refer [ def-rmap-props dp]]
 
@@ -168,7 +168,7 @@ rule to get once behavior or just when fm-traversing to find someone"
   (dp :c-quiesce!!! (cinfo c))
   (when-not false                                           ;; (c-quiesced? c)
     (assert (not (c-quiesced? c))
-      (str "c-quiesce> already dead " (cinfo c)))
+      (str "c-quiesce!> already dead " (cinfo c)))
     (when-let [onq (:on-quiesce @c)]
       (onq c))
     (unlink-from-callers c)

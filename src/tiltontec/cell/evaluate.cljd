@@ -17,7 +17,7 @@
     [tiltontec.cell.observer :refer [c-observe]]
     [tiltontec.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]
-    [tiltontec.model.peek :refer [md-ref? minfo *md-quiescing* md-quiesced?]]))
+    [tiltontec.model.peek :refer [mref? minfo *md-quiescing* md-quiesced?]]))
 
 (defn ephemeral-reset [rc]
   (when (c-ephemeral? rc)                                   ;; allow call on any cell, catch here
@@ -66,7 +66,7 @@
   (dpc c :evic-entry)
   (cond
     ; --------------------------------------------------
-    *md-quiescing*                                            ; we got kicked off during md-quiesce processing
+    *md-quiescing*                                            ; we got kicked off during md-quiesce! processing
     ; just return what we have if valid, else nil
     (cond
       (c-unbound? c)
@@ -75,7 +75,7 @@
           (c-prop c) (c-model c)))
 
       (c-valid? c)
-      ;; c is valid, go ahead and return its value in case md-quiesce can use it.
+      ;; c is valid, go ahead and return its value in case md-quiesce! can use it.
       (c-value c))
 
 

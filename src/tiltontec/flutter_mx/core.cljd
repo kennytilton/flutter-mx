@@ -11,11 +11,11 @@
      :refer [TextStyle]]
     [clojure.string :as str]
     [tiltontec.matrix.foundation :as mxf]
-    [tiltontec.matrix.base :refer [dp dpx]]
+    [tiltontec.matrix.base :refer [wtrx dp dpx]]
     [tiltontec.matrix.util :refer [atom?]]
-    [tiltontec.model.peek :refer [Model md-ref?]]
-    [tiltontec.cell.base :refer [cinfo ] :as cty]
-    [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set!  make mget mkids mswap! cFkids] :as mx]
+    [tiltontec.model.peek :refer [Model mref? minfo]]
+    [tiltontec.cell.base :refer [cinfo] :as cty]
+    [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mkids mswap! cFkids] :as mx]
     [tiltontec.flutter-mx.factory :as mk]))
 
 (deftype CBAsIs [value]
@@ -33,7 +33,7 @@
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
-   ;(dp :resolving prop (tiltontec.cell.base/minfo me) widget-value)
+   ;(dp :resolving prop (minfo me) widget-value)
    (cond
      (nil? widget-value)
      (do
@@ -42,12 +42,12 @@
 
      (dart/is? widget-value CBAsIs)
      (do
-       (dpx :fx-resolve-as-ising!!!!!!!!! prop (tiltontec.cell.base/minfo me) widget-value)
+       (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
        (.-value ^CBAsIs widget-value))
 
      (dart/is? widget-value CBToResolve)
      (let [val ^CBToResolve widget-value]
-       (dpx :fx-reso-calling-back!!!!!!! prop (tiltontec.cell.base/minfo me) widget-value)
+       (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
        (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
          (dpx :CBToResolveyields cb-val)
          (recur prop me ctx cb-val)))
@@ -67,7 +67,7 @@
      (cty/c-ref? widget-value)
      (throw (Exception. (str "fx-resolve sees Cell! " (cinfo widget-value))))
 
-     (md-ref? widget-value)
+     (mref? widget-value)
      (do
        (let [fx (fx-render ctx widget-value)]
          (dpx :rfx-mdref-yielded-flutter fx)
@@ -79,7 +79,7 @@
            (dpx :vec-rez rzd)
            rzd))
 
-     :default (do #_(dp :resolve-fall-thru-used prop (tiltontec.cell.base/minfo me) widget-value
+     :default (do #_(dp :resolve-fall-thru-used prop (minfo me) widget-value
                       (when (atom? widget-value)
                         (deref widget-value)))
                 widget-value))))
@@ -93,22 +93,28 @@
 (defn ctx-page-pop [ctx]
   (.pop (-> ctx m.Navigator/of)))
 
+(defn bail-render [fx]
+  (dp :bail-render-c-ref!!!! fx @fx)
+  #_
+  (throw (Exception. (str "fx-render passed Cell " (deref fx)))))
+
 (defn fx-render [ctx fx]
-  (dpx :render-entry ctx (tiltontec.cell.base/minfo fx))
-  (cond
-    (not (md-ref? fx))
+  (wtrx [0 999 :render-entry (minfo fx)]
     (cond
-      (cty/c-ref? fx) (throw (Exception. (str "fx-render passed Cell " (deref fx))))
-      :default (do
-                 (dpx :render-sees-not-md-ref?-passing-thru fx)
-                 fx))
-    :else (let [gen (mget fx :fx-gen)]
-            (dpx :render-sees-gen!! gen)
-            (assert gen "OBAD: fx-render of model finds no fx-gen: ")
-            (let [g (gen fx ctx)]
-              (dpx :render-genned!!! g)
-              (rmap-meta-set! [:fx-dom fx] g)
-              g))))
+      (not (mref? fx))
+      (cond
+        (cty/c-ref? fx) (bail-render fx)
+        :default (do
+                   (when-not (string? fx)
+                     (dp :render-sees-not-mref?-passing-thru fx))
+                   fx))
+      :else (let [gen (mget fx :fx-gen)]
+              (dpx :render-sees-gen!! gen)
+              (assert gen "OBAD: fx-render of model finds no fx-gen: ")
+              (let [g (gen fx ctx)]
+                (dpx :render-genned!!! g)
+                (rmap-meta-set! [:fx-dom fx] g)
+                g)))))
 
 (defmacro in-my-context [[me-var ctx-var] & body]
   `(tiltontec.flutter-mx.core/->CBToResolve
@@ -295,14 +301,14 @@
 ;;; the dance between Flutter and MX is a bit intricate
 ;;; these macros try to hide the plumbing without being obscure.
 
+(defmacro as-is [callback-fn]
+  `(tiltontec.flutter-mx.core/->CBAsIs
+     ~callback-fn))
+
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
   `(tiltontec.flutter-mx.core/in-my-context [~me ~ctx]
      (tiltontec.flutter-mx.core/->CBAsIs
        ~callback-fn)))
-
-(defmacro as-is [callback-fn]
-  `(tiltontec.flutter-mx.core/->CBAsIs
-     ~callback-fn))
 
 (defmacro as-dart-callback [[& cb-params] & body]
   `(tiltontec.flutter-mx.core/with-ctx+as-is [~'me ~'ctx]

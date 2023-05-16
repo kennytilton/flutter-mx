@@ -26,14 +26,13 @@
 
 (def ^:dynamic *trx?* true)
 
-#_
-        (alter-var-root #'*trx?* not)
+#_(alter-var-root #'*trx?* not)
 
 (def ^:dynamic *trc-ensure* nil)
 (def ^:dynamic *trx-path-id* nil)
 (def ^:dynamic *trdeep* 0)
 (def ^:dynamic *txran* 0)
-(def last-trc (atom 0)) ;; s/b universal time
+(def last-trc (atom 0))                                     ;; s/b universal time
 
 (defn call-trc$ [s bits]
   (str s ": " (str/join ", " bits)))
@@ -43,8 +42,7 @@
   ;; (break) ;; uncomment to escape loop
   (when *trx?*
     (when s
-      (let [path (apply str (repeat *trdeep* "."))]
-        (dp path (call-trc$ s os))))))
+      (dp (call-trc$ s os)))))
 
 (defmacro trx [label & vals]
   `(call-trc ~(when (not (nil? label))
@@ -69,9 +67,9 @@
 ;;;----------------------------------------
 
 (defn dp [& bits]
-  (when-not false ;; (nil? (first bits))
-    (dart:core/print (str/join " - " (list* :DPR
-                                       *trdeep*
+  (when-not false                                           ;; (nil? (first bits))
+    (dart:core/print (str/join " - " (list*                 ;:DPR
+                                       ;*trdeep*
                                        (apply str (repeat *trdeep* "."))
                                        (map #(if (nil? %) :NIL %) bits))))))
 
@@ -86,19 +84,43 @@
                                        bits)))))
 (defn dprnx [& bits])
 
+(def wtrx-id (atom 0))
+
+(defn bail-hi [hi]
+  (throw (Exception.
+           (str "wtrx depth " *trdeep* " exceeded max depth " hi ":"
+              #_ (apply call-trc$ (first trxargs)
+                  (rest trxargs))))))
+
 (defn call-wtrx [fn lo hi trxargs]
-  (let [orig-depth *trdeep*
-        new-depth (+ 1 orig-depth)]
-    (binding [*trdeep* new-depth]
-      (assert (= *trdeep* new-depth))
+  (let [xid (swap! wtrx-id inc)]
+    (binding [*trdeep* (inc *trdeep*)]
+      #_ (if (<= lo *trdeep* hi)
+        (apply call-trc xid trxargs)
+        (if (> *trdeep* hi)
+          (do (dp :throwing xid)
+              (bail-hi hi)
+              #_ (throw (Exception.
+                       (str "wtrx depth " *trdeep* " exceeded max depth " hi ":"
+                         #_ (apply call-trc$ (first trxargs)
+                              (rest trxargs))))))
+          (dp :ignoring-wtrx-id xid [lo *trdeep* hi]
+                (first trxargs) (<= lo *trdeep* hi) (<= 0 1 999))))
+
       (cond
         (<= lo *trdeep* hi)
         (apply call-trc trxargs)
+
         (> *trdeep* hi)
-        (throw (Exception.
-                 (str "wtrx exceeded max depth " hi ":"
-                   (apply call-trc$ (first trxargs)
-                     (rest trxargs))))))
+        (do (dp :throwing xid)
+            (bail-hi hi)
+            #_ (throw (Exception.
+                     (str "wtrx depth " *trdeep* " exceeded max depth " hi ":"
+                       #_ (apply call-trc$ (first trxargs)
+                            (rest trxargs))))))
+
+        :else (dp :ignoring-wtrx-id xid [lo *trdeep* hi]
+                (first trxargs) (<= lo *trdeep* hi) (<= 0 1 999)))
       (fn))))
 
 (defmacro wtrx [[lo hi & trxargs] & body]

@@ -7,6 +7,8 @@
 
     ;["dart:io" :as io]
 
+    [tiltontec.matrix.base
+     :refer [prog1 wtrx dprn dp dpx trx]]
     [tiltontec.alpha2.counter :as a2c]
     [tiltontec.testing :as testing]
     [tiltontec.test.lazy-cells :as test-lazy]
@@ -22,11 +24,15 @@
     [tiltontec.demo.todoMVC.core :as todo]))
 
 (defn main []
+  (dp :main-entry)
   (.ensureInitialized w/WidgetsFlutterBinding)
-  (fx/run-app
+  (wtrx [0 999 :run-app]
+    (dp :running-app)
+    (fx/run-app
       (fx/fx-render nil
-        ;; Change the namespace below to one above and rebuild to see a different example.
-        (counter/make-app)))
+        ;; Change the  namespace below to one above and rebuild to see a different example.
+        (x05/make-app))))
+  (dp :run-app-fini)
 
   ; (defn main []
   ;  (.ensureInitialized w/WidgetsFlutterBinding)
@@ -39,6 +45,7 @@
   ;      (todo/make-app)))
 
   ;; (testing/run-tests)
+  (dp :main-exit)
   )
 
 ;; (set! r/debugPaintSizeEnabled true)
