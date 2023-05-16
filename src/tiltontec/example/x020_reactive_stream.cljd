@@ -46,11 +46,13 @@
               :next-word  (cF+ [:ephemeral? true
                                 :watch (fn [_ me new-word _ _]
                                          (when new-word
-                                           (.add (.-sink ^#/(async/StreamController String) (mget me :msg-stream))
+                                           (.add (.-sink ^async/StreamController
+                                                   ;;^#/(async/StreamController String)
+                                                   (mget me :msg-stream))
                                              new-word)))]
                             (when-let [offset (mget me :offset)]
                               (nth the-second-coming (mod offset (count the-second-coming)))))
-              :msg-stream (new #/(async/StreamController String))}
+              :msg-stream (async.StreamController/broadcast) #_ (new #/(async/StreamController String))}
              (m/Icon m.Icons/chat .color
                (if (mget me :offset)
                  m.Colors/white
@@ -80,13 +82,15 @@
                   {:name     :msg-recipient
                    :msg-rcvd (cF+n [:ephemeral? true
                                     :on-quiesce (fn [cell]
-                                                  (dp :rcvd-on-quiesce!!! (cinfo cell))
                                                   (when-let [sub (:subscription @cell)]
-                                                    (dp :rcvd-cancelling-sub!!!!!! sub)
-                                                    (.cancel ^#/(async/StreamSubscription String) (:subscription @cell))))
+                                                    (.cancel
+                                                      ;; ^#/(async/StreamSubscription String)
+                                                      (:subscription @cell))))
                                     :watch (fn [_ me new-source old-source cell]
                                              (when (= old-source mx/unbound)
-                                               (let [sub (.listen (.-stream ^#/(async/StreamController String) new-source)
+                                               (let [sub (.listen (.-stream ^async/StreamController
+                                                                    ;; ^#/(async/StreamController String)
+                                                                    new-source)
                                                            (fn [^String msg]
                                                              (mset! me :msg-rcvd msg)))]
                                                  (rmap-set! [:subscription cell] sub)
