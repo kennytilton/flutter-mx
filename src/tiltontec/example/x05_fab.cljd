@@ -20,8 +20,8 @@
                                :initial-open? false
                                :distance 112.0
                                :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
-                                         #_#_{:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
-                                                 {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
+                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
+                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
          :itemCount   25
@@ -62,29 +62,29 @@
 
     (when-let [anime (mget me :expand-animation)]
       (dp :making-expandable-fab-kid-stack!!!!!!!!!!!!!!!!!!!! (cbase/cinfo (cbase/+cause)))
-        (fx/stack
-          {:alignment    m.Alignment/bottomRight
-           :clipBehavior m.Clip/none}
-          {:name :fab-stack}
-          (dp :fab-stack-kids!!!!!!!!!!!!!!!!! (cbase/cinfo (cbase/+cause))(minfo me))
-          (tap-to-close-fab me)
-          ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-          (doall (map-indexed
-                   (fn [i action]
-                     (dp :eabuild i action)
-                     (expanding-action-button me anime
-                       :direction-degrees (* i 30.0 #_ (fmuv :fab :step)) ;;; HHACK
-                       :max-distance distance
-                       :progress-key :expand-animation
-                       :action action))
-                   actions))
-          (tap-to-open-fab me)))))
+      (fx/stack
+        {:alignment    m.Alignment/bottomRight
+         :clipBehavior m.Clip/none}
+        {:name :fab-stack}
+        (dp :fab-stack-kids!!!!!!!!!!!!!!!!! (cbase/cinfo (cbase/+cause)) (minfo me))
+        (tap-to-close-fab me)
+        ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
+        (doall (map-indexed
+                 (fn [i action]
+                   (dp :eabuild i action)
+                   (expanding-action-button me anime
+                     :direction-degrees (* i 30.0 #_(fmuv :fab :step)) ;;; HHACK
+                     :max-distance distance
+                     :progress-key :expand-animation
+                     :action action))
+                 actions))
+        (tap-to-open-fab me)))))
 
 (defn expanding-action-button [me anime & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
-    {:animation anime ;; (mget (mx/fasc :fab) :expand-animation)
+    {:animation anime                                       ;; (mget (mx/fasc :fab) :expand-animation)
      :builder   (as-dart-callback [ctx child]
-                  (let [progress ^m/CurvedAnimation anime #_ (mget me :animation) #_ (mget (mx/fasc :fab) :expand-animation)
+                  (let [progress ^m/CurvedAnimation anime #_(mget me :animation) #_(mget (mx/fasc :fab) :expand-animation)
                         offset (m.Offset/fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
                                  (* (.-value progress) max-distance))]
@@ -100,7 +100,7 @@
                         child))))}
     {:name :ani-builder}
     (fx/fade-transition
-      {:opacity anime #_ (mget (mx/fasc :fab) :expand-animation)}
+      {:opacity anime #_(mget (mx/fasc :fab) :expand-animation)}
       (action-button
         :icon (:icon action)
         :onPressed (fx/in-my-context [me ctx]
@@ -149,11 +149,12 @@
           (fx/padding {:padding (m.EdgeInsets/all 8.0)}
             (fx/icon {:icon  m.Icons/close
                       :color (fx/in-my-context [me ctx]
-                               (.-primaryColor (m.Theme/of ctx)))} {})))))))
+                               (.-primaryColor (m.Theme/of ctx)))}
+              {:name :fabicon-close})))))))
 
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
-    {:ignoring (mget (mx/fasc :fab par) :open?)}
+    {:ignoring (cF (mget (mx/fasc :fab par) :open?))}
     (fx/animated-container
       {:transformAlignment m.Alignment/center
        :transform          (cF (if (mget (mx/fasc :fab par) :open?)
@@ -172,7 +173,8 @@
                         (let [fb (mx/fasc :fab par)]
                           (assert (mref? fb :fb-open))
                           (mx/mswap! fb :open? not)))}
-          (fx/icon {:icon m.Icons/create}))))))
+          (fx/icon {:icon m.Icons/create}
+            {:name :fabicon-open}))))))
 
 (defn fake-item [is-big?]
   (m/Container

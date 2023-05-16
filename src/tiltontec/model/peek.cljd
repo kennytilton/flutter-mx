@@ -59,12 +59,12 @@
      (not (atom? md)) :not-atom-md
      (not (mref? md)) (do (dp :atom-not-md-c @md)
                           :atom-not-md-c)
-     :else (if false                                        ;; verbose
+     :else (if verbose
              [(:name @md) (meta md)]
-             [:minfo :fxc (:fx-class @md)
+             [:MI (or (:name @md) :anon)
+              :fxc (:fx-class @md)
               :mxtype (mx-type md)
-              (or (:name @md)
-                :anon #_[:hunh @md])]))))
+              ]))))
 
 ;; --- quiescing --------------------
 
