@@ -29,7 +29,6 @@
                         (fn [ctx i] (fake-item (odd? i))))}))))
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
-  (dp :building-xfab initial-open? distance actions)
   (fmk/sized-box+expand-ful
     {}                                                      ;; <= necessary placeholder
     {:name             :fab
@@ -45,7 +44,6 @@
                                .duration (dart:core/Duration .milliseconds 250)
                                .vsync state)))
      :expand-animation (cF (when-let [c (fx/my-controller)]
-                             (dp :fab-expand-animation-got-controller!!!!!!!!!!!!!!!!!!!!)
                              (m/CurvedAnimation
                                .curve m.Curves/fastOutSlowIn
                                .reverseCurve m.Curves/easeOutQuad
@@ -61,17 +59,14 @@
                                       (.reverse c)))))}
 
     (when-let [anime (mget me :expand-animation)]
-      (dp :making-expandable-fab-kid-stack!!!!!!!!!!!!!!!!!!!! (cbase/cinfo (cbase/+cause)))
       (fx/stack
         {:alignment    m.Alignment/bottomRight
          :clipBehavior m.Clip/none}
         {:name :fab-stack}
-        (dp :fab-stack-kids!!!!!!!!!!!!!!!!! (cbase/cinfo (cbase/+cause)) (minfo me))
         (tap-to-close-fab me)
         ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
         (doall (map-indexed
                  (fn [i action]
-                   (dp :eabuild i action)
                    (expanding-action-button me anime
                      :direction-degrees (* i 30.0 #_(fmuv :fab :step)) ;;; HHACK
                      :max-distance distance
