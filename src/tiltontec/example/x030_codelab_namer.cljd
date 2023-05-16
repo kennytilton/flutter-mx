@@ -7,20 +7,22 @@
     [tiltontec.model.peek :refer [mname]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
 
-(defn big-card [^en/WordPair word-pair]
+(defn big-card []
   (fx/card {:color (fx/in-my-context [me ctx]
                      (-> (m.Theme/of ctx) .-colorScheme .-primary))}
+    {:name :bigc
+     :word-pair (cF (mget (fasc :app) :word-pair))}
     (fx/padding {:padding (m/EdgeInsets.all 20)}
       (fx/text {:style          (fx/in-my-context [me ctx]
                                   (.copyWith (.-displayMedium (.-textTheme (m.Theme/of ctx)))
                                     .color (-> (m.Theme/of ctx) .-colorScheme .-onPrimary)))
-                :semanticsLabel (.-asPascalCase word-pair)}
-        (.-asCamelCase word-pair)))))
+                :semanticsLabel (cF (.-asPascalCase (mget (fasc :bigc) :word-pair)))}
+        (.-asCamelCase (mget (fasc :bigc) :word-pair))))))
 
 (defn generator-page []
   (fx/center
     (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
-      (big-card (mget (fasc :app) :word-pair))
+      (big-card)
       (m/SizedBox .height 10)
       (fx/row {:mainAxisSize m/MainAxisSize.min}
         (fx/elevated-button+icon
