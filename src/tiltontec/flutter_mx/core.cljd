@@ -34,7 +34,7 @@
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
    ;(dp :resolving prop (minfo me) widget-value)
-   (cond
+   (let [resolved (cond
      (nil? widget-value)
      (do
        ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! prop (tiltontec.cell.base/minfo me))
@@ -50,7 +50,7 @@
        (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
        (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
          (dpx :CBToResolveyields cb-val)
-         (recur prop me ctx cb-val)))
+         (fx-resolve prop me ctx cb-val)))
 
      (dart/is? widget-value m/Widget)
      (do
@@ -62,7 +62,7 @@
        (dpx :fxres-calling-fn?-blind widget-value)
        (let [v (widget-value me ctx)]
          (dpx :recuring-unwrapped-fn?-return-val v)
-         (recur prop me ctx v)))
+         (fx-resolve prop me ctx v)))
 
      (cty/c-ref? widget-value)
      (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
@@ -82,7 +82,9 @@
      :default (do #_(dp :resolve-fall-thru-used prop (minfo me) widget-value
                       (when (atom? widget-value)
                         (deref widget-value)))
-                widget-value))))
+                widget-value))]
+     ;;(dp :resolved prop resolved)
+     resolved)))
 
 (defn ctx-page-push [ctx fx-page-def]
   (.push (-> ctx m.Navigator/of)

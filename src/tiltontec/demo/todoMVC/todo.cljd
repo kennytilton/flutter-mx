@@ -9,7 +9,7 @@
     [tiltontec.matrix.foundation :refer [PObserver observe MXImplementer] :as cmx]
     [tiltontec.cell.base :as cb]
 
-    [tiltontec.matrix.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
+    [tiltontec.matrix.api :refer [dp cFn cF+ cI mget mkids mkids mswap!] :as mx]
     [tiltontec.model.peek :refer [Model]]
     [tiltontec.demo.todoMVC.persist :as stg]))
 
@@ -41,6 +41,7 @@
 
   ([td-lst title completed stg-id created-at]
    ;; create MX proxy to-do
+   (dp :making-todo!! title stg-id)
    (let [created-at (or created-at
                       (.-millisecondsSinceEpoch (.now DateTime)))]
      (mx/make

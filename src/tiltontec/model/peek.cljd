@@ -45,8 +45,8 @@
 
 ;; --- md-quiesced? ---
 
-(defn md-quiesced? [me]
-  (if-let [m (meta me)]
+(defn md-quiesced? [md]
+  (if-let [m (meta md)]
     (= :dead (:state m))                                    ;;; HHHACK redundant?
     false))
 
@@ -63,7 +63,8 @@
              [(:name @md) (meta md)]
              [:MI (or (:name @md) :anon)
               :fxc (:fx-class @md)
-              :mxtype (mx-type md)
+              :state (:state (meta md))
+              ;:mxtype (mx-type md)
               ]))))
 
 ;; --- quiescing --------------------

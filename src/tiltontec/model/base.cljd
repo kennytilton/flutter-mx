@@ -3,7 +3,7 @@
     [tiltontec.matrix.foundation :refer [observe]]
     [tiltontec.matrix.base
      :refer [trx mx-throw wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
-    [tiltontec.matrix.util :refer [ rmap-set! rmap-meta-set!]]
+    [tiltontec.matrix.util :refer [rmap-set! rmap-meta-set!]]
 
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
@@ -83,40 +83,3 @@
                       (c-awaken c)))))))
     (rmap-meta-set! [:state me] :awake)
     me))
-
-;; --- md-quiesce --
-
-(defn md-quiesce-self! [me]
-  (wtrx [0 999 :mdq-self (minfo me)]
-    (when-let [onq (get @me :on-quiesce)]
-      (wtrx [0 999 :mdq-onq (minfo me)]
-        (onq me)))
-
-    (doseq [c (vals (:cz (meta me)))]
-      (when c                                               ;; not if optimized away
-        (c-quiesce! c)))
-
-    (doseq [k (keys @me)]
-      (when-not (some #{k} [:parent :host])
-        (when-let [v (get @me k)]
-          (when (or (mref? v)
-                  (and (coll? v) (mref? (first v))))
-            (dp :blindly-md-quiescing k)
-            (md-quiesce! (get @me k))))))
-
-    (reset! me (concat [:quiesced] [(minfo me)]))
-    (rmap-meta-set! [:state me] :quiesced)))
-
-(defn md-quiesce! [me]
-  ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
-  #_
-  (wtrx [0 999 :mdq-entry (minfo me)]
-    (binding [*md-quiescing* true]
-      (cond
-        (and (coll? me) (mref? (first me)))
-        (doseq [elt me]
-          (md-quiesce! elt))
-
-        :else (when (mref? me)
-                (md-quiesce-self! me))))))
-

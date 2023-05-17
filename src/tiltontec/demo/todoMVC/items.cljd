@@ -133,16 +133,26 @@
      :direction   w/DismissDirection.horizontal
      :onDismissed (todo-delete-callback todo :swipe-dismissed)
      }
+    {:name :todo-LI}
     (fx/visibility!
       ;; try with SizedBox.shrink?
-      {:visible           (cF (mget me :selected?))
+      {:visible           (cF (let [vis (mget me :selected?)]
+                                (dp :LI-sees-vis vis)
+                                (assert (boolean? vis)
+                                  (str "vis todo-li not bool " vis))
+                                (assert (or (= vis true)(= vis false))
+                                  (str "vis todo-li not tf " vis))
+                                vis))
        :maintainSize      false
        :maintainAnimation true
        :maintainState     true}
-      {:selected? (cF (case (fmuval :completions :selection)
-                        :all true
-                        :active (not (td-completed todo))
-                        :done (td-completed todo)))}
+      {:selected? (cF (let [sel? (case (fmuval :completions :selection)
+                                   :all true
+                                   :active (not (td-completed todo))
+                                   :done (td-completed todo))]
+                        (dp :sel???????????? sel?)
+                        (assert (boolean? sel?) (str "selected? not bool " sel?))
+                        sel?))}
       (fx/container
         {:decoration (fx/in-my-context [me context]
                        ;; list with separator cannot hide separator when item hidden, so

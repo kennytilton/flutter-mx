@@ -36,6 +36,14 @@
 (defn mget? [me prop & [alt-value]]
   (tiltontec.model.core/mget? me prop alt-value))
 
+;;; ---- lifecycle ---------------------------------
+
+
+;; --- md-quiesce --
+
+(defn md-quiesce! [me]
+  (md/md-quiesce! me))
+
 ;;; --- navigation ---------------------------------
 
 (defn mname [me]
@@ -46,6 +54,9 @@
 (defmacro mpar [& [me]]
   (let [me (or me 'me)]
     `(:parent @~me)))
+
+(defn mhost [md]
+  (md/mhost md))
 
 (defmacro with-par [meform & body]
   `(tiltontec.model.core/with-par ~meform

@@ -165,7 +165,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-quiesce! [c]
   (assert c)
-  (dp :c-quiesce!!! (cinfo c))
+  ;;(dp :c-quiesce!!! (cinfo c))
   (when-not false                                           ;; (c-quiesced? c)
     (assert (not (c-quiesced? c))
       (str "c-quiesce!> already dead " (cinfo c)))
@@ -173,7 +173,8 @@ rule to get once behavior or just when fm-traversing to find someone"
       (onq c))
     (unlink-from-callers c)
     (unlink-from-used c :quiesce)
-    (reset! c (concat [:quiesced] ((juxt c-prop-name c-mname) c)))))
+    #_ (reset! c (concat [:quiesced] ((juxt c-prop-name c-mname) c)))
+    ))
 
 (defn c-quiesced? [ref]
   (assert (atom? ref)
