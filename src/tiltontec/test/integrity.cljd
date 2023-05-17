@@ -1,7 +1,6 @@
 (ns tiltontec.test.integrity
   (:require
-    [tiltontec.matrix.base :refer [trx dp prog1]]
-    [tiltontec.matrix.util :refer [ err]]
+    [tiltontec.matrix.base :refer [trx dp prog1 mx-throw]]
     [tiltontec.cell.base
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?
@@ -41,7 +40,7 @@
                                (case new
                                  :home :off
                                  :away :on
-                                 (err (str "unexpected loc " new))))))]
+                                 (mx-throw (str "unexpected loc " new))))))]
                 (case (cget act)
                   :leave :away
                   :return :home
@@ -83,7 +82,7 @@
                            (c-reset-next! alarm (case new
                                                   :home :off
                                                   :away :on
-                                                  (err (str "unexpected loc %s" new))))))]
+                                                  (mx-throw (str "unexpected loc %s" new))))))]
               (case (cget act)
                 :leave :away
                 :return :home

@@ -2,10 +2,10 @@
   (:require
     [clojure.string :as str]
     [tiltontec.matrix.base
-     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props]]
+     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props  mx-throw]]
     [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
     [tiltontec.matrix.util
-     :refer [difference atom? err rmap-set! rmap-meta-set! pln]]
+     :refer [difference atom? rmap-set! rmap-meta-set! pln]]
 
     [tiltontec.cell.base
      :refer [without-c-dependency
@@ -84,7 +84,7 @@
       (creset! c new-value))
     (do
       (if (contains? @me prop)
-        (err str
+        (mx-throw
           "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/mset! to the property '" prop "', which is not mediated by any cell.\n"
           "...> if such post-make mutation is in fact required, wrap the initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
           "...> look for MXAPI_ILLEGAL_MUTATE_NONCELL in the Errors documentation for  more details.\n"
@@ -92,14 +92,14 @@
           "...> FYI: instance is of type " (mx-type me) ".\n"
           "...> FYI: full instance is " @me "\n"
           "...> FYI: instance meta is " (meta me) "\n.")
-        (err str
+        (mx-throw
           "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent prop \"" prop "\".\n"
           "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))))
 
 (defn mswap! [me prop swap-fn & swap-fn-args]
   (if (contains? @me prop)
     (mset! me prop (apply swap-fn (mget me prop) swap-fn-args))
-    (err str
+    (mx-throw
       "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent prop \"" prop "\".\n"
       "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
 
@@ -250,7 +250,7 @@
                 :me? true)))
 
           (when (:must? options)
-            (err :fm-ascendant-must-failed what where options)))))))
+            (mx-throw :fm-ascendant-must-failed what where options)))))))
 
 (defn nextsib [mx]
   (without-c-dependency
@@ -451,7 +451,7 @@
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
     (mxu-find-id me id-name)
-    (throw (str "fmo> not id or name " id-name))))
+    (throw (Exception. (str "fmo> not id or name " id-name)))))
 
 (defn fmov
   ([me id-name]
@@ -460,7 +460,7 @@
    (when-let [mx (fmo me id-name)]
      (if (contains? @mx prop-name)
        (mget mx prop-name)
-       (throw (str "fmov> " id-name " lacks " prop-name " property"))))))
+       (throw (Exception. (str "fmov> " id-name " lacks " prop-name " property")))))))
 
 ;;; --- ancestry ----
 (defn fm-ancestry [me]

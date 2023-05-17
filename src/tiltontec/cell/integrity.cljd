@@ -1,9 +1,9 @@
 (ns tiltontec.cell.integrity
   (:require
     [tiltontec.matrix.base
-     :refer [prog1 wtrx dprn dp dpx trx]]
+     :refer [prog1 wtrx dprn dp dpx trx mx-throw]]
     [tiltontec.matrix.util
-     :refer [ensure-vec err pln plnk fifo-add fifo-peek fifo-pop cl-find]]
+     :refer [ensure-vec  pln plnk fifo-add fifo-peek fifo-pop cl-find]]
     [tiltontec.cell.base
      :refer [pcell un-stopped +pulse+ c-pulse c-optimized-away?
              +client-q-handler+ c-stopped
@@ -51,7 +51,7 @@
 
 (defn ufb-queue [opcode]
   (or (opcode unfin-biz)
-    (err (str "ufb-queue> opcode unknown: " opcode))))
+    (mx-throw (str "ufb-queue> opcode unknown: " opcode))))
 
 (defn ufb-queue-ensure [opcode]
   "vestigial"
@@ -63,7 +63,7 @@
 (defn ufb-assert-q-empty [opcode]
   (if-let [uqp (fifo-peek (ufb-queue-ensure opcode))]
     (do
-      (err (str "ufb queue %s not empty, viz %s")
+      (mx-throw (str "ufb queue %s not empty, viz %s")
         opcode uqp))
     true))
 

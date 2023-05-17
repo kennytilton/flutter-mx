@@ -2,9 +2,9 @@
   (:require
     ;; todo merge cells NSes
 
-    [tiltontec.matrix.util :refer [err rmap-set!]]
+    [tiltontec.matrix.util :refer [ rmap-set!]]
     [tiltontec.matrix.base
-     :refer [trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
+     :refer [mx-throw trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
     [tiltontec.cell.base
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
@@ -46,7 +46,7 @@
       :else (do
               (assert (some #{k} allowed) (str "Cell option invalid: " k ". Only allowed are: " allowed))
               (when (and observer? (some #{k} [:obs :watch]))
-                (err "make-c-formula> options include multiple :watch or :obs. Supply just one."))
+                (mx-throw "make-c-formula> options include multiple :watch or :obs. Supply just one."))
 
               (recur more (conj res (case k
                                       :watch :obs
@@ -256,15 +256,15 @@ in the CL version of Cells SETF itself is the change API dunction."
     *defer-changes*
     #_ (let [prop (c-prop-name c)
              me (c-model c)]
-         (err str
+         (mx-throw ( str
            "MXAPI_UNDEFERRED_CHANGE> undeferred mswap!/mset! to the property '" prop "' by an observer detected."
            "...> such mutations must be wrapped by WITH-INTEGRITY, must conveniently with macro WITH-CC."
            "...> look for MXAPI_UNDEFERRED_CHANGE in the Errors documentation for  more details.\n"
            "...> FYI: intended new value is [" new-value "]; current value is [" (get @me prop :no-such-prop) "].\n"
            "...> FYI: instance is of type " (type-cljc me) ".\n"
            "...> FYI: full instance is " @me "\n"
-           "...> FYI: instance meta is " (meta me) "\n.")
-         #_ (err (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
+           "...> FYI: instance meta is " (meta me) "\n."))
+         #_ (mx-throw (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
                    (c-prop c))))
     (do (dp :c-reset-rejecting-undeferred! (c-prop c))
         (throw (Exception. (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "

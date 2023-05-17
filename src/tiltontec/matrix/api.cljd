@@ -169,18 +169,18 @@
     `(let [name# ~name
            md# (tiltontec.model.core/fm-ascendant name# ~me-ref)]
        (if (nil? md#)
-         (throw (str "fascv> did not find model " name#
-                  " searching up from " (tiltontec.model.peek/mname md#)
-                  " seeking property " ~prop-name " value."))
+         (throw (Exception. (str "fascv> did not find model " name#
+                              " searching up from " (tiltontec.model.peek/mname md#)
+                              " seeking property " ~prop-name " value.")))
          (if (contains? @md# ~prop-name)
            (tiltontec.model.core/mget md# ~prop-name)
-           (throw (str "fascv> " ~name " lacks " ~prop-name " property")))
+           (throw (Exception. (str "fascv> " ~name " lacks " ~prop-name " property"))))
          (mget md# ~prop-name)))))
 
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
     (mxu-find-id me id-name)
-    (throw (str "fmo> not id or name " id-name))))
+    (throw (Exception. (str "fmo> not id or name " id-name)))))
 
 (defn fmov
   ([me id-name]
@@ -189,7 +189,7 @@
    (when-let [mx (fmo me id-name)]
      (if (contains? @mx prop-name)
        (mget mx prop-name)
-       (throw (str "fmov> " id-name " lacks " prop-name " property"))))))
+       (throw (Exception. (str "fmov> " id-name " lacks " prop-name " property")))))))
 
 (defmacro fm* [name & [me]]
   (let [me-ref (or me 'me)]

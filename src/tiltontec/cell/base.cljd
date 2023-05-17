@@ -2,10 +2,10 @@
   (:require
     [tiltontec.model.peek :refer [mref?]]
     [tiltontec.matrix.base :as utb
-     :refer [ def-rmap-props dp]]
+     :refer [mx-throw def-rmap-props dp]]
 
     [tiltontec.matrix.util
-     :refer [cl-find set-ify atom? err
+     :refer [cl-find set-ify atom?
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-set! mut-set!]
      :as utc]
@@ -133,15 +133,15 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-assert
   ([assertion] (when-not assertion
-                 (dp #_ ut/err "c-assert anon failed")))
+                 (dp "c-assert anon failed")))
   ([assertion fmt$ & fmt-args]
    (when-not +stop+
      (when-not assertion
-       (dp #_ ut/err (str "c-assert> " fmt$ fmt-args))))))
+       (dp (str "c-assert> " fmt$ fmt-args))))))
 
 (defn c-break [& args]
   (when-not +stop+
-    (dp #_ ut/err (str args))))
+    (dp (str args))))
 
 (defn c-warn [& args]
   (when-not +stop+

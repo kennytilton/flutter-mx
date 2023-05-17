@@ -1,9 +1,9 @@
 (ns tiltontec.cell.evaluate
   (:require
     [clojure.string :as str]
-    [tiltontec.matrix.base :refer [wtrx dprn dp dpx trx prog1]]
+    [tiltontec.matrix.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
     [tiltontec.matrix.util
-     :refer [ atom? rmap-set! err rmap-meta-set! set-ify difference]]
+     :refer [ atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency with-mx-isolation pcell c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?  cprn c-code$
@@ -71,7 +71,7 @@
     (cond
       (c-unbound? c)
       (do
-        (err "evic> unbound prop %s of model %s"
+        (mx-throw "evic> unbound prop %s of model %s"
           (c-prop c) (c-model c)))
 
       (c-valid? c)
@@ -94,7 +94,7 @@
     ;; --- above we had valid values so did not care. now... -------
     (when-let [md (c-model c)]
       (md-quiesced? (c-model c)))
-    (err (str/join " " ["evic> model: " (c-model c) "of cell" c "is dead"]))
+    (mx-throw (str/join " " ["evic> model: " (c-model c) "of cell" c "is dead"]))
 
     ;; --- no more early exits  -------------------
     (or (not (c-valid? c))
@@ -252,7 +252,7 @@
   (when (some #{c} *call-stack*)
     (let [me (c-model c)
           prop (c-prop-name c)]
-      (err str
+      (mx-throw
         "MXAPI_COMPUTE_CYCLE_DETECTED> cyclic dependency detected while computing prop '"
         prop "' of model '" (c-mname c) "'.\n"
         "...> formula for " prop ":\n"
