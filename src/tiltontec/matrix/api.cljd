@@ -1,6 +1,7 @@
 (ns tiltontec.matrix.api
   (:require
     [clojure.string :as str]
+    [tiltontec.matrix.base :refer [mx-throw]]
     [tiltontec.matrix.util :as util]
     [tiltontec.cell.base :as cb]
     [tiltontec.model.peek :as mpeek]
@@ -169,18 +170,18 @@
     `(let [name# ~name
            md# (tiltontec.model.core/fm-ascendant name# ~me-ref)]
        (if (nil? md#)
-         (throw (Exception. (str "fascv> did not find model " name#
+         (mx-throw (str "fascv> did not find model " name#
                               " searching up from " (tiltontec.model.peek/mname md#)
-                              " seeking property " ~prop-name " value.")))
+                              " seeking property " ~prop-name " value."))
          (if (contains? @md# ~prop-name)
            (tiltontec.model.core/mget md# ~prop-name)
-           (throw (Exception. (str "fascv> " ~name " lacks " ~prop-name " property"))))
+           (mx-throw (str "fascv> " ~name " lacks " ~prop-name " property")))
          (mget md# ~prop-name)))))
 
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
     (mxu-find-id me id-name)
-    (throw (Exception. (str "fmo> not id or name " id-name)))))
+    (mx-throw (str "fmo> not id or name " id-name))))
 
 (defn fmov
   ([me id-name]
@@ -189,7 +190,7 @@
    (when-let [mx (fmo me id-name)]
      (if (contains? @mx prop-name)
        (mget mx prop-name)
-       (throw (Exception. (str "fmov> " id-name " lacks " prop-name " property")))))))
+       (mx-throw (str "fmov> " id-name " lacks " prop-name " property"))))))
 
 (defmacro fm* [name & [me]]
   (let [me-ref (or me 'me)]

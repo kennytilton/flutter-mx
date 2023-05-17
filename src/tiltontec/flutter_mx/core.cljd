@@ -11,7 +11,7 @@
      :refer [TextStyle]]
     [clojure.string :as str]
     [tiltontec.matrix.foundation :as mxf]
-    [tiltontec.matrix.base :refer [wtrx dp dpx]]
+    [tiltontec.matrix.base :refer [wtrx dp dpx mx-throw]]
     [tiltontec.matrix.util :refer [atom?]]
     [tiltontec.model.peek :refer [Model mref? minfo]]
     [tiltontec.cell.base :refer [cinfo] :as cty]
@@ -65,7 +65,7 @@
          (recur prop me ctx v)))
 
      (cty/c-ref? widget-value)
-     (throw (Exception. (str "fx-resolve sees Cell! " (cinfo widget-value))))
+     (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
 
      (mref? widget-value)
      (do
@@ -93,17 +93,13 @@
 (defn ctx-page-pop [ctx]
   (.pop (-> ctx m.Navigator/of)))
 
-(defn bail-render [fx]
-  (dp :bail-render-c-ref!!!! fx @fx)
-  #_
-  (throw (Exception. (str "fx-render passed Cell " (deref fx)))))
-
 (defn fx-render [ctx fx]
   (wtrx [0 999 nil :render-entry (minfo fx)]
     (cond
       (not (mref? fx))
       (cond
-        (cty/c-ref? fx) (bail-render fx)
+        (cty/c-ref? fx)
+        (mx-throw (str "fx-render passed Cell " (deref fx)))
         :default (do
                    (when-not (string? fx)
                      (dp :render-sees-not-mref?-passing-thru fx))

@@ -44,9 +44,9 @@
   (if (not (contains? @me prop))
     (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
       ;(dp :mget prop (minfo me))
-      (throw (Exception. (str "MXAPI_ILLEGAL_GET_NO_SUCH_prop> mget was attempted on non-existent prop \"" prop "\"."
+      (mx-throw (str "MXAPI_ILLEGAL_GET_NO_SUCH_prop> mget was attempted on non-existent prop \"" prop "\"."
                            "\n...> FYI: known props are" (keys @me)
-                           "\n...> FYI: use mget? if prop might not exist.")))
+                           "\n...> FYI: use mget? if prop might not exist."))
       nil)
     (let [dbg? false]
       (when dbg?
@@ -292,7 +292,7 @@
       (> *trdeep* 16)
       (do (dprn :NAVIG-BAILING-at-depth *trdeep*)
           (when (:must? options)
-            (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options])))))
+            (mx-throw (str/join "-" [:fm-navig-must-failed what where options]))))
 
       (and where what (atom? where))
       (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
@@ -343,11 +343,11 @@
                         false))))
 
               (when (:must? options)
-                (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))))))
+                (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))))))
       :else (do (dpx :NAVIG-falls-out nil)
                 (when (:must? options)
-                  (throw (Exception. "fall out navig"))
-                  (throw (Exception. (str/join "-" [:fm-navig-must-failed what where options]))))
+                  (mx-throw "fall out navig")
+                  (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))
                 nil))))
 
 (defn fm! [what where]
@@ -451,7 +451,7 @@
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
     (mxu-find-id me id-name)
-    (throw (Exception. (str "fmo> not id or name " id-name)))))
+    (mx-throw (str "fmo> not id or name " id-name))))
 
 (defn fmov
   ([me id-name]
@@ -460,7 +460,7 @@
    (when-let [mx (fmo me id-name)]
      (if (contains? @mx prop-name)
        (mget mx prop-name)
-       (throw (Exception. (str "fmov> " id-name " lacks " prop-name " property")))))))
+       (mx-throw (str "fmov> " id-name " lacks " prop-name " property"))))))
 
 ;;; --- ancestry ----
 (defn fm-ancestry [me]

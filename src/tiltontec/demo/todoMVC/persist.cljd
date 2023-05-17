@@ -3,7 +3,7 @@
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     ["dart:convert" :as convert]
     ["package:uuid/uuid.dart" :as uu]
-    [tiltontec.matrix.base :refer [dprn dp dpx]]
+    [tiltontec.matrix.base :refer [dprn dp dpx mx-throw]]
     [tiltontec.matrix.util :as util]
     [clojure.walk :as walk]))
 
@@ -35,7 +35,7 @@
   Returns the unique storage key generated for the data."
   [collection-name td-map]
   (when-let [stg-id (:stg-id td-map)]
-    (throw (Exception. (str "td-initialize> sees :stg-id " stg-id ", suggesting td already written"))))
+    (mx-throw (str "td-initialize> sees :stg-id " stg-id ", suggesting td already written")))
 
   (let [new-stg-id (str collection-name "/" (.v4 (UUID)))]
     (td-store

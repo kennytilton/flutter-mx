@@ -256,19 +256,19 @@ in the CL version of Cells SETF itself is the change API dunction."
     *defer-changes*
     #_ (let [prop (c-prop-name c)
              me (c-model c)]
-         (mx-throw ( str
+         (mx-throw
            "MXAPI_UNDEFERRED_CHANGE> undeferred mswap!/mset! to the property '" prop "' by an observer detected."
            "...> such mutations must be wrapped by WITH-INTEGRITY, must conveniently with macro WITH-CC."
            "...> look for MXAPI_UNDEFERRED_CHANGE in the Errors documentation for  more details.\n"
            "...> FYI: intended new value is [" new-value "]; current value is [" (get @me prop :no-such-prop) "].\n"
            "...> FYI: instance is of type " (type-cljc me) ".\n"
            "...> FYI: full instance is " @me "\n"
-           "...> FYI: instance meta is " (meta me) "\n."))
+           "...> FYI: instance meta is " (meta me) "\n.")
          #_ (mx-throw (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
                    (c-prop c))))
     (do (dp :c-reset-rejecting-undeferred! (c-prop c))
-        (throw (Exception. (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
-                             (c-prop c) " :me " @(c-model c)))))
+        (mx-throw (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
+                             (c-prop c) " :me " @(c-model c))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
     (c-value-assume c new-value nil)
@@ -293,8 +293,8 @@ allow an observer to explicitly queue a creset! for
 execution as soon as the current change is manifested."
   `(cond
      (not *within-integrity*)
-     (throw (Exception. (str "c-reset-next!> deferred change to %s not under WITH-INTEGRITY supervision."
-                          (c-prop ~f-c))))
+     (mx-throw (str "c-reset-next!> deferred change to %s not under WITH-INTEGRITY supervision."
+                          (c-prop ~f-c)))
      ;---------------------------------------------
      :else
      (tiltontec.cell.integrity/ufb-add :change
