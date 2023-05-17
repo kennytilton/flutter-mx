@@ -79,7 +79,7 @@
   ;; sloppy
   (when prior-value
     (cond
-      (mref? prior-value) (wtrx [0 999 :mdq-lost-solo (cinfo cell) :prior (minfo prior-value)]
+      (mref? prior-value) (wtrx [0 999 nil :mdq-lost-solo (cinfo cell) :prior (minfo prior-value)]
                             (md-quiesce! prior-value))
       (coll? new-value) (cond
                           (coll? prior-value)
@@ -87,7 +87,7 @@
                             (when-not (empty? lostks)
                               (doseq [k lostks]
                                 (when (mref? k)
-                                  (wtrx [0 999 :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
+                                  (wtrx [0 999 nil :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
                                     (md-quiesce! k))))))
                           :else (when (mref? prior-value)
                                   (when-not (some #{prior-value} new-value)

@@ -513,11 +513,11 @@
     (doseq [md val]
       (md-quiesce-owned! me property md))
     (when (md-owns? me val)
-      (dp :quiescing-owned-property!!!!!!!!! property (minfo val))
+      ;;(dp :quiescing-owned-property!!!!!!!!! property (minfo val))
       (md-quiesce-self! val))))
 
 (defn md-quiesce-self! [me]
-  (wtrx [0 999 :mdq-self (minfo me)]
+  (wtrx [0 999 nil :mdq-self (minfo me)]
     (when-let [onq (get @me :on-quiesce)]
       (wtrx [0 999 :mdq-onq (minfo me)]
         (onq me)))
@@ -538,8 +538,7 @@
 
 (defn md-quiesce! [me]
   ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
-  (dp :mdq-entry (minfo me))
-  (wtrx [0 999 :mdq-entry (minfo me)]
+  (wtrx [0 999 nil :mdq-entry (minfo me)]
     (binding [*md-quiescing* true]
       (cond
         (and (coll? me) (mref? (first me)))

@@ -83,16 +83,13 @@
                    :msg-rcvd (cF+n [:ephemeral? true
                                     :on-quiesce (fn [cell]
                                                   (when-let [sub (:subscription @cell)]
-                                                    (.cancel
-                                                      ^#/(async/StreamSubscription void)
-                                                      (:subscription @cell))))
+                                                    (.cancel ^#/(async/StreamSubscription void) sub)))
                                     :watch (fn [_ me new-source old-source cell]
                                              (when (= old-source mx/unbound)
                                                (let [sub (.listen (.-stream ^async/StreamController new-source)
                                                            (fn [^String msg]
                                                              (mset! me :msg-rcvd msg)))]
-                                                 (rmap-set! [:subscription cell] sub)
-                                                 (dp :got-sub!!!!!!! sub))))]
+                                                 (rmap-set! [:subscription cell] sub))))]
                                (mget (fm* :msg-sender) :msg-stream))
                    :msg-ct   (cF (when-let [msg (the-string (mget me :msg-rcvd))]
                                    (when-not (or (str/blank? msg)
