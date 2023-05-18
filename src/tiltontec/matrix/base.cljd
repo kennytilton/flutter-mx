@@ -98,29 +98,13 @@
 (defn call-wtrx [fn lo hi trxargs]
   (let [xid (swap! wtrx-id inc)]
     (binding [*trdeep* (inc *trdeep*)]
-      #_(if (<= lo *trdeep* hi)
-          (apply call-trc xid trxargs)
-          (if (> *trdeep* hi)
-            (do (dp :throwing xid)
-                (bail-hi hi)
-                #_(mx-throw
-                    (str "wtrx depth " *trdeep* " exceeded max depth " hi ":"
-                      #_(apply call-trc$ (first trxargs)
-                          (rest trxargs))))))
-          (dp :ignoring-wtrx-id xid [lo *trdeep* hi]
-            (first trxargs) (<= lo *trdeep* hi) (<= 0 1 999)))
-
       (cond
         (<= lo *trdeep* hi)
         (apply call-trc trxargs)
 
         (> *trdeep* hi)
         (do (dp :throwing xid)
-            (bail-hi hi)
-            #_(mx-throw
-                (str "wtrx depth " *trdeep* " exceeded max depth " hi ":"
-                  #_(apply call-trc$ (first trxargs)
-                      (rest trxargs)))))
+            (bail-hi hi))
 
         :else (dp :ignoring-wtrx-id xid [lo *trdeep* hi]
                 (first trxargs) (<= lo *trdeep* hi) (<= 0 1 999)))
