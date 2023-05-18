@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [tiltontec.matrix.base
-     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props  mx-throw]]
+     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
     [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
     [tiltontec.matrix.util
      :refer [difference atom? rmap-set! rmap-meta-set! pln]]
@@ -26,7 +26,7 @@
      :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell]]
     [tiltontec.cell.evaluate :refer [cget c-awaken]]
     [tiltontec.model.peek :refer [*md-quiescing* Model minfo mref?]]
-    [tiltontec.model.base :refer [  md-cell md-install-cell md-awaken *md-host*]]))
+    [tiltontec.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
 
 (defmacro pme [& mas]
   `(when true                                               ;;  (= :login (:name (deref ~'me)))
@@ -45,8 +45,8 @@
     (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
       ;(dp :mget prop (minfo me))
       (mx-throw (str "MXAPI_ILLEGAL_GET_NO_SUCH_prop> mget was attempted on non-existent prop \"" prop "\"."
-                           "\n...> FYI: known props are" (keys @me)
-                           "\n...> FYI: use mget? if prop might not exist."))
+                  "\n...> FYI: known props are" (keys @me)
+                  "\n...> FYI: use mget? if prop might not exist."))
       nil)
     (let [dbg? false]
       (when dbg?
@@ -281,8 +281,8 @@
     (fmdp :host :navhosted-gotit prop what (minfo where))
     (cond
       (mref? it) (do (fmdp :host :checking-hosted!! prop (minfo it))
-                       (fm-navig what it
-                         :me? true :inside? true :up? false))
+                     (fm-navig what it
+                       :me? true :inside? true :up? false))
       (sequential? it) (do (fmdp :checking-hosted-seq!! (map minfo it))
                            (some (fn [it]
                                    (fm-navig what it
@@ -504,7 +504,7 @@
 ;; --- md-quiesce --
 
 (defn md-owns? [owner owned?]
-  (and (mref? owner)(mref? owned?)
+  (and (mref? owner) (mref? owned?)
     (or (= owner (mpar owned?))
       (= owner (mhost owned?)))))
 
@@ -536,15 +536,22 @@
     ;; (reset! me (concat [:quiesced] [(minfo me)]))
     (rmap-meta-set! [:state me] :quiesced)))
 
+(def +md-quiesce-feature+ (atom true))
+
+(defn md-quiesce-feature! [on-off]
+  (reset! +md-quiesce-feature+ on-off))
+
 (defn md-quiesce! [me]
   ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
-  (wtrx [0 999 nil :mdq-entry (minfo me)]
-    (binding [*md-quiescing* true]
-      (cond
-        (and (coll? me) (mref? (first me)))
-        (doseq [elt me]
-          (md-quiesce! elt))
-        :else
-        (when (mref? me)
-          (md-quiesce-self! me))))))
+  (when @+md-quiesce-feature+
+    (dp :quiescing!!!!)
+    (wtrx [0 999 nil :mdq-entry (minfo me)]
+      (binding [*md-quiescing* true]
+        (cond
+          (and (coll? me) (mref? (first me)))
+          (doseq [elt me]
+            (md-quiesce! elt))
+          :else
+          (when (mref? me)
+            (md-quiesce-self! me)))))))
 

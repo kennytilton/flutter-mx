@@ -7,6 +7,7 @@
 
     ;["dart:io" :as io]
 
+    [tiltontec.model.core :as md]
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx]]
     [tiltontec.alpha2.counter :as a2c]
@@ -25,14 +26,14 @@
 
 (defn main []
   (dp :main-entry)
-
+  (md/md-quiesce-feature! false)
   (.ensureInitialized w/WidgetsFlutterBinding)
   (wtrx [0 999 :run-app]
     (dp :running-app)
     (fx/run-app
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example.
-        (hello/make-app))))
+        (todo/make-app))))
   (dp :run-app-fini)
 
   ;; (testing/run-tests)

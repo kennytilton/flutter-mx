@@ -88,7 +88,7 @@
                     ;; unless in a fresh scope. So ^^^ we throw in a fresh scope.
                     {:onFocusChange (cF (as-dart-callback [focused?]
                                           (dp :focuschange!!! @me title focused? (mget (fmu :item-control) :editing?))
-                                          (when #_ (mget (fmu :item-control) :editing?) (not focused?)
+                                          (when #_(mget (fmu :item-control) :editing?) (not focused?)
                                             ;; spec says commit on blur...
                                             (commit-to-do-editing (fm* :todo-editor) todo)
                                             (mset! (fasc :item-control) :editing? false))))}
@@ -153,8 +153,10 @@
                                           .color (.-dividerColor (.of m/Theme context))))))}
         (fx/gesture-detector
           {:onDoubleTap (as-dart-callback []
+                          (dp :double-tap!!!! :editing (mget me :editing?) (minfo me))
                           (when (not (mget me :editing?))
                             ;; todo fix double-taps and keyrepeat  not seen during editing
+                            (dp :setting-editing-true111 (minfo me))
                             (mset! me :editing? true)))}
           {:name     :item-control
            :hovered? (cI false)
@@ -166,9 +168,11 @@
               {:onEnter (hover-cb true)
                :onHover (hover-cb true)
                :onExit  (hover-cb false)}
-              (if (mget (fasc :item-control) :editing?)
-                (to-do-editor me todo)
-                (to-do-display todo)))))))))
+              (do
+                (dp :mouse-kids-rule!!! (mget (fasc :item-control) :editing?))
+                (if (mget (fasc :item-control) :editing?)
+                  (to-do-editor me todo)
+                  (to-do-display todo))))))))))
 
 (defn todo-items []
   (fx/expanded
