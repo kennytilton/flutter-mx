@@ -97,22 +97,23 @@
 
 (defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
-  (when prior-value
-    (cond
-      (mref? prior-value) (wtrx [0 999 :mdq-lost-solo!!!!!!! (cinfo cell) :prior (minfo prior-value)]
-                            (md-quiesce-if-owned! (c-model cell) prior-value))
-      (coll? new-value) (cond
-                          (coll? prior-value)
-                          (let [lostks (difference (set prior-value) (set new-value))]
-                            (when-not (empty? lostks)
-                              (doseq [k lostks]
-                                (when (mref? k)
-                                  (wtrx [0 999 :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
-                                    (md-quiesce-if-owned! (c-model cell) k))))))
-                          :else (when (mref? prior-value)
-                                  (when-not (some #{prior-value} new-value)
-                                    (wtrx [0 999 :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
-                                      (md-quiesce-if-owned! (c-model cell) prior-value))))))))
+  (when (mx/md-quiesce-feature?)
+    (when prior-value
+      (cond
+        (mref? prior-value) (wtrx [0 999 :mdq-lost-solo!!!!!!! (cinfo cell) :prior (minfo prior-value)]
+                              (md-quiesce-if-owned! (c-model cell) prior-value))
+        (coll? new-value) (cond
+                            (coll? prior-value)
+                            (let [lostks (difference (set prior-value) (set new-value))]
+                              (when-not (empty? lostks)
+                                (doseq [k lostks]
+                                  (when (mref? k)
+                                    (wtrx [0 999 :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
+                                      (md-quiesce-if-owned! (c-model cell) k))))))
+                            :else (when (mref? prior-value)
+                                    (when-not (some #{prior-value} new-value)
+                                      (wtrx [0 999 :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
+                                        (md-quiesce-if-owned! (c-model cell) prior-value)))))))))
 
 (deftype FXDartWidget []
   :extends Model

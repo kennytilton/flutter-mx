@@ -541,13 +541,16 @@
 
 (def +md-quiesce-feature+ (atom false))
 
+(defn md-quiesce-feature? []
+  @+md-quiesce-feature+)
+
 (defn md-quiesce-feature! [on-off]
   (dp :md-quiesce-feature-going!!!!!!!!!!!!! on-off)
   (reset! +md-quiesce-feature+ on-off))
 
 (defn md-quiesce! [me]
   ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
-  (when @+md-quiesce-feature+
+  (when (md-quiesce-feature?)
     (dp :md-quiescing (minfo me))
     (wtrx [0 999 nil :mdq-entry (minfo me)]
       (binding [*md-quiescing* true]
