@@ -1,6 +1,6 @@
 (ns tiltontec.cell.base
   (:require
-    [tiltontec.model.peek :refer [mref?]]
+    [tiltontec.model.peek :refer [mref? minfo]]
     [tiltontec.matrix.base :as utb
      :refer [mx-throw def-rmap-props dp]]
 
@@ -165,7 +165,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-quiesce! [c]
   (assert c)
-  ;;(dp :c-quiesce!!! (cinfo c))
+  (dpc c :quiesce :entry)
   (when-not false                                           ;; (c-quiesced? c)
     (assert (not (c-quiesced? c))
       (str "c-quiesce!> already dead " (cinfo c)))
@@ -185,6 +185,9 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-ref? [c]
   (when (and c (atom? c) (map? @c))
     (dart/is? (c-type c) Cell)))
+
+(defn c-ref?! [c]
+  (dart/is? (c-type c) Cell))
 
 (defn c-formula? [c]
   (when (and c (atom? c) (map? @c))
@@ -252,17 +255,32 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
                        :not-cell-c)
     (c-quiesced? c) [:deadc> @c]
-    :else (if verbose? [:cinfo-all @c]
-            ((juxt c-prop-name c-mname c-async? c-value) c)))))
+    :else (if verbose?
+            [:cinfo-all @c]
+            (conj ((juxt c-prop-name c-mname #_ c-async? c-value) c)
+              [:used/users (count (c-useds c))
+               (count (c-callers c))])))))
 
-(defn dpc [c & bits]
-  (assert (c-ref? c) (str "DPC got non-c: " c bits))
-  (when (:debug @c)
-    (apply dp :DPC (cinfo c) bits)))
+;(defn dpc [c & bits]
+;  (assert (c-ref? c) (str "DPC got non-c: " c bits))
+;  (when (:debug @c)
+;    (apply dp :DPC (cinfo c) bits)))
+
+(defn atom-dump [a]
+  (if (atom? a)
+    (atom-dump (deref a))
+    a))
+
+(defn dpc [c category & bits]
+  (assert (c-ref?! c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)))
+  (when-let [dbg (:debug @c)]
+    (when (or (true? dbg) (some #{category} dbg))
+      (apply dp :DPC category (first bits) (cinfo c) (rest bits)))))
 
 ;; --- dependency maintenance --------------------------------
 
 (defn dependency-record [used]
+  (dpc *depender* :link :record-usage-of/if  (not (c-optimized-away? used)) (cinfo used))
   (when-not (c-optimized-away? used)
     (mut-set! *depender* :useds
       (conj (c-useds *depender*) used))
@@ -270,15 +288,19 @@ rule to get once behavior or just when fm-traversing to find someone"
       (conj (c-callers used) *depender*))))
 
 (defn dependency-drop [used caller]
+  (dpc caller :link :drops-dependency (cinfo used))
   (mut-set! caller :useds (disj (c-useds caller) used))
   (mut-set! used :callers (disj (c-callers used) caller)))
 
 (defn unlink-from-callers [used]
+  (dpc used :link :unlink-callers (count (c-callers used)))
   (doseq [caller (c-callers used)]
+    (dpc caller :link :dropped-by-used!!!! (cinfo used))
     (dependency-drop used caller)))
 
 (defn unlink-from-used [caller why]
   "Tell dependencies they need not notify us when they change, then clear our record of them."
+  (dpc caller :link :unlink-from-used!!! (count (c-useds caller)))
   (doseq [used (c-useds caller)]
     (dependency-drop used caller)))
 
@@ -291,12 +313,5 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 
 ;;---
-
-(defn md-prop-owning?
-  "Signifies whether the given prop is a host or owning property, meaning
-  its value should be GCed and navigation might want to go here."
-  [class-name prop-name]
-  ;; todo resurrect if needed, or clean up altogether
-  false)
 
 (defn c-debug [c tag])

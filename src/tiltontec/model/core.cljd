@@ -75,7 +75,6 @@
 ;;; --- accessors ----
 
 (defn mset! [me prop new-value]
-  ;; (dp :md-reset prop )
   (assert me "no me passed to mset!")
   (assert (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
@@ -93,14 +92,14 @@
           "...> FYI: full instance is " @me "\n"
           "...> FYI: instance meta is " (meta me) "\n.")
         (mx-throw
-          "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent prop \"" prop "\".\n"
+          "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mset! was attempted on non-existent prop \"" prop "\".\n"
           "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))))
 
 (defn mswap! [me prop swap-fn & swap-fn-args]
   (if (contains? @me prop)
     (mset! me prop (apply swap-fn (mget me prop) swap-fn-args))
     (mx-throw
-      "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-existent prop \"" prop "\".\n"
+      "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-extant prop \"" prop "\".\n"
       "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
 
 (defn make [& arg-list]
@@ -249,8 +248,8 @@
           (if-let [par (:parent @where)]
             (fm-ascendant what par
               :me? true)
-            (when-let [owner (:owner @where)]
-              (fm-ascendant what owner
+            (when-let [host (:host @where)]
+              (fm-ascendant what host
                 :me? true)))
 
           (when (:must? options)
@@ -503,23 +502,29 @@
 
 ;; --- md-quiesce --
 
-(defn md-owns? [owner owned?]
-  (and (mref? owner) (mref? owned?)
-    (or (= owner (mpar owned?))
-      (= owner (mhost owned?)))))
+(defn md-owning?
+  "Is MD the parent or host of OTHER?"[md other]
+  (and (mref? md) (mref? other)
+    (or (= md (mpar other))
+      (= md (mhost other)))))
+
+(defn md-quiesce-if-owned! [owner md]
+  (when (or (= owner (mpar md))(= owner (mhost md)))
+    (md-quiesce! md)))
 
 (defn md-quiesce-owned! [me property val]
   (if (and (coll? val) (mref? (first val)))
     (doseq [md val]
       (md-quiesce-owned! me property md))
-    (when (md-owns? me val)
-      ;;(dp :quiescing-owned-property!!!!!!!!! property (minfo val))
-      (md-quiesce-self! val))))
+    (when (md-owning? me val)
+      (dp :mdqing-owned-property property (minfo val) :owned-by (minfo me))
+      (md-quiesce! val))))
 
 (defn md-quiesce-self! [me]
-  (wtrx [0 999 nil :mdq-self (minfo me)]
+  (wtrx [0 999 :mdq-self (minfo me)]
     (when-let [onq (get @me :on-quiesce)]
       (wtrx [0 999 :mdq-onq (minfo me)]
+        (dp :mdq-onq (minfo me))
         (onq me)))
 
     (doseq [c (vals (:cz (meta me)))]
@@ -529,22 +534,21 @@
     (doseq [k (keys @me)]
       (when-not (some #{k} [:parent :host])
         (when-let [v (get @me k)]
-          (when (or (mref? v)
-                  (and (coll? v) (mref? (first v))))
-            (md-quiesce-owned! me k (get @me k))))))
+          (md-quiesce-owned! me k (get @me k)))))
 
     ;; (reset! me (concat [:quiesced] [(minfo me)]))
     (rmap-meta-set! [:state me] :quiesced)))
 
-(def +md-quiesce-feature+ (atom true))
+(def +md-quiesce-feature+ (atom false))
 
 (defn md-quiesce-feature! [on-off]
+  (dp :md-quiesce-feature-going!!!!!!!!!!!!! on-off)
   (reset! +md-quiesce-feature+ on-off))
 
 (defn md-quiesce! [me]
   ;; todo this means we have to ensure that :on-quiesce is just a function, not a cell
   (when @+md-quiesce-feature+
-    (dp :quiescing!!!!)
+    (dp :md-quiescing (minfo me))
     (wtrx [0 999 nil :mdq-entry (minfo me)]
       (binding [*md-quiescing* true]
         (cond

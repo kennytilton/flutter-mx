@@ -13,7 +13,7 @@
              c-rule c-code c-me c-value-state c-callers dependency-record
              unlink-from-callers *causation* c-synaptic? c-mname
              c-pulse c-pulse-last-changed c-ephemeral? c-then? c-prop c-props c-prop-name
-             *depender* *c-prop-depth* md-prop-owning? c-lazy dpc c-async?] :as cty]
+             *depender* *c-prop-depth*  c-lazy dpc c-async?] :as cty]
     [tiltontec.cell.observer :refer [c-observe]]
     [tiltontec.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]
@@ -63,7 +63,7 @@
   and propagation."
 
   [c debug-id ensurer]
-  (dpc c :evic-entry)
+  (dpc c :evic :evic-entry)
   (cond
     ; --------------------------------------------------
     *md-quiescing*                                            ; we got kicked off during md-quiesce! processing
@@ -150,7 +150,7 @@
                        (when (and (nil? (c-model c))
                                (= (c-state c) :nascent)
                                (> @+pulse+ (c-pulse-observed c)))
-                         (dpc c :cget-observe-awake!!!!!!!!!!! (c-prop c) (c-state c))
+                         (dpc c :cget :observe-awake!!!!!!!!!!! (c-prop c) (c-state c))
                          (rmap-set! [:state c] :awake)
                          (c-observe c prior-value :cget)
                          (ephemeral-reset c)))))
@@ -183,7 +183,7 @@
     (dpx :--------------------- 43)
     (let [[raw-value propagation-code] (calculate-and-link c)]
       ;;(trx :cn-set-sees!!!! (c-prop c) raw-value propagation-code)
-      (dpc c :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
+      (dpc c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
         #_#_:meta-mw (meta (c-me c)))
 
       (cond
@@ -290,7 +290,7 @@
             prop-code? (and (c-synaptic? c)
                          (vector? raw-value)
                          (contains? (meta raw-value) :propagate))]
-        (dpc c :cn-link-got raw-value prop-code?)
+        (dpc c :cnset :cn-link-got raw-value prop-code?)
         (if prop-code?
           [(first raw-value) (:propagate (meta raw-value))]
           [raw-value nil])))))
@@ -379,7 +379,7 @@
           ;; --- cell maintenance ---
           ;; even if no news at least honor the reset!
           ;;
-          (dpc c :cvass-sets-awake new-value)
+          (dpc c :cnset :cvass-sets-awake new-value)
           (rmap-set! [:value c] new-value)
           (rmap-set! [:state c] :awake)
           #_(trx :new-vlue-installed (c-prop c) new-value (:value c))
@@ -410,6 +410,7 @@
             ;; we now can look to see if we can be optimized away
             (let []
               ;; --- data flow propagation -----------
+              (dpc c :propagate :cvass-intiating-maybe)
               (when-not (or (= propagation-code :no-propagate)
                           (c-optimized-away? c))
                 (assert (map? @c))
@@ -421,8 +422,9 @@
 then clear our record of them."
   (doseq [used (c-useds c)]
     (do
+      (dpc c :link :caller-removes-self-from-used-callers (cinfo used))
       (rmap-set! [:callers used] (disj (c-callers used) c))))
-
+  (dpc c :link :clearing-all-useds)
   (rmap-set! [:useds c] #{}))
 
 (defn md-cell-flush [c]
@@ -454,7 +456,7 @@ then clear our record of them."
           (c-valid? c)                                      ;; /// when would this not be the case? and who cares?
           (not (c-synaptic? c))                             ;; no prop to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
-    (dpc c :optimizing-away!!!! (c-prop c))
+    (dpc c :opti :optimizing-away!!!! (c-prop c))
     (when (= :freeze (c-optimize c))
       ;; we could just blindly call unlink-from-unused since normally
       ;; we are here because there are no useds, but the precision may pay off some day
@@ -483,7 +485,7 @@ then clear our record of them."
       (ensure-value-is-current caller :opti-used c))        ;; this will get round to optimizing
     ; them if necessary, and if not they still need to have one last notification if this was
     ; a rare mid-life optimization
-    (dpc c :OPTI-now-setting-c-atom-to-value (c-value c))
+    (dpc c :opti :OPTI-now-setting-c-atom-to-value (c-value c))
     (reset! c (c-value c))
     ))
 
@@ -512,6 +514,7 @@ then clear our record of them."
 
   [c prior-value callers]
 
+  (dpc c :propagate :top-prop-call)
   ;; (trx :propagate (:prop @c))
 
   (cond
@@ -535,13 +538,6 @@ then clear our record of them."
         ;; to look at its siblings (say a view instance being deleted from a stack who looks to the psib
         ;; pb to decide its own pt), the doomed kid will still have a parent but not be in its kids prop
         ;; when it goes looking for a sibling relative to its position.
-        #_ ;; 2023-05-15 old school
-                (when (and prior-value
-                        (c-model c)
-                        (md-prop-owning? (mx-type (c-model c)) (c-prop c)))
-                  (when-let [ownees (difference (set-ify prior-value) (set-ify (c-value c)))]
-                    (doseq [ownee ownees]
-                      (md-FIX-quiesce ownee))))
 
         (propagate-to-callers c callers)
         ;;(trx :watch-chkpulse!!!!!!!! @+pulse+ (c-pulse-observed c))
@@ -579,6 +575,7 @@ then clear our record of them."
   ;;         but B is busy eagerly propagating. "This time" is important because it means
   ;;         there is no way one can reliably be sure H will not ask for A
   ;;
+  (dpc c :propagate (count callers))
   (when-not (empty? callers)
     (let [causation (cons c *causation*)]                   ;; closed over below
       (with-integrity (:tell-dependents c)

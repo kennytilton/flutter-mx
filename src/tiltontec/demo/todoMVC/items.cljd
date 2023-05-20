@@ -44,10 +44,11 @@
         "X"))))
 
 (defn to-do-display [todo]
+  (dp :building-display-todo (td-title todo))
   (fx/list-tile
     {:leading  (completion-toggler todo)
      :trailing (delete-button todo)
-     :title    (cF (fx/text!
+     :title    (cF (fx/text
                      {:style (cF (if (mget todo :completed)
                                    (p/TextStyle
                                      .color m.Colors/grey
@@ -56,9 +57,9 @@
                                      (if (mget todo :ae-events?)
                                        m.Colors/red
                                        m.Colors/blue))))}
-                     (or (td-title todo)
-                       "notitle bug")))}
-    {:name :my-list-tile
+                     {:name :todo-li-title-text}
+                     (td-title todo)))}
+    {:name :todo-dsp
      :todo todo}))
 
 (defn- commit-to-do-editing
@@ -78,6 +79,7 @@
 
 (defn to-do-editor [me todo]
   (assert todo)
+  (dp :building-editor-for (td-title todo) (minfo me))
   (fx/list-tile
     {:title (cF (let [tile me
                       _ (assert todo "no todo in editor")
@@ -87,14 +89,15 @@
                     ;; the to-do input field is already focused, and autofocus does not jump to those
                     ;; unless in a fresh scope. So ^^^ we throw in a fresh scope.
                     {:onFocusChange (cF (as-dart-callback [focused?]
-                                          (dp :focuschange!!! @me title focused? (mget (fmu :item-control) :editing?))
+                                          (dp :focuschange!!! (cinfo me) title focused?
+                                            (mget (fmu :item-control) :editing?))
                                           (when #_(mget (fmu :item-control) :editing?) (not focused?)
                                             ;; spec says commit on blur...
                                             (commit-to-do-editing (fm* :todo-editor) todo)
                                             (mset! (fasc :item-control) :editing? false))))}
-                    {:owner tile}
-                    ;; ^^^ this widget is a delegate, not a child, so we record the ListTile as the "owner",
-                    ;; and modified navigation to try any owner if "parent" is nil while searching up the Matrix.
+                    {:host tile}
+                    ;; ^^^ this widget is a delegate, not a child, so we record the ListTile as the "host",
+                    ;; and modified navigation to try any host if "parent" is nil while searching up the Matrix.
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
@@ -124,15 +127,16 @@
                                                                .text (mget me :value)))}
                           {:name  :todo-editor
                            :value (cI title)}))))))}
-    {:todo  todo
-     :owner me}))
+    {:name :todo-edt
+     :todo  todo
+     :host me}))
 
 (defn todo-list-item [todo]
+  (dp :building-todo-LI (td-title todo))
   (fx/dismissible
     {:key         (m/ValueKey. (td-stg-id todo))
      :direction   w/DismissDirection.horizontal
-     :onDismissed (todo-delete-callback todo :swipe-dismissed)
-     }
+     :onDismissed (todo-delete-callback todo :swipe-dismissed)}
     {:name :todo-LI}
     (fx/visibility!
       ;; try with SizedBox.shrink?
@@ -157,10 +161,16 @@
                           (when (not (mget me :editing?))
                             ;; todo fix double-taps and keyrepeat  not seen during editing
                             (dp :setting-editing-true111 (minfo me))
-                            (mset! me :editing? true)))}
+                            (mset! me :editing? true)))
+           :onTap       (as-dart-callback []
+                          (let [ec (:editing? (:cz (meta me)))]
+                            (dp :tap!!!! :editing (mget me :editing?) (minfo me))
+                            (dp :tapczz (cinfo ec))))}
           {:name     :item-control
            :hovered? (cI false)
-           :editing? (cI false)}
+           :editing? (cI false :debug [:link :quiesce :propagate :opti]
+                       :watch (fn [_ me newv oldv c]
+                                (dp :editing-watch!! newv)))}
           (letfn [(hover-cb [hovered?]
                     (as-dart-callback [e]
                       (mset! (fasc :item-control) :hovered? hovered?)))]
@@ -168,8 +178,10 @@
               {:onEnter (hover-cb true)
                :onHover (hover-cb true)
                :onExit  (hover-cb false)}
+              {:name :mouse-rgn}
               (do
-                (dp :mouse-kids-rule!!! (mget (fasc :item-control) :editing?))
+                (dp :mouse-region-kids-rule!!! (mget (fasc :item-control) :editing?) (cinfo _cell))
+                (swap! _cell assoc :debug [:link :quiesce :opti])
                 (if (mget (fasc :item-control) :editing?)
                   (to-do-editor me todo)
                   (to-do-display todo))))))))))
@@ -185,6 +197,7 @@
                             ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                             (fx/fx-render ctx
                               (nth (mkids me) i)))))}
+      {:name :lv-builder}
       (map todo-list-item
         (sort-by todo/td-created-at
           (todo/app-todos (my-app)))))))

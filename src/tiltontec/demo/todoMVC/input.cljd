@@ -4,7 +4,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
-    [tiltontec.matrix.api :refer [cF cI cFonce mget  mswap! mset!]]
+    [tiltontec.matrix.api :refer [dp cF cI cFonce mget  mswap! mset!]]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
     [tiltontec.demo.todoMVC.common :refer [ my-todo-list ] :as cmm]
     [tiltontec.demo.todoMVC.todo :refer [td-completed] :as todo]))
@@ -12,15 +12,18 @@
 (defn todo-input-onSubmitted-formula []
   (cF (as-dart-callback [value]
         ;; blank or not we need to restore focus to the input per the spec
+        (dp :new-todo-onsubmit-----------------------------------)
         (.requestFocus ^m/FocusNode (mget me :focusNode))
         ;; spec says to trim, and to silently ignore blank entry
         (let [trimmed (str/trim value)]
           (when-not (str/blank? trimmed)
             ;; --- we have a non-blank entry, so we save, clear entry, and store
+            (dp :new-todo-trim-----------------------------------)
             (mset! me :value trimmed) ;; let text proxy know its cleaned value
             (.clear ^m/TextEditingController
               (mget me :controller))
             (let [td-lst (my-todo-list)]
+              (dp :new-todo-add-----------------------------------)
               (mswap! td-lst :kids conj
                 (todo/make-ToDo td-lst trimmed false))))))))
 

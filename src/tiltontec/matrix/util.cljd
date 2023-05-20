@@ -65,7 +65,10 @@
   new-value)
 
 (defn rmap-meta-set! [[prop ref] new-value]
-  (assert (meta ref))
+  (assert (atom? ref)
+    (str "rmap-meta-set!> prop:" prop
+      "new-value:" new-value
+      "failed assertion atom? on ref:" ref))
   (alter-meta! ref assoc prop new-value)
   new-value)
 

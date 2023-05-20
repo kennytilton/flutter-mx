@@ -15,7 +15,7 @@
             [tiltontec.model.peek :refer [minfo Model]]
             [tiltontec.cell.base :refer [cinfo c-model] :as cty]
             [tiltontec.matrix.api
-             :refer [md-quiesce! rmap-meta-set! mref? make mget mget? mkids mswap! cI cFkids]
+             :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set! mref? make mget mget? mkids mswap! cI cFkids]
              :as mx]
             [clojure.string :as str]))
 
@@ -39,6 +39,26 @@
   (dpx :recording-state (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
   (mx/with-cc :reco-state
     (mx/mset! me :fx$state state)))
+
+(defn record-fx$ctx [me ctx]
+  (mx/rmap-meta-set! [:fx$ctx me] ctx))
+
+(defn fx-ctx [me]
+  (:fx$ctx (meta me)))
+
+(defn ctx-check [fx-class me ctx]
+  (cond
+    (nil? (fx-ctx me))
+    (do
+      ;(dp :ctx-check-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
+      (mx/rmap-meta-set! [:fx$ctx me] ctx))
+
+    (= ctx (fx-ctx me))
+    (dpx :ctx-check-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
+
+    :else (do
+            (dp :ctx-check-fail (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
+            (mx/rmap-meta-set! [:fx$ctx me] ctx))))
 
 (defn fx-state-nearest [me]
   (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))
@@ -79,20 +99,20 @@
   ;; sloppy
   (when prior-value
     (cond
-      (mref? prior-value) (wtrx [0 999 nil :mdq-lost-solo (cinfo cell) :prior (minfo prior-value)]
-                            (md-quiesce! prior-value))
+      (mref? prior-value) (wtrx [0 999 :mdq-lost-solo!!!!!!! (cinfo cell) :prior (minfo prior-value)]
+                            (md-quiesce-if-owned! (c-model cell) prior-value))
       (coll? new-value) (cond
                           (coll? prior-value)
                           (let [lostks (difference (set prior-value) (set new-value))]
                             (when-not (empty? lostks)
                               (doseq [k lostks]
                                 (when (mref? k)
-                                  (wtrx [0 999 nil :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
-                                    (md-quiesce! k))))))
+                                  (wtrx [0 999 :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
+                                    (md-quiesce-if-owned! (c-model cell) k))))))
                           :else (when (mref? prior-value)
                                   (when-not (some #{prior-value} new-value)
                                     (wtrx [0 999 :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
-                                      (md-quiesce! prior-value))))))))
+                                      (md-quiesce-if-owned! (c-model cell) prior-value))))))))
 
 (deftype FXDartWidget []
   :extends Model
@@ -151,6 +171,7 @@
                            (when-let [init (tiltontec.model.core/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (with-flutter-ref
                              (~fx-class                     ;; /SnackBar
                                ~@(let [kvs (for [[k# _#] fx-props]
@@ -180,6 +201,7 @@
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (let [k1# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
                                        (first (tiltontec.model.core/mkids me)))]
                              (with-flutter-ref
@@ -284,6 +306,7 @@
                            (when-let [init (tiltontec.matrix.api/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (with-flutter-ref
                              (~fx-class
                                ~(symbol (str "." (name target-prop-name)))
@@ -351,7 +374,7 @@
                              (dpx :calling-initstate-of (tiltontec.cell.base/minfo me))
                              (init this me)))
                          (~'build [_# ctx]
-                           (dpx :konly-param1-stateful-build-entry)
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (with-flutter-ref
                              (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
                                           (tiltontec.matrix.api/mget me :_param-1))
@@ -380,6 +403,7 @@
                            #_(when-let [init (mget? me :initState)]
                                (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (with-flutter-ref
                              (~fx-class
                                ~@(let [kvs (for [[k# _#] fx-props]
@@ -407,6 +431,7 @@
                            (when-let [init (tiltontec.matrix.api/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (with-flutter-ref
                              (~fx-class (tiltontec.flutter-mx.core/fx-resolve :ico-prop me ctx
                                           (tiltontec.matrix.api/mget me ~p1-prop-name))
@@ -437,6 +462,7 @@
                            (when-let [init (tiltontec.matrix.api/mget? me :initState)]
                              (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.matrix.api/mkids me)))]
                              (with-flutter-ref
@@ -471,6 +497,7 @@
                              ;; this is where widgets can build controllers who vsync
                              (init this me)))
                          (~'build [_# ctx]
+                           (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) me ctx)
                            (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 me ctx
                                         (first (tiltontec.matrix.api/mkids me)))]
                              (with-flutter-ref

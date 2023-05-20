@@ -17,7 +17,7 @@
              unlink-from-callers *causation*
              c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
-             md-prop-owning? c-lazy] :as cty]
+              c-lazy] :as cty]
 
     [tiltontec.cell.observer
      :refer [fn-obs]]
@@ -38,15 +38,21 @@
                                :on-quiesce})
 
 (defn c-options-canonicalize [options allowed]
+  ;;(dp :coc-entry options)
+  (when (some #{:zoom} options)
+    (dp :make-cell-sees-zoom options))
   (loop [[k v & more] options
          res nil
          observer? false]
+    ;;(dp :coc-pair k v (count more))
     (cond
       (nil? k) (reverse res)
       :else (do
               (assert (some #{k} allowed) (str "Cell option invalid: " k ". Only allowed are: " allowed))
+              (when (= k :zoom)
+                (dp :zoom!!! k allowed (some #{k} allowed)))
               (when (and observer? (some #{k} [:obs :watch]))
-                (mx-throw "make-c-formula> options include multiple :watch or :obs. Supply just one."))
+                (mx-throw "c-options-canonicalize> options include multiple :watch or :obs. Supply just one."))
 
               (recur more (conj res (case k
                                       :watch :obs
@@ -246,7 +252,7 @@
   "The moral equivalent of a Common Lisp SETF, and indeed
 in the CL version of Cells SETF itself is the change API dunction."
   (assert (c-ref? c))
-  (dpc c :cset!!!!!!! new-value (cinfo c) :fut? (c-async? c)
+  (dpc c :cset new-value (cinfo c) :fut? (c-async? c)
     :defer? *defer-changes*
     :winteg? cty/*within-integrity*
     @c)
@@ -274,9 +280,9 @@ in the CL version of Cells SETF itself is the change API dunction."
     (c-value-assume c new-value nil)
     ;-------------------------------------------
     :else
-    (do (dpc c :cset!!!-integrity!!!!!!!!! new-value (cinfo c))
+    (do (dpc c :cset :cset!!!-integrity!!!!!!!!! new-value (cinfo c))
         (with-integrity (:change (c-prop c))
-          (dpc c :cset!-pre-ass-fires!!! (cinfo c) new-value)
+          (dpc c :cset :cset!-pre-ass-fires!!! (cinfo c) new-value)
           (c-value-assume c new-value nil)))))
 
 (defn creset! [c new-value]
