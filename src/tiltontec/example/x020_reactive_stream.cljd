@@ -100,7 +100,9 @@
 
           (fx/text {:style (p/TextStyle .color m.Colors/blue
                              .fontSize 18.0)}
-            {:full-text (cF (conj
-                              (if (= _cache cty/unbound) [] _cache)
-                              (the-string (mget (fmu :msg-recipient) :msg-rcvd))))}
+            {:full-text (cF (if (mget (fmu :listening) :value)
+                              (conj
+                                (if (= _cache cty/unbound) [] _cache)
+                                (the-string (mget (fmu :msg-recipient) :msg-rcvd)))
+                              _cache))}
             (str/join " " (remove #{"<none>"} (mget me :full-text)))))))))
