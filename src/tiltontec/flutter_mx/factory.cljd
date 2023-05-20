@@ -33,32 +33,34 @@
 (defn flutter-ref [me]
   (:fx$flutter-ref (meta me)))
 
-;;; --------------------
-
-(defn record-fx$state [me state]
-  (dpx :recording-state (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
-  (mx/with-cc :reco-state
-    (mx/mset! me :fx$state state)))
+;;; --- ctx tracking ----------------------
 
 (defn record-fx$ctx [me ctx]
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
-
-(defn fx-ctx [me]
-  (:fx$ctx (meta me)))
 
 (defn ctx-check [fx-class me ctx]
   (cond
     (nil? (fx-ctx me))
     (do
       ;(dp :ctx-check-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
-      (mx/rmap-meta-set! [:fx$ctx me] ctx))
+      (record-fx$ctx me ctx))
 
     (= ctx (fx-ctx me))
     (dpx :ctx-check-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
 
     :else (do
-            (dp :ctx-check-fail (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
-            (mx/rmap-meta-set! [:fx$ctx me] ctx))))
+            (dp :ctx-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
+            (record-fx$ctx me ctx))))
+
+(defn fx-ctx [me]
+  (:fx$ctx (meta me)))
+
+;;; --- state tracking -----------------
+
+(defn record-fx$state [me state]
+  (dpx :recording-state (tiltontec.cell.base/minfo me) cty/*defer-changes* cty/*within-integrity*)
+  (mx/with-cc :reco-state
+    (mx/mset! me :fx$state state)))
 
 (defn fx-state-nearest [me]
   (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))

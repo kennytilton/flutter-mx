@@ -62,7 +62,9 @@
           {:mainAxisAlignment m.MainAxisAlignment/center}
           (fx/text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 36.0)}
-            (str "Message " (or (mget (fmu :msg-recipient) :msg-ct) "not") " received:"))
+            (if (mget (fmu :listening) :value)
+              (str "Message " (or (mget (fmu :msg-recipient) :msg-ct) "not") " received:")
+              _cache))
 
           (fx/check-box
             {:value     (cI true :watch (fn [_ me newv _ _]
