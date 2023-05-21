@@ -9,7 +9,7 @@
     [tiltontec.cell.base :refer [cinfo] :as cty]
     [tiltontec.model.peek :refer [minfo]]
     [tiltontec.matrix.api :refer [mget mswap! mset! mset! mkids fm* fmuval fmu fasc
-                                  cF cI cFonce with-mx-isolation dp dpx]]
+                                  cF cI cFonce with-mx-isolation dp dpx] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
     [tiltontec.demo.todoMVC.common :as cmm
      :refer [my-todo-list]]
@@ -78,7 +78,6 @@
 
 (defn to-do-editor [me todo]
   (assert todo)
-  (dp :building-editor-for (td-title todo) (minfo me))
   (fx/list-tile
     {:title (cF (let [tile me
                       _ (assert todo "no todo in editor")
@@ -88,8 +87,6 @@
                     ;; the to-do input field is already focused, and autofocus does not jump to those
                     ;; unless in a fresh scope. So ^^^ we throw in a fresh scope.
                     {:onFocusChange (cF (as-dart-callback [focused?]
-                                          (dp :focuschange!!! (cinfo me) title focused?
-                                            (mget (fmu :item-control) :editing?))
                                           (when #_(mget (fmu :item-control) :editing?) (not focused?)
                                             ;; spec says commit on blur...
                                             (commit-to-do-editing (fm* :todo-editor) todo)
@@ -157,10 +154,7 @@
           {:onDoubleTap (as-dart-callback []
                           (when (not (mget me :editing?))
                             ;; todo fix double-taps and keyrepeat  not seen during editing
-                            (mset! me :editing? true)))
-           :onTap       (as-dart-callback []
-                          (let [ec (:editing? (:cz (meta me)))]
-                            (dp :tapczz (cinfo ec))))}
+                            (mset! me :editing? true)))}
           {:name     :item-control
            :hovered? (cI false)
            :editing? (cI false)}
@@ -193,7 +187,7 @@
                    exg (some (fn [li]
                                (when (= stg-id (.-value ^m/ValueKey (mget li :key)))
                                  li))
-                         _cache)]
+                         (when (not= mx/unbound _cache) _cache))]
                (or exg (todo-list-item todo))))
         (sort-by todo/td-created-at
           (todo/app-todos (my-app)))))))

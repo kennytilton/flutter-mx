@@ -517,14 +517,14 @@
     (doseq [md val]
       (md-quiesce-owned! me property md))
     (when (md-owning? me val)
-      (dp :mdqing-owned-property property (minfo val) :owned-by (minfo me))
+      ;;(dp :mdqing-owned-property property (minfo val) :owned-by (minfo me))
       (md-quiesce! val))))
 
 (defn md-quiesce-self! [me]
-  (wtrx [0 999 :mdq-self (minfo me)]
+  (wtrx [0 999 nil :mdq-self (minfo me)]
     (when-let [onq (get @me :on-quiesce)]
-      (wtrx [0 999 :mdq-onq (minfo me)]
-        (dp :mdq-onq (minfo me))
+      (wtrx [0 999 nil :mdq-onq (minfo me)]
+        ;; (dp :mdq-onq (minfo me))
         (onq me)))
 
     (doseq [c (vals (:cz (meta me)))]
