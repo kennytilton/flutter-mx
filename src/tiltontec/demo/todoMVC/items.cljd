@@ -198,6 +198,14 @@
                             (fx/fx-render ctx
                               (nth (mkids me) i)))))}
       {:name :lv-builder}
-      (map todo-list-item
+      (map (fn [todo]
+             (dp :todo-items-sees todo)
+             (let [stg-id (td-stg-id todo)
+                   exg (some (fn [li]
+                               (when (= stg-id (.-value ^m/ValueKey (mget li :key)))
+                                 li))
+                         _cache)]
+               (or exg (do (dp :building-new-for (td-title todo))
+                           (todo-list-item todo)))))
         (sort-by todo/td-created-at
           (todo/app-todos (my-app)))))))
