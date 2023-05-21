@@ -12,18 +12,15 @@
 (defn todo-input-onSubmitted-formula []
   (cF (as-dart-callback [value]
         ;; blank or not we need to restore focus to the input per the spec
-        (dp :new-todo-onsubmit-----------------------------------)
         (.requestFocus ^m/FocusNode (mget me :focusNode))
         ;; spec says to trim, and to silently ignore blank entry
         (let [trimmed (str/trim value)]
           (when-not (str/blank? trimmed)
             ;; --- we have a non-blank entry, so we save, clear entry, and store
-            (dp :new-todo-trim-----------------------------------)
             (mset! me :value trimmed) ;; let text proxy know its cleaned value
             (.clear ^m/TextEditingController
               (mget me :controller))
             (let [td-lst (my-todo-list)]
-              (dp :new-todo-add-----------------------------------)
               (mswap! td-lst :kids conj
                 (todo/make-ToDo td-lst trimmed false))))))))
 
