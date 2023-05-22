@@ -3,17 +3,17 @@
     [clojure.string :as str]
     [tiltontec.matrix.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
     [tiltontec.matrix.util
-     :refer [ atom? rmap-set! rmap-meta-set! set-ify difference]]
+     :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tiltontec.cell.base
      :refer [without-c-dependency with-mx-isolation pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input?  cprn c-code$
-             c-model  c-valid? c-useds c-ref?
+             c-unbound? c-input? cprn c-code$
+             c-model c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes* dependency-drop
              c-rule c-code c-me c-value-state c-callers dependency-record
              unlink-from-callers *causation* c-synaptic? c-mname
              c-pulse c-pulse-last-changed c-ephemeral? c-then? c-prop c-props c-prop-name
-             *depender* *c-prop-depth*  c-lazy dpc c-async?] :as cty]
+             *depender* *c-prop-depth* c-lazy dpc c-async?] :as cty]
     [tiltontec.cell.observer :refer [c-observe]]
     [tiltontec.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]
@@ -66,7 +66,7 @@
   (dpc c :evic :evic-entry)
   (cond
     ; --------------------------------------------------
-    *md-quiescing*                                            ; we got kicked off during md-quiesce! processing
+    *md-quiescing*                                          ; we got kicked off during md-quiesce! processing
     ; just return what we have if valid, else nil
     (cond
       (c-unbound? c)
@@ -452,6 +452,8 @@ then clear our record of them."
             (and (= :when-value-t (c-optimize c))
               (not (nil? (c-value c)))))
           (c-optimize c)
+          (not (and (c-async? c)                            ;; we will need the cell to handle the response when it comes in
+                 (not (:then? @c))))                        ;; <- part of response handling is to flag :then as true
           (not (c-optimized-away? c))                       ;; c-streams (FNYI) may come this way repeatedly even if optimized away
           (c-valid? c)                                      ;; /// when would this not be the case? and who cares?
           (not (c-synaptic? c))                             ;; no prop to cache invariant result, so they have to stay around)
