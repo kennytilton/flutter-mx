@@ -6,10 +6,10 @@
      :refer [ensure-vec  pln plnk fifo-add fifo-peek fifo-pop cl-find]]
     [tiltontec.cell.base
      :refer [pcell un-stopped +pulse+ c-pulse c-optimized-away?
-             +client-q-handler+ c-stopped
+             +client-q-handler+ c-stopped pulse-now
              *within-integrity* *defer-changes*
              *depender* ]]
-    [tiltontec.cell.base :as cty]))
+    [tiltontec.cell.base :refer [dpc] :as cty]))
 
 ;; --- the pulse ------------------------------
 
@@ -21,18 +21,18 @@
   ([] (data-pulse-next :anon))
   ([pulse-info]
    (when-not *one-pulse?*
-     (dpx :PULSE-NEXT!! pulse-info (inc @+pulse+))
+     (dp :PULSE-NEXT!! pulse-info (inc @+pulse+))
      (swap! +pulse+ inc))))            ;; try as commute?
 
 (defn c-current? [c]
-  (= (c-pulse c) @+pulse+))
+  (cty/dpc c :evic :current?-SEES-C-at (c-pulse c) :now-at (cty/pulse-now))
+  (= (c-pulse c) (cty/pulse-now)))
 
 (defn c-pulse-update [c key]
-  ;(pcell :pulse-upd c)
-  ;(dp :pulse-upd-opti (c-optimized-away? c))
   (when-not (c-optimized-away? c)
-    (assert (>= @+pulse+ (c-pulse c)))
-    (swap! c assoc :pulse @+pulse+)))
+    (assert (>= (pulse-now) (c-pulse c)))
+    (dpc c :pulse :PULSE-BUMP!!! key (c-pulse c) (pulse-now))
+    (swap! c assoc :pulse (pulse-now))))
 
 ;; --- ufb utils ----------------------------
 

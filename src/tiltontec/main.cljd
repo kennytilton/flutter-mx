@@ -22,18 +22,19 @@
     [tiltontec.example.x029_layout_builder :as x029]
     [tiltontec.example.x030_codelab_namer :as x030]
     [tiltontec.example.layout-explorer :as layo]            ;; buggy
-    [tiltontec.demo.todoMVC.core :as todo]))
+    [tiltontec.demo.todoMVC.core :as todo]
+    [tiltontec.example.fetch-data-list.core :as etienne]))
 
 (defn main []
   (dp :main-entry)
-  (md/md-quiesce-feature! true)
+  (md/md-quiesce-feature! false)
   (.ensureInitialized w/WidgetsFlutterBinding)
   (wtrx [0 999 :run-app]
     (dp :running-app)
     (fx/run-app
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example.
-        (todo/make-app))))
+        (etienne/make-app))))
   (dp :run-app-fini)
 
   ;; (testing/run-tests)

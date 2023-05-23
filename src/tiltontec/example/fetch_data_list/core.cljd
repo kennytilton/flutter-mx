@@ -1,0 +1,104 @@
+(ns tiltontec.example.fetch-data-list.core
+  "Flutter/MX Port of CLJD port of Etienne Theodore's
+  Fetch Data List example: https://github.com/Kiruel/fetch-data-list?ref=etiennetheodore.com"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:http/http.dart" :as http]
+    ["dart:convert" :as c]
+    [tiltontec.matrix.util
+     :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
+    [tiltontec.matrix.base
+     :refer [prog1 wtrx dprn dp dpx trx]]
+    [tiltontec.matrix.api :refer [dp cFn cF+ cI mget mkids mkids mswap!] :as mx]
+    [tiltontec.flutter-mx.core :as fx]
+    [tiltontec.example.fetch-data-list.api.albums :refer [get-album]]))
+
+#_(def second-route
+    (fx/scaffold
+      {:appBar (fx/app-bar
+                 {:title (fx/text "Second Route")})}
+      (fx/center
+        (fx/elevated-button
+          {:onPressed (fx/in-my-context [me ctx]
+                        (fx/->CBAsIs
+                          (fn ^void []
+                            (fx/ctx-page-pop ctx)
+                            nil)))}
+          (m/Text "Go back!")))))
+
+(defn- build-list-items [body]
+  (dp :blitems!!!!! (take 3 body))
+  (fx/text "soon")
+  #_(fx/list-view+builder
+      {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
+       :itemCount   (count body)
+       :itemBuilder (fx/->CBAsIs
+                      (fn [ctx idx]
+                        (let [album (get-in body [idx])]
+                          (fx/list-tile
+                            {:title (fx/text (get album "title"))
+                             :onTap (as-dart-callback
+                                      (dp :FNYI!!!-nav-to-album)
+                                      ;;#(.pop (m.Navigator/of ctx))
+                                      )}))))}))
+
+#_(defn- build-list-items [body]
+    (f/widget
+      :get [m/Navigator]
+      (m/ListView.builder
+        .itemCount (count body)
+        .itemBuilder
+        (f/build
+          #_{:clj-kondo/ignore [:unresolved-symbol]}
+          [idx]
+          (let [album (get-in body #_{:clj-kondo/ignore [:unresolved-symbol]} [idx])]
+            (m/ListTile
+              .onTap (fn [] (navigate navigator
+                              (album-detail/view album)
+                              (str "/album-detail/" (get album "id"))))
+              .title (m/Text (get album "title"))))))))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Fetch Data List Example"
+     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Fetch Data List Example")})}
+      (fx/center {}
+        {:response (cF+ [:async? true
+                         :debug true                        ;; [:opti]
+                         :watch (fn [_ me new old c]
+                                  (dp :RESPONSE-watch new)
+                                  (when new
+                                    (when-let [{sc .-statusCode body .-body} ^http/Response new]
+                                      (dp :RESPONSE_GOT!! sc (count body) (string? body)))))]
+                     (get-album))
+        :name :center-beef}
+        #_(if-let [r (mget me :response)]
+            (fx/text "got r")
+            (m/CircularProgressIndicator))
+        (do
+          (rmap-meta-set! [:debug _cell] [:propagate :evic :pulse])
+          (let [r (mget me :response)]
+            (dp :KIDS_SEES-response!!!!!!! r)
+            (if-some [{sc .-statusCode body .-body} ^http/Response r]
+              (case sc
+                200 (build-list-items (c/json.decode body))
+                (fx/text (str "Something wrong happened, status code: " sc)))
+              (m/CircularProgressIndicator))))))))
+
+#_(defn main []
+    (f/run
+      (m/MaterialApp
+        .title "Fetch Data List Example"
+        .theme (m/ThemeData .primarySwatch m/Colors.blue))
+      .home
+      (m/Scaffold .appBar (m/AppBar .title (m/Text "Fetch Data List Example")))
+      .body
+      (m/Center)
+      :watch [response (api.albums/get-album)]
+      (if-some [{sc .-statusCode body .-body} ^http/Response response]
+        (case sc
+          200 (build-list-items (c/json.decode body))
+          (m/Text (str "Something wrong happened, status code: " sc)))
+        (m/CircularProgressIndicator))))

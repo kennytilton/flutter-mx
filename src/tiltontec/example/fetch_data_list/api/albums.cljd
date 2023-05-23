@@ -1,0 +1,20 @@
+(ns tiltontec.example.fetch-data-list.api.albums
+  (:require
+    ["package:http/http.dart" :as http]))
+
+(def ^:private base-url "https://jsonplaceholder.typicode.com/")
+
+(defn get-album
+  "Call http for /albums or /albums/{page}
+     The argument page should be a number.
+     **Usage**
+     ```clojure
+     :watch [response (get-album)];; You get a list of album
+     ```
+     or
+     ```clojure
+     :watch [response (get-album 1)];; You get one album
+     ```
+"
+  ([] (http/get (Uri.parse (str base-url "albums"))))
+  ([page] (http/get (Uri.parse (str base-url "albums/" page)))))

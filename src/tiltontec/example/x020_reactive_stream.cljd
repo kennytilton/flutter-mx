@@ -108,3 +108,15 @@
                                 (the-string (mget (fmu :msg-recipient) :msg-rcvd)))
                               _cache))}
             (str/join " " (remove #{"<none>"} (mget me :full-text)))))))))
+
+:msg-rcvd (cF+n [:ephemeral? true
+                 :on-quiesce (fn [cell]
+                               (when-let [sub (:subscription @cell)]
+                                 (.cancel ^#/(async/StreamSubscription void) sub)))
+                 :watch (fn [_ me new-source old-source cell]
+                          (when (= old-source mx/unbound)
+                            (let [sub (.listen (.-stream ^async/StreamController new-source)
+                                        (fn [^String msg]
+                                          (mset! me :msg-rcvd msg)))]
+                              (rmap-set! [:subscription cell] sub))))]
+            (mget (fm* :msg-sender) :msg-stream))

@@ -7,7 +7,7 @@
     [tiltontec.matrix.util
      :refer [cl-find set-ify atom?
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
-             fifo-data fifo-add rmap-set! mut-set!]
+             fifo-data fifo-add rmap-set! rmap-meta-set! mut-set!]
      :as utc]
 
     [tiltontec.matrix.foundation :refer [PObserver observe] :as mx]))
@@ -166,21 +166,25 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-quiesce! [c]
   (assert c)
   (dpc c :quiesce :entry)
-  (when-not false                                           ;; (c-quiesced? c)
-    (assert (not (c-quiesced? c))
+  (when-not false                                           ;; (c-quiesced c)
+    (assert (not (c-quiesced c))
       (str "c-quiesce!> already dead " (cinfo c)))
     (when-let [onq (:on-quiesce @c)]
       (onq c))
     (unlink-from-callers c)
     (unlink-from-used c :quiesce)
-    #_ (reset! c (concat [:quiesced] ((juxt c-prop-name c-mname) c)))
-    ))
+    (rmap-meta-set! [:quiesced c]
+      [(c-prop-name c) (c-mname c) (c-value c)])))
 
-(defn c-quiesced? [ref]
-  (assert (atom? ref)
-    (str "util.core/rmap-quiesced?> failed assertion atom? on ref:" ref))
-  (and (coll? @ref)
-    (= :quiesced (first @ref))))
+(defn c-quiesced [c]
+  (assert (c-ref?! c)
+    (str "c-quiesced> failed assertion c-ref?! on:" c))
+  (:quiesced (meta c)))
+
+(defn c-quiesced? [c]
+  (assert (c-ref?! c)
+    (str "c-quiesced?> failed assertion c-ref?! on:" c))
+  (seq (c-quiesced c)))
 
 (defn c-ref? [c]
   (when (and c (atom? c) (map? @c))
@@ -188,6 +192,11 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-ref?! [c]
   (dart/is? (c-type c) Cell))
+
+(defn c-quiesced [ref]
+  (assert (c-ref?! ref)
+    (str "util.core/rmap-quiesced?> failed assertion atom? on ref:" ref))
+  (:quiesced (meta ref)))
 
 (defn c-formula? [c]
   (when (and c (atom? c) (map? @c))
@@ -252,12 +261,15 @@ rule to get once behavior or just when fm-traversing to find someone"
     (nil? c) :null-c
     (not (atom? c)) (if verbose? [:not-atom-c c]
                                  :not-atom-c)
-    (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
-                       :not-cell-c)
-    (c-quiesced? c) [:deadc> @c]
+
+    (not (c-ref? c)) (if (c-ref?! c)
+                       [:ex-cref @c :meta (meta c)]
+                       (if verbose? [:not-cell-c @c :meta (meta c)]
+                                    :not-cell-c))
+    (c-quiesced c) [:deadc> @c]
     :else (if verbose?
             [:cinfo-all @c]
-            (conj ((juxt c-prop-name c-mname #_ c-async? c-value) c)
+            (conj ((juxt c-prop-name c-mname c-pulse #_ c-async? #_ c-value) c)
               [:used/users (count (c-useds c))
                (count (c-callers c))])))))
 
@@ -273,7 +285,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn dpc [c category & bits]
   (assert (c-ref?! c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)))
-  (when-let [dbg (:debug @c)]
+  (when-let [dbg (c-debug c)]
     (when (or (true? dbg) (some #{category} dbg))
       (apply dp :DPC category (first bits) (cinfo c) (rest bits)))))
 
@@ -288,12 +300,16 @@ rule to get once behavior or just when fm-traversing to find someone"
       (conj (c-callers used) *depender*))))
 
 (defn dependency-drop [used caller]
-  (dpc caller :link :drops-dependency (cinfo used))
+  (dpc caller :link :caller-DROPS (cinfo caller) :USED (cinfo used))
+  (when (:debug @caller)
+    (dp :caller-DROP-FULL-INFO (c-useds caller) (set? (c-useds caller))
+      (meta caller) @caller))
   (mut-set! caller :useds (disj (c-useds caller) used))
+  (dpc used :link :used-DROPPING (cinfo used) :caller (cinfo caller))
   (mut-set! used :callers (disj (c-callers used) caller)))
 
 (defn unlink-from-callers [used]
-  (dpc used :link :unlink-callers (count (c-callers used)))
+  (dpc used :link :UNLINK-callers (count (c-callers used)))
   (doseq [caller (c-callers used)]
     (dpc caller :link :dropped-by-used!!!! (cinfo used))
     (dependency-drop used caller)))
@@ -314,4 +330,5 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;;---
 
-(defn c-debug [c tag])
+(defn c-debug [c]
+  (:debug (meta c)))

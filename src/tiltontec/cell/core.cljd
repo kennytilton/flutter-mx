@@ -2,14 +2,14 @@
   (:require
     ;; todo merge cells NSes
 
-    [tiltontec.matrix.util :refer [ rmap-set!]]
+    [tiltontec.matrix.util :refer [rmap-set!]]
     [tiltontec.matrix.base
      :refer [mx-throw trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
     [tiltontec.cell.base
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? unbound dpc
-             c-model  c-valid? c-useds c-ref?
+             c-model c-valid? c-useds c-ref?
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
@@ -17,7 +17,7 @@
              unlink-from-callers *causation*
              c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
-              c-lazy] :as cty]
+             c-lazy] :as cty]
 
     [tiltontec.cell.observer
      :refer [fn-obs]]
@@ -31,8 +31,8 @@
 
 ; todo: stand-alone cells with observers should be observed when they are made
 
-(def +valid-input-options+  #{:obs :watch :prop :ephemeral? :unchanged-if
-                              :value :input? :debug :on-quiesce :sink})
+(def +valid-input-options+ #{:obs :watch :prop :ephemeral? :unchanged-if
+                             :value :input? :debug :on-quiesce :sink})
 (def +valid-formula-options+ #{:obs :watch :prop :input? :lazy :optimize :ephemeral? :unchanged-if
                                :code :value :rule :async? :and-then? :sink :debug
                                :on-quiesce})
@@ -74,8 +74,9 @@
                   :ephemeral?         false
                   :input?             true}
 
-            options)
-      :meta {:mx-type (cty/Cell.)})))
+            (dissoc options :debug))
+      :meta {:mx-type (cty/Cell.)
+             :debug   (:debug options)})))
 
 (defn make-c-formula [& kvs]
   (let [options (apply hash-map (c-options-canonicalize kvs
@@ -98,8 +99,9 @@
                   :ephemeral?         false
                   :optimize           true                  ;; this can also be :when-not-nil
                   :input?             false}                ;; not redundant: can start with rule, continue as input
-            options)
-      :meta {:mx-type (cty/CellFormula.)})))
+            (dissoc options :debug))
+      :meta {:mx-type (cty/CellFormula.)
+             :debug   (:debug options)})))
 
 ;;___________________ constructors _______________________________
 ;; I seem to have created a zillion of these, but I normally
@@ -260,21 +262,21 @@ in the CL version of Cells SETF itself is the change API dunction."
 
   (cond
     *defer-changes*
-    #_ (let [prop (c-prop-name c)
-             me (c-model c)]
-         (mx-throw
-           "MXAPI_UNDEFERRED_CHANGE> undeferred mswap!/mset! to the property '" prop "' by an observer detected."
-           "...> such mutations must be wrapped by WITH-INTEGRITY, must conveniently with macro WITH-CC."
-           "...> look for MXAPI_UNDEFERRED_CHANGE in the Errors documentation for  more details.\n"
-           "...> FYI: intended new value is [" new-value "]; current value is [" (get @me prop :no-such-prop) "].\n"
-           "...> FYI: instance is of type " (type-cljc me) ".\n"
-           "...> FYI: full instance is " @me "\n"
-           "...> FYI: instance meta is " (meta me) "\n.")
-         #_ (mx-throw (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
-                   (c-prop c))))
+    #_(let [prop (c-prop-name c)
+            me (c-model c)]
+        (mx-throw
+          "MXAPI_UNDEFERRED_CHANGE> undeferred mswap!/mset! to the property '" prop "' by an observer detected."
+          "...> such mutations must be wrapped by WITH-INTEGRITY, must conveniently with macro WITH-CC."
+          "...> look for MXAPI_UNDEFERRED_CHANGE in the Errors documentation for  more details.\n"
+          "...> FYI: intended new value is [" new-value "]; current value is [" (get @me prop :no-such-prop) "].\n"
+          "...> FYI: instance is of type " (type-cljc me) ".\n"
+          "...> FYI: full instance is " @me "\n"
+          "...> FYI: instance meta is " (meta me) "\n.")
+        #_(mx-throw (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
+                      (c-prop c))))
     (do (dp :c-reset-rejecting-undeferred! (c-prop c))
         (mx-throw (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
-                             (c-prop c) " :me " @(c-model c))))
+                    (c-prop c) " :me " @(c-model c))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
     (c-value-assume c new-value nil)
@@ -300,7 +302,7 @@ execution as soon as the current change is manifested."
   `(cond
      (not *within-integrity*)
      (mx-throw (str "c-reset-next!> deferred change to %s not under WITH-INTEGRITY supervision."
-                          (c-prop ~f-c)))
+                 (c-prop ~f-c)))
      ;---------------------------------------------
      :else
      (tiltontec.cell.integrity/ufb-add :change

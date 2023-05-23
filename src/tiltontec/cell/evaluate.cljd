@@ -7,7 +7,7 @@
     [tiltontec.cell.base
      :refer [without-c-dependency with-mx-isolation pcell c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? cprn c-code$
-             c-model c-valid? c-useds c-ref?
+             c-model c-valid? c-useds c-ref? c-quiesced? c-quiesced
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes* dependency-drop
              c-rule c-code c-me c-value-state c-callers dependency-record
@@ -53,17 +53,13 @@
       (conj (c-useds *depender*) used))
     (dependency-record used)))
 
-;; (declare calculate-and-set)
-
-;; test
-
 (defn ensure-value-is-current
   "The key to data integrity: recursively check the known dependency
   graph to decide if we are current, and if not kick off recalculation
   and propagation."
 
   [c debug-id ensurer]
-  (dpc c :evic :evic-entry)
+  (dpc c :evic :evic-entry debug-id)
   (cond
     ; --------------------------------------------------
     *md-quiescing*                                          ; we got kicked off during md-quiesce! processing
@@ -100,8 +96,6 @@
     (or (not (c-valid? c))
       (loop [[used & urest] (seq (c-useds c))]
         (when used
-          ;;(pcell :cnset-evicing used)
-          ;;(pcell :cnset-user c)
           (ensure-value-is-current used :nested c)
           ;; now see if it actually changed
           ;; (dp :pulse-checks (c-prop used)(c-pulse-last-changed used)(c-prop c)(c-pulse c))
@@ -134,11 +128,6 @@
                  (with-integrity ()
                    (let [prior-value (c-value c)]
                      #_(dp :cget-to-evic (c-prop c) (md-type (c-model c)))
-                     #_(when (and *depender* (not= :kids (c-prop *depender*)))
-                         (prn :cget-sees-depender
-                           (str "asker= "
-                             (c-prop *depender*) "/"
-                             (c-mname *depender*))))
                      (prog1
 
                        (let [ev (ensure-value-is-current c :c-read nil)]
@@ -157,21 +146,12 @@
                  (when *depender*
                    (dpx :cget-depender!! (cinfo *depender*))
                    (dpx :cget-depender!! (meta *depender*))
-                   #_(when (and *depender* (not= :kids (c-prop *depender*)))
-                       (prn :cget-records-dependency
-                         :askee (c-prop c) (md-type (c-model c))
-                         (str "asker= "
-                           (c-prop *depender*) "/"
-                           (c-mname *depender*))))
                    (when-not (cty/c-optimized-away? *depender*)
                      (dpx :cget-reco-dependency (cinfo c) @c (meta c))
                      (record-dependency c)
                      (dpx :cget-reco-dependency-cool (cinfo c)))))
     (atom? c) @c
     :else c))
-
-;(declare calculate-and-link
-;  c-value-assume)
 
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
@@ -198,10 +178,11 @@
                            (.then ^Future raw-value
                              (fn [fu-val]
                                ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
+                               (dp :FUVAL-RECEIVED!!!!! fu-val)
                                (assert (atom? c) (str "CNSET> in future then atom? false origc "
                                                    cfo " cnow " c))
-                               (assert (map? @c) (str "CNSET> in future then map? false origc "
-                                                   cfo " derefc now " (or (deref c) "nada")))
+                               (assert (map? @c) (str "CNSET> in future then: map? false origc "
+                                                   cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
                                (assert (c-ref? c) (str "CNSET> in future then c-ref? false origc "
                                                     cfo " derefnow " (deref c)))
                                (with-mx-isolation
@@ -346,11 +327,6 @@
   ;(trx :mdsv-store prop (flz value))
   (rmap-set! [prop me] value))
 
-(defn c-ref-ex? [c]
-  (when (and c (atom? c) (map? @c))
-    ;;(dp :cref-checking-ctype (cty/c-type c) (dart/is? (cty/c-type c) cty/Cell))
-    (dart/is? (cty/c-type c) cty/Cell)))
-
 (defn c-value-assume
   "The Cell assumes a new value at awakening, on creset!, or
    after formula recalculation.
@@ -362,12 +338,12 @@
 
   [c new-value propagation-code]
 
-  (assert (c-ref-ex? c) (str "CVASS> c not c-ref? "
-                          (cinfo c true)
-                          " assuming value " new-value
-                          " atom? " (atom? c)
-                          " map? " (when (atom? c) (map? (deref c)))
-                          " deref? " (when (atom? c) (deref c))))
+  (assert (c-ref? c) (str "CVASS> c not c-ref? "
+                       (cinfo c true)
+                       " assuming value " new-value
+                       " atom? " (atom? c)
+                       " map? " (when (atom? c) (map? (deref c)))
+                       " deref? " (when (atom? c) (deref c))))
   ;; (println :cva-entry (c-prop c) new-value)
   (do                                                       ;; (wtrx (0 100 :cv-ass (:prop @c) new-value)
     (prog1 new-value                                        ;; sans doubt
@@ -379,9 +355,11 @@
           ;; --- cell maintenance ---
           ;; even if no news at least honor the reset!
           ;;
-          (dpc c :cnset :cvass-sets-awake new-value)
+          (dpc c :cnset :CVASS_SETS!!!! new-value)
           (rmap-set! [:value c] new-value)
           (rmap-set! [:state c] :awake)
+          (rmap-set! [:pulse-last-changed c] @+pulse+)
+
           #_(trx :new-vlue-installed (c-prop c) new-value (:value c))
           ;;
           ;; --- model maintenance ---
@@ -390,18 +368,18 @@
             (md-prop-value-store (c-model c) (c-prop c) new-value))
 
           (c-pulse-update c :slotv-assume)
-          #_(println :maybe-propping (c-prop c) new-value
-              :priorstate prior-state
-              :propcode propagation-code
-              :changed? (c-value-changed? c new-value prior-value))
 
           ; we optimize here because even if unchanged we may not have c-useds,
           ; now that, with the :freeze option, we are doing "late" optimize-away
+          ; Note that the :async? option likewise introduces late optimize
           (when-let [optimize (and (c-formula? c)
                                 (c-optimize c))]
             (optimize-away?! c prior-value))
 
-          (when (or (not (some #{prior-state} [:valid :uncurrent]))
+          (dpc c :propagate :PROP-maybe-caller-ct (count callers))
+
+          (when (or
+                  (not (some #{prior-state} [:valid :uncurrent]))
                   (= propagation-code true)                 ;; forcing
                   (when-not (= propagation-code false)
                     (c-value-changed? c new-value prior-value)))
@@ -410,10 +388,11 @@
             ;; we now can look to see if we can be optimized away
             (let []
               ;; --- data flow propagation -----------
-              (dpc c :propagate :cvass-intiating-maybe)
+
               (when-not (or (= propagation-code :no-propagate)
-                          (c-optimized-away? c))
-                (assert (map? @c))
+                          #_(c-optimized-away? c))
+                ;;(assert (map? @c))
+                (dpc c :propagate :PROP-YES-caller-ct (count callers))
                 (propagate c prior-value callers)))))))))
 
 ;; --- unlinking ----------------------------------------------
@@ -458,7 +437,7 @@ then clear our record of them."
           (c-valid? c)                                      ;; /// when would this not be the case? and who cares?
           (not (c-synaptic? c))                             ;; no prop to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
-    (dpc c :opti :optimizing-away!!!! (c-prop c))
+    (dpc c :opti :optimizing-away!!!! (c-prop c) (c-async? c) (:then? @c))
     (when (= :freeze (c-optimize c))
       ;; we could just blindly call unlink-from-unused since normally
       ;; we are here because there are no useds, but the precision may pay off some day
@@ -468,8 +447,7 @@ then clear our record of them."
           (assert (not (some #{c} (c-callers ud)))))
         (assert (zero? (count (c-useds c))))))
 
-    (rmap-set! [::cty/state c] :optimized-away)             ;; leaving this for now, but we toss
-    ; the cell below. hhack
+    (rmap-set! [::cty/state c] :optimized-away)
     (c-observe c prior-value :opti-away)
 
     (when-let [me (c-model c)]
@@ -479,8 +457,7 @@ then clear our record of them."
 
     ;; let callers know they need not check us for currency again
     (doseq [caller (seq (c-callers c))]
-      ;; (rmap-set! [:useds caller] (disj (c-useds caller) c))
-      (swap! caller assoc :useds (remove #{c} (c-useds caller)))
+      ;; HHACK (rmap-set! [:useds caller] (disj (c-useds caller) c))
       (dependency-drop c caller)
       ;;; (trc "nested opti" c caller)
       ;;(optimize-away?! caller) ;; rare but it happens when rule says (or .cache ...)
@@ -502,10 +479,6 @@ then clear our record of them."
 
 (def ^:dynamic *custom-propagater* nil)
 
-;(declare
-;  propagate-to-callers
-;  md-prop-cell-flushed)
-
 (defn propagate
   "A cell:
   - notifies its callers of its change;
@@ -525,9 +498,6 @@ then clear our record of them."
     ;; ----------------------------------
     :else
     (do
-      ;;(dp :upd-pulse-last-chg-to @+pulse+ c)
-      (rmap-set! [:pulse-last-changed c] @+pulse+)
-
       (binding [*depender* nil
                 *call-stack* nil
                 *c-prop-depth* (inc *c-prop-depth*)
@@ -577,31 +547,28 @@ then clear our record of them."
   ;;         but B is busy eagerly propagating. "This time" is important because it means
   ;;         there is no way one can reliably be sure H will not ask for A
   ;;
-  (dpc c :propagate (count callers))
+  (dpc c :propagate-ENTRY (count callers))
   (when-not (empty? callers)
     (let [causation (cons c *causation*)]                   ;; closed over below
       (with-integrity (:tell-dependents c)
-        (if (md-quiesced? (c-model c))
-          (do (trx "WHOAA!!!! dead by time :tell-deps dispatched; bailing" c))
-          (binding [*causation* causation]
-            (doseq [caller (seq callers)]
-              (cond
-                (or                                         ;; lotsa reasons NOT to proceed
-                  (= (c-state caller) :quiesced)
-                  (c-current? caller)                       ;; happens if I changed when caller used me in current pulse+
-                  (some #{(c-lazy caller)} [true :always :once-asked])
+        (binding [*causation* causation]
+          (doseq [caller (seq callers)]
+            (dpc caller :propagate :PROP-maybe!!)
+            (cond
+              (or                                           ;; lotsa reasons NOT to proceed
+                (c-quiesced? caller)
+                (c-current? caller)                         ;; happens if I changed when caller used me in current pulse+
+                (some #{(c-lazy caller)} [true :always :once-asked])
 
-                  (and (not (some #{c} (c-useds caller)))   ; hard to follow, but it is trying to say
-                    (not (c-optimized-away? c))))           ; "go ahead and notify caller one more time
-                ; even if I have been optimized away cuz they need to know."
-                ; Note this is why callers must be supplied, having been copied
-                ; before the optimization step.
-                (do #_(trx :not-propping @+pulse+ (c-prop c)
-                        ;; :val (c-value c)
-                        :to (c-prop caller) :caller         ;; @caller
-                        (c-state caller) :current (c-current? caller)
-                        :c-not-used? (not (some #{c} (c-useds caller)))
-                        :c-not-opti (not (c-optimized-away? c))))
+                (and (not (some #{c} (c-useds caller)))     ; hard to follow, but it is trying to say
+                  (not (c-optimized-away? c))))             ; "go ahead and notify caller one more time
+              ; even if I have been optimized away cuz they need to know."
+              ; Note this is why callers must be supplied, having been copied
+              ; before the optimization step.
+              (do (dpc caller :propagate :NOT-PROPPING!
+                    (c-quiesced? caller)
+                    (c-current? caller)))
 
-                :else
-                (calculate-and-set caller :propagate c)))))))))
+              :else
+              (do (dpc caller :propagate :PROP-YES-to-cnset!!)
+                  (calculate-and-set caller :propagate c)))))))))
