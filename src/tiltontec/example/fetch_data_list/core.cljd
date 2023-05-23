@@ -5,12 +5,13 @@
     ["package:flutter/material.dart" :as m]
     ["package:http/http.dart" :as http]
     ["dart:convert" :as c]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     [tiltontec.matrix.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx]]
     [tiltontec.matrix.api :refer [dp cFn cF+ cI mget mkids mkids mswap!] :as mx]
-    [tiltontec.flutter-mx.core :as fx]
+
     [tiltontec.example.fetch-data-list.api.albums :refer [get-album]]))
 
 #_(def second-route
@@ -28,8 +29,8 @@
 
 (defn- build-list-items [body]
   (dp :blitems!!!!! (take 3 body))
-  (fx/text "soon")
-  #_(fx/list-view+builder
+  ;(fx/text "soon")
+  (fx/list-view+builder
       {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
        :itemCount   (count body)
        :itemBuilder (fx/->CBAsIs
@@ -37,26 +38,10 @@
                         (let [album (get-in body [idx])]
                           (fx/list-tile
                             {:title (fx/text (get album "title"))
-                             :onTap (as-dart-callback
+                             :onTap (as-dart-callback []
                                       (dp :FNYI!!!-nav-to-album)
                                       ;;#(.pop (m.Navigator/of ctx))
                                       )}))))}))
-
-#_(defn- build-list-items [body]
-    (f/widget
-      :get [m/Navigator]
-      (m/ListView.builder
-        .itemCount (count body)
-        .itemBuilder
-        (f/build
-          #_{:clj-kondo/ignore [:unresolved-symbol]}
-          [idx]
-          (let [album (get-in body #_{:clj-kondo/ignore [:unresolved-symbol]} [idx])]
-            (m/ListTile
-              .onTap (fn [] (navigate navigator
-                              (album-detail/view album)
-                              (str "/album-detail/" (get album "id"))))
-              .title (m/Text (get album "title"))))))))
 
 (defn make-app []
   (fx/material-app
@@ -77,6 +62,12 @@
         #_(if-let [r (mget me :response)]
             (fx/text "got r")
             (m/CircularProgressIndicator))
+        (if-some [{sc .-statusCode body .-body} ^http/Response (mget me :response)]
+          (case sc
+            200 (build-list-items (c/json.decode body))
+            (fx/text (str "Something wrong happened, status code: " sc)))
+          (m/CircularProgressIndicator))
+        #_
         (do
           (rmap-meta-set! [:debug _cell] [:propagate :evic :pulse])
           (let [r (mget me :response)]

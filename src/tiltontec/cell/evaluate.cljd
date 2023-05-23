@@ -227,7 +227,7 @@
   * Well, we also look to see if a synaptic cell has attached a
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c]
-  (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (when (atom? c) (deref c))))
+  (assert (cty/c-ref? c) (str "calcnlink passed non-cell " c (cinfo c)))
 
   ;; first check for cycles
   (when (some #{c} *call-stack*)
@@ -448,6 +448,7 @@ then clear our record of them."
         (assert (zero? (count (c-useds c))))))
 
     (rmap-set! [::cty/state c] :optimized-away)
+    (rmap-meta-set! [:opti c] [(c-prop c) (c-mname c)])
     (c-observe c prior-value :opti-away)
 
     (when-let [me (c-model c)]
@@ -455,16 +456,31 @@ then clear our record of them."
       (rmap-meta-set! [:cz me] (assoc (:cz (meta me)) (c-prop c) nil))
       (md-cell-flush c))
 
-    ;; let callers know they need not check us for currency again
+    ;; before telling callers they no longer need to worry about us changing,
+    ;; EVIC them so they can see our change.
     (doseq [caller (seq (c-callers c))]
-      ;; HHACK (rmap-set! [:useds caller] (disj (c-useds caller) c))
-      (dependency-drop c caller)
-      ;;; (trc "nested opti" c caller)
-      ;;(optimize-away?! caller) ;; rare but it happens when rule says (or .cache ...)
-      (ensure-value-is-current caller :opti-used c))        ;; this will get round to optimizing
-    ; them if necessary, and if not they still need to have one last notification if this was
-    ; a rare mid-life optimization
-    (dpc c :opti :OPTI-now-setting-c-atom-to-value (c-value c))
+      (ensure-value-is-current caller :opti-used c))
+
+    ;; now let callers know they need not check us for currency again
+    (doseq [caller (seq (c-callers c))]
+      (dependency-drop c caller))
+
+    ;(dpc c :opti :OPTI-now-setting-c-atom-to-value (c-value c))
+
+
+    ;optimize away needs to clear meta mx-type so it does not look like c-formula
+    ;or, better, lose the cell altogether as when kids had no dependents
+
+
+
+    (dp :OPTI-now-setting (cinfo c) :to-value (c-value c)
+      :list (list? (c-value c))
+      :coll? (coll? (c-value c))
+      :first (when (coll? (c-value c))
+               [(first (c-value c)) (meta (first (c-value c)))])
+      :atom (when (atom? (c-value c))
+              [:meta (meta (c-value c))
+              :deref @(c-value c)]))
     (reset! c (c-value c))
     ))
 
