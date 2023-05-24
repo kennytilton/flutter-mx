@@ -51,7 +51,7 @@
       {:appBar (fx/app-bar {:title (fx/text "Fetch Data List Example")})}
       (fx/center {}
         {:response (cF+ [:async? true
-                         :debug true                        ;; [:opti]
+                         :debug [:opti :evic]                        ;; [:opti]
                          :watch (fn [_ me new old c]
                                   (dp :RESPONSE-watch new)
                                   (when new
@@ -59,10 +59,10 @@
                                       (dp :RESPONSE_GOT!! sc (count body) (string? body)))))]
                      (get-album))
         :name :center-beef}
-        #_(if-let [r (mget me :response)]
-            (fx/text "got r")
+        (if-let [r (mget me :response)]
+            (fx/text "got response!")
             (m/CircularProgressIndicator))
-        (if-some [{sc .-statusCode body .-body} ^http/Response (mget me :response)]
+        #_ (if-some [{sc .-statusCode body .-body} ^http/Response (mget me :response)]
           (case sc
             200 (build-list-items (c/json.decode body))
             (fx/text (str "Something wrong happened, status code: " sc)))

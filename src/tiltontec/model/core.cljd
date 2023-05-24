@@ -127,8 +127,7 @@
                         ;; todo pull more fx$s into meta
                         :mx-type (:mx-type iargs (Model.))})]
         (assert (meta me))
-        #_(when-not (:parent @me)
-            (dp :no-par!!!! me))
+        (dp :make-post-me (meta me))
         (rmap-meta-set!
           [:cz me]
           (->> arg-list
@@ -536,8 +535,7 @@
         (when-let [v (get @me k)]
           (md-quiesce-owned! me k (get @me k)))))
 
-    ;; (reset! me (concat [:quiesced] [(minfo me)]))
-    (rmap-meta-set! [:state me] :quiesced)))
+    (rmap-meta-set! [:state me] :md-quiesced)))
 
 (def +md-quiesce-feature+ (atom false))
 

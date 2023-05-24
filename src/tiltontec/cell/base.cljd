@@ -156,50 +156,38 @@ rule to get once behavior or just when fm-traversing to find someone"
   :extends Cell)
 
 (defn c-type [c]
-  (assert (and c (atom? c))
-    (str "c-type> argument null or not atom or not map deref: " c))
-  (when-let [m (meta c)]
-    (:mx-type m))) ;; not a typo! "mx" covers model and cell
+  (when (atom? c)
+    (:mx-type @c)))
 
 ;; --- c-quiesce! -----------
 
 (defn c-quiesce! [c]
-  (assert c)
+  (assert (c-ref? c))
   (dpc c :quiesce :entry)
-  (when-not false                                           ;; (c-quiesced c)
-    (assert (not (c-quiesced c))
-      (str "c-quiesce!> already dead " (cinfo c)))
+  (when-not false
+    (assert (not (c-quiesced? c))
+      (str "c-quiess!> already quiessed " (cinfo c)))
     (when-let [onq (:on-quiesce @c)]
       (onq c))
     (unlink-from-callers c)
     (unlink-from-used c :quiesce)
-    (rmap-meta-set! [:quiesced c]
-      [(c-prop-name c) (c-mname c) (c-value c)])))
-
-(defn c-quiesced [c]
-  (assert (c-ref?! c)
-    (str "c-quiesced> failed assertion c-ref?! on:" c))
-  (:quiesced (meta c)))
+    (rmap-set! [:quiesced? c] true)))
 
 (defn c-quiesced? [c]
-  (assert (c-ref?! c)
-    (str "c-quiesced?> failed assertion c-ref?! on:" c))
-  (seq (c-quiesced c)))
+  (assert (c-ref? c)
+    (str "c-quiessed?> failed assertion c-ref? on:" c))
+  (:quiesced? @c))
 
-(defn c-ref? [c]
-  (when (and c (atom? c) (map? @c))
-    (dart/is? (c-type c) Cell)))
-
-(defn c-ref?! [c]
-  (dart/is? (c-type c) Cell))
-
-(defn c-quiesced [ref]
-  (assert (c-ref?! ref)
-    (str "util.core/rmap-quiesced?> failed assertion atom? on ref:" ref))
-  (:quiesced (meta ref)))
+(defn c-ref?
+  ([c] (c-ref? c nil))
+  ([c tag]
+   (when tag
+     (dp :c-ref?-tagged tag (cinfo c)))
+   (and c (atom? c) (c-type c)
+     (dart/is? (c-type c) Cell))))
 
 (defn c-formula? [c]
-  (when (and c (atom? c) (map? @c))
+  (and c (atom? c) (c-type c)
     (dart/is? (c-type c) CellFormula)))
 
 (utb/def-rmap-props c-
@@ -214,20 +202,15 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-value [c]
   (assert (atom? c))
   (cond
-    (and (c-ref? c)
-      (map? @c)) (:value @c)
+    (c-ref? c :cvalue)
+    (:value @c)
+
     :else @c))
 
 (defn c-optimized-away? [c]
-  (cond
-    (c-ref? c) (or (not (map? @c))
-                 (not (contains? @c :state)) ;; random property check?
-                 (and (atom? c)
-                   (:optimized-away (meta c)))
-                 (= :optimized-away (:state @c)))
-    (and (atom? c)
-      (:optimized-away (meta c))) true
-    :else true))
+  (assert (atom? c) (str :c-opti-away?-sees-not-atom c))
+  (assert (c-ref? c) (str :c-opti-away?-sees-NON-cref (cinfo c) :deref @c))
+  (:optimized? @c))
 
 (defn c-model [rc]
   (:me @rc))
@@ -262,11 +245,9 @@ rule to get once behavior or just when fm-traversing to find someone"
     (not (atom? c)) (if verbose? [:not-atom-c c]
                                  :not-atom-c)
 
-    (not (c-ref? c)) (if (c-ref?! c)
-                       [:ex-cref @c :meta (meta c)]
-                       (if verbose? [:not-cell-c @c :meta (meta c)]
-                                    :not-cell-c))
-    (c-quiesced c) [:deadc> @c]
+    (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
+                                  :not-cell-c)
+    (c-quiesced? c) [:QUIESCED @c]
     :else (if verbose?
             [:cinfo-all @c]
             (conj ((juxt c-prop-name c-mname c-pulse #_ c-async? #_ c-value) c)
@@ -284,7 +265,8 @@ rule to get once behavior or just when fm-traversing to find someone"
     a))
 
 (defn dpc [c category & bits]
-  (assert (c-ref?! c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)))
+  (assert (c-ref? c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)
+                       " bits " (apply str bits)))
   (when-let [dbg (c-debug c)]
     (when (or (true? dbg) (some #{category} dbg))
       (apply dp :DPC category (first bits) (cinfo c) (rest bits)))))
@@ -331,4 +313,5 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;;---
 
 (defn c-debug [c]
-  (:debug (meta c)))
+  (assert (c-ref? c))
+  (:debug @c))

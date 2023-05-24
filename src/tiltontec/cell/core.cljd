@@ -61,7 +61,8 @@
 (defn make-cell [& kvs]
   (let [options (apply hash-map (c-options-canonicalize kvs
                                   +valid-input-options+))]
-    (atom (merge {:value              unbound
+    (atom (merge {:mx-type            (cty/Cell.)
+                  :value              unbound
                   :state              :nascent
                   :pulse              0
                   :pulse-last-changed 0
@@ -73,10 +74,7 @@
                   :lazy               false                 ;; not a predicate (can hold, inter alia, :until-asked)
                   :ephemeral?         false
                   :input?             true}
-
-            (dissoc options :debug))
-      :meta {:mx-type (cty/Cell.)
-             :debug   (:debug options)})))
+            options))))
 
 (defn make-c-formula [& kvs]
   (let [options (apply hash-map (c-options-canonicalize kvs
@@ -88,7 +86,8 @@
     (when-let [lazy (:lazy options)]
       (assert (some #{lazy} [true false :until-asked]) (str "make-cf sees invalid value for :lazy " lazy)))
 
-    (atom (merge {:value              unbound
+    (atom (merge {:mx-type            (cty/CellFormula.)
+                  :value              unbound
                   :state              :nascent              ;; s/b :unbound?
                   :pulse              0
                   :pulse-last-changed 0
@@ -99,9 +98,7 @@
                   :ephemeral?         false
                   :optimize           true                  ;; this can also be :when-not-nil
                   :input?             false}                ;; not redundant: can start with rule, continue as input
-            (dissoc options :debug))
-      :meta {:mx-type (cty/CellFormula.)
-             :debug   (:debug options)})))
+            options))))
 
 ;;___________________ constructors _______________________________
 ;; I seem to have created a zillion of these, but I normally
