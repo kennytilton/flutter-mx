@@ -36,12 +36,13 @@
        :itemBuilder (fx/->CBAsIs
                       (fn [ctx idx]
                         (let [album (get-in body [idx])]
-                          (fx/list-tile
-                            {:title (fx/text (get album "title"))
-                             :onTap (as-dart-callback []
-                                      (dp :FNYI!!!-nav-to-album)
-                                      ;;#(.pop (m.Navigator/of ctx))
-                                      )}))))}))
+                          (fx/fx-render ctx
+                            (fx/list-tile
+                              {:title (fx/text (get album "title"))
+                               :onTap (as-dart-callback []
+                                        (dp :FNYI!!!-nav-to-album)
+                                        ;;#(.pop (m.Navigator/of ctx))
+                                        )})))))}))
 
 (defn make-app []
   (fx/material-app
@@ -59,12 +60,13 @@
                                       (dp :RESPONSE_GOT!! sc (count body) (string? body)))))]
                      (get-album))
         :name :center-beef}
-        (if-let [r (mget me :response)]
+        #_ (if-let [r (mget me :response)]
             (fx/text "got response!")
             (m/CircularProgressIndicator))
-        #_ (if-some [{sc .-statusCode body .-body} ^http/Response (mget me :response)]
+        (if-some [{sc .-statusCode body .-body} ^http/Response (mget me :response)]
           (case sc
-            200 (build-list-items (c/json.decode body))
+            200 #_ (fx/text "sc 200")
+            (build-list-items (c/json.decode body))
             (fx/text (str "Something wrong happened, status code: " sc)))
           (m/CircularProgressIndicator))
         #_
