@@ -6,7 +6,7 @@
     [tiltontec.flutter-mx.core :refer [in-my-context as-dart-callback] :as fx]
     ))
 
-(defn view [album]
+(defn view [ctx album]
   (fx/scaffold
     {:appBar (fx/app-bar
                {:title (fx/text (str "Album #"
@@ -16,10 +16,10 @@
         {:mainAxisAlignment m.MainAxisAlignment/center}
         (fx/column
           {:crossAxisAlignment m.CrossAxisAlignment/start}
-          (fx/text "name?")
-          (fx/text (str "Title:" (get album "title")))
-          (fx/text (str "Id:" (get album "id")))
-          (fx/text (str "UserId:" (get album "userId"))))
+          (fx/text (str "name:   " (-> ctx m.ModalRoute/of .-settings .-name)))
+          (fx/text (str "Title:  " (get album "title")))
+          (fx/text (str "Id:     " (get album "id")))
+          (fx/text (str "UserId: " (get album "userId"))))
         (fx/elevated-button
           {:onPressed (as-dart-callback
                         (fx/ctx-page-pop ctx))}
