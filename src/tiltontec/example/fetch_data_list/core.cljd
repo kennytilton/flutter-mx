@@ -14,19 +14,19 @@
   (fx/list-view+builder
     {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
      :itemCount   (count body)
-     :itemBuilder (fx/->CBAsIs
-                    (fn [ctx idx]
-                      (let [album (get-in body [idx])]
-                        (fx/fx-render ctx
-                          (fx/list-tile
-                            {:title (fx/text (get album "title"))
-                             :onTap (as-dart-callback []
-                                      (fx/ctx-page-push ctx
-                                        (fn [ctx]
-                                          ;; ^^^ we need the ctx at the time the page builder is called
-                                          ;; to pick up the current route.
-                                          (album-detail/view ctx album))
-                                        (str "/album-detail/" (get album "id"))))})))))}))
+     :itemBuilder (as-dart-callback [ctx idx]
+                    (let [album (get-in body [idx])]
+                      (fx/fx-render ctx
+                        ;; ^^ we cannot give Dart an f/mx proxy, so we "render" to a proper Flutter widget
+                        (fx/list-tile
+                          {:title (fx/text (get album "title"))
+                           :onTap (as-dart-callback []
+                                    (fx/ctx-page-push ctx
+                                      (fn [ctx]
+                                        ;; ^^^ we need the ctx at the time the page builder is called
+                                        ;; to pick up the current route.
+                                        (album-detail/view ctx album))
+                                      (str "/album-detail/" (get album "id"))))}))))}))
 
 (defn make-app []
   (fx/material-app
