@@ -86,19 +86,23 @@
      ;;(dp :resolved prop resolved)
      resolved)))
 
+;(#/(m/MaterialPageRoute Object)
+;  .settings (m/RouteSettings .name name)
+;  .builder
+;  (f/build page))
+
 (defn ctx-page-push
   ([ctx fx-page-def]
    (ctx-page-push ctx fx-page-def nil))
-  ([ctx fx-page-def route-name]
+  ([ctx fx-page-def name]
    (.push (-> ctx m.Navigator/of)
      (#/(m/MaterialPageRoute Object)
-       .settings (m/RouteSettings .name route-name)
-       .builder (fn [_]
-                  (fx-render ctx
+       .settings (m/RouteSettings .name name)
+       .builder (fn [my-ctx]
+                  (fx-render my-ctx
                     (if (fn? fx-page-def)
-                      (fx-page-def)
+                      (fx-page-def my-ctx)
                       fx-page-def)))))))
-
 
 (defn ctx-page-pop [ctx]
   (.pop (-> ctx m.Navigator/of)))

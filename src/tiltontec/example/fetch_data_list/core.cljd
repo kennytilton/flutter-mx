@@ -6,48 +6,28 @@
     ["package:http/http.dart" :as http]
     ["dart:convert" :as c]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
-    [tiltontec.matrix.util
-     :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
-    [tiltontec.matrix.base
-     :refer [prog1 wtrx dprn dp dpx trx]]
     [tiltontec.matrix.api :refer [dp cFn cF+ cI mget mkids mkids mswap!] :as mx]
     [tiltontec.example.fetch-data-list.api.albums :refer [get-album]]
     [tiltontec.example.fetch-data-list.pages.album-detail :as album-detail]))
 
 (defn- build-list-items [body]
-  (dp :blitems!!!!! (take 3 body))
   (fx/list-view+builder
-      {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
-       :itemCount   (count body)
-       :itemBuilder (fx/->CBAsIs
-                      (fn [ctx idx]
-                        (let [album (get-in body [idx])]
-                          (fx/fx-render ctx
-                            (fx/list-tile
-                              {:title (fx/text (get album "title"))
-                               :onTap (fx/in-my-context [me ctx]
-                                        (fx/->CBAsIs
-                                          #(fx/ctx-page-push ctx
-                                             (album-detail/view ctx album)
-                                             (str "/album-detail/" (get album "id")))))
+    {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
+     :itemCount   (count body)
+     :itemBuilder (fx/->CBAsIs
+                    (fn [ctx idx]
+                      (let [album (get-in body [idx])]
+                        (fx/fx-render ctx
+                          (fx/list-tile
+                            {:title (fx/text (get album "title"))
+                             :onTap (as-dart-callback []
+                                      (fx/ctx-page-push ctx
+                                        (fn [ctx]
+                                          ;; ^^^ we need the ctx at the time the page builder is called
+                                          ;; to pick up the current route.
+                                          (album-detail/view ctx album))
+                                        (str "/album-detail/" (get album "id"))))})))))}))
 
-                               #_ (as-dart-callback []
-                                        (dp :FNYI!!!-nav-to-album)
-                                        ;;#(.pop (m.Navigator/of ctx))
-                                        )})))))}))
-
-#_ (defn- navigate [navigator page name]
-     (.push
-       navigator (#/(m/MaterialPageRoute Object)
-                   .settings (m/RouteSettings .name name)
-                   .builder
-                   (f/build page))))
-
-#_ (defn ctx-page-push [ctx fx-page-def]
-     (.push (-> ctx m.Navigator/of)
-       (#/(m/MaterialPageRoute Object)
-         .builder (fn [_]
-                    (fx-render ctx fx-page-def)))))
 (defn make-app []
   (fx/material-app
     {:title "Fetch Data List Example"
@@ -55,19 +35,11 @@
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Fetch Data List Example")})}
       (fx/center {}
-        {:response (cF+ [:async? true
-                         :debug [:opti :evic]                        ;; [:opti]
-                         :watch (fn [_ me new old c]
-                                  (dp :RESPONSE-watch new)
-                                  (when new
-                                    (when-let [{sc .-statusCode body .-body} ^http/Response new]
-                                      (dp :RESPONSE_GOT!! sc (count body) ))))]
-                     (get-album))
-        :name :center-beef}
+        {:response (cF+ [:async? true]
+                     (get-album))}
         (if-some [{sc .-statusCode body .-body} ^http/Response (mget me :response)]
           (case sc
-            200 #_ (fx/text "sc 200")
-            (build-list-items (c/json.decode body))
+            200 (build-list-items (c/json.decode body))
             (fx/text (str "Something wrong happened, status code: " sc)))
           (m/CircularProgressIndicator))))))
 

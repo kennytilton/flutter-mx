@@ -59,7 +59,7 @@
   and propagation."
 
   [c debug-id ensurer]
-  (wtrx [0 1000 :EVIC-ENTRY debug-id (cinfo c)]
+  (wtrx [0 1000 nil :EVIC-ENTRY debug-id (cinfo c)]
     (dpc c :evic :evic-entry debug-id)
     (cond
       ; --------------------------------------------------
@@ -183,7 +183,7 @@
                            (.then ^Future raw-value
                              (fn [fu-val]
                                ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
-                               (dp :FUVAL-RECEIVED!!!!! fu-val)
+                               ;(dp :FUVAL-RECEIVED!!!!! fu-val)
                                (assert (atom? c) (str "CNSET> in future then atom? false origc "
                                                    cfo " cnow " c))
                                (assert (map? @c) (str "CNSET> in future then: map? false origc "
@@ -377,13 +377,11 @@
           ; we optimize here because even if unchanged we may not have c-useds,
           ; now that, with the :freeze option, we are doing "late" optimize-away
           ; Note that the :async? option likewise introduces late optimize
-          (dp :pre-opti-c (cinfo c))
+
           (when-let [optimize (and (c-formula? c)
                                 (c-optimize c))]
             (optimize-away?! c prior-value))
 
-          (dp :pre-pop-bug (cinfo c))
-          (dp :pre-pop-bug-c-atom (when (atom? c) @c))
           (dpc c :propagate :PROP-maybe-caller-ct (count callers))
 
           (when (or
