@@ -23,12 +23,25 @@
     [tiltontec.example.x030_codelab_namer :as x030]
     [tiltontec.example.layout-explorer :as layo]            ;; buggy
     [tiltontec.demo.todoMVC.core :as todo]
-    [tiltontec.example.fetch-data-list.core :as etienne]))
+    [tiltontec.example.fetch-data-list.core :as etienne]
+    ["package:hive/hive.dart" :as hive]
+    ["package:hive_flutter/hive_flutter.dart" :as hive-f]))
 
 (defn main []
   (dp :main-entry)
+
   (md/md-quiesce-feature! true)
   (.ensureInitialized w/WidgetsFlutterBinding)
+
+
+  (-> hive-f/Hive hive-f/HiveX .initFlutter await)
+  (dp :hive-ok)
+  (let [box (-> hive-f/Hive (.openBox "testBox") await)]
+    (dp :box box)
+    (.put box "name" "David")
+    (let [d (.get box "name")]
+      (dp :name-is d)))
+
   (wtrx [0 999 :run-app]
     (dp :running-app)
     (fx/run-app
