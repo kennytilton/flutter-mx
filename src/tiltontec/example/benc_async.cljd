@@ -1,0 +1,33 @@
+(ns tiltontec.example.benc-async
+  (:require
+    [clojure.string :as str]
+    [tiltontec.cell.core :refer [cF cf-freeze]]
+    [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+    [tiltontec.matrix.api :refer [cI cF+ dp fmu fasc minfo with-cc] :as mx]
+    [tiltontec.matrix.util
+     :refer [ atom? rmap-set! rmap-meta-set! set-ify difference]]
+    [tiltontec.flutter-mx.core :as fx]
+    [tiltontec.flutter-mx.factory :as fmk]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ))
+
+(defn make-app []
+  (let [title "Why Hello"]
+    (fx/material-app
+      {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
+        {:name         :scaffo
+         :message      (cI "Hello, this message can be overriden")
+         :message-copy (cF+ [:async? true] (await (mget me :message)))
+         :frozen       (cF (when-let [original (mget me :message-copy)]
+                             (cf-freeze original)))}
+        (fx/center
+          (fx/column (fx/elevated-button {:onPressed (fx/as-dart-callback []
+                                                       (with-cc :test
+                                                         (mset! (fasc :scaffo) :message "New Message")))}
+                       (fx/text "Change Text"))
+            (fx/text (str "Current message: " (mget (fasc :scaffo) :message-copy)))
+            (fx/text (str "Original value: " (mget (fasc :scaffo) :frozen)))))))))
