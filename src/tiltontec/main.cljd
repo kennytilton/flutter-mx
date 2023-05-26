@@ -4,7 +4,6 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as f]
-
     ;["dart:io" :as io]
 
     [tiltontec.model.core :as md]
@@ -24,34 +23,25 @@
     [tiltontec.example.layout-explorer :as layo]            ;; buggy
     [tiltontec.demo.todoMVC.core :as todo]
     [tiltontec.example.fetch-data-list.core :as etienne]
-    [tiltontec.example.benc-async :as bca]
-    ["package:hive/hive.dart" :as hive]
-    ["package:hive_flutter/hive_flutter.dart" :as hive-f]))
+    [tiltontec.example.benc-async :as bca]))
 
 (defn main []
   (dp :main-entry)
 
-  (md/md-quiesce-feature! true)
   (.ensureInitialized w/WidgetsFlutterBinding)
 
-
-  (-> hive-f/Hive hive-f/HiveX .initFlutter await)
-  (dp :hive-ok)
-  (let [box (-> hive-f/Hive (.openBox "testBox") await)]
-    (dp :box box)
-    (.put box "name" "David")
-    (let [d (.get box "name")]
-      (dp :name-is d)))
+  (md/md-quiesce-feature! true)
 
   (wtrx [0 999 :run-app]
     (dp :running-app)
     (fx/run-app
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example.
-        (bca/make-app))))
+        (x030/make-app))))
   (dp :run-app-fini)
 
   ;; (testing/run-tests)
+
   (dp :main-exit))
 
 ;; (set! r/debugPaintSizeEnabled true)

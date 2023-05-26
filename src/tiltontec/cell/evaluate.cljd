@@ -45,9 +45,9 @@
                                                (dart/is? @*depender* #/(Future dynamic)))
                                          [:future])]))
 
-    (trx nil :reco-dep!!! :used (c-prop used) :caller (c-prop *depender*))
-    (dpx :reco-dep-sees-dep @*depender*)
-    (when (dart/is? @*depender* #/(Future dynamic))
+    #_ (trx nil :reco-dep!!! :used (c-prop used) :caller (c-prop *depender*))
+    #_ (dpx :reco-dep-sees-dep @*depender*)
+    #_ (when (dart/is? @*depender* #/(Future dynamic))
       (dpx :reco-dep-future!!!!!!!!! (await @*depender*)))
     (rmap-set! [:useds *depender*]
       (conj (c-useds *depender*) used))
@@ -212,14 +212,8 @@
                 ;; as part of the opti-away processing.
                 ;;(trx :calc-n-set->assume raw-value)
                 (c-value-assume c raw-value propagation-code)
-                (when-not (or (map? (deref c))
-                            (c-optimized-away? c))
-                  (dp :c-NO_LONGER-map!!!!!!!!!-meta (meta c))
-                  (dp :c-NO_LONGER-map!!!!!!!!! (deref c) (when (atom? (deref c))
-                                                            (deref (deref c))))
-                  (assert (or (map? (deref c))
-                            (c-optimized-away? c)) "calc-n-set deref c not map or opti"))
-                )))))
+                (assert (or (map? (deref c))
+                          (c-optimized-away? c)) "calc-n-set post CVASS deref c not map or opti"))))))
 
 ;(declare unlink-from-used)
 
