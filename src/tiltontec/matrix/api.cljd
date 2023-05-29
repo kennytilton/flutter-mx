@@ -9,10 +9,11 @@
 
 (def unbound cb/unbound)
 
-(defn dp [& bits]
-  (cb/without-c-dependency
-    (dart:core/print (str/join " " (list* :DPR>
-                                     (map #(if (nil? %) :NIL %) bits))))))
+(defmacro dp [& bits]
+  `(cb/without-c-dependency
+    (dart:core/print (clojure.string/join " " (list* :DPR>
+                                     (map #(if (nil? %) :NIL %) (vector ~@bits)))))))
+
 (defmacro dpx [& bits]
   `(do))
 

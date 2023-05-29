@@ -2,10 +2,10 @@
   (:require
     ["dart:math" :as math]
     [cljd.flutter.alpha :as f]
-    [tiltontec.cell.base :as cbase]
+    [tiltontec.cell.base :as cb]
     [tiltontec.model.peek :refer [Model minfo mref?]]
     [tiltontec.matrix.base :refer [trx dpx dp]]
-    [tiltontec.matrix.api :refer [cF cI mget fmuv] :as mx]
+    [tiltontec.matrix.api :refer [cF cF+ cI mget fmuv] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     [tiltontec.flutter-mx.factory :as fmk]
     ["package:flutter/widgets.dart" :as w]
@@ -33,12 +33,13 @@
     {}                                                      ;; <= necessary placeholder
     {:name             :fab
      ; --- Dart lifecycle ---------------------------
-     ;; todo how does this ever run?
-     :dispose          (fn [this me]
-                         (when-let [controller (fx/my-controller)]
-                           (.dispose controller)))
      ; --- animation mechanics ----------------------
-     :controller       (cF (fx/when-my-state [state]
+     :controller       (cF+ [:on-quiesce (fn [c]
+                                           (let [me (cb/c-model c)]
+                                             (when-let [controller (cb/c-value c)]
+                                               (dp :disposing-cont!!! controller)
+                                               (.dispose ^m/AnimationController controller))))]
+                         (fx/when-my-state [state]
                              (m/AnimationController
                                .value (if initial-open? 1.0 0.0)
                                .duration (dart:core/Duration .milliseconds 250)

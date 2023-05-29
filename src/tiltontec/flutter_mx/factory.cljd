@@ -13,7 +13,7 @@
             [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
 
             [tiltontec.model.peek :refer [minfo Model]]
-            [tiltontec.cell.base :refer [cinfo c-model] :as cty]
+            [tiltontec.cell.base :refer [dpc cinfo c-model] :as cty]
             [tiltontec.matrix.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set! mref? make mget mget? mkids mswap! cI cFkids]
              :as mx]
@@ -66,7 +66,6 @@
   (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))
   (when me
     (or ^State? (mget? me :fx$state)
-      ;; todo without dependency? Complete rethink?
       (when-let [st (fx-state-nearest (mx/mpar))]
         (dpx :got-nearest-st-JIT st (tiltontec.cell.base/minfo me))
         ;; todo memoize instead
@@ -127,7 +126,8 @@
       (when-not (= prior-value cty/unbound)
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (minfo me) (cinfo cell))
         (dpx :FXDartWidget-observing-md!!! prop (minfo me) #_#_:deref @me)
-        (dpx :FXDartWidget-observing-cell!!! prop (cinfo cell) @cell)
+        (when true ;; (= prop :kids)
+          (dpc cell :quiesce :FXDartWidget-observing-cell-change!!! prop  ))
         (when-let [noter (mget? me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
         (md-quiesce-lost! cell new-value prior-value)

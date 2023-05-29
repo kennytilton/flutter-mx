@@ -7,7 +7,7 @@
     [tiltontec.cell.base
      :refer [without-c-dependency with-mx-isolation pcell c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? cprn c-code$
-             c-model c-valid? c-useds c-ref? c-quiesced?
+             c-model c-valid? c-useds c-ref? c-quiesced? c-on-quiesce
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes* dependency-drop
              c-rule c-code c-me c-value-state c-callers dependency-record
@@ -165,7 +165,7 @@
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
-  (do                                                       ;; cty/with-cdbg (and (= :style (c-prop c)) (= :z-counter (c-mname c)))
+  (do                                                       ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
     (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
     (let [[raw-value propagation-code] (calculate-and-link c dbgid)]
       (dpc c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
@@ -430,6 +430,7 @@ then clear our record of them."
             (= :freeze (c-optimize c))
             (and (= :when-value-t (c-optimize c))
               (not (nil? (c-value c)))))
+          (not (c-on-quiesce c))
           (c-optimize c)
           (not (and (c-async? c)                            ;; we will need the cell to handle the response when it comes in
                  (not (:then? @c))))                        ;; <- part of response handling is to flag :then as true

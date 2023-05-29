@@ -168,6 +168,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (assert (not (c-quiesced? c))
       (str "c-quiess!> already quiessed " (cinfo c)))
     (when-let [onq (:on-quiesce @c)]
+      (dpc c :quiesce :calling-onq!!!!!! onq)
       (onq c))
     (unlink-from-callers c)
     (unlink-from-used c :quiesce)
@@ -192,7 +193,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (utb/def-rmap-props c-
   me prop state input? rule pulse pulse-last-changed pulse-observed
-  useds users callers optimize ephemeral? sink
+  useds users callers optimize ephemeral? sink on-quiesce
   lazy synapses synaptic? code async? then? debug)
 
 (defn c-code$ [c]

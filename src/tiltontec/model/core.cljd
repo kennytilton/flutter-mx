@@ -1,6 +1,7 @@
 (ns tiltontec.model.core
   (:require
     [clojure.string :as str]
+    [tiltontec.cell.base :refer [dpc]]
     [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
     [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
@@ -523,11 +524,11 @@
   (wtrx [0 999 nil :mdq-self (minfo me)]
     (when-let [onq (get @me :on-quiesce)]
       (wtrx [0 999 nil :mdq-onq (minfo me)]
-        ;; (dp :mdq-onq (minfo me))
         (onq me)))
 
     (doseq [c (vals (:cz (meta me)))]
       (when c                                               ;; not if optimized away
+        (dpc c :quiesce :mdq-self-qis c)
         (c-quiesce! c)))
 
     (doseq [k (keys @me)]
