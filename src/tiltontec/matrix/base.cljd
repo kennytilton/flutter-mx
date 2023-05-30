@@ -102,7 +102,7 @@
         (<= lo *trdeep* hi)
         (apply call-trc trxargs)
 
-        (> *trdeep* hi)
+        (> *trdeep* 5 #_ hi) ;;hack
         (do (dp :throwing xid)
             (bail-hi hi))
 
@@ -111,6 +111,8 @@
       (fn))))
 
 (defmacro wtrx [[lo hi & trxargs] & body]
+  `(do ~@body)
+  #_
   `(call-wtrx (fn [] ~@body) ~lo ~hi (list ~@trxargs)))
 
 (defmacro prog1 [& body]
