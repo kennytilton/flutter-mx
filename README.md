@@ -18,42 +18,82 @@ First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tense
 git clone https://github.com/kennytilton/flutter-mx
 ```
 
-#### 2. Start a simulator. (Our focus so far has been mobile.)
+#### 2. You now have three delightful options
+You can run on an iOS simulator, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
 
-In a terminal:
-* start a sim: 
-```bash
+##### Device options
+We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you.
+
+To see what devices Flutter can see, in a terminal enter:
+``` bash
+flutter devices
+```
+My output as we speak:
+``` text
+3 connected devices:
+
+iPhone 14 Pro Max (mobile) • 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 • ios            • com.apple.CoreSimulator.SimRuntime.iOS-16-4 (simulator)
+macOS (desktop)            • macos                                • darwin-arm64   • macOS 13.3.1 22E772610a darwin-arm64 (Rosetta)
+Chrome (web)               • chrome                               • web-javascript • Google Chrome 114.0.5735.90
+
+No wireless devices were found.
+```
+Note that I have an iOS sim available, because I had previously entered:
+``` bash
 open -a Simulator
 ```
+Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise.
 
-You should see a Simulator appear. I get an iPhone 12 by default. Explore the `open` command for alternatives.
+Made your choice? Make note of the second column, and follow one of the three sets of instructions below.
 
-BEWARE! If you forget the step above to open a simulator, the next command will run for ages and _open a tab in your browser_. Close everything and start over. 
-
-#### 3. Run the sample app.
-
-In a terminal: `cd flutter-mx`, or wherever you cloned it;
-
-Next, we build the app and start a "watch" to rebuild when the source changes.
-
-HEADS UP! This next command does not return. Use Control-C to kill the process when through exploring:
-
+##### Running on the iOS sim
+In a terminal:
 ```bash
-clj -M -m cljd.build flutter
+cd flutter-mx # ...or wherever you cloned this repo.
+clj -M:cljd flutter -d 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 # <!!!!! change the ID to your ID as shown in the device list
 ```
+After a while you should see the legendary Flutter Counter app on the sim! 
 
-After a few minutes (just the first time, thirty seconds on subsequent start-ups) you should see these last lines of output:
+Note that the build/run command does not return. Hit Control-C when done, or quit the Simulator app. But continue below for more.
+#### Running on the desktop
+In a terminal:
+```bash
+cd flutter-mx # ...or wherever you cloned this repo.
+clj -M:cljd flutter -d macos
 ```
-An Observatory debugger and profiler on iPhone 12 is available at: http://127.0.0.1:61081/v17dEYvUuuQ=/
-The Flutter DevTools debugger and profiler on iPhone 12 is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:61081/v17dEYvUuuQ=/
+After a while should see the legendary Flutter Counter app running in a desktop app! 
+
+Note that the build/run command does not return. Hit Control-C when done, or quit the desktop app. But continue below for more.
+#### Running in the Google Chrome browser
+In a terminal:
+```bash
+cd flutter-mx # ...or wherever you cloned this repo.
+clj -M:cljd flutter -d chrome
 ```
-Now check the simulator you opened earlier. You should see our "hello, world" app in the sim:
+After a while should see the legendary Flutter Counter app running in the Chrome browser! 
 
-![FMX Hello World screenshot](image/hello-world-app.jpg)
+Note that the build/run command does not return. Hit Control-C when done, or close the web page. But continue below for more.
 
-Mr. Kernighan co-authored "The C Programming Language" with Dennis Ritchie, and contributed the bit on "hello, world".
+###  Diagnostics
+We rely exclusively on print debugging, but Flutter offers extensive debugging support you might like. Looking at the terminal window where we started the simulator version, we see:
+```
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
 
-The code for our `hello-world` is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
+A Dart VM Service on iPhone 14 Pro Max is available at: http://127.0.0.1:50022/9iEGXsRelsg=/
+The Flutter DevTools debugger and profiler on iPhone 14 Pro Max is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:50022/9iEGXsRelsg=/
+
+```
+Enter the `Flutter DevTools` URL offered in our browser, `http://127.0.0.1:9100?uri=http://127.0.0.1:50022/9iEGXsRelsg=/`, we see a serious debugging tool!
+
+### The Counter app, à la Flutter MX
+
+The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
 
 #### 4. Running other examples.
 
