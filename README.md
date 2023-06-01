@@ -91,18 +91,16 @@ The Flutter DevTools debugger and profiler on iPhone 14 Pro Max is available at:
 ```
 Enter the `Flutter DevTools` URL offered in our browser, `http://127.0.0.1:9100?uri=http://127.0.0.1:50022/9iEGXsRelsg=/`, we see a serious debugging tool!
 
-### The Counter app, à la Flutter MX
+#### The Counter app, using Flutter/MX
 
-The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x00_hello_world.cljd).
+The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x01_counter.cljd). Yes, just two dozen lines. Lisp can hide a lot.
 
 #### 4. Running other examples.
 
 To try a different example:
-1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `hello` in `(hello/make-app)` to one of the namespaces listed above in the NS requires. Try `counter` to see the standard Flutter Counter app, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
+1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `counter` in `(counter/make-app)` to one of the namespaces listed above in the NS requires. Try `hello` to see an elaborate "Hello, world", featuring that phrase's popularizer, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
 2. Save your changes.
-3. Now switch back to the "watch" terminal and wait a few seconds until you see that the app has been rebuilt.
-4. Now hit RETURN.
-5. Check the sim to see the new app.
+3. Wait a few seconds and the new app should appear in your chosen device.
 
 More examples, including translations of the rest of the [ClojureDart samples](https://github.com/Tensegritics/ClojureDart/blob/main/samples/README.md), can be found in our [Flutter/MX Sandbox](https://github.com/kennytilton/flutter-mx-sandbox) repo.
 
