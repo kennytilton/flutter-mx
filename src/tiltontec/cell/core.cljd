@@ -117,22 +117,26 @@
 ;  `(c-fn-var (~'prop-c#) ~@body))
 
 (defmacro c-fn [& body]
+  #_
   `(fn f [~'_cell]
      (let [~'me (tiltontec.cell.base/c-model ~'_cell)
            ; ~'_cell ~c
            ; ~'_slot-name (tiltontec.cell.base/c-prop _cell)
            ~'_cache (tiltontec.cell.base/c-value ~'_cell)]
        ~@body))
-  #_
+
   (let [name (when (and (symbol? (first body))
                      (rest body))
                (first body))]
-    `(fn f [~'_cell]
+    #_ (when (not name)
+      (prn :---------)
+      (prn body))
+    `(fn ~(or name 'f) [~'_cell]
        (let [~'me (tiltontec.cell.base/c-model ~'_cell)
              ; ~'_cell ~c
              ; ~'_slot-name (tiltontec.cell.base/c-prop _cell)
              ~'_cache (tiltontec.cell.base/c-value ~'_cell)]
-         ~@body))))
+         ~@(if name (rest body) body)))))
 
 (defmacro cF [& body]
   `(make-c-formula

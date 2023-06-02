@@ -478,7 +478,10 @@
      (doall (remove nil? (flatten (list ~@tree))))))
 
 (defmacro cFkids [& tree]
-  `(cF (the-kids ~@tree)))
+  `(cF kids (the-kids ~@tree)))
+
+(defmacro cFkids+ [name & tree]
+  `(cF ~name (tiltontec.model.core/the-kids ~@tree)))
 
 (defn kid-values-kids [me x-kids]
   (let [k-key (mget me :kid-key)
