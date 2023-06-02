@@ -13,9 +13,11 @@ If you just want to run the thing...
 
 First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennytilton on that Slack or the Flutter Community Slack.
 
-#### 1. Clone this repo
+#### 1. Clone and initialize this repo
 ```bash
 git clone https://github.com/kennytilton/flutter-mx
+cd flutter-mx
+clj -M:cljd init
 ```
 
 #### 2. You now have three delightful options
@@ -49,7 +51,6 @@ Made your choice? Make note of the second column, and follow one of the three se
 ##### Running on the iOS sim
 In a terminal:
 ```bash
-cd flutter-mx # ...or wherever you cloned this repo.
 clj -M:cljd flutter -d 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 # <!!!!! change the ID to your ID as shown in the device list
 ```
 After a while you should see the legendary Flutter Counter app on the sim! 
@@ -58,19 +59,17 @@ Note that the build/run command does not return. Hit Control-C when done, or qui
 #### Running on the desktop
 In a terminal:
 ```bash
-cd flutter-mx # ...or wherever you cloned this repo.
 clj -M:cljd flutter -d macos
 ```
-After a while should see the legendary Flutter Counter app running in a desktop app! 
+After a while you should see the legendary Flutter Counter app running in a desktop app! 
 
 Note that the build/run command does not return. Hit Control-C when done, or quit the desktop app. But continue below for more.
 #### Running in the Google Chrome browser
 In a terminal:
 ```bash
-cd flutter-mx # ...or wherever you cloned this repo.
 clj -M:cljd flutter -d chrome
 ```
-After a while should see the legendary Flutter Counter app running in the Chrome browser! 
+After a while you should see the legendary Flutter Counter app running in the Chrome browser! 
 
 Note that the build/run command does not return. Hit Control-C when done, or close the web page. But continue below for more.
 
