@@ -9,9 +9,14 @@ Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or ju
 
 If you just want to run the thing...
 
-#### 0. Prepare your ClojureDart working set-up, on Mac OS X
+#### 0. Prepare your Clojure and ClojureDart environments, on Mac OS X
 
-First, complete the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennytilton on that Slack or the Flutter Community Slack.
+Clojure installation is documented [here](https://clojure.org/guides/install_clojure). tl;dr:
+```
+brew install clojure/tools/clojure
+```
+
+Next, execute the [ClojureDart "Flutter Quick Start"](https://github.com/Tensegritics/ClojureDart/blob/main/doc/flutter-quick-start.md). Help with that can be had in the #ClojureDart channel on the #Clojurians Slack. Or ping @kennytilton on that Slack or the Flutter Community Slack.
 
 #### 1. Clone and initialize this repo
 ```bash
@@ -24,9 +29,14 @@ clj -M:cljd init
 You can run on an iOS simulator, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
 
 ##### Device options
-We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you.
+We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
+``` bash
+open -a Simulator
+```
+Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise.
 
-To see what devices Flutter can see, in a terminal enter:
+##### Flutter devices
+Now to see what devices Flutter thinks are available, in a terminal enter:
 ``` bash
 flutter devices
 ```
@@ -40,12 +50,6 @@ Chrome (web)               • chrome                               • web-java
 
 No wireless devices were found.
 ```
-Note that I have an iOS sim available, because I had previously entered:
-``` bash
-open -a Simulator
-```
-Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise.
-
 Made your choice? Make note of the second column, and follow one of the three sets of instructions below.
 
 ##### Running on the iOS sim
