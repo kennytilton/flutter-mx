@@ -9,6 +9,8 @@ Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or ju
 
 If you just want to run the thing...
 
+<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20Sim.png" width="240">
+
 #### 0. Prepare your Clojure and ClojureDart environments, on Mac OS X
 
 Clojure installation is documented [here](https://clojure.org/guides/install_clojure). tl;dr:
@@ -57,7 +59,7 @@ In a terminal:
 ```bash
 clj -M:cljd flutter -d 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 # <!!!!! change the ID to your ID as shown in the device list
 ```
-After a while you should see the legendary Flutter Counter app on the sim! 
+After a while you should see the legendary Flutter Counter app on the sim, as shown above.
 
 Note that the build/run command does not return. Hit Control-C when done, or quit the Simulator app. Then continue [below](#3-diagnostics).
 #### Running on the desktop
@@ -67,6 +69,8 @@ clj -M:cljd flutter -d macos
 ```
 After a while you should see the legendary Flutter Counter app running in a desktop app! 
 
+<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20macos.png" width="360">
+
 Note that the build/run command does not return. Hit Control-C when done, or quit the desktop app. Then continue [below](#3-diagnostics).
 #### Running in the Google Chrome browser
 In a terminal:
@@ -74,6 +78,8 @@ In a terminal:
 clj -M:cljd flutter -d chrome
 ```
 After a while you should see the legendary Flutter Counter app running in the Chrome browser! 
+
+<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20chrome.png" width="360">
 
 Note that the build/run command does not return. Hit Control-C when done, or close the web page. Then continue to [next](#3-diagnostics).
 
@@ -109,11 +115,9 @@ The Flutter DevTools debugger and profiler on iPhone 14 Pro Max is available at:
 Enter the `Flutter DevTools` URL offered in our browser, `http://127.0.0.1:9100?uri=http://127.0.0.1:50022/9iEGXsRelsg=/`, we see a serious debugging tool!
 
 #### The Counter app, using Flutter/MX
-
 The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x01_counter.cljd). Yes, just two dozen lines. Lisp can hide a lot.
 
 #### 4. Running other examples.
-
 To try a different example:
 1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `counter` in `(counter/make-app)` to one of the namespaces listed above in the NS requires. Try `hello` to see an elaborate "Hello, world", featuring that phrase's popularizer, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
 2. Save your changes.
