@@ -95,6 +95,8 @@ In a second terminal:
 ```
 clj -M:cljd flutter -d chrome
 ```
+<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20all.png" width="720">
+
 How cool is that?!
 
 ###  3. Diagnostics
