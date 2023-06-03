@@ -59,7 +59,7 @@ clj -M:cljd flutter -d 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 # <!!!!! change the 
 ```
 After a while you should see the legendary Flutter Counter app on the sim! 
 
-Note that the build/run command does not return. Hit Control-C when done, or quit the Simulator app. But continue below for more.
+Note that the build/run command does not return. Hit Control-C when done, or quit the Simulator app. Then continue [below](#3-diagnostics).
 #### Running on the desktop
 In a terminal:
 ```bash
@@ -67,7 +67,7 @@ clj -M:cljd flutter -d macos
 ```
 After a while you should see the legendary Flutter Counter app running in a desktop app! 
 
-Note that the build/run command does not return. Hit Control-C when done, or quit the desktop app. But continue below for more.
+Note that the build/run command does not return. Hit Control-C when done, or quit the desktop app. Then continue [below](#3-diagnostics).
 #### Running in the Google Chrome browser
 In a terminal:
 ```bash
@@ -75,9 +75,23 @@ clj -M:cljd flutter -d chrome
 ```
 After a while you should see the legendary Flutter Counter app running in the Chrome browser! 
 
-Note that the build/run command does not return. Hit Control-C when done, or close the web page. But continue below for more.
+Note that the build/run command does not return. Hit Control-C when done, or close the web page. Then continue to [next](#3-diagnostics).
 
-###  Diagnostics
+#### Running everywhere
+In a terminal:
+```bash
+open -a Simulator # iff necessary
+clj -M:cljd flutter -d all
+```
+The app should load in the Simulator and a desktop app. 
+
+In a second terminal:
+```
+clj -M:cljd flutter -d chrome
+```
+How cool is that?!
+
+###  3. Diagnostics
 We rely exclusively on print debugging, but Flutter offers extensive debugging support you might like. Looking at the terminal window where we started the simulator version, we see:
 ```
 Flutter run key commands.
