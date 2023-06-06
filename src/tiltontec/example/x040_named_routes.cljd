@@ -17,6 +17,28 @@
                         (.pushNamed (-> ctx m.Navigator/of) "/second"))}
           (text "Launch Screen"))))))
 
+(def f-screen
+  (fn [ctx]
+    (fx/fx-render ctx
+      (scaffold
+        {:appBar (app-bar
+                   {:title (m/Text "First Screen")})}
+        (center
+          (elevated-button
+            {:onPressed (as-dart-callback []
+                          (.pushNamed (-> ctx m.Navigator/of) "/second"))}
+            (text "Launch Screen")))))))
+
+(defn screen-1 []
+  (scaffold
+    {:appBar (app-bar
+               {:title (m/Text "First Screen")})}
+    (center
+      (elevated-button
+        {:onPressed (as-dart-callback []
+                      (.pushNamed (-> ctx m.Navigator/of) "/second"))}
+        (text "Launch Screen")))))
+
 (defn ^m/Widget second-screen [ctx]
   (fx/fx-render ctx
     (scaffold
@@ -30,7 +52,16 @@
 
 (defn make-app []
   (material-app
-    {:title "Navigation Basics"
+    {:title        "Navigation Basics"
      :initialRoute "/"
-     :routes {"/" first-screen
-              "/second"   second-screen}}))
+     :routes       {"/" f-screen ;; first-screen
+                    #_^m/Widget (fn [ctx] (fx/fx-render ctx
+                                            (scaffold
+                                              {:appBar (app-bar
+                                                         {:title (m/Text "First Screen")})}
+                                              (center
+                                                (elevated-button
+                                                  {:onPressed (as-dart-callback []
+                                                                (.pushNamed (-> ctx m.Navigator/of) "/second"))}
+                                                  (text "Launch Screen"))))))
+                    "/second" second-screen}}))
