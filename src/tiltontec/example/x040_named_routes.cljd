@@ -50,11 +50,8 @@
                  {:title (m/Text "First Screen")})}
       (fx/center
         (fx/elevated-button
-          {:onPressed (fx/in-my-context [me ctx]
-                        (fx/->CBAsIs
-                          #(do
-                             (.pushNamed (-> ctx m.Navigator/of) "/second")
-                             nil)))}
+          {:onPressed (fx/as-dart-callback []
+                        (.pushNamed (-> ctx m.Navigator/of) "/second"))}
           (fx/text "Launch Screen"))))))
 
 (defn ^m/Widget second-screen [ctx]
