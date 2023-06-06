@@ -6,30 +6,7 @@
      :refer [as-dart-callback scaffold app-bar elevated-button text center material-app]]
     ["package:flutter/material.dart" :as m]))
 
-(defn ^m/Widget first-screen [ctx]
-  (fx/fx-render ctx
-    (scaffold
-      {:appBar (app-bar
-                 {:title (m/Text "First Screen")})}
-      (center
-        (elevated-button
-          {:onPressed (as-dart-callback []
-                        (.pushNamed (-> ctx m.Navigator/of) "/second"))}
-          (text "Launch Screen"))))))
-
-(def f-screen
-  (fn [ctx]
-    (fx/fx-render ctx
-      (scaffold
-        {:appBar (app-bar
-                   {:title (m/Text "First Screen")})}
-        (center
-          (elevated-button
-            {:onPressed (as-dart-callback []
-                          (.pushNamed (-> ctx m.Navigator/of) "/second"))}
-            (text "Launch Screen")))))))
-
-(defn screen-1 []
+(defn first-screen [ctx]
   (scaffold
     {:appBar (app-bar
                {:title (m/Text "First Screen")})}
@@ -39,35 +16,7 @@
                       (.pushNamed (-> ctx m.Navigator/of) "/second"))}
         (text "Launch Screen")))))
 
-(defn ^m/Widget second-screen [ctx]
-  (fx/fx-render ctx
-    (scaffold
-      {:appBar (app-bar
-                 {:title (m/Text "Second Screen")})}
-      (center
-        (elevated-button
-          {:onPressed (as-dart-callback []
-                        (-> ctx m.Navigator/of .pop))}
-          (fx/text "Go Back!"))))))
-
-; (into {}
-;                        (keep (fn [[k v]]
-;                                {k (fn ^m/Widget k [ctx]
-;                                     v)}))
-;                        {"/"       first-screen
-;                         "/second" second-screen}))))
-
-(defn s1 [ctx]
-  (scaffold
-    {:appBar (app-bar
-               {:title (m/Text "First Screen")})}
-    (center
-      (elevated-button
-        {:onPressed (as-dart-callback []
-                      (.pushNamed (-> ctx m.Navigator/of) "/second"))}
-        (text "Launch Screen")))))
-
-(defn s2 [ctx]
+(defn second-screen [ctx]
   (scaffold
     {:appBar (app-bar
                {:title (m/Text "Second Screen")})}
@@ -81,30 +30,9 @@
   (material-app
     {:title        "Navigation Basics"
      :initialRoute "/"
-     :routes
-     #_(into {}
-             (keep (fn [[k v]]
-                     {k (fn ^m/Widget k [ctx]
-                          v)}))
-             {"/"       first-screen
-              "/second" second-screen})
-     (into {}
-           (for [[k gen] {"/"       s1
-                          "/second" s2}]
-             [k (fn ^m/Widget k [ctx]
-                  (fx/fx-render ctx
-                    (gen ctx)))]))
-     #_(into {}
-             (keep (fn [[k gen]]
-                     {k (fn ^m/Widget k [ctx]
+     :routes (into {}
+                   (for [[k gen] {"/"       first-screen
+                                  "/second" second-screen}]
+                     [k (fn ^m/Widget k [ctx]
                           (fx/fx-render ctx
-                            (gen ctx)))}))
-             {"/"       s1
-              "/second" s2})
-     #_{"/" (fn ^m/Widget [ctx]
-              (fx/fx-render ctx
-                (s1 ctx)))
-        "/second"
-        (fn ^m/Widget [ctx]
-          (fx/fx-render ctx
-            (s2 ctx)))}}))
+                            (gen ctx)))]))}))
