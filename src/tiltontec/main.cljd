@@ -9,13 +9,15 @@
     [tiltontec.model.core :as md]
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx]]
-    [tiltontec.alpha2.counter :as a2c]
+    [tiltontec.matrix.api :refer [minfo] :as mx]
+
     [tiltontec.testing :as testing]
     [tiltontec.test.lazy-cells :as test-lazy]
     [tiltontec.flutter-mx.core :as fx]
     [tiltontec.example.mathpaper :as tek]
     [tiltontec.example.x00-hello-world :as hello]
     [tiltontec.example.x01-counter :as counter]
+    [tiltontec.example.x03-physics-sim :as x03]
     [tiltontec.example.x05-fab :as x05]
     [tiltontec.example.x020-reactive-stream :as x020]
 
@@ -26,19 +28,29 @@
     [tiltontec.example.benc-async :as bca]
     [tiltontec.example.x035-timer-poll :as x035]))
 
+(defonce prior-app (atom nil))
+
 (defn main []
   (dp :main-entry)
-  (.ensureInitialized w/WidgetsFlutterBinding)
+  (dp :prior-app? @prior-app)
   (md/md-quiesce-feature! true)
+
+  (when-let [prior @prior-app]
+    (dp :quiescing-prior!)
+    (md/md-quiesce! prior)
+    (dp :quiesced-prior!))
+  (.ensureInitialized w/WidgetsFlutterBinding)
 
   (wtrx [0 999 :run-app]
     (fx/run-app
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example.
-        ;; VVVVV --------------------------------------------
-        (counter/make-app))))
+        ;; ------ VVVVV --------------------------------------------
+        (let [app (counter/make-app)]
+          (dp :app (mx/minfo app))
+          (reset! prior-app app)))))
 
-  (dp :run-app-fini)
+  (dp :run-app-fini @prior-app)
   ;; (testing/run-tests)
   (dp :main-exit))
 
