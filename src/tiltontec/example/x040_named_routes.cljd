@@ -6,31 +6,33 @@
      :refer [as-dart-callback scaffold app-bar elevated-button text center material-app]]
     ["package:flutter/material.dart" :as m]))
 
-(defn ^m/Widget first-screen [ctx]
-  (fx/fx-render ctx
-    (scaffold
-      {:appBar (app-bar
-                 {:title (m/Text "First Screen")})}
-      (center
-        (elevated-button
-          {:onPressed (as-dart-callback []
-                        (.pushNamed (-> ctx m.Navigator/of) "/second"))}
-          (text "Launch Screen"))))))
+(defn first-screen [ctx]
+  (scaffold
+    {:appBar (app-bar
+               {:title (m/Text "First Screen")})}
+    (center
+      (elevated-button
+        {:onPressed (as-dart-callback []
+                      (.pushNamed (-> ctx m.Navigator/of) "/second"))}
+        (text "Launch Screen")))))
 
-(defn ^m/Widget second-screen [ctx]
-  (fx/fx-render ctx
-    (scaffold
-      {:appBar (app-bar
-                 {:title (m/Text "Second Screen")})}
-      (center
-        (elevated-button
-          {:onPressed (as-dart-callback []
-                        (-> ctx m.Navigator/of .pop))}
-          (fx/text "Go Back!"))))))
+(defn second-screen [ctx]
+  (scaffold
+    {:appBar (app-bar
+               {:title (m/Text "Second Screen")})}
+    (center
+      (elevated-button
+        {:onPressed (as-dart-callback []
+                      (-> ctx m.Navigator/of .pop))}
+        (fx/text "Go Back!")))))
 
 (defn make-app []
   (material-app
-    {:title "Navigation Basics"
+    {:title        "Navigation Basics"
      :initialRoute "/"
-     :routes {"/" first-screen
-              "/second"   second-screen}}))
+     :routes (into {}
+                   (for [[k gen] {"/"       first-screen
+                                  "/second" second-screen}]
+                     [k (fn ^m/Widget k [ctx]
+                          (fx/fx-render ctx
+                            (gen ctx)))]))}))
