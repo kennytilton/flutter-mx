@@ -81,11 +81,30 @@
   (material-app
     {:title        "Navigation Basics"
      :initialRoute "/"
-     :routes       {"/" ;;first-screen                        ;; first-screen
-                    (fn ^m/Widget  [ctx]
-                      (fx/fx-render ctx
-                        (s1 ctx)))
-                    "/second" #_ second-screen
-                    (fn ^m/Widget  [ctx]
-                      (fx/fx-render ctx
-                        (s2 ctx)))}}))
+     :routes
+     #_(into {}
+             (keep (fn [[k v]]
+                     {k (fn ^m/Widget k [ctx]
+                          v)}))
+             {"/"       first-screen
+              "/second" second-screen})
+     (into {}
+           (for [[k gen] {"/"       s1
+                          "/second" s2}]
+             [k (fn ^m/Widget k [ctx]
+                  (fx/fx-render ctx
+                    (gen ctx)))]))
+     #_(into {}
+             (keep (fn [[k gen]]
+                     {k (fn ^m/Widget k [ctx]
+                          (fx/fx-render ctx
+                            (gen ctx)))}))
+             {"/"       s1
+              "/second" s2})
+     #_{"/" (fn ^m/Widget [ctx]
+              (fx/fx-render ctx
+                (s1 ctx)))
+        "/second"
+        (fn ^m/Widget [ctx]
+          (fx/fx-render ctx
+            (s2 ctx)))}}))
