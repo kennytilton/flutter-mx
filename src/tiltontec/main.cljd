@@ -20,12 +20,8 @@
     [tiltontec.example.x03-physics-sim :as x03]
     [tiltontec.example.x05-fab :as x05]
     [tiltontec.example.x020-reactive-stream :as x020]
-
     [tiltontec.example.x030_codelab_namer :as x030]
-    [tiltontec.example.layout-explorer :as layo]            ;; buggy
     [tiltontec.demo.todoMVC.core :as todo]
-    [tiltontec.example.fetch-data-list.core :as etienne]
-    [tiltontec.example.benc-async :as bca]
     [tiltontec.example.x035-timer-poll :as x035]
     [tiltontec.example.x040-named-routes :as x040]))
 
@@ -33,9 +29,7 @@
 
 (defn main []
   (dp :main-entry)
-  (dp :prior-app? @prior-app)
   (md/md-quiesce-feature! true)
-
   (when-let [prior @prior-app]
     (dp :quiescing-prior!)
     (md/md-quiesce! prior)
@@ -47,9 +41,9 @@
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example.
         ;; ------ VVVVV --------------------------------------------
-        (x040/make-app))))
+        (counter/make-app))))
 
-  (dp :run-app-fini @prior-app)
+  ;; (dp :run-app-fini @prior-app)
   ;; (testing/run-tests)
   (dp :main-exit))
 
