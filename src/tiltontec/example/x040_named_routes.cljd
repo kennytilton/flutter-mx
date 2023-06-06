@@ -1,0 +1,90 @@
+(ns tiltontec.example.x040-named-routes
+  "Port of CLJD sample.navigate-named-routes...
+      Port of https://docs.flutter.dev/cookbook/navigation/named-routes.html"
+  (:require
+    [clojure.string :as str]
+    [tiltontec.matrix.api :refer [cF mget]]
+    [tiltontec.flutter-mx.core :as fx
+     :refer [scaffold app-bar text center column hero material-app]]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+;(ns sample.navigate-named-routes
+;  "Port of https://docs.flutter.dev/cookbook/navigation/named-routes.html"
+;  (:require
+;    ["package:flutter/material.dart" :as m]
+;    [cljd.flutter :as f]))
+
+
+#_
+(defn ^m/Widget first-screen [ctx]
+  (f/widget
+    :get [m/Navigator]
+    (m/Scaffold
+      .appBar (m/AppBar
+                .title (m/Text "First Screen"))
+      .body   (m/Center
+                .child (m/ElevatedButton
+                         .onPressed #(do
+                                       (.pushNamed navigator "/second")
+                                       nil)
+                         .child     (m/Text "Launch Screen"))))))
+
+#_
+        (defn ^m/Widget second-screen [ctx]
+          (f/widget
+            :get [m/Navigator]
+            (m/Scaffold
+              .appBar (m/AppBar
+                        .title (m/Text "Second Screen"))
+              .body   (m/Center
+                        .child (m/ElevatedButton
+                                 .onPressed #(.pop navigator)
+                                 .child     (m/Text "Go Back!"))))))
+
+(defn ^m/Widget first-screen [ctx]
+  (fx/fx-render ctx
+    (fx/scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "First Screen")})}
+      (fx/center
+        (fx/elevated-button
+          {:onPressed (fx/in-my-context [me ctx]
+                        (fx/->CBAsIs
+                          #(do
+                             (.pushNamed (-> ctx m.Navigator/of) "/second")
+                             nil)))}
+          (fx/text "Launch Screen"))))))
+
+(defn ^m/Widget second-screen [ctx]
+  (fx/fx-render ctx
+    (fx/scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "Second Screen")})}
+      (fx/center
+        (fx/elevated-button
+          {:onPressed (fx/in-my-context [me ctx]
+                        (fx/->CBAsIs
+                          (fn ^void []
+                            (fx/ctx-page-pop ctx)
+                            nil)))}
+          (fx/text "Go Back!"))))))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Navigation Basics"
+     :initialRoute "/"
+     :routes {"/" first-screen
+              "/second"   second-screen}}))
+
+;(defn main []
+;  (m/runApp
+;    (m/MaterialApp
+;      .title "Navigation Basics"
+;      .initialRoute "/"
+;      .routes       {"/" first-screen
+;                     "/second"   second-screen})))
+
+
+
