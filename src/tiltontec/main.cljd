@@ -41,7 +41,7 @@
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example.
         ;; ------ VVVVV --------------------------------------------
-        (x040/make-app))))
+        (counter/make-app))))
 
   ;; (dp :run-app-fini @prior-app)
   ;; (testing/run-tests)
@@ -49,3 +49,41 @@
 
 ;; (set! r/debugPaintSizeEnabled true)
 ;; (w/debugDumpApp)
+
+; (defn repl-ish []
+;  (do (dart:core/print :on-reload)
+;      (bt/scan! 3)
+;      (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+;      (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
+;      (await (.delayed dc/Future (dc/Duration .milliseconds 2000))))
+;  (do
+;    nil
+;    ))
+;​
+;(defmacro hot-reload-detector
+;  [& body]
+;  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
+;        state-sym `^w/State state#
+;        super-sym `super#
+;        user-widget
+;        `(reify :extends (w/StatefulWidget.)
+;           :no-meta true
+;           (~'createState [_#]
+;            (reify :extends w/State
+;              :no-meta true
+;              (~'initState [~state-sym]
+;               (.initState ~(vary-meta state-sym assoc :tag 'super))
+;               nil)
+;              (^void ~'reassemble [this#]
+;               (.reassemble ^{:tag ~'super} this#)
+;               (repl-ish))
+;              (~'dispose [~state-sym]
+;               (.dispose ~(vary-meta state-sym assoc :tag 'super)))
+;              (~'build [~state-sym ~flutter-build-ctx]
+;               ~@body))))]
+;    user-widget))
+;
+; (defn main [] ;<id:1673573645>
+;  (fx/run-app
+;   (fx/hot-reload-detector
+;    (fx/fx-render nil (home/make)))))
