@@ -16,7 +16,7 @@
             [tiltontec.cell.base :refer [dpc cinfo c-model] :as cty]
             [tiltontec.matrix.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
-                     mref? make mget mget? mkids mswap! cI cFkids cFkids+ ]
+                     mref? make mget mget? mkids mswap! cI cFkids  ]
              :as mx]
             [clojure.string :as str]))
 
@@ -219,7 +219,7 @@
                                                 `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                                    (tiltontec.model.core/mget ~'me ~k#))])]
                                      (apply concat kvs)))))))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~child))))
+       (tiltontec.matrix.api/cFkids ~child))))
 
 (defmacro k1-child-stateless [fx-class fx-props mx-props & [child]]
   (let []
@@ -237,7 +237,7 @@
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                          (tiltontec.model.core/mget ~'me ~k#))])]
                            (apply concat kvs))))))
-       (tiltontec.model.core/cFkids+ ~(fx-class-sym fx-class) ~child))))
+       (tiltontec.model.core/cFkids ~child))))
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & [child]]
   (let []
@@ -255,7 +255,7 @@
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                          (tiltontec.model.core/mget ~'me ~k#))])]
                            (apply concat kvs))))))
-       (tiltontec.model.core/cFkids+ ~(fx-class-sym fx-class) ~child))))
+       (tiltontec.model.core/cFkids ~child))))
 
 (defmacro children-stateless [fx-class fx-props mx-props & children]
   (let [fname (symbol (second (clojure.string/split (str fx-class) #"/")))]
@@ -272,7 +272,7 @@
                                      [(symbol (str "." (name k#)))
                                       `(tiltontec.matrix.api/mget ~'me ~k#)])]
                            (apply concat kvs))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~@children))))
+       (tiltontec.matrix.api/cFkids ~@children))))
 
 (defmacro kids->prop-stateless [target-prop-name fx-class fx-props mx-props & children]
   (let []
@@ -293,7 +293,7 @@
                                      #_[(symbol (str "." (name k#)))
                                         `(tiltontec.matrix.api/mget ~'me ~k#)])]
                            (apply concat kvs))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~@children))))
+       (tiltontec.matrix.api/cFkids ~@children))))
 
 (defmacro kids->prop-stateful [target-prop-name fx-class fx-props mx-props & children]
   (let []
@@ -324,7 +324,7 @@
                                               `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                                  (tiltontec.matrix.api/mget ~'me ~k#))])]
                                    (apply concat kvs))))))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~@children))))
+       (tiltontec.matrix.api/cFkids ~@children))))
 
 (defmacro childless-stateless [fx-class fx-props mx-props]
   (let []
@@ -480,7 +480,7 @@
                                                 `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                                    (tiltontec.matrix.api/mget ~'me ~k#))])]
                                      (apply concat kvs)))))))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~body))))
+       (tiltontec.matrix.api/cFkids ~body))))
 
 
 (defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]
@@ -515,7 +515,7 @@
                                                 `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                                    (tiltontec.matrix.api/mget ~'me ~k#))])]
                                      (apply concat kvs)))))))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~home))))
+       (tiltontec.matrix.api/cFkids ~home))))
 
 (defmacro prop-param1-childless-stateless [prop fx-class fx-props mx-props]
   (let []
@@ -550,7 +550,7 @@
                                       `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
                                          (tiltontec.matrix.api/mget ~'me ~k#))])]
                            (apply concat kvs))))))
-       (tiltontec.matrix.api/cFkids+ ~(fx-class-sym fx-class) ~@children))))
+       (tiltontec.matrix.api/cFkids ~@children))))
 
 ;;; -------------------------------------------------------------
 

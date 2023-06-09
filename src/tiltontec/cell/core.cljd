@@ -105,17 +105,18 @@
 ;; use just cI, cF, and cFn (which starts out as cF and becomes cI).
 ;;
 
-;(defmacro c-fn-var [[c] & body]
-;  `(fn [~c]
-;     (let [~'me (tiltontec.cell.base/c-model ~c)
-;           ~'_cell ~c
-;           ~'_slot-name (tiltontec.cell.base/c-prop ~c)
-;           ~'_cache (tiltontec.cell.base/c-value ~c)]
-;       ~@body)))
+(defmacro c-fn-var [[c] & body]
+  `(fn [~c]
+     (let [~'me (tiltontec.cell.base/c-model ~c)
+           ~'_cell ~c
+           ~'_slot-name (tiltontec.cell.base/c-prop ~c)
+           ~'_cache (tiltontec.cell.base/c-value ~c)]
+       ~@body)))
 
-;(defmacro c-fn [& body]
-;  `(c-fn-var (~'prop-c#) ~@body))
+(defmacro c-fn [& body]
+  `(c-fn-var (~'prop-c#) ~@body))
 
+#_
 (defmacro c-fn [& body]
   #_
   `(fn f [~'_cell]
