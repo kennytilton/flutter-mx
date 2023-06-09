@@ -22,26 +22,24 @@
     [tiltontec.example.x020-reactive-stream :as x020]
     [tiltontec.example.x030_codelab_namer :as x030]
     [tiltontec.demo.todoMVC.core :as todo]
+    [tiltontec.example.fetch-data-list.core :as etienne]
+    [tiltontec.example.benc-async :as bca]
     [tiltontec.example.x035-timer-poll :as x035]
-    [tiltontec.example.x040-named-routes :as x040]))
-
-(defonce prior-app (atom nil))
+    [tiltontec.example.benc-gd :as bgd]))
 
 (defn main []
   (dp :main-entry)
   (md/md-quiesce-feature! true)
-  (when-let [prior @prior-app]
-    (dp :quiescing-prior!)
-    (md/md-quiesce! prior)
-    (dp :quiesced-prior!))
+
   (.ensureInitialized w/WidgetsFlutterBinding)
 
   (wtrx [0 999 :run-app]
     (fx/run-app
       (fx/fx-render nil
-        ;; Change the  namespace below to one above and rebuild to see a different example.
+        ;; Change the  namespace below to one above and rebuild to see a different example. <<<<<<< Updated upstream
         ;; ------ VVVVV --------------------------------------------
-        (counter/make-app))))
+        (bgd/make-app))))
+
 
   ;; (dp :run-app-fini @prior-app)
   ;; (testing/run-tests)
