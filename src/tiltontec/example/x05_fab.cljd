@@ -99,9 +99,8 @@
       {:opacity anime #_(mget (mx/fasc :fab) :expand-animation)}
       (action-button
         :icon (:icon action)
-        :onPressed (fx/in-my-context [me ctx]
-                     (fx/->CBAsIs
-                       #(show-action ctx action)))))))
+        :onPressed (fx/with-ctx+as-is [me ctx]
+                     #(show-action ctx action))))))
 
 (defn show-action [ctx action]
   (m/showDialog

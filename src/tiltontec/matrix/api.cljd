@@ -11,8 +11,9 @@
 
 (defmacro dp [& bits]
   `(cb/without-c-dependency
-    (dart:core/print (clojure.string/join " " (list* :DPR>
-                                     (map #(if (nil? %) :NIL %) (vector ~@bits)))))))
+     (dart:core/print (clojure.string/join " " (list* :DPR>
+                                                 (map #(if (nil? %) :NIL %) (vector ~@bits)))))
+     nil))
 
 (defmacro dpx [& bits]
   `(do))
@@ -191,8 +192,8 @@
            md# (tiltontec.model.core/fm-ascendant name# ~me-ref)]
        (if (nil? md#)
          (mx-throw (str "fascv> did not find model " name#
-                              " searching up from " (tiltontec.model.peek/mname md#)
-                              " seeking property " ~prop-name " value."))
+                     " searching up from " (tiltontec.model.peek/mname md#)
+                     " seeking property " ~prop-name " value."))
          (if (contains? @md# ~prop-name)
            (tiltontec.model.core/mget md# ~prop-name)
            (mx-throw (str "fascv> " ~name " lacks " ~prop-name " property")))

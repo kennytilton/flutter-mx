@@ -34,57 +34,74 @@
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
    ;(dp :resolving prop (minfo me) widget-value)
-   (let [resolved (cond
-     (nil? widget-value)
-     (do
-       ;(dp :exwid-sees-nil-widget-value!!!!!!!!!! prop (tiltontec.cell.base/minfo me))
-       nil)
+   (wtrx [0 1000 nil :RESO prop (minfo me)]
+     (let [resolved
+           (cond
+             (nil? widget-value)
+             (do
+               (dpx :fx-res-nil!! prop )
+               nil)
 
-     (dart/is? widget-value CBAsIs)
-     (do
-       (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
-       (.-value ^CBAsIs widget-value))
+             (dart/is? widget-value CBAsIs)
+             (do
+               (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
+               (.-value ^CBAsIs widget-value))
 
-     (dart/is? widget-value CBToResolve)
-     (let [val ^CBToResolve widget-value]
-       (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
-       (let [cb-val (.-value val)]                          ;; ^CBToResolve widget-value)]
-         (dpx :CBToResolveyields cb-val)
-         (fx-resolve prop me ctx cb-val)))
+             (dart/is? widget-value CBToResolve)
+             ;; in the past, a naked function given, say, to onPress would be
+             ;; called like (naked-fn me ctx), but with v2 it simply gets passed
+             ;; as the onPress, so we have to do call a CBToResolve value here and
+             ;; then give that recursively to fx-resolve. So if the (cb-val me ctx) below
+             ;; returns a function, /that/ will be passed on to Flutter as is. ie CBToResolve
+             ;; exists so we can use params me and ctx to decide the handler to be given to Flutter.
+             (let [val ^CBToResolve widget-value]
+               (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
+               (let [cb-val (.-value val)]                  ;; ^CBToResolve widget-value)]
+                 (dpx :CBToResolveyields cb-val)
+                 (let [v (cb-val me ctx)]
+                   (dpx :recuring-unwrapped-fn?-return-val v)
+                   (fx-resolve prop me ctx v))
+                 #_
+                         (fx-resolve prop me ctx cb-val)))
 
-     (dart/is? widget-value m/Widget)
-     (do
-       ;;(dp :widget-value-is-widget widget-value)
-       widget-value)
+             (dart/is? widget-value m/Widget)
+             (do
+               (dpx :widget-value-is-widget widget-value)
+               widget-value)
 
-     (fn? widget-value)
-     (do                                                    ;; (dp :ew-sees-fn widget-value)
-       (dpx :fxres-calling-fn?-blind widget-value)
-       (let [v (widget-value me ctx)]
-         (dpx :recuring-unwrapped-fn?-return-val v)
-         (fx-resolve prop me ctx v)))
+             (fn? widget-value)
+             (do
+               (dpx :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
+               widget-value)
+             #_
+                     (do
+                       (dpx :fxres-calling-fn?-blind widget-value)
+                       (let [v (widget-value me ctx)]
+                         (dpx :recuring-unwrapped-fn?-return-val v)
+                         (fx-resolve prop me ctx v)))
 
-     (cty/c-ref? widget-value)
-     (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
+             (cty/c-ref? widget-value)
+             (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
 
-     (mref? widget-value)
-     (do
-       (let [fx (fx-render ctx widget-value)]
-         (dpx :rfx-mdref-yielded-flutter fx)
-         fx))
+             (mref? widget-value)
+             (do
+               (dpx :fxres-sees-mref (minfo widget-value))
+               (let [fx (fx-render ctx widget-value)]
+                 (dpx :rfx-mdref-yielded-flutter fx)
+                 fx))
 
-     (vector? widget-value)
-     (do (dpx :BAM-vector!!!!!!! widget-value)
-         (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
-           (dpx :vec-rez rzd)
-           rzd))
+             (vector? widget-value)
+             (do (dpx :fxres-seq!!!! prop (count widget-value))
+                 (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
+                   (dpx :vec-rez rzd)
+                   rzd))
 
-     :default (do #_(dp :resolve-fall-thru-used prop (minfo me) widget-value
-                      (when (atom? widget-value)
-                        (deref widget-value)))
-                widget-value))]
-     ;;(dp :resolved prop resolved)
-     resolved)))
+             :default (do (dpx :fxres-fall-thru-passthru prop (minfo me) widget-value
+                            (when (atom? widget-value)
+                              (deref widget-value)))
+                          widget-value))]
+       ;;(dp :resolved prop resolved)
+       resolved))))
 
 ;(#/(m/MaterialPageRoute Object)
 ;  .settings (m/RouteSettings .name name)

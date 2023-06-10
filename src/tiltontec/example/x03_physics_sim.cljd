@@ -16,11 +16,11 @@
   (let [size (.-size (MediaQuery/of ctx))
         controller (fx/my-controller)
         animation ^#/(m/Animation Alignment) (.drive controller
-                                                     (m/AlignmentTween
-                                                       .begin (mget me :dragAlignment)
-                                                       .end m.Alignment/center))
+                                               (m/AlignmentTween
+                                                 .begin (mget me :dragAlignment)
+                                                 .end m.Alignment/center))
         units-per-s (m/Offset (/ (.-dx px-per-s) (.-width size))
-                              (/ (.-dy px-per-s) (.-height size)))
+                      (/ (.-dy px-per-s) (.-height size)))
         unit-velocity (.-distance units-per-s)
         spring (p/SpringDescription
                  .mass 30
@@ -36,24 +36,21 @@
   (fx/ticker-mode
     {:enabled true}
     (fx/gesture-detector
-      {:onPanDown   (cF (fx/->CBAsIs
-                          (fn [^m/DragDownDetails details]
-                            (when-let [c (fx/my-controller)]
-                              (.stop c)))))
-       :onPanUpdate (fx/in-my-context [me ctx]
-                      (fx/->CBAsIs
-                        (fn [^m/DragUpdateDetails details]
-                          (let [size (.-size (MediaQuery/of ctx))]
-                            (with-mx-isolation
-                              (mx/mswap! me :dragAlignment
-                                         #(.+ ^m/Alignment %
-                                              (m/Alignment
-                                                (/ (-> details .-delta .-dx) (/ (.-width size) 2))
-                                                (/ (-> details .-delta .-dy) (/ (.-height size) 2))))))))))
-       :onPanEnd    (cF (fx/in-my-context [me ctx]
-                          (fx/->CBAsIs
-                            (fn [^m/DragEndDetails details]
-                              (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond))))))}
+      {:onPanDown   (cF (fn [^m/DragDownDetails details]
+                          (when-let [c (fx/my-controller)]
+                            (.stop c))))
+       :onPanUpdate (fx/with-ctx+as-is [me ctx]
+                      (fn [^m/DragUpdateDetails details]
+                        (let [size (.-size (MediaQuery/of ctx))]
+                          (with-mx-isolation
+                            (mx/mswap! me :dragAlignment
+                              #(.+ ^m/Alignment %
+                                 (m/Alignment
+                                   (/ (-> details .-delta .-dx) (/ (.-width size) 2))
+                                   (/ (-> details .-delta .-dy) (/ (.-height size) 2)))))))))
+       :onPanEnd    (cF (fx/with-ctx+as-is [me ctx]
+                          (fn [^m/DragEndDetails details]
+                            (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond)))))}
       {:name          :draggo
        :dragAlignment (cI m.Alignment/center)
        :controller    (cF (when-let [st (mget (mpar) :fx$state)]
@@ -71,7 +68,7 @@
 (defn make-app []
   (let [title (str "Physics Animation")]
     (fx/material-app {:title title}
-                     (fx/scaffold
-                       {:appBar (fx/app-bar {:title (fx/text title)})}
-                       (draggable-card
-                         :drag-child (fx/flutter-logo {:size 128.0} {}))))))
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
+        (draggable-card
+          :drag-child (fx/flutter-logo {:size 128.0} {}))))))

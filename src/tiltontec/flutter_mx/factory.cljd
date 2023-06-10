@@ -16,7 +16,7 @@
             [tiltontec.cell.base :refer [dpc cinfo c-model] :as cty]
             [tiltontec.matrix.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
-                     mref? make mget mget? mkids mswap! cI cFkids  ]
+                     mref? make mget mget? mkids mswap! cI cFkids]
              :as mx]
             [clojure.string :as str]))
 
@@ -37,20 +37,21 @@
 ;;; --- ctx tracking ----------------------
 
 (defn record-fx$ctx [me ctx]
+  (dpx :reco-CTX! (minfo me) ctx)
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
 
 (defn ctx-check [fx-class me ctx]
   (cond
     (nil? (fx-ctx me))
     (do
-      ;(dp :ctx-check-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
+      (dpx :CTX-CHECK-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
       (record-fx$ctx me ctx))
 
     (= ctx (fx-ctx me))
-    (dpx :ctx-check-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
+    (dpx :CTX-CHECK-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
 
     :else (do
-            (dpx :ctx-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
+            (dpx :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
             (record-fx$ctx me ctx))))
 
 (defn fx-ctx [me]
@@ -66,7 +67,9 @@
 (defn fx-state-nearest [me]
   (dpx :state-nearest-entry (tiltontec.cell.base/minfo me))
   (when me
-    (or ^State? (mget? me :fx$state)
+    (if-let [st ^State? (mget? me :fx$state)]
+      (do (dpx :nearest-st-bingo-from (minfo me))
+          st)
       (when-let [st (fx-state-nearest (mx/mpar))]
         (dpx :got-nearest-st-JIT st (tiltontec.cell.base/minfo me))
         ;; todo memoize instead
@@ -88,14 +91,29 @@
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
 
-(defn state-set
+(defn trigger-state
   ([^State state]
-   (state-set state nil))
+   (trigger-state state nil))
   ([^State state me]
    (if (.-mounted state)
-     (do (dpx :setting-state state (cty/minfo me))
+     (do (dpx :TRG-STATE-setting-state!!!! state (minfo me))
          (.setState state (fn [] (do))))
-     #_(dp :NOT_SETTING_STATE_NOT_MOUNTED state (cty/minfo me)))))
+     (dp :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
+
+(defn trigger-rebuild [^w/Element elt me]
+  (dpx :MNBuild-entry (minfo me) elt)
+  (when (not (and (.-mounted elt)
+               (.-debugIsActive elt)
+               (not (.-debugIsDefunct elt))))
+    (dp :rebld-DEAD-ELT-me!!!(minfo me))
+    (dp :rebld-mounted (.-mounted elt))
+    (dp :rebld-active (.-debugIsActive elt))
+    (dp :rebld-sees-defunct (.-debugIsDefunct elt) )
+    (dp :rebld-str (.toString elt)))
+
+  (when (not (.-debugIsDefunct elt))
+    (dpx :MNBuild-MNB!!! (minfo me))
+    (.markNeedsBuild elt)))
 
 (defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
@@ -134,15 +152,12 @@
         (md-quiesce-lost! cell new-value prior-value)
 
         (if-let [^State state (mget? me :fx$state)]
-          (do (dpx :FXDWO-settingimmediatestate prop new-value #_(meta me) (cty/minfo me) (.-mounted state))
-              (state-set state me))
-          (if-let [^State state (fx-state-nearest me)]
-            (do
-              (dpx :FXDWO-obs-FXD-uses-nearest-state state (.-mounted state)
-                :prop prop :new-prio new-value prior-value)
-              (state-set state me))
-            (dpx :FXDWO-NOT-setting-state-on-utterly-stateless prop new-value (cty/minfo me)
-              #_@me)))))))
+          (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state))
+              (trigger-state state me))
+          (if-let [^w/Element elt (fx-ctx me)]
+            (do (dpx :FXDWO-direct-MNB prop new-value (minfo me))
+                (trigger-rebuild elt me))
+            (dpx :FXDWO-NOT-MNBING-contextless prop new-value (minfo me))))))))
 
 ;(deftype FXDartWidgetFamily []
 ;  :extends FXDartWidget
@@ -228,6 +243,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class
                        .child (tiltontec.flutter-mx.core/fx-resolve :kid1 ~'me ctx
@@ -246,6 +262,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class
                        .content (tiltontec.flutter-mx.core/fx-resolve :kid1 ~'me ctx
@@ -264,6 +281,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class
                        .children (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
@@ -281,6 +299,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class
                        ~(symbol (str "." (name target-prop-name)))
@@ -333,6 +352,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class
                        ~@(let [kvs (for [[k# _#] fx-props]
@@ -350,6 +370,7 @@
          :_param-1 (tiltontec.cell.core/cF ~only-kid)
          :fx-class (quote ~fx-class)
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
                                   (tiltontec.matrix.api/mget ~'me :_param-1))
@@ -524,6 +545,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class (tiltontec.flutter-mx.core/fx-resolve ~prop ~'me ctx
                                   (tiltontec.matrix.api/mget ~'me ~prop))
@@ -543,6 +565,7 @@
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ctx]
+                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
                      (~fx-class
                        ~@(let [kvs (for [[k# _#] fx-props]
