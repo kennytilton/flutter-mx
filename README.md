@@ -9,7 +9,7 @@ Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or ju
 
 If you just want to run the thing...
 
-<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20Sim.png" width="240">
+<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/counter-app.png" width="240">
 
 #### 0. Prepare your Clojure and ClojureDart environments, on Mac OS X
 
@@ -69,8 +69,6 @@ clj -M:cljd flutter -d macos
 ```
 After a while you should see the legendary Flutter Counter app running in a desktop app! 
 
-<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20macos.png" width="360">
-
 Note that the build/run command does not return. Hit Control-C when done, or quit the desktop app. Then continue [below](#3-diagnostics).
 #### Running in the Google Chrome browser
 In a terminal:
@@ -78,8 +76,6 @@ In a terminal:
 clj -M:cljd flutter -d chrome
 ```
 After a while you should see the legendary Flutter Counter app running in the Chrome browser! 
-
-<img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20chrome.png" width="360">
 
 Note that the build/run command does not return. Hit Control-C when done, or close the web page. Then continue to [next](#3-diagnostics).
 
@@ -97,7 +93,7 @@ clj -M:cljd flutter -d chrome
 ```
 <img src="https://github.com/kennytilton/flutter-mx/blob/main/image/HW%20d%20all.png" width="720">
 
-How cool is that?!
+That ^^ is our other demo app, a true "Hello, world."! How cool is that?!
 
 ###  3. Diagnostics
 We rely exclusively on print debugging, but Flutter offers extensive debugging support you might like. Looking at the terminal window where we started the simulator version, we see:
@@ -121,9 +117,12 @@ The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-
 
 #### 4. Running other examples.
 To try a different example:
-1. Edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `counter` in `(counter/make-app)` to one of the namespaces listed above in the NS requires. Try `hello` to see an elaborate "Hello, world", featuring that phrase's popularizer, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
-2. Save your changes.
-3. Wait a few seconds and the new app should appear in your chosen device.
+0. Switch to the dev branch: `git checkout dev`;
+1. kill whatever `watch` you have running;
+2. edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `counter` in `(counter/make-app)` to one of the namespaces listed above in the NS requires. Try `hello` to see an elaborate "Hello, world", featuring that phrase's popularizer, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
+3. save your changes;
+4. start another build/watch as explained above; and
+5. the new app should appear in your chosen device.
 
 More examples, including translations of the rest of the [ClojureDart samples](https://github.com/Tensegritics/ClojureDart/blob/main/samples/README.md), can be found in our [Flutter/MX Sandbox](https://github.com/kennytilton/flutter-mx-sandbox) repo.
 
