@@ -16,7 +16,7 @@
             [tiltontec.cell.base :refer [dpc cinfo c-model] :as cty]
             [tiltontec.matrix.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
-                     mref? make mget mget? mkids mswap! cI cFkids]
+                     mpar mref? make mget mget? mkids mswap! cI cFkids]
              :as mx]
             [clojure.string :as str]))
 
@@ -91,6 +91,24 @@
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
 
+(defn trigger-build [me]
+  (if-let [^State state (mget? me :fx$state)]
+    (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state))
+        (trigger-state state me))
+    (do
+      (if-let [^w/Element elt (fx-ctx me)]
+        (do (dpx :FXDWO-direct-MNB prop new-value (minfo me))
+            (mark-rebuild elt me))
+        (dpx :FXDWO-NOT-MNBING-contextless prop new-value (minfo me)))
+      (trigger-state-above (mpar)))))
+
+(defn trigger-state-above [me]
+  (when me
+    (if-let [^State state (mget? me :fx$state)]
+      (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state))
+          (trigger-state state me))
+      (trigger-state-above (mpar)))))
+
 (defn trigger-state
   ([^State state]
    (trigger-state state nil))
@@ -100,7 +118,7 @@
          (.setState state (fn [] (do))))
      (dp :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
 
-(defn trigger-rebuild [^w/Element elt me]
+(defn mark-rebuild [^w/Element elt me]
   (dpx :MNBuild-entry (minfo me) elt)
   (when (not (and (.-mounted elt)
                (.-debugIsActive elt)
@@ -151,13 +169,7 @@
           (.notifyListeners ^m/ChangeNotifier noter))
         (md-quiesce-lost! cell new-value prior-value)
 
-        (if-let [^State state (mget? me :fx$state)]
-          (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state))
-              (trigger-state state me))
-          (if-let [^w/Element elt (fx-ctx me)]
-            (do (dpx :FXDWO-direct-MNB prop new-value (minfo me))
-                (trigger-rebuild elt me))
-            (dpx :FXDWO-NOT-MNBING-contextless prop new-value (minfo me))))))))
+        (trigger-build me)))))
 
 ;(deftype FXDartWidgetFamily []
 ;  :extends FXDartWidget
