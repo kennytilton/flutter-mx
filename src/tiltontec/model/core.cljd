@@ -26,7 +26,7 @@
     [tiltontec.cell.core
      :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell]]
     [tiltontec.cell.evaluate :refer [cget c-awaken]]
-    [tiltontec.model.peek :refer [*md-quiescing* Model minfo mref?]]
+    [tiltontec.model.peek :refer [chk *md-quiescing* Model minfo mref?]]
     [tiltontec.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
 
 (defmacro pme [& mas]
@@ -40,8 +40,8 @@
   (atom nil))
 
 (defn mget [me prop]
-  (assert me (str "mget passed nil for me accessing prop: " prop))
-  (assert (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+  (chk me (str "mget passed nil for me accessing prop: " prop))
+  (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
   (if (not (contains? @me prop))
     (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
       ;(dp :mget prop (minfo me))
@@ -61,8 +61,8 @@
   ([me prop]
    (mget? me prop nil))
   ([me prop alt-val]
-   (assert me (str "mget passed nil for me accessing prop: " prop))
-   (assert (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+   (chk me (str "mget passed nil for me accessing prop: " prop))
+   (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
    (if (contains? @me prop)
      (mget me prop)
      alt-val)))
@@ -76,8 +76,8 @@
 ;;; --- accessors ----
 
 (defn mset! [me prop new-value]
-  (assert me "no me passed to mset!")
-  (assert (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
+  (chk me "no me passed to mset!")
+  (chk (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
     (do
       (dpx :md-reset-gotc!!! @c)
@@ -127,7 +127,7 @@
                  :meta {:state   :nascent
                         ;; todo pull more fx$s into meta
                         :mx-type (:mx-type iargs (Model.))})]
-        (assert (meta me))
+        (chk (meta me))
         ;(dp :make-post-me (meta me))
         (rmap-meta-set!
           [:cz me]
@@ -183,7 +183,7 @@
     `(:parent @~me)))
 
 (defn mhost [md]
-  (assert (mref? md))
+  (chk (mref? md))
   (:host @md))
 
 (defn make-family [& arg-list]
@@ -217,7 +217,7 @@
        (do ~@body))))
 
 (defn fm-navig-eq? [seek poss]
-  (assert (or (atom? poss) (string? poss))
+  (chk (or (atom? poss) (string? poss))
     (str "poss not ref " (string? poss)))
   (fmdp :eq :fm-navig-eq? (fn? seek) (keyword? seek) (minfo poss))
   (cond
@@ -274,7 +274,7 @@
           (recur (rest sibs)))))))
 
 (defn fm-navig-hosted? [what where prop]
-  (assert (mref? where))
+  (chk (mref? where))
   (fmdp :host :navhosted-entry prop what (minfo where))
   (when-let [it (mget where prop)]
     (fmdp :host :navhosted-gotit prop what (minfo where))
@@ -408,14 +408,14 @@
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/mget? node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
-       (assert other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
 
 (defmacro fmuval [name & [prop me]]
@@ -423,7 +423,7 @@
         me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
 
 (defn mxu-find-id
@@ -435,7 +435,7 @@
 (defn mxu-find-type
   "Search matrix ascendants only from node 'me' for first with given tag"
   [me explicit=type-test]
-  (assert me)
+  (chk me)
   ;; explicit-type-test will have to be like (fn [me] (dart/is? (mx-type me) TScaffold))
   (fm-ascendant explicit=type-test me))
 
@@ -467,13 +467,13 @@
 
 ;;; --- ancestry ----
 (defn fm-ancestry [me]
-  (assert (mref? me))
+  (chk (mref? me))
   (when-let [par (mpar me)]
     (conj (fm-ancestry par) par)))
 
 (defmacro the-kids [& tree]
   `(binding [*md-parent* ~'me]
-     (assert *md-parent*)
+     (chk *md-parent*)
      ;;(dp :bingo-par (atom? *md-parent*))
      (doall (remove nil? (flatten (list ~@tree))))))
 
@@ -482,12 +482,12 @@
 
 (defn kid-values-kids [me x-kids]
   (let [k-key (mget me :kid-key)
-        _ (assert k-key)
+        _ (chk k-key)
         x-kids (when (not= x-kids unbound)
                  (into {} (for [k x-kids]
                             [(k-key k) k])))
         k-factory (mget me :kid-factory)]
-    (assert (and k-factory))
+    (chk (and k-factory))
 
     (doall
       (map-indexed

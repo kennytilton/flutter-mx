@@ -1,15 +1,15 @@
 (ns tiltontec.cell.integrity
   (:require
+    [tiltontec.model.peek :refer [chk mref? minfo]]
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx mx-throw]]
     [tiltontec.matrix.util
      :refer [ensure-vec  pln plnk fifo-add fifo-peek fifo-pop cl-find]]
-    [tiltontec.cell.base
-     :refer [pcell un-stopped +pulse+ c-pulse c-optimized-away?
-             +client-q-handler+ c-stopped pulse-now
+    [tiltontec.cell.base :as cty
+     :refer [dpc +pulse+ c-pulse c-optimized-away?
+             +client-q-handler+ pulse-now
              *within-integrity* *defer-changes*
-             *depender* ]]
-    [tiltontec.cell.base :refer [dpc] :as cty]))
+             *depender* ]]))
 
 ;; --- the pulse ------------------------------
 
@@ -30,7 +30,7 @@
 
 (defn c-pulse-update [c key]
   (when-not (c-optimized-away? c)
-    (assert (>= (pulse-now) (c-pulse c)))
+    (chk (>= (pulse-now) (c-pulse c)))
     (dpc c :pulse :PULSE-BUMP!!! key (c-pulse c) (pulse-now))
     (swap! c assoc :pulse (pulse-now))))
 
@@ -85,44 +85,43 @@
 
 (defn finish-business []
   (dpx :fin-biz-entry @cty/+stop+)
-  (un-stopped
-    (loop [tag "tell-dependents"]
-      (case tag
-        "tell-dependents"
-        (do
-            (ufb-do :tell-dependents)
-            (ufb-do :awaken)
+  (loop [tag "tell-dependents"]
+    (case tag
+      "tell-dependents"
+      (do
+        (ufb-do :tell-dependents)
+        (ufb-do :awaken)
 
-            (recur
-              (if (fifo-peek (ufb-queue-ensure :tell-dependents))
-                "tell-dependents"
-                "handle-clients")))
+        (recur
+          (if (fifo-peek (ufb-queue-ensure :tell-dependents))
+            "tell-dependents"
+            "handle-clients")))
 
-        "handle-clients"
-        (do
-          (when-let [clientq (ufb-queue :client)]
-            (if-let [cqh @+client-q-handler+]
-              (cqh clientq)
-              (ufb-do clientq :client))
+      "handle-clients"
+      (do
+        (when-let [clientq (ufb-queue :client)]
+          (if-let [cqh @+client-q-handler+]
+            (cqh clientq)
+            (ufb-do clientq :client))
 
-            (recur
-              (if (fifo-peek (ufb-queue :client))
-                "handle-clients"
-                "ephemeral-reset"))))
+          (recur
+            (if (fifo-peek (ufb-queue :client))
+              "handle-clients"
+              "ephemeral-reset"))))
 
-        "ephemeral-reset"
-        (do (ufb-do :ephemeral-reset)
-            (recur "deferred-state-change"))
+      "ephemeral-reset"
+      (do (ufb-do :ephemeral-reset)
+          (recur "deferred-state-change"))
 
-        "deferred-state-change"
-        (when-let [[defer-info task-fn] (fifo-pop (ufb-queue :change))]
-          (data-pulse-next :deferred-state-chg)
-          (dpx :dpnext-defer-info defer-info)
-          (task-fn :change defer-info)
-          (recur "tell-dependents"))
+      "deferred-state-change"
+      (when-let [[defer-info task-fn] (fifo-pop (ufb-queue :change))]
+        (data-pulse-next :deferred-state-chg)
+        (dpx :dpnext-defer-info defer-info)
+        (task-fn :change defer-info)
+        (recur "tell-dependents"))
 
-        (do (dprn :INTEG-finbiz-unexpected-tag!!! tag)
-            (mx-throw (str "finbiz sees unexpected case tag!!! <" tag ">")))))))
+      (do (dprn :INTEG-finbiz-unexpected-tag!!! tag)
+          (mx-throw (str "finbiz sees unexpected case tag!!! <" tag ">"))))))
 
 ;(declare call-with-integrity)
 
@@ -148,63 +147,51 @@
 (def wi-depth (atom 0))
 
 (defn call-with-integrity [opcode defer-info action]
-  ;    (when opcode
-  ;  (assert (cl-find opcode +ufb-opcodes+)
-  ;          (str "Invalid opcode for with-integrity: %s. Allowed values: %s"
-  ;                  opcode +ufb-opcodes+)))
-  #_ (when (and  opcode *within-integrity*)
-       (dp :cwi opcode *within-integrity*))
-  #_ (when (and opcode (not (some #{opcode} [:awaken])))
-    (dpx :cwi-entry!!!!!!! opcode *within-integrity*))
   (do ;; wtrx (0 100 nil "cwi-begin" opcode *within-integrity*)
-    (do ;; hun-stopped
-      (do
-        (cond
-          (c-stopped) (dp :cwi-sees-cells-stopped!!!!!! @wi-depth)
+    (cond
+      *within-integrity*
+      (if opcode
+        (prog1
+          :deferred-to-ufb-1
+          ;; set! is supposed to return the value being installed
+          ;; in the place, but if the set! is deferred we return
+          ;; something that will help someone who tries to use
+          ;; the set!'ed value figure out what is going on:
+          ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
+          (when (and opcode (not (some #{opcode} [:awaken])))
+            (dpx :cwi-deferred!!!! opcode @wi-depth))
+          (dpx :cwi-deferred!!! opcode (cty/cinfo defer-info)(cty/minfo defer-info) defer-info)
+          (ufb-add opcode [defer-info action]))
 
-          *within-integrity*
-          (if opcode
-            (prog1
-              :deferred-to-ufb-1
-              ;; set! is supposed to return the value being installed
-              ;; in the place, but if the set! is deferred we return
-              ;; something that will help someone who tries to use
-              ;; the set!'ed value figure out what is going on:
-              ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
-              (when (and opcode (not (some #{opcode} [:awaken])))
-                (dpx :cwi-deferred!!!! opcode @wi-depth))
-              (dpx :cwi-deferred!!! opcode (cty/cinfo defer-info)(cty/minfo defer-info) defer-info)
-              (ufb-add opcode [defer-info action]))
+        ;; thus by not supplying an opcode one can get something
+        ;; executed immediately, potentially breaking data integrity
+        ;; but signifying by having coded the with-integrity macro
+        ;; that one is aware of this.
+        ;;
+        ;; If you have read this comment.
+        ;;
+        (do
+          (when (and opcode (not (some #{opcode} [:awaken])))
+            (dp :cwi-bypassing-integrity!!! opcode defer-info @wi-depth))
+          (action opcode defer-info)))
 
-            ;; thus by not supplying an opcode one can get something
-            ;; executed immediately, potentially breaking data integrity
-            ;; but signifying by having coded the with-integrity macro
-            ;; that one is aware of this.
-            ;;
-            ;; If you have read this comment.
-            ;;
-            (do
-              (when (and opcode (not (some #{opcode} [:awaken])))
-                (dp :cwi-bypassing-integrity!!! opcode defer-info @wi-depth))
-              (action opcode defer-info)))
+      :else (binding [*within-integrity* true
+                      *defer-changes* false]
+              (swap! wi-depth inc)
+              (dpx :cwi-go-1 opcode @wi-depth)
+              (when (or (zero? @+pulse+)
+                      (= opcode :change))
+                (data-pulse-next [:cwi opcode defer-info]))
 
-          :else (binding [*within-integrity* true
-                          *defer-changes* false]
-                  (swap! wi-depth inc)
-                  (dpx :cwi-go-1 opcode @wi-depth)
-                  (when (or (zero? @+pulse+)
-                          (= opcode :change))
-                    (data-pulse-next [:cwi opcode defer-info]))
+              ;;(pln :cwi-action!! opcode )
+              (prog1
+                (action opcode defer-info)
 
-                  ;;(pln :cwi-action!! opcode )
-                  (prog1
-                    (action opcode defer-info)
-
-                    (dpx :cwi-post-action)
-                    (do ;; tufte/p :finbiz
-                      (finish-business))
-                    (ufb-assert-q-empty :tell-dependents)
-                    (ufb-assert-q-empty :change)
-                    (swap! wi-depth dec)
-                    (dpx :cwi-out!! opcode @wi-depth))))))))
+                (dpx :cwi-post-action)
+                (do ;; tufte/p :finbiz
+                  (finish-business))
+                (ufb-assert-q-empty :tell-dependents)
+                (ufb-assert-q-empty :change)
+                (swap! wi-depth dec)
+                (dpx :cwi-out!! opcode @wi-depth))))))
 

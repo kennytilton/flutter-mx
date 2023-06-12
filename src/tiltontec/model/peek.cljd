@@ -1,8 +1,22 @@
 (ns tiltontec.model.peek
   (:require
-    [clojure.string :as str]
+    [cljd.string :as str]
+    ["package:flutter/foundation.dart" :as fd]
     [tiltontec.matrix.util :refer [rmap-set!]]
     [tiltontec.matrix.foundation :refer [MXImplementer PObserver mx-type]]))
+
+;; --- assertions ---------------------------
+(defn flutter-release-mode []
+  ;; fd/kReleaseMode
+  true) ;; HHACK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+(defn call-chk [condition & bits]
+  (when-not condition
+    (throw (Exception. (str/join " - " bits)))))
+
+(defmacro chk [test & bits]
+  `(when-not (tiltontec.model.peek/flutter-release-mode)
+     (apply tiltontec.model.peek/call-chk ~test ~@bits)))
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))
@@ -21,11 +35,11 @@
 (defn md-type
   ([md] (md-type md :anon))
   ([md tag]
-   (assert md
+   (chk md
      (str "md-type> argument null: " tag))
-   (assert (atom? md)
+   (chk (atom? md)
      (str "md-type> argument not atom " md tag))
-   (assert (map? @md)
+   (chk (map? @md)
      (str "md-type> argument atom not map deref: " @md "<<<<deref: " tag))
    (mx-type md)))
 

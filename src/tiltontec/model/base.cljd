@@ -9,14 +9,14 @@
      :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input?
              c-model c-valid? c-useds c-ref?
-             c-state +pulse+ c-pulse-observed c-assert
+             c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* unbound
              c-rule c-me c-value-state c-callers
              unlink-from-callers *causation* c-mname
              c-synaptic? c-quiesce!
              c-pulse c-pulse-last-changed c-ephemeral? c-prop c-lazy] :as cty]
     [tiltontec.cell.evaluate :refer [cget c-awaken]]
-    [tiltontec.model.peek :refer [minfo md-type mref? mname *md-quiescing*]]
+    [tiltontec.model.peek :refer [chk minfo md-type mref? mname *md-quiescing*]]
     ))
 
 (def ^:dynamic *md-host*
@@ -56,12 +56,12 @@
    (2) call observers of all slots"
   [me]
 
-  (assert me "md-awaken is nil")
+  (chk me "md-awaken is nil")
   ;(dp :md-awaken-me!! (cty/minfo me))
   ;(prn :md-awaken-meta!! (meta me))
   ;(prn :md-awaken-deref!! (deref me))
 
-  (assert (= :nascent (md-state me))
+  (chk (= :nascent (md-state me))
     (str "md-awaken> incoming md-state not= :nascent, it is" (md-state me)))
 
   (wtrx [0 999 nil :awk-entry (minfo me)]

@@ -5,8 +5,8 @@
     [tiltontec.matrix.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tiltontec.cell.base
-     :refer [without-c-dependency with-mx-isolation pcell c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? cprn c-code$
+     :refer [without-c-dependency with-mx-isolation  c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input? c-code$
              c-model c-valid? c-useds c-ref? c-quiesced? c-on-quiesce
              c-state +pulse+ c-pulse-observed cinfo
              *call-stack* *defer-changes* dependency-drop
@@ -17,7 +17,7 @@
     [tiltontec.cell.observer :refer [c-observe]]
     [tiltontec.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]
-    [tiltontec.model.peek :refer [mref? minfo *md-quiescing* md-quiesced?]]))
+    [tiltontec.model.peek :refer [chk mref? minfo *md-quiescing* md-quiesced?]]))
 
 (defn ephemeral-reset [rc]
   (when (c-ephemeral? rc)                                   ;; allow call on any cell, catch here
@@ -36,8 +36,8 @@
 
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
-    (assert *depender*)
-    (assert (cty/c-ref? *depender*) (str/join " | "
+    (chk *depender*)
+    #_ (chk (cty/c-ref? *depender*) (str/join " | "
                                       ["reco-dep sees non c-ref depender: " *depender*
                                        [:used (cinfo used)]
                                        (when (atom? *depender*) (deref *depender*))
@@ -122,7 +122,7 @@
   Ensures value is current, records any dependent, and
   notices if a standalone  cell has never been observed."
   [c]
-  (assert (c-ref? c) (str :CGET-sees-non-cref (cinfo c)))
+  (chk (c-ref? c) (str :CGET-sees-non-cref (cinfo c)))
 
   (cond
     (c-optimized-away? c)
@@ -165,7 +165,8 @@
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
-  (do                                                       ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
+  (do
+    ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
     (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
     (let [[raw-value propagation-code] (calculate-and-link c dbgid)]
       (dpc c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
@@ -173,7 +174,7 @@
 
       (cond
         (c-async? c) (let [cfo (cinfo c true)]
-                       (assert (or (nil? raw-value)         ;; someday support other default future cell values, mebbe :pending
+                       (chk (or (nil? raw-value)         ;; someday support other default future cell values, mebbe :pending
                                  (dart/is? raw-value Future))
                          (str "cnset-future got non future: " raw-value dbgid dbgdata))
 
@@ -184,18 +185,18 @@
                              (fn [fu-val]
                                ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
                                ;(dp :FUVAL-RECEIVED!!!!! fu-val)
-                               (assert (atom? c) (str "CNSET> in future then atom? false origc "
+                               (chk (atom? c) (str "CNSET> in future then atom? false origc "
                                                    cfo " cnow " c))
-                               (assert (map? @c) (str "CNSET> in future then: map? false origc "
+                               (chk (map? @c) (str "CNSET> in future then: map? false origc "
                                                    cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
-                               (assert (c-ref? c) (str "CNSET> in future then c-ref? false origc "
+                               (chk (c-ref? c) (str "CNSET> in future then c-ref? false origc "
                                                     cfo " derefnow " (deref c)))
                                (with-mx-isolation
                                  (with-integrity [:change :future-then]
                                    ;; todo if a cfu is meant to run repeatedly as dependencies change,
                                    ;;      do we need to clear :then? Or is opti-away not a problem
                                    ;;      since it would have happened were there no users??
-                                   (assert (c-ref? c) (str "CNSET> in future then withininetg c-ref? false origc "
+                                   (chk (c-ref? c) (str "CNSET> in future then withininetg c-ref? false origc "
                                                         cfo))
                                    (rmap-set! [:then? c] true)
                                    (c-value-assume c (if-let [and-then (:and-then? @c)]
@@ -205,14 +206,14 @@
                            (c-value-assume c nil propagation-code))
                          (c-value-assume c nil propagation-code)))
         :else (when-not (c-optimized-away? c)
-                (assert (map? (deref c)) "calc-n-set")
+                (chk (map? (deref c)) "calc-n-set")
                 ;; this check for optimized-away? arose because a rule using without-c-dependency
                 ;; can be re-entered unnoticed since that "clears" *call-stack*. If re-entered, a subsequent
                 ;; re-exit will be of an optimized away cell, which will have been value-assumed
                 ;; as part of the opti-away processing.
                 ;;(trx :calc-n-set->assume raw-value)
                 (c-value-assume c raw-value propagation-code)
-                (assert (or (map? (deref c))
+                (chk (or (map? (deref c))
                           (c-optimized-away? c)) "calc-n-set post CVASS deref c not map or opti"))))))
 
 ;(declare unlink-from-used)
@@ -226,7 +227,7 @@
   * Well, we also look to see if a synaptic cell has attached a
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c dbg-id]
-  (assert (cty/c-ref? c) (str "calcnlink passed non-cref> " dbg-id ", " (cinfo c)))
+  (chk (cty/c-ref? c) (str "calcnlink passed non-cref> " dbg-id ", " (cinfo c)))
 
   ;; first check for cycles
   (when (some #{c} *call-stack*)
@@ -250,7 +251,7 @@
               *call-stack* (cons c *call-stack*)
               *defer-changes* true]
       (unlink-from-used c :pre-rule-clear)
-      (assert (c-rule c) (str "No rule in %s type %s" (:prop @c) (cty/c-type c)))
+      (chk (c-rule c) (str "No rule in %s type %s" (:prop @c) (cty/c-type c)))
 
       ;(dp c :CNL-trying-formula (cinfo c))
       ;(dp c :CNL-trying-formula-code (c-code$ c))
@@ -292,7 +293,7 @@
 
       (c-ref? c)
       (do
-        (assert (c-input? c))
+        (chk (c-input? c))
         (when (> @+pulse+ (c-pulse-observed c))             ;; safeguard against double-call
           (when-let [me (c-me c)]
             (rmap-set! [(c-prop c) me] (c-value c)))
@@ -321,8 +322,8 @@
 ;; ------------------------------------------------------------
 
 (defn md-prop-value-store [me prop value]
-  (assert me)
-  (assert (atom? me))
+  (chk me)
+  (chk (atom? me))
   ;(trx :mdsv-store prop (flz value))
   (rmap-set! [prop me] value))
 
@@ -337,7 +338,7 @@
 
   [c new-value propagation-code]
 
-  (assert (c-ref? c) (str "CVASS> c not c-ref? "
+  (chk (c-ref? c) (str "CVASS> c not c-ref? "
                        (cinfo c true)
                        " assuming value " new-value
                        " atom? " (atom? c)
@@ -391,7 +392,7 @@
 
               (when-not (or (= propagation-code :no-propagate)
                           #_(c-optimized-away? c))
-                ;;(assert (map? @c))
+                ;;(chk (map? @c))
                 (dpc c :propagate :PROP-YES-caller-ct (count callers))
                 (propagate c prior-value callers)))))))))
 
@@ -407,7 +408,7 @@ then clear our record of them."
   (rmap-set! [:useds c] #{}))
 
 (defn md-cell-flush [c]
-  (assert (c-ref? c) (str "c-ref? fail on md-cell-flush" c))
+  (chk (c-ref? c) (str "c-ref? fail on md-cell-flush" c))
   (when-let [me (c-model c)]
     (rmap-set! [:cells-flushed me]
       (conj (:cells-flushed me)
@@ -445,8 +446,8 @@ then clear our record of them."
       (let [useds (c-useds c)]
         (unlink-from-used c :freeze)
         (doseq [ud useds]
-          (assert (not (some #{c} (c-callers ud)))))
-        (assert (zero? (count (c-useds c))))))
+          (chk (not (some #{c} (c-callers ud)))))
+        (chk (zero? (count (c-useds c))))))
 
     (rmap-set! [:optimized? c] true)
 

@@ -1,5 +1,6 @@
 (ns tiltontec.cell.synapse
   (:require
+    [tiltontec.model.peek :refer [chk mref? minfo]]
     [tiltontec.matrix.base :refer [dp]]
     [tiltontec.matrix.util :refer [ pln rmap-set!]]
 
@@ -18,8 +19,8 @@
      :refer [cI creset! make-c-formula c-fn]]))
 
 (defn existing-syn [synapse-id]
-  (assert (keyword? synapse-id) "Synapse ID must be a keyword")
-  (assert *depender* (str "You attempted to create synapse " synapse-id " outside a Cell formula. Synapses serve containing Cells."))
+  (chk (keyword? synapse-id) "Synapse ID must be a keyword")
+  (chk *depender* (str "You attempted to create synapse " synapse-id " outside a Cell formula. Synapses serve containing Cells."))
   (some #(when (= synapse-id (:synapse-id (deref %))) %)
     (c-synapses *depender*)))
 
@@ -48,7 +49,6 @@
                   ;; (dp :with-syn-ensure-syn-value (nil? existing-syn#))
                   (ensure-value-is-current synapse# :synapse *depender*))]
      ;;(dp :synapse-returns ~synapse-id :useds (doall (map c-prop (c-useds synapse#))))
-     ;; (cpr :syn-ret-value!!!!!! (map #(:uri (deref %)) value#))
      (record-dependency synapse#)
      value#))
 
