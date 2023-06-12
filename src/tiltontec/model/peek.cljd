@@ -2,7 +2,6 @@
   (:require
     [cljd.string :as str]
     ["package:flutter/foundation.dart" :as fd]
-    [tiltontec.matrix.util :refer [rmap-set!]]
     [tiltontec.matrix.foundation :refer [MXImplementer PObserver mx-type]]))
 
 ;; --- assertions ---------------------------
@@ -16,7 +15,7 @@
 
 (defmacro chk [test & bits]
   `(when-not (tiltontec.model.peek/flutter-release-mode)
-     (apply tiltontec.model.peek/call-chk ~test ~@bits)))
+     (tiltontec.model.peek/call-chk ~test ~@bits)))
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))

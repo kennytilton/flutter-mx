@@ -13,7 +13,7 @@
     [tiltontec.matrix.foundation :as mxf]
     [tiltontec.matrix.base :refer [wtrx dp dpx mx-throw]]
     [tiltontec.matrix.util :refer [atom?]]
-    [tiltontec.model.peek :refer [Model mref? minfo]]
+    [tiltontec.model.peek :refer [chk Model mref? minfo]]
     [tiltontec.cell.base :refer [cinfo] :as cty]
     [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mkids mswap! cFkids] :as mx]
     [tiltontec.flutter-mx.factory :as mk]))
@@ -131,7 +131,7 @@
                    fx))
       :else (let [gen (mget fx :fx-gen)]
               (dpx :render-sees-gen!! gen)
-              (assert gen "OBAD: fx-render of model finds no fx-gen: ")
+              (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
               ;; nope (mk/record-fx$ctx fx ctx)
               (let [g (gen fx ctx)]

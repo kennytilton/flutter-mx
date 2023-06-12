@@ -12,7 +12,7 @@
              :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
             [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
 
-            [tiltontec.model.peek :refer [minfo Model]]
+            [tiltontec.model.peek :refer [chk minfo Model]]
             [tiltontec.cell.base :refer [dpc cinfo c-model] :as cty]
             [tiltontec.matrix.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
@@ -518,8 +518,8 @@
 
 (defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]
   (let []
-    ;(assert (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
-    ;(assert (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
+    ;(chk (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
+    ;(chk (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
     `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
        ~fx-props
        (assoc ~mx-props

@@ -1,6 +1,7 @@
 (ns tiltontec.matrix.util
-  (:require [clojure.string :as str :refer [join]]
+  (:require [cljd.string :as str :refer [join]]
             [clojure.walk :as walk]
+            [tiltontec.model.peek :refer [chk]]
             [tiltontec.matrix.base :as utm
              :refer [prog1 wtrx dp]]))
 
@@ -36,24 +37,24 @@
 (defn mut-set!
   ([mut prop new-value] (mut-set! mut prop new-value nil))
   ([mut prop new-value tag]
-   (assert (atom? mut)
-     (pln "util.core/mut-set!> prop:" prop :tag tag
+   (chk (atom? mut)
+     "util.core/mut-set!> prop:" prop :tag tag
        "new-value:" new-value
-       "failed assertion any-ref? on ref:" mut))
+       "failed assertion any-ref? on ref:" mut)
    (when-not (map? @mut)
      (pln "util.core/mut-set!> prop:" prop :tag tag
        "new-value:" (or new-value :NIL)
        "failed assertion map? on ref:" @mut)
-     (assert false))
+     (chk false))
    (swap! mut assoc prop new-value)
    new-value))
 
 (defn rmap-set! [[prop ref] new-value]
-  (assert (atom? ref)
+  (chk (atom? ref)
     (str "model.util.core/rmap-set!> prop:" prop
       "new-value:" new-value
       "failed assertion atom? on ref:" (deref ref)))
-  (assert (map? (deref ref))
+  (chk (map? (deref ref))
     (str "model.util.core/rmap-set!> prop " prop
       " new-value " new-value
       " failed assertion map? on ref: " (or (deref ref) ":NIL") " <<<"))
@@ -61,7 +62,7 @@
   new-value)
 
 (defn rmap-meta-set! [[prop ref] new-value]
-  (assert (atom? ref)
+  (chk (atom? ref)
     (str "rmap-meta-set!> prop:" prop
       "new-value:" new-value
       "failed assertion atom? on ref:" ref))

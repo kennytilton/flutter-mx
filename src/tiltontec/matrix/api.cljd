@@ -98,7 +98,7 @@
 ;(defn mxu-find-type
 ;  "Search matrix ascendants from node 'me' for first with given tag"
 ;  [me type]
-;  (assert me)
+;  (chk me)
 ;  (fasc (fn [visited]
 ;          (= type (mx-type visited))) me))
 
@@ -223,14 +223,14 @@
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/mget? node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
-       (assert other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuval [name & [prop me]]
@@ -238,7 +238,7 @@
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (assert other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defn mxu-find-id
