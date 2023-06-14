@@ -6,11 +6,13 @@
     ["package:flutter/foundation.dart" :as f]
     ;["dart:io" :as io]
 
+    [tiltontec.cell.base :refer [cinfo c-model] :as cty]
     [tiltontec.model.core :as md]
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx]]
     [tiltontec.matrix.api :refer [minfo] :as mx]
     [tiltontec.flutter-mx.core :as fx]
+    [tiltontec.flutter-mx.factory :as fxk]
 
     ;[tiltontec.testing :as testing]
     ;[tiltontec.test.lazy-cells :as test-lazy]
@@ -33,6 +35,25 @@
   (md/md-quiesce-feature! true)
 
   (.ensureInitialized w/WidgetsFlutterBinding)
+
+  (fxk/fmx-debugger-set!
+    (fn [opcode data]
+      (case opcode
+        :mark-rebuild-unless-defunct
+        (let [{:keys [cell element]} data]
+          (dp :adtata data)
+          (dp :cell (cinfo cell))
+          (dp :cellkeys (keys @cell))
+          (let [elt ^w/Element element]
+            (when true #_(not (and (.-mounted elt)
+                                (.-debugIsActive elt)
+                                (not (.-debugIsDefunct elt))))
+              (dp :rebld-DEAD-ELT-me!!! (minfo (:me @cell)))
+              (dp :rebld-mounted (.-mounted elt))
+              (dp :rebld-active (.-debugIsActive elt))
+              (dp :rebld-sees-defunct (.-debugIsDefunct elt))
+              (dp :rebld-str (.toString elt)))))
+        (dp :unrecognized-debug-opcode opcode data))))
 
   (wtrx [0 999 :run-app]
     (fx/run-app

@@ -20,6 +20,17 @@
              :as mx]
             [clojure.string :as str]))
 
+;;; --- developer debugging ---------------------------------
+(def *fmx-debugger*
+  "Atom holding an optional developer diagnostic callback.
+  Eg (fn [opcode data]..)
+  Where opcode will indicate trace event, and data will be a map varying by opcode."
+  (atom nil))
+
+(defn fmx-debugger-set! [fn]
+  (dp :debug-fn!!! fn)
+  (reset! *fmx-debugger* fn))
+
 ;;; --- Flutter refs of fx models -----------------------------
 
 (defn call-with-flutter-ref [me factory]
@@ -91,14 +102,14 @@
       (vec (apply concat (seq fx-props)))
       (vec (apply concat (seq custom-props))))))
 
-(defn trigger-build [me]
+(defn trigger-build [me cell]
   (if-let [^State state (mget? me :fx$state)]
-    (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state))
+    (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state)(cinfo cell))
         (trigger-state state me))
     (do
       (if-let [^w/Element elt (fx-ctx me)]
         (do (dpx :FXDWO-direct-MNB prop new-value (minfo me))
-            (mark-rebuild elt me))
+            (mark-rebuild elt me cell))
         (dpx :FXDWO-NOT-MNBING-contextless prop new-value (minfo me)))
       (trigger-state-above (mpar)))))
 
@@ -118,16 +129,10 @@
          (.setState state (fn [] (do))))
      (dp :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
 
-(defn mark-rebuild [^w/Element elt me]
-  (dpx :MNBuild-entry (minfo me) elt)
-  #_ (when (not (and (.-mounted elt)
-               (.-debugIsActive elt)
-               (not (.-debugIsDefunct elt))))
-    (dp :rebld-DEAD-ELT-me!!!(minfo me))
-    (dp :rebld-mounted (.-mounted elt))
-    (dp :rebld-active (.-debugIsActive elt))
-    (dp :rebld-sees-defunct (.-debugIsDefunct elt) )
-    (dp :rebld-str (.toString elt)))
+(defn mark-rebuild [^w/Element elt me cell]
+  (dp :MNBuild-entry (minfo me) elt (deref *fmx-debugger*))
+  (when-let [cb (deref *fmx-debugger*)]
+    (cb :mark-rebuild-unless-defunct {:element elt :cell cell}))
 
   (when (not (.-debugIsDefunct elt))
     (dpx :MNBuild-MNB!!! (minfo me))
@@ -169,7 +174,7 @@
           (.notifyListeners ^m/ChangeNotifier noter))
         (md-quiesce-lost! cell new-value prior-value)
 
-        (trigger-build me)))))
+        (trigger-build me cell)))))
 
 ;(deftype FXDartWidgetFamily []
 ;  :extends FXDartWidget
