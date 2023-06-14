@@ -223,14 +223,14 @@
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/mget? node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
-       (chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.model.peek/chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuval [name & [prop me]]
@@ -238,7 +238,7 @@
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defn mxu-find-id
