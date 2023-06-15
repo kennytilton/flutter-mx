@@ -35,15 +35,16 @@
                                                :size-basis (cI 0)
                                                :clock (cF+ [:debug false
                                                             :watch (fn [_ _ new old c]
-                                                                     (dpx :shotime-watch-sees-new new))
+                                                                     (when new
+                                                                       (dp :clock-watch-sees-tmr new)))
                                                             :on-quiesce (fn [c]
                                                                           (when-let [tmr ^async/Timer (cb/c-value c)]
-                                                                            (dpx :cancelling-timer!!! tmr)
+                                                                            (dp :cancelling-timer!!! tmr)
                                                                             (.cancel tmr)))]
                                                         (async/Timer.periodic (Duration .seconds 3)
                                                           (fn [^async/Timer tmr]
                                                             (dp :tmr-fires!!!! (.-tick tmr)(minfo me))
-                                                            (mset! me :size-basis (.-tick tmr)))))}
+                                                            #_ (mset! me :size-basis (.-tick tmr)))))}
                                               (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10)))]
                                   (dp :built (mx/minfo built))
                                   (when-let [oldb (deref (mget me :built))]
