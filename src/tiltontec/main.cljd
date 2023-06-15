@@ -22,6 +22,7 @@
     ;[tiltontec.example.mathpaper :as tek]
     ;[tiltontec.example.x00-hello-world :as hello]
     [tiltontec.example.x01-counter :as counter]
+    [tiltontec.example.x029_layout_builder :as x029]
     ;[tiltontec.example.x03-physics-sim :as x03]
     ;[tiltontec.example.x05-fab :as x05]
     ;[tiltontec.example.x020-reactive-stream :as x020]
@@ -32,7 +33,7 @@
 
 (defn main []
   (dp :main-entry)
-  (md/md-quiesce-feature! true)
+  (md/md-quiesce-feature! false) ;; hhack for builder reclaim; s/b true
 
   (.ensureInitialized w/WidgetsFlutterBinding)
 
@@ -40,12 +41,12 @@
     (fn [opcode data]
       (case opcode
         :mark-rebuild-unless-defunct
-        (let [{:keys [cell element]} data]
+        (do) #_ (let [{:keys [cell element]} data]
           (dp :adtata data)
           (dp :cell (cinfo cell))
           (dp :cellkeys (keys @cell))
           (let [elt ^w/Element element]
-            (when true #_(not (and (.-mounted elt)
+            (when (not (and (.-mounted elt)
                                 (.-debugIsActive elt)
                                 (not (.-debugIsDefunct elt))))
               (dp :rebld-DEAD-ELT-me!!! (minfo (:me @cell)))
@@ -60,7 +61,7 @@
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example. <<<<<<< Updated upstream
         ;; ------ VVVVV --------------------------------------------
-        (counter/make-app))))
+        (x029/make-app))))
 
 
   ;; (dp :run-app-fini @prior-app)

@@ -1,0 +1,55 @@
+(ns tiltontec.example.x029_layout_builder
+  (:require
+    ["dart:math" :as math]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["dart:async" :as async]
+    [tiltontec.cell.base :as cb]
+    [tiltontec.matrix.api :refer [dp dpx cF cF+ cI mget fmuv minfo mset! fmu] :as mx]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
+
+(defn make-app []
+  (let [title "Layout Builder Dynamic Text Size"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
+        (fx/center
+          (fx/layout-builder
+            {:builder (cF (fx/->CBAsIs
+                            (fn [ctx box-constraint]
+                              ;; next bit is key: the layout builder wants back a native Flutter
+                              ;; widget, so we have to do the conversion from f/mx proxy to Flutter
+                              ;; ourselves, sth normally midden by f/mx macrology.
+                              (dp :builder-runs!!!!!!)
+                              (fx/fx-render ctx
+                                ; now we can play in f/mx world....
+                                (let [built (fx/text
+                                              {:style (cF (p/TextStyle
+                                                            .color (mget me :font-color)
+                                                            .fontSize (mget me :font-size)))}
+                                              {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                                               :font-color (cF (cond
+                                                                 (> (mget me :font-size) 50) m.Colors/red
+                                                                 :else m.Colors/cyan))
+                                               :size-basis (cI 0)
+                                               :clock (cF+ [:debug false
+                                                            :watch (fn [_ _ new old c]
+                                                                     (dpx :shotime-watch-sees-new new))
+                                                            :on-quiesce (fn [c]
+                                                                          (when-let [tmr ^async/Timer (cb/c-value c)]
+                                                                            (dpx :cancelling-timer!!! tmr)
+                                                                            (.cancel tmr)))]
+                                                        (async/Timer.periodic (Duration .seconds 3)
+                                                          (fn [^async/Timer tmr]
+                                                            (dp :tmr-fires!!!! (.-tick tmr)(minfo me))
+                                                            (mset! me :size-basis (.-tick tmr)))))}
+                                              (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10)))]
+                                  (dp :built (mx/minfo built))
+                                  (when-let [oldb (deref (mget me :built))]
+                                    (dp :GCing!!! (:sid (meta oldb)) (mx/minfo oldb))
+                                    (mx/md-quiesce! oldb true))
+                                  (reset! (mget me :built) built)
+                                  ;;(dp :me-built!!! (mx/minfo built) :by (mx/minfo me))
+                                  built)))))}
+            {:built (cI (atom nil))}))))))
