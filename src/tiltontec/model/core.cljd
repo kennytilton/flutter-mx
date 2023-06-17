@@ -1,15 +1,14 @@
 (ns tiltontec.model.core
   (:require
     [clojure.string :as str]
-    [tiltontec.cell.base :refer [dpc]]
-    [tiltontec.matrix.base
+     [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
     [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
     [tiltontec.matrix.util
      :refer [difference atom? rmap-set! rmap-meta-set! pln]]
 
     [tiltontec.cell.base
-     :refer [without-c-dependency
+     :refer [without-c-dependency dpc
              cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? c-quiesce!
              c-model c-valid? c-useds c-ref?
@@ -80,7 +79,7 @@
   (chk (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
     (do
-      (dpx :md-reset-gotc!!! @c)
+      (dp :mset-gotc!!! (cinfo c) :newv new-value)
       (creset! c new-value))
     (do
       (if (contains? @me prop)

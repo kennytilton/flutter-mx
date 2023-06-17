@@ -103,8 +103,8 @@
       (vec (apply concat (seq custom-props))))))
 
 (defn trigger-build [me cell]
-  (if-let [^State state (mget? me :fx$state)]
-    (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state)(cinfo cell))
+  (if-let [^State? state (mget? me :fx$state)]
+    (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state) (cinfo cell))
         (trigger-state state me))
     (do
       (if-let [^w/Element elt (fx-ctx me)]
@@ -115,7 +115,7 @@
 
 (defn trigger-state-above [me]
   (when me
-    (if-let [^State state (mget? me :fx$state)]
+    (if-let [^State? state (mget? me :fx$state)]
       (do (dpx :FXDWO-settingimmediatestate prop new-value (minfo me) (.-mounted state))
           (trigger-state state me))
       (trigger-state-above (mpar)))))
@@ -148,11 +148,11 @@
         (coll? new-value) (cond
                             (coll? prior-value)
                             (let [lostks (difference (set prior-value) (set new-value))]
-                              (when-not (empty? lostks)
-                                (doseq [k lostks]
-                                  (when (mref? k)
-                                    (wtrx [0 999 nil :mdq-lost-coll-diff (cinfo cell) :lostk (minfo k)]
-                                      (md-quiesce-if-owned! (c-model cell) k))))))
+                              (when-not (empty? lost)
+                                (doseq [md lost]
+                                  (when (mref? md)
+                                    (wtrx [0 999 nil :mdq-lost-coll-diff (cinfo cell) :lostk (minfo md)]
+                                      (md-quiesce-if-owned! (c-model cell) md))))))
                             :else (when (mref? prior-value)
                                     (when-not (some #{prior-value} new-value)
                                       (wtrx [0 999 nil :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
@@ -163,13 +163,14 @@
   PObserver
   (observe [this prop me new-value prior-value cell]
     (dpx :fxdw-obs prop)
-    (when-not (some #{prop} [:parent :name :mx-type :on-quiesce :initState :fx-class :cells-flushed
-                             :fx$state :fx$ikeys :fx$notifier :fx$observer])
-      (when-not (= prior-value cty/unbound)
+    (when-not (= prior-value cty/unbound)
+      (when-not (some #{prop} [:parent :name :mx-type :on-quiesce :initState :fx-class :cells-flushed
+                               :fx$state :fx$ikeys :fx$notifier :fx$observer :ui/a-ctx])
+        (dpx :FXDartWidget-observing!!! prop)
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (minfo me) (cinfo cell))
         (dpx :FXDartWidget-observing-md!!! prop (minfo me) #_#_:deref @me)
-        (when true ;; (= prop :kids)
-          (dpc cell :quiesce :FXDartWidget-observing-cell-change!!! prop  ))
+        (when true                                          ;; (= prop :kids)
+          (dpc cell :quiesce :FXDartWidget-observing-cell-change!!! prop))
         (when-let [noter (mget? me :fx$notifier)]
           (.notifyListeners ^m/ChangeNotifier noter))
         (md-quiesce-lost! cell new-value prior-value)
