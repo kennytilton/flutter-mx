@@ -1,15 +1,14 @@
 (ns tiltontec.model.core
   (:require
     [clojure.string :as str]
-    [tiltontec.cell.base :refer [dpc]]
-    [tiltontec.matrix.base
+     [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
     [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
     [tiltontec.matrix.util
      :refer [difference atom? rmap-set! rmap-meta-set! pln]]
 
     [tiltontec.cell.base
-     :refer [without-c-dependency
+     :refer [without-c-dependency dpc
              cells-init c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? c-quiesce!
              c-model c-valid? c-useds c-ref?
@@ -80,7 +79,7 @@
   (chk (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
     (do
-      (dpx :md-reset-gotc!!! @c)
+      (dp :mset-gotc!!! (cinfo c) :newv new-value)
       (creset! c new-value))
     (do
       (if (contains? @me prop)
@@ -102,6 +101,10 @@
     (mx-throw
       "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-extant prop \"" prop "\".\n"
       "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
+
+(def +md-sid+ (atom 0))
+(defn md-sid [me]
+  (:sid (meta me)))
 
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
@@ -126,8 +129,8 @@
                    mdmap)
                  :meta {:state   :nascent
                         ;; todo pull more fx$s into meta
-                        :mx-type (:mx-type iargs (Model.))})]
-        (chk (meta me))
+                        :mx-type (:mx-type iargs (Model.))
+                        :sid     (swap! +md-sid+ inc)})]
         ;(dp :make-post-me (meta me))
         (rmap-meta-set!
           [:cz me]
@@ -503,13 +506,13 @@
 ;; --- md-quiesce --
 
 (defn md-owning?
-  "Is MD the parent or host of OTHER?"[md other]
+  "Is MD the parent or host of OTHER?" [md other]
   (and (mref? md) (mref? other)
     (or (= md (mpar other))
       (= md (mhost other)))))
 
 (defn md-quiesce-if-owned! [owner md]
-  (when (or (= owner (mpar md))(= owner (mhost md)))
+  (when (or (= owner (mpar md)) (= owner (mhost md)))
     (md-quiesce! md)))
 
 (defn md-quiesce-owned! [me property val]
@@ -547,16 +550,18 @@
   (dp :md-quiesce-feature (if on-off :ON :OFF))
   (reset! +md-quiesce-feature+ on-off))
 
-(defn md-quiesce! [me]
-  (when (md-quiesce-feature?)
-    ;(dp :md-quiescing (minfo me))
-    (wtrx [0 999 nil :mdq-entry (minfo me)]
-      (binding [*md-quiescing* true]
-        (cond
-          (and (coll? me) (mref? (first me)))
-          (doseq [elt me]
-            (md-quiesce! elt))
-          :else
-          (when (mref? me)
-            (md-quiesce-self! me)))))))
+(defn md-quiesce!
+  ([me] (md-quiesce! me (md-quiesce-feature?)))
+  ([me force?]
+   (when force?
+     (dp :md-quiescing (minfo me))
+     (wtrx [0 999 nil :mdq-entry (minfo me)]
+       (binding [*md-quiescing* true]
+         (cond
+           (and (coll? me) (mref? (first me)))
+           (doseq [elt me]
+             (md-quiesce! elt true))
+           :else
+           (when (mref? me)
+             (md-quiesce-self! me))))))))
 

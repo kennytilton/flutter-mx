@@ -1,11 +1,13 @@
 (ns tiltontec.cell.evaluate
   (:require
     [clojure.string :as str]
+    ["package:flutter/widgets.dart" :as w
+     :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
     [tiltontec.matrix.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
     [tiltontec.matrix.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tiltontec.cell.base
-     :refer [without-c-dependency with-mx-isolation  c-optimized-away? c-formula? c-value c-optimize
+     :refer [without-c-dependency with-mx-isolation c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? c-code$
              c-model c-valid? c-useds c-ref? c-quiesced? c-on-quiesce
              c-state +pulse+ c-pulse-observed cinfo
@@ -37,18 +39,18 @@
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
     (chk *depender*)
-    #_ (chk (cty/c-ref? *depender*) (str/join " | "
-                                      ["reco-dep sees non c-ref depender: " *depender*
-                                       [:used (cinfo used)]
-                                       (when (atom? *depender*) (deref *depender*))
-                                       (when (and (atom? *depender*)
-                                               (dart/is? @*depender* #/(Future dynamic)))
-                                         [:future])]))
+    #_(chk (cty/c-ref? *depender*) (str/join " | "
+                                     ["reco-dep sees non c-ref depender: " *depender*
+                                      [:used (cinfo used)]
+                                      (when (atom? *depender*) (deref *depender*))
+                                      (when (and (atom? *depender*)
+                                              (dart/is? @*depender* #/(Future dynamic)))
+                                        [:future])]))
 
-    #_ (trx nil :reco-dep!!! :used (c-prop used) :caller (c-prop *depender*))
-    #_ (dpx :reco-dep-sees-dep @*depender*)
-    #_ (when (dart/is? @*depender* #/(Future dynamic))
-      (dpx :reco-dep-future!!!!!!!!! (await @*depender*)))
+    #_(trx nil :reco-dep!!! :used (c-prop used) :caller (c-prop *depender*))
+    #_(dpx :reco-dep-sees-dep @*depender*)
+    #_(when (dart/is? @*depender* #/(Future dynamic))
+        (dpx :reco-dep-future!!!!!!!!! (await @*depender*)))
     (rmap-set! [:useds *depender*]
       (conj (c-useds *depender*) used))
     (dependency-record used)))
@@ -90,7 +92,7 @@
 
       ;; --- above we had valid values so did not care. now... -------
       (when-let [md (c-model c)]
-        (md-quiesced? (c-model c)))
+        (md-quiesced? md))
       (mx-throw (str/join " " ["evic> model: " (c-model c) "of cell" c "is quiessed"]))
 
       ;; --- no more early exits  -------------------
@@ -117,6 +119,12 @@
               (c-pulse-update c :valid-uninfluenced)
               (c-value c)))))
 
+(defn state-info [^State? state c]
+  (concat (if state
+            [:mounted (.-mounted state) state]
+            [:null-state])
+    (cinfo c)))
+
 (defn cget
   "The API for determing the value associated with a Cell.
   Ensures value is current, records any dependent, and
@@ -131,9 +139,16 @@
       (c-value c))
 
     (c-quiesced? c)
-    (do
-      (dp :ILLOGIC-cget-sees-QUIESCED-c (cinfo c))
-      (c-value c))
+    (cond
+      (= (c-prop-name c) :fx$state)
+      (do
+        (dpx :cget-qi-fxstate-allowed (state-info (c-value c) c))
+        (c-value c))
+      :else (do
+              (dp :ILLOGIC-cget-sees-QUIESCED-c (cinfo c)
+                (minfo (c-model c)))
+              (throw (Exception. (str :CQI!! (cinfo c) (minfo (c-model c)))))
+              (c-value c)))
 
     :else
     (prog1
@@ -174,8 +189,8 @@
 
       (cond
         (c-async? c) (let [cfo (cinfo c true)]
-                       (chk (or (nil? raw-value)         ;; someday support other default future cell values, mebbe :pending
-                                 (dart/is? raw-value Future))
+                       (chk (or (nil? raw-value)            ;; someday support other default future cell values, mebbe :pending
+                              (dart/is? raw-value Future))
                          (str "cnset-future got non future: " raw-value dbgid dbgdata))
 
                        (if (dart/is? raw-value Future)
@@ -186,18 +201,18 @@
                                ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
                                ;(dp :FUVAL-RECEIVED!!!!! fu-val)
                                (chk (atom? c) (str "CNSET> in future then atom? false origc "
-                                                   cfo " cnow " c))
+                                                cfo " cnow " c))
                                (chk (map? @c) (str "CNSET> in future then: map? false origc "
-                                                   cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
+                                                cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
                                (chk (c-ref? c) (str "CNSET> in future then c-ref? false origc "
-                                                    cfo " derefnow " (deref c)))
+                                                 cfo " derefnow " (deref c)))
                                (with-mx-isolation
                                  (with-integrity [:change :future-then]
                                    ;; todo if a cfu is meant to run repeatedly as dependencies change,
                                    ;;      do we need to clear :then? Or is opti-away not a problem
                                    ;;      since it would have happened were there no users??
                                    (chk (c-ref? c) (str "CNSET> in future then withininetg c-ref? false origc "
-                                                        cfo))
+                                                     cfo))
                                    (rmap-set! [:then? c] true)
                                    (c-value-assume c (if-let [and-then (:and-then? @c)]
                                                        (and-then c fu-val) fu-val) nil)))))
@@ -214,7 +229,7 @@
                 ;;(trx :calc-n-set->assume raw-value)
                 (c-value-assume c raw-value propagation-code)
                 (chk (or (map? (deref c))
-                          (c-optimized-away? c)) "calc-n-set post CVASS deref c not map or opti"))))))
+                       (c-optimized-away? c)) "calc-n-set post CVASS deref c not map or opti"))))))
 
 ;(declare unlink-from-used)
 
@@ -339,11 +354,11 @@
   [c new-value propagation-code]
 
   (chk (c-ref? c) (str "CVASS> c not c-ref? "
-                       (cinfo c true)
-                       " assuming value " new-value
-                       " atom? " (atom? c)
-                       " map? " (when (atom? c) (map? (deref c)))
-                       " deref? " (when (atom? c) (deref c))))
+                    (cinfo c true)
+                    " assuming value " new-value
+                    " atom? " (atom? c)
+                    " map? " (when (atom? c) (map? (deref c)))
+                    " deref? " (when (atom? c) (deref c))))
   ;; (println :cva-entry (c-prop c) new-value)
   (do                                                       ;; (wtrx (0 100 :cv-ass (:prop @c) new-value)
     (prog1 new-value                                        ;; sans doubt
@@ -467,9 +482,9 @@ then clear our record of them."
     (doseq [caller (seq (c-callers c))]
       (dependency-drop c caller))
 
-    #_ (do
-         (dp :OPTI-now-setting (cinfo c) :to-value (cell-dump (c-value c) :opti-set))
-         (reset! c (c-value c)))))
+    #_(do
+        (dp :OPTI-now-setting (cinfo c) :to-value (cell-dump (c-value c) :opti-set))
+        (reset! c (c-value c)))))
 
 (defn cell-dump [c tag]
   (cond

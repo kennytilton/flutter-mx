@@ -38,7 +38,7 @@
    (chk (atom? md)
      (str "md-type> argument not atom " md tag))
    (chk (map? @md)
-     (str "md-type> argument atom not map deref: " @md "<<<<deref: " tag))
+     (str "md-type> argument atom not map deref: " (or @md :NIL) "<<<<deref: " tag))
    (mx-type md)))
 
 (defn mname [me]
@@ -59,7 +59,7 @@
 
 (defn md-quiesced? [md]
   (if-let [m (meta md)]
-    (= :md-quiesced (:state m))                                    ;;; HHHACK redundant?
+    (= :md-quiesced (:state m))
     false))
 
 (defn minfo
@@ -76,6 +76,7 @@
              [:MI (or (:name @md) :anon)
               :fxc (:fx-class @md)
               :state (:state (meta md))
+              :sid (:sid (meta md))
               ;:mxtype (mx-type md)
               ]))))
 
