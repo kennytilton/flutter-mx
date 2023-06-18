@@ -185,6 +185,19 @@
     `(let [name# ~name]
        (tiltontec.model.core/fm-ascendant name# ~me-ref))))
 
+(defn faprop "Search strictly up and mget value of first asc w that property"
+  ([prop-name md]
+   (faprop prop-name md md))
+  ([prop-name md start]
+   (cond
+     (contains? @md prop-name)
+     (mget md prop-name)
+     :else (if-let [par (mpar md)]
+             (recur prop-name par start)
+             (mx-throw (str "faprop> did not find model with property " prop-name
+                            " searching up from " (tiltontec.model.peek/mname md)
+                            " seeking property " ~prop-name " value."))))))
+
 (defmacro fmav "Search strictly up and mget value"
   [name prop-name & [me]]
   (let [me-ref (or me 'me)]
