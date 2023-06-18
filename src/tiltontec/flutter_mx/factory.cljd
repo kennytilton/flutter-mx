@@ -147,7 +147,7 @@
                               (md-quiesce-if-owned! (c-model cell) prior-value))
         (coll? new-value) (cond
                             (coll? prior-value)
-                            (let [lostks (difference (set prior-value) (set new-value))]
+                            (let [lost (difference (set prior-value) (set new-value))]
                               (when-not (empty? lost)
                                 (doseq [md lost]
                                   (when (mref? md)
