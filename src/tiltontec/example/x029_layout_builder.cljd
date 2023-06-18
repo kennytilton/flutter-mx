@@ -1,4 +1,4 @@
-(ns tiltontec.example.x029_layout_builder
+(ns tiltontec.example.x029-layout-builder
   (:require
     ["dart:math" :as math]
     ["package:flutter/widgets.dart" :as w]
@@ -17,7 +17,8 @@
         (fx/center
           (fx/layout-builder
             {:builder (cF (fx/->CBAsIs
-                            (fn [ctx box-constraint]
+                            ;; todo with-builder
+                            (fn [ctx box-constraints]
                               ;; next bit is key: the layout builder wants back a native Flutter
                               ;; widget, so we have to do the conversion from f/mx proxy to Flutter
                               ;; ourselves, sth normally midden by f/mx macrology.
@@ -28,7 +29,7 @@
                                               {:style (cF (p/TextStyle
                                                             .color (mget me :font-color)
                                                             .fontSize (mget me :font-size)))}
-                                              {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                                              {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraints))
                                                :font-color (cF (cond
                                                                  (> (mget me :font-size) 50) m.Colors/red
                                                                  :else m.Colors/cyan))

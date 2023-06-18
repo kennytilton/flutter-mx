@@ -1,0 +1,48 @@
+(ns tiltontec.example.x029a-layout-kid-builder
+  (:require
+    ["dart:math" :as math]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["dart:async" :as async]
+    [tiltontec.cell.base :as cb]
+    [tiltontec.matrix.api :refer [dp dpx cF cF+ cI mget mpar fmuv minfo mset! fmu] :as mx]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
+
+(defn make-app []
+  (let [title "Layout Builder Dynamic Text Size"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
+        (fx/center
+          (fx/layout-kid-builder
+            ;; for now, we must use the hard-coded :box-constraints to get that build parameter
+            (do ;;when-let [box (mget me :box-constraints)]
+              (dp :building-text!!!!!!!!)
+              (fx/text
+                {:style (cF (p/TextStyle
+                              .color (mget me :font-color)
+                              .fontSize (mget me :font-size)))}
+                {:font-size  (cF (if-let [box (mget (mpar) :box-constraints)]
+                                   ;; ^^^ this is the only place we need the box, so not
+                                   ;; too awkward, but what if there were a bunch?
+                                   (+ (* 0.05 (.-maxHeight ^m/BoxConstraints box))
+                                      (* 5 (mod (mget me :size-basis) 5)))
+                                   24))
+                 :font-color (cF (cond
+                                   (> (mget me :font-size) 25) m.Colors/red
+                                   :else m.Colors/cyan))
+                 :size-basis (cI 0)
+                 :clock      (cF+ [:debug false
+                                   :watch (fn [_ _ new old c]
+                                            (when new
+                                              (dp :clock-watch-sees-tmr new)))
+                                   :on-quiesce (fn [c]
+                                                 (when-let [tmr ^async/Timer (cb/c-value c)]
+                                                   (dp :cancelling-timer!!! tmr)
+                                                   (.cancel tmr)))]
+                               (async/Timer.periodic (Duration .seconds 3)
+                                 (fn [^async/Timer tmr]
+                                   (dp :tmr-fires!!!! (.-tick tmr) (minfo me))
+                                   (mset! me :size-basis (.-tick tmr)))))}
+                (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10))))))))))
