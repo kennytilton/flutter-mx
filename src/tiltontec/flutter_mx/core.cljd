@@ -29,6 +29,10 @@
   ;; used where app needs to see the Flutter context to decide a value
   :extends mxf/MXImplementer)
 
+(defn fx-get-resolved [me prop ctx]
+  (fx-resolve prop me ctx
+              (mget me prop)))
+
 (defn fx-resolve
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
