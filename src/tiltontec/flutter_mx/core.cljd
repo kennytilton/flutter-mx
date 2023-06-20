@@ -38,7 +38,7 @@
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
    ;(dp :resolving prop (minfo me) widget-value)
-   (wtrx [0 1000 :RESO prop (minfo me)]
+   (wtrx [0 1000 nil :RESO prop (minfo me)]
      (let [resolved
            (cond
              (nil? widget-value)
@@ -123,7 +123,7 @@
   (.pop (-> ctx m.Navigator/of)))
 
 (defn fx-render [ctx fx]
-  (wtrx [0 999  :render-entry (minfo fx)]
+  (wtrx [0 999 nil :render-entry (minfo fx)]
     (cond
       (not (mref? fx))
       (cond
