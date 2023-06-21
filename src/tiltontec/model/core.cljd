@@ -1,7 +1,7 @@
 (ns tiltontec.model.core
   (:require
     [clojure.string :as str]
-     [tiltontec.matrix.base
+    [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
     [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
     [tiltontec.matrix.util
@@ -31,8 +31,8 @@
 (defmacro pme [& mas]
   `(when true                                               ;;  (= :login (:name (deref ~'me)))
      (dp (mx-type ~'me)
-       (:tag (deref ~'me))
-       (:name (deref ~'me)) ~@mas)))
+         (:tag (deref ~'me))
+         (:name (deref ~'me)) ~@mas)))
 
 (def matrix
   "Each app will populate this with the root of its application matrix."
@@ -45,8 +45,8 @@
     (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
       ;(dp :mget prop (minfo me))
       (mx-throw (str "MXAPI_ILLEGAL_GET_NO_SUCH_prop> mget was attempted on non-existent prop \"" prop "\"."
-                  "\n...> FYI: known props are" (keys @me)
-                  "\n...> FYI: use mget? if prop might not exist."))
+                     "\n...> FYI: known props are" (keys @me)
+                     "\n...> FYI: use mget? if prop might not exist."))
       nil)
     (let [dbg? false]
       (when dbg?
@@ -116,38 +116,40 @@
             me (atom
                  (let [mdmap (merge {:parent *md-parent*
                                      :host   *md-host*}
-                               (->> arg-list
-                                 (partition 2)
-                                 (filter (fn [[prop v]]
-                                           (not (= :mx-type prop))))
-                                 (map (fn [[k v]]
-                                        (vector k (if (c-ref? v)
-                                                    unbound
-                                                    v))))
-                                 (into {})))]
+                                    (->> arg-list
+                                         (partition 2)
+                                         (filter (fn [[prop v]]
+                                                   (not (some #{prop} [:fx$quiesce :mx-type]))
+                                                   #_(not (= :mx-type prop))))
+                                         (map (fn [[k v]]
+                                                (vector k (if (c-ref? v)
+                                                            unbound
+                                                            v))))
+                                         (into {})))]
                    ;; (prn :mdmap-keys (keys mdmap))
                    mdmap)
-                 :meta {:state   :nascent
+                 :meta {:state      :nascent
                         ;; todo pull more fx$s into meta
-                        :mx-type (:mx-type iargs (Model.))
-                        :sid     (swap! +md-sid+ inc)})]
+                        :mx-type    (:mx-type iargs (Model.))
+                        :fx$quiesce (:fx$quiesce iargs (Model.))
+                        :sid        (swap! +md-sid+ inc)})]
         ;(dp :make-post-me (meta me))
         (rmap-meta-set!
           [:cz me]
           (->> arg-list
-            (partition 2)
-            (filter (fn [[prop v]]
-                      (when-not (some #{prop} [:parent :name :mx-type :on-quiesce
-                                               :fx$ikeys :fx$notifier :fx$observer])
-                        (md-install-cell me prop v))))
-            (map vec)
-            (into {})))
+               (partition 2)
+               (filter (fn [[prop v]]
+                         (when-not (some #{prop} [:parent :name :mx-type :on-quiesce
+                                                  :fx$ikeys :fx$notifier :fx$observer])
+                           (md-install-cell me prop v))))
+               (map vec)
+               (into {})))
 
         ;(prn :meta-cz? (meta me))
 
         (with-integrity (:awaken me)
-          (md-awaken me)
-          #_(dp :md-awaken-complete))
+                        (md-awaken me)
+                        #_(dp :md-awaken-complete))
         me))))
 
 ;;; --- family ------------------------------------
@@ -197,9 +199,9 @@
     (odd? (count arg-list)) (apply make-family :mx-type arg-list)
     :else
     (apply make
-      :mx-type (Family.)
-      :on-quiesce fm-quiesce
-      arg-list)))
+           :mx-type (Family.)
+           :on-quiesce fm-quiesce
+           arg-list)))
 
 ;;; -------------------------------------------------------------------------
 ;;;      Navigation
@@ -221,7 +223,7 @@
 
 (defn fm-navig-eq? [seek poss]
   (chk (or (atom? poss) (string? poss))
-    (str "poss not ref " (string? poss)))
+       (str "poss not ref " (string? poss)))
   (fmdp :eq :fm-navig-eq? (fn? seek) (keyword? seek) (minfo poss))
   (cond
     (not (atom? poss))                                      ;; string child of html label?
@@ -233,30 +235,30 @@
     (keyword? seek) (do
                       ;; (trx :fm-navig-eq?sees seek (:name @poss) (mx-type poss))
                       (or (= seek (:name @poss))
-                        ;; search for types will have to be converted to function tests
-                        ;; with explicit types coded
-                        #_(= (mx-type poss) seek)))
+                          ;; search for types will have to be converted to function tests
+                          ;; with explicit types coded
+                          #_(= (mx-type poss) seek)))
     :else (do (trx :fm-navig-eq?-else-pplain=! seek)
               (= seek poss))))
 
 (defn fm-ascendant [what where & options]
   (when (and where what)
     (let [options (merge {:me? false :wocd? true}
-                    (apply hash-map options))]
+                         (apply hash-map options))]
       (binding [*depender* (if (:wocd? options) nil *depender*)]
         (or (and (:me? options)
-              (fm-navig-eq? what where)
-              where)
+                 (fm-navig-eq? what where)
+                 where)
 
-          (if-let [par (:parent @where)]
-            (fm-ascendant what par
-              :me? true)
-            (when-let [host (:host @where)]
-              (fm-ascendant what host
-                :me? true)))
+            (if-let [par (:parent @where)]
+              (fm-ascendant what par
+                            :me? true)
+              (when-let [host (:host @where)]
+                (fm-ascendant what host
+                              :me? true)))
 
-          (when (:must? options)
-            (mx-throw :fm-ascendant-must-failed what where options)))))))
+            (when (:must? options)
+              (mx-throw :fm-ascendant-must-failed what where options)))))))
 
 (defn nextsib [mx]
   (without-c-dependency
@@ -284,11 +286,11 @@
     (cond
       (mref? it) (do (fmdp :host :checking-hosted!! prop (minfo it))
                      (fm-navig what it
-                       :me? true :inside? true :up? false))
+                               :me? true :inside? true :up? false))
       (sequential? it) (do (fmdp :checking-hosted-seq!! (map minfo it))
                            (some (fn [it]
                                    (fm-navig what it
-                                     :me? true :inside? true :up? false)) it))
+                                             :me? true :inside? true :up? false)) it))
       :else (when it (dp :ignoring-prop-val it)))))
 
 (defn fm-navig [what where & options]
@@ -311,45 +313,45 @@
                   (if (fm-navig-eq? what where)
                     where
                     (some (partial fm-navig-hosted? what where)
-                      ;; todo should navig be restricted to custom props and :kids?
-                      ;; todo rework how delegates access full mx
-                      (keep #{:persistentFooterButtons
-                              :floatingActionButton} (:fx$ikeys @where)))))
+                          ;; todo should navig be restricted to custom props and :kids?
+                          ;; todo rework how delegates access full mx
+                          (keep #{:persistentFooterButtons
+                                  :floatingActionButton} (:fx$ikeys @where)))))
 
-              (and (:inside? options)
-                (if-let [kids (mget? where :kids)]
-                  (do
-                    (if-let [netkids (remove #{(:skip options)} kids)]
-                      (do
-                        (some #(fm-navig what %
-                                 :me? true
-                                 :inside? true
-                                 :up? false) netkids))
-                      (trx nil :no-net-kids)))
-                  (trx nil :inside-no-kids (:name @where))))
+                (and (:inside? options)
+                     (if-let [kids (mget? where :kids)]
+                       (do
+                         (if-let [netkids (remove #{(:skip options)} kids)]
+                           (do
+                             (some #(fm-navig what %
+                                              :me? true
+                                              :inside? true
+                                              :up? false) netkids))
+                           (trx nil :no-net-kids)))
+                       (trx nil :inside-no-kids (:name @where))))
 
-              (and (:up? options)
-                (if-let [par (:parent @where)]
-                  (do
-                    (fmdp :up :navig-uppar! (minfo par))
-                    (fm-navig what par
-                      :up? true
-                      :me? true
-                      :skip where
-                      :inside? true))
-                  (if-let [host (:host @where)]
-                    (do
-                      (fmdp :up :navig-uphost! (minfo host))
-                      (fm-navig what host
-                        :up? true
-                        :me? true
-                        :skip where
-                        :inside? true))
-                    (do (dpx :no-up-from (minfo where))
-                        false))))
+                (and (:up? options)
+                     (if-let [par (:parent @where)]
+                       (do
+                         (fmdp :up :navig-uppar! (minfo par))
+                         (fm-navig what par
+                                   :up? true
+                                   :me? true
+                                   :skip where
+                                   :inside? true))
+                       (if-let [host (:host @where)]
+                         (do
+                           (fmdp :up :navig-uphost! (minfo host))
+                           (fm-navig what host
+                                     :up? true
+                                     :me? true
+                                     :skip where
+                                     :inside? true))
+                         (do (dpx :no-up-from (minfo where))
+                             false))))
 
-              (when (:must? options)
-                (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))))))
+                (when (:must? options)
+                  (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))))))
       :else (do (dpx :NAVIG-falls-out nil)
                 (when (:must? options)
                   (mx-throw "fall out navig")
@@ -367,7 +369,7 @@
   "Search up the matrix from node 'where' looking for element with given name"
   [where name]
   (fm-navig #(= name (mget? % :name))
-    where :me? false :up? true :inside? false))
+            where :me? false :up? true :inside? false))
 
 ;(md/fm-navig :z-counter me
 ;  :me? false
@@ -380,14 +382,14 @@
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (fm-navig #(= name# (mget? % :name))
-         ~me-ref :me? false :up? true :inside? false))))
+                 ~me-ref :me? false :up? true :inside? false))))
 
 (defmacro fmuinc [name & [me]]
   ;; fmu "inclusive" of the starting node "me"
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (fm-navig #(= name# (mget? % :name))
-         ~me-ref :me? true :up? true :inside? false))))
+                 ~me-ref :me? true :up? true :inside? false))))
 
 (defmacro fasc "Search strictly up"
   [name & [me]]
@@ -402,22 +404,22 @@
        (tiltontec.model.core/fmdp :fm*-start-after name#)
        (tiltontec.model.core/fm-navig #(do
                                          #_(tiltontec.model.core/fmdp :fm*-sees (= name# (tiltontec.model.core/mget % :name))
-                                             (tiltontec.cell.base/minfo %))
+                                                                      (tiltontec.cell.base/minfo %))
                                          (= name# (mget? % :name)))
-         ~me-ref :me? true :up? true :inside? true))))
+                                      ~me-ref :me? true :up? true :inside? true))))
 
 (defmacro fm*val [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tiltontec.model.core/fm-navig (fn [node#] (= ~name (tiltontec.model.core/mget? node# :name)))
-                    ~me-ref :me? true :up? true :inside? true)]
+                                                 ~me-ref :me? true :up? true :inside? true)]
        (chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tiltontec.model.core/mget other# ~prop))))
 
 (defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
-                    ~me-ref :me? false :up? true :inside? false)]
+                            ~me-ref :me? false :up? true :inside? false)]
        (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
 
@@ -425,7 +427,7 @@
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
-                    ~me-ref :me? false :up? true :inside? false)]
+                            ~me-ref :me? false :up? true :inside? false)]
        (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
 
@@ -433,7 +435,7 @@
   "Search up the matrix from node 'where' looking for element with given id"
   [where id]
   (fm-navig #(= id (mget % :id))
-    where :me? false :up? true :inside? false))
+            where :me? false :up? true :inside? false))
 
 (defn mxu-find-type
   "Search matrix ascendants only from node 'me' for first with given tag"
@@ -445,19 +447,19 @@
 (defn fmi-w-class [where class]
   (fm-navig #(when (atom? %)
                (= class (mget % :class)))
-    where :inside? true :up? false))
+            where :inside? true :up? false))
 
 (defn mxi-find
   "Search matrix below node 'where' for node with property and value"
   [where property value]
   (fm-navig #(when (atom? %)
                (= value (mget % property)))
-    where :inside? true :up? false))
+            where :inside? true :up? false))
 
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
-    (mxu-find-id me id-name)
-    (mx-throw (str "fmo> not id or name " id-name))))
+      (mxu-find-id me id-name)
+      (mx-throw (str "fmo> not id or name " id-name))))
 
 (defn fmov
   ([me id-name]
@@ -496,8 +498,8 @@
       (map-indexed
         (fn [idx kid-value]
           (or (and x-kids (get x-kids kid-value))
-            (binding [*md-parent* me]
-              (k-factory me kid-value))))
+              (binding [*md-parent* me]
+                (k-factory me kid-value))))
         (mget me :kid-values)))))
 
 ;;; --- quiesce -------------------------------------------------
@@ -508,8 +510,8 @@
 (defn md-owning?
   "Is MD the parent or host of OTHER?" [md other]
   (and (mref? md) (mref? other)
-    (or (= md (mpar other))
-      (= md (mhost other)))))
+       (or (= md (mpar other))
+           (= md (mhost other)))))
 
 (defn md-quiesce-if-owned! [owner md]
   (when (or (= owner (mpar md)) (= owner (mhost md)))
@@ -554,14 +556,15 @@
   ([me] (md-quiesce! me (md-quiesce-feature?)))
   ([me force?]
    (when force?
-     (dpx :md-quiescing (minfo me))
-     (wtrx [0 999 nil :mdq-entry (minfo me)]
-       (binding [*md-quiescing* true]
-         (cond
-           (and (coll? me) (mref? (first me)))
-           (doseq [elt me]
-             (md-quiesce! elt true))
-           :else
-           (when (mref? me)
-             (md-quiesce-self! me))))))))
+     (when (not= :never (:fx$quiesce (meta me)))
+       (dp :md-quiescing (minfo me) :meta (meta me))
+       (wtrx [0 999 nil :mdq-entry (minfo me)]
+         (binding [*md-quiescing* true]
+           (cond
+             (and (coll? me) (mref? (first me)))
+             (doseq [elt me]
+               (md-quiesce! elt true))
+             :else
+             (when (mref? me)
+               (md-quiesce-self! me)))))))))
 
