@@ -53,10 +53,17 @@
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
       (center
+        (fx/text-ex
+          {:style (in-my-context [me ctx]
+                                 (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+          {:name  :z-counter
+           :value (cI 2)}
+          (cF (str (mx/my-value))))
+        #_
         (column
           {:mainAxisAlignment m.MainAxisAlignment/center}
 
-          (text {:style (p/TextStyle .color m.Colors/black
+          #_ (text {:style (p/TextStyle .color m.Colors/black
                                      .fontSize 18.0)}
                 "You clicked (+) so many times:")
           #_ ;; via apply
@@ -64,18 +71,18 @@
                           (flutter-arg-map {:style (p/TextStyle .color m.Colors/black
                                                                 .fontSize 18.0)}))
 
-          (fx/container
-            {:decoration (let [named (into {} (flutter-arg-map
-                                                   {:color        m.Colors/green
-                                                    :borderRadius (m/BorderRadius.circular 8.0)}))]
+          #_ (fx/container
+            {:decoration (let [named (flutter-arg-map
+                                       {:color        m.Colors/green
+                                        :borderRadius (m/BorderRadius.circular 8.0)})]
                            (Function.apply m/BoxDecoration.new [] named))}
             (Function.apply m/Text.new ["booya"]
                             (flutter-arg-map {:style (p/TextStyle .color m.Colors/white
                                                                   .fontSize 18.0)})))
 
-          (sized-box {:height 14.0})
+          #_ (sized-box {:height 14.0})
 
-          (text
+          (fx/text
             {:style (in-my-context [me ctx]
                                    (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
