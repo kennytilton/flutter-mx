@@ -109,7 +109,8 @@
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
   (cond
-    (odd? (count arg-list)) (apply make :mx-type arg-list)
+    (odd? (count arg-list)) (do (dp :make-sees-type!!!!!!!!!!! (first arg-list))
+                                (apply make :mx-type arg-list))
     :else
     (do
       (let [iargs (apply hash-map arg-list)
@@ -552,14 +553,17 @@
   (dp :md-quiesce-feature (if on-off :ON :OFF))
   (reset! +md-quiesce-feature+ on-off))
 
+(def ^:dynamic *md-quiesce-log?* true)
+
 (defn md-quiesce!
   ([me] (md-quiesce! me (md-quiesce-feature?)))
   ([me force?]
    (when force?
      (when (not= :never (:fx$quiesce (meta me)))
-       (dp :md-quiescing (minfo me) :meta (meta me))
+       (when *md-quiesce-log?* (dp :md-quiescing (minfo me) :meta (meta me)))
        (wtrx [0 999 nil :mdq-entry (minfo me)]
-         (binding [*md-quiescing* true]
+         (binding [*md-quiescing* true
+                   *md-quiesce-log?* false]
            (cond
              (and (coll? me) (mref? (first me)))
              (doseq [elt me]
