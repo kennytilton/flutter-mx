@@ -16,7 +16,7 @@
     [tiltontec.model.peek :refer [chk Model mref? minfo]]
     [tiltontec.cell.base :refer [cinfo] :as cty]
     [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mkids mswap! cFkids] :as mx]
-    [tiltontec.flutter-mx.factory :as mk]))
+    [tiltontec.flutter-mx.factory :as fxf]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
@@ -137,7 +137,7 @@
               (dpx :render-sees-gen!! gen)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
-              ;; nope (mk/record-fx$ctx fx ctx)
+              ;; nope (fxf/record-fx$ctx fx ctx)
               (let [g (gen fx ctx)]
                 (dpx :render-genned!!! g)
                 (rmap-meta-set! [:fx-dom fx] g)
@@ -255,6 +255,22 @@
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~param-1#))))
 
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
+
+#_
+(defn textex [fx-props mx-props content]
+  (apply fxf/make-fx (new fxf/FXDartWidget)
+         :fx-class 'm/Text
+         :_param1 content
+         :fx-gen (fn [me ctx]
+                   (fxf/ctx-check 'm/Text me ctx)
+                   (apply m/Text (fx-render ctx
+                                   (tiltontec.matrix.api/mget me :_param-1))
+                          (let [kvs (for [[k _] fx-props]
+                                      [(symbol (str "." (name k)))
+                                       (fx-get-resolved me k ctx)])]
+                              (apply concat kvs))))
+         (concat (apply concat fx-props) (apply concat fx-props))))
+
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateful text! m/Text)
 
 ;;; --- childless stateless --------------------------------------------------------

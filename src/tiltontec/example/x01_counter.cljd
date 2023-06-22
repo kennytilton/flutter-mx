@@ -2,11 +2,41 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.matrix.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm*] :as mx]
+    [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm*] :as mx]
     [tiltontec.flutter-mx.core :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
-             center column text sized-box]]))
+             center column text #_textex sized-box]]))
+
+(defn map-keep [m] (into {} (remove (comp nil? second) m)))
+
+(defn flutter-arg-map [m]
+  (let [flutter-args (into {} (map (fn [[k v]] [(Symbol (name k)) v]) m))]
+    ;; Flutter doesn't like to take optional named args with nil values, so we need to filter these out altogether
+    (map-keep flutter-args)))
+
+(defn dart-apply
+  ([dart-fn args]
+   (let [named-args (when (map? args) args)
+         positional-args (when (seq? args) args)]
+     (dart-apply dart-fn positional-args named-args)))
+
+  ([dart-fn positional-args named-args]
+   (dp :ar3-fn dart-fn :posn positional-args :named named-args)
+   (Function.apply dart-fn
+                   (or positional-args [])
+                   (flutter-arg-map named-args))))
+
+#_(dart-apply m/BoxShadow.new {:color      color
+                               :offset     (m/Offset offset-x offset-y)
+                               :blurRadius radius})
+#_
+(fx/container
+  {:decoration (let [named (into {} (map (fn [[k v]] [(Symbol (name k)) v])
+                                         {:color        m.Colors/cyan
+                                          :borderRadius (m/BorderRadius.circular 8.0)}))]
+                 (Function.apply m/BoxDecoration [] named))}
+  (text "booya"))
 
 (defn make-app []
   (material-app
@@ -19,18 +49,35 @@
        :floatingActionButton
        (cF (floating-action-button
              {:onPressed (as-dart-callback []
-                           (mswap! (fm* :z-counter) :value inc))
+                                           (mswap! (fm* :z-counter) :value inc))
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
       (center
-        (column {:mainAxisAlignment m.MainAxisAlignment/center}
+        (column
+          {:mainAxisAlignment m.MainAxisAlignment/center}
+
           (text {:style (p/TextStyle .color m.Colors/black
-                             .fontSize 18.0)}
-            "You clicked (+) so many times:")
+                                     .fontSize 18.0)}
+                "You clicked (+) so many times:")
+          #_ ;; via apply
+          (Function.apply m/Text.new ["You clicked (+) so many times:"]
+                          (flutter-arg-map {:style (p/TextStyle .color m.Colors/black
+                                                                .fontSize 18.0)}))
+
+          (fx/container
+            {:decoration (let [named (into {} (flutter-arg-map
+                                                   {:color        m.Colors/green
+                                                    :borderRadius (m/BorderRadius.circular 8.0)}))]
+                           (Function.apply m/BoxDecoration.new [] named))}
+            (Function.apply m/Text.new ["booya"]
+                            (flutter-arg-map {:style (p/TextStyle .color m.Colors/white
+                                                                  .fontSize 18.0)})))
+
           (sized-box {:height 14.0})
+
           (text
             {:style (in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                                   (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
             (str (mx/my-value))))))))

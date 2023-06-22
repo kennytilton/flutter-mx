@@ -402,14 +402,14 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ctx]
                    (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
-                   (~fx-class (tiltontec.flutter-mx.core/fx-render :factory ctx
+                   (~fx-class (tiltontec.flutter-mx.core/fx-render ctx
                                 (tiltontec.matrix.api/mget ~'me :_param-1))
                      ~@(let [kvs (for [[k# _#] fx-props]
                                    [(symbol (str "." (name k#)))
-                                    `(do ;;(dp :prop-get!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-                                         ;; (tiltontec.flutter-mx.core/fx-get-resolved ~'me ~k# ctx)
-                                         (tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
-                                           (tiltontec.matrix.api/mget ~'me ~k#)))])]
+                                    `(do                    ;;(dp :prop-get!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+                                       ;; (tiltontec.flutter-mx.core/fx-get-resolved ~'me ~k# ctx)
+                                       (tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
+                                         (tiltontec.matrix.api/mget ~'me ~k#)))])]
                          (apply concat kvs)))))
        ;; todo teach make-fx it does not need children
        nil)))
