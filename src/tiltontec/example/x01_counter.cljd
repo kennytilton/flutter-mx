@@ -53,13 +53,6 @@
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
       (center
-        (fx/text-ex
-          {:style (in-my-context [me ctx]
-                                 (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-          {:name  :z-counter
-           :value (cI 2)}
-          (cF (str (mx/my-value))))
-        #_
         (column
           {:mainAxisAlignment m.MainAxisAlignment/center}
 
@@ -82,11 +75,20 @@
 
           #_ (sized-box {:height 14.0})
 
-          (fx/text
+          (fx/text-ex {:style (p/TextStyle .color m.Colors/black
+                                     .fontSize 18.0)}
+                "You clicked (+) so many times:")
+
+          (fx/text "hunh")
+
+          (fx/text-ex
             {:style (in-my-context [me ctx]
-                                   (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
-             :value (cI 0)}
-            (str (mx/my-value))))))))
+             :basis 40
+             :b2 (cI 2)
+             :value (cF (+ (mget me :basis)
+                           (mget me :b2)))}
+            "boomer" #_ (cF (str (mx/my-value)))))))))
 
 

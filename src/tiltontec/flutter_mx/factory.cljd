@@ -55,14 +55,14 @@
   (cond
     (nil? (fx-ctx me))
     (do
-      (dp :CTX-CHECK-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
+      (dpx :CTX-CHECK-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
       (record-fx$ctx me ctx))
 
     (= ctx (fx-ctx me))
-    (dp :CTX-CHECK-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
+    (dpx :CTX-CHECK-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
 
     :else (do
-            (dp :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
+            (dpx :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
             (record-fx$ctx me ctx))))
 
 (defn fx-ctx [me]
@@ -94,22 +94,6 @@
    (make-fx mx-type fx-props custom-props nil))
   ([mx-type fx-props custom-props cFkids-form]
    (apply tiltontec.model.core/make
-          :mx-type mx-type
-          :fx$state (cI nil)
-          ;; todo move ^^^ and next to meta
-          :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
-                            (concat (keys fx-props) (keys custom-props)))
-          :kids cFkids-form
-          (concat
-            (vec (apply concat (seq fx-props)))
-            (vec (apply concat (seq custom-props)))))))
-
-(defn make-fx-ex
-  ([mx-type fx-props custom-props]
-   (make-fx-ex mx-type fx-props custom-props nil))
-  ([mx-type fx-props custom-props cFkids-form]
-   (dp :mk-fx-ex-sees mx-type :fxpro fx-props :custom custom-props)
-   (apply tiltontec.model.core/make-ex
           :mx-type mx-type
           :fx$state (cI nil)
           ;; todo move ^^^ and next to meta

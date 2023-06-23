@@ -31,7 +31,7 @@
 
 (defn fx-get-resolved [me prop ctx]
   (fx-resolve prop me ctx
-              (mget me prop)))
+    (mget me prop)))
 
 (defn fx-resolve
   ([me ctx widget-value]
@@ -43,7 +43,7 @@
            (cond
              (nil? widget-value)
              (do
-               (dpx :fx-res-nil!! prop )
+               (dpx :fx-res-nil!! prop)
                nil)
 
              (dart/is? widget-value CBAsIs)
@@ -65,8 +65,7 @@
                  (let [v (cb-val me ctx)]
                    (dpx :recuring-unwrapped-fn?-return-val v)
                    (fx-resolve prop me ctx v))
-                 #_
-                         (fx-resolve prop me ctx cb-val)))
+                 #_(fx-resolve prop me ctx cb-val)))
 
              (dart/is? widget-value m/Widget)
              (do
@@ -130,16 +129,16 @@
         (cty/c-ref? fx)
         (mx-throw (str "fx-render passed Cell " (deref fx)))
         :default (do
-                   #_ (when-not (string? fx)
-                     (dp :render-sees-not-mref?-passing-thru fx))
+                   #_(when-not (string? fx)
+                       (dp :render-sees-not-mref?-passing-thru fx))
                    fx))
       :else (let [gen (mget fx :fx-gen)]
-              (dp :render-sees-gen!! gen)
+              (dpx :render-sees-gen!! gen)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
               ;; nope (fxf/record-fx$ctx fx ctx)
               (let [g (gen fx ctx)]
-                (dp :render-genned!!! g)
+                (dpx :render-genned!!! g)
                 (rmap-meta-set! [:fx-dom fx] g)
                 g)))))
 
@@ -256,37 +255,47 @@
 
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
 
-(defn map-keep [m] (into {} (remove (comp nil? second) m)))
+;(defn map-keep [m] (into {} (remove (comp nil? second) m)))
+;
+;(defn flutter-arg-map [m]
+;  (let [flutter-args (into {} (map (fn [[k v]] [(Symbol (name k)) v]) m))]
+;    ;; Flutter doesn't like to take optional named args with nil values, so we need to filter these out altogether
+;    (map-keep flutter-args)))
 
-(defn flutter-arg-map [m]
-  (let [flutter-args (into {} (map (fn [[k v]] [(Symbol (name k)) v]) m))]
-    ;; Flutter doesn't like to take optional named args with nil values, so we need to filter these out altogether
-    (map-keep flutter-args)))
+(defn fx-props-resolved [me ctx fx-props-map]
+  (into {}
+    (remove nil?
+      ;; Flutter doesn't like to take optional named args with nil values
+      (for [[k v] fx-props-map]
+        (when-let [rv (fx-get-resolved me k ctx)]
+          [(Symbol (name k)) rv])))))
 
-(defn fx-props-resolved [ me ctx fx-props-map]
-  (let [flutter-args (into {} (map (fn [[k v]]
-                                     [(Symbol (name k))
-                                      (fx-get-resolved me k ctx)])
-                                   fx-props-map))]
-    ;; Flutter doesn't like to take optional named args with nil values, so we need to filter these out altogether
-    (map-keep flutter-args)))
 
-(defn text-ex [fx-props mx-props content]
-  (dp :texex fx-props mx-props content)
-  (fxf/make-fx-ex
-    (new fxf/FXDartWidget)
-    fx-props
-    (assoc mx-props
-      :fx-class 'm/Text
-      :fx$p1 content
-      :fx-gen (fn text-ex-gen [me ctx]
-                (fxf/ctx-check 'm/Text me ctx)
-                (Function.apply
-                  m/Text.new
-                  ;["hack-hack"]
-                  [(fx-render ctx
-                    (tiltontec.matrix.api/mget me :fx$p1))]
-                  (fx-props-resolved me ctx fx-props))))))
+(defn make-fx-apply [maker params]
+  (if (map? (first params))
+    (if (map? (second params))
+      (apply maker params)
+      (apply maker (first params) nil (rest params)))
+    (apply maker nil nil params)))
+
+(defn text-ex [& params]
+  (make-fx-apply
+    (fn mkr [fx-props mx-props content]
+      (fxf/make-fx
+        (new fxf/FXDartWidget)
+        fx-props
+        (assoc mx-props
+          :fx-class 'm/Text
+          :fx$p1 content
+          :fx-gen (fn [me ctx]
+                    (fxf/ctx-check 'm/Text me ctx)
+                    (Function.apply
+                      m/Text.new
+                      [(fx-render ctx
+                         (tiltontec.matrix.api/mget me :fx$p1))]
+                      (fx-props-resolved me ctx fx-props))))))
+    params))
+
 
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateful text! m/Text)
 
