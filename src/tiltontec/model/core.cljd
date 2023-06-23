@@ -106,54 +106,6 @@
 (defn md-sid [me]
   (:sid (meta me)))
 
-(defn make-ex [& arg-list]
-  (dpx :make-ex-sees arg-list)
-  ;;(prn :make-entry (count arg-list) (first arg-list))
-  (cond
-    (odd? (count arg-list)) (do (dpx :make-sees-type!!!!!!!!!!! (first arg-list))
-                                (apply make :mx-type arg-list))
-    :else
-    (do
-      (let [iargs (apply hash-map arg-list)
-            me (atom
-                 (let [mdmap (merge {:parent *md-parent*
-                                     :host   *md-host*}
-                                    (->> arg-list
-                                         (partition 2)
-                                         (filter (fn [[prop v]]
-                                                   (not (some #{prop} [:fx$quiesce :mx-type]))
-                                                   #_(not (= :mx-type prop))))
-                                         (map (fn [[k v]]
-                                                (vector k (if (c-ref? v)
-                                                            unbound
-                                                            v))))
-                                         (into {})))]
-                   ;; (prn :mdmap-keys (keys mdmap))
-                   mdmap)
-                 :meta {:state      :nascent
-                        ;; todo pull more fx$s into meta
-                        :mx-type    (:mx-type iargs (Model.))
-                        :fx$quiesce (:fx$quiesce iargs (Model.))
-                        :sid        (swap! +md-sid+ inc)})]
-        ;(dp :make-post-me (meta me))
-        (rmap-meta-set!
-          [:cz me]
-          (->> arg-list
-               (partition 2)
-               (filter (fn [[prop v]]
-                         (when-not (some #{prop} [:parent :name :mx-type :on-quiesce
-                                                  :fx$ikeys :fx$notifier :fx$observer])
-                           (md-install-cell me prop v))))
-               (map vec)
-               (into {})))
-
-        ;(prn :meta-cz? (meta me))
-
-        (with-integrity (:awaken me)
-                        (md-awaken me)
-                        #_(dp :md-awaken-complete))
-        me))))
-
 (defn make [& arg-list]
   ;;(prn :make-entry (count arg-list) (first arg-list))
   (cond
