@@ -409,8 +409,6 @@
       (apply maker (first params) nil (rest params)))
     (apply maker nil nil params)))
 
-;(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
-
 (defmacro deftag-ex [mx-name factory]
   `(defmacro ~mx-name [& vargs#]
      (let [[fx-props# mx-props# & children#]
@@ -420,7 +418,56 @@
              :else (list* (first vargs#) nil (rest vargs#)))]
        `(~'~factory ~fx-props# ~mx-props# (cFkids ~@children#)))))
 
-(deftag-ex scaffold tiltontec.flutter-mx.core/_scaffold-ex)
+(defmacro deftag-ex-ex [mx-name factory]
+  `(defmacro ~mx-name [& vargs#]
+     (let [[fx-props# mx-props# & children#]
+           (cond (nil? vargs#) nil
+             (not (map? (first vargs#))) (list* nil nil vargs#)
+             (map? (second vargs#)) vargs#
+             :else (list* (first vargs#) nil (rest vargs#)))]
+       `(~'~factory ~fx-props# ~mx-props# (cFkids ~@children#)))))
+
+
+;(deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
+
+;(deftag-ex-ex text (konly-p0-stateless m/Text.new))
+
+
+(defmacro konly-p0-stateless [constructor]
+  `(fxf/make-fx
+     (new fxf/FXDartWidget)
+     ~'fx-props
+     (assoc ~'mx-props
+       :fx-class 'm/Text
+       :kids ~'kids
+       :fx-gen (fn [me ctx]
+                 (fxf/ctx-check 'm/Text me ctx)
+                 (~'Function.apply
+                   ~constructor
+                   [(fx-render ctx
+                      (tiltontec.flutter-mx.core/fx-resolve me ctx
+                        (first (tiltontec.matrix.api/mkids me))))]
+                   (fx-props-resolved me ctx ~'fx-props))))))
+
+(deftag-ex text tiltontec.flutter-mx.core/_text)
+
+(defn _text [fx-props mx-props kids]
+  (konly-p0-stateless m/Text.new)
+  #_
+  (fxf/make-fx
+    (new fxf/FXDartWidget)
+    fx-props
+    (assoc mx-props
+      :fx-class 'm/Text
+      :kids kids
+      :fx-gen (fn [me ctx]
+                (fxf/ctx-check 'm/Text me ctx)
+                (Function.apply
+                  m/Text.new
+                  [(fx-render ctx
+                     (tiltontec.flutter-mx.core/fx-resolve me ctx
+                       (first (tiltontec.matrix.api/mkids me))))]
+                  (fx-props-resolved me ctx fx-props))))))
 
 (defn stateful-gen [me ctx gen-fn]
   (reify :extends (m/StatefulWidget
@@ -435,6 +482,10 @@
           (fxf/with-flutter-ref
             (gen-fn me ctx)))))))
 
+;;; --- SCAFFOLD -------------------------------------------------------
+(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
+#_ (deftag-ex scaffold tiltontec.flutter-mx.core/_scaffold-ex)
+#_
 (defn _scaffold-ex [fx-props mx-props kids]
   (fxf/make-fx
     (new fxf/FXDartWidget)
@@ -452,28 +503,8 @@
                           (Symbol "body")
                           body)))))))))
 
-
-;(deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
-
-(deftag-ex text tiltontec.flutter-mx.core/_text)
-
-(defn _text [fx-props mx-props kids]
-  (fxf/make-fx
-    (new fxf/FXDartWidget)
-    fx-props
-    (assoc mx-props
-      :fx-class 'm/Text
-      :kids kids
-      :fx-gen (fn [me ctx]
-                (fxf/ctx-check 'm/Text me ctx)
-                (Function.apply
-                  m/Text.new
-                  [(fx-render ctx
-                     (tiltontec.flutter-mx.core/fx-resolve me ctx
-                       (first (tiltontec.matrix.api/mkids me))))]
-                  (fx-props-resolved me ctx fx-props))))))
-
-;(deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
+#_
 (defn sized-box [& params]
   ;; was k1-child-stateless
   (make-fx-apply
