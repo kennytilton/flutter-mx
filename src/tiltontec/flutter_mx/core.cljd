@@ -451,9 +451,26 @@
 
 (deftag-ex text tiltontec.flutter-mx.core/_text)
 
+;; OK
 (defn _text [fx-props mx-props kids]
-  (konly-p0-stateless m/Text.new)
-  #_
+  #_ (konly-p0-stateless m/Text.new)
+  (fxf/make-fx
+      (new fxf/FXDartWidget)
+      fx-props
+      (assoc mx-props
+        :fx-class 'm/Text
+        :kids kids
+        :fx-gen (fn [me ctx]
+                  (fxf/ctx-check 'm/Text me ctx)
+                  (Function.apply
+                    (.-new m/Text)
+                    [(fx-render ctx
+                       (tiltontec.flutter-mx.core/fx-resolve me ctx
+                         (first (tiltontec.matrix.api/mkids me))))]
+                    (fx-props-resolved me ctx fx-props))))))
+
+#_#_
+(defn make-fx-apply [fx-props mx-props kids fx-gen]
   (fxf/make-fx
     (new fxf/FXDartWidget)
     fx-props
@@ -462,12 +479,17 @@
       :kids kids
       :fx-gen (fn [me ctx]
                 (fxf/ctx-check 'm/Text me ctx)
-                (Function.apply
-                  m/Text.new
-                  [(fx-render ctx
-                     (tiltontec.flutter-mx.core/fx-resolve me ctx
-                       (first (tiltontec.matrix.api/mkids me))))]
-                  (fx-props-resolved me ctx fx-props))))))
+                (fx-gen me ctx fx-props mx-props)))))
+
+(defn _text [fx-props mx-props kids]
+  (make-fx-apply fx-props mx-props kids
+    (fn [me ctx fx-props mx-props]
+      (Function.apply
+        m/Text.new
+        [(fx-render ctx
+           (tiltontec.flutter-mx.core/fx-resolve me ctx
+             (first (mx/mkids me))))]
+        (fx-props-resolved me ctx fx-props)))))
 
 (defn stateful-gen [me ctx gen-fn]
   (reify :extends (m/StatefulWidget
@@ -484,36 +506,34 @@
 
 ;;; --- SCAFFOLD -------------------------------------------------------
 (deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
-#_ (deftag-ex scaffold tiltontec.flutter-mx.core/_scaffold-ex)
-#_
-(defn _scaffold-ex [fx-props mx-props kids]
-  (fxf/make-fx
-    (new fxf/FXDartWidget)
-    fx-props
-    (assoc mx-props
-      :fx-class 'Scaffold
-      :kids kids
-      :fx-gen (fn fgen [me ctx]
-                (stateful-gen me ctx
-                  (fn [me ctx]
-                    (let [body (tiltontec.flutter-mx.core/fx-resolve me ctx
-                                 (first (tiltontec.matrix.api/mkids me)))]
-                      (Function.apply m/Scaffold.new []
-                        (assoc (fx-props-resolved me ctx fx-props)
-                          (Symbol "body")
-                          body)))))))))
+#_(deftag-ex scaffold tiltontec.flutter-mx.core/_scaffold-ex)
+#_(defn _scaffold-ex [fx-props mx-props kids]
+    (fxf/make-fx
+      (new fxf/FXDartWidget)
+      fx-props
+      (assoc mx-props
+        :fx-class 'Scaffold
+        :kids kids
+        :fx-gen (fn fgen [me ctx]
+                  (stateful-gen me ctx
+                    (fn [me ctx]
+                      (let [body (tiltontec.flutter-mx.core/fx-resolve me ctx
+                                   (first (tiltontec.matrix.api/mkids me)))]
+                        (Function.apply m/Scaffold.new []
+                          (assoc (fx-props-resolved me ctx fx-props)
+                            (Symbol "body")
+                            body)))))))))
 
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
-#_
-(defn sized-box [& params]
-  ;; was k1-child-stateless
-  (make-fx-apply
-    (fn [fx-props mx-props]
-      (fxf/make-fx (new fxf/FXDartWidget) fx-props
-        (assoc mx-props
-          :fx-class 'm/SizedBox
-          :fx-gen (fn [me ctx]
-                    (fxf/ctx-check me ctx)
-                    (Function.apply m/SizedBox.new
-                      [] (fx-props-resolved me ctx fx-props))))))
-    params))
+#_(defn sized-box [& params]
+    ;; was k1-child-stateless
+    (make-fx-apply
+      (fn [fx-props mx-props]
+        (fxf/make-fx (new fxf/FXDartWidget) fx-props
+          (assoc mx-props
+            :fx-class 'm/SizedBox
+            :fx-gen (fn [me ctx]
+                      (fxf/ctx-check me ctx)
+                      (Function.apply m/SizedBox.new
+                        [] (fx-props-resolved me ctx fx-props))))))
+      params))
