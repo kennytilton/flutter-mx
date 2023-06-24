@@ -438,12 +438,12 @@
      (new fxf/FXDartWidget)
      ~'fx-props
      (assoc ~'mx-props
-       :fx-class 'm/Text
+       :fx-class '~constructor
        :kids ~'kids
        :fx-gen (fn [me ctx]
                  (fxf/ctx-check 'm/Text me ctx)
                  (~'Function.apply
-                   ~constructor
+                   (.-new ~constructor)
                    [(fx-render ctx
                       (tiltontec.flutter-mx.core/fx-resolve me ctx
                         (first (tiltontec.matrix.api/mkids me))))]
@@ -453,8 +453,8 @@
 
 ;; OK
 (defn _text [fx-props mx-props kids]
-  #_ (konly-p0-stateless m/Text.new)
-  (fxf/make-fx
+  (konly-p0-stateless m/Text)
+  #_ (fxf/make-fx
       (new fxf/FXDartWidget)
       fx-props
       (assoc mx-props
