@@ -433,17 +433,17 @@
 ;(deftag-ex-ex text (konly-p0-stateless m/Text.new))
 
 
-(defmacro konly-p0-stateless [constructor]
+(defmacro konly-p0-stateless [mclass]
   `(fxf/make-fx
      (new fxf/FXDartWidget)
      ~'fx-props
      (assoc ~'mx-props
-       :fx-class '~constructor
+       :fx-class '~mclass
        :kids ~'kids
        :fx-gen (fn [me ctx]
-                 (fxf/ctx-check 'm/Text me ctx)
+                 (fxf/ctx-check 'mclass me ctx)
                  (~'Function.apply
-                   (.-new ~constructor)
+                   (.-new ~mclass)
                    [(fx-render ctx
                       (tiltontec.flutter-mx.core/fx-resolve me ctx
                         (first (tiltontec.matrix.api/mkids me))))]
