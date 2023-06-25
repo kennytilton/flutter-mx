@@ -434,4 +434,66 @@
 
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
 
-(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
+;(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
+
+;;; --- nextgen ----------------------------------------
+
+(defn fx-props-resolved [me ctx fx-props-map]
+  (into {}
+    (remove nil?
+      ;; Flutter doesn't like to take optional named args with nil values
+      (for [[k v] fx-props-map]
+        (when-let [rv (fx-get-resolved me k ctx)]
+          [(Symbol (name k)) rv])))))
+
+(defn make-fx-apply
+  "Supports optional/positional flutter and MX prop maps before kids"
+  [maker params]
+  (if (map? (first params))
+    (if (map? (second params))
+      (apply maker params)
+      (apply maker (first params) nil (rest params)))
+    (apply maker nil nil params)))
+
+;(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
+
+(defmacro deftag-ex [mx-name factory]
+  `(defmacro ~mx-name [& vargs#]
+     (let [[fx-props# mx-props# & children#]
+           (cond (nil? vargs#) nil
+             (not (map? (first vargs#))) (list* nil nil vargs#)
+             (map? (second vargs#)) vargs#
+             :else (list* (first vargs#) nil (rest vargs#)))]
+       `(~'~factory ~fx-props# ~mx-props# (cFkids ~@children#)))))
+
+(deftag-ex scaffold tiltontec.flutter-mx.core/_scaffold-ex)
+
+(defn stateful-gen [me ctx gen-fn]
+  (reify :extends (m/StatefulWidget
+                    .key (tiltontec.flutter-mx.core/fx-resolve me ctx
+                           (tiltontec.matrix.api/mget? me :key)))
+    (createState [_]
+      (reify :extends w/State
+        (^void initState [this]
+          (tiltontec.flutter-mx.factory/record-fx$state me this))
+        (build [_ ctx]
+          (tiltontec.flutter-mx.factory/ctx-check me ctx)
+          (fxf/with-flutter-ref
+            (gen-fn me ctx)))))))
+
+(defn _scaffold-ex [fx-props mx-props kids]
+  (fxf/make-fx
+    (new fxf/FXDartWidget)
+    fx-props
+    (assoc mx-props
+      :fx-class 'Scaffold
+      :kids kids
+      :fx-gen (fn fgen [me ctx]
+                (stateful-gen me ctx
+                  (fn [me ctx]
+                    (let [body (tiltontec.flutter-mx.core/fx-resolve me ctx
+                                 (first (tiltontec.matrix.api/mkids me)))]
+                      (Function.apply m/Scaffold.new []
+                        (assoc (fx-props-resolved me ctx fx-props)
+                          (Symbol "body")
+                          body)))))))))
