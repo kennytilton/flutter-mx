@@ -429,14 +429,9 @@
              (not (map? (first vargs#))) (list* nil nil vargs#)
              (map? (second vargs#)) vargs#
              :else (list* (first vargs#) nil (rest vargs#)))]
-       (prn :fxprops fx-props#)
-       ;;`(do)
-
        `((fn [~'fx-props ~'mx-props ~'kids]
-           ~'~factory
-           ;;(tiltontec.flutter-mx.core/konly-p0-stateless-ex m/Text)
-           )
-         ~fx-props# ~mx-props# (cFkids ~@kids#)))))
+           ~'~factory)
+         ~fx-props# ~mx-props# (tiltontec.matrix.api/cFkids ~@kids#)))))
 
 
 (defmacro konly-p0-stateless-ex [mclass]
@@ -455,7 +450,7 @@
                         (first (tiltontec.matrix.api/mkids me#))))]
                    (tiltontec.flutter-mx.core/fx-props-resolved me# ctx# fx-props))))))
 
-(deftag-ex-ex textexex
+(deftag-ex-ex text
   (tiltontec.flutter-mx.core/konly-p0-stateless-ex m/Text))
 
 (defmacro konly-p0-stateless [mclass]
@@ -474,25 +469,11 @@
                         (first (tiltontec.matrix.api/mkids me))))]
                    (fx-props-resolved me ctx ~'fx-props))))))
 
-(deftag-ex text tiltontec.flutter-mx.core/_text)
+(deftag-ex text-ok tiltontec.flutter-mx.core/_text)
 
-;; OK
+
 (defn _text [fx-props mx-props kids]
-  (konly-p0-stateless m/Text)
-  #_ (fxf/make-fx
-      (new fxf/FXDartWidget)
-      fx-props
-      (assoc mx-props
-        :fx-class 'm/Text
-        :kids kids
-        :fx-gen (fn [me ctx]
-                  (fxf/ctx-check 'm/Text me ctx)
-                  (Function.apply
-                    (.-new m/Text)
-                    [(fx-render ctx
-                       (tiltontec.flutter-mx.core/fx-resolve me ctx
-                         (first (tiltontec.matrix.api/mkids me))))]
-                    (fx-props-resolved me ctx fx-props))))))
+  (konly-p0-stateless m/Text))
 
 #_#_
 (defn make-fx-apply [fx-props mx-props kids fx-gen]
