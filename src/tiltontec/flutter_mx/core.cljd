@@ -43,12 +43,12 @@
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
    ;(dp :resolving prop (minfo me) widget-value)
-   (wtrx [0 1000 :RESO prop (minfo me)]
+   (wtrx [0 1000 :RESO prop (minfo me) widget-value]
      (let [resolved
            (cond
              (nil? widget-value)
              (do
-               (dpx :fx-res-nil!! prop)
+               (dp :fx-res-nil!! prop (minfo me))
                nil)
 
              (dart/is? widget-value CBAsIs)
@@ -451,18 +451,31 @@
       [(fx-render-nth-kid me ctx 0)]
       (tiltontec.flutter-mx.core/fx-props-resolved me ctx fx-props))))
 
-
-
 (deftag-fn material-app m/MaterialApp fx-gen-k0>home-stateful)
 (defn fx-gen-k0>home-stateful [me ctx fx-props new-fn]
   (stateful-gen me ctx
     (fn [me ctx]
-      (let [k0 (tiltontec.flutter-mx.core/fx-resolve me ctx
+      (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve me ctx
                    (first (tiltontec.matrix.api/mkids me)))]
+        (dp :home-stateful-gen-sees-k0 (minfo k0))
         (Function.apply new-fn []
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol "home")
             k0))))))
+
+(defn stateful-gen [me ctx gen-fn]
+  (reify :extends (m/StatefulWidget
+                    .key (tiltontec.flutter-mx.core/fx-resolve me ctx
+                           (tiltontec.matrix.api/mget? me :key)))
+    (createState [_]
+      (reify :extends w/State
+        (^void initState [this]
+          (tiltontec.flutter-mx.factory/record-fx$state me this))
+        (build [_ ctx]
+          (dp :stateful-gen-build-entry (minfo me))
+          (tiltontec.flutter-mx.factory/ctx-check me ctx)
+          (fxf/with-flutter-ref
+            (gen-fn me ctx)))))))
 
 (deftag-fn scaffold m/Scaffold fx-gen-k0>body-stateful)
 (defn fx-gen-k0>body-stateful [me ctx fx-props new-fn]
@@ -470,7 +483,7 @@
     (fn [me ctx]
       (let [k0 (tiltontec.flutter-mx.core/fx-resolve me ctx
                    (first (tiltontec.matrix.api/mkids me)))]
-        (Function.apply m/Scaffold.new []
+        (Function.apply new-fn []
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol "body")
             k0))))))
@@ -511,7 +524,7 @@
           (tiltontec.matrix.api/cFkids ~home))))
 
 
-
+#_
 (deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
 
 ;(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
