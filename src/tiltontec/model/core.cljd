@@ -481,7 +481,8 @@
   `(binding [*md-parent* ~'me]
      (chk *md-parent*)
      ;;(dp :bingo-par (atom? *md-parent*))
-     (doall (remove nil? (flatten (list ~@tree))))))
+     (doall (map tiltontec.flutter-mx.core/fx-resolve
+              (remove nil? (flatten (list ~@tree)))))))
 
 (defmacro cFkids [& tree]
   `(cF (the-kids ~@tree)))

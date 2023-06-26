@@ -2,57 +2,66 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* cFkids] :as mx]
+    [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* cFkids minfo] :as mx]
     [tiltontec.flutter-mx.core :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
              center column text sized-box]]))
 
-(defn make-app []
+(defn make-app-factory []
   (material-app
     {:title "Flutter/MX Counter Demo"
+     :color m.Colors/cyan
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
-    (fx/text
-      {:style (p/TextStyle
-                .color m.Colors/blue
-                .fontSize 24)
-       #_ (cF (p/TextStyle
-                    .color m.Colors/blue
-                    .fontSize 24))
-       #_
-       (in-my-context [me ctx]
-                (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-      {:name  :z-counter
-       :value (cI (rand-int 99999))}
-      (cF (dp :seeking-my-val!!!!!! )
-          (str (mx/my-value))))
-    #_
     (fx/scaffold
-      {:appBar
-       (app-bar
-         {:title (m/Text "Flutter/MX Counter")})
-       :floatingActionButton
-       (cF (floating-action-button
-             {:onPressed (as-dart-callback []
-                           (mswap! (fm* :z-counter) :value inc))
-              :tooltip   "Increment"}
-             (m/Icon m.Icons/add .color m.Colors/black)))}
-      (center
-        (column {:mainAxisAlignment m.MainAxisAlignment/center}
-          (fx/text {:style (p/TextStyle .color m.Colors/black
-                             .fontSize 18.0)}
-            "You clicked (+) so many times:")
-          (fx/sized-box {:height 16.0})
-          (fx/text
-            {:style (do ;; (prn :comping-style!!!!!!!!!!!)
-                        (in-my-context [me ctx]
+      {:appBar (app-bar {:title (m/Text "Flutter/MX Counter")})}
+      )
+    #_(fx/scaffold
+        {:appBar
+         (app-bar
+           {:title (m/Text "Flutter/MX Counter")})}
+        (fx/text
+          {:style (p/TextStyle
+                    .color m.Colors/blue
+                    .fontSize 24)
+           #_(cF (p/TextStyle
+                   .color m.Colors/blue
+                   .fontSize 24))
+           #_(in-my-context [me ctx]
+               (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+          {:name  :z-counter
+           :value (cI (rand-int 99999))}
+          (fx/->CBFactory
+            (fn [& [me]]
+              (dp :text-kid-factory-called-par!!! (minfo me))
+              (str (mx/my-value))))))))
+
+#_(fx/scaffold
+    {:appBar
+     (app-bar
+       {:title (m/Text "Flutter/MX Counter")})
+     :floatingActionButton
+     (cF (floating-action-button
+           {:onPressed (as-dart-callback []
+                         (mswap! (fm* :z-counter) :value inc))
+            :tooltip   "Increment"}
+           (m/Icon m.Icons/add .color m.Colors/black)))}
+    (center
+      (column {:mainAxisAlignment m.MainAxisAlignment/center}
+        (fx/text {:style (p/TextStyle .color m.Colors/black
+                           .fontSize 18.0)}
+          "You clicked (+) so many times:")
+        (fx/sized-box {:height 16.0})
+        (fx/text
+          {:style (do                                       ;; (prn :comping-style!!!!!!!!!!!)
+                    (in-my-context [me ctx]
                       (.-headline3 (.-textTheme (m.Theme/of ctx)))))}
-            "boom")
-          (fx/text
-            {:style (in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-            {:name  :z-counter
-             :value (cI (rand-int 99999))}
-            (str (mx/my-value))))))))
+          "boom")
+        (fx/text
+          {:style (in-my-context [me ctx]
+                    (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+          {:name  :z-counter
+           :value (cI (rand-int 99999))}
+          (str (mx/my-value))))))
 
 
