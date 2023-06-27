@@ -209,7 +209,7 @@
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless container m/Container)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless card m/Card)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless padding m/Padding)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless center m/Center)
+
 (deftag tiltontec.flutter-mx.factory/k1-child-stateless place-holder w/PlaceHolder)
 
 (defmacro deftagnokids [factory mx-name fx-class]
@@ -486,6 +486,19 @@
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol "body")
             k0))))))
+
+;; (deftag tiltontec.flutter-mx.factory/k1-child-stateless center m/Center)
+
+(deftag-fn center m/Center fx-gen-k0>child-stateless)
+(defn fx-gen-k0>child-stateless [me ctx fx-props new-fn]
+  (tiltontec.flutter-mx.factory/ctx-check me ctx)
+  (tiltontec.flutter-mx.factory/with-flutter-ref
+    (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
+               (first (tiltontec.matrix.api/mkids me)))]
+      (Function.apply new-fn []
+        (assoc (fx-props-resolved me ctx fx-props)
+          (Symbol "child")
+          k0)))))
 
 #_(deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
 #_(defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]
