@@ -5,7 +5,7 @@
     [tiltontec.matrix.foundation :as mxf]
     [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* cFkids minfo] :as mx]
     [tiltontec.flutter-mx.core :as fx
-     :refer [as-dart-callback in-my-context
+     :refer [as-dart-callback in-my-context as-content
              material-app scaffold app-bar floating-action-button
              center column text sized-box]]))
 
@@ -34,9 +34,5 @@
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
-            (mxf/->CBFactory
-              (fn [& [me]]
-                ;(dp :text-kid-factory-called-par!!! (minfo me))
-                (str (mx/my-value))))))))))
-
-
+            (as-content
+              (str (mx/my-value)))))))))

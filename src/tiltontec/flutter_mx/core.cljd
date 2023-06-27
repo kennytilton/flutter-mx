@@ -391,6 +391,11 @@
 
 ;;; --- nextgen ----------------------------------------
 
+(defmacro as-content [form]
+  `(mxf/->CBFactory
+     (fn [& [~'me]]
+       (str (mx/my-value)))))
+
 (defn make-fx-dart-widget
   ([fx-props mx-props] (make-fx-dart-widget fx-props mx-props nil))
   ([fx-props mx-props kids]
