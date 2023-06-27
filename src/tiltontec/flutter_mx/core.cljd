@@ -29,90 +29,83 @@
   ;; used where app needs to see the Flutter context to decide a value
   :extends mxf/MXImplementer)
 
-(deftype CBFactory [value]
-  ;; tells fx-render to call the value as a function with an optional parent.
-  ;; this allows us to defer evaluation without heavy macrology.
-  :extends mxf/MXImplementer)
-
 (defn fx-get-resolved [me prop ctx]
   (fx-resolve prop me ctx
     (mget me prop)))
 
-(defn fx-resolve
-  ([me ctx widget-value]
-   (fx-resolve :anon me ctx widget-value))
-  ([prop me ctx widget-value]
-   ;(dp :resolving prop (minfo me) widget-value)
-   (wtrx [0 1000 :RESO prop (minfo me) widget-value]
-     (let [resolved
-           (cond
-             (nil? widget-value)
-             (do
-               (dp :fx-res-nil!! prop (minfo me))
-               nil)
+(defn fx-resolve [prop me ctx widget-value]
+  (dp :resolving prop me widget-value)
+  (dp :resolving prop (minfo me) widget-value)
+  (wtrx [0 1000 :RESO prop (minfo me) widget-value]
+    (let [resolved
+          (cond
+            (nil? widget-value)
+            (do
+              (dp :fx-res-nil!! prop (minfo me))
+              nil)
 
-             (dart/is? widget-value CBAsIs)
-             (do
-               (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
-               (.-value ^CBAsIs widget-value))
+            (dart/is? widget-value CBAsIs)
+            (do
+              (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
+              (.-value ^CBAsIs widget-value))
 
-             (dart/is? widget-value CBFactory)
-             ;; we can defer widget construction/eval until parent "me" is in hand,
-             ;; instead of via macrology. The alternative has been for, say, `column` to
-             ;; be a macro, so its children do not evaluate before the column even
-             ;; exists. MX relies on children knowing their parent at birth.
-             (do
-               (dp :fx-resolving-Factory!!!!!!! prop (minfo me) widget-value)
-               ((.-value ^CBFactory widget-value) me))
+            (dart/is? widget-value mxf/CBFactory)
+            ;; we can defer widget construction/eval until parent "me" is in hand,
+            ;; instead of via macrology. The alternative has been for, say, `column` to
+            ;; be a macro, so its children do not evaluate before the column even
+            ;; exists. MX relies on children knowing their parent at birth.
+            (do
+              (dp :fx-resolving-Factory!!!!!!! prop (minfo me) widget-value)
+              ((.-value ^mxf/CBFactory widget-value) me))
 
-             (dart/is? widget-value CBToResolve)
-             ;; in the past, a naked function given, say, to onPress would be
-             ;; called like (naked-fn me ctx), but with v2 it simply gets passed
-             ;; as the onPress, so we have to do call a CBToResolve value here and
-             ;; then give that recursively to fx-resolve. So if the (cb-val me ctx) below
-             ;; returns a function, /that/ will be passed on to Flutter as is. ie CBToResolve
-             ;; exists so we can use params me and ctx to decide the handler to be given to Flutter.
-             (let [val ^CBToResolve widget-value]
-               (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
-               (let [cb-val (.-value val)]                  ;; ^CBToResolve widget-value)]
-                 (dpx :CBToResolveyields cb-val)
-                 (let [v (cb-val me ctx)]
-                   (dpx :recuring-unwrapped-fn?-return-val v)
-                   (fx-resolve prop me ctx v))
-                 #_(fx-resolve prop me ctx cb-val)))
+            (dart/is? widget-value CBToResolve)
+            ;; in the past, a naked function given, say, to onPress would be
+            ;; called like (naked-fn me ctx), but with v2 it simply gets passed
+            ;; as the onPress, so we have to do call a CBToResolve value here and
+            ;; then give that recursively to fx-resolve. So if the (cb-val me ctx) below
+            ;; returns a function, /that/ will be passed on to Flutter as is. ie CBToResolve
+            ;; exists so we can use params me and ctx to decide the handler to be given to Flutter.
+            (let [val ^CBToResolve widget-value]
+              (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
+              (let [cb-val (.-value val)]                   ;; ^CBToResolve widget-value)]
+                (dpx :CBToResolveyields cb-val)
+                (let [v (cb-val me ctx)]
+                  (dpx :recuring-unwrapped-fn?-return-val v)
+                  (fx-resolve prop me ctx v))
+                #_(fx-resolve prop me ctx cb-val)))
 
-             (dart/is? widget-value m/Widget)
-             (do
-               (dpx :widget-value-is-widget widget-value)
-               widget-value)
+            (dart/is? widget-value m/Widget)
+            (do
+              (dpx :widget-value-is-widget widget-value)
+              widget-value)
 
-             (fn? widget-value)
-             (do
-               (dpx :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
-               widget-value)
+            (fn? widget-value)
+            (do
+              (dpx :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
+              widget-value)
 
-             (cty/c-ref? widget-value)
-             (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
+            (cty/c-ref? widget-value)
+            (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
 
-             (mref? widget-value)
-             (do
-               (dpx :fxres-sees-mref (minfo widget-value))
-               (let [fx (fx-render ctx widget-value)]
-                 (dpx :rfx-mdref-yielded-flutter fx)
-                 fx))
+            (mref? widget-value)
+            (do
+              (dpx :fxres-sees-mref (minfo widget-value))
+              (let [fx (fx-render ctx widget-value)]
+                (dpx :rfx-mdref-yielded-flutter fx)
+                fx))
 
-             (vector? widget-value)
-             (do (dp :fxres-vector!!! prop (count widget-value))
-                 (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
-                   (dpx :vec-rez rzd)
-                   rzd))
+            (vector? widget-value)
+            (do (dp :fxres-vector!!! prop (count widget-value))
+                (let [rzd (doall (map (partial fx-resolve prop me ctx) widget-value))]
+                  (dpx :vec-rez rzd)
+                  rzd))
 
-             :default (do (dp :fxres-fall-thru-passthru prop (minfo me) widget-value
-                            (when (atom? widget-value)
-                              (deref widget-value)))
-                          widget-value))]
-       ;;(dp :resolved prop resolved)
-       resolved))))
+            :default (do (dp :fxres-fall-thru-passthru prop (minfo me) widget-value
+                           (when (atom? widget-value)
+                             (deref widget-value)))
+                         widget-value))]
+      ;;(dp :resolved prop resolved)
+      resolved)))
 
 (defn ctx-page-push
   ([ctx fx-page-def]
@@ -142,12 +135,12 @@
                        (dp :render-sees-not-mref?-passing-thru fx))
                    fx))
       :else (let [gen (mget fx :fx-gen)]
-              (dpx :render-sees-gen!! gen)
+              (dp :render-sees-gen!! gen)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
               ;; nope (fxf/record-fx$ctx fx ctx)
               (let [g (gen fx ctx)]
-                (dpx :render-genned!!! g)
+                (dp :render-genned!!! g)
                 (rmap-meta-set! [:fx-dom fx] g)
                 g)))))
 
@@ -416,12 +409,13 @@
 
 (defn fx-render-nth-kid [me ctx kid-n]
   (tiltontec.flutter-mx.core/fx-render ctx
-    (tiltontec.flutter-mx.core/fx-resolve me ctx
+    (tiltontec.flutter-mx.core/fx-resolve :kidn me ctx
       (nth (tiltontec.matrix.api/mkids me) 0))))
 
 (defmacro deftag-fn [mx-name dart-class flutter-variant]
   `(defn ~mx-name [& vargs#]
-     (->CBFactory
+     (dp :deftag-fn-entry!! '~mx-name)
+     (mxf/->CBFactory
        (fn [& [par#]]
          (dp :factory-called-par!!! (minfo par#))
          (let [[fx-props# mx-props# & kids#]
@@ -455,77 +449,81 @@
 (defn fx-gen-k0>home-stateful [me ctx fx-props new-fn]
   (stateful-gen me ctx
     (fn [me ctx]
-      (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve me ctx
-                   (first (tiltontec.matrix.api/mkids me)))]
+      (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
+                      (first (tiltontec.matrix.api/mkids me)))]
         (dp :home-stateful-gen-sees-k0 (minfo k0))
+        (prn :home-stateful-gen-sees-k0 (minfo k0))
         (Function.apply new-fn []
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol "home")
             k0))))))
 
 (defn stateful-gen [me ctx gen-fn]
+  (dp :stateful-gen-entry (minfo me))
   (reify :extends (m/StatefulWidget
-                    .key (tiltontec.flutter-mx.core/fx-resolve me ctx
+                    .key (tiltontec.flutter-mx.core/fx-resolve :key me ctx
                            (tiltontec.matrix.api/mget? me :key)))
     (createState [_]
       (reify :extends w/State
         (^void initState [this]
           (tiltontec.flutter-mx.factory/record-fx$state me this))
         (build [_ ctx]
-          (dp :stateful-gen-build-entry (minfo me))
+          (dp :stateful-gen-build-entry)
+          (prn :stateful-gen-build-entry)
           (tiltontec.flutter-mx.factory/ctx-check me ctx)
-          (fxf/with-flutter-ref
-            (gen-fn me ctx)))))))
+          (let [built (fxf/with-flutter-ref
+                        (gen-fn me ctx))]
+            (dp :built!!! built)
+            built))))))
 
 (deftag-fn scaffold m/Scaffold fx-gen-k0>body-stateful)
 (defn fx-gen-k0>body-stateful [me ctx fx-props new-fn]
   (stateful-gen me ctx
     (fn [me ctx]
-      (let [k0 (tiltontec.flutter-mx.core/fx-resolve me ctx
-                   (first (tiltontec.matrix.api/mkids me)))]
+      (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
+                 (first (tiltontec.matrix.api/mkids me)))]
         (Function.apply new-fn []
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol "body")
             k0))))))
 
-#_ (deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
-#_ (defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]
-     (let []
-       ;(chk (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
-       ;(chk (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
-       `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
-          ~fx-props
-          (assoc ~mx-props
-            :fx-class (quote ~fx-class)
-            :fx-gen (fn fgen [~'me ctx]
-                      (reify :extends (m/StatefulWidget
-                                        .key (tiltontec.flutter-mx.core/fx-resolve ~'me ctx
-                                               (tiltontec.matrix.api/mget? ~'me :key)))
-                        (~'createState [_#]
-                          (reify :extends w/State
-                            (^void ~'initState [this]
-                              ;(.initState ~'^super this)
-                              (tiltontec.flutter-mx.factory/record-fx$state ~'me this)
-                              (when-let [init (tiltontec.matrix.api/mget? ~'me :initState)]
-                                ;; this is where widgets can build controllers who vsync
-                                (init this ~'me)))
-                            (~'build [_# ctx]
-                              (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
-                              (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 ~'me ctx
-                                           (first (tiltontec.matrix.api/mkids ~'me)))]
-                                (with-flutter-ref
-                                  (~fx-class
-                                    .home bod#
-                                    ~@(let [kvs (for [[k# _#] fx-props]
-                                                  [(symbol (str "." (name k#))) ;;k#
-                                                   `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
-                                                      (tiltontec.matrix.api/mget ~'me ~k#))])]
-                                        (apply concat kvs)))))))))))
-          (tiltontec.matrix.api/cFkids ~home))))
+#_(deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
+#_(defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]
+    (let []
+      ;(chk (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
+      ;(chk (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
+      `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+         ~fx-props
+         (assoc ~mx-props
+           :fx-class (quote ~fx-class)
+           :fx-gen (fn fgen [~'me ctx]
+                     (reify :extends (m/StatefulWidget
+                                       .key (tiltontec.flutter-mx.core/fx-resolve ~'me ctx
+                                              (tiltontec.matrix.api/mget? ~'me :key)))
+                       (~'createState [_#]
+                         (reify :extends w/State
+                           (^void ~'initState [this]
+                             ;(.initState ~'^super this)
+                             (tiltontec.flutter-mx.factory/record-fx$state ~'me this)
+                             (when-let [init (tiltontec.matrix.api/mget? ~'me :initState)]
+                               ;; this is where widgets can build controllers who vsync
+                               (init this ~'me)))
+                           (~'build [_# ctx]
+                             (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
+                             (let [bod# (tiltontec.flutter-mx.core/fx-resolve :kid1 ~'me ctx
+                                          (first (tiltontec.matrix.api/mkids ~'me)))]
+                               (with-flutter-ref
+                                 (~fx-class
+                                   .home bod#
+                                   ~@(let [kvs (for [[k# _#] fx-props]
+                                                 [(symbol (str "." (name k#))) ;;k#
+                                                  `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
+                                                     (tiltontec.matrix.api/mget ~'me ~k#))])]
+                                       (apply concat kvs)))))))))))
+         (tiltontec.matrix.api/cFkids ~home))))
 
 
-#_
-(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
+#_(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
 
 ;(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
 
@@ -540,12 +538,11 @@
 
 
 
-#_
-(deftag-scaff scaffold tiltontec.flutter-mx.core/_scaffold-ex)
+#_(deftag-scaff scaffold tiltontec.flutter-mx.core/_scaffold-ex)
 
 (defn stateful-gen [me ctx gen-fn]
   (reify :extends (m/StatefulWidget
-                    .key (tiltontec.flutter-mx.core/fx-resolve me ctx
+                    .key (tiltontec.flutter-mx.core/fx-resolve :key me ctx
                            (tiltontec.matrix.api/mget? me :key)))
     (createState [_]
       (reify :extends w/State
@@ -566,7 +563,7 @@
       :fx-gen (fn fgen [me ctx]
                 (stateful-gen me ctx
                   (fn [me ctx]
-                    (let [body (tiltontec.flutter-mx.core/fx-resolve me ctx
+                    (let [body (tiltontec.flutter-mx.core/fx-resolve :key me ctx
                                  (first (tiltontec.matrix.api/mkids me)))]
                       (Function.apply m/Scaffold.new []
                         (assoc (fx-props-resolved me ctx fx-props)

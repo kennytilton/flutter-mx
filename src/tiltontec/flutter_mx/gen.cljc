@@ -25,7 +25,7 @@
                  (~'Function.apply
                    (.-new ~mclass)
                    [(tiltontec.flutter-mx.core/fx-render ctx#
-                      (tiltontec.flutter-mx.core/fx-resolve me# ctx#
+                      (tiltontec.flutter-mx.core/fx-resolve :k0 me# ctx#
                         (first (tiltontec.matrix.api/mkids me#))))]
                    (tiltontec.flutter-mx.core/fx-props-resolved me# ctx# ~'~fx-props))))))
 

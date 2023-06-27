@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [tiltontec.matrix.base
      :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
-    [tiltontec.matrix.foundation :refer [mx-type PObserver observe]]
+    [tiltontec.matrix.foundation :refer [mx-type PObserver observe] :as mxf]
     [tiltontec.matrix.util
      :refer [difference atom? rmap-set! rmap-meta-set! pln]]
 
@@ -481,7 +481,10 @@
   `(binding [*md-parent* ~'me]
      (chk *md-parent*)
      ;;(dp :bingo-par (atom? *md-parent*))
-     (doall (map tiltontec.flutter-mx.core/fx-resolve
+     (doall (map (fn [kid#]
+                   (if (dart/is? kid# mxf/CBFactory)
+                     ((.-value ^mxf/CBFactory kid#) *md-parent*)
+                     kid#))
               (remove nil? (flatten (list ~@tree)))))))
 
 (defmacro cFkids [& tree]

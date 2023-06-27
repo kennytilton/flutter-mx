@@ -10,6 +10,7 @@
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx]]
     [tiltontec.matrix.api :refer [minfo] :as mx]
+    [tiltontec.matrix.foundation :as mxf]
     [tiltontec.flutter-mx.core :as fx]
     [tiltontec.example.x01-counter :as counter]
     ;; [tiltontec.example.x029a-layout-kid-builder :as x029k]
@@ -21,12 +22,26 @@
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;; (fxk/fmx-debugger-set! sample-debugger)
 
+  (let [md (fx/material-app
+             {:title "Flutter/MX Counter Demo"
+              :color m.Colors/cyan
+              :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+             {:name :mat-app}
+             (fx/scaffold
+               {:appBar (m/AppBar .title (m/Text "Flutter/MX Counter"))}))]
+    (dp :md (minfo md))
+    (let [md ((.-value ^mxf/CBFactory md))]
+      (dp :fctmakes (minfo md))
+      (let [r (fx/fx-render nil md)]
+        (dp :rendered r))))
+
+  
   (wtrx [0 999 :run-app]
     (fx/run-app
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example. <<<<<<< Updated upstream
         ;; ------ VVVVV --------------------------------------------
-        ((.-value ^fx/CBFactory (counter/make-app-factory)))
+        ((.-value ^mxf/CBFactory (counter/make-app-factory)))
         #_ ((counter/make-app-factory) nil))))
 
   ;; (testing/run-tests)
