@@ -97,7 +97,7 @@
             (vector? widget-value)
             (do (dp :fxres-vector!!! prop (count widget-value))
                 (let [rzd (doall (map (partial fx-resolve prop me ctx) widget-value))]
-                  (dpx :vec-rez rzd)
+                  (dp :vec-rez rzd)
                   rzd))
 
             :default (do (dp :fxres-fall-thru-passthru prop (minfo me) widget-value
@@ -311,7 +311,6 @@
   navigation-rail-destination w/NavigationRailDestination)
 
 (deftag tiltontec.flutter-mx.factory/children-stateless stack m/Stack)
-(deftag tiltontec.flutter-mx.factory/children-stateless column m/Column)
 
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless wrap w/Wrap :children)
 (deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
@@ -459,7 +458,7 @@
             k0))))))
 
 (defn stateful-gen [me ctx gen-fn]
-  (dp :stateful-gen-entry (minfo me))
+  ;;(dp :stateful-gen-entry (minfo me))
   (reify :extends (m/StatefulWidget
                     .key (tiltontec.flutter-mx.core/fx-resolve :key me ctx
                            (tiltontec.matrix.api/mget? me :key)))
@@ -468,12 +467,11 @@
         (^void initState [this]
           (tiltontec.flutter-mx.factory/record-fx$state me this))
         (build [_ ctx]
-          (dp :stateful-gen-build-entry)
-          (prn :stateful-gen-build-entry)
+          ;;(dp :stateful-gen-build-entry)
           (tiltontec.flutter-mx.factory/ctx-check me ctx)
           (let [built (fxf/with-flutter-ref
                         (gen-fn me ctx))]
-            (dp :built!!! built)
+            ;;(dp :built!!! built)
             built))))))
 
 (deftag-fn scaffold m/Scaffold fx-gen-k0>body-stateful)
@@ -499,6 +497,24 @@
         (assoc (fx-props-resolved me ctx fx-props)
           (Symbol "child")
           k0)))))
+
+;; (deftag tiltontec.flutter-mx.factory/children-stateless column m/Column)
+
+
+(deftag-fn column m/Column fx-gen-ks>children-stateless)
+(defn fx-gen-ks>children-stateless [me ctx fx-props new-fn]
+  (tiltontec.flutter-mx.factory/ctx-check me ctx)
+  (tiltontec.flutter-mx.factory/with-flutter-ref
+    (let [^#/(List Widget) children (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
+                                      (tiltontec.matrix.api/mkids me))]
+      (dp :col-kids!!!!!!!!!!!!! children)
+      (Function.apply new-fn []
+        (assoc (fx-props-resolved me ctx fx-props)
+          (Symbol "children")
+          children)))))
+
+; (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
+;                                   (tiltontec.matrix.api/mkids ~'me))
 
 #_(deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
 #_(defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]

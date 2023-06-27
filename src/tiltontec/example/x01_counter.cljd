@@ -28,15 +28,16 @@
                                     :tooltip   "Increment"}
                                    (m/Icon m.Icons/add .color m.Colors/black)))}
       (fx/center
-        (fx/text
-          {:style (in-my-context [me ctx]
-                    (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-          {:name  :z-counter
-           :value (cI (rand-int 99999))}
-          (mxf/->CBFactory
-            (fn [& [me]]
-              (dp :text-kid-factory-called-par!!! (minfo me))
-              (str (mx/my-value)))))))))
+        (fx/column
+          (fx/text
+            {:style (in-my-context [me ctx]
+                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+            {:name  :z-counter
+             :value (cI (rand-int 99999))}
+            (mxf/->CBFactory
+              (fn [& [me]]
+                (dp :text-kid-factory-called-par!!! (minfo me))
+                (str (mx/my-value))))))))))
 
 #_(fx/scaffold
     {:appBar
