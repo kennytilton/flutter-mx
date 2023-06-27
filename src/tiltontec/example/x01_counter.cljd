@@ -7,14 +7,13 @@
     [tiltontec.flutter-mx.core :as fx
      :refer [as-dart-callback in-my-context as-content
              material-app scaffold app-bar floating-action-button
-             center column text sized-box]]))
+             hero center column text sized-box]]))
 
 (defn make-app-factory []
   (material-app
     {:title "Flutter/MX Counter Demo"
      :color m.Colors/cyan
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
-    {:name :mat-app}
     (scaffold
       {:appBar               (app-bar {:title (m/Text "Flutter/MX Counter")})
        :floatingActionButton (cF (floating-action-button
@@ -25,6 +24,10 @@
       (center
         (column
           {:mainAxisAlignment m.MainAxisAlignment/center}
+          (hero {:tag "imageHero"}
+            (m/Image .image (m/AssetImage "image/kernighan.jpeg")
+              .height 512))
+          (sized-box {:height 16.0})
           (text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
             "You clicked (+) so many times:")
