@@ -34,14 +34,12 @@
     (mget me prop)))
 
 (defn fx-resolve [prop me ctx widget-value]
-  (dp :resolving prop me widget-value)
-  (dp :resolving prop (minfo me) widget-value)
-  (wtrx [0 1000 :RESO prop (minfo me) widget-value]
+  (wtrx [0 1000 nil :RESO prop (minfo me) widget-value]
     (let [resolved
           (cond
             (nil? widget-value)
             (do
-              (dp :fx-res-nil!! prop (minfo me))
+              (dpx :fx-res-nil!! prop (minfo me))
               nil)
 
             (dart/is? widget-value CBAsIs)
@@ -95,12 +93,12 @@
                 fx))
 
             (vector? widget-value)
-            (do (dp :fxres-vector!!! prop (count widget-value))
+            (do (dpx :fxres-vector!!! prop (count widget-value))
                 (let [rzd (doall (map (partial fx-resolve prop me ctx) widget-value))]
                   (dp :vec-rez rzd)
                   rzd))
 
-            :default (do (dp :fxres-fall-thru-passthru prop (minfo me) widget-value
+            :default (do (dpx :fxres-fall-thru-passthru prop (minfo me) widget-value
                            (when (atom? widget-value)
                              (deref widget-value)))
                          widget-value))]
@@ -124,7 +122,7 @@
   (.pop (-> ctx m.Navigator/of)))
 
 (defn fx-render [ctx fx]
-  (wtrx [0 999 :render-entry (minfo fx)]
+  (wtrx [0 999 nil :render-entry (minfo fx)]
     (cond
       (not (mref? fx))
       (cond
@@ -135,12 +133,12 @@
                        (dp :render-sees-not-mref?-passing-thru fx))
                    fx))
       :else (let [gen (mget fx :fx-gen)]
-              (dp :render-sees-gen!! gen)
+              (dpx :render-sees-gen!! gen)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
               ;; nope (fxf/record-fx$ctx fx ctx)
               (let [g (gen fx ctx)]
-                (dp :render-genned!!! g)
+                (dpx :render-genned!!! g)
                 (rmap-meta-set! [:fx-dom fx] g)
                 g)))))
 
@@ -389,7 +387,7 @@
     io/Platform.isFuchsia :fuchsia
     :else :unknown))
 
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
+
 
 ;;; --- nextgen ----------------------------------------
 
@@ -413,24 +411,23 @@
 
 (defmacro deftag-fn [mx-name dart-class flutter-variant]
   `(defn ~mx-name [& vargs#]
-     (dp :deftag-fn-entry!! '~mx-name)
+     (dpx :deftag-fn-entry!! '~mx-name)
      (mxf/->CBFactory
        (fn [& [par#]]
-         (dp :factory-called-par!!! (minfo par#))
+         (dpx :factory-called-par!!! (minfo par#))
          (let [[fx-props# mx-props# & kids#]
                (cond (nil? vargs#) nil
                  (not (map? (first vargs#))) (list* nil nil vargs#)
                  (map? (second vargs#)) vargs#
                  :else (list* (first vargs#) nil (rest vargs#)))]
            (binding [tiltontec.model.core/*md-parent* par#]
-             (dp :tag-fn-sees-mx-props!!!!!!!!!!! mx-props#)
              (let [px (tiltontec.flutter-mx.core/make-fx-dart-widget
                         fx-props#
                         (assoc mx-props#
                           :kids (tiltontec.matrix.api/cFkids kids#)
                           :fx-gen (fn [me# ctx#]
                                     (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))]
-               (dp :TAG-FN-made-proxy (minfo px))
+               (dpx :TAG-FN-made-proxy (minfo px))
                px)))))))
 
 ; --- old school
@@ -500,18 +497,18 @@
 
 ;; (deftag tiltontec.flutter-mx.factory/children-stateless column m/Column)
 
-
 (deftag-fn column m/Column fx-gen-ks>children-stateless)
 (defn fx-gen-ks>children-stateless [me ctx fx-props new-fn]
   (tiltontec.flutter-mx.factory/ctx-check me ctx)
   (tiltontec.flutter-mx.factory/with-flutter-ref
     (let [^#/(List Widget) children (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
                                       (tiltontec.matrix.api/mkids me))]
-      (dp :col-kids!!!!!!!!!!!!! children)
       (Function.apply new-fn []
         (assoc (fx-props-resolved me ctx fx-props)
-          (Symbol "children")
-          children)))))
+          (Symbol "children") children)))))
+
+;; (deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
+(deftag-fn sized-box m/SizedBox fx-gen-k0>child-stateless)
 
 ; (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
 ;                                   (tiltontec.matrix.api/mkids ~'me))
