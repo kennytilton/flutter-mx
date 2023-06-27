@@ -2,7 +2,7 @@
   (:require
     [cljd.string :as str]
     ["package:flutter/foundation.dart" :as fd]
-    [tiltontec.matrix.foundation :refer [MXImplementer PObserver mx-type]]))
+    [tiltontec.matrix.foundation :refer [MXImplementer CBFactory PObserver mx-type]]))
 
 ;; --- assertions ---------------------------
 (defn flutter-release-mode []
@@ -68,6 +68,7 @@
   ([md verbose]
    (cond
      (nil? md) :null-md
+     (dart/is? md mxf/CBFactory) :factory
      (not (atom? md)) :not-atom-md
      (not (mref? md)) (do (dp :atom-not-md-c @md)
                           :atom-not-md-c)

@@ -2,6 +2,7 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    [tiltontec.matrix.foundation :as mxf]
     [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* cFkids minfo] :as mx]
     [tiltontec.flutter-mx.core :as fx
      :refer [as-dart-callback in-my-context
@@ -14,26 +15,21 @@
      :color m.Colors/cyan
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     {:name :mat-app}
+    #_ ;; ok
     (scaffold
       {:appBar #_ (m/AppBar .title (m/Text "Flutter/MX Counter"))
        (app-bar {:title (m/Text "Flutter/MX Counter 2")})}
       )
-    #_(fx/scaffold
+    (fx/scaffold
         {:appBar
          (app-bar
            {:title (m/Text "Flutter/MX Counter")})}
         (fx/text
-          {:style (p/TextStyle
-                    .color m.Colors/blue
-                    .fontSize 24)
-           #_(cF (p/TextStyle
-                   .color m.Colors/blue
-                   .fontSize 24))
-           #_(in-my-context [me ctx]
-               (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+          {:style (in-my-context [me ctx]
+                    (.-headline4 (.-textTheme (m.Theme/of ctx))))}
           {:name  :z-counter
            :value (cI (rand-int 99999))}
-          (fx/->CBFactory
+          (mxf/->CBFactory
             (fn [& [me]]
               (dp :text-kid-factory-called-par!!! (minfo me))
               (str (mx/my-value))))))))
