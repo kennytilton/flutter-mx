@@ -24,11 +24,7 @@
                       (fn [^async/Timer tmr]
                         (mset! me :elapsed (.-tick tmr)))))}
       (fx/scaffold
-        {:appBar (cF (let [ab (fx/app-bar {:title (fx/text title)})]
-                       (dp :AB!!!!!!!!! ab (minfo ab))
-                       (m/AppBar .title (m/Text "OK title"))))
-         #_ (cF (fx/fx-factory-yield
-                       (fx/app-bar {:title (fx/text title)})))}
+        {:appBar (fx/app-bar {:title (fx/text title)})}
         (fx/center
           (fx/layout-kid-builder
             ;; for now, we must use the hard-coded :box-constraints to get that build parameter.
@@ -55,7 +51,8 @@
                                      (> (mget me :font-size) 25) m.Colors/red
                                      :else m.Colors/cyan))}
                   (str "boom" (rand-int 100))
-                  #_(str (mget (fasc :the-app) :msg)
+                  #_ (fx/as-content
+                    (str (mget (fasc :the-app) :msg)
                              "in font size "
-                             (/ (int (* 10 (mget me :font-size))) 10)))))))))))
+                             (/ (int (* 10 (mget me :font-size))) 10))))))))))))
 
