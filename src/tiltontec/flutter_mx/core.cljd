@@ -384,6 +384,20 @@
           (fxf/with-flutter-ref
             (gen-fn me ctx)))))))
 
+(defn stateful-ticker-gen [me ctx gen-fn]
+  (reify :extends (m/StatefulWidget
+                    .key (tiltontec.flutter-mx.core/fx-resolve :key me ctx
+                           (tiltontec.matrix.api/mget? me :key)))
+    (createState [_]
+      (reify :extends w/State
+        ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
+        (^void initState [this]
+          (tiltontec.flutter-mx.factory/record-fx$state me this))
+        (build [_ ctx]
+          (tiltontec.flutter-mx.factory/ctx-check me ctx)
+          (fxf/with-flutter-ref
+            (gen-fn me ctx)))))))
+
 (defmacro deftag-fn [mx-name dart-class flutter-variant & flutter-variant-props]
   `(defn ~mx-name [& vargs#]
      (dpx :deftag-fn-entry!! '~mx-name)
@@ -412,7 +426,6 @@
 (deftags-plus fx-gen-k0>prop-stateful {:prop :home}
   (material-app m/MaterialApp))
 
-
 (defn fx-gen-prop>p0-stateful [me ctx fx-props new-fn {:keys [prop]}]
   (dp :prop>p0-stateful-sees!!!! prop)
   (stateful-gen me ctx
@@ -439,9 +452,8 @@
           (Symbol (name prop))
           k0)))))
 
-(defn fx-gen-k0>prop-stateful [me ctx fx-props new-fn {:keys [prop]}]
-  (dp :prop-stateful-sees!!!! prop)
-  (stateful-gen me ctx
+(defn fx-gen-k0>prop-stateful [me ctx fx-props new-fn {:keys [prop ticker?]}]
+  ((if ticker? stateful-ticker-gen stateful-gen) me ctx
     (fn [me ctx]
       (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
                       (first (tiltontec.matrix.api/mkids me)))]
@@ -449,6 +461,10 @@
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol (name prop))
             k0))))))
+
+(deftag-fn ticker-mode m/TickerMode fx-gen-k0>prop-stateful
+  {:prop :child
+   :ticker? true})
 
 (deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
@@ -504,7 +520,6 @@
   (popup-menu-item m/PopupMenuItem)
   (ink! m/Ink)
   (safe-area w/SafeArea)
-  (ticker-mode w/TickerMode)
   (dismissible w/Dismissible)
   (elevated-button m/ElevatedButton)
   (default-tab-controller m/DefaultTabController)
@@ -540,7 +555,6 @@
 ;
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful safe-area w/SafeArea)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful hero m/Hero)
-;(deftag tiltontec.flutter-mx.factory/k1-child-stateful ticker-mode w/TickerMode)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless gesture-detector m/GestureDetector)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful dismissible w/Dismissible)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful elevated-button m/ElevatedButton)
