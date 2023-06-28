@@ -60,7 +60,9 @@
             ;; exists. MX relies on children knowing their parent at birth.
             (do
               (dp :fx-resolving-Factory!!!!!!! prop (minfo me) widget-value)
-              ((.-value ^mxf/CBFactory widget-value) me))
+              (let [yielded (fx-factory-yield me widget-value)]
+                (dp :fact-yields yielded (minfo yielded))
+                (fx-resolve prop me ctx yielded)))
 
             (dart/is? widget-value CBToResolve)
             ;; in the past, a naked function given, say, to onPress would be
@@ -209,7 +211,7 @@
      (let [[fx-props# mx-props#] vargs#]
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props#))))
 
-(deftagnokids tiltontec.flutter-mx.factory/childless-stateless app-bar m/AppBar)
+
 
 (deftag tiltontec.flutter-mx.factory/childless-stateless data-table m/DataTable)
 (defmacro alert-dialog [fx-props mx-props & children]
@@ -428,6 +430,27 @@
       [(fx-render-nth-kid me ctx 0)]
       (tiltontec.flutter-mx.core/fx-props-resolved me ctx fx-props))))
 
+(defn fx-gen-childless-stateless [me ctx fx-props new-fn]
+  (tiltontec.flutter-mx.factory/ctx-check me ctx)
+  (tiltontec.flutter-mx.factory/with-flutter-ref
+    (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
+               (first (tiltontec.matrix.api/mkids me)))]
+      (Function.apply new-fn [] (fx-props-resolved me ctx fx-props)))))
+
+; (deftagnokids tiltontec.flutter-mx.factory/childless-stateless app-bar m/AppBar)
+(deftags fx-gen-childless-stateless
+  (app-bar m/AppBar)
+  ;(data-table m/DataTable)
+  ;;(icon m/IconButton) todo needs :icon-prop
+  ;(icon-button m/IconButton)
+  ;(rounded-rectangle-border p/RoundedRectangleBorder)
+  ;(list-tile m/ListTile)
+  ;(layout-builder w/LayoutBuilder)
+  ;(flutter-logo m/FlutterLogo)
+  ;(navigation-rail-destination w/NavigationRailDestination) ;; todo flutter pub missing?
+  ;(bottom-navigation-bar-item w/BottomNavigationBarItem)
+  )
+
 (deftag-fn material-app m/MaterialApp fx-gen-k0>home-stateful)
 (defn fx-gen-k0>home-stateful [me ctx fx-props new-fn]
   (stateful-gen me ctx
@@ -483,6 +506,7 @@
     (fn [me ctx]
       (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
                  (first (tiltontec.matrix.api/mkids me)))]
+        (dp :scaff-body-stateful-sees-k0 (minfo k0) k0)
         (Function.apply new-fn []
           (assoc (fx-props-resolved me ctx fx-props)
             (Symbol "body")
