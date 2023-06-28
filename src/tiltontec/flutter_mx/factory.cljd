@@ -413,51 +413,55 @@
                                    (apply concat kvs))))))))))
        nil)))
 
-#_ (defmacro deftag-fn [mx-name dart-class flutter-variant]
-     `(defn ~mx-name [& vargs#]
-        (dpx :deftag-fn-entry!! '~mx-name)
-        (mxf/->CBFactory
-          (fn [& [par#]]
-            (dpx :deftag-fn-factory-called-par!!! (minfo par#))
-            (let [[fx-props# mx-props# & kids#]
-                  (cond (nil? vargs#) nil
-                    (not (map? (first vargs#))) (list* nil nil vargs#)
-                    (map? (second vargs#)) vargs#
-                    :else (list* (first vargs#) nil (rest vargs#)))]
-              (binding [tiltontec.model.core/*md-parent* par#]
-                (tiltontec.flutter-mx.core/make-fx-dart-widget
-                  fx-props#
-                  (assoc mx-props#
-                    :kids (tiltontec.matrix.api/cFkids kids#)
-                    :fx-gen (fn [me# ctx#]
-                              (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))))))))
+#_(defmacro deftag-fn [mx-name dart-class flutter-variant]
+    `(defn ~mx-name [& vargs#]
+       (dpx :deftag-fn-entry!! '~mx-name)
+       (mxf/->CBFactory
+         (fn [& [par#]]
+           (dpx :deftag-fn-factory-called-par!!! (minfo par#))
+           (let [[fx-props# mx-props# & kids#]
+                 (cond (nil? vargs#) nil
+                   (not (map? (first vargs#))) (list* nil nil vargs#)
+                   (map? (second vargs#)) vargs#
+                   :else (list* (first vargs#) nil (rest vargs#)))]
+             (binding [tiltontec.model.core/*md-parent* par#]
+               (tiltontec.flutter-mx.core/make-fx-dart-widget
+                 fx-props#
+                 (assoc mx-props#
+                   :kids (tiltontec.matrix.api/cFkids kids#)
+                   :fx-gen (fn [me# ctx#]
+                             (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))))))))
 
 (defmacro konly-for-builder-stateless [fx-class fx-props mx-props & [only-kid]]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx
-       (new tiltontec.flutter-mx.factory/FXDartWidget)
-       (assoc ~fx-props
-         :builder (tiltontec.matrix.api/cF
-                    (fx/->CBAsIs
-                      (fn [ctx box-constraints]
-                        ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
-                        ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
-                        ;; with iso?
-                        (binding [tiltontec.flutter-mx.factory/*fx-building?* true]
-                          (tiltontec.model.core/mset! ~'me :box-constraints box-constraints)) ;; ...and convert box argument to reactive input
-                        (fx/fx-render ctx (first (tiltontec.matrix.api/mkids ~'me)))))))
-       (assoc ~mx-props
-         :box-constraints (tiltontec.cell.core/cI nil)
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn ~(fx-class-sym fx-class) [~'me ctx]
-                   (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
-                   (tiltontec.flutter-mx.factory/with-flutter-ref
-                     (~fx-class
-                       ~@(let [kvs (for [k# (conj (keys fx-props) :builder)]
-                                     [(symbol (str "." (name k#)))
-                                      `(do (do) (tiltontec.flutter-mx.core/fx-get-resolved ~'me ~k# ctx))])]
-                           (apply concat kvs))))))
-       (tiltontec.matrix.api/cFkids ~only-kid))))
+    `(tiltontec.matrix.foundation/->CBFactory
+       (fn [& [par#]]
+         (dpx :konly-for-builder-stateless-runs-with-par!!! (minfo par#))
+         (binding [tiltontec.model.core/*md-parent* par#]
+           (tiltontec.flutter-mx.factory/make-fx
+             (new tiltontec.flutter-mx.factory/FXDartWidget)
+             (assoc ~fx-props
+               :builder (tiltontec.matrix.api/cF
+                          (fx/->CBAsIs
+                            (fn [ctx box-constraints]
+                              ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
+                              ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
+                              ;; with iso?
+                              (binding [tiltontec.flutter-mx.factory/*fx-building?* true]
+                                (tiltontec.model.core/mset! ~'me :box-constraints box-constraints)) ;; ...and convert box argument to reactive input
+                              (fx/fx-render ctx (first (tiltontec.matrix.api/mkids ~'me)))))))
+             (assoc ~mx-props
+               :box-constraints (tiltontec.cell.core/cI nil)
+               :fx-class (quote ~fx-class)
+               :fx-gen (fn ~(fx-class-sym fx-class) [~'me ctx]
+                         (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
+                         (tiltontec.flutter-mx.factory/with-flutter-ref
+                           (~fx-class
+                             ~@(let [kvs (for [k# (conj (keys fx-props) :builder)]
+                                           [(symbol (str "." (name k#)))
+                                            `(do (do) (tiltontec.flutter-mx.core/fx-get-resolved ~'me ~k# ctx))])]
+                                 (apply concat kvs))))))
+             (tiltontec.matrix.api/cFkids ~only-kid)))))))
 
 (defmacro childless-stateful [fx-class fx-props mx-props]
   (let []
