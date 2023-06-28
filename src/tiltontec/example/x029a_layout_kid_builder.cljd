@@ -10,8 +10,6 @@
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
 
 (defn make-app []
-  :disabled-app!!!!!
-  #_
   (let [title "Seamless Layout Builder/Built"]
     (fx/material-app
       {:title title}
@@ -19,40 +17,45 @@
        :msg     "\"Hi, mom!\" "
        :elapsed (cI 0)
 
-       #_#_ :clock   (cF+ [:on-quiesce (fn [cell]
-                                    (when-let [tmr ^async/Timer (cb/c-value cell)]
-                                      (.cancel tmr)))]
-                     (async/Timer.periodic (Duration .seconds 3)
-                                           (fn [^async/Timer tmr]
-                                             (mset! me :elapsed (.-tick tmr)))))}
+       #_#_:clock (cF+ [:on-quiesce (fn [cell]
+                                      (when-let [tmr ^async/Timer (cb/c-value cell)]
+                                        (.cancel tmr)))]
+                    (async/Timer.periodic (Duration .seconds 3)
+                      (fn [^async/Timer tmr]
+                        (mset! me :elapsed (.-tick tmr)))))}
       (fx/scaffold
-        {:appBar (fx/app-bar {:title (fx/text title)})}
+        {:appBar (cF (let [ab (fx/app-bar {:title (fx/text title)})]
+                       (dp :AB!!!!!!!!! ab (minfo ab))
+                       (m/AppBar .title (m/Text "OK title"))))
+         #_ (cF (fx/fx-factory-yield
+                       (fx/app-bar {:title (fx/text title)})))}
         (fx/center
           (fx/layout-kid-builder
-              ;; for now, we must use the hard-coded :box-constraints to get that build parameter.
-              ;; We could make this parameterizable, but builders are passed boxConstraints -- why
-              ;; make that tailorable?
-              (fx/center
-                (fx/column
-                  (fx/text
-                    {:style (cF (p/TextStyle
-                                  .color m.Colors/blue
-                                  .fontSize 24))}
-                    {:name :test}
-                    "test")
-                  (fx/text
-                    {:style (cF (p/TextStyle
-                                  .color (mget me :font-color)
-                                  .fontSize (mget me :font-size)))}
-                    {:font-size  (cF (if-let [box (faprop :box-constraints me)]
-                                       (+ (* 0.05 (.-maxHeight ^m/BoxConstraints box))
-                                          ;; just a random computation off a model outside the built-kid model:
-                                          (* 5 0 #_ (mod (faprop :elapsed me) 3)))
-                                       24))
-                     :font-color (cF (cond
-                                       (> (mget me :font-size) 25) m.Colors/red
-                                       :else m.Colors/cyan))}
-                    (str (mget (fasc :the-app) :msg)
-                         "in font size "
-                         (/ (int (* 10 (mget me :font-size))) 10)))))))))))
+            ;; for now, we must use the hard-coded :box-constraints to get that build parameter.
+            ;; We could make this parameterizable, but builders are passed boxConstraints -- why
+            ;; make that tailorable?
+            (fx/center
+              (fx/column
+                (fx/text
+                  {:style (cF (p/TextStyle
+                                .color m.Colors/blue
+                                .fontSize 24))}
+                  {:name :test}
+                  "test")
+                (fx/text
+                  {:style (cF (p/TextStyle
+                                .color (mget me :font-color)
+                                .fontSize (mget me :font-size)))}
+                  {:font-size  (cF (if-let [box (faprop :box-constraints me)]
+                                     (+ (* 0.05 (.-maxHeight ^m/BoxConstraints box))
+                                       ;; just a random computation off a model outside the built-kid model:
+                                       (* 5 0 #_(mod (faprop :elapsed me) 3)))
+                                     24))
+                   :font-color (cF (cond
+                                     (> (mget me :font-size) 25) m.Colors/red
+                                     :else m.Colors/cyan))}
+                  (str "boom" (rand-int 100))
+                  #_(str (mget (fasc :the-app) :msg)
+                             "in font size "
+                             (/ (int (* 10 (mget me :font-size))) 10)))))))))))
 
