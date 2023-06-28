@@ -13,6 +13,7 @@
     [tiltontec.matrix.foundation :as mxf]
     [tiltontec.matrix.base :refer [wtrx dp dpx mx-throw]]
     [tiltontec.matrix.util :refer [atom?]]
+    [tiltontec.model.base :refer [*md-host*]]
     [tiltontec.model.peek :refer [chk Model mref? minfo]]
     [tiltontec.cell.base :refer [cinfo] :as cty]
     [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mkids mswap! cFkids] :as mx]
@@ -58,7 +59,12 @@
             ;; instead of via macrology. The alternative has been for, say, `column` to
             ;; be a macro, so its children do not evaluate before the column even
             ;; exists. MX relies on children knowing their parent at birth.
-            (do
+
+            ;; todo should we bind parent or host when generating structure for props
+            ;; should it be parent or host?
+
+
+            (binding [*md-host* me]
               (dp :fx-resolving-Factory!!!!!!! prop (minfo me) widget-value)
               (let [yielded (fx-factory-yield me widget-value)]
                 (dp :fact-yields yielded (minfo yielded))
@@ -213,17 +219,17 @@
 
 
 
-(deftag tiltontec.flutter-mx.factory/childless-stateless data-table m/DataTable)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless data-table m/DataTable)
 (defmacro alert-dialog [fx-props mx-props & children]
   `(tiltontec.flutter-mx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
-(deftag tiltontec.flutter-mx.factory/childless-stateful text-field m/TextField)
-(deftag tiltontec.flutter-mx.factory/childless-stateful check-box m/Checkbox)
+;(deftag tiltontec.flutter-mx.factory/childless-stateful text-field m/TextField)
+;(deftag tiltontec.flutter-mx.factory/childless-stateful check-box m/Checkbox)
 
-(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateful icon m/Icon :icon)
+;(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateful icon m/Icon :icon)
 
 ;; todo does snackbar still need this custom macro?
-(deftag tiltontec.flutter-mx.factory/make-fx-snackbar snack-bar m/SnackBar)
+;(deftag tiltontec.flutter-mx.factory/make-fx-snackbar snack-bar m/SnackBar)
 
 
 ;;; --- tagleaf --------------------------------------------
@@ -256,28 +262,20 @@
   (let [[fx-props mx-props] vargs]
     `(tiltontec.flutter-mx.factory/childless-stateless m/IconButton ~fx-props ~mx-props)))
 
-(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+separated m.ListView/separated)
-(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
-
-(deftag tiltontec.flutter-mx.factory/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
-(deftag tiltontec.flutter-mx.factory/childless-stateless list-tile m/ListTile)
-(deftag tiltontec.flutter-mx.factory/childless-stateless layout-builder w/LayoutBuilder)
-
-(deftag tiltontec.flutter-mx.factory/childless-stateless flutter-logo m/FlutterLogo)
-
-
-
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateful
-  navigation-rail m/NavigationRail :destinations)
-(deftag tiltontec.flutter-mx.factory/childless-stateless
-  navigation-rail-destination w/NavigationRailDestination)
-
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless wrap w/Wrap :children)
-
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless grid-view+count m.GridView/count :children)
-
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
-(deftag tiltontec.flutter-mx.factory/childless-stateless bottom-navigation-bar-item w/BottomNavigationBarItem)
+;(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+separated m.ListView/separated)
+;(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless list-tile m/ListTile)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless layout-builder w/LayoutBuilder)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless flutter-logo m/FlutterLogo)
+;(deftag tiltontec.flutter-mx.factory/kids->prop-stateful
+;  navigation-rail m/NavigationRail :destinations)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless
+;  navigation-rail-destination w/NavigationRailDestination)
+;(deftag tiltontec.flutter-mx.factory/kids->prop-stateless wrap w/Wrap :children)
+;(deftag tiltontec.flutter-mx.factory/kids->prop-stateless grid-view+count m.GridView/count :children)
+;(deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
+;(deftag tiltontec.flutter-mx.factory/childless-stateless bottom-navigation-bar-item w/BottomNavigationBarItem)
 
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
@@ -404,7 +402,7 @@
                  :fx-gen (fn [me# ctx#]
                            (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))))))))
 
-(deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
+;(deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
 ; --- old school
 ;(deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
@@ -431,7 +429,7 @@
   ;;(icon m/IconButton) todo needs :icon-prop
   ;(icon-button m/IconButton)
   ;(rounded-rectangle-border p/RoundedRectangleBorder)
-  ;(list-tile m/ListTile)
+  (list-tile m/ListTile)
   ;(layout-builder w/LayoutBuilder)
   ;(flutter-logo m/FlutterLogo)
   ;(navigation-rail-destination w/NavigationRailDestination) ;; todo flutter pub missing?
@@ -455,8 +453,8 @@
                 `(tiltontec.flutter-mx.core/deftag-fn ~fx# ~m# ~fx-gen)))))
 
 ;;; --- problems ------------------------------------------
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
-(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
+;(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
+;(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
 
 (deftags fx-gen-k0>child-stateful
   (hero m/Hero)
@@ -472,10 +470,13 @@
   (default-tab-controller m/DefaultTabController)
   (focus m/Focus)
   (focus-scope m/FocusScope)
-  (text-button m/TextButton)
+  ;(text-button m/TextButton)
   ;(focus+focus-node m.Focus/withExternalFocusNode)
   (animated-builder m/AnimatedBuilder)
   (animated-container m/AnimatedContainer))
+
+;(deftag tiltontec.flutter-mx.factory/k1-child-stateful text-button m/TextButton)
+
 
 (defn fx-gen-k0>child-stateful [me ctx fx-props new-fn]
   (stateful-gen me ctx
@@ -514,7 +515,7 @@
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless preferred-size m/PreferredSize)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless animated-opacity m/AnimatedOpacity)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless drawer-header m/DrawerHeader)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless floating-action-button m/FloatingActionButton)
+;(deftag tiltontec.flutter-mx.factory/k1-child-stateless floating-action-button m/FloatingActionButton)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless align m/Align)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless visibility m/Visibility)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful visibility! m/Visibility)
@@ -536,7 +537,6 @@
 ;
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus m/Focus)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus-scope m/FocusScope)
-;(deftag tiltontec.flutter-mx.factory/k1-child-stateful text-button m/TextButton)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
 ;(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-builder m/AnimatedBuilder)
@@ -560,7 +560,7 @@
   (preferred-size m/PreferredSize)
   (animated-opacity m/AnimatedOpacity)
   (drawer-header m/DrawerHeader)
-  ;(floating-action-button m/FloatingActionButton)
+  (floating-action-button m/FloatingActionButton)
   (align m/Align)
   (visibility m/Visibility)
   (opacity m/Opacity)
