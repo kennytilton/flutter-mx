@@ -262,7 +262,7 @@
 (deftag tiltontec.flutter-mx.factory/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
 (deftag tiltontec.flutter-mx.factory/childless-stateless list-tile m/ListTile)
 (deftag tiltontec.flutter-mx.factory/childless-stateless layout-builder w/LayoutBuilder)
-(deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
+
 (deftag tiltontec.flutter-mx.factory/childless-stateless flutter-logo m/FlutterLogo)
 
 
@@ -352,7 +352,7 @@
 (defmacro as-content [form]
   `(mxf/->CBFactory
      (fn [& [~'me]]
-       (str (mx/my-value)))))
+       ~form)))
 
 (defn make-fx-dart-widget
   ([fx-props mx-props] (make-fx-dart-widget fx-props mx-props nil))
@@ -390,7 +390,7 @@
      (dpx :deftag-fn-entry!! '~mx-name)
      (mxf/->CBFactory
        (fn [& [par#]]
-         (dpx :factory-called-par!!! (minfo par#))
+         (dpx :deftag-fn-factory-called-par!!! (minfo par#))
          (let [[fx-props# mx-props# & kids#]
                (cond (nil? vargs#) nil
                  (not (map? (first vargs#))) (list* nil nil vargs#)
@@ -404,20 +404,7 @@
                  :fx-gen (fn [me# ctx#]
                            (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))))))))
 
-(defmacro deftag-fn-ex [mx-name dart-class flutter-variant]
-  `(defn ~mx-name [& vargs#]
-     (dpx :deftag-fn-entry!! '~mx-name)
-     (let [[fx-props# mx-props# & kids#]
-           (cond (nil? vargs#) nil
-             (not (map? (first vargs#))) (list* nil nil vargs#)
-             (map? (second vargs#)) vargs#
-             :else (list* (first vargs#) nil (rest vargs#)))]
-       (tiltontec.flutter-mx.core/make-fx-dart-widget
-         fx-props#
-         (assoc mx-props#
-           :kids (tiltontec.matrix.api/cFkids kids#)
-           :fx-gen (fn [me# ctx#]
-                     (~flutter-variant me# ctx# fx-props# (.-new ~dart-class))))))))
+(deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
 ; --- old school
 ;(deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
@@ -555,11 +542,9 @@
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-builder m/AnimatedBuilder)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-container m/AnimatedContainer)
 
-(deftag-fn-ex material m/Material fx-gen-k0>child-stateless)
-
 (deftags fx-gen-k0>child-stateless
   (center m/Center)
-  ;(material m/Material)
+  (material m/Material)
   (fade-transition m/FadeTransition)
   (listener w/Listener)
   (mouse-region w/MouseRegion)

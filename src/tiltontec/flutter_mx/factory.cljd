@@ -7,6 +7,7 @@
              :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
             ["package:flutter/painting.dart" :as p
              :refer [TextStyle]]
+            [tiltontec.model.core :as md]
             [tiltontec.matrix.base :refer [wtrx dprn dp dpx]]
             [tiltontec.matrix.util
              :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
@@ -97,6 +98,8 @@
   ([mx-type fx-props custom-props]
    (make-fx mx-type fx-props custom-props nil))
   ([mx-type fx-props custom-props cFkids-form]
+   (when-not md/*md-parent*
+     (dp :make-fx-sees-no-PAR!!!!!! mx-type fx-props custom-props))
    (apply tiltontec.model.core/make
      :mx-type mx-type
      :fx$state (cI nil)
@@ -409,6 +412,25 @@
                                               `(do (do) (tiltontec.flutter-mx.core/fx-get-resolved ~'me ~k# ctx))])]
                                    (apply concat kvs))))))))))
        nil)))
+
+#_ (defmacro deftag-fn [mx-name dart-class flutter-variant]
+     `(defn ~mx-name [& vargs#]
+        (dpx :deftag-fn-entry!! '~mx-name)
+        (mxf/->CBFactory
+          (fn [& [par#]]
+            (dpx :deftag-fn-factory-called-par!!! (minfo par#))
+            (let [[fx-props# mx-props# & kids#]
+                  (cond (nil? vargs#) nil
+                    (not (map? (first vargs#))) (list* nil nil vargs#)
+                    (map? (second vargs#)) vargs#
+                    :else (list* (first vargs#) nil (rest vargs#)))]
+              (binding [tiltontec.model.core/*md-parent* par#]
+                (tiltontec.flutter-mx.core/make-fx-dart-widget
+                  fx-props#
+                  (assoc mx-props#
+                    :kids (tiltontec.matrix.api/cFkids kids#)
+                    :fx-gen (fn [me# ctx#]
+                              (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))))))))
 
 (defmacro konly-for-builder-stateless [fx-class fx-props mx-props & [only-kid]]
   (let []
