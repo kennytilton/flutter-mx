@@ -390,7 +390,7 @@
                            (tiltontec.matrix.api/mget? me :key)))
     (createState [_]
       (reify :extends w/State
-        ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
+        ^:mixin m/SingleTickerProviderStateMixin            ;; todo make optional
         (^void initState [this]
           (tiltontec.flutter-mx.factory/record-fx$state me this))
         (build [_ ctx]
@@ -454,16 +454,16 @@
 
 (defn fx-gen-k0>prop-stateful [me ctx fx-props new-fn {:keys [prop ticker?]}]
   ((if ticker? stateful-ticker-gen stateful-gen) me ctx
-    (fn [me ctx]
-      (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
-                      (first (tiltontec.matrix.api/mkids me)))]
-        (Function.apply new-fn []
-          (assoc (fx-props-resolved me ctx fx-props)
-            (Symbol (name prop))
-            k0))))))
+   (fn [me ctx]
+     (let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
+                (first (tiltontec.matrix.api/mkids me)))]
+       (Function.apply new-fn []
+         (merge (fx-props-resolved me ctx fx-props)
+           (when k0 {(Symbol (name prop))
+                     k0})))))))
 
 (deftag-fn ticker-mode m/TickerMode fx-gen-k0>prop-stateful
-  {:prop :child
+  {:prop    :child
    :ticker? true})
 
 (deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
@@ -528,7 +528,7 @@
   (text-button m/TextButton)
   ;(focus+focus-node m.Focus/withExternalFocusNode)
   (animated-builder m/AnimatedBuilder)
-  #_ (animated-container m/AnimatedContainer))
+  (animated-container m/AnimatedContainer))
 
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful text-button m/TextButton)
 
@@ -565,7 +565,7 @@
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
 ;(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-builder m/AnimatedBuilder)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-container m/AnimatedContainer)
+;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-container m/AnimatedContainer)
 
 (deftags-plus fx-gen-k0>prop-stateless {:prop :child}
   (sized-box m/SizedBox))
@@ -603,7 +603,7 @@
   (tiltontec.flutter-mx.factory/ctx-check me ctx)
   (tiltontec.flutter-mx.factory/with-flutter-ref
     (let [^#/(List Widget) kids (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
-                                      (tiltontec.matrix.api/mkids me))]
+                                  (tiltontec.matrix.api/mkids me))]
       (Function.apply new-fn []
         (assoc (fx-props-resolved me ctx fx-props)
           (Symbol (name prop)) kids)))))
