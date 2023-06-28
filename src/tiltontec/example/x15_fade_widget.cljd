@@ -1,0 +1,33 @@
+(ns tiltontec.example.x15-fade-widget
+  "FlutterMX port of CLJD Faithful port of https://docs.flutter.dev/cookbook/animation/opacity-animation"
+  (:require ["package:flutter/material.dart" :as m]
+            ;["package:localstore/localstore.dart" :as ls]
+            [tiltontec.model.core :refer [mget mset! mswap!] :as md]
+            [tiltontec.cell.core :refer [cF cF+ cF_ cI c_F]]
+            [tiltontec.flutter-mx.core :as fx]))
+
+(defn make-app []
+  (let [title "Opacity Demo"]
+    (fx/material-app
+      {:title                      title
+       :debugShowCheckedModeBanner false}
+      {:name :zapp}
+      (fx/scaffold
+        {:appBar               (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton (cF (fx/floating-action-button
+                                     {:tooltip   "Toggle Opacity"
+                                      :onPressed (fx/->CBAsIs
+                                                   (fn ^void []
+                                                     (md/mswap! me :visible not)
+                                                     nil))}
+                                     (fx/icon {:icon m.Icons/flip})))}
+        {:visible (cI true)
+         :name    :my-home}
+        (fx/center {}
+          {:name :zcenter}
+          (fx/animated-opacity
+            {:opacity  (cF (cond (true? (md/mget (md/fm* :my-home) :visible)) 1.0
+                                 :else 0.0))
+             :duration  (Duration .milliseconds 500)}
+            {:name :ani-opa}
+            (m/Container .width 200.0 .height 200.0 .color m.Colors/teal)))))))
