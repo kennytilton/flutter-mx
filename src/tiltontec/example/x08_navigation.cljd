@@ -1,0 +1,39 @@
+(ns tiltontec.example.x08-navigation
+  "Port of CLJD port of https://docs.flutter.dev/cookbook/navigation/navigation-basics"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    [tiltontec.matrix.api :refer [dp minfo]]
+    [tiltontec.flutter-mx.core :as fx]))
+
+(defn second-route []
+  (fx/scaffold
+    {:appBar (fx/app-bar {:title (fx/text "Second Route")})}
+    (fx/center
+      (fx/elevated-button
+        {:onPressed (fx/in-my-context [me ctx]
+                      (fx/->CBAsIs
+                        (fn ^void []
+                          (fx/ctx-page-pop ctx)
+                          nil)))}
+        (m/Text "Go back!")))))
+
+(defn my-ctx-page-push [me ctx fx-page-def]
+  (.push (-> ctx m.Navigator/of)
+    (#/(m/MaterialPageRoute Object)
+      .settings (m/RouteSettings .name "/second")
+      .builder (fn [_]
+                 ;; todo can render handle resolve, or specifically just yield?
+                 (fx/fx-render ctx
+                   (fx/fx-resolve :push-built me ctx fx-page-def))))))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Navigation Basics"}
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "First Route")})}
+      (fx/center
+        (fx/elevated-button
+          {:onPressed (fx/in-my-context [me ctx]
+                        (fx/->CBAsIs
+                          #(my-ctx-page-push me ctx (second-route))))}
+          (fx/text "Open route"))))))
