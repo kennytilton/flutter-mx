@@ -33,6 +33,10 @@
   (fx-resolve prop me ctx
     (mget me prop)))
 
+(defn fx-factory-yield
+  ([f] (fx-factory-yield nil f))
+  ([par f] ((.-value ^mxf/CBFactory f) par)))
+
 (defn fx-resolve [prop me ctx widget-value]
   (wtrx [0 1000 nil :RESO prop (minfo me) widget-value]
     (let [resolved
@@ -238,8 +242,6 @@
              (list (first vargs#) nil (last vargs#)))]
        `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~param-1#))))
 
-
-
 (deftagleaf tiltontec.flutter-mx.factory/konly-param1-stateful text! m/Text)
 
 ;;; --- childless stateless --------------------------------------------------------
@@ -258,19 +260,14 @@
 (deftag tiltontec.flutter-mx.factory/childless-stateless flutter-logo m/FlutterLogo)
 
 
-(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
-
 
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateful
   navigation-rail m/NavigationRail :destinations)
 (deftag tiltontec.flutter-mx.factory/childless-stateless
   navigation-rail-destination w/NavigationRailDestination)
 
-(deftag tiltontec.flutter-mx.factory/children-stateless stack m/Stack)
-
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless wrap w/Wrap :children)
-(deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
-(deftag tiltontec.flutter-mx.factory/children-stateless list-view m/ListView)
+
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless grid-view+count m.GridView/count :children)
 
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
@@ -423,10 +420,6 @@
             (Symbol "home")
             k0))))))
 
-; (deftag tiltontec.flutter-mx.factory/k1-child-stateful hero m/Hero)
-
-
-
 (defmacro deftags [fx-gen & pairs]
   `(do
      ~@(doall (for [[fx# m#] pairs]
@@ -434,6 +427,7 @@
 
 ;;; --- problems ------------------------------------------
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
+(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
 
 (deftags fx-gen-k0>child-stateful
   (hero m/Hero)
@@ -556,6 +550,15 @@
       (Function.apply new-fn []
         (assoc (fx-props-resolved me ctx fx-props)
           (Symbol "children") children)))))
+
+(deftags fx-gen-ks>children-stateless
+  (stack m/Stack)
+  (row m/Row)
+  (list-view m/ListView))
+
+; (deftag tiltontec.flutter-mx.factory/children-stateless stack m/Stack)
+;(deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
+;(deftag tiltontec.flutter-mx.factory/children-stateless list-view m/ListView)
 
 (deftag-fn sized-box m/SizedBox fx-gen-k0>child-stateless)
 
