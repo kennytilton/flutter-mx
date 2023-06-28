@@ -382,7 +382,7 @@
           (fxf/with-flutter-ref
             (gen-fn me ctx)))))))
 
-(defmacro deftag-fn [mx-name dart-class flutter-variant]
+(defmacro deftag-fn [mx-name dart-class flutter-variant & flutter-variant-props]
   `(defn ~mx-name [& vargs#]
      (dpx :deftag-fn-entry!! '~mx-name)
      (mxf/->CBFactory
@@ -399,7 +399,39 @@
                (assoc mx-props#
                  :kids (tiltontec.matrix.api/cFkids kids#)
                  :fx-gen (fn [me# ctx#]
-                           (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)))))))))))
+                           (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)
+                             ~@flutter-variant-props))))))))))
+
+(defmacro deftags-plus [fx-gen options & pairs]
+  `(do
+     ~@(doall (for [[fx# m#] pairs]
+                `(tiltontec.flutter-mx.core/deftag-fn ~fx# ~m# ~fx-gen ~options)))))
+
+(deftags-plus fx-gen-k0>prop-stateful {:prop :home}
+  (material-app m/MaterialApp))
+
+;(deftag-fn sized-box m/SizedBox fx-gen-k0>prop-stateless {:prop :child})
+
+(defn fx-gen-k0>prop-stateless [me ctx fx-props new-fn {:keys [prop]}]
+  (tiltontec.flutter-mx.factory/ctx-check me ctx)
+  (tiltontec.flutter-mx.factory/with-flutter-ref
+    (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
+               (first (tiltontec.matrix.api/mkids me)))]
+      (Function.apply new-fn []
+        (assoc (fx-props-resolved me ctx fx-props)
+          (Symbol (name prop))
+          k0)))))
+
+(defn fx-gen-k0>prop-stateful [me ctx fx-props new-fn {:keys [prop]}]
+  (dp :prop-stateful-sees!!!! prop)
+  (stateful-gen me ctx
+    (fn [me ctx]
+      (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
+                      (first (tiltontec.matrix.api/mkids me)))]
+        (Function.apply new-fn []
+          (assoc (fx-props-resolved me ctx fx-props)
+            (Symbol (name prop))
+            k0))))))
 
 ;(deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
@@ -435,17 +467,6 @@
   ;(bottom-navigation-bar-item w/BottomNavigationBarItem)
   )
 
-(deftag-fn material-app m/MaterialApp fx-gen-k0>home-stateful)
-(defn fx-gen-k0>home-stateful [me ctx fx-props new-fn]
-  (stateful-gen me ctx
-    (fn [me ctx]
-      (when-let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
-                      (first (tiltontec.matrix.api/mkids me)))]
-        (Function.apply new-fn []
-          (assoc (fx-props-resolved me ctx fx-props)
-            (Symbol "home")
-            k0))))))
-
 (defmacro deftags [fx-gen & pairs]
   `(do
      ~@(doall (for [[fx# m#] pairs]
@@ -476,7 +497,6 @@
 
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful text-button m/TextButton)
 
-
 (defn fx-gen-k0>child-stateful [me ctx fx-props new-fn]
   (stateful-gen me ctx
     (fn [me ctx]
@@ -487,27 +507,8 @@
             (Symbol "child")
             k0))))))
 
-(deftag-fn scaffold m/Scaffold fx-gen-k0>body-stateful)
-(defn fx-gen-k0>body-stateful [me ctx fx-props new-fn]
-  (stateful-gen me ctx
-    (fn [me ctx]
-      (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
-                 (first (tiltontec.matrix.api/mkids me)))]
-        (dp :scaff-body-stateful-sees-k0 (minfo k0) k0)
-        (Function.apply new-fn []
-          (assoc (fx-props-resolved me ctx fx-props)
-            (Symbol "body")
-            k0))))))
-
-(defn fx-gen-k0>child-stateless [me ctx fx-props new-fn]
-  (tiltontec.flutter-mx.factory/ctx-check me ctx)
-  (tiltontec.flutter-mx.factory/with-flutter-ref
-    (let [k0 (tiltontec.flutter-mx.core/fx-resolve :key me ctx
-               (first (tiltontec.matrix.api/mkids me)))]
-      (Function.apply new-fn []
-        (assoc (fx-props-resolved me ctx fx-props)
-          (Symbol "child")
-          k0)))))
+(deftags-plus fx-gen-k0>prop-stateful {:prop :body}
+  (scaffold m/Scaffold))
 
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless single-child-scroll-view m/SingleChildScrollView)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateless expanded m/Expanded)
@@ -541,7 +542,10 @@
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-builder m/AnimatedBuilder)
 ;(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-container m/AnimatedContainer)
 
-(deftags fx-gen-k0>child-stateless
+(deftags-plus fx-gen-k0>prop-stateless {:prop :child}
+  (sized-box m/SizedBox))
+
+(deftags-plus fx-gen-k0>prop-stateless {:prop :child}
   (center m/Center)
   (material m/Material)
   (fade-transition m/FadeTransition)
@@ -589,7 +593,7 @@
 ;(deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
 ;(deftag tiltontec.flutter-mx.factory/children-stateless list-view m/ListView)
 
-(deftag-fn sized-box m/SizedBox fx-gen-k0>child-stateless)
+
 
 
 
