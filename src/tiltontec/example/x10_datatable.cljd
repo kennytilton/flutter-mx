@@ -9,17 +9,18 @@
     {:scrollDirection m.Axis/horizontal}
     (fx/data-table
       {:headingTextStyle (m/TextStyle
-                               .fontWeight m.FontWeight/bold
-                               .color m.Colors/blue)
+                           .fontWeight m.FontWeight/bold
+                           .color m.Colors/blue)
        :showBottomBorder true
-       :columns (let [^#/(List m/DataColumn) dcols (mapv (fn [col]
-                                                          (m/DataColumn .label (m/Text col))) cols)]
-                  dcols)
-       :rows    (let [^#/(List m/DataRow) drows
-                      (map (fn [row]
-                             (m/DataRow .cells (mapv (fn [cell] (m/DataCell (m/Text cell)))
-                                                 row))) rows)]
-                  drows)})))
+       :columns          (let [^#/(List m/DataColumn) dcols
+                               (map (fn [col]
+                                      (m/DataColumn .label (m/Text col))) cols)]
+                           dcols)
+       :rows             (let [^#/(List m/DataRow) drows
+                               (map (fn [row]
+                                      (m/DataRow .cells (map (fn [cell] (m/DataCell (m/Text cell)))
+                                                          row))) rows)]
+                           drows)})))
 
 (defn make-app []
   (fx/material-app {:debugShowCheckedModeBanner false}
