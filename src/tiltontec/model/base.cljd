@@ -67,19 +67,18 @@
   (wtrx [0 999 nil :awk-entry (minfo me)]
     (rmap-meta-set! [:state me] :awakening)
     (binding [*md-host* me]
-      (doall
-        (for [prop (keys @me)]
-          ;; next is tricky: if prop is in :cz but nil, it has been
-          ;; optimized-away and observed then in the rare case
-          ;; it gets optimized away on other than the initial
-          ;; value.
-          (when-let [c (prop (md-cz me) :not-found)]
-            (cond
-              (= c :not-found)
-              ;; these need at least an initial observe
-              (when (not (some #{prop} [:parent :name :fx-gen :on-quiesce]))
-                (observe (md-type me) prop me (prop @me) unbound nil))
-              :else (when-not (= (c-state c) :awake)        ;; might have happened already
-                      (c-awaken c)))))))
+      (doseq [prop (keys @me)]
+        ;; next is tricky: if prop is in :cz but nil, it has been
+        ;; optimized-away and observed then in the rare case
+        ;; it gets optimized away on other than the initial
+        ;; value.
+        (when-let [c (prop (md-cz me) :not-found)]
+          (cond
+            (= c :not-found)
+            ;; these need at least an initial observe
+            (when (not (some #{prop} [:parent :name :fx-gen :on-quiesce]))
+              (observe (md-type me) prop me (prop @me) unbound nil))
+            :else (when-not (= (c-state c) :awake)          ;; might have happened already
+                    (c-awaken c))))))
     (rmap-meta-set! [:state me] :awake)
     me))

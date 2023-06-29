@@ -1,5 +1,6 @@
 (ns tiltontec.example.x10-datatable
   (:require
+    [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* cFkids minfo] :as mx]
     [tiltontec.flutter-mx.core :as fx]
     ["package:flutter/material.dart" :as m]))
 
@@ -8,14 +9,17 @@
     {:scrollDirection m.Axis/horizontal}
     (fx/data-table
       {:headingTextStyle (m/TextStyle
-                           .fontWeight m.FontWeight/bold
-                           .color m.Colors/blue)
+                               .fontWeight m.FontWeight/bold
+                               .color m.Colors/blue)
        :showBottomBorder true
-       :columns          (mapv (fn [col]
-                                 (m/DataColumn .label (m/Text col))) cols)
-       :rows             (mapv (fn [row]
-                                 (m/DataRow .cells (mapv (fn [cell] (m/DataCell (m/Text cell)))
-                                                     row))) rows)})))
+       :columns (let [^#/(List m/DataColumn) dcols (mapv (fn [col]
+                                                          (m/DataColumn .label (m/Text col))) cols)]
+                  dcols)
+       :rows    (let [^#/(List m/DataRow) drows
+                      (map (fn [row]
+                             (m/DataRow .cells (mapv (fn [cell] (m/DataCell (m/Text cell)))
+                                                 row))) rows)]
+                  drows)})))
 
 (defn make-app []
   (fx/material-app {:debugShowCheckedModeBanner false}
