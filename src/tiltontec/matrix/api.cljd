@@ -179,11 +179,18 @@
        (fm-navig #(= name# (mget? % :name))
          ~me-ref :me? true :up? true :inside? false))))
 
-(defmacro fasc "Search strictly up"
+(defmacro fasc? "Search strictly up"
   [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (tiltontec.model.core/fm-ascendant name# ~me-ref))))
+
+(defmacro fasc "Search strictly up"
+  [name & [me]]
+  (let [me-ref (or me 'me)]
+    `(let [name# ~name]
+       (tiltontec.model.core/fm-ascendant name# ~me-ref
+         :must? true))))
 
 (defn faprop "Search strictly up and mget value of first asc w that property"
   ([prop-name md]
@@ -292,6 +299,8 @@
 (defmacro cFkids [& tree]
   `(cF (tiltontec.model.core/the-kids ~@tree)))
 
+(defmacro cFkids-stack [& tree]
+  `(cF (tiltontec.model.core/the-kids-stack ~@tree)))
 
 (defmacro with-integrity [[opcode info] & body]
   `(tiltontec.cell.integrity/with-integrity [~opcode ~info]

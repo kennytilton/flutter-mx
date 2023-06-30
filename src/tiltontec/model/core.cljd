@@ -243,23 +243,23 @@
               (= seek poss))))
 
 (defn fm-ascendant [what where & options]
-  (when (and where what)
-    (let [options (merge {:me? false :wocd? true}
-                         (apply hash-map options))]
-      (binding [*depender* (if (:wocd? options) nil *depender*)]
-        (or (and (:me? options)
-                 (fm-navig-eq? what where)
-                 where)
-
-            (if-let [par (:parent @where)]
-              (fm-ascendant what par
-                            :me? true)
-              (when-let [host (:host @where)]
-                (fm-ascendant what host
-                              :me? true)))
-
-            (when (:must? options)
-              (mx-throw :fm-ascendant-must-failed what where options)))))))
+  (assert (and where what) (mx-throw :fm-ascendant-must-have-what-and-where what where options))
+  (let [options (merge {:me? false :wocd? true}
+                  (apply hash-map options))]
+    (binding [*depender* (if (:wocd? options) nil *depender*)]
+      (letfn [(fasc-up [where me?]
+                (or
+                  (and me?
+                    (fm-navig-eq? what where)
+                    where)
+                  (if-let [par (:parent @where)]
+                    (fasc-up par true)
+                    (when-let [host (:host @where)]
+                      (fasc-up host true)))))]
+        (or (fasc-up where (:me? options))
+          (when (:must? options)
+            (mx-throw :fm-ascendant-must-failed what (minfo where) options
+              :ancestry (fm-ancestry where))))))))
 
 (defn nextsib [mx]
   (without-c-dependency
@@ -484,6 +484,19 @@
      (doall (map (fn [kid#]
                    (if (dart/is? kid# mxf/CBFactory)
                      ((.-value ^mxf/CBFactory kid#) *md-parent*)
+                     kid#))
+              (remove nil? (flatten (list ~@tree)))))))
+
+(defmacro the-kids-stack [& tree]
+  `(binding [*md-parent* ~'me]
+     (chk *md-parent*)
+     ;;(dp :bingo-par (atom? *md-parent*))
+     (doall (map (fn [kid#]
+                   (if (dart/is? kid# mxf/CBFactory)
+                     (do
+                       (dp :kid-JIT-me (minfo ~'me))
+                       (dp :kid-JIT-parent (minfo *md-parent*))
+                       ((.-value ^mxf/CBFactory kid#) *md-parent*))
                      kid#))
               (remove nil? (flatten (list ~@tree)))))))
 

@@ -51,23 +51,7 @@
              ~'~factory)
            ~fx-props# ~mx-props# (tiltontec.matrix.api/cFkids ~@kids#)))))
 
-#_ (defmacro k0>p0-stateless [mclass]
-     `(fn [fx-props# mx-props# kids#]
-        (tiltontec.flutter-mx.core/make-fx-dart-widget
-          fx-props#
-          (assoc mx-props#
-            :kids kids#
-            :fx-gen (fn [me# ctx#]
-                      (fx-gen-k0>p0 me# ctx# fx-props# (.-new ~mclass)))))))
 
-(defn make-fx-apply
-  "Supports optional/positional flutter and MX prop maps before kids"
-  [maker params]
-  (if (map? (first params))
-    (if (map? (second params))
-      (apply maker params)
-      (apply maker (first params) nil (rest params)))
-    (apply maker nil nil params)))
 
 (comment
   (macroexpand-1
