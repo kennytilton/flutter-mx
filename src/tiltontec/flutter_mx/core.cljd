@@ -40,7 +40,9 @@
              ((.-value ^mxf/CBFactory f) par)
              f)))
 
-(defn fx-resolve [prop me ctx widget-value]
+(defn fx-resolve
+  "Convert an FX-side value to one suitable as value for a property of a native Dart widget"
+  [prop me ctx widget-value]
   (wtrx [0 1000 nil :RESO prop (minfo me) widget-value]
     (let [resolved
           (cond
@@ -59,13 +61,9 @@
             ;; instead of via macrology. The alternative has been for, say, `column` to
             ;; be a macro, so its children do not evaluate before the column even
             ;; exists. MX relies on children knowing their parent at birth.
-
-            ;; todo should we bind parent or host when generating structure for props
-            ;; should it be parent or host?
-
-
+            ;; todo should a factory ever make it this far without being converted to a model?!
             (binding [*md-host* me]
-              (dpx :fx-resolving-Factory!!!!!!! prop (minfo me) widget-value)
+              (dpx :FX-RESOLVING-Factory!!!!!!!!!!!!!!!!!! prop (minfo me) widget-value)
               (let [yielded (fx-factory-yield me widget-value)]
                 (dpx :fact-yields yielded (minfo yielded))
                 (fx-resolve prop me ctx yielded)))
@@ -348,9 +346,21 @@
 ;;; --- nextgen ----------------------------------------
 
 (defmacro as-content [form]
-  `(mxf/->CBFactory
+  `(tiltontec.matrix.foundation/->CBFactory
      (fn [& [~'me]]
        ~form)))
+
+(defmacro with-parent [& kids]
+  `(tiltontec.matrix.foundation/->CBFactory
+     (fn [& [~'me]]
+       (tiltontec.model.core/the-kids
+         ~@kids))))
+
+(defmacro with-host [guest]
+  `(tiltontec.matrix.foundation/->CBFactory
+     (fn [& [par#]]
+       (binding [tiltontec.model.core/*md-parent* par#]
+         ~guest))))
 
 (defn make-fx-dart-widget
   ([fx-props mx-props] (make-fx-dart-widget fx-props mx-props nil))
@@ -401,7 +411,7 @@
 (defmacro deftag-constructor [mx-name dart-class flutter-variant & flutter-variant-props]
   `(defn ~mx-name [& vargs#]
      (dpx :deftag-fn-entry!! '~mx-name)
-     (mxf/->CBFactory
+     (tiltontec.matrix.foundation/->CBFactory
        (fn [& [par#]]
          (dpx :deftag-fn-factory-called-par!!! (minfo par#))
          (let [[fx-props# mx-props# & kids#]
@@ -420,8 +430,7 @@
 
 (defmacro deftag-fn [mx-name dart-class flutter-variant & flutter-variant-props]
   `(defn ~mx-name [& vargs#]
-     (dpx :deftag-fn-entry!! '~mx-name)
-     (mxf/->CBFactory
+     (tiltontec.matrix.foundation/->CBFactory
        (fn [& [par#]]
          (dpx :deftag-fn-factory-called-par!!! (minfo par#))
          (let [[fx-props# mx-props# & kids#]
@@ -438,14 +447,61 @@
                            (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)
                              ~@flutter-variant-props))))))))))
 
+(defmacro deftag-fn-stack [mx-name dart-class flutter-variant & flutter-variant-props]
+  `(defn ~mx-name [& vargs#]
+     (tiltontec.matrix.foundation/->CBFactory
+       (fn [& [par#]]
+         (dpx :deftag-fn-STACK-factory-called-par!!! (minfo par#))
+         (let [[fx-props# mx-props# & kids#]
+               (cond (nil? vargs#) nil
+                 (not (map? (first vargs#))) (list* nil nil vargs#)
+                 (map? (second vargs#)) vargs#
+                 :else (list* (first vargs#) nil (rest vargs#)))]
+           (dp :tagfn-STACK-sees-kids (cinfo (first kids#)))
+           (binding [tiltontec.model.core/*md-parent* par#]
+             (tiltontec.flutter-mx.core/make-fx-dart-widget
+               fx-props#
+               (assoc mx-props#
+                 :kids (first kids#)
+                 :fx-gen (fn [me# ctx#]
+                           (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)
+                             ~@flutter-variant-props))))))))))
 
+(deftag-fn-stack stack m/Stack fx-gen-ks>prop-stateless {:prop :children})
+
+(defn fx-gen-ks>prop-stateless [me ctx fx-props new-fn {:keys [prop]}]
+  (fxf/ctx-check me ctx)
+  (fxf/with-flutter-ref
+    (let [^#/(List Widget) kids (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
+                                  (tiltontec.matrix.api/mkids me))]
+      (dp :ks->propless-kids prop (minfo me) (count kids) kids)
+      (dp :ks->propless-kids-first prop :first (first kids))
+      (Function.apply new-fn []
+        (assoc (fx-props-resolved me ctx fx-props)
+          (Symbol (name prop)) kids)))))
+
+(defn fx-gen-k0>prop-stateful [me ctx fx-props new-fn {:keys [prop ticker?]}]
+  (dp :k0->propful prop (minfo me))
+  ((if ticker? stateful-ticker-gen stateful-gen) me ctx
+   (fn [me ctx]
+     (let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
+                (first (tiltontec.matrix.api/mkids me)))]
+       (dp :k0->propful-k0 prop (minfo k0) k0)
+       (when (sequential? k0)
+         (dp :mkids!!!!!!!!! (minfo me) (tiltontec.matrix.api/mkids me))
+         (dp :k0->propful-k0-list prop (minfo (first k0))))
+       (dp :k0->propful-props prop (fx-props-resolved me ctx fx-props))
+       (Function.apply new-fn []
+         (merge (fx-props-resolved me ctx fx-props)
+           (when k0 {(Symbol (name prop))
+                     k0})))))))
 
 (deftag-hack scaffold m/Scaffold fx-gen-k0>prop-stateful {:prop :body})
 
 (defmacro deftag-hack [mx-name dart-class flutter-variant & flutter-variant-props]
   `(defn ~mx-name [& vargs#]
      (dpx :deftag-HACK-entry!! '~mx-name)
-     (mxf/->CBFactory
+     (tiltontec.matrix.foundation/->CBFactory
        (fn [& [par#]]
          (dpx :deftag-HACK-factory-called-par!!! (minfo par#))
          (let [[fx-props# mx-props# & kids#]
@@ -501,15 +557,7 @@
           (Symbol (name prop))
           k0)))))
 
-(defn fx-gen-k0>prop-stateful [me ctx fx-props new-fn {:keys [prop ticker?]}]
-  ((if ticker? stateful-ticker-gen stateful-gen) me ctx
-   (fn [me ctx]
-     (let [k0 (tiltontec.flutter-mx.core/fx-resolve :kd0-home me ctx
-                (first (tiltontec.matrix.api/mkids me)))]
-       (Function.apply new-fn []
-         (merge (fx-props-resolved me ctx fx-props)
-           (when k0 {(Symbol (name prop))
-                     k0})))))))
+
 
 
 
@@ -653,20 +701,21 @@
 
 ;(deftag tiltontec.flutter-mx.factory/children-stateless column m/Column)
 
-(defn fx-gen-ks>prop-stateless [me ctx fx-props new-fn {:keys [prop]}]
+
+
+(defn fx-gen-ks>ignored-stateless [me ctx fx-props new-fn]
   (fxf/ctx-check me ctx)
   (fxf/with-flutter-ref
     (let [^#/(List Widget) kids (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
                                   (tiltontec.matrix.api/mkids me))]
-      (dp :ks->propless-kids (map minfo kids))
+      (dp :ks->ignnored-less-kids (map minfo kids))
       (Function.apply new-fn []
-        (assoc (fx-props-resolved me ctx fx-props)
-          (Symbol (name prop)) kids)))))
+        (fx-props-resolved me ctx fx-props)))))
 
-;(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
-(deftag-constructor list-view+builder m.ListView/builder fx-gen-ks>prop-stateless {:prop :children})
+(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
+;(deftag-constructor list-view+builder m.ListView/builder fx-gen-ks>ignored-stateless)
 (deftag-fn column m/Column fx-gen-ks>prop-stateless {:prop :children})
-(deftag-fn stack m/Stack fx-gen-ks>prop-stateless {:prop :children})
+
 
 (defmacro deftags-prop [fxgen & triples]
   `(do
@@ -689,45 +738,6 @@
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless grid-view+count m.GridView/count :children)
 ;(deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
 ;(deftag tiltontec.flutter-mx.factory/kids->prop-stateful navigation-rail m/NavigationRail :destinations)
-
-(defmacro deftag-stack [mx-name dart-class flutter-variant & flutter-variant-props]
-  `(defn ~mx-name [& vargs#]
-     (dp :deftag-fn-entry!!!! '~mx-name)
-     (mxf/->CBFactory
-       (fn [& [par#]]
-         (dp :defstack-RLZ-par!!! (minfo par#))
-         (let [[fx-props# mx-props# & kids#]
-               (cond (nil? vargs#) nil
-                 (not (map? (first vargs#))) (list* nil nil vargs#)
-                 (map? (second vargs#)) vargs#
-                 :else (list* (first vargs#) nil (rest vargs#)))]
-           (dp :defstack-RLZ-kids!!!!!!!! kids#)
-           (binding [tiltontec.model.core/*md-parent* par#]
-             (tiltontec.flutter-mx.core/make-fx-dart-widget
-               fx-props#
-               (assoc mx-props#
-                 :kids (tiltontec.matrix.api/cFkids-stack kids#)
-                 :fx-gen (fn [me# ctx#]
-                           (dp :defstack-kids (mget me# :kids))
-                           (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)
-                             ~@flutter-variant-props))))))))))
-
-(defn fx-gen-stack [me ctx fx-props new-fn {:keys [prop]}]
-  (dp :genstack-entry!!!!!!!!!!!!!)
-  (fxf/ctx-check me ctx)
-  (dp :genstack-sees-kids (tiltontec.matrix.api/mkids me))
-  (fxf/with-flutter-ref
-    (let [^#/(List Widget) kids (mapv (partial tiltontec.flutter-mx.core/fx-render ctx)
-                                  (tiltontec.matrix.api/mkids me))]
-      (dp :ks->propless-kids (map minfo kids))
-      (Function.apply new-fn []
-        (assoc (fx-props-resolved me ctx fx-props)
-          (Symbol (name prop)) kids)))))
-
-; (deftag-stack stack m/Stack fx-gen-stack {:prop :children})
-
-
-
 ;(deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
 ;(deftag tiltontec.flutter-mx.factory/children-stateless list-view m/ListView)
 
