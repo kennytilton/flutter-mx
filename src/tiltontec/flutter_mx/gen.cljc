@@ -1,5 +1,28 @@
 (ns tiltontec.flutter-mx.gen)
 
+(defmacro deftag-hack [mx-name dart-class flutter-variant & flutter-variant-props]
+  `(defn ~mx-name [& vargs#]
+     (dpx :deftag-HACK-entry!! '~mx-name)
+     (tiltontec.matrix.foundation/->CBFactory
+       (fn [& [par#]]
+         (dpx :deftag-HACK-factory-called-par!!! (minfo par#))
+         (let [[fx-props# mx-props# & kids#]
+               (cond (nil? vargs#) nil
+                 (not (map? (first vargs#))) (list* nil nil vargs#)
+                 (map? (second vargs#)) vargs#
+                 :else (list* (first vargs#) nil (rest vargs#)))]
+           (binding [tiltontec.model.core/*md-parent* par#]
+             (dp :deftag-HACK-making-kids!!!!!!  kids# #_ (cinfo kids#) :par (minfo par#))
+             (tiltontec.flutter-mx.core/make-fx-dart-widget
+               fx-props#
+               (assoc mx-props#
+                 :kids (if (tiltontec.cell.base/c-ref? (first kids#))
+                         (first kids#)
+                         kids#)
+                 :fx-gen (fn [me# ctx#]
+                           (~flutter-variant me# ctx# fx-props# (.-new ~dart-class)
+                             ~@flutter-variant-props))))))))))
+
 (defmacro deftag-ex-exex [mx-name factory]
   `(defmacro ~mx-name [& vargs#]
      (let [[fx-props# mx-props# & kids#]
