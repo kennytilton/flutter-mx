@@ -2,7 +2,7 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.matrix.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm*] :as mx]
+    [tiltontec.matrix.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc] :as mx]
     [tiltontec.flutter-mx.core :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
@@ -19,20 +19,27 @@
        :floatingActionButton
        (cF (floating-action-button
              {:onPressed (as-dart-callback []
-                           (mswap! (fm* :z-counter) :value inc))
+                           (mswap! (fm* :scaffo) :counter inc))
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
+      {:name :scaffo
+       :counter (cI 0)
+       :show-doc (cF (even? (mget me :counter)))}
       (center
         (column {:mainAxisAlignment m.MainAxisAlignment/center}
-          (text {:style (p/TextStyle .color m.Colors/black
+          (if (mget (fasc :scaffo) :show-doc)
+            (text {:style (p/TextStyle .color m.Colors/black
                              .fontSize 18.0)}
-            "You clicked (+) so many times:")
+              "You clicked (+) so many times:")
+            (text {:style (p/TextStyle .color m.Colors/black
+                            .fontSize 18.0)}
+              "Try clicking again!"))
           (sized-box {:height 14.0})
           (text
             {:style (in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
             {:name  :z-counter
              :value (cI 0)}
-            (str (mx/my-value))))))))
+            (str (mget (fasc :scaffo) :counter))))))))
 
 
