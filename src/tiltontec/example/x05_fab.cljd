@@ -5,7 +5,7 @@
     [tiltontec.cell.base :as cbase]
     [tiltontec.model.peek :refer [Model minfo mref?]]
     [tiltontec.matrix.base :refer [trx dpx dp]]
-    [tiltontec.matrix.api :refer [cF cF+ cI mget fmuv fasc] :as mx]
+    [tiltontec.matrix.api :refer [cF cFkids cF+ cI mget fmuv fasc] :as mx]
     [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]
     [tiltontec.flutter-mx.factory :as fmk]
     ["package:flutter/widgets.dart" :as w]
@@ -15,21 +15,18 @@
   (fx/material-app {:title "Expandable Fab"}
     {:name :mat-app}
     (fx/scaffold
-      {:appBar (fx/app-bar {:title (fx/text "Expandable FAB")})
+      {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
        :floatingActionButton (expandable-fab
-                                   :initial-open? false
-                                   :distance 112.0
-                                   :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
-                                             {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
-                                             {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
+                               :initial-open? false
+                               :distance 112.0
+                               :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
+                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
+                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
          :itemCount   25
-         :itemBuilder fake-builder}
-        {:name :lstview}))))
-
-(defn ^w/Widget fake-builder [ctx i]
-  (fake-item (odd? i)))
+         :itemBuilder (fn ^w/Widget [ctx i]
+                        (fake-item (odd? i)))}))))
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
   (fx/sized-box+expand
@@ -38,10 +35,12 @@
      ; --- Dart lifecycle ---------------------------
      ;; todo how does this ever run?
      :dispose          (fn [this me]
-                         (when-let [controller (fx/my-controller)]
-                           (.dispose controller)))
+                         (when-let [c (fx/my-controller)]
+                           (dp :disposing-controller!!!!!! c)
+                           (.dispose c)))
      ; --- animation mechanics ----------------------
      :controller       (cF (fx/when-my-state [state]
+                             (dp :controller-vsinc-state state)
                              (m/AnimationController
                                .value (if initial-open? 1.0 0.0)
                                .duration (dart:core/Duration .milliseconds 250)
@@ -56,39 +55,42 @@
      :open?            (cI initial-open?)
      :ani-dir          (cF+ [:watch (fn [prop-name me new-value prior-value cell]
                                       (when-let [c (fx/my-controller)]
+                                        (dp :firing-controller!!!!!!!!! new-value c)
                                         (case new-value
                                           :forward (.forward c)
                                           :reverse (.reverse c))))]
                          (if (mget me :open?)
                            :forward :reverse))}
-    (fx/text "boom")
-    #_
     (fx/stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
       {:name :fab-stack}
-      (tap-to-close-fab me)
-      ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-      (when-let [ani (mget (fasc :fab) :expand-animation)]
-        (map-indexed
-          (fn [i action]
-            (expanding-action-button me ani
-              :direction-degrees (* i #_30.0 (fmuv :fab :step))
-              :max-distance distance
-              :progress-key :expand-animation
-              :action action))
-          actions))
-      (tap-to-open-fab me))))
+      (cFkids
+        (tap-to-close-fab me)
+        ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
+        (when-let [ani (mget (fasc :fab) :expand-animation)]
+          (dp :ani!!!!!!!!!!! ani)
+          (map-indexed
+            (fn [i action]
+              (expanding-action-button me ani
+                :direction-degrees (* i #_30.0 (fmuv :fab :step))
+                :max-distance distance
+                :progress-key :expand-animation
+                :action action))
+            actions))
+        (tap-to-open-fab me)))))
 
 (defn expanding-action-button [me anime & {:keys [action direction-degrees max-distance progress-key]}]
+  (dp :building-eab!!!! action anime)
   (fx/animated-builder
     {:animation anime                                       ;; (mget (mx/fasc :fab) :expand-animation)
      :builder   (as-dart-callback [ctx child]
-                  (let [progress ^m/CurvedAnimation anime #_(mget me :animation) #_(mget (mx/fasc :fab) :expand-animation)
+                  (let [progress ^m/CurvedAnimation anime
                         offset (m.Offset/fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
                                  (* (.-value progress) max-distance))]
                     ;; N.B! alpha widgets are welcome at leaves of the MX tree...
+                    (dp :Building!!!!!!!!!!!!!!-ani-prog (.-value progress))
                     (f/widget
                       (f/nest
                         (m/Positioned

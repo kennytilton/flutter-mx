@@ -4,7 +4,18 @@
     [tiltontec.flutter-mx.core :as fx]
     ["package:flutter/material.dart" :as m]))
 
-(defn data-table [& {:keys [cols rows]}]
+(defn make-app []
+  (fx/material-app {:debugShowCheckedModeBanner false}
+    (fx/scaffold {:appBar (fx/app-bar {:title (fx/text (str "DataTable Sample fx " (rand-int 99)))})}
+      (fx/center
+        (data-display :cols ["#" "Name" "Age" "City"]
+          :rows [["1" "zm" "42" "guangzhou"]
+                 ["2" "zrj" "10" "guangzhou"]
+                 ["3" "wrp" "13" "hongkong"]
+                 ["4" "wrl" "11" "guangzhou"]
+                 ["5" "wrj" "10" "beijing"]])))))
+
+(defn data-display [& {:keys [cols rows]}]
   (fx/single-child-scroll-view
     {:scrollDirection m.Axis/horizontal}
     (fx/data-table
@@ -22,13 +33,3 @@
                                                           row))) rows)]
                            drows)})))
 
-(defn make-app []
-  (fx/material-app {:debugShowCheckedModeBanner false}
-    (fx/scaffold {:appBar (fx/app-bar {:title (fx/text (str "DataTable Sample fx " (rand-int 99)))})}
-      (fx/center
-        (data-table :cols ["#" "Name" "Age" "City"]
-          :rows [["1" "zm" "42" "guangzhou"]
-                 ["2" "zrj" "10" "guangzhou"]
-                 ["3" "wrp" "13" "hongkong"]
-                 ["4" "wrl" "11" "guangzhou"]
-                 ["5" "wrj" "10" "beijing"]])))))

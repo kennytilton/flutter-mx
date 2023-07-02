@@ -1,6 +1,7 @@
 (ns tiltontec.example.x11-grid-list
   "MX Port of CLJD faithful port of https://docs.flutter.dev/cookbook/lists/grid-lists"
   (:require
+    [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* cFkids minfo] :as mx]
     [tiltontec.flutter-mx.core :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
@@ -12,10 +13,11 @@
         ; --- implicit body ---
         (fx/grid-view+count
           {:crossAxisCount 2}
-          (mapv
-            (fn [i] (fx/center
-                      (fx/text
-                        {:style (fx/in-my-context [me ctx]
-                                  (-> (m.Theme/of ctx) .-textTheme .-headline3))}
-                        (str "Item " i))))
-            (range 100)))))))
+          (cFkids
+            (mapv
+              (fn [i] (fx/center
+                        (fx/text
+                          {:style (fx/in-my-context [me ctx]
+                                    (-> (m.Theme/of ctx) .-textTheme .-headline3))}
+                          (str "Item " i))))
+              (range 100))))))))

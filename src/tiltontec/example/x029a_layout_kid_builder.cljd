@@ -18,7 +18,7 @@
        :msg     "\"Hi, mom!\" "
        :elapsed (cI 0)
 
-       #_#_:clock (cF+ [:on-quiesce (fn [cell]
+       :clock (cF+ [:on-quiesce (fn [cell]
                                       (when-let [tmr ^async/Timer (cb/c-value cell)]
                                         (.cancel tmr)))]
                     (async/Timer.periodic (Duration .seconds 3)
@@ -48,17 +48,13 @@
                    :font-size  (cF (if-let [box (faprop :box-constraints me)]
                                      (+ (* 0.05 (.-maxHeight ^m/BoxConstraints box))
                                        ;; just a random computation off a model outside the built-kid model:
-                                       (* 5 0 #_(mod (faprop :elapsed me) 3)))
+                                       (* 5 (mod (faprop :elapsed me) 3)))
                                      24))
                    :font-color (cF (cond
                                      (> (mget me :font-size) 25) m.Colors/red
                                      :else m.Colors/cyan))}
-                  #_ (str "boom" (rand-int 100))
                   (fx/as-content
-                    (do
-                      (dp :text-con-me (minfo me))
-                      (dp :fasc (map minfo (md/fm-ancestry me)))
-                      (str (mget (fasc :the-app me) :msg)
-                             "in font size "
-                             (/ (int (* 10 (mget me :font-size))) 10)))))))))))))
+                    (str (mget (fasc :the-app me) :msg)
+                      "in font size "
+                      (/ (int (* 10 (mget me :font-size))) 10))))))))))))
 
