@@ -15,18 +15,21 @@
   (fx/material-app {:title "Expandable Fab"}
     {:name :mat-app}
     (fx/scaffold
-      {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
-       :floatingActionButton (expandable-fab
-                               :initial-open? false
-                               :distance 112.0
-                               :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
-                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
-                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
+      {:appBar (fx/app-bar {:title (fx/text "Expandable FAB")})
+       #_#_:floatingActionButton (expandable-fab
+                                   :initial-open? false
+                                   :distance 112.0
+                                   :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
+                                             {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
+                                             {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
       (fx/list-view+builder
         {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
          :itemCount   25
-         :itemBuilder (fx/->CBAsIs
-                        (fn [ctx i] (fake-item (odd? i))))}))))
+         :itemBuilder fake-builder}
+        {:name :lstview}))))
+
+(defn ^w/Widget fake-builder [ctx i]
+  (fake-item (odd? i)))
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
   (fmk/sized-box+expand-ful
@@ -69,7 +72,7 @@
         (map-indexed
           (fn [i action]
             (expanding-action-button me ani
-              :direction-degrees (* i #_ 30.0 (fmuv :fab :step))
+              :direction-degrees (* i #_30.0 (fmuv :fab :step))
               :max-distance distance
               :progress-key :expand-animation
               :action action))
