@@ -16,7 +16,7 @@
     {:name :mat-app}
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Expandable FAB")})
-       #_#_:floatingActionButton (expandable-fab
+       :floatingActionButton (expandable-fab
                                    :initial-open? false
                                    :distance 112.0
                                    :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
@@ -32,7 +32,7 @@
   (fake-item (odd? i)))
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
-  (fmk/sized-box+expand-ful
+  (fx/sized-box+expand
     {}                                                      ;; <= necessary placeholder
     {:name             :fab
      ; --- Dart lifecycle ---------------------------
@@ -61,7 +61,8 @@
                                           :reverse (.reverse c))))]
                          (if (mget me :open?)
                            :forward :reverse))}
-
+    (fx/text "boom")
+    #_
     (fx/stack
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}

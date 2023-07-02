@@ -406,6 +406,11 @@
           (fxf/with-flutter-ref
             (gen-fn me ctx)))))))
 
+#_ (defmacro sized-box+expand [fx-props mx-props & children]
+  `(tiltontec.flutter-mx.factory/k1-child-stateful m.SizedBox/expand ~fx-props ~mx-props ~@children))
+
+(deftag-constructor sized-box+expand m.SizedBox/expand fx-gen-k0>prop-stateful {:prop :child
+                                                                                :ticker? true})
 (deftag-constructor list-view+builder m.ListView/builder fx-gen-ks>ignored-stateless)
 
 (defn fx-gen-ks>ignored-stateless [me ctx fx-props new-fn]
