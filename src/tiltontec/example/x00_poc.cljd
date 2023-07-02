@@ -1,42 +1,46 @@
-(ns tiltontec.example.x01-counter
+(ns tiltontec.example.x00-poc
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tiltontec.matrix.foundation :as mxf]
-    [tiltontec.matrix.api :refer [dp cF cI cFn cFonce mpar mget mset! mswap! fm* fmu cFkids minfo] :as mx]
+    [tiltontec.matrix.api :refer [cF cI cFn cFkids cFonce mpar mget mset! mswap! fm* fmu fasc] :as mx]
     [tiltontec.flutter-mx.core :as fx
-     :refer [as-dart-callback in-my-context as-content
+     :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
-             hero center column text sized-box]]))
+             center column text sized-box]]))
 
 (defn make-app []
   (material-app
-    {:title "Flutter/MX Test Bed"
-     :color m.Colors/cyan
+    {:title "Flutter/MX Counter Demo"
      :theme (m/ThemeData .primarySwatch m.Colors/blue)}
     (scaffold
-      {:appBar               (app-bar {:title (fx/text "Flutter/MX Test Bed")}
-                               {:name :hi-appbar})
-       :floatingActionButton (floating-action-button
-                               {:onPressed (as-dart-callback []
-                                             (mswap! (fm* :ctr) :value inc))
-                                :tooltip   "Increment"}
-                               (m/Icon m.Icons/add .color m.Colors/black))}
-      (center {} {:name :center-0}
-        (column
-          {:mainAxisAlignment m.MainAxisAlignment/center}
-          {:name :col-0}
+      {:appBar
+       (app-bar
+         {:title (m/Text "Flutter/MX Counter")})
+       :floatingActionButton
+       (cF (floating-action-button
+             {:onPressed (as-dart-callback []
+                           (mswap! (fm* :scaffo) :counter inc))
+              :tooltip   "Increment"}
+             (m/Icon m.Icons/add .color m.Colors/black)))}
+      {:name     :scaffo
+       :counter  (cI 0)
+       :show-doc (cF (even? (mget me :counter)))}
+      (center
+        (column {:mainAxisAlignment m.MainAxisAlignment/center}
           (cFkids
-            (fx/container
-              (when true ; (pos? (mget (fm* :ctr) :ctr))
-                (hero {:tag "imageHero"}
-                  (m/Image .image (m/AssetImage "image/kernighan.jpeg")
-                    .height 512))))
-            (sized-box {:height 016.0})
+            (if (mget (fasc :scaffo) :show-doc)
+              (text {:style (p/TextStyle .color m.Colors/black
+                              .fontSize 18.0)}
+                "You clicked (+) so many times:")
+              (text {:style (p/TextStyle .color m.Colors/black
+                              .fontSize 18.0)}
+                "Try clicking again!"))
+            (sized-box {:height 14.0})
             (text
               {:style (in-my-context [me ctx]
                         (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-              {:name  :ctr
+              {:name  :z-counter
                :value (cI 0)}
-              (as-content
-                (str (mx/my-value))))))))))
+              (str (mget (fasc :scaffo) :counter)))))))))
+
+
