@@ -30,27 +30,27 @@
     (scaffold
       {:appBar              (app-bar
                               {:title (m/Text "Bottom Navigation Bar Demo")})
-       :bottomNavigationBar (cF (fx/bottom-navigation-bar
-                                  {;; :type m.BottomNavigationBarType/fixed or .../shifting
-                                   ;; ^^^ we can specify fixed or shifting to override defaults, which
-                                   ;; are fixed for items <= 3, shifting above 3. Very strange.
-                                   :currentIndex      (cF (let [scaff (fmu :top-scaff)
-                                                                curr-id (mget scaff :current-page-id)]
-                                                            (cl-position-if (mget scaff :pages)
-                                                              (fn [page] (= curr-id (:page-id page))))))
-                                   :selectedItemColor (.-shade800 m.Colors/amber)
-                                   :onTap             (fx/as-dart-callback [i]
-                                                        (let [item (nth (mkids me) i)]
-                                                          (mset! (fmu :top-scaff) :current-page-id
-                                                            (mget item :page-id))))}
-                                  (mapv (fn [{:keys [page-id icon label bkg]}]
-                                          (fx/bottom-navigation-bar-item
-                                            {:icon            icon
-                                             :label           label
-                                             :backgroundColor bkg}
-                                            {:page-id page-id}))
-                                    ;; todo why does not fasc work in next?
-                                    (mget (mx/fmu :top-scaff) :pages))))}
+       :bottomNavigationBar (fx/bottom-navigation-bar
+                              {;; :type m.BottomNavigationBarType/fixed or .../shifting
+                               ;; ^^^ we can specify fixed or shifting to override defaults, which
+                               ;; are fixed for items <= 3, shifting above 3. Very strange.
+                               :currentIndex      (cF (let [scaff (fmu :top-scaff)
+                                                            curr-id (mget scaff :current-page-id)]
+                                                        (cl-position-if (mget scaff :pages)
+                                                          (fn [page] (= curr-id (:page-id page))))))
+                               :selectedItemColor (.-shade800 m.Colors/amber)
+                               :onTap             (fx/as-dart-callback [i]
+                                                    (let [item (nth (mkids me) i)]
+                                                      (mset! (fmu :top-scaff) :current-page-id
+                                                        (mget item :page-id))))}
+                              (mapv (fn [{:keys [page-id icon label bkg]}]
+                                      (fx/bottom-navigation-bar-item
+                                        {:icon            icon
+                                         :label           label
+                                         :backgroundColor bkg}
+                                        {:page-id page-id}))
+                                ;; todo why does not fasc work in next?
+                                (mget (mx/fmu :top-scaff) :pages)))}
       {:name            :top-scaff
        :current-page-id (cI :home)
        :pages           [{:page-id :home
@@ -78,5 +78,4 @@
           (text {:style (p/TextStyle
                           .fontWeight m.FontWeight/bold
                           .fontSize 30.0)}
-            (fx/as-content
-              (str "Nav page " (mget (mx/fasc :top-scaff) :current-page-id)))))))))
+            (str "Nav page " (mget (mx/fasc :top-scaff) :current-page-id))))))))

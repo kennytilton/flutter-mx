@@ -1,0 +1,32 @@
+(ns tiltontec.example.x029_layout_builder
+  (:require
+    ["dart:math" :as math]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tiltontec.matrix.api :refer [dp cF cI mget fmuv] :as mx]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback] :as fx]))
+
+(defn make-app []
+  (let [title "Layout Builder Dynamic Text Size"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
+        (fx/center
+          (fx/layout-builder
+            {:builder (fx/->CBAsIs
+                        (fn [ctx box-constraint]
+                          ;; next bit is key: the layout builder wants back a native Flutter
+                          ;; widget, so we have to do the conversion from f/mx proxy to Flutter
+                          ;; ourselves, sth normally midden by f/mx macrology.
+                          (fx/fx-render ctx
+                            ; now we can play in f/mx world....
+                            (fx/text
+                              {:style (cF (p/TextStyle
+                                            .color (mget me :font-color)
+                                            .fontSize (mget me :font-size)))}
+                              {:font-size (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                               :font-color (cF (cond
+                                                 (> (mget me :font-size) 50) m.Colors/red
+                                                 :else m.Colors/cyan))}
+                              (str "Fontsize " (/(int (* 10 (mget me :font-size))) 10))))))}))))))
