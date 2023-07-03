@@ -339,8 +339,6 @@
     io/Platform.isFuchsia :fuchsia
     :else :unknown))
 
-
-
 ;;; --- nextgen ----------------------------------------
 
 (defmacro as-content [form]
@@ -348,17 +346,17 @@
      (fn [& [~'me]]
        ~form)))
 
-(defmacro with-parent [& kids]
-  `(tiltontec.matrix.foundation/->CBFactory
-     (fn [& [~'me]]
-       (tiltontec.model.core/the-kids
-         ~@kids))))
+;(defmacro with-parent [& kids]
+;  `(tiltontec.matrix.foundation/->CBFactory
+;     (fn [& [~'me]]
+;       (tiltontec.model.core/the-kids
+;         ~@kids))))
 
-(defmacro with-host [guest]
-  `(tiltontec.matrix.foundation/->CBFactory
-     (fn [& [par#]]
-       (binding [tiltontec.model.core/*md-parent* par#]
-         ~guest))))
+;(defmacro with-host [guest]
+;  `(tiltontec.matrix.foundation/->CBFactory
+;     (fn [& [par#]]
+;       (binding [tiltontec.model.core/*md-parent* par#]
+;         ~guest))))
 
 (defn make-fx-dart-widget
   ([fx-props mx-props] (make-fx-dart-widget fx-props mx-props nil))

@@ -65,7 +65,7 @@
       {:alignment    m.Alignment/bottomRight
        :clipBehavior m.Clip/none}
       {:name :fab-stack}
-      (cFkids
+      (cFkids  ;; HASSLE
         (tap-to-close-fab me)
         ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
         (when-let [ani (mget (fasc :fab) :expand-animation)]
@@ -106,8 +106,7 @@
       (action-button
         :icon (:icon action)
         :onPressed (fx/in-my-context [me ctx]
-                     (fx/->CBAsIs
-                       #(show-action ctx action)))))))
+                     #(show-action ctx action))))))
 
 (defn show-action [ctx action]
   (m/showDialog

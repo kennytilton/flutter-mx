@@ -31,40 +31,38 @@
 
 (defn gesture-parallelogram []
   (fx/gesture-detector
-    {:onPanStart  (cF (fx/->CBAsIs
-                        (fn [^g/DragStartDetails details]
-                          (let [vertices (mget me :vertices)
-                                pointer (.-localPosition details)
-                                [id delta] (or
-                                             ;; see if a dot has been clicked, perhaps within the parallelogram
-                                             ;; _and_ on the dot, since they overlap a bit. Our spec gives
-                                             ;; the dot precedence.
-                                             (some (fn [[i vertex]]
-                                                     (let [delta (.- pointer vertex)]
-                                                       (when (< (.-distance delta) radius)
-                                                         [i delta])))
-                                               (map-indexed vector vertices))
-                                             ;; ... not on a dot, now see if in parallelogram
-                                             (when-some [delta (inside-parallelogram vertices pointer)]
-                                               [:parallelogram delta])
-                                             ;; fall thru binding id and delta to nil. The id being nil is key
-                                             )]
-                            (md/mset! me :drag-op {:dragee id :delta delta})))))
-     :onPanUpdate (cF (fx/->CBAsIs
-                        (fn [^g/DragUpdateDetails details]
-                          (let [{:keys [dragee delta]} (md/mget me :drag-op)
-                                new-pos (when delta
-                                          (.- (.-localPosition details) delta))]
-                            (cond
-                              (= dragee :parallelogram)
-                              (md/mswap! me :vertices move-to new-pos)
-                              (int? dragee)
-                              (md/mswap! me :vertices assoc dragee new-pos))))))}
+    {:onPanStart  (cF (fn [^g/DragStartDetails details]
+                        (let [vertices (mget me :vertices)
+                              pointer (.-localPosition details)
+                              [id delta] (or
+                                           ;; see if a dot has been clicked, perhaps within the parallelogram
+                                           ;; _and_ on the dot, since they overlap a bit. Our spec gives
+                                           ;; the dot precedence.
+                                           (some (fn [[i vertex]]
+                                                   (let [delta (.- pointer vertex)]
+                                                     (when (< (.-distance delta) radius)
+                                                       [i delta])))
+                                             (map-indexed vector vertices))
+                                           ;; ... not on a dot, now see if in parallelogram
+                                           (when-some [delta (inside-parallelogram vertices pointer)]
+                                             [:parallelogram delta])
+                                           ;; fall thru binding id and delta to nil. The id being nil is key
+                                           )]
+                          (md/mset! me :drag-op {:dragee id :delta delta}))))
+     :onPanUpdate (cF (fn [^g/DragUpdateDetails details]
+                        (let [{:keys [dragee delta]} (md/mget me :drag-op)
+                              new-pos (when delta
+                                        (.- (.-localPosition details) delta))]
+                          (cond
+                            (= dragee :parallelogram)
+                            (md/mswap! me :vertices move-to new-pos)
+                            (int? dragee)
+                            (md/mswap! me :vertices assoc dragee new-pos)))))}
     {:fx$notifier (m/ChangeNotifier)
      :vertices    (cI [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)])
      :drag-op     (cI {:delta  nil
                        :dragee nil})}
-    (fx/as-content
+    (fx/as-content  ;; HASSLE
       (m/CustomPaint
         .size (m/Size double/infinity double/infinity)
         .painter (reify :extends (m/CustomPainter .repaint (mget me :fx$notifier))
