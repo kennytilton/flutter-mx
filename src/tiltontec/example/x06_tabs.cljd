@@ -6,19 +6,17 @@
 ;; partial port of CLJD tabs sample, incidentally demonstrating
 ;; that non-MX components can be added to MX components
 
-(defn make-app
-  []
-  (let [title "Tabs Demo"]
+(defn make-app []
+  (let [title "Tabs Demo"
+        ;; todo can we really add the same widget twice? (This works)
+        tabs [(m/Tab .icon (m/Icon m.Icons/directions_transit)),
+              (m/Tab .icon (m/Icon m.Icons/directions_bike))
+              (m/Tab .icon (m/Icon m.Icons/directions_car)),]]
     (fx/material-app {:title title}
       (fx/default-tab-controller
-        {:length 3}
+        {:length (count tabs)}
         (fx/scaffold
           {:appBar (fx/app-bar
-                     {:bottom (m/TabBar
-                                .tabs [(m/Tab .icon (m/Icon m.Icons/directions_car)),
-                                       (m/Tab .icon (m/Icon m.Icons/directions_transit)),
-                                       (m/Tab .icon (m/Icon m.Icons/directions_bike))])})}
+                     {:bottom (m/TabBar .tabs tabs)})}
           (m/TabBarView
-            .children [(m/Tab .icon (m/Icon. m.Icons/directions_car)),
-                       (m/Tab .icon (m/Icon. m.Icons/directions_transit)),
-                       (m/Tab .icon (m/Icon. m.Icons/directions_bike))]))))))
+            .children tabs))))))

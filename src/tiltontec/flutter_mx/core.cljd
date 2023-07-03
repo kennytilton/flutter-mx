@@ -51,11 +51,6 @@
               (dpx :fx-res-nil!! prop (minfo me))
               nil)
 
-            (dart/is? widget-value CBAsIs)
-            (do
-              (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
-              (.-value ^CBAsIs widget-value))
-
             (dart/is? widget-value mxf/CBFactory)
             ;; we can defer widget construction/eval until parent "me" is in hand,
             ;; instead of via macrology. The alternative has been for, say, `column` to
@@ -276,15 +271,6 @@
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
 ;;; these macros try to hide the plumbing without being obscure.
-
-(defmacro as-is [callback-fn]
-  `(do ;; tiltontec.flutter-mx.core/->CBAsIs
-     ~callback-fn))
-
-(defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tiltontec.flutter-mx.core/in-my-context [~me ~ctx]
-     (do ;; tiltontec.flutter-mx.core/->CBAsIs
-       ~callback-fn)))
 
 (defmacro as-dart-callback [[& cb-params] & body]
   `(tiltontec.flutter-mx.core/in-my-context [~'me ~'ctx]

@@ -81,10 +81,21 @@
          :sound (cI nil :ephemeral? true)}
         (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (language-selector)
+          (fx/text-button
+            {:onPressed (as-dart-callback []
+                          (dp :knock!!!)
+                          (mset! (fasc :demo) :sound
+                            :knock-knock #_[:knock-knock (rand-int 99999)]))}
+            (fx/text {:style (cF (p/TextStyle
+                                   .color (if (mget (fmu :lang-picker) :lang-preferred)
+                                            m.Colors/green m.Colors/red)
+                                   .fontSize 24.0))}
+              "Knock"))
+          #_ ;; todo get ignore working
           (fx/ignore-pointer
-            {:ignoring (cF (nil? (mget (fmu :lang-picker) :lang-preferred)))}
+            {:ignoring false #_ (cF (nil? (mget (fmu :lang-picker) :lang-preferred)))}
             (fx/text-button
-              {:onPressed (cF (as-dart-callback []
+              {:onPressed (do #_ cF (as-dart-callback []
                                 (dp :knock!!!)
                                 (mset! (fasc :demo) :sound
                                   :knock-knock #_[:knock-knock (rand-int 99999)])))}
