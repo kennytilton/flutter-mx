@@ -278,16 +278,16 @@
 ;;; these macros try to hide the plumbing without being obscure.
 
 (defmacro as-is [callback-fn]
-  `(tiltontec.flutter-mx.core/->CBAsIs
+  `(do ;; tiltontec.flutter-mx.core/->CBAsIs
      ~callback-fn))
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
   `(tiltontec.flutter-mx.core/in-my-context [~me ~ctx]
-     (tiltontec.flutter-mx.core/->CBAsIs
+     (do ;; tiltontec.flutter-mx.core/->CBAsIs
        ~callback-fn)))
 
 (defmacro as-dart-callback [[& cb-params] & body]
-  `(tiltontec.flutter-mx.core/with-ctx+as-is [~'me ~'ctx]
+  `(tiltontec.flutter-mx.core/in-my-context [~'me ~'ctx]
      (fn [~@cb-params]
        (tiltontec.cell.base/with-mx-isolation
          ~@body))))
