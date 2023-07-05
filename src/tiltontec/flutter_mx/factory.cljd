@@ -95,17 +95,26 @@
 ;;; --- make fx ------------------------------------------
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
-  ;(dp :make-fx!!!!!!! mx-type)
   (apply tiltontec.model.core/make
          :mx-type mx-type
          :fx$state (cI nil)
-         ;; todo move ^^^ and next to meta
          :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
                            (concat (keys fx-props) (keys custom-props)))
          :kids cFkids-form
          (concat
            (vec (apply concat (seq fx-props)))
            (vec (apply concat (seq custom-props))))))
+
+(defn make-fx-dart-widget [fx-props custom-props & [cFkids-form]]
+  (make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    fx-props custom-props cFkids-form))
+
+(defn ^:macro-support fx-props>mx [fx-props]
+  (let [kvs (for [[k _] fx-props]
+              [(symbol (str "." (name k)))
+               `(tiltontec.flutter-mx.core/fx-resolve ~k ~'me ctx
+                  (tiltontec.matrix.api/mget ~'me ~k))])]
+    (apply concat kvs)))
 
 (def ^:dynamic *fx-building?* false)
 
@@ -189,7 +198,7 @@
 
 (defmacro make-fx-snackbar [fx-class fx-props mx-props & children]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -223,7 +232,7 @@
 
 (defmacro k1-child-stateful [fx-class fx-props mx-props & [child]]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -250,7 +259,7 @@
 
 (defmacro k1-child-stateless [fx-class fx-props mx-props & [child]]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -268,7 +277,7 @@
 
 (defmacro k1-content-stateless [fx-class fx-props mx-props & [child]]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -286,7 +295,7 @@
 
 (defmacro children-stateless [fx-class fx-props mx-props & children]
   (let [fname (symbol (second (clojure.string/split (str fx-class) #"/")))]
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -304,7 +313,7 @@
 
 (defmacro kids->prop-stateless [target-prop-name fx-class fx-props mx-props & children]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -323,7 +332,7 @@
 
 (defmacro kids->prop-stateful [target-prop-name fx-class fx-props mx-props & children]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -349,7 +358,7 @@
 
 (defmacro childless-stateless [fx-class fx-props mx-props]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -365,7 +374,7 @@
 
 (defmacro konly-param1-stateless [fx-class fx-props mx-props & [only-kid]]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :_param-1 (tiltontec.cell.core/cF ~only-kid)
@@ -384,7 +393,7 @@
 
 (defmacro konly-param1-stateful [fx-class fx-props mx-props & [only-kid]]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :_param-1 (tiltontec.cell.core/cF ~only-kid)
@@ -436,7 +445,7 @@
 
 (defmacro childless-stateful [fx-class fx-props mx-props]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -459,7 +468,7 @@
 
 (defmacro prop-param1-childless-stateful [p1-prop-name fx-class fx-props mx-props]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -485,7 +494,7 @@
   (let []
     (assert (not (contains? fx-props :body))
             (str "For " fx-class ", provide the body as (the only) child widget, not as a parameter."))
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -503,24 +512,14 @@
                              (with-flutter-ref
                                (~fx-class
                                  .body bod#
-                                 ~@(let [kvs (for [[k# _#] fx-props]
-                                               [(symbol (str "." (name k#)))
-                                                `(tiltontec.flutter-mx.core/fx-resolve-mget? ~'me ~k# ctx)])]
-                                     (apply concat kvs)))))))))))
+                                 ~@(fx-props>mx fx-props))))))))))
        (tiltontec.matrix.api/cFkids ~body))))
-
-(defn ^:macro-support fx-props>mx [fx-props]
-  (let [kvs (for [[k _] fx-props]
-              [(symbol (str "." (name k)))
-               `(tiltontec.flutter-mx.core/fx-resolve ~k ~'me ctx
-                  (tiltontec.matrix.api/mget ~'me ~k))])]
-    (apply concat kvs)))
 
 (defmacro k1-home-stateful [fx-class fx-props mx-props & [home]]
   (let []
     ;(chk (not (contains? fx-props :home)) "k1-home-stateful passed :home param in FX props, but expects :home as first child")
     ;(chk (not (contains? mx-props :home)) "k1-home-stateful sees :home in MX props, but expects :home as first child")
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -543,7 +542,7 @@
 
 (defmacro prop-param1-childless-stateless [prop fx-class fx-props mx-props]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
@@ -559,7 +558,7 @@
 
 (defmacro kids-for-builder [fx-class fx-props mx-props & children]
   (let []
-    `(tiltontec.flutter-mx.factory/make-fx (new tiltontec.flutter-mx.factory/FXDartWidget)
+    `(tiltontec.flutter-mx.factory/make-fx-dart-widget
        ~fx-props
        (assoc ~mx-props
          :fx-class (quote ~fx-class)
