@@ -15,7 +15,7 @@
     [tiltontec.matrix.util :refer [atom?]]
     [tiltontec.model.peek :refer [chk Model mref? minfo]]
     [tiltontec.cell.base :refer [cinfo] :as cty]
-    [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mkids mswap! cFkids] :as mx]
+    [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
     [tiltontec.flutter-mx.factory :as mk]))
 
 (deftype CBAsIs [value]
@@ -29,9 +29,9 @@
   ;; used where app needs to see the Flutter context to decide a value
   :extends mxf/MXImplementer)
 
-(defn fx-get-resolved [me prop ctx]
+(defn fx-resolve-mget? [me prop ctx]
   (fx-resolve prop me ctx
-              (mget me prop)))
+    (mget? me prop)))
 
 (defn fx-resolve
   ([me ctx widget-value]
@@ -43,7 +43,7 @@
            (cond
              (nil? widget-value)
              (do
-               (dpx :fx-res-nil!! prop )
+               (dpx :fx-res-nil!! prop)
                nil)
 
              (dart/is? widget-value CBAsIs)
@@ -65,8 +65,7 @@
                  (let [v (cb-val me ctx)]
                    (dpx :recuring-unwrapped-fn?-return-val v)
                    (fx-resolve prop me ctx v))
-                 #_
-                         (fx-resolve prop me ctx cb-val)))
+                 #_(fx-resolve prop me ctx cb-val)))
 
              (dart/is? widget-value m/Widget)
              (do
@@ -101,11 +100,6 @@
        ;;(dp :resolved prop resolved)
        resolved))))
 
-;(#/(m/MaterialPageRoute Object)
-;  .settings (m/RouteSettings .name name)
-;  .builder
-;  (f/build page))
-
 (defn ctx-page-push
   ([ctx fx-page-def]
    (ctx-page-push ctx fx-page-def nil))
@@ -130,8 +124,8 @@
         (cty/c-ref? fx)
         (mx-throw (str "fx-render passed Cell " (deref fx)))
         :default (do
-                   #_ (when-not (string? fx)
-                     (dp :render-sees-not-mref?-passing-thru fx))
+                   #_(when-not (string? fx)
+                       (dp :render-sees-not-mref?-passing-thru fx))
                    fx))
       :else (let [gen (mget fx :fx-gen)]
               (dpx :render-sees-gen!! gen)
@@ -198,18 +192,36 @@
        `(~'~factory ~@(when ~param-property
                         [~param-property]) ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
 
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless material m/Material)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless fade-transition m/FadeTransition)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless listener w/Listener)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless mouse-region w/MouseRegion)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless ink-well m/InkWell)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless ignore-pointer w/IgnorePointer)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless absorb-pointer w/AbsorbPointer)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless container m/Container)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless card m/Card)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless padding m/Padding)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless center m/Center)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless place-holder w/PlaceHolder)
+(defmacro deftags [variant & fx-mx-pairs]
+  `(do ~@(for [[fx# mx#] fx-mx-pairs]
+           `(deftag ~variant ~fx# ~mx#))))
+
+(deftags tiltontec.flutter-mx.factory/k1-child-stateless
+  (material m/Material)
+  (fade-transition m/FadeTransition)
+  (listener w/Listener)
+  (mouse-region w/MouseRegion)
+  (ink-well m/InkWell)
+  (ignore-pointer w/IgnorePointer)
+  (absorb-pointer w/AbsorbPointer)
+  (container m/Container)
+  (card m/Card)
+  (padding m/Padding)
+  (center m/Center)
+  (place-holder w/PlaceHolder)
+  (single-child-scroll-view m/SingleChildScrollView)
+  (expanded m/Expanded)
+  (preferred-size m/PreferredSize)
+  (animated-opacity m/AnimatedOpacity)
+  (drawer-header m/DrawerHeader)
+  (floating-action-button m/FloatingActionButton)
+  (align m/Align)
+  (visibility m/Visibility)
+  (drawer m/Drawer)
+  (sized-box m/SizedBox)
+  (opacity m/Opacity)
+  (ink m/Ink)
+  (gesture-detector m/GestureDetector))
 
 (deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
 
@@ -274,27 +286,18 @@
 (deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 (deftag tiltontec.flutter-mx.factory/childless-stateless flutter-logo m/FlutterLogo)
 
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless single-child-scroll-view m/SingleChildScrollView)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless expanded m/Expanded)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless preferred-size m/PreferredSize)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless animated-opacity m/AnimatedOpacity)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless drawer-header m/DrawerHeader)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless floating-action-button m/FloatingActionButton)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless align m/Align)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless visibility m/Visibility)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful visibility! m/Visibility)
+(deftag tiltontec.flutter-mx.factory/k1-child-stateful visibility! m/Visibility) ;; todo stateful needed?
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful popup-menu-button m/PopupMenuButton)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful popup-menu-item m/PopupMenuItem)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless opacity m/Opacity)
+
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful opacity! m/Opacity)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless ink m/Ink)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful ink! m/Ink)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful focus m/Focus)
 
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful safe-area w/SafeArea)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful hero m/Hero)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful ticker-mode w/TickerMode)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless gesture-detector m/GestureDetector)
+
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful dismissible w/Dismissible)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful elevated-button m/ElevatedButton)
 (deftag tiltontec.flutter-mx.factory/k1-child-stateful default-tab-controller m/DefaultTabController)
@@ -321,10 +324,6 @@
 
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
 (deftag tiltontec.flutter-mx.factory/childless-stateless bottom-navigation-bar-item w/BottomNavigationBarItem)
-
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless drawer m/Drawer)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateless sized-box m/SizedBox)
-
 
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
