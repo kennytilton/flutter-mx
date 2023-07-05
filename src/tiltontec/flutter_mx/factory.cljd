@@ -509,7 +509,7 @@
                                      (apply concat kvs)))))))))))
        (tiltontec.matrix.api/cFkids ~body))))
 
-(defn fx-props>mx [fx-props]
+(defn ^:macro-support fx-props>mx [fx-props]
   (let [kvs (for [[k _] fx-props]
               [(symbol (str "." (name k)))
                `(tiltontec.flutter-mx.core/fx-resolve ~k ~'me ctx
@@ -538,6 +538,8 @@
                              (with-flutter-ref
                                (~fx-class
                                  .home bod#
+                                 ~@(fx-props>mx fx-props)
+                                 #_
                                  ~@(let [kvs (for [[k# _#] fx-props]
                                                [(symbol (str "." (name k#))) ;;k#
                                                 `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
