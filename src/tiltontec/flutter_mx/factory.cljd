@@ -121,6 +121,15 @@
 
 (def ^:dynamic *fx-building?* false)
 
+(defn mark-rebuild [^w/Element elt me cell]
+  (dpx :MNBuild-entry (minfo me) elt (deref *fmx-debugger*))
+  (when-let [cb (deref *fmx-debugger*)]
+    (cb :mark-rebuild-unless-defunct {:element elt :cell cell}))
+
+  (when (not (.-debugIsDefunct elt))
+    (dpx :MNBuild-MNB!!! (minfo me))
+    (.markNeedsBuild elt)))
+
 (defn trigger-build [me cell]
   (when-not *fx-building?*
     (if-let [^State? state (mget? me :fx$state)]
@@ -148,15 +157,6 @@
      (do (dpx :TRG-STATE-setting-state!!!! state (minfo me))
          (.setState state (fn [] (do))))
      (dp :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
-
-(defn mark-rebuild [^w/Element elt me cell]
-  (dpx :MNBuild-entry (minfo me) elt (deref *fmx-debugger*))
-  (when-let [cb (deref *fmx-debugger*)]
-    (cb :mark-rebuild-unless-defunct {:element elt :cell cell}))
-
-  (when (not (.-debugIsDefunct elt))
-    (dpx :MNBuild-MNB!!! (minfo me))
-    (.markNeedsBuild elt)))
 
 (defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
@@ -220,8 +220,7 @@
                          (~'build [_# ~'ctx]
                            (tiltontec.flutter-mx.factory/with-flutter-ref
                              (~fx-class                     ;; /SnackBar
-                               ~@(fx-props>mx fx-props)))))))))
-       nil)))
+                               ~@(fx-props>mx fx-props))))))))))))
 
 (defn ^:macro-support fx-class-sym [fx-class]
   (symbol (second (clojure.string/split (str fx-class) #"/"))))
@@ -244,8 +243,7 @@
                            (let [k1# (tiltontec.flutter-mx.core/fx-resolve :kid1 ~'me ~'ctx
                                        (first (tiltontec.model.core/mkids ~'me)))]
                              (tiltontec.flutter-mx.factory/with-flutter-ref
-                               (~fx-class
-                                 .child k1#
+                               (~fx-class .child k1#
                                  ~@(fx-props>mx fx-props))))))))))
        (tiltontec.matrix.api/cFkids ~child))))
 
@@ -337,8 +335,7 @@
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ~'ctx]
                    (tiltontec.flutter-mx.factory/with-flutter-ref
                      (~fx-class
-                       ~@(fx-props>mx fx-props)))))
-       nil)))
+                       ~@(fx-props>mx fx-props))))))))
 
 (defmacro konly-param1-stateless [fx-class fx-props mx-props & [only-kid]]
   (let []
@@ -351,9 +348,7 @@
                    (tiltontec.flutter-mx.factory/with-flutter-ref
                      (~fx-class (tiltontec.flutter-mx.core/fx-render ~'ctx
                                   (tiltontec.matrix.api/mget ~'me :_param-1))
-                       ~@(fx-props>mx fx-props)))))
-       ;; todo teach make-fx it does not need children
-       nil)))
+                       ~@(fx-props>mx fx-props))))))))
 
 (defmacro konly-param1-stateful [fx-class fx-props mx-props & [only-kid]]
   (let []
@@ -373,8 +368,7 @@
                            (tiltontec.flutter-mx.factory/with-flutter-ref
                              (~fx-class (tiltontec.flutter-mx.core/fx-render ~'ctx
                                           (tiltontec.matrix.api/mget ~'me :_param-1))
-                               ~@(fx-props>mx fx-props)))))))))
-       nil)))
+                               ~@(fx-props>mx fx-props))))))))))))
 
 (defmacro konly-for-builder-stateless [fx-class fx-props mx-props & [only-kid]]
   (let []
@@ -418,8 +412,7 @@
                          (~'build [_# ~'ctx]
                            (tiltontec.flutter-mx.factory/with-flutter-ref
                              (~fx-class
-                               ~@(fx-props>mx fx-props)))))))))
-       nil)))
+                               ~@(fx-props>mx fx-props))))))))))))
 
 (defmacro k1-body-stateful [fx-class fx-props mx-props & [body]]
   (let []
@@ -479,8 +472,7 @@
                    (tiltontec.flutter-mx.factory/with-flutter-ref
                      (~fx-class
                        (tiltontec.flutter-mx.core/fx-resolve-mget? ~'me ~prop ~'ctx)
-                       ~@(fx-props>mx (dissoc fx-props prop))))))
-       nil)))
+                       ~@(fx-props>mx (dissoc fx-props prop)))))))))
 
 ;;; --- kids for builder ------------------------------------------------------
 
