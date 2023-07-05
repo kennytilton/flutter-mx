@@ -538,13 +538,7 @@
                              (with-flutter-ref
                                (~fx-class
                                  .home bod#
-                                 ~@(fx-props>mx fx-props)
-                                 #_
-                                 ~@(let [kvs (for [[k# _#] fx-props]
-                                               [(symbol (str "." (name k#))) ;;k#
-                                                `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
-                                                   (tiltontec.matrix.api/mget ~'me ~k#))])]
-                                     (apply concat kvs)))))))))))
+                                 ~@(fx-props>mx fx-props))))))))))
        (tiltontec.matrix.api/cFkids ~home))))
 
 (defmacro prop-param1-childless-stateless [prop fx-class fx-props mx-props]
@@ -556,13 +550,9 @@
          :fx-gen (fn fgen [~'me ctx]
                    (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
-                     (~fx-class (tiltontec.flutter-mx.core/fx-resolve ~prop ~'me ctx
-                                  (tiltontec.matrix.api/mget ~'me ~prop))
-                       ~@(let [kvs (for [[k# _#] (dissoc fx-props prop)]
-                                     [(symbol (str "." (name k#)))
-                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
-                                         (tiltontec.matrix.api/mget ~'me ~k#))])]
-                           (apply concat kvs))))))
+                     (~fx-class
+                       (tiltontec.flutter-mx.core/fx-resolve-mget? ~'me ~prop ctx)
+                       ~@(fx-props>mx (dissoc fx-props prop))))))
        nil)))
 
 ;;; --- kids for builder ------------------------------------------------------
@@ -576,12 +566,7 @@
          :fx-gen (fn fgen [~'me ctx]
                    (tiltontec.flutter-mx.factory/ctx-check (quote ~fx-class) ~'me ctx)
                    (with-flutter-ref
-                     (~fx-class
-                       ~@(let [kvs (for [[k# _#] fx-props]
-                                     [(symbol (str "." (name k#)))
-                                      `(tiltontec.flutter-mx.core/fx-resolve ~k# ~'me ctx
-                                         (tiltontec.matrix.api/mget ~'me ~k#))])]
-                           (apply concat kvs))))))
+                     (~fx-class ~@(fx-props>mx fx-props)))))
        (tiltontec.matrix.api/cFkids ~@children))))
 
 ;;; -------------------------------------------------------------
