@@ -1,0 +1,44 @@
+(ns example.eg.x02-two-counters-ala-matrix
+  (:require
+    ["package:flutter/widgets.dart"
+     :refer [Text State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]
+
+    [clojure.string :as str]
+    [tilton.mx.api :refer [cF cI make  mget  cFkids fmu fmuv] :as mx]
+    [tilton.fmx.core :as fx]
+    ))
+
+(defn- build-counter [counter-key]
+  (fx/expanded
+    (fx/column
+      {:mainAxisAlignment MainAxisAlignment/center}
+      {:name  :ctr-col
+       ;; The column maintains its own state, aka "in-place state".
+       ;; We find it useful to give every widget a "value" property for holding the primary value of a widget
+       :value (cI 0)}
+      (fx/text (str/capitalize (name counter-key)))
+      (fx/text {:style (fx/in-my-context [me ctx]
+                         ;; we hacked the text widget a bit to look for callback functions on "style"
+                         ;; so a style formula can tap the runtime context.
+                         (-> (Theme/of ctx) .-textTheme .-displayLarge))}
+        (str (mx/fmuval :ctr-col)))
+      (fx/elevated-button
+        {:onPressed (fx/->CBAsIs
+                      (fn ^void []
+                        (mx/mswap! (mx/fm* :ctr-col) :value inc)))}
+        (fx/text "+")))))
+
+(defn make-app []
+  (fx/material-app {:title "Two Counters (MX)"
+                 :theme (cF (ThemeData .primarySwatch Colors/blue))}
+    (fx/scaffold
+      {:appBar (AppBar .title (Text "Two Counters (MX)"))}
+      (fx/center
+        (fx/row
+          {:mainAxisAlignment MainAxisAlignment/center}
+          (mapv #(build-counter %)
+            [:left :right]))))))

@@ -1,0 +1,48 @@
+(ns example.eg.x02-two-counters-ala-flux
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.cell.core :refer [cF cI]]
+    [tilton.mx.model.core :refer [mget mset! mswap!] :as md]
+    [tilton.fmx.core :as fx]
+
+    ["package:flutter/widgets.dart"
+     :refer [Text State StatefulWidget StatelessWidget]]
+    ["package:flutter/material.dart" :as m
+     :refer [MainAxisAlignment Colors Theme Icon Icons ThemeData runApp AppBar State]]
+    ["package:flutter/painting.dart"
+     :refer [TextStyle]]))
+
+(defn build-counter [counter-key]
+  (fx/expanded
+    (fx/column
+      {:mainAxisAlignment MainAxisAlignment/center}
+      {:name  :counter-col
+       :value (cF (let [app (md/fm-ascendant :counter-app me :must? true)]
+                    (get-in (mget app :flux-store) [:counters counter-key])))}
+      (fx/text (str/capitalize (name counter-key)))
+      (fx/text {:style (TextStyle
+                         .color m.Colors/cyan
+                         .fontSize 32.0)}
+        (str (md/fmuval :counter-col)))
+      (fx/elevated-button
+        {:onPressed (fx/as-dart-callback []
+                      (mswap! (md/fm-ascendant :counter-app me)
+                        :flux-store update-in [:counters counter-key] inc))}
+        (fx/text "+")))))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Two Counters"
+     :theme (cF (ThemeData .primarySwatch Colors/blue))}
+    {:name       :counter-app
+     ; simulating a separate global store a la Flux, we bind a purely independent Matrix data structure that
+     ; must be consulted for values. Pro tip: use `mswap! <the app> :flux-store update-in etc` to
+     ; increment either counter.
+     :flux-store (cI {:counters {:left 0 :right 0}})}
+
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Two Counters ala Flux")})}
+      (fx/center
+        (fx/row
+          {:mainAxisAlignment MainAxisAlignment/center}
+          (mapv #(build-counter %) [:left :right]))))))

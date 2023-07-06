@@ -1,0 +1,39 @@
+(ns example.eg.x00-hello-world
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.api :refer [cF mget mset! mswap!] :as md]
+    [tilton.fmx.core :as fx
+     :refer [scaffold app-bar text center column hero material-app]]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Hello World, Teal"
+     :theme (cF (m/ThemeData .primarySwatch
+                  (let [ttl (mget me :title)]
+                    ;; silly derivation
+                    (cond
+                      (str/includes? ttl "Teal") m.Colors/teal
+                      (str/includes? ttl "Red") m.Colors/red
+                      :else m.Colors/blue))))}
+    (scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "Welcome to Flutter/MX")})}
+      (center
+        (column
+          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+          (text {:overflow p.TextOverflow/ellipsis
+                 :style    (p/TextStyle
+                             .color m.Colors/cyan
+                             .fontSize 32.0)}
+            "hello, world\\n")
+          (hero {:tag "imageHero"}
+            (m/Image .image (m/AssetImage "image/kernighan.jpeg")
+              .height 512))
+          (text {:overflow p.TextOverflow/ellipsis
+                 :style    (p/TextStyle
+                             .color m.Colors/cyan
+                             .fontSize 16.0)}
+            "Brian Kernighan"))))))

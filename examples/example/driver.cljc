@@ -8,6 +8,7 @@
     [tilton.mx.api :refer [minfo] :as mx]
     [tilton.fmx.core :as fx]
     ;;[example.x00-poc :as x00]
+    [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]
     ;[example.eg.x02-two-counters-ala-flux :as ctr2flux]
     ;[example.eg.x02-two-counters-ala-matrix :as ctr2]
@@ -41,4 +42,4 @@
     [example.eg.x029a-layout-kid-builder :as x029]))
 
 (defn select []
-  (x03/make-app))
+  (hello/make-app))
