@@ -356,14 +356,13 @@
        (new tilton.fmx.factory/FXDartWidget)
        (assoc ~fx-props
          :builder (tilton.mx.api/cF
-                    (fx/->CBAsIs
-                      (fn [ctx box-constraints]
-                        ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
-                        ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
-                        ;; with iso?
-                        (binding [tilton.fmx.factory/*fx-building?* true]
-                          (tilton.mx.model.core/mset! ~'me :box-constraints box-constraints)) ;; ...and convert box argument to reactive input
-                        (fx/fx-render ctx (first (tilton.mx.api/mkids ~'me)))))))
+                    (fn [ctx box-constraints]
+                      ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
+                      ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
+                      ;; with iso?
+                      (binding [tilton.fmx.factory/*fx-building?* true]
+                        (tilton.mx.model.core/mset! ~'me :box-constraints box-constraints)) ;; ...and convert box argument to reactive input
+                      (fx/fx-render ctx (first (tilton.mx.api/mkids ~'me))))))
        (assoc ~mx-props
          :box-constraints (tilton.mx.cell.core/cI nil)
          :fx-class (quote ~fx-class)
@@ -478,3 +477,30 @@
 (defmacro transorm+rotate-ful [fx-props mx-props & children]
   `(tilton.fmx.factory/k1-child-stateful m.Transform/rotate ~fx-props ~mx-props ~@children))
 
+;;; ------- deftags ---------------------------------
+
+
+(defmacro deftag [factory mx-name fx-class & [param-property]]
+  `(defmacro ~mx-name [& vargs#]
+     (let [[fx-props# mx-props# & children#]
+           (cond
+             (nil? vargs#)
+             nil
+
+             (not (map? (first vargs#)))
+             ; just kids
+             (list* nil nil vargs#)
+
+             (map? (second vargs#))
+             ; full spec kids optional
+             vargs#
+
+             :else
+             ;; first is fx props, no mx props, maybe kids
+             (list* (first vargs#) nil (rest vargs#)))]
+       `(~'~factory ~@(when ~param-property
+                        [~param-property]) ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
+
+(defmacro deftags [variant & fx-mx-pairs]
+  `(do ~@(for [[fx# mx#] fx-mx-pairs]
+           `(deftag ~variant ~fx# ~mx#))))

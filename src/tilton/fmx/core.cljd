@@ -15,7 +15,7 @@
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
     [tilton.mx.cell.base :refer [cinfo] :as cty]
     [tilton.mx.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
-    [tilton.fmx.factory :as mk]))
+    [tilton.fmx.factory :refer [deftag deftags] :as fxf]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
@@ -130,7 +130,7 @@
               (dpx :render-sees-gen!! gen)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
-              ;; nope (mk/record-fx$ctx fx ctx)
+              ;; nope (fxf/record-fx$ctx fx ctx)
               (let [g (gen fx ctx)]
                 (dpx :render-genned!!! g)
                 (rmap-meta-set! [:fx-dom fx] g)
@@ -170,30 +170,6 @@
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
 
-(defmacro deftag [factory mx-name fx-class & [param-property]]
-  `(defmacro ~mx-name [& vargs#]
-     (let [[fx-props# mx-props# & children#]
-           (cond
-             (nil? vargs#)
-             nil
-
-             (not (map? (first vargs#)))
-             ; just kids
-             (list* nil nil vargs#)
-
-             (map? (second vargs#))
-             ; full spec kids optional
-             vargs#
-
-             :else
-             ;; first is fx props, no mx props, maybe kids
-             (list* (first vargs#) nil (rest vargs#)))]
-       `(~'~factory ~@(when ~param-property
-                        [~param-property]) ~'~fx-class ~fx-props# ~mx-props# ~@children#))))
-
-(defmacro deftags [variant & fx-mx-pairs]
-  `(do ~@(for [[fx# mx#] fx-mx-pairs]
-           `(deftag ~variant ~fx# ~mx#))))
 
 (deftags tilton.fmx.factory/k1-child-stateless
   (material m/Material)
