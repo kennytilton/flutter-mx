@@ -10,7 +10,7 @@
      :refer [wtrx dp dpx trx]]
     [tilton.mx.api :refer [minfo] :as mx]
     [tilton.fmx.core :as fx]
-    [example.driver :as eg]
+    ; [example.driver :as eg] ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]))
 
 (defn main []
@@ -23,9 +23,10 @@
     (fx/run-app
       (fx/fx-render nil
         ;; Change the  namespace below to one above and rebuild to see a different example. <<<<<<< Updated upstream
-        ;; ------ VVVVV --------------------------------------------
-        #_ (counter/make-app)
-        (eg/select))))
+        ;; ------ VVVVV either/or next two--------------------------------------------
+        (counter/make-app)
+        #_ (eg/select) ;; <--- cannot use when excluding examples dir in deps.edn
+        )))
 
   ;; (testing/run-tests)
   (dp :main-exit))
