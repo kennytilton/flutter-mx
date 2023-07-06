@@ -1,8 +1,8 @@
-(ns tiltontec.mx.model.peek
+(ns tilton.mx.model.peek
   (:require
     [cljd.string :as str]
     ["package:flutter/foundation.dart" :as fd]
-    [tiltontec.mx.foundation :refer [MXImplementer PObserver mx-type]]))
+    [tilton.mx.foundation :refer [MXImplementer PObserver mx-type]]))
 
 ;; --- assertions ---------------------------
 (defn flutter-release-mode []
@@ -13,8 +13,8 @@
     (throw (Exception. (str/join " - " bits)))))
 
 (defmacro chk [test & bits]
-  `(when-not (tiltontec.mx.model.peek/flutter-release-mode)
-     (tiltontec.mx.model.peek/call-chk ~test ~@bits)))
+  `(when-not (tilton.mx.model.peek/flutter-release-mode)
+     (tilton.mx.model.peek/call-chk ~test ~@bits)))
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))

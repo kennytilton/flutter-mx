@@ -1,4 +1,4 @@
-(ns tiltontec.flutter-mx.core
+(ns tilton.fmx.core
   (:require
     ["dart:io" :as io]
     ["package:flutter/foundation.dart" :as foundation]
@@ -9,13 +9,13 @@
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
     ["package:flutter/painting.dart" :as p
      :refer [TextStyle]]
-    [tiltontec.mx.foundation :as mxf]
-    [tiltontec.mx.base :refer [wtrx dp dpx mx-throw]]
-    [tiltontec.mx.util :refer [atom?]]
-    [tiltontec.mx.model.peek :refer [chk Model mref? minfo]]
-    [tiltontec.mx.cell.base :refer [cinfo] :as cty]
-    [tiltontec.mx.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
-    [tiltontec.flutter-mx.factory :as mk]))
+    [tilton.mx.foundation :as mxf]
+    [tilton.mx.base :refer [wtrx dp dpx mx-throw]]
+    [tilton.mx.util :refer [atom?]]
+    [tilton.mx.model.peek :refer [chk Model mref? minfo]]
+    [tilton.mx.cell.base :refer [cinfo] :as cty]
+    [tilton.mx.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
+    [tilton.fmx.factory :as mk]))
 
 (deftype CBAsIs [value]
   ;; tells fx-resolve to leave mx value untouched
@@ -137,19 +137,19 @@
                 g)))))
 
 (defmacro in-my-context [[me-var ctx-var] & body]
-  `(tiltontec.flutter-mx.core/->CBToResolve
+  `(tilton.fmx.core/->CBToResolve
      (fn [~me-var ~ctx-var]
        ~@body)))
 
 (defmacro when-my-state [[state-var] & body]
-  `(when-let [~state-var (tiltontec.flutter-mx.core/my-state)]
+  `(when-let [~state-var (tilton.fmx.core/my-state)]
      ~@body))
 
 (defn ctx-nav [ctx]
   (m.Navigator/of ctx))
 
 (defmacro my-controller []
-  `^m/AnimationController? (tiltontec.mx.api/mget ~'me :controller))
+  `^m/AnimationController? (tilton.mx.api/mget ~'me :controller))
 
 (defn standard-text-value-controller [me]
   ;; usage: (fx/text {:controller (cF (standard-text-value-controller me))}....
@@ -163,10 +163,10 @@
 
 (defmacro my-animation []
   ;; uncast since type will vary
-  `(tiltontec.mx.api/mget ~'me :animation))
+  `(tilton.mx.api/mget ~'me :animation))
 
 (defmacro my-state []
-  `(tiltontec.mx.api/mget ~'me :fx$state))
+  `(tilton.mx.api/mget ~'me :fx$state))
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
 
@@ -195,7 +195,7 @@
   `(do ~@(for [[fx# mx#] fx-mx-pairs]
            `(deftag ~variant ~fx# ~mx#))))
 
-(deftags tiltontec.flutter-mx.factory/k1-child-stateless
+(deftags tilton.fmx.factory/k1-child-stateless
   (material m/Material)
   (fade-transition m/FadeTransition)
   (listener w/Listener)
@@ -222,7 +222,7 @@
   (ink m/Ink)
   (gesture-detector m/GestureDetector))
 
-(deftags tiltontec.flutter-mx.factory/childless-stateless
+(deftags tilton.fmx.factory/childless-stateless
   (app-bar m/AppBar)
   (data-table m/DataTable)
   (rounded-rectangle-border p/RoundedRectangleBorder)
@@ -233,30 +233,30 @@
   (navigation-rail-destination w/NavigationRailDestination))
 
 (defmacro alert-dialog [fx-props mx-props & children]
-  `(tiltontec.flutter-mx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
+  `(tilton.fmx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
-(deftags tiltontec.flutter-mx.factory/childless-stateful
+(deftags tilton.fmx.factory/childless-stateful
   (text-field m/TextField)
   (check-box m/Checkbox)
   (elevated-button+icon m.ElevatedButton/icon))
 
 ;; todo does snackbar still need this custom macro?
-(deftag tiltontec.flutter-mx.factory/make-fx-snackbar snack-bar m/SnackBar)
-(deftag tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
-(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateless icon m/Icon :icon)
+(deftag tilton.fmx.factory/make-fx-snackbar snack-bar m/SnackBar)
+(deftag tilton.fmx.factory/konly-param1-stateless text m/Text)
+(deftag tilton.fmx.factory/prop-param1-childless-stateless icon m/Icon :icon)
 
-(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
+(deftag tilton.fmx.factory/k1-body-stateful scaffold m/Scaffold)
 
 (defmacro icon-button [& vargs]
   (let [[fx-props mx-props] vargs]
-    `(tiltontec.flutter-mx.factory/childless-stateless m/IconButton ~fx-props ~mx-props)))
+    `(tilton.fmx.factory/childless-stateless m/IconButton ~fx-props ~mx-props)))
 
-(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+separated m.ListView/separated)
-(deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
-(deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
-(deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
+(deftag tilton.fmx.factory/kids-for-builder list-view+separated m.ListView/separated)
+(deftag tilton.fmx.factory/kids-for-builder list-view+builder m.ListView/builder)
+(deftag tilton.fmx.factory/k1-home-stateful material-app m/MaterialApp)
+(deftag tilton.fmx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
-(deftags tiltontec.flutter-mx.factory/k1-child-stateful
+(deftags tilton.fmx.factory/k1-child-stateful
   (popup-menu-button m/PopupMenuButton)
   (popup-menu-item m/PopupMenuItem)
   (opacity! m/Opacity)
@@ -275,20 +275,20 @@
   (animated-builder m/AnimatedBuilder)
   (animated-container m/AnimatedContainer))
 
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateful
+(deftag tilton.fmx.factory/kids->prop-stateful
   navigation-rail m/NavigationRail :destinations)
 
-(deftags tiltontec.flutter-mx.factory/children-stateless
+(deftags tilton.fmx.factory/children-stateless
   (stack m/Stack)
   (column m/Column)
   (row m/Row)
   (list-view m/ListView))
 
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless
+(deftag tilton.fmx.factory/kids->prop-stateless
   grid-view+count m.GridView/count :children)
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless
+(deftag tilton.fmx.factory/kids->prop-stateless
   bottom-navigation-bar m/BottomNavigationBar :items)
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless
+(deftag tilton.fmx.factory/kids->prop-stateless
   wrap w/Wrap :children)
 
 ;;; ---------------------------------------------------
@@ -296,23 +296,23 @@
 ;;; these macros try to hide the plumbing without being obscure.
 
 (defmacro as-is [callback-fn]
-  `(tiltontec.flutter-mx.core/->CBAsIs
+  `(tilton.fmx.core/->CBAsIs
      ~callback-fn))
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tiltontec.flutter-mx.core/in-my-context [~me ~ctx]
-     (tiltontec.flutter-mx.core/->CBAsIs
+  `(tilton.fmx.core/in-my-context [~me ~ctx]
+     (tilton.fmx.core/->CBAsIs
        ~callback-fn)))
 
 (defmacro as-dart-callback [[& cb-params] & body]
-  `(tiltontec.flutter-mx.core/with-ctx+as-is [~'me ~'ctx]
+  `(tilton.fmx.core/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
-       (tiltontec.mx.cell.base/with-mx-isolation
+       (tilton.mx.cell.base/with-mx-isolation
          ~@body))))
 
 (defmacro my-app []
   ;; fasc "captures" 'me
-  `(tiltontec.mx.api/fasc :app))
+  `(tilton.mx.api/fasc :app))
 
 ;;; --- hot reload support --------------------
 

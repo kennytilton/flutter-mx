@@ -1,16 +1,16 @@
-(ns tiltontec.mx.cell.base
+(ns tilton.mx.cell.base
   (:require
-    [tiltontec.mx.model.peek :refer [chk mref? minfo]]
-    [tiltontec.mx.base :as utb
+    [tilton.mx.model.peek :refer [chk mref? minfo]]
+    [tilton.mx.base :as utb
      :refer [mx-throw def-rmap-props dp]]
 
-    [tiltontec.mx.util
+    [tilton.mx.util
      :refer [cl-find set-ify atom?
              make-fifo-queue fifo-empty? fifo-peek fifo-pop
              fifo-data fifo-add rmap-set! rmap-meta-set! mut-set!]
      :as utc]
 
-    [tiltontec.mx.foundation :refer [PObserver observe] :as mx]))
+    [tilton.mx.foundation :refer [PObserver observe] :as mx]))
 
 ;; --- the Cells beef -----------------------
 
@@ -36,27 +36,27 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defmacro WITHOUT-mx-isolation [& body]
   `(do
-     (when (or tiltontec.mx.cell.base/*within-integrity*
-             tiltontec.mx.cell.base/*depender*
-             tiltontec.mx.cell.base/*defer-changes*
-             tiltontec.mx.cell.base/*call-stack*)
-       (tiltontec.mx.base/dp :DANGER-mx-iso-ignoring!!!!!!!!! tiltontec.mx.cell.base/*within-integrity*
-         tiltontec.mx.cell.base/*depender*
-         tiltontec.mx.cell.base/*defer-changes*
-         tiltontec.mx.cell.base/*call-stack*))
+     (when (or tilton.mx.cell.base/*within-integrity*
+             tilton.mx.cell.base/*depender*
+             tilton.mx.cell.base/*defer-changes*
+             tilton.mx.cell.base/*call-stack*)
+       (tilton.mx.base/dp :DANGER-mx-iso-ignoring!!!!!!!!! tilton.mx.cell.base/*within-integrity*
+         tilton.mx.cell.base/*depender*
+         tilton.mx.cell.base/*defer-changes*
+         tilton.mx.cell.base/*call-stack*))
      ~@body))
 
 (defmacro with-mx-isolation [& body]
   `(do
-     #_(tiltontec.mx.base/dp :mx-iso-overriding!!!S
-         tiltontec.mx.cell.base/*within-integrity*
-         tiltontec.mx.cell.base/*depender*
-         tiltontec.mx.cell.base/*defer-changes*
-         tiltontec.mx.cell.base/*call-stack*)
-     (binding [tiltontec.mx.cell.base/*within-integrity* nil
-               tiltontec.mx.cell.base/*depender* nil
-               tiltontec.mx.cell.base/*defer-changes* false
-               tiltontec.mx.cell.base/*call-stack* nil]
+     #_(tilton.mx.base/dp :mx-iso-overriding!!!S
+         tilton.mx.cell.base/*within-integrity*
+         tilton.mx.cell.base/*depender*
+         tilton.mx.cell.base/*defer-changes*
+         tilton.mx.cell.base/*call-stack*)
+     (binding [tilton.mx.cell.base/*within-integrity* nil
+               tilton.mx.cell.base/*depender* nil
+               tilton.mx.cell.base/*defer-changes* false
+               tilton.mx.cell.base/*call-stack* nil]
        ~@body)))
 
 (def unbound (gensym "unbound-cell-value"))
@@ -84,7 +84,7 @@ rule to get once behavior or just when fm-traversing to find someone"
    (reset! +client-q-handler+ (:client-queue-handler options))))
 
 (defmacro without-c-dependency [& body]
-  `(binding [tiltontec.mx.cell.base/*depender* nil]
+  `(binding [tilton.mx.cell.base/*depender* nil]
      ~@body))
 
 (defn +cause []
