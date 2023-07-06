@@ -42,4 +42,4 @@
     [example.eg.x029a-layout-kid-builder :as x029]))
 
 (defn select []
-  (hello/make-app))
+  (x029/make-app))
