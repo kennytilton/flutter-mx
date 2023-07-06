@@ -9,12 +9,12 @@
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
     ["package:flutter/painting.dart" :as p
      :refer [TextStyle]]
-    [tiltontec.matrix.foundation :as mxf]
-    [tiltontec.matrix.base :refer [wtrx dp dpx mx-throw]]
-    [tiltontec.matrix.util :refer [atom?]]
-    [tiltontec.matrix.model.peek :refer [chk Model mref? minfo]]
-    [tiltontec.matrix.cell.base :refer [cinfo] :as cty]
-    [tiltontec.matrix.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
+    [tiltontec.mx.foundation :as mxf]
+    [tiltontec.mx.base :refer [wtrx dp dpx mx-throw]]
+    [tiltontec.mx.util :refer [atom?]]
+    [tiltontec.mx.model.peek :refer [chk Model mref? minfo]]
+    [tiltontec.mx.cell.base :refer [cinfo] :as cty]
+    [tiltontec.mx.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
     [tiltontec.flutter-mx.factory :as mk]))
 
 (deftype CBAsIs [value]
@@ -149,7 +149,7 @@
   (m.Navigator/of ctx))
 
 (defmacro my-controller []
-  `^m/AnimationController? (tiltontec.matrix.api/mget ~'me :controller))
+  `^m/AnimationController? (tiltontec.mx.api/mget ~'me :controller))
 
 (defn standard-text-value-controller [me]
   ;; usage: (fx/text {:controller (cF (standard-text-value-controller me))}....
@@ -163,10 +163,10 @@
 
 (defmacro my-animation []
   ;; uncast since type will vary
-  `(tiltontec.matrix.api/mget ~'me :animation))
+  `(tiltontec.mx.api/mget ~'me :animation))
 
 (defmacro my-state []
-  `(tiltontec.matrix.api/mget ~'me :fx$state))
+  `(tiltontec.mx.api/mget ~'me :fx$state))
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
 
@@ -307,12 +307,12 @@
 (defmacro as-dart-callback [[& cb-params] & body]
   `(tiltontec.flutter-mx.core/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
-       (tiltontec.matrix.cell.base/with-mx-isolation
+       (tiltontec.mx.cell.base/with-mx-isolation
          ~@body))))
 
 (defmacro my-app []
   ;; fasc "captures" 'me
-  `(tiltontec.matrix.api/fasc :app))
+  `(tiltontec.mx.api/fasc :app))
 
 ;;; --- hot reload support --------------------
 

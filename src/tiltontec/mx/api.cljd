@@ -1,11 +1,11 @@
-(ns tiltontec.matrix.api
+(ns tiltontec.mx.api
   (:require
     [clojure.string :as str]
-    [tiltontec.matrix.base :refer [mx-throw]]
-    [tiltontec.matrix.util :as util]
-    [tiltontec.matrix.cell.base :as cb]
-    [tiltontec.matrix.model.peek :as mpeek]
-    [tiltontec.matrix.model.core :as md]))
+    [tiltontec.mx.base :refer [mx-throw]]
+    [tiltontec.mx.util :as util]
+    [tiltontec.mx.cell.base :as cb]
+    [tiltontec.mx.model.peek :as mpeek]
+    [tiltontec.mx.model.core :as md]))
 
 (def unbound cb/unbound)
 
@@ -35,10 +35,10 @@
   (apply md/mswap! me prop swap-fn swap-fn-args))
 
 (defn mget [me prop]
-  (tiltontec.matrix.model.core/mget me prop))
+  (tiltontec.mx.model.core/mget me prop))
 
 (defn mget? [me prop & [alt-value]]
-  (tiltontec.matrix.model.core/mget? me prop alt-value))
+  (tiltontec.mx.model.core/mget? me prop alt-value))
 
 ;;; ---- lifecycle ---------------------------------
 ;; --- md-quiesce --
@@ -59,7 +59,7 @@
 (defn mname [me]
   (:name @me))
 
-(defn mkids [me] (tiltontec.matrix.model.core/mget? me :kids))
+(defn mkids [me] (tiltontec.mx.model.core/mget? me :kids))
 
 (defmacro mpar [& [me]]
   (let [me (or me 'me)]
@@ -69,7 +69,7 @@
   (md/mhost md))
 
 (defmacro with-par [meform & body]
-  `(tiltontec.matrix.model.core/with-par ~meform
+  `(tiltontec.mx.model.core/with-par ~meform
      ~@body))
 
 (defn fm-navig [what where & options]
@@ -80,13 +80,13 @@
   [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (tiltontec.matrix.model.core/fm-ascendant name# ~me-ref))))
+       (tiltontec.mx.model.core/fm-ascendant name# ~me-ref))))
 ;
 ;(defmacro fmu [name & [me]]
 ;  "Search matrix ascendents from node 'me' (defaulting to 'me in current scope) looking for element with given name"
 ;  (let [me-ref (or me 'me)]
 ;    `(let [name# ~name]
-;       (tiltontec.matrix.model.core/fm-navig #(= name# (tiltontec.matrix.model.core/mget? % :name))
+;       (tiltontec.mx.model.core/fm-navig #(= name# (tiltontec.mx.model.core/mget? % :name))
 ;         ~me-ref :me? false :up? true :inside? false))))
 
 ;(defn fm!
@@ -108,54 +108,54 @@
   "Search matrix ascendents from node 'me' looking for `what`, and extract `slot`"
   [what slot & [me]]
   (let [me (or me 'me)]
-    `(tiltontec.matrix.model.core/mget (tiltontec.matrix.model.core/fm! ~what ~me) ~slot)))
+    `(tiltontec.mx.model.core/mget (tiltontec.mx.model.core/fm! ~what ~me) ~slot)))
 
 ;;; --- cell factories -----------------------------------------
 
 (defn cI [value & option-kvs]
-  (apply tiltontec.matrix.cell.core/make-cell
+  (apply tiltontec.mx.cell.core/make-cell
     :value value
     :input? true
     option-kvs))
 
 (defmacro cF [& body]
-  `(tiltontec.matrix.cell.core/make-c-formula
+  `(tiltontec.mx.cell.core/make-c-formula
      :code '~body
-     :rule (tiltontec.matrix.cell.core/c-fn ~@body)))
+     :rule (tiltontec.mx.cell.core/c-fn ~@body)))
 
 (defmacro cF+ [[& options] & body]
-  `(tiltontec.matrix.cell.core/make-c-formula
+  `(tiltontec.mx.cell.core/make-c-formula
      ~@options
      :code '~body
-     :rule (tiltontec.matrix.cell.core/c-fn ~@body)))
+     :rule (tiltontec.mx.cell.core/c-fn ~@body)))
 
 (defmacro cFn [& body]
-  `(tiltontec.matrix.cell.core/make-c-formula
-     :code '(tiltontec.matrix.cell.base/without-c-dependency ~@body)
+  `(tiltontec.mx.cell.core/make-c-formula
+     :code '(tiltontec.mx.cell.base/without-c-dependency ~@body)
      :input? true
-     :rule (tiltontec.matrix.cell.core/c-fn (tiltontec.matrix.cell.base/without-c-dependency ~@body))))
+     :rule (tiltontec.mx.cell.core/c-fn (tiltontec.mx.cell.base/without-c-dependency ~@body))))
 
 (defmacro cF+n [[& options] & body]
-  `(tiltontec.matrix.cell.core/make-c-formula
+  `(tiltontec.mx.cell.core/make-c-formula
      ~@options
-     :code '(tiltontec.matrix.cell.base/without-c-dependency ~@body)
+     :code '(tiltontec.mx.cell.base/without-c-dependency ~@body)
      :input? true
-     :rule (tiltontec.matrix.cell.core/c-fn (tiltontec.matrix.cell.base/without-c-dependency ~@body))))
+     :rule (tiltontec.mx.cell.core/c-fn (tiltontec.mx.cell.base/without-c-dependency ~@body))))
 
 (defmacro cFonce [& body]
-  `(tiltontec.matrix.cell.core/make-c-formula
-     :code '(tiltontec.matrix.cell.base/without-c-dependency ~@body)
+  `(tiltontec.mx.cell.core/make-c-formula
+     :code '(tiltontec.mx.cell.base/without-c-dependency ~@body)
      :input? nil
-     :rule (tiltontec.matrix.cell.core/c-fn (tiltontec.matrix.cell.base/without-c-dependency ~@body))))
+     :rule (tiltontec.mx.cell.core/c-fn (tiltontec.mx.cell.base/without-c-dependency ~@body))))
 
 (defmacro cF1 [& body]
-  `(tiltontec.matrix.cell.core/cFonce ~@body))
+  `(tiltontec.mx.cell.core/cFonce ~@body))
 
 ;;; --- fm navig ---------------------------------------------------------------
 
 (defmacro mdv! [what prop & [me]]
   (let [me (or me 'me)]
-    `(tiltontec.matrix.model.core/mget (tiltontec.matrix.model.core/fm! ~what ~me) ~prop)))
+    `(tiltontec.mx.model.core/mget (tiltontec.mx.model.core/fm! ~what ~me) ~prop)))
 
 (defn mxu-find-name
   "Search up the matrix from node 'where' looking for element with given name"
@@ -164,7 +164,7 @@
     where :me? false :up? true :inside? false))
 
 (defmacro my-value []
-  `(tiltontec.matrix.model.core/mget ~'me :value))
+  `(tiltontec.mx.model.core/mget ~'me :value))
 
 (defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
@@ -183,7 +183,7 @@
   [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (tiltontec.matrix.model.core/fm-ascendant name# ~me-ref))))
+       (tiltontec.mx.model.core/fm-ascendant name# ~me-ref))))
 
 (defn faprop "Search strictly up and mget value of first asc w that property"
   ([prop-name md]
@@ -195,20 +195,20 @@
      :else (if-let [par (mpar md)]
              (recur prop-name par start)
              (mx-throw (str "faprop> did not find model with property " prop-name
-                            " searching up from " (tiltontec.matrix.model.peek/mname md)
+                            " searching up from " (tiltontec.mx.model.peek/mname md)
                             " seeking property " ~prop-name " value."))))))
 
 (defmacro fmav "Search strictly up and mget value"
   [name prop-name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name
-           md# (tiltontec.matrix.model.core/fm-ascendant name# ~me-ref)]
+           md# (tiltontec.mx.model.core/fm-ascendant name# ~me-ref)]
        (if (nil? md#)
          (mx-throw (str "fascv> did not find model " name#
-                     " searching up from " (tiltontec.matrix.model.peek/mname md#)
+                     " searching up from " (tiltontec.mx.model.peek/mname md#)
                      " seeking property " ~prop-name " value."))
          (if (contains? @md# ~prop-name)
-           (tiltontec.matrix.model.core/mget md# ~prop-name)
+           (tiltontec.mx.model.core/mget md# ~prop-name)
            (mx-throw (str "fascv> " ~name " lacks " ~prop-name " property")))
          (mget md# ~prop-name)))))
 
@@ -229,32 +229,32 @@
 (defmacro fm* [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (tiltontec.matrix.model.core/fm-navig
+       (tiltontec.mx.model.core/fm-navig
          #(do (= name# (mget? % :name)))
          ~me-ref :me? true :up? true :inside? true))))
 
 (defmacro fm*val [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
-    `(let [other# (tiltontec.matrix.model.core/fm-navig (fn [node#] (= ~name (tiltontec.matrix.model.core/mget? node# :name)))
+    `(let [other# (tiltontec.mx.model.core/fm-navig (fn [node#] (= ~name (tiltontec.mx.model.core/mget? node# :name)))
                     ~me-ref :me? true :up? true :inside? true)]
-       (tiltontec.matrix.model.peek/chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
-       (tiltontec.matrix.model.core/mget other# ~prop))))
+       (tiltontec.mx.model.peek/chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.mx.model.core/mget other# ~prop))))
 
 (defmacro fmuv [name prop & [me]]
   (let [me-ref (or me 'me)]
-    `(let [other# (tiltontec.matrix.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
+    `(let [other# (tiltontec.mx.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (tiltontec.matrix.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
-       (tiltontec.matrix.model.core/mget other# ~prop))))
+       (tiltontec.mx.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.mx.model.core/mget other# ~prop))))
 
 (defmacro fmuval [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
-    `(let [other# (tiltontec.matrix.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
+    `(let [other# (tiltontec.mx.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (tiltontec.matrix.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
-       (tiltontec.matrix.model.core/mget other# ~prop))))
+       (tiltontec.mx.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (tiltontec.mx.model.core/mget other# ~prop))))
 
 (defn mxu-find-id
   "Search up the matrix from node 'where' looking for element with given id"
@@ -269,16 +269,16 @@
   ([x tag]
    (mpeek/mref? x tag)))
 
-(def +matrix+ tiltontec.matrix.model.core/+matrix+)
+(def +matrix+ tiltontec.mx.model.core/+matrix+)
 
 (defn make [& arg-list]
-  (apply tiltontec.matrix.model.core/make arg-list))
+  (apply tiltontec.mx.model.core/make arg-list))
 
 (defmacro with-mx-isolation [& body]
-  `(binding [tiltontec.matrix.cell.base/*within-integrity* nil
-             tiltontec.matrix.cell.base/*depender* nil
-             tiltontec.matrix.cell.base/*defer-changes* false
-             tiltontec.matrix.cell.base/*call-stack* nil]
+  `(binding [tiltontec.mx.cell.base/*within-integrity* nil
+             tiltontec.mx.cell.base/*depender* nil
+             tiltontec.mx.cell.base/*defer-changes* false
+             tiltontec.mx.cell.base/*call-stack* nil]
      ~@body))
 
 (defmacro def-mx-props [reader-prefix & slots]
@@ -287,22 +287,22 @@
               `(defn ~(symbol (str (or reader-prefix "")
                                 prop#))
                  [~'ref]
-                 (tiltontec.matrix.model.core/mget ~'ref ~(keyword prop#)))) slots)))
+                 (tiltontec.mx.model.core/mget ~'ref ~(keyword prop#)))) slots)))
 
 (defmacro cFkids [& tree]
-  `(cF (tiltontec.matrix.model.core/the-kids ~@tree)))
+  `(cF (tiltontec.mx.model.core/the-kids ~@tree)))
 
 
 (defmacro with-integrity [[opcode info] & body]
-  `(tiltontec.matrix.cell.integrity/with-integrity [~opcode ~info]
+  `(tiltontec.mx.cell.integrity/with-integrity [~opcode ~info]
      ~@body))
 
 (defmacro with-cc [id & body]
-  `(tiltontec.matrix.cell.integrity/with-cc ~id
+  `(tiltontec.mx.cell.integrity/with-cc ~id
      ~@body))
 
 (defmacro without-integrity [& body]
-  `(tiltontec.matrix.cell.integrity/without-integrity
+  `(tiltontec.mx.cell.integrity/without-integrity
      ~@body))
 
 ;;; --- debug -------------------------------

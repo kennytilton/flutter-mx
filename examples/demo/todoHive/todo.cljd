@@ -5,13 +5,13 @@
     ["package:http/http.dart" :as dht]
     ["package:hive_flutter/hive_flutter.dart" :as hv]
 
-    [tiltontec.matrix.base :refer [dprn dp dpx]]
-    [tiltontec.matrix.util :as util]
-    [tiltontec.matrix.foundation :refer [PObserver observe MXImplementer] :as cmx]
-    [tiltontec.matrix.cell.base :as cb]
+    [tiltontec.mx.base :refer [dprn dp dpx]]
+    [tiltontec.mx.util :as util]
+    [tiltontec.mx.foundation :refer [PObserver observe MXImplementer] :as cmx]
+    [tiltontec.mx.cell.base :as cb]
 
-    [tiltontec.matrix.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
-    [tiltontec.matrix.model.peek :refer [Model]]
+    [tiltontec.mx.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
+    [tiltontec.mx.model.peek :refer [Model]]
     [demo.todoHive.persist :as stg]))
 
 ;;; --- handy accessors ---------------------------------
@@ -96,7 +96,7 @@
     (partial remove (fn [td] (= stg-id (td-stg-id td))))))
 
 (defn app-todos [app]
-  (when-let [td-lst (tiltontec.matrix.model.core/mget app :todo-list)]
+  (when-let [td-lst (tiltontec.mx.model.core/mget app :todo-list)]
     ;; we have to wait for todos to be loaded asynchronously
     (assert (mx/mref? td-lst) (str "app-todos> td-lst not mref? " td-lst))
     (mkids td-lst)))

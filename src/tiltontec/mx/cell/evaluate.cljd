@@ -1,12 +1,12 @@
-(ns tiltontec.matrix.cell.evaluate
+(ns tiltontec.mx.cell.evaluate
   (:require
     [clojure.string :as str]
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
-    [tiltontec.matrix.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
-    [tiltontec.matrix.util
+    [tiltontec.mx.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
+    [tiltontec.mx.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
-    [tiltontec.matrix.cell.base
+    [tiltontec.mx.cell.base
      :refer [without-c-dependency with-mx-isolation c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? c-code$
              c-model c-valid? c-useds c-ref? c-quiesced? c-on-quiesce
@@ -16,10 +16,10 @@
              unlink-from-callers *causation* c-synaptic? c-mname
              c-pulse c-pulse-last-changed c-ephemeral? c-then? c-prop c-props c-prop-name
              *depender* *c-prop-depth* c-lazy dpc c-async?] :as cty]
-    [tiltontec.matrix.cell.observer :refer [c-observe]]
-    [tiltontec.matrix.cell.integrity
+    [tiltontec.mx.cell.observer :refer [c-observe]]
+    [tiltontec.mx.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]
-    [tiltontec.matrix.model.peek :refer [chk mref? minfo *md-quiescing* md-quiesced?]]))
+    [tiltontec.mx.model.peek :refer [chk mref? minfo *md-quiescing* md-quiesced?]]))
 
 (defn ephemeral-reset [rc]
   (when (c-ephemeral? rc)                                   ;; allow call on any cell, catch here

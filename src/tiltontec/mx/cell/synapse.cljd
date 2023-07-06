@@ -1,21 +1,21 @@
-(ns tiltontec.matrix.cell.synapse
+(ns tiltontec.mx.cell.synapse
   (:require
-    [tiltontec.matrix.model.peek :refer [chk mref? minfo]]
-    [tiltontec.matrix.base :refer [dp]]
-    [tiltontec.matrix.util :refer [ pln rmap-set!]]
+    [tiltontec.mx.model.peek :refer [chk mref? minfo]]
+    [tiltontec.mx.base :refer [dp]]
+    [tiltontec.mx.util :refer [ pln rmap-set!]]
 
-    [tiltontec.matrix.cell.base
+    [tiltontec.mx.cell.base
      :refer [*depender* c-synapses c-prop c-useds]]
 
-    [tiltontec.matrix.cell.integrity
+    [tiltontec.mx.cell.integrity
      :refer [with-integrity]]
 
-    [tiltontec.matrix.cell.evaluate :refer [ cget c-value-assume
+    [tiltontec.mx.cell.evaluate :refer [ cget c-value-assume
                                      record-dependency ensure-value-is-current]]
 
-    [tiltontec.matrix.cell.observer :refer [fn-obs]]
+    [tiltontec.mx.cell.observer :refer [fn-obs]]
 
-    [tiltontec.matrix.cell.core
+    [tiltontec.mx.cell.core
      :refer [cI creset! make-c-formula c-fn]]))
 
 (defn existing-syn [synapse-id]
@@ -45,7 +45,7 @@
                       ;; (dp :made-syn!!!!!!!!!!!! @new-syn#)
                       new-syn#))
 
-         value# (tiltontec.matrix.cell.integrity/with-integrity ()
+         value# (tiltontec.mx.cell.integrity/with-integrity ()
                   ;; (dp :with-syn-ensure-syn-value (nil? existing-syn#))
                   (ensure-value-is-current synapse# :synapse *depender*))]
      ;;(dp :synapse-returns ~synapse-id :useds (doall (map c-prop (c-useds synapse#))))
@@ -62,7 +62,7 @@
                     (record-dependency new-syn)           ;; needed?!!!!
                     new-syn))
 
-        value (tiltontec.matrix.cell.integrity/with-integrity ()
+        value (tiltontec.mx.cell.integrity/with-integrity ()
                 (ensure-value-is-current synapse :synapse *depender*))]
     (record-dependency synapse)
 
