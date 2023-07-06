@@ -9,7 +9,6 @@
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
     ["package:flutter/painting.dart" :as p
      :refer [TextStyle]]
-    [clojure.string :as str]
     [tiltontec.matrix.foundation :as mxf]
     [tiltontec.matrix.base :refer [wtrx dp dpx mx-throw]]
     [tiltontec.matrix.util :refer [atom?]]
@@ -223,8 +222,6 @@
   (ink m/Ink)
   (gesture-detector m/GestureDetector))
 
-(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
-
 (deftags tiltontec.flutter-mx.factory/childless-stateless
   (app-bar m/AppBar)
   (data-table m/DataTable)
@@ -232,44 +229,23 @@
   (list-tile m/ListTile)
   (layout-builder w/LayoutBuilder)
   (flutter-logo m/FlutterLogo)
-  (bottom-navigation-bar-item w/BottomNavigationBarItem))
-
-(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateless icon m/Icon :icon)
+  (bottom-navigation-bar-item w/BottomNavigationBarItem)
+  (navigation-rail-destination w/NavigationRailDestination))
 
 (defmacro alert-dialog [fx-props mx-props & children]
   `(tiltontec.flutter-mx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
-(deftag tiltontec.flutter-mx.factory/childless-stateful text-field m/TextField)
-(deftag tiltontec.flutter-mx.factory/childless-stateful check-box m/Checkbox)
+(deftags tiltontec.flutter-mx.factory/childless-stateful
+  (text-field m/TextField)
+  (check-box m/Checkbox)
+  (elevated-button+icon m.ElevatedButton/icon))
 
 ;; todo does snackbar still need this custom macro?
 (deftag tiltontec.flutter-mx.factory/make-fx-snackbar snack-bar m/SnackBar)
-
-;;; --- tagleaf --------------------------------------------
-
-(defmacro deftagleaf [factory mx-name fx-class]
-  `(defmacro ~mx-name [& vargs#]
-     (let [[fx-props# mx-props# param-1#]
-           (cond
-             (nil? vargs#)
-             nil
-
-             (not (map? (first vargs#)))
-             ; just param
-             (list nil nil (first vargs#))
-
-             (map? (second vargs#))
-             ; full spec kids optional
-             vargs#
-
-             :else
-             ;; first is fx props, no mx props, maybe kids
-             (list (first vargs#) nil (last vargs#)))]
-       `(~'~factory ~'~fx-class ~fx-props# ~mx-props# ~param-1#))))
-
 (deftag tiltontec.flutter-mx.factory/konly-param1-stateless text m/Text)
+(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateless icon m/Icon :icon)
 
-;;; --- childless stateless --------------------------------------------------------
+(deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
 
 (defmacro icon-button [& vargs]
   (let [[fx-props mx-props] vargs]
@@ -277,13 +253,10 @@
 
 (deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+separated m.ListView/separated)
 (deftag tiltontec.flutter-mx.factory/kids-for-builder list-view+builder m.ListView/builder)
-
 (deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
-
 (deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
 (deftags tiltontec.flutter-mx.factory/k1-child-stateful
-  (visibility! m/Visibility) ;; todo stateful needed? see todohive
   (popup-menu-button m/PopupMenuButton)
   (popup-menu-item m/PopupMenuItem)
   (opacity! m/Opacity)
@@ -302,22 +275,21 @@
   (animated-builder m/AnimatedBuilder)
   (animated-container m/AnimatedContainer))
 
-(deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
-
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateful
   navigation-rail m/NavigationRail :destinations)
-(deftag tiltontec.flutter-mx.factory/childless-stateless
-  navigation-rail-destination w/NavigationRailDestination)
 
-(deftag tiltontec.flutter-mx.factory/children-stateless stack m/Stack)
-(deftag tiltontec.flutter-mx.factory/children-stateless column m/Column)
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless wrap w/Wrap :children)
-(deftag tiltontec.flutter-mx.factory/children-stateless row m/Row)
-(deftag tiltontec.flutter-mx.factory/children-stateless list-view m/ListView)
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless grid-view+count m.GridView/count :children)
+(deftags tiltontec.flutter-mx.factory/children-stateless
+  (stack m/Stack)
+  (column m/Column)
+  (row m/Row)
+  (list-view m/ListView))
 
-(deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
-
+(deftag tiltontec.flutter-mx.factory/kids->prop-stateless
+  grid-view+count m.GridView/count :children)
+(deftag tiltontec.flutter-mx.factory/kids->prop-stateless
+  bottom-navigation-bar m/BottomNavigationBar :items)
+(deftag tiltontec.flutter-mx.factory/kids->prop-stateless
+  wrap w/Wrap :children)
 
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
