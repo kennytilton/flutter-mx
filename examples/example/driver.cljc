@@ -6,7 +6,7 @@
     [tilton.mx.base
      :refer [prog1 wtrx dprn dp dpx trx]]
     [tilton.mx.api :refer [minfo] :as mx]
-    [tilton.fmx.core :as fx]
+    [tilton.fmx.api :as fx]
     ;;[example.x00-poc :as x00]
     [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]

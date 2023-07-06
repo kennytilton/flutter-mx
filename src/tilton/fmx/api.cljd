@@ -1,4 +1,4 @@
-(ns tilton.fmx.core
+(ns tilton.fmx.api
   (:require
     ["dart:io" :as io]
     ["package:flutter/foundation.dart" :as foundation]
@@ -137,12 +137,12 @@
                 g)))))
 
 (defmacro in-my-context [[me-var ctx-var] & body]
-  `(tilton.fmx.core/->CBToResolve
+  `(tilton.fmx.api/->CBToResolve
      (fn [~me-var ~ctx-var]
        ~@body)))
 
 (defmacro when-my-state [[state-var] & body]
-  `(when-let [~state-var (tilton.fmx.core/my-state)]
+  `(when-let [~state-var (tilton.fmx.api/my-state)]
      ~@body))
 
 (defn ctx-nav [ctx]
@@ -272,16 +272,16 @@
 ;;; these macros try to hide the plumbing without being obscure.
 
 (defmacro as-is [callback-fn]
-  `(tilton.fmx.core/->CBAsIs
+  `(tilton.fmx.api/->CBAsIs
      ~callback-fn))
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tilton.fmx.core/in-my-context [~me ~ctx]
-     (tilton.fmx.core/->CBAsIs
+  `(tilton.fmx.api/in-my-context [~me ~ctx]
+     (tilton.fmx.api/->CBAsIs
        ~callback-fn)))
 
 (defmacro as-dart-callback [[& cb-params] & body]
-  `(tilton.fmx.core/with-ctx+as-is [~'me ~'ctx]
+  `(tilton.fmx.api/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
        (tilton.mx.cell.base/with-mx-isolation
          ~@body))))

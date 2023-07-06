@@ -3,7 +3,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc] :as mx]
-    [tilton.fmx.core :as fx
+    [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
              center column text sized-box]]))

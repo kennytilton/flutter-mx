@@ -118,7 +118,7 @@
 (defn ^:macro-support fx-props>mx [fx-props]
   (let [kvs (for [[k _] fx-props]
               [(symbol (str "." (name k)))
-               `(tilton.fmx.core/fx-resolve ~k ~'me ~'ctx
+               `(tilton.fmx.api/fx-resolve ~k ~'me ~'ctx
                   (tilton.mx.api/mget ~'me ~k))])]
     (apply concat kvs)))
 
@@ -212,7 +212,7 @@
                    (reify :extends (~fx-class #_m/SnackBar
                                      ~@(let [kvs (for [[k# _#] fx-props]
                                                    [(symbol (str "." (name k#)))
-                                                    `(tilton.fmx.core/fx-resolve ~k# ~'me ctx
+                                                    `(tilton.fmx.api/fx-resolve ~k# ~'me ctx
                                                        (tilton.mx.model.core/mget ~'me ~k#))])]
                                          (apply concat kvs)))
                      ^#/(w/State ~fx-class #_m/SnackBar)
@@ -233,14 +233,14 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ~'ctx]
                    (reify :extends (m/StatefulWidget
-                                     .key (tilton.fmx.core/fx-resolve-mget? ~'me :key ~'ctx))
+                                     .key (tilton.fmx.api/fx-resolve-mget? ~'me :key ~'ctx))
                      (~'createState [_#]
                        (reify :extends w/State
                          ^:mixin m/SingleTickerProviderStateMixin ;; todo make optional
                          (^void ~'initState [this]
                            (tilton.fmx.factory/fx-state-init ~'me this))
                          (~'build [_# ~'ctx]
-                           (let [k1# (tilton.fmx.core/fx-resolve :kid1 ~'me ~'ctx
+                           (let [k1# (tilton.fmx.api/fx-resolve :kid1 ~'me ~'ctx
                                        (first (tilton.mx.model.core/mkids ~'me)))]
                              (tilton.fmx.factory/with-flutter-ref
                                (~fx-class .child k1#
@@ -256,7 +256,7 @@
          :fx-gen (fn fgen [~'me ~'ctx]
                    (tilton.fmx.factory/with-flutter-ref
                      (~fx-class
-                       .child (tilton.fmx.core/fx-resolve :kid1 ~'me ~'ctx
+                       .child (tilton.fmx.api/fx-resolve :kid1 ~'me ~'ctx
                                 (first (tilton.mx.model.core/mkids ~'me)))
                        ~@(fx-props>mx fx-props)))))
        (tilton.mx.model.core/cFkids ~child))))
@@ -270,7 +270,7 @@
          :fx-gen (fn fgen [~'me ~'ctx]
                    (tilton.fmx.factory/with-flutter-ref
                      (~fx-class
-                       .content (tilton.fmx.core/fx-resolve :kid1 ~'me ~'ctx
+                       .content (tilton.fmx.api/fx-resolve :kid1 ~'me ~'ctx
                                   (first (tilton.mx.model.core/mkids ~'me)))
                        ~@(fx-props>mx fx-props)))))
        (tilton.mx.model.core/cFkids ~child))))
@@ -284,7 +284,7 @@
          :fx-gen (fn fgen [~'me ~'ctx]
                    (tilton.fmx.factory/with-flutter-ref
                      (~fx-class
-                       .children (mapv (partial tilton.fmx.core/fx-render ~'ctx)
+                       .children (mapv (partial tilton.fmx.api/fx-render ~'ctx)
                                    (tilton.mx.api/mkids ~'me))
                        ~@(fx-props>mx fx-props)))))
        (tilton.mx.api/cFkids ~@children))))
@@ -299,7 +299,7 @@
                    (tilton.fmx.factory/with-flutter-ref
                      (~fx-class
                        ~(symbol (str "." (name target-prop-name)))
-                       (mapv (partial tilton.fmx.core/fx-render ~'ctx)
+                       (mapv (partial tilton.fmx.api/fx-render ~'ctx)
                          (tilton.mx.api/mkids ~'me))
                        ~@(fx-props>mx fx-props)))))
        (tilton.mx.api/cFkids ~@children))))
@@ -312,7 +312,7 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ~'ctx]
                    (reify :extends (m/StatefulWidget
-                                     .key (tilton.fmx.core/fx-resolve-mget? ~'me :key ~'ctx))
+                                     .key (tilton.fmx.api/fx-resolve-mget? ~'me :key ~'ctx))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -321,7 +321,7 @@
                            (tilton.fmx.factory/with-flutter-ref
                              (~fx-class
                                ~(symbol (str "." (name target-prop-name)))
-                               (mapv (partial tilton.fmx.core/fx-render ~'ctx)
+                               (mapv (partial tilton.fmx.api/fx-render ~'ctx)
                                  (tilton.mx.api/mkids ~'me))
                                ~@(fx-props>mx fx-props)))))))))
        (tilton.mx.api/cFkids ~@children))))
@@ -346,7 +346,7 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ~'ctx]
                    (tilton.fmx.factory/with-flutter-ref
-                     (~fx-class (tilton.fmx.core/fx-render ~'ctx
+                     (~fx-class (tilton.fmx.api/fx-render ~'ctx
                                   (tilton.mx.api/mget ~'me :_param-1))
                        ~@(fx-props>mx fx-props))))))))
 
@@ -371,7 +371,7 @@
                      (~fx-class
                        ~@(let [kvs (for [k# (conj (keys fx-props) :builder)]
                                      [(symbol (str "." (name k#)))
-                                      `(tilton.fmx.core/fx-resolve-mget? ~'me ~k# ~'ctx)])]
+                                      `(tilton.fmx.api/fx-resolve-mget? ~'me ~k# ~'ctx)])]
                            (apply concat kvs))))))
        (tilton.mx.api/cFkids ~only-kid))))
 
@@ -383,7 +383,7 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ~'ctx]
                    (reify :extends (m/StatefulWidget
-                                     .key (tilton.fmx.core/fx-resolve-mget? ~'me :key ~'ctx))
+                                     .key (tilton.fmx.api/fx-resolve-mget? ~'me :key ~'ctx))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
@@ -403,13 +403,13 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ~'ctx]
                    (reify :extends (m/StatefulWidget
-                                     .key (tilton.fmx.core/fx-resolve-mget? ~'me :key ~'ctx))
+                                     .key (tilton.fmx.api/fx-resolve-mget? ~'me :key ~'ctx))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            (tilton.fmx.factory/fx-state-init ~'me this))
                          (~'build [_# ~'ctx]
-                           (let [bod# (tilton.fmx.core/fx-resolve :kid1 ~'me ~'ctx
+                           (let [bod# (tilton.fmx.api/fx-resolve :kid1 ~'me ~'ctx
                                         (first (tilton.mx.api/mkids ~'me)))]
                              (tilton.fmx.factory/with-flutter-ref
                                (~fx-class
@@ -427,13 +427,13 @@
          :fx-class (quote ~fx-class)
          :fx-gen (fn fgen [~'me ~'ctx]
                    (reify :extends (m/StatefulWidget
-                                     .key (tilton.fmx.core/fx-resolve-mget? ~'me :key ~'ctx))
+                                     .key (tilton.fmx.api/fx-resolve-mget? ~'me :key ~'ctx))
                      (~'createState [_#]
                        (reify :extends w/State
                          (^void ~'initState [this]
                            (tilton.fmx.factory/fx-state-init ~'me this))
                          (~'build [_# ~'ctx]
-                           (let [bod# (tilton.fmx.core/fx-resolve :kid1 ~'me ~'ctx
+                           (let [bod# (tilton.fmx.api/fx-resolve :kid1 ~'me ~'ctx
                                         (first (tilton.mx.api/mkids ~'me)))]
                              (tilton.fmx.factory/with-flutter-ref
                                (~fx-class
@@ -450,7 +450,7 @@
          :fx-gen (fn fgen [~'me ~'ctx]
                    (tilton.fmx.factory/with-flutter-ref
                      (~fx-class
-                       (tilton.fmx.core/fx-resolve-mget? ~'me ~prop ~'ctx)
+                       (tilton.fmx.api/fx-resolve-mget? ~'me ~prop ~'ctx)
                        ~@(fx-props>mx (dissoc fx-props prop)))))))))
 
 ;;; --- kids for builder ------------------------------------------------------
