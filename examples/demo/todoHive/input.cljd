@@ -1,0 +1,72 @@
+(ns demo.todoHive.input
+  (:require
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [clojure.string :as str]
+    [tiltontec.matrix.base :refer [dprn dp dpx]]
+    [tiltontec.matrix.api :refer [cF cI cFonce mget  mswap! mset!]]
+    [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
+    [demo.todoHive.common :refer [ my-todo-list ] :as cmm]
+    [demo.todoHive.todo :refer [td-completed] :as todo]))
+
+(defn todo-input-onSubmitted-formula []
+  (cF (as-dart-callback [value]
+        ;; blank or not we need to restore focus to the input per the spec
+        (.requestFocus ^m/FocusNode (mget me :focusNode))
+        ;; spec says to trim, and to silently ignore blank entry
+        (let [trimmed (str/trim value)]
+          (when-not (str/blank? trimmed)
+            ;; --- we have a non-blank entry, so we save, clear entry, and store
+            (mset! me :value trimmed) ;; let text proxy know its cleaned value
+            (.clear ^m/TextEditingController
+              (mget me :controller))
+            (let [td-lst (my-todo-list)]
+              (mswap! td-lst :kids conj
+                (todo/make-ToDo td-lst trimmed false))))))))
+
+(defn todo-input []
+  (fx/material {:elevation   20.0
+                :color       m.Colors/white
+                :shadowColor m.Colors/black}
+    (fx/text-field {:autofocus   true
+                    :focusNode   (m/FocusNode)
+                    :decoration  (m/InputDecoration
+                                   .hintText "What needs doing?"
+                                   .border m.InputBorder/none
+                                   .contentPadding (m.EdgeInsets/all 9.0))
+                    :onSubmitted (todo-input-onSubmitted-formula)
+                    :controller  (cFonce (fx/standard-text-value-controller me))}
+      {:name  :todo-input
+       :value (cI "")})))
+
+(defn todo-toggle-all []
+  (fx/visibility
+    {:visible               (cF (boolean
+                                  (seq (todo/app-todos (my-app)))))
+     ;; todo: composability with fixed arity reusables as case may be.
+     :maintainSize          true
+     :maintainSemantics     false
+     ;; todo why do not other visis specify these ^^^ vvvv?
+     :maintainInteractivity false
+     :maintainAnimation     true
+     :maintainState         true}
+    (fx/icon-button
+      {:onPressed (as-dart-callback []
+                    (let [todos (todo/app-todos (my-app))
+                          all-done? (every? td-completed todos)]
+                      (doseq [td todos]
+                        ;; todo do all these in one change pulse
+                        (mset! td :completed (if all-done? false true)))))
+       :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))
+
+(defn todo-controls []
+  (fx/row
+    (fx/expanded {:flex 1}
+      ;; handy widget to mark all to-dos at once
+      (todo-toggle-all))
+    ; --- the to-do input field ----
+    (fx/expanded {:flex 9}
+      (fx/padding
+        {:padding (m.EdgeInsets/all 16.0)}
+        (todo-input)))))
