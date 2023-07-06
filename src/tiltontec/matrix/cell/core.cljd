@@ -1,10 +1,10 @@
-(ns tiltontec.cell.core
+(ns tiltontec.matrix.cell.core
   (:require
-    [tiltontec.model.peek :refer [chk mref? minfo]]
+    [tiltontec.matrix.model.peek :refer [chk mref? minfo]]
     [tiltontec.matrix.util :refer [rmap-set!]]
     [tiltontec.matrix.base
      :refer [mx-throw trx wtrx dprn dp dpx prog1 *trx?* def-rmap-props def-rmap-meta-props]]
-    [tiltontec.cell.base
+    [tiltontec.matrix.cell.base
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? unbound dpc
@@ -18,15 +18,15 @@
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
              c-lazy] :as cty]
 
-    [tiltontec.cell.observer
+    [tiltontec.matrix.cell.observer
      :refer [fn-obs]]
 
-    [tiltontec.cell.integrity
+    [tiltontec.matrix.cell.integrity
      :refer [with-integrity]]
-    [tiltontec.cell.evaluate :as ev
+    [tiltontec.matrix.cell.evaluate :as ev
      :refer [cget cget c-value-assume
              record-dependency ensure-value-is-current]]
-    [tiltontec.model.peek :refer [mref?]]))
+    [tiltontec.matrix.model.peek :refer [mref?]]))
 
 ; todo: stand-alone cells with observers should be observed when they are made
 
@@ -105,10 +105,10 @@
 
 (defmacro c-fn-var [[c] & body]
   `(fn [~c]
-     (let [~'me (tiltontec.cell.base/c-model ~c)
+     (let [~'me (tiltontec.matrix.cell.base/c-model ~c)
            ~'_cell ~c
-           ~'_slot-name (tiltontec.cell.base/c-prop ~c)
-           ~'_cache (tiltontec.cell.base/c-value ~c)]
+           ~'_slot-name (tiltontec.matrix.cell.base/c-prop ~c)
+           ~'_cache (tiltontec.matrix.cell.base/c-value ~c)]
        ~@body)))
 
 (defmacro c-fn [& body]
@@ -118,10 +118,10 @@
 (defmacro c-fn [& body]
   #_
   `(fn f [~'_cell]
-     (let [~'me (tiltontec.cell.base/c-model ~'_cell)
+     (let [~'me (tiltontec.matrix.cell.base/c-model ~'_cell)
            ; ~'_cell ~c
-           ; ~'_slot-name (tiltontec.cell.base/c-prop _cell)
-           ~'_cache (tiltontec.cell.base/c-value ~'_cell)]
+           ; ~'_slot-name (tiltontec.matrix.cell.base/c-prop _cell)
+           ~'_cache (tiltontec.matrix.cell.base/c-value ~'_cell)]
        ~@body))
 
   (let [name (when (and (symbol? (first body))
@@ -131,36 +131,36 @@
       (prn :---------)
       (prn body))
     `(fn ~(or name 'f) [~'_cell]
-       (let [~'me (tiltontec.cell.base/c-model ~'_cell)
+       (let [~'me (tiltontec.matrix.cell.base/c-model ~'_cell)
              ; ~'_cell ~c
-             ; ~'_slot-name (tiltontec.cell.base/c-prop _cell)
-             ~'_cache (tiltontec.cell.base/c-value ~'_cell)]
+             ; ~'_slot-name (tiltontec.matrix.cell.base/c-prop _cell)
+             ~'_cache (tiltontec.matrix.cell.base/c-value ~'_cell)]
          ~@(if name (rest body) body)))))
 
 (defmacro cF [& body]
   `(make-c-formula
      :code '~body
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn ~@body)))
 
 (defmacro cFnil [& body]
   `(make-c-formula
      ;;:code '~body
      :value nil
-     :rule (tiltontec.cell.core/c-fn ~@body)))
+     :rule (tiltontec.matrix.cell.core/c-fn ~@body)))
 
 (defmacro cF+ [[& options] & body]
   `(make-c-formula
      ~@options
      :code '~body
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn ~@body)))
 
 (defmacro cFn [& body]
   `(make-c-formula
      :code '(without-c-dependency ~@body)
      :input? true
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
 (defmacro cF+n [[& options] & body]
@@ -168,7 +168,7 @@
      ~@options
      :code '(without-c-dependency ~@body)
      :input? true
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
 (defmacro c_Fn [& body]
@@ -176,7 +176,7 @@
      :code '(without-c-dependency ~@body)
      :input? true
      :lazy :until-asked
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
 (defmacro cFn-dbg [& body]
@@ -184,7 +184,7 @@
      :code '(without-c-dependency ~@body)
      :input? true
      :debug true
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
 (defmacro cFn-until [args & body]
@@ -192,7 +192,7 @@
      :optimize :when-value-t
      :code '~body
      :input? true
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn ~@body)
      ~@args))
 
@@ -200,15 +200,15 @@
   `(make-c-formula
      :code '(without-c-dependency ~@body)
      :input? nil
-     :value tiltontec.cell.base/unbound
-     :rule (c-fn (tiltontec.cell.base/without-c-dependency ~@body))))
+     :value tiltontec.matrix.cell.base/unbound
+     :rule (c-fn (tiltontec.matrix.cell.base/without-c-dependency ~@body))))
 
 (defmacro c_1 [& body]
   `(make-c-formula
      :code '(without-c-dependency ~@body)
      :input? nil
      :lazy true
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
 (defmacro cF1 [& body]
@@ -217,7 +217,7 @@
 (defmacro cFdbg [& body]
   `(make-c-formula
      :code '~body
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :debug true
      :rule (c-fn ~@body)))
 
@@ -225,7 +225,7 @@
   `(make-c-formula
      ~@options
      :code '~body
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :lazy true
      :rule (c-fn ~@body)))
 
@@ -234,7 +234,7 @@
   `(make-c-formula
      ~@options
      :code '~body
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :lazy :until-asked
      :rule (c-fn ~@body)))
 
@@ -242,7 +242,7 @@
   "Lazy until asked, then eagerly propagating"
   `(make-c-formula
      :code '~body
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :lazy :until-asked
      :rule (c-fn ~@body)
      :debug true))
@@ -250,7 +250,7 @@
 (defmacro c-formula [[& kvs] & body]
   `(make-c-formula
      :code '~body                                           ;; debug aid
-     :value tiltontec.cell.base/unbound
+     :value tiltontec.matrix.cell.base/unbound
      :rule (c-fn ~@body)
      ~@keys))
 
@@ -323,7 +323,7 @@ execution as soon as the current change is manifested."
                  (c-prop ~f-c)))
      ;---------------------------------------------
      :else
-     (tiltontec.cell.integrity/ufb-add :change
+     (tiltontec.matrix.cell.integrity/ufb-add :change
        [:c-reset-next!
         (fn [~'opcode ~'defer-info]
           (let [c# ~f-c

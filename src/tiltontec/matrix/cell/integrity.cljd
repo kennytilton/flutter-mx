@@ -1,11 +1,11 @@
-(ns tiltontec.cell.integrity
+(ns tiltontec.matrix.cell.integrity
   (:require
-    [tiltontec.model.peek :refer [chk mref? minfo]]
+    [tiltontec.matrix.model.peek :refer [chk mref? minfo]]
     [tiltontec.matrix.base
      :refer [prog1 wtrx dprn dp dpx trx mx-throw]]
     [tiltontec.matrix.util
      :refer [ensure-vec  pln plnk fifo-add fifo-peek fifo-pop cl-find]]
-    [tiltontec.cell.base :as cty
+    [tiltontec.matrix.cell.base :as cty
      :refer [dpc +pulse+ c-pulse c-optimized-away?
              +client-q-handler+ pulse-now
              *within-integrity* *defer-changes*
@@ -139,7 +139,7 @@
 
 (defmacro without-integrity [& body]
   `(binding
-     [tiltontec.cell.base/*within-integrity* false
+     [tiltontec.matrix.cell.base/*within-integrity* false
       *defer-changes* false
       *call-stack* '()]
      ~@body))
