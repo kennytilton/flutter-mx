@@ -225,21 +225,24 @@
 
 (deftag tiltontec.flutter-mx.factory/k1-body-stateful scaffold m/Scaffold)
 
-(defmacro deftagnokids [factory mx-name fx-class]
-  `(defmacro ~mx-name [& vargs#]
-     ;; todo user error checking
-     (let [[fx-props# mx-props#] vargs#]
-       `(~'~factory ~'~fx-class ~fx-props# ~mx-props#))))
+(deftags tiltontec.flutter-mx.factory/childless-stateless
+  (app-bar m/AppBar)
+  (data-table m/DataTable)
+  (rounded-rectangle-border p/RoundedRectangleBorder)
+  (list-tile m/ListTile)
+  (layout-builder w/LayoutBuilder)
+  (flutter-logo m/FlutterLogo)
+  (bottom-navigation-bar-item w/BottomNavigationBarItem))
 
-(deftagnokids tiltontec.flutter-mx.factory/childless-stateless app-bar m/AppBar)
-(deftag tiltontec.flutter-mx.factory/childless-stateless data-table m/DataTable)
+(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateless icon m/Icon :icon)
+
 (defmacro alert-dialog [fx-props mx-props & children]
   `(tiltontec.flutter-mx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
 
 (deftag tiltontec.flutter-mx.factory/childless-stateful text-field m/TextField)
 (deftag tiltontec.flutter-mx.factory/childless-stateful check-box m/Checkbox)
 
-(deftag tiltontec.flutter-mx.factory/prop-param1-childless-stateless icon m/Icon :icon)
+
 
 ;; todo does snackbar still need this custom macro?
 (deftag tiltontec.flutter-mx.factory/make-fx-snackbar snack-bar m/SnackBar)
@@ -279,35 +282,29 @@
 
 (deftag tiltontec.flutter-mx.factory/k1-home-stateful material-app m/MaterialApp)
 
-(deftag tiltontec.flutter-mx.factory/childless-stateless rounded-rectangle-border p/RoundedRectangleBorder)
-(deftag tiltontec.flutter-mx.factory/childless-stateless list-tile m/ListTile)
-(deftag tiltontec.flutter-mx.factory/childless-stateless layout-builder w/LayoutBuilder)
 (deftag tiltontec.flutter-mx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
-(deftag tiltontec.flutter-mx.factory/childless-stateless flutter-logo m/FlutterLogo)
 
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful visibility! m/Visibility) ;; todo stateful needed?
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful popup-menu-button m/PopupMenuButton)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful popup-menu-item m/PopupMenuItem)
+(deftags tiltontec.flutter-mx.factory/k1-child-stateful
+  (visibility! m/Visibility) ;; todo stateful needed? see todohive
+  (popup-menu-button m/PopupMenuButton)
+  (popup-menu-item m/PopupMenuItem)
+  (opacity! m/Opacity)
+  (ink! m/Ink)
+  (focus m/Focus)
+  (safe-area w/SafeArea)
+  (hero m/Hero)
+  (ticker-mode w/TickerMode)
+  (dismissible w/Dismissible)
+  (elevated-button m/ElevatedButton)
+  (default-tab-controller m/DefaultTabController)
+  (focus m/Focus)
+  (focus-scope m/FocusScope)
+  (text-button m/TextButton)
+  (focus+focus-node m.Focus/withExternalFocusNode)
+  (animated-builder m/AnimatedBuilder)
+  (animated-container m/AnimatedContainer))
 
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful opacity! m/Opacity)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful ink! m/Ink)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus m/Focus)
-
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful safe-area w/SafeArea)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful hero m/Hero)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful ticker-mode w/TickerMode)
-
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful dismissible w/Dismissible)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful elevated-button m/ElevatedButton)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful default-tab-controller m/DefaultTabController)
-
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus m/Focus)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus-scope m/FocusScope)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful text-button m/TextButton)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful focus+focus-node m.Focus/withExternalFocusNode)
 (deftag tiltontec.flutter-mx.factory/childless-stateful elevated-button+icon m.ElevatedButton/icon)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-builder m/AnimatedBuilder)
-(deftag tiltontec.flutter-mx.factory/k1-child-stateful animated-container m/AnimatedContainer)
 
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateful
   navigation-rail m/NavigationRail :destinations)
@@ -322,7 +319,7 @@
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless grid-view+count m.GridView/count :children)
 
 (deftag tiltontec.flutter-mx.factory/kids->prop-stateless bottom-navigation-bar m/BottomNavigationBar :items)
-(deftag tiltontec.flutter-mx.factory/childless-stateless bottom-navigation-bar-item w/BottomNavigationBarItem)
+
 
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
