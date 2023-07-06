@@ -1,0 +1,27 @@
+(ns example.eg.x13-snackbar
+  "Flummox port of CLJD Faithful port of https://docs.flutter.dev/cookbook/design/snackbars"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.fmx.core
+     :refer [snack-bar material-app scaffold center elevated-button text app-bar fx-render as-dart-callback]]))
+
+;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/snackbar
+;;           ^^^ Copyright 2022 by Tensegritics, Eclipse
+
+(defn make-app []
+  (let [title (str "Snackbar Demo #" (rand-int 99))]
+    (material-app
+      {:title title}
+      (scaffold
+        {:appBar (app-bar {:title (text title)})}
+        (center
+          (elevated-button
+            {:onPressed (as-dart-callback []
+                          (.showSnackBar (m.ScaffoldMessenger/of ctx)
+                            (fx-render ctx
+                              (snack-bar {:action  (m/SnackBarAction
+                                                     .label "Undo!"
+                                                     .onPressed (fn [] (dart:core/print :UNDO!!!!!)))
+                                          :content (text "Yay! A SnackBar!")}))))}
+            (text "Show text")))))))

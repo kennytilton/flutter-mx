@@ -1,0 +1,46 @@
+(ns example.eg.x07-animated-container
+  (:require
+    ["package:flutter/material.dart" :as m]
+    [tilton.mx.cell.core :refer [cF cF+ cI]]
+    [tilton.mx.model.core :refer [mget] :as md]
+    [tilton.fmx.core :as fx]))
+
+(defn random-to-double [max]
+  (-> max rand-int .toDouble))
+
+(defn random-color []
+  (m.Color/fromRGBO (rand-int 256)
+    (rand-int 256)
+    (rand-int 256)
+    1))
+
+(defn make-app []
+  (fx/material-app
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Animated Container Demo")})
+       :floatingActionButton
+       (cF (fx/floating-action-button
+             {:onPressed (fx/as-dart-callback []
+                           (let [anicon (md/fm* :anicon)]
+                              (md/mswap! anicon :config assoc
+                                :width (random-to-double 300)
+                                :height (random-to-double 300)
+                                :color (random-color)
+                                :borderRadius (m.BorderRadius/circular (random-to-double 100)))))}
+             (fx/icon {:icon m.Icons/play_arrow})))}
+
+      (fx/center
+        (fx/animated-container
+          {:width      (cF (:width (mget me :config)))
+           :height     (cF (:height (mget me :config)))
+           :decoration (cF (let [config (mget me :config)]
+                             (m/BoxDecoration
+                               .color (:color config)
+                               .borderRadius (:borderRadius config))))
+           :duration   (Duration .seconds 1)
+           :curve      m.Curves/fastOutSlowIn}
+          {:name   :anicon
+           :config (cI {:width        50.0
+                        :height       50.0
+                        :color        m.Colors/green
+                        :borderRadius (m.BorderRadius/circular 8.0)})})))))

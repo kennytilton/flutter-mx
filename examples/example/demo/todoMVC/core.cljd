@@ -1,0 +1,98 @@
+(ns example.demo.todoMVC.core
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
+    [tilton.fmx.core :refer [in-my-context as-dart-callback] :as fx]
+    [example.demo.todoMVC.common :as cmm]
+    [example.demo.todoMVC.todo :as todo]
+    [example.demo.todoMVC.input :as input]
+    [example.demo.todoMVC.items :as items]
+    [example.demo.todoMVC.footer :as footer]
+    [example.demo.todoMVC.persist :as stg]
+    ;;["package:hive/hive.dart" :as hvroot]
+    ["package:hive_flutter/hive_flutter.dart" :as hv]))
+
+(def app-theme (m/ThemeData
+                 .fontFamily "Helvetica Neue"
+                 .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
+
+;;;;;; --- the app --------------------------------------------------------
+
+(defn make-app []
+  (let [title "todo"]
+    (fx/material-app
+      {:title                      title
+       :theme                      app-theme
+       :debugShowCheckedModeBanner true}
+      {:name      :app
+       :db        (cF+ [:async? true
+                        :watch (fn [_ me hv-box _ _]
+                                 (stg/DB! hv-box))]
+                    (-> hv/Hive hv/HiveX .initFlutter await)
+                    (-> hv/Hive (.openBox "todo")))
+       :todo-list (cF (when-let [db (mget me :db)]
+                        (assert (stg/DB) (str "DB not populated but cell :db is: " db))
+                        ;; Now we can load any existing todos from storage...
+                        (todo/make-ToDoList "todo"
+                          (stg/collection-docs "todo"))))}
+      (fx/scaffold
+        {:appBar                  (todo-app-bar title)
+         :persistentFooterButtons [(todos-dashboard)]}
+        (fx/ink {:color m.Colors/white}
+          (fx/column
+            (input/todo-controls)
+            (items/todo-items)
+            (about-credits)))))))
+
+;;; --- the app bar -----------------------------------------------
+(defn todo-app-bar [title]
+  (fx/preferred-size
+    {:preferredSize (.fromHeight m/Size 72)}
+    (fx/app-bar {:backgroundColor (.fromRGBO m/Color 245 245 245 1)
+                 :title           (fx/column
+                                    {:crossAxisAlignment m.CrossAxisAlignment/end}
+                                    (fx/text
+                                      {:style (p/TextStyle
+                                                .fontFamily "Helvetica Neue"
+                                                .color (cmm/title-red)
+                                                .fontWeight m.FontWeight/w100
+                                                .fontSize 64.0)}
+                                      title))})))
+
+;;; --- footer filters -------------------------------------------------
+(defn todos-dashboard []
+  (fx/row
+    {:mainAxisAlignment m.MainAxisAlignment/center}
+    (fx/expanded {:flex 1} (footer/items-remaining-display))
+    (fx/expanded {:flex 2} (footer/completion-filters))
+    (fx/expanded {:flex 1} (footer/clear-completed-button))))
+
+;;; --- credits --------------------------------------------------------
+(defn about-credits []
+  (let [faint (p/TextStyle
+                ;; todo does flutter let us place the style higher so referenced just once?
+                .color m.Colors/grey
+                .fontSize 14.0)
+        credits ["Double-click a todo to edit."
+                 "Make title blank to delete. Or click the big red X."
+                 "Red indicates meaningless hits on FDA.gov."
+                 "by Kenny Tilton"
+                 "Flutter \u2022 Matrix \u2022 ClojureDart"]]
+    (fx/padding
+      {:padding (m.EdgeInsets/all 16.0)}
+      {:name          :credits-toggle
+       :show-credits? (cI false)}
+      (fx/column
+        (when (mget (fasc :credits-toggle) :show-credits?)
+          (fx/column
+            (mapv #(fx/text {:style faint} %) credits)))
+        (fx/icon-button
+          {:onPressed (as-dart-callback []
+                        (mswap! (fasc :credits-toggle) :show-credits? not))
+           :icon      (cF (in-my-context [me ctx]
+                            (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
+                                      m.Icons/info_outline m.Icons/info)
+                              .color m.Colors/grey)))})))))
+

@@ -1,0 +1,30 @@
+(ns example.eg.x14-hero
+  "FlutterMX port of CLJD Faithful port of https://docs.flutter.dev/cookbook/navigation/hero-animations"
+  (:require ["package:flutter/material.dart" :as m]
+            [tilton.fmx.core :refer [as-dart-callback] :as fx]))
+
+(def detail-screen
+  (fx/scaffold
+    (fx/gesture-detector
+      {:onTap (as-dart-callback []
+                (.pop (m.Navigator/of ctx)))}
+      (fx/center
+        (fx/hero {:tag "imageHero"}
+          (m/Image .image (m/AssetImage "image/einstein.jpeg")))))))
+
+(defn make-app []
+  (let []
+    (fx/material-app
+      {:debugShowCheckedModeBanner false}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text "Main Screen")})}
+        (fx/gesture-detector
+          {:onTap (as-dart-callback []
+                    (.push (m.Navigator/of ctx)
+                      (#/(m/MaterialPageRoute Object)
+                        .builder (fn [_]
+                                   (fx/fx-resolve me ctx
+                                     detail-screen)))))}
+          (fx/hero {:tag "imageHero"}
+            ;; required a pubspec.yaml "assets:" entry and add a path to a JPEG,
+            (m/Image .image (m/AssetImage "image/john.jpeg"))))))))
