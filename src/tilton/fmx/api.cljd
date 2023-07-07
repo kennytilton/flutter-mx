@@ -300,12 +300,20 @@
   `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
      (~'createState [_#]
        (reify :extends w/State
-         (~'build [_# ctx]
+         (~'build [_# ~'ctx]
            ~widget-expression)))))
 
 (defmacro run-app [widget-expression]
   `(m/runApp
-     (wrap-stateless (wrap-unique-key ~widget-expression))))
+     (wrap-stateless
+       (wrap-unique-key
+         ~widget-expression))))
+
+(defmacro run-fx-app [fx-app]
+  `(m/runApp
+     (wrap-stateless
+       (wrap-unique-key
+         (fx-render ~'ctx ~fx-app)))))
 
 ;;; --- environment ------------------------
 

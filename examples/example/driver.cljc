@@ -1,17 +1,9 @@
 (ns example.driver
   (:require
-   ;["dart:io" :as io]
-    [tilton.mx.cell.base :refer [cinfo c-model] :as cty]
-    [tilton.mx.model.core :as md]
-    [tilton.mx.base
-     :refer [prog1 wtrx dprn dp dpx trx]]
-    [tilton.mx.api :refer [minfo] :as mx]
-    [tilton.fmx.api :as fx]
-    ;;[example.x00-poc :as x00]
     [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]
-    ;[example.eg.x02-two-counters-ala-flux :as ctr2flux]
-    ;[example.eg.x02-two-counters-ala-matrix :as ctr2]
+    [example.eg.x02-two-counters-ala-flux :as ctr2flux]
+    [example.eg.x02-two-counters-ala-matrix :as ctr2]
     [example.eg.x03-physics-sim :as x03]
     [example.eg.x04-drawer :as x04]
     [example.eg.x05-fab :as x05]
@@ -42,4 +34,4 @@
     [example.eg.x029a-layout-kid-builder :as x029]))
 
 (defn select []
-  (x029/make-app))
+  (x03/make-app))

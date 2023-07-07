@@ -25,19 +25,16 @@
               :tooltip   "Increment"}
              (m/Icon m.Icons/add .color m.Colors/black)))}
       {:name :scaffo
-       :counter (cI 0)
-       :show-doc (cF (even? (mget me :counter)))}
+       :counter (cI 0)}
       (center
         (column {:mainAxisAlignment m.MainAxisAlignment/center}
           (text {:style (p/TextStyle .color m.Colors/black
                           .fontSize 18.0)}
-            "You clicked (+) so many times:")
+            "You have clicked (+) this many times:")
           (sized-box {:height 14.0})
           (text
             {:style (in-my-context [me ctx]
                       (.-headline4 (.-textTheme (m.Theme/of ctx))))}
-            {:name  :z-counter
-             :value (cI 0)}
             (str (mget (fasc :scaffo) :counter))))))))
 
 
