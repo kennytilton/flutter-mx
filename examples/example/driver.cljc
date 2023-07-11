@@ -34,4 +34,4 @@
     [example.eg.x029a-layout-kid-builder :as x029]))
 
 (defn select []
-  (x03/make-app))
+  (x07/make-app))
