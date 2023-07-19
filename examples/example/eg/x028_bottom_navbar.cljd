@@ -31,14 +31,14 @@
       {:appBar              (app-bar
                               {:title (m/Text "Bottom Navigation Bar Demo")})
        :bottomNavigationBar (fx/bottom-navigation-bar
-                              {;; :type m.BottomNavigationBarType/fixed or .../shifting
+                              {;; :type m/BottomNavigationBarType.fixed or ...shifting
                                ;; ^^^ we can specify fixed or shifting to override defaults, which
                                ;; are fixed for items <= 3, shifting above 3. Very strange.
                                :currentIndex      (cF (let [scaff (fmu :top-scaff)
                                                             curr-id (mget scaff :current-page-id)]
                                                         (cl-position-if (mget scaff :pages)
                                                           (fn [page] (= curr-id (:page-id page))))))
-                               :selectedItemColor (.-shade800 m.Colors/amber)
+                               :selectedItemColor (.-shade800 m/Colors.amber)
                                :onTap             (fx/as-dart-callback [i]
                                                     (let [item (nth (mkids me) i)]
                                                       (mset! (fmu :top-scaff) :current-page-id
@@ -56,26 +56,26 @@
        :pages           [{:page-id :home
                           :icon    (m/Icon m/Icons.home)
                           :label   "Home"
-                          :bkg     m.Colors/red}
+                          :bkg     m/Colors.red}
                          {:page-id :business
                           :icon    (m/Icon m/Icons.business)
                           :label   "Business"
-                          :bkg     m.Colors/green}
+                          :bkg     m/Colors.green}
                          {:page-id :school
                           :icon    (m/Icon m/Icons.school)
                           :label   "School"
-                          :bkg     m.Colors/purple}
+                          :bkg     m/Colors.purple}
                          ;; un-comment this guy to trigger default BottomNavigationBarType.shifting
                          ;; comment to get just three items, hence default BottomNavigationBarType.fixed.
                          ;; ps. All that can be overridden by specifying the :type directly. See above.
                          {:page-id :settings
                           :icon    (m/Icon m/Icons.settings)
                           :label   "Settings"
-                          :bkg     m.Colors/pink}]}
+                          :bkg     m/Colors.pink}]}
       (center
         (column
-          {:mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (text {:style (p/TextStyle
-                          .fontWeight m.FontWeight/bold
+                          .fontWeight m/FontWeight.bold
                           .fontSize 30.0)}
             (str "Nav page " (mget (mx/fasc :top-scaff) :current-page-id))))))))

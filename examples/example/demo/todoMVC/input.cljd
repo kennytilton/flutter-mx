@@ -27,14 +27,14 @@
 
 (defn todo-input []
   (fx/material {:elevation   20.0
-                :color       m.Colors/white
-                :shadowColor m.Colors/black}
+                :color       m/Colors.white
+                :shadowColor m/Colors.black}
     (fx/text-field {:autofocus   true
                     :focusNode   (m/FocusNode)
                     :decoration  (m/InputDecoration
                                    .hintText "What needs doing?"
                                    .border m.InputBorder/none
-                                   .contentPadding (m.EdgeInsets/all 9.0))
+                                   .contentPadding (m/EdgeInsets.all 9.0))
                     :onSubmitted (todo-input-onSubmitted-formula)
                     :controller  (cFonce (fx/standard-text-value-controller me))}
       {:name  :todo-input
@@ -58,7 +58,7 @@
                       (doseq [td todos]
                         ;; todo do all these in one change pulse
                         (mset! td :completed (if all-done? false true)))))
-       :icon      (m/Icon m.Icons/expand_more .color m.Colors/blueGrey)})))
+       :icon      (m/Icon m.Icons/expand_more .color m/Colors.blueGrey)})))
 
 (defn todo-controls []
   (fx/row
@@ -68,5 +68,5 @@
     ; --- the to-do input field ----
     (fx/expanded {:flex 9}
       (fx/padding
-        {:padding (m.EdgeInsets/all 16.0)}
+        {:padding (m/EdgeInsets.all 16.0)}
         (todo-input)))))

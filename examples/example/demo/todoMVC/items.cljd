@@ -20,7 +20,7 @@
   (fx/check-box
     {:value     (cF (boolean (td-completed todo)))
      :shape     (fx/rounded-rectangle-border
-                  {:borderRadius (m.BorderRadius/all (m.Radius/circular 20.0))})
+                  {:borderRadius (m/BorderRadius.all (m.Radius/circular 20.0))})
      :onChanged (cF (as-dart-callback [value]
                       (mset! todo :completed value)))}))
 
@@ -40,7 +40,7 @@
       (fx/text {:style (p/TextStyle
                          .fontFamily "Helvetica Neue"
                          .color (cmm/title-red)
-                         .fontWeight m.FontWeight/w200
+                         .fontWeight m/FontWeight.w200
                          .fontSize 20.0)}
         "X"))))
 
@@ -51,12 +51,12 @@
      :title    (cF (fx/text
                      {:style (cF (if (mget todo :completed)
                                    (p/TextStyle
-                                     .color m.Colors/grey
+                                     .color m/Colors.grey
                                      .decoration p.TextDecoration/lineThrough)
                                    (p/TextStyle .color
                                      (if (mget todo :ae-events?)
-                                       m.Colors/red
-                                       m.Colors/blue))))}
+                                       m/Colors.red
+                                       m/Colors.blue))))}
                      {:name :todo-li-title-text}
                      (td-title todo)))}
     {:name :todo-dsp
@@ -98,8 +98,8 @@
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
-                                    :color       m.Colors/white
-                                    :shadowColor m.Colors/black}
+                                    :color       m/Colors.white
+                                    :shadowColor m/Colors.black}
                         ;; doing our best ^^^^ to emulate official TodoMVC styling.
                         (fx/text-field {:autofocus   true
                                         :focusNode   (cF (m/FocusNode
@@ -115,9 +115,9 @@
                                                                              :else m/KeyEventResult.ignored)))))
                                         :decoration  (m/InputDecoration
                                                        .border (m/OutlineInputBorder
-                                                                 .borderRadius (m.BorderRadius/all
+                                                                 .borderRadius (m/BorderRadius.all
                                                                                  (m.Radius/circular 0.0)))
-                                                       .contentPadding (m.EdgeInsets/all 9.0))
+                                                       .contentPadding (m/EdgeInsets.all 9.0))
                                         :onSubmitted (cF (as-dart-callback [value]
                                                            (commit-to-do-editing me todo value)))
                                         :controller  (cFonce (m/TextEditingController
@@ -177,7 +177,7 @@
   (fx/expanded
     ;; ^^^ sizer is required to join column, which demands children know their size
     (fx/list-view+builder
-      {:padding     (m.EdgeInsets/all 0.0)
+      {:padding     (m/EdgeInsets.all 0.0)
        :itemCount   (cF (count (mkids me)))
        :itemBuilder (cF (fx/as-is
                           (fn [ctx i]

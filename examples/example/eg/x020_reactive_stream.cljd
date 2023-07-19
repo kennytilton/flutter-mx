@@ -25,7 +25,7 @@
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Stream Demo"
-     :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
     (fx/scaffold
       {:appBar (fx/app-bar
                  {:title (m/Text "Reactive Streams Demo")})
@@ -99,7 +99,7 @@
               ;; nb. No formula wrapper is _required_ by MX. In this case the property value can be generated in-line.
               (new #/(async/StreamController String))
               }
-             (m/Icon m.Icons/chat .color
+             (m/Icon m/Icons.chat .color
                ;; Just showing off toggling the color, but the astute reader may be surprised that
                ;; this works without being wrapped in a `cF` formula wrapper.
                ;;
@@ -108,12 +108,12 @@
                ;; which in exceptionally dense DAGs has been a significant performance issue.
                ;;
                (if (mget me :offset)
-                 m.Colors/white
-                 m.Colors/yellow))))}
+                 m/Colors.white
+                 m/Colors.yellow))))}
       (fx/center
         (fx/column
-          {:mainAxisAlignment m.MainAxisAlignment/center}
-          (fx/text {:style (p/TextStyle .color m.Colors/black
+          {:mainAxisAlignment m/MainAxisAlignment.center}
+          (fx/text {:style (p/TextStyle .color m/Colors.black
                              .fontSize 36.0)}
             ;; tl;dr We need to document the MX navigation mechanisms, here FMU or "family search up". by which
             ;; one widget tracks down another widget to get one of its properties.
@@ -131,7 +131,7 @@
             {:style (fx/in-my-context [me ctx]
                       ;; access to the Flutter context is not straightforward.
                       ;; Macro `in-my-context` handles the complexity of accessing the context.
-                      (.-headline3 (.-textTheme (m.Theme/of ctx))))}
+                      (.-headline3 (.-textTheme (m/Theme.of ctx))))}
             ;; tl;dr: Matrix supports the prototype model.
             ;;
             ;; We pause to call out what we have seen before: next we are able to provide
@@ -180,7 +180,7 @@
             ;; the first parameter to the Text constructor.
             (mget me :msg-rcvd))
 
-          (fx/text {:style (p/TextStyle .color m.Colors/blue
+          (fx/text {:style (p/TextStyle .color m/Colors.blue
                              .fontSize 18.0)}
             {:full-text (cF (conj
                               (if (= _cache cty/unbound) [] _cache)

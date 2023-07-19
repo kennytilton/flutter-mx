@@ -18,7 +18,7 @@
         animation ^#/(m/Animation Alignment) (.drive controller
                                                      (m/AlignmentTween
                                                        .begin (mget me :dragAlignment)
-                                                       .end m.Alignment/center))
+                                                       .end m/Alignment.center))
         units-per-s (m/Offset (/ (.-dx px-per-s) (.-width size))
                               (/ (.-dy px-per-s) (.-height size)))
         unit-velocity (.-distance units-per-s)
@@ -55,7 +55,7 @@
                             (fn [^m/DragEndDetails details]
                               (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond))))))}
       {:name          :draggo
-       :dragAlignment (cI m.Alignment/center)
+       :dragAlignment (cI m/Alignment.center)
        :controller    (cF (when-let [st (mget (mpar) :fx$state)]
                             ;; todo search up for (dart/is? <state> w/TickerProvider)
                             (dp :anicon-st-from (minfo (mpar)))

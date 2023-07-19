@@ -26,7 +26,7 @@
 (defn completion-filters []
   (fx/row
     {;; map one is for Flutter widget properties, using Flutter camelCase keywords
-     :mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+     :mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
     {;; map two is for application semantics
      ;; naming MX objects lets search the application "database" symbolically
      :name      :completions
@@ -51,13 +51,13 @@
                                         ;; next we see that a "native" Flutter object can be mingled with FMX objects
                                         (m/BoxDecoration
                                           .border (.all m/Border .color (cmm/title-red) .width 0.5)
-                                          .borderRadius (m.BorderRadius/all (m.Radius/circular 4.0)))))}
+                                          .borderRadius (m/BorderRadius.all (m.Radius/circular 4.0)))))}
                        {:selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
                                      ;; so it can be used directly by the decoration rule ^^^.
                                      (= completion-enum
                                        (mget selector :selection)))}
                        (fx/padding
-                         {:padding (m.EdgeInsets/all 3.0)}
+                         {:padding (m/EdgeInsets.all 3.0)}
                          ;; note again that a native Flutter m/Text can be mingled with FMX, here
                          ;; an m/Text will become the :child of an FMX padding widget.
                          (m/Text label)))))]

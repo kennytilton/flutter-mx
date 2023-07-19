@@ -1,15 +1,15 @@
-(ns tiltontec.demo.localStorage-todoMVC.footer
+(ns example.demo.localStorage-todoMVC.footer
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
 
-    [tiltontec.matrix.api :refer [mget mset! mswap! mkids cI cF]]
-    [tiltontec.flutter-mx.core :refer [as-dart-callback my-app] :as fx]
+    [tilton.mx.api :refer [mget mset! mswap! mkids cI cF]]
+    [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
 
-    [tiltontec.demo.localStorage-todoMVC.common :as cmm
+    [example.demo.localStorage-todoMVC.common :as cmm
      :refer [ my-todo-list ]]
-    [tiltontec.demo.localStorage-todoMVC.todo :refer [td-completed] :as todo]))
+    [example.demo.localStorage-todoMVC.todo :refer [td-completed] :as todo]))
 
 (defn items-remaining-display []
   (fx/text
@@ -25,7 +25,7 @@
 (defn completion-filters []
   (fx/row
     {;; map one is for Flutter widget properties, using Flutter camelCase keywords
-     :mainAxisAlignment m.MainAxisAlignment/spaceEvenly}
+     :mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
     {;; map two is for application semantics
      ;; naming MX objects lets search the application "database" symbolically
      :name      :completions
@@ -50,13 +50,13 @@
                                         ;; next we see that a "native" Flutter object can be mingled with FMX objects
                                         (m/BoxDecoration
                                           .border (.all m/Border .color (cmm/title-red) .width 0.5)
-                                          .borderRadius (m.BorderRadius/all (m.Radius/circular 4.0)))))}
+                                          .borderRadius (m/BorderRadius.all (m.Radius/circular 4.0)))))}
                        {:selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
                                      ;; so it can be used directly by the decoration rule ^^^.
                                      (= completion-enum
                                        (mget selector :selection)))}
                        (fx/padding
-                         {:padding (m.EdgeInsets/all 3.0)}
+                         {:padding (m/EdgeInsets.all 3.0)}
                          ;; note again that a native Flutter m/Text can be mingled with FMX, here
                          ;; an m/Text will become the :child of an FMX padding widget.
                          (m/Text label)))))]
@@ -65,7 +65,7 @@
        (choice :done "Done")])))
 
 (defn clear-completed-button []
-  (fx/visibility!
+  (fx/visibility
     {:visible           (cF (if-let [tds (todo/app-todos (my-app))]
                               (boolean                      ;; FL wants explicit boolean
                                 (some td-completed tds))

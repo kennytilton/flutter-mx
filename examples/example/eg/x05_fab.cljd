@@ -19,11 +19,11 @@
        :floatingActionButton (expandable-fab
                                :initial-open? false
                                :distance 112.0
-                               :actions [{:title "Create Post" :icon (m/Icon m.Icons/format_size)}
-                                         {:title "Upload Photo" :icon (m/Icon m.Icons/insert_photo)}
-                                         {:title "Upload Video" :icon (m/Icon m.Icons/videocam)}])}
+                               :actions [{:title "Create Post" :icon (m/Icon m/Icons.format_size)}
+                                         {:title "Upload Photo" :icon (m/Icon m/Icons.insert_photo)}
+                                         {:title "Upload Video" :icon (m/Icon m/Icons.videocam)}])}
       (fx/list-view+builder
-        {:padding     (m.EdgeInsets/symmetric .vertical 8.0)
+        {:padding     (m/EdgeInsets.symmetric .vertical 8.0)
          :itemCount   25
          :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
 
@@ -44,8 +44,8 @@
                                .vsync state)))
      :expand-animation (cF (when-let [c (fx/my-controller)]
                              (m/CurvedAnimation
-                               .curve m.Curves/fastOutSlowIn
-                               .reverseCurve m.Curves/easeOutQuad
+                               .curve m/Curves.fastOutSlowIn
+                               .reverseCurve m/Curves.easeOutQuad
                                .parent c)))
      ; --- behavior -------------------------
      :step             (/ 90.0 (dec (count actions)))
@@ -60,8 +60,8 @@
 
     (when-let [anime (mget me :expand-animation)]
       (fx/stack
-        {:alignment    m.Alignment/bottomRight
-         :clipBehavior m.Clip/none}
+        {:alignment    m/Alignment.bottomRight
+         :clipBehavior m/Clip.none}
         {:name :fab-stack}
         (tap-to-close-fab me)
         ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
@@ -80,7 +80,7 @@
     {:animation anime                                       ;; (mget (mx/fasc :fab) :expand-animation)
      :builder   (as-dart-callback [ctx child]
                   (let [progress ^m/CurvedAnimation anime #_(mget me :animation) #_(mget (mx/fasc :fab) :expand-animation)
-                        offset (m.Offset/fromDirection
+                        offset (m/Offset.fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
                                  (* (.-value progress) max-distance))]
                     ;; N.B! alpha widgets are welcome at leaves of the MX tree...
@@ -89,7 +89,7 @@
                         (m/Positioned
                           .right (+ 4.0 (.-dx offset))
                           .bottom (+ 4.0 (.-dy offset)))
-                        (m.Transform/rotate
+                        (m/Transform.rotate
                           .angle (* (- 1.0 (.-value progress))
                                    math/pi 0.5))
                         child))))}
@@ -112,55 +112,55 @@
                (fx/fx-render ctx
                  (fx/alert-dialog
                    {:actions [(m/TextButton
-                                .onPressed #(-> ctx m.Navigator/of .pop)
+                                .onPressed #(-> ctx m/Navigator.of .pop)
                                 .child (m/Text "CLOSE"))]}
                    {}
                    (fx/text {} {} (:title action)))))))
 
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        (m/CircleBorder)
-                :clipBehavior m.Clip/antiAlias
+                :clipBehavior m/Clip.antiAlias
                 :color        (fx/in-my-context [me ctx]
-                                (-> (m.Theme/of ctx) .-colorScheme .-secondary))
+                                (-> (m/Theme.of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
        :color     (fx/in-my-context [me ctx]
-                    (-> (m.Theme/of ctx) .-colorScheme .-onSecondary))})))
+                    (-> (m/Theme.of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
   (fx/sized-box {:width  56.0
                  :height 56.0}
     (fx/center
       (fx/material {:shape        (m/CircleBorder)
-                    :clipBehavior m.Clip/antiAlias
+                    :clipBehavior m/Clip.antiAlias
                     :elevation    4.0}
         (fx/ink-well {:onTap (as-dart-callback []
                                (assert (mref? par :par-close))
                                (let [fb (mx/fasc :fab par)]
                                  (assert (mref? fb :fb-close))
                                  (mx/mswap! fb :open? not)))}
-          (fx/padding {:padding (m.EdgeInsets/all 8.0)}
-            (fx/icon {:icon  m.Icons/close
+          (fx/padding {:padding (m/EdgeInsets.all 8.0)}
+            (fx/icon {:icon  m/Icons.close
                       :color (fx/in-my-context [me ctx]
-                               (.-primaryColor (m.Theme/of ctx)))}
+                               (.-primaryColor (m/Theme.of ctx)))}
               {:name :fabicon-close})))))))
 
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
     {:ignoring (cF (mget (mx/fasc :fab par) :open?))}
     (fx/animated-container
-      {:transformAlignment m.Alignment/center
+      {:transformAlignment m/Alignment.center
        :transform          (cF (if (mget (mx/fasc :fab par) :open?)
-                                 (m.Matrix4/diagonal3Values 0.7 0.7 1.0)
-                                 (m.Matrix4/diagonal3Values 1.0 1.0 1.0)))
+                                 (m/Matrix4.diagonal3Values 0.7 0.7 1.0)
+                                 (m/Matrix4.diagonal3Values 1.0 1.0 1.0)))
        :duration           (dart:core/Duration .milliseconds 250)
-       :curve              (m/Interval 0.0 0.5 .curve m.Curves/easeOut)}
+       :curve              (m/Interval 0.0 0.5 .curve m/Curves.easeOut)}
       (fx/animated-opacity
         {:opacity  (cF (if (mget (mx/fasc :fab par) :open?)
                          0.0 1.0))
-         :curve    (m/Interval 0.25 1.0 .curve m.Curves/easeInOut)
+         :curve    (m/Interval 0.25 1.0 .curve m/Curves.easeInOut)
          :duration (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
           {:onPressed (as-dart-callback []
@@ -168,22 +168,22 @@
                         (let [fb (mx/fasc :fab par)]
                           (assert (mref? fb :fb-open))
                           (mx/mswap! fb :open? not)))}
-          (fx/icon {:icon m.Icons/create}
+          (fx/icon {:icon m/Icons.create}
             {:name :fabicon-open}))))))
 
 (defn fake-item [is-big?]
   (m/Container
-    .margin (m.EdgeInsets/symmetric .vertical 8.0 .horizontal 24.0)
+    .margin (m/EdgeInsets.symmetric .vertical 8.0 .horizontal 24.0)
     .height (if is-big? 128.0 36.0)
     .decoration (m/BoxDecoration
-                  .borderRadius (m.BorderRadius/all (m.Radius/circular 8.0))
-                  .color (.-shade300 m.Colors/cyan))))
+                  .borderRadius (m/BorderRadius.all (m/Radius.circular 8.0))
+                  .color (.-shade300 m/Colors.cyan))))
 
 #_;; this below is the above converted to "apply". The Dart equivalent works, but not this
         (dart:core.Function/apply m/Container nil
-          ^#/(Map Symbol dynamic) {:margin (m.EdgeInsets/symmetric :vertical 8.0 :horizontal 24.0)
+          ^#/(Map Symbol dynamic) {:margin (m/EdgeInsets.symmetric :vertical 8.0 :horizontal 24.0)
                                    :height (if is-big? 128.0 36.0)
                                    :decoration
                                    (m/BoxDecoration
-                                     :borderRadius (m.BorderRadius/all (m.Radius/circular 8.0))
+                                     :borderRadius (m/BorderRadius.all (m/Radius.circular 8.0))
                                      :color (.-shade300 Colors/pink))})

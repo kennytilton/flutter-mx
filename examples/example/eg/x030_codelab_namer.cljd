@@ -9,13 +9,13 @@
 
 (defn big-card []
   (fx/card {:color (fx/in-my-context [me ctx]
-                     (-> (m.Theme/of ctx) .-colorScheme .-primary))}
+                     (-> (m/Theme.of ctx) .-colorScheme .-primary))}
     {:name :bigc
      :word-pair (cF (mget (fasc :app) :word-pair))}
     (fx/padding {:padding (m/EdgeInsets.all 20)}
       (fx/text {:style          (fx/in-my-context [me ctx]
-                                  (.copyWith (.-displayMedium (.-textTheme (m.Theme/of ctx)))
-                                    .color (-> (m.Theme/of ctx) .-colorScheme .-onPrimary)))
+                                  (.copyWith (.-displayMedium (.-textTheme (m/Theme.of ctx)))
+                                    .color (-> (m/Theme.of ctx) .-colorScheme .-onPrimary)))
                 :semanticsLabel (cF (let [wp (mget (fasc :bigc) :word-pair)]
                                       (dp :wp!!!!!!!!!!! wp)
                                       (.-asPascalCase ^en/WordPair wp)))}
@@ -23,7 +23,7 @@
 
 (defn generator-page []
   (fx/center
-    (fx/column {:mainAxisAlignment m.MainAxisAlignment/center}
+    (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
       (big-card)
       (m/SizedBox .height 10)
       (fx/row {:mainAxisSize m/MainAxisSize.min}
@@ -88,7 +88,7 @@
           (fx/expanded
             (fx/container
               {:color (fx/in-my-context [me ctx]
-                        (-> (m.Theme/of ctx) .-colorScheme .-primaryContainer))}
+                        (-> (m/Theme.of ctx) .-colorScheme .-primaryContainer))}
               (case (fmuv :nav :selectedIndex)
                 0 (generator-page)
                 1 (favorites-page

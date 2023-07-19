@@ -23,7 +23,7 @@
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
     (fx/scaffold
       {:appBar               (fx/app-bar
                                {:title (m/Text "Flutter/MX Timer Life-Cycle")})
@@ -32,19 +32,19 @@
                                                  (mswap! (fmu :scaffo) :show-time? not))
                                     :tooltip   "Toggle Time"}
                                    (if (mget (fmu :scaffo) :show-time?)
-                                     (m/Icon m.Icons/stop_rounded
-                                       .color m.Colors/white)
-                                     (m/Icon m.Icons/download_rounded
-                                       .color  m.Colors/black))))}
+                                     (m/Icon m/Icons.stop_rounded
+                                       .color m/Colors.white)
+                                     (m/Icon m/Icons.download_rounded
+                                       .color  m/Colors.black))))}
       {:name       :scaffo
        :show-time? (cI true)}
       (fx/center
-        (fx/wrap {:direction          m.Axis/vertical
-                  :crossAxisAlignment m.WrapCrossAlignment/center
+        (fx/wrap {:direction          m/Axis.vertical
+                  :crossAxisAlignment m/WrapCrossAlignment.center
                   :spacing            14}
           (fx/container {}{:name :contnr}
             (when (mget (fasc :scaffo) :show-time?)
-              (fx/text {:style (p/TextStyle .color m.Colors/black
+              (fx/text {:style (p/TextStyle .color m/Colors.black
                                  .fontSize 18.0)}
                 {:name :shotime
                  :clock (cF+ [:debug false
@@ -61,7 +61,7 @@
                 "Making fetch #")))
           (fx/text
             {:style (fx/in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                      (.-headline4 (.-textTheme (m/Theme.of ctx))))}
             {:name  :counter
              :value (cI 0)}
             (str (mx/my-value)))
