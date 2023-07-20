@@ -270,12 +270,12 @@
 
       ;(dp c :CNL-trying-formula (cinfo c))
       ;(dp c :CNL-trying-formula-code (c-code$ c))
-      (let [raw-value #_((c-rule c) c)
-            (try
+      (let [raw-value ((c-rule c) c)
+            #_ (try
               ((c-rule c) c)
               (catch Exception e
-                (dprn :exception e)
-                (dprn :error-calculating-formula (c-code c))
+                (dprn :cnl-exception e)
+                (dprn :cnl-error-calculating-formula (c-code c))
                 (dprn :error-calculating-cinfo (cinfo c))
                 (dprn :error-calculating-minfo (minfo (c-model c)))
                 (dprn :ex-data (ex-data e))
@@ -294,7 +294,7 @@
 ;;; --- awakening ------------------------------------
 
 (defn c-awaken [c]
-  (try
+  (do ;; try
     (cond
       (c-formula? c)
       (cond
@@ -324,11 +324,11 @@
       (dp :c-awaken-fall-thru (if (atom? c)
                                 [:ref-of (meta c) @c]
                                 [:unref c])))
-    (catch Exception e
-      (dprn :error-calculating-cinfo (cinfo c))
+    #_ (catch Exception e
+      (dprn :awaken-error-calculating-cinfo (cinfo c))
       (dprn :c-awaken-exception e)
 
-      (dprn :error-calculating-formula (c-code c))
+      (dprn :awaken-error-calculating-formula (c-code c))
 
       (dprn :error-calculating-minfo (minfo (c-model c)))
       (dprn :ex-data (ex-data e))

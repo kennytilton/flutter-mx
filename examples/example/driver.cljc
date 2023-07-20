@@ -31,7 +31,8 @@
     [example.eg.x030_codelab_namer :as x030]
     [example.eg.x035-timer-poll :as x035]
     ;[example.eg.x040-named-routes :as x040]
-    [example.eg.x029a-layout-kid-builder :as x029]))
+    [example.eg.x029a-layout-kid-builder :as x029]
+    [example.eg.dliepmann-layout :as dlayout]))
 
 (defn select []
-  (x05/make-app))
+  (dlayout/make-app))

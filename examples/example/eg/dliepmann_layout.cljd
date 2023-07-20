@@ -1,0 +1,81 @@
+(ns example.eg.dliepmann-layout
+  "Port of Dave Liepmann's ClojureDart port https://github.com/daveliepmann/ClojureDart/tree/main/samples/flutter_tutorial_building_layouts
+  of Flutter 'Building layouts' tutorial https://docs.flutter.dev/ui/layout/tutorial"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [clojure.string :as str]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding in-my-context]]))
+
+(defn title-section []
+  (container
+    {:padding (m/EdgeInsets.all 32)}
+    (row
+      (expanded
+        (column {:crossAxisAlignment m/CrossAxisAlignment.start}
+          (container {:padding (m/EdgeInsets.only .bottom 8)}
+            (text {:style (m/TextStyle .fontWeight m/FontWeight.bold)}
+              "Oeschinen Lake Campground"))
+          (text {:style (m/TextStyle .color (m/Colors.grey 500))}
+            "Kandersteg, Switzerland")))
+      (icon {:icon  m/Icons.star
+             :color (m/Colors.red 500)})
+      (text "41"))))
+
+(defn button-column [color icon label]
+  (column {:mainAxisSize      m/MainAxisSize.min
+        :mainAxisAlignment m/MainAxisAlignment.center}
+    {:name :button-col}
+    (fx/icon {:icon icon
+              :color color})
+    (container {:margin (m/EdgeInsets.only .top 8)}
+      (text {:style (fx/text-style {:fontSize   12
+                                    :fontWeight m/FontWeight.w400
+                                    :color      color})}
+        label))))
+
+(defn button-section []
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (into [] (for [[ico label] [[m/Icons.call "CALL"]
+                                [m/Icons.near_me "ROUTE"]
+                                [m/Icons.share "SHARE"]]]
+               (button-column (in-my-context [me ctx]
+                                (.-primaryColor (m/Theme.of ctx)))
+                 ico label)))))
+
+(defn campground-desc []
+  (str/replace
+    "Lake Oeschinen lies at the foot of the Blüemlisalp in the Bernese Alps.
+  Situated 1,578 meters above sea level, it is one of the larger Alpine Lakes.
+  A gondola ride from Kandersteg, followed by a half-hour walk through pastures
+  and pine forest, leads you to the lake, which warms to 20 degrees Celsius in the summer.
+  Activities enjoyed here include rowing, and riding the summer toboggan run."
+    #"\n" ""))
+
+(defn text-section []
+  (padding {:padding (m/EdgeInsets.all 32)}
+    (text {:softWrap true}
+      (campground-desc))))                                  ;
+
+(defn image-section []
+  ;; todo fmx-ify image, image-asset, et al
+  (m/Image.asset "image/lake-oeschinen.jpg"
+    .width 600
+    .height 240
+    .fit m/BoxFit.cover))
+
+(defn make-app []
+  (let [title "Flutter layout demo (cljd-ified!)"]
+    (material-app
+      {:title title}
+      (scaffold
+        {:appBar (app-bar {:title (text title)})}
+        (column
+          (image-section)
+          (title-section)
+          (button-section)
+          (padding {:padding (m/EdgeInsets.all 32)}
+            (text {:softWrap true}
+              (campground-desc))))))))
