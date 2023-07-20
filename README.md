@@ -117,17 +117,28 @@ The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-
 
 #### 4. Running other examples.
 To try a different example:
-0. Switch to the dev branch: `git checkout dev`;
-1. kill whatever `watch` you have running;
-2. edit [main.cljd](https://github.com/kennytilton/flutter-mx/blob/d6cd6e14027ed8f00a42ca6cc2464e48142922d4/src/tiltontec/main.cljd#L43) and change the namespace `counter` in `(counter/make-app)` to one of the namespaces listed above in the NS requires. Try `hello` to see an elaborate "Hello, world", featuring that phrase's popularizer, or `todo` to see the [TodoMVC classic](https://github.com/tastejs/todomvc/blob/master/app-spec.md).
-3. save your changes;
-4. start another build/watch as explained above; and
-5. the new app should appear in your chosen device.
 
-More examples, including translations of the rest of the [ClojureDart samples](https://github.com/Tensegritics/ClojureDart/blob/main/samples/README.md), can be found in our [Flutter/MX Sandbox](https://github.com/kennytilton/flutter-mx-sandbox) repo.
+0. kill (^C) any `watch` you have running;
+1. Switch to the example branch:
+```bash
+git checkout example
+```
+2. start another build/watch as explained above; and
+3. the latest example app should appear in your chosen device.
 
-#### 5. More on the Flutter/MX version of TodoMVC
-Here is a TodoMVC medium screenshot:
+#### 5. The Flutter/MX version of TodoMVC
+To run the f/mx version of TodoMVC:
+
+0. If not on the example branch, `git checkout example`;
+1. Edit `examples/example/driver.cljc`;
+2. Change the function `select` to be:
+   ```
+   (defn select []
+      (todo/make-app))
+   ```
+3. Run as described above.
+
+Here is a TodoMVC screenshot:
 
 ![f/mx TodoMVC screenshot](image/todomvc-app.jpeg)
 
