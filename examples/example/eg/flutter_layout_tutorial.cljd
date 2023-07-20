@@ -1,4 +1,4 @@
-(ns example.eg.dliepmann-layout
+(ns example.eg.flutter-layout-tutorial
   "Port of Dave Liepmann's ClojureDart port https://github.com/daveliepmann/ClojureDart/tree/main/samples/flutter_tutorial_building_layouts
   of Flutter 'Building layouts' tutorial https://docs.flutter.dev/ui/layout/tutorial"
   (:require
@@ -8,6 +8,28 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding in-my-context]]))
+
+(defn make-app []
+  (let [title "Flutter layout demo (cljd-ified!)"]
+    (material-app
+      {:title title}
+      (scaffold
+        {:appBar (app-bar {:title (text title)})}
+        (column
+          (m/Image.asset "image/lake-oeschinen.jpg"
+            .width 600 .height 240
+            .fit m/BoxFit.cover)
+          (title-section)
+          (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            (into [] (for [[ico label] [[m/Icons.call "CALL"]
+                                        [m/Icons.near_me "ROUTE"]
+                                        [m/Icons.share "SHARE"]]]
+                       (button-column (in-my-context [me ctx]
+                                        (.-primaryColor (m/Theme.of ctx)))
+                         ico label))))
+          (padding {:padding (m/EdgeInsets.all 32)}
+            (text {:softWrap true}
+              (campground-desc))))))))
 
 (defn title-section []
   (container
@@ -26,24 +48,14 @@
 
 (defn button-column [color icon label]
   (column {:mainAxisSize      m/MainAxisSize.min
-        :mainAxisAlignment m/MainAxisAlignment.center}
+           :mainAxisAlignment m/MainAxisAlignment.center}
     {:name :button-col}
-    (fx/icon {:icon icon
-              :color color})
+    (fx/icon {:icon icon :color color})
     (container {:margin (m/EdgeInsets.only .top 8)}
       (text {:style (fx/text-style {:fontSize   12
                                     :fontWeight m/FontWeight.w400
                                     :color      color})}
         label))))
-
-(defn button-section []
-  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-    (into [] (for [[ico label] [[m/Icons.call "CALL"]
-                                [m/Icons.near_me "ROUTE"]
-                                [m/Icons.share "SHARE"]]]
-               (button-column (in-my-context [me ctx]
-                                (.-primaryColor (m/Theme.of ctx)))
-                 ico label)))))
 
 (defn campground-desc []
   (str/replace
@@ -54,28 +66,3 @@
   Activities enjoyed here include rowing, and riding the summer toboggan run."
     #"\n" ""))
 
-(defn text-section []
-  (padding {:padding (m/EdgeInsets.all 32)}
-    (text {:softWrap true}
-      (campground-desc))))                                  ;
-
-(defn image-section []
-  ;; todo fmx-ify image, image-asset, et al
-  (m/Image.asset "image/lake-oeschinen.jpg"
-    .width 600
-    .height 240
-    .fit m/BoxFit.cover))
-
-(defn make-app []
-  (let [title "Flutter layout demo (cljd-ified!)"]
-    (material-app
-      {:title title}
-      (scaffold
-        {:appBar (app-bar {:title (text title)})}
-        (column
-          (image-section)
-          (title-section)
-          (button-section)
-          (padding {:padding (m/EdgeInsets.all 32)}
-            (text {:softWrap true}
-              (campground-desc))))))))
