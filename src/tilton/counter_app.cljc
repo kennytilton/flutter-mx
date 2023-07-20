@@ -19,12 +19,13 @@
        (app-bar
          {:title (m/Text "Flutter/MX Counter Classic")})
        :floatingActionButton
-       (cF (floating-action-button
-             {:onPressed (as-dart-callback []
-                           (mswap! (fm* :scaffo) :counter inc))
-              :tooltip   "Increment"}
-             (m/Icon m.Icons/add .color m.Colors/black)))}
-      {:name :scaffo
+       (cF (fx/theme {:data (m/ThemeData .primarySwatch m.Colors/yellow)}
+             (floating-action-button
+               {:onPressed (as-dart-callback []
+                             (mswap! (fm* :scaffo) :counter inc))
+                :tooltip   "Increment"}
+               (m/Icon m.Icons/add .color m.Colors/black))))}
+      {:name    :scaffo
        :counter (cI 0)}
       (center
         (column {:mainAxisAlignment m.MainAxisAlignment/center}
