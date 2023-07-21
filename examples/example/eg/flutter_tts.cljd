@@ -1,6 +1,5 @@
 (ns example.eg.flutter-tts
-  "Port of Dave Liepmann's ClojureDart port https://github.com/daveliepmann/ClojureDart/tree/main/samples/flutter_tutorial_building_layouts
-  of Flutter 'Building layouts' tutorial https://docs.flutter.dev/ui/layout/tutorial"
+  "Port of flutter_tts package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -11,25 +10,28 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding in-my-context
-             icon-button
+             icon-button fx-render
              as-dart-callback]]))
 
 (defn make-app []
   (material-app {}
-    {:name :app
-     :fts   (cF+ [:watch (fn [_ me newv _ _]
-                           (dp :fts!! newv)
-                           (when-let [fts newv]
-                             (.setSharedInstance fts true)
-                             (.awaitSpeakCompletion fts true)
-                             (.setLanguage fts "en-US")
-                             (.setSpeechRate fts 0.5)
-                             (.setPitch fts 1.0)))]
-              (fts/FlutterTts))
-     :langs (cF+ [:async? true
-                  :watch (fn [_ _ newv _ _]
-                           (dp :langs-f!! newv))]
-              (.-getLanguages (mget me :fts)))}
+    {:name     :app
+     :fts      (cF+ [:watch (fn [_ me newv _ _]
+                              (when-let [fts newv]
+                                (.setSharedInstance fts true)
+                                (.awaitSpeakCompletion fts true)
+                                (.setLanguage fts (mget me :language))
+                                (.setSpeechRate fts (mget me :speech-rate))
+                                (.setPitch fts (mget me :pitch))))]
+                 (fts/FlutterTts))
+     :language (cI "fr-FR")
+     :volume   (cI 0.8)
+     :speech-rate (cI 0.5)
+     :pitch (cI 1.0)
+     :langs    (cF+ [:async? true
+                     :watch (fn [_ _ newv _ _]
+                              (dp :langs-f!! newv))]
+                 (.-getLanguages (mget me :fts)))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (fx/single-child-scroll-view
@@ -52,7 +54,11 @@
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI "Hi, Mom!")})))
+       :value (cI (str "\"Jealousy\"\nby Robert Graves\n\n"
+                    "I'd die for you or you for me, \n"
+                    "So furious is our jealousy. \n"
+                    "And if you doubt this to be true, \n"
+                    "Kill me outright, lest I kill you."))})))
 
 (defn btn-section []
   (container
@@ -69,25 +75,23 @@
         tst (fmu :text-in)
         speech (mget tst :value)]
     (when (not (str/blank? speech))
-      (dp :speaking!! speech :??)
-      ; ((.-setRate tts) 1.1)
-      ;    ((.-setVolume tts) 0.7)
-      ;    ((.-setPitch tts) 1.0)
-      ((.-setLanguage fts) "en-AU")
+      (.setSpeechRate fts (mget app :speech-rate))
+      (.setPitch fts (mget app :pitch))
+      (.setVolume fts (mget app :volume))
+      (.setLanguage fts (mget app :language))
       (.speak fts speech))))
 
 (defn btn-stop [me]
   (let [app (fasc :app)
         fts ^FlutterTts (mget app :fts)]
-    (dp :stopfts fts)
     (let [r (await (.stop fts))]
-      (dp :stop-r r ))))
+      (dp :stop-r r))))
 
 (defn btn-pause [me]
   (let [app (fasc :app)
         fts ^FlutterTts (mget app :fts)]
     (let [r (await (.pause fts))]
-      (dp :pause-r r ))))
+      (dp :pause-r r))))
 
 (defn build-button-col [color splash-color icon label func]
   (column
@@ -100,18 +104,53 @@
        :onPressed   (fn [] (func me))})))
 
 (defn future-builder []
-  (text "future section"))
+  (fx/future-builder
+    {:future  (cF (let [app (fasc :app)
+                        fts ^FlutterTts (mget app :fts)]
+                    (.-getLanguages fts)))
+     :builder (cF (fx/->CBAsIs
+                    (fn [ctx snapshot]
+                      (fx-render ctx
+                        (cond
+                          (.-hasData snapshot) (language-dropdown me (.-data snapshot))
+                          (.-hasError snapshot) (text "Error loading languages...")
+                          :else (fx/text "Loading languages..."))))))}))
+
+(defn language-dropdown [par languages]
+  (container
+    {:padding (m/EdgeInsets.only .top 10.0)}
+    (row
+      {:mainAxisAlignment m/MainAxisAlignment.center}
+      (fx/dropdown-button
+        {:value     (cF (mget (fasc :app par) :language))
+         :items     (mapv (fn [lang]
+                            (fx/dropdown-menu-item
+                              {:value lang}
+                              (text lang)))
+                      (sort languages))
+         :onChanged (fn [new-lang]
+                      (dp :changed!!! new-lang)
+                      (mset! (fasc :app par) :language new-lang))}))))
 
 (defn build-sliders []
-  (text "sliders section"))
-
-;body: SingleChildScrollView (
-;                              scrollDirection: Axis.vertical,
-;                              child: Column (
-;                                              children: [
-;                                                         _inputSection (),
-;                                                         _btnSection (),
-;                                                         _engineSection (),
-;                                                         _futureBuilder (),
-;                                                         _buildSliders (),
-;                                                         if (isAndroid) _getMaxSpeechInputLengthSection (),
+  (column
+    (fx/slider
+      {:value (cF (mget (fasc :app) :volume))
+       :onChanged (fn [val]
+                    (mset! (fasc :app) :volume val))
+       :min 0.0 :max 1.0 :divisions 10
+       :label (cF (str "Volume " (mget me :value)))})
+    (fx/slider
+      {:value (cF (mget (fasc :app) :pitch))
+       :onChanged (fn [val]
+                    (mset! (fasc :app) :pitch val))
+       :min 0.5 :max 2.0 :divisions 15
+       :label (cF (str "Pitch " (mget me :value)))
+       :activeColor m/Colors.red})
+    (fx/slider
+      {:value (cF (mget (fasc :app) :speech-rate))
+       :onChanged (fn [val]
+                    (mset! (fasc :app) :speech-rate val))
+       :min 0.0 :max 1.0 :divisions 10
+       :label (cF (str "Rate " (mget me :value)))
+       :activeColor m/Colors.green})))
