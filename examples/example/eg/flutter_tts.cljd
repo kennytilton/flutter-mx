@@ -4,50 +4,57 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :as fts]
     [clojure.string :as str]
-    [tilton.mx.api :refer [dp cI cF cFn mset!]]
+    [tilton.mx.api :refer [dp cI cF cF+ cFn cFonce mget mget? mset!]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding in-my-context
              icon-button
              as-dart-callback]]))
 
-#_
 (defn make-app []
-  (fx/material-app
-    {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
-    (fx/scaffold
-      {:appBar (fx/app-bar
-                 {:title (m/Text "Flutter/MX Timer Life-Cycle")})}
-      )))
-
-(defn make-app []
-    (material-app
-      (scaffold
-        {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
-        (fx/single-child-scroll-view
-          {:scrollDirection m/Axis.vertical}
-          (column
-            (input-section)
-            (btn-section)
-            (engine-section)
-            (future-builder)
-            (build-sliders))))))
+  (material-app {}
+    {:fts   (cF+ [:watch (fn [_ me newv _ _]
+                           (dp :fts!! newv)
+                           (when-let [fts newv]
+                             (.setSharedInstance fts true)
+                             (.awaitSpeakCompletion fts true)
+                             (.setLanguage fts "en-US")
+                             (.setSpeechRate fts 0.5)
+                             (.setPitch fts 1.0)))]
+              (fts/FlutterTts))
+     :langs (cF+ [:async? true
+                  :watch (fn [_ _ newv _ _]
+                           (dp :langs-f!! newv))]
+              (.-getLanguages (mget me :fts)))}
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
+      (fx/single-child-scroll-view
+        {:scrollDirection m/Axis.vertical}
+        (column
+          (input-section)
+          (btn-section)
+          (engine-section)
+          (future-builder)
+          (build-sliders))))))
 
 (defn input-section []
   (container
     {:alignment m/Alignment.topCenter
-     :padding (m/EdgeInsets.only
-                .top 25.0 .left 25.0 .right 25.0)}
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0)}
     (fx/text-field
-      {:onChanged (as-dart-callback [text]
-                    (mset! me :value text))
-       :minLines 6
-       :maxLines 11}
+      {:controller (cFonce (let [c (m/TextEditingController .text (mget me :value))]
+                             (.addListener c
+                               (fn [] (dp (str "Second text field: " (.-text c)))))
+                             c))
+       :onChanged  (as-dart-callback [text]
+                     (mset! me :value text))
+       :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI nil :watch (fn [prop me newv priorv c]
-                               (dp (str "First text field: " newv))))})))
+       :value (cI "Hi, Mom!" :watch (fn [prop me newv priorv c]
+                                      (dp (str "First text field: " newv))))})))
 
 (defn btn-section []
   (container
@@ -79,13 +86,13 @@
 
 (defn build-button-col [color splash-color icon label func]
   (column
-    {:mainAxisSize m/MainAxisSize.min
+    {:mainAxisSize      m/MainAxisSize.min
      :mainAxisAlignment m/MainAxisAlignment.center}
     (icon-button
-      {:icon (fx/icon {:icon icon})
-       :color color
+      {:icon        (fx/icon {:icon icon})
+       :color       color
        :splashColor splash-color
-       :onPressed func})))
+       :onPressed   func})))
 
 (defn engine-section []
   (text "engine section"))
