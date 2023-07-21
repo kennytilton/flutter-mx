@@ -4,9 +4,10 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    ["package:flutter_tts/flutter_tts.dart" :as fts]
+    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     [clojure.string :as str]
-    [tilton.mx.api :refer [dp cI cF cF+ cFn cFonce mget mget? mset!]]
+    [tilton.mx.api :as mx
+     :refer [dp cI cF cF+ cFn cFonce mget mget? mset! minfo fasc fmu]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding in-my-context
@@ -15,7 +16,8 @@
 
 (defn make-app []
   (material-app {}
-    {:fts   (cF+ [:watch (fn [_ me newv _ _]
+    {:name :app
+     :fts   (cF+ [:watch (fn [_ me newv _ _]
                            (dp :fts!! newv)
                            (when-let [fts newv]
                              (.setSharedInstance fts true)
@@ -35,7 +37,6 @@
         (column
           (input-section)
           (btn-section)
-          (engine-section)
           (future-builder)
           (build-sliders))))))
 
@@ -45,16 +46,13 @@
      :padding   (m/EdgeInsets.only
                   .top 25.0 .left 25.0 .right 25.0)}
     (fx/text-field
-      {:controller (cFonce (let [c (m/TextEditingController .text (mget me :value))]
-                             (.addListener c
-                               (fn [] (dp (str "Second text field: " (.-text c)))))
-                             c))
+      {:controller (cFonce
+                     (m/TextEditingController .text (mget me :value)))
        :onChanged  (as-dart-callback [text]
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI "Hi, Mom!" :watch (fn [prop me newv priorv c]
-                                      (dp (str "First text field: " newv))))})))
+       :value (cI "Hi, Mom!")})))
 
 (defn btn-section []
   (container
@@ -65,24 +63,31 @@
       (build-button-col m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" btn-stop)
       (build-button-col m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" btn-pause))))
 
-(defn btn-speak []
-  (dp :speaking!!!!!!!))
+(defn btn-speak [me]
+  (let [app (fasc :app)
+        fts (mget app :fts)
+        tst (fmu :text-in)
+        speech (mget tst :value)]
+    (when (not (str/blank? speech))
+      (dp :speaking!! speech :??)
+      ; ((.-setRate tts) 1.1)
+      ;    ((.-setVolume tts) 0.7)
+      ;    ((.-setPitch tts) 1.0)
+      ((.-setLanguage fts) "en-AU")
+      (.speak fts speech))))
 
-;   Future _speak() async {
-;    await flutterTts.setVolume(volume);
-;    await flutterTts.setSpeechRate(rate);
-;    await flutterTts.setPitch(pitch);
-;
-;    if (_newVoiceText != null) {
-;      if (_newVoiceText!.isNotEmpty) {
-;        await flutterTts.speak(_newVoiceText!);
-;      }
-;    }
-;  }
-(defn btn-stop []
-  (dp :stop!!!!!!))
-(defn btn-pause []
-  (dp :pause!!!!!))
+(defn btn-stop [me]
+  (let [app (fasc :app)
+        fts ^FlutterTts (mget app :fts)]
+    (dp :stopfts fts)
+    (let [r (await (.stop fts))]
+      (dp :stop-r r ))))
+
+(defn btn-pause [me]
+  (let [app (fasc :app)
+        fts ^FlutterTts (mget app :fts)]
+    (let [r (await (.pause fts))]
+      (dp :pause-r r ))))
 
 (defn build-button-col [color splash-color icon label func]
   (column
@@ -92,10 +97,7 @@
       {:icon        (fx/icon {:icon icon})
        :color       color
        :splashColor splash-color
-       :onPressed   func})))
-
-(defn engine-section []
-  (text "engine section"))
+       :onPressed   (fn [] (func me))})))
 
 (defn future-builder []
   (text "future section"))
