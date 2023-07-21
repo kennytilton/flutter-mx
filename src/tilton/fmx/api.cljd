@@ -102,7 +102,7 @@
   ([ctx fx-page-def]
    (ctx-page-push ctx fx-page-def nil))
   ([ctx fx-page-def name]
-   (.push (-> ctx m.Navigator/of)
+   (.push (-> ctx m/Navigator.of)
      (#/(m/MaterialPageRoute Object)
        .settings (m/RouteSettings .name name)
        .builder (fn [my-ctx]
@@ -112,7 +112,7 @@
                       fx-page-def)))))))
 
 (defn ctx-page-pop [ctx]
-  (.pop (-> ctx m.Navigator/of)))
+  (.pop (-> ctx m/Navigator.of)))
 
 (defn fx-render [ctx fx]
   (wtrx [0 999 nil :render-entry (minfo fx)]
@@ -145,7 +145,7 @@
      ~@body))
 
 (defn ctx-nav [ctx]
-  (m.Navigator/of ctx))
+  (m/Navigator.of ctx))
 
 (defmacro my-controller []
   `^m/AnimationController? (tilton.mx.api/mget ~'me :controller))
@@ -172,6 +172,7 @@
 
 (deftags tilton.fmx.factory/k1-child-stateless
   (theme m/Theme)
+  (icon-theme m/IconTheme)
   (material m/Material)
   (fade-transition m/FadeTransition)
   (listener w/Listener)
@@ -215,7 +216,7 @@
 (deftags tilton.fmx.factory/childless-stateful
   (text-field m/TextField)
   (check-box m/Checkbox)
-  (elevated-button+icon m.ElevatedButton/icon))
+  (elevated-button+icon m/ElevatedButton.icon))
 
 ;; todo does snackbar still need this custom macro?
 (deftag tilton.fmx.factory/make-fx-snackbar snack-bar m/SnackBar)
@@ -228,8 +229,8 @@
   (let [[fx-props mx-props] vargs]
     `(tilton.fmx.factory/childless-stateless m/IconButton ~fx-props ~mx-props)))
 
-(deftag tilton.fmx.factory/kids-for-builder list-view+separated m.ListView/separated)
-(deftag tilton.fmx.factory/kids-for-builder list-view+builder m.ListView/builder)
+(deftag tilton.fmx.factory/kids-for-builder list-view+separated m/ListView.separated)
+(deftag tilton.fmx.factory/kids-for-builder list-view+builder m/ListView.builder)
 (deftag tilton.fmx.factory/k1-home-stateful material-app m/MaterialApp)
 (deftag tilton.fmx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
 
@@ -248,7 +249,7 @@
   (focus m/Focus)
   (focus-scope m/FocusScope)
   (text-button m/TextButton)
-  (focus+focus-node m.Focus/withExternalFocusNode)
+  (focus+focus-node m/Focus.withExternalFocusNode)
   (animated-builder m/AnimatedBuilder)
   (animated-container m/AnimatedContainer))
 
@@ -262,7 +263,7 @@
   (list-view m/ListView))
 
 (deftag tilton.fmx.factory/kids->prop-stateless
-  grid-view+count m.GridView/count :children)
+  grid-view+count m/GridView.count :children)
 (deftag tilton.fmx.factory/kids->prop-stateless
   bottom-navigation-bar m/BottomNavigationBar :items)
 (deftag tilton.fmx.factory/kids->prop-stateless

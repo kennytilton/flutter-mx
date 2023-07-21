@@ -6,36 +6,38 @@
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
-             center column text sized-box]]))
+             theme icon-theme center column text sized-box]]))
 
 ;;; --- The Flutter Classic: A Counter App -----------------------
 
 (defn make-app []
   (material-app
     {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .primarySwatch m.Colors/blue)}
+     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
     (scaffold
       {:appBar
        (app-bar
          {:title (m/Text "Flutter/MX Counter Classic")})
        :floatingActionButton
-       (cF (fx/theme {:data (m/ThemeData .primarySwatch m.Colors/yellow)}
+       (cF (theme {:data (m/ThemeData .primarySwatch m/Colors.red)}
              (floating-action-button
                {:onPressed (as-dart-callback []
                              (mswap! (fm* :scaffo) :counter inc))
                 :tooltip   "Increment"}
-               (m/Icon m.Icons/add .color m.Colors/black))))}
+               (icon-theme
+                 {:data (m/IconThemeData .color m/Colors.white)}
+                 (m/Icon m/Icons.add)))))}
       {:name    :scaffo
        :counter (cI 0)}
       (center
-        (column {:mainAxisAlignment m.MainAxisAlignment/center}
-          (text {:style (p/TextStyle .color m.Colors/black
-                          .fontSize 18.0)}
+        (column {:mainAxisAlignment m/MainAxisAlignment.center}
+          (text {:style (p/TextStyle .color m/Colors.black
+                          .fontSize 22.0)}
             "You have clicked (+) this many times:")
-          (sized-box {:height 14.0})
+          (sized-box {:height 18.0})
           (text
             {:style (in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m.Theme/of ctx))))}
+                      (.-headline4 (.-textTheme (m/Theme.of ctx))))}
             (str (mget (fasc :scaffo) :counter))))))))
 
 

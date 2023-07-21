@@ -1,0 +1,108 @@
+(ns example.eg.flutter-tts
+  "Port of Dave Liepmann's ClojureDart port https://github.com/daveliepmann/ClojureDart/tree/main/samples/flutter_tutorial_building_layouts
+  of Flutter 'Building layouts' tutorial https://docs.flutter.dev/ui/layout/tutorial"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [clojure.string :as str]
+    [tilton.mx.api :refer [dp cI cF cFn mset!]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding in-my-context
+             icon-button
+             as-dart-callback]]))
+
+#_
+(defn make-app []
+  (fx/material-app
+    {:title "Flutter/MX Counter Demo"
+     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
+    (fx/scaffold
+      {:appBar (fx/app-bar
+                 {:title (m/Text "Flutter/MX Timer Life-Cycle")})}
+      )))
+
+(defn make-app []
+    (material-app
+      (scaffold
+        {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
+        (fx/single-child-scroll-view
+          {:scrollDirection m/Axis.vertical}
+          (column
+            (input-section)
+            (btn-section)
+            (engine-section)
+            (future-builder)
+            (build-sliders))))))
+
+(defn input-section []
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding (m/EdgeInsets.only
+                .top 25.0 .left 25.0 .right 25.0)}
+    (fx/text-field
+      {:onChanged (as-dart-callback [text]
+                    (mset! me :value text))
+       :minLines 6
+       :maxLines 11}
+      {:name  :text-in
+       :value (cI nil :watch (fn [prop me newv priorv c]
+                               (dp (str "First text field: " newv))))})))
+
+(defn btn-section []
+  (container
+    {:padding (m/EdgeInsets.only .top 50.0)}
+    (row
+      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (build-button-col m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" btn-speak)
+      (build-button-col m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" btn-stop)
+      (build-button-col m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" btn-pause))))
+
+(defn btn-speak []
+  (dp :speaking!!!!!!!))
+
+;   Future _speak() async {
+;    await flutterTts.setVolume(volume);
+;    await flutterTts.setSpeechRate(rate);
+;    await flutterTts.setPitch(pitch);
+;
+;    if (_newVoiceText != null) {
+;      if (_newVoiceText!.isNotEmpty) {
+;        await flutterTts.speak(_newVoiceText!);
+;      }
+;    }
+;  }
+(defn btn-stop []
+  (dp :stop!!!!!!))
+(defn btn-pause []
+  (dp :pause!!!!!))
+
+(defn build-button-col [color splash-color icon label func]
+  (column
+    {:mainAxisSize m/MainAxisSize.min
+     :mainAxisAlignment m/MainAxisAlignment.center}
+    (icon-button
+      {:icon (fx/icon {:icon icon})
+       :color color
+       :splashColor splash-color
+       :onPressed func})))
+
+(defn engine-section []
+  (text "engine section"))
+
+(defn future-builder []
+  (text "future section"))
+
+(defn build-sliders []
+  (text "sliders section"))
+
+;body: SingleChildScrollView (
+;                              scrollDirection: Axis.vertical,
+;                              child: Column (
+;                                              children: [
+;                                                         _inputSection (),
+;                                                         _btnSection (),
+;                                                         _engineSection (),
+;                                                         _futureBuilder (),
+;                                                         _buildSliders (),
+;                                                         if (isAndroid) _getMaxSpeechInputLengthSection (),

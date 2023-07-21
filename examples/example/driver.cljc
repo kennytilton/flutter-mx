@@ -32,7 +32,8 @@
     [example.eg.x035-timer-poll :as x035]
     ;[example.eg.x040-named-routes :as x040]
     [example.eg.x029a-layout-kid-builder :as x029]
-    [example.eg.flutter-layout-tutorial :as dlayout]))
+    [example.eg.flutter-layout-tutorial :as dlayout]
+    [example.eg.flutter-tts :as tts]))
 
 (defn select []
-  (dlayout/make-app))
+  (tts/make-app))
