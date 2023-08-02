@@ -14,29 +14,37 @@
 
 (defn make-app []
   (material-app {}
-    {:name        :app
-     :fts         (flutter-tts-initializer)
-     :language    (cI "en-AU")
-     :volume      (cI 0.8 :watch (fn [_ me new _ _]
-                                   (.setVolume (mget me :fts) new)))
-     :speech-rate (cI 0.5 :watch (fn [_ me new _ _]
-                                   (.setSpeechRate (mget me :fts) new)))
-     :pitch       (cI 1.0 :watch (fn [_ me new _ _]
-                                   (.setPitch (mget me :fts) new)))
-     :langs       (cF+ [:async? true]
-                    (.-getLanguages (mget me :fts)))}
+    {:name          :app
+     :fts           (flutter-tts-initializer)
+     ;:language      (cI (mget (fm* )))
+     :volume        (cI 0.8 :watch (fn [_ me new _ _]
+                                     (.setVolume (mget me :fts) new)))
+     :speech-rate   (cI 0.5 :watch (fn [_ me new _ _]
+                                     (.setSpeechRate (mget me :fts) new)))
+     :pitch         (cI 1.0 :watch (fn [_ me new _ _]
+                                     (.setPitch (mget me :fts) new)))
+     :lang-geos     (cF+ [:async? true
+                          :watch (fn [_ _ lang-geos _ _]
+                                   (dp :Lgs lang-geos)
+                                   (let [langs (group-by #(subs % 0 2) (sort lang-geos))]
+                                     (dp :langs (keys langs))))]
+                      (.-getLanguages (mget me :fts)))
+     :lang-geo-tree (cF (group-by #(subs % 0 2) (sort (mget me :lang-geos))))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
-      (fx/single-child-scroll-view
-        {:scrollDirection m/Axis.vertical}
-        (column
-          (text-input)
-          (speaking-controls)
-          (language-selector)
+      (column
+        (lang-chooser)
+        (geo-chooser)
+        (fx/single-child-scroll-view
+          {:scrollDirection m/Axis.vertical}
           (column
-            (property-slider :volume "Volume" m/Colors.blue 0 1 10)
-            (property-slider :pitch "Pitch" m/Colors.red 0.5 2 15)
-            (property-slider :speech-rate "Rate" m/Colors.green 0 1 10)))))))
+            (text-input)
+            (speaking-controls)
+            ;;(language-selector)
+            (column
+              (property-slider :volume "Volume" m/Colors.blue 0 1 10)
+              (property-slider :pitch "Pitch" m/Colors.red 0.5 2 15)
+              (property-slider :speech-rate "Rate" m/Colors.green 0 1 20))))))))
 
 (defn flutter-tts-initializer []
   (cF+ [:watch (fn [_ me newv _ _]
@@ -44,6 +52,79 @@
                    (.setSharedInstance fts true)
                    (.awaitSpeakCompletion fts true)))]
     (FlutterTts)))
+
+(defn lang-chooser []
+  (expanded
+    (fx/grid-view+count
+      {:crossAxisCount   7
+       :mainAxisSpacing  4
+       :crossAxisSpacing 4
+       :childAspectRatio 2.0
+       :padding          (m/EdgeInsets.all 8)}
+      {:name  :lang-choice
+       :langs (cF+ [:watch (fn [_ _ new _ _]
+                             (dp :langs-watch new))]
+                (sort (keys (mget (fasc :app) :lang-geo-tree))))
+       :value (cI 7)
+       :lang-code (cF (when-let [langs (seq (mget me :langs))]
+                        (dp :langs???? langs)
+                        (nth langs (mget me :value))))}
+      (let [langs (mget me :langs)]
+        (mapv
+          (fn [i] (fx/gesture-detector
+                    {:onTap (as-dart-callback []
+                              (mset! (fasc :lang-choice) :value i))}
+                    (container
+                      {:decoration (m/BoxDecoration
+                                     .border (when (= i (mget (fasc :lang-choice) :value))
+                                               (.all m/Border .color m/Colors.red .width 2))
+                                     .color (.-shade300 (cond
+                                                          (even? i) m/Colors.cyan
+                                                          :else m/Colors.yellow)))}
+                      (center
+                        (padding {:padding (m/EdgeInsets.all 4.0)}
+                          (fx/text
+                            {:style (p/TextStyle .color m/Colors.black
+                                      .fontSize 16.0)}
+                            (subs (nth langs i) 0 2)))))))
+          (range (count langs)))))))
+
+(defn geo-chooser []
+  (expanded
+    (fx/grid-view+count
+      {:crossAxisCount   8
+       :mainAxisSpacing  4
+       :crossAxisSpacing 4
+       :childAspectRatio 2.0
+       :padding          (m/EdgeInsets.all 8)}
+      {:name  :geo-choice
+       :geo-lang (cF (let [geos (mget me :geos)]
+                       (nth geos (min (mget me :value) (dec (count geos))))))
+       :value (cI 0 :watch (fn [_ me newv _ _]
+                             (let [new-geo (nth (mget me :geos) newv)]
+                               (dp :new-geo!!! new-geo))))
+       :geos (cF (get (mget (fasc :app) :lang-geo-tree)
+                   (mget (fmu :lang-choice) :lang-code)))}
+      (let [lang (mget (fmu :lang-choice) :lang-code)
+            geos (get (mget (fasc :app) :lang-geo-tree) lang)]
+        (mapv
+          (fn [i] (fx/gesture-detector
+                    {:onTap (as-dart-callback []
+                              (mset! (fasc :geo-choice) :value i))}
+                    (container
+                      {:decoration (m/BoxDecoration
+                                     .border (when (= i (mget (fasc :geo-choice) :value))
+                                               (.all m/Border .color m/Colors.red .width 2))
+                                     .color (.-shade300 (cond
+                                                          (even? i) m/Colors.cyan
+                                                          :else m/Colors.yellow)))}
+                      (center
+                        (padding {:padding (m/EdgeInsets.all 4.0)}
+                          (fx/text
+                            {:style (p/TextStyle .color m/Colors.black
+                                      .fontSize 16.0)}
+                            (subs (nth geos i) 3)))))))
+          (range (count geos)))))))
 
 ;;; --- text input --------------------------------------------------------------
 
@@ -59,7 +140,8 @@
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI (str "\"Jealousy\"\nby Robert Graves\n\n"
+       :value (cI "Turning and turning in the widening gyre, The falcon cannot hear the falconer."
+                #_(str "\"Jealousy\"\nby Robert Graves\n\n"
                     "I'd die for you or you for me, \n"
                     "So furious is our jealousy. \n"
                     "And if you doubt this to be true, \n"
@@ -91,12 +173,14 @@
 (defn do-speak [me]
   (let [app (fasc :app)
         fts (mget app :fts)
-        speech (mget (fmu :text-in) :value)]
+        speech (mget (fmu :text-in) :value)
+        lang (mget (fmu :geo-choice) :geo-lang)]
+    (dp :speaking!!!!! lang)
     (when (not (str/blank? speech))
       (.setSpeechRate fts (mget app :speech-rate))
       (.setPitch fts (mget app :pitch))
       (.setVolume fts (mget app :volume))
-      (.setLanguage fts (mget app :language))
+      (.setLanguage fts lang)
       (.speak fts speech))))
 
 (defn do-stop [me]
