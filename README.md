@@ -195,8 +195,9 @@ Here is how I work. We will extend this section greatly as we help others get st
 * start with the above;
 * edit this project in IntelliJ+Cursive, with the Flutter plug-in installed;
 * * IMPORTANT: tell IntelliJ to use clj formatting for .cljd files; more Cursive support is on the way;
-* after making changes, I save in IntelliJ and look at the "build" terminal for errors;
-* if all is well, I switch to the terminal and just hit ENTER to see the changed app;
+* after making changes, I save in IntelliJ and check the "build" terminal for errors;
+* if all is well, the app will have also done a hot reload. so I check the sim;
+* if I do not see my changes, I switch to the launch terminal and hit return, which does a hot restart;
 * if I am curious about some CLJD issue, such as how to run the Math `abs` method, I do this:
 * * add snippets of code to the main function, after the test suite runner;
 * * save;
