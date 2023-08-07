@@ -78,9 +78,32 @@ Now:
 ```bash
 clj -M:cljd flutter -d 00008020-0006021A02F1402E # <---!!!!! change the ID to your ID as shown in the device list
 ```
-Now we have to wait a couple of minutes, and ignore several fatal-sounding errors. Edited output:
+Now we have to wait several minutes, not panic when the device puts up a blank screen, and ignore several fatal-sounding errors. Edited output:
 ```
+Launching flutter run -d 00008020-0006021A02F1402E
+Launching lib/main.dart on Kenneth’s iPad in debug mode...
+...snip...
+(lldb) warning: libobjc.A.dylib is being read from process memory. This indicates that LLDB could not find the on-disk shared cache for this device. This will likely reduce debugging performance.
+The Dart VM Service was not discovered after 30 seconds. This is taking much longer than expected...
+process interrupt
+error: Failed to halt process: Halt timed out. State = running
+* thread #1, stop reason = signal SIGSTOP
+    frame #0: 0x00000001e68b7164 dyld`_dyld_debugger_notification
+dyld`:
+->  0x1e68b7164 <+0>: ret    
+dyld`dyld4::Atlas::Bitmap::Bitmap:
+    0x1e68b7168 <+0>: pacibsp 
+    0x1e68b716c <+4>: sub    sp, sp, #0x50
+    0x1e68b7170 <+8>: stp    x24, x23, [sp, #0x10]
+Target 0: (Runner) stopped.
+(lldb) 2023-08-07 12:22:43.227037-0400 Runner[2785:2662306] [VERBOSE-2:FlutterDarwinContextMetalImpeller.mm(35)] Using the Impeller rendering backend.
+...snip...
+A Dart VM Service on Kenneth’s iPad is available at: http://127.0.0.1:65178/sbCSDP_TpSo=/
+The Flutter DevTools debugger and profiler on Kenneth’s iPad is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:65178/sbCSDP_TpSo=/
 ```
+We should now see the legendary Flutter Counter app on the device, as shown above.
+
+Note that the build/run command does not return. Hit Control-C when done. Then continue [below](#3-diagnostics).
 
 #### Running on the desktop
 In a terminal:
