@@ -28,7 +28,7 @@ clj -M:cljd init
 ```
 
 #### 2. You now have three delightful options
-You can run on an iOS simulator, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
+You can run on an iOS simulator, an iOS device, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
 
 ##### Device options
 We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
@@ -44,24 +44,67 @@ flutter devices
 ```
 My output as we speak:
 ``` text
-3 connected devices:
 
-iPhone 14 Pro Max (mobile) • 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 • ios            • com.apple.CoreSimulator.SimRuntime.iOS-16-4 (simulator)
-macOS (desktop)            • macos                                • darwin-arm64   • macOS 13.3.1 22E772610a darwin-arm64 (Rosetta)
-Chrome (web)               • chrome                               • web-javascript • Google Chrome 114.0.5735.90
+Kenneth’s iPad (mobile)                        • 00008020-0006021A02F1402E            • ios            • iOS 16.5.1 20F75
+iPad Pro (12.9-inch) (6th generation) (mobile) • 46B3E45C-52BB-4534-86B4-3BE15D296EF1 • ios            • com.apple.CoreSimulator.SimRuntime.iOS-16-4 (simulator)
+macOS (desktop)                                • macos                                • darwin-arm64   • macOS 13.4.1 22F770820d darwin-arm64 (Rosetta)
+Chrome (web)                                   • chrome                               • web-javascript • Google Chrome 115.0.5790.114
 
 No wireless devices were found.
+
+• Error: Kenneth’s iPad is busy: Fetching debug symbols for Kenneth’s iPad. Xcode will continue when Kenneth’s iPad is finished. (code -10)
 ```
-Made your choice? Make note of the second column, and follow one of the three sets of instructions below.
+n.b. We will ignore the "iPad is busy" error. It seems benign.
+
+OK, made your choice? Make note of the second column, and follow one of the three sets of instructions below.
 
 ##### Running on the iOS sim
 In a terminal:
 ```bash
-clj -M:cljd flutter -d 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 # <!!!!! change the ID to your ID as shown in the device list
+clj -M:cljd flutter -d 46B3E45C-52BB-4534-86B4-3BE15D296EF1 # <---!!!!! change the ID to your ID as shown in the device list
 ```
 After a while you should see the legendary Flutter Counter app on the sim, as shown above.
 
 Note that the build/run command does not return. Hit Control-C when done, or quit the Simulator app. Then continue [below](#3-diagnostics).
+
+#### Running on a phyical iOS device connected via USB cable
+Our first task is to get the device capable of running in developer mode:
+* Open the device "Settings" app;
+* select "Privacy & Security";
+* scroll to the end to "Security" options; and
+* turn "Developer mode" on.
+
+Now:
+```bash
+clj -M:cljd flutter -d 00008020-0006021A02F1402E # <---!!!!! change the ID to your ID as shown in the device list
+```
+Now we have to wait several minutes, not panic when the device puts up a blank screen, and ignore several fatal-sounding errors. Edited output:
+```
+Launching flutter run -d 00008020-0006021A02F1402E
+Launching lib/main.dart on Kenneth’s iPad in debug mode...
+...snip...
+(lldb) warning: libobjc.A.dylib is being read from process memory. This indicates that LLDB could not find the on-disk shared cache for this device. This will likely reduce debugging performance.
+The Dart VM Service was not discovered after 30 seconds. This is taking much longer than expected...
+process interrupt
+error: Failed to halt process: Halt timed out. State = running
+* thread #1, stop reason = signal SIGSTOP
+    frame #0: 0x00000001e68b7164 dyld`_dyld_debugger_notification
+dyld`:
+->  0x1e68b7164 <+0>: ret    
+dyld`dyld4::Atlas::Bitmap::Bitmap:
+    0x1e68b7168 <+0>: pacibsp 
+    0x1e68b716c <+4>: sub    sp, sp, #0x50
+    0x1e68b7170 <+8>: stp    x24, x23, [sp, #0x10]
+Target 0: (Runner) stopped.
+(lldb) 2023-08-07 12:22:43.227037-0400 Runner[2785:2662306] [VERBOSE-2:FlutterDarwinContextMetalImpeller.mm(35)] Using the Impeller rendering backend.
+...snip...
+A Dart VM Service on Kenneth’s iPad is available at: http://127.0.0.1:65178/sbCSDP_TpSo=/
+The Flutter DevTools debugger and profiler on Kenneth’s iPad is available at: http://127.0.0.1:9100?uri=http://127.0.0.1:65178/sbCSDP_TpSo=/
+```
+We should now see the legendary Flutter Counter app on the device, as shown above.
+
+Note that the build/run command does not return. Hit Control-C when done. Then continue [below](#3-diagnostics).
+
 #### Running on the desktop
 In a terminal:
 ```bash
