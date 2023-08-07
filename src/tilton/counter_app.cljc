@@ -1,43 +1,38 @@
 (ns tilton.counter-app
   (:require
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]
-    [tilton.mx.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc] :as mx]
+    [tilton.mx.api :refer [cI mget mswap! fm* fasc] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
              theme icon-theme center column text sized-box]]))
 
 ;;; --- The Flutter Classic: A Counter App -----------------------
+;;; A straight transliteration from the Dart example Counter app
 
 (defn make-app []
   (material-app
     {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
+     :theme (m/ThemeData
+              .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
     (scaffold
       {:appBar
-       (app-bar
-         {:title (m/Text "Flutter/MX Counter Classic")})
-       :floatingActionButton
-       (cF (theme {:data (m/ThemeData .primarySwatch m/Colors.red)}
-             (floating-action-button
-               {:onPressed (as-dart-callback []
-                             (mswap! (fm* :scaffo) :counter inc))
-                :tooltip   "Increment"}
-               (icon-theme
-                 {:data (m/IconThemeData .color m/Colors.white)}
-                 (m/Icon m/Icons.add)))))}
+       (app-bar {:backgroundColor (fx/in-my-context [me ctx]
+                                    (.-inversePrimary (.-colorScheme (m/Theme.of ctx))))
+                 :title           (m/Text "Flutter/MX Counter Classic")})
+       :floatingActionButton (floating-action-button
+                               {:onPressed (as-dart-callback []
+                                             (mswap! (fm* :scaffo) :counter inc))
+                                :tooltip   "Increment"}
+                               (m/Icon m/Icons.add))}
       {:name    :scaffo
        :counter (cI 0)}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text {:style (p/TextStyle .color m/Colors.black
-                          .fontSize 22.0)}
-            "You have clicked (+) this many times:")
-          (sized-box {:height 18.0})
+          (text "You have clicked (+) this many times:")
           (text
             {:style (in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m/Theme.of ctx))))}
+                      (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}
             (str (mget (fasc :scaffo) :counter))))))))
-
-
