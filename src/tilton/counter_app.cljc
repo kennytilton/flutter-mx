@@ -31,7 +31,7 @@
        :counter (cI 0)}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text "You have clicked (+) this many times:")
+          (text "We have clicked (+) this many times:")
           (text
             {:style (in-my-context [me ctx]
                       (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}
