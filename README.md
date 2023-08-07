@@ -44,20 +44,24 @@ flutter devices
 ```
 My output as we speak:
 ``` text
-3 connected devices:
 
-iPhone 14 Pro Max (mobile) • 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 • ios            • com.apple.CoreSimulator.SimRuntime.iOS-16-4 (simulator)
-macOS (desktop)            • macos                                • darwin-arm64   • macOS 13.3.1 22E772610a darwin-arm64 (Rosetta)
-Chrome (web)               • chrome                               • web-javascript • Google Chrome 114.0.5735.90
+Kenneth’s iPad (mobile)                        • 00008020-0006021A02F1402E            • ios            • iOS 16.5.1 20F75
+iPad Pro (12.9-inch) (6th generation) (mobile) • 46B3E45C-52BB-4534-86B4-3BE15D296EF1 • ios            • com.apple.CoreSimulator.SimRuntime.iOS-16-4 (simulator)
+macOS (desktop)                                • macos                                • darwin-arm64   • macOS 13.4.1 22F770820d darwin-arm64 (Rosetta)
+Chrome (web)                                   • chrome                               • web-javascript • Google Chrome 115.0.5790.114
 
 No wireless devices were found.
+
+• Error: Kenneth’s iPad is busy: Fetching debug symbols for Kenneth’s iPad. Xcode will continue when Kenneth’s iPad is finished. (code -10)
 ```
-Made your choice? Make note of the second column, and follow one of the three sets of instructions below.
+n.b. We will ignore the "iPad is busy" error. It seems benign.
+
+OK, made your choice? Make note of the second column, and follow one of the three sets of instructions below.
 
 ##### Running on the iOS sim
 In a terminal:
 ```bash
-clj -M:cljd flutter -d 50ADDF8B-B5F5-4C12-B34C-28A4D5680314 # <!!!!! change the ID to your ID as shown in the device list
+clj -M:cljd flutter -d 46B3E45C-52BB-4534-86B4-3BE15D296EF1 # <---!!!!! change the ID to your ID as shown in the device list
 ```
 After a while you should see the legendary Flutter Counter app on the sim, as shown above.
 
