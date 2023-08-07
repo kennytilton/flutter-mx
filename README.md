@@ -28,7 +28,7 @@ clj -M:cljd init
 ```
 
 #### 2. You now have three delightful options
-You can run on an iOS simulator, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
+You can run on an iOS simulator, an iOS device, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
 
 ##### Device options
 We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
@@ -66,6 +66,22 @@ clj -M:cljd flutter -d 46B3E45C-52BB-4534-86B4-3BE15D296EF1 # <---!!!!! change t
 After a while you should see the legendary Flutter Counter app on the sim, as shown above.
 
 Note that the build/run command does not return. Hit Control-C when done, or quit the Simulator app. Then continue [below](#3-diagnostics).
+
+#### Running on a phyical iOS device connected via USB cable
+Our first task is to get the device capable of running in developer mode:
+* Open the device "Settings" app;
+* select "Privacy & Security";
+* scroll to the end to "Security" options; and
+* turn "Developer mode" on.
+
+Now:
+```bash
+clj -M:cljd flutter -d 00008020-0006021A02F1402E # <---!!!!! change the ID to your ID as shown in the device list
+```
+Now we have to wait a couple of minutes, and ignore several fatal-sounding errors. Edited output:
+```
+```
+
 #### Running on the desktop
 In a terminal:
 ```bash
