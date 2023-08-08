@@ -31,11 +31,11 @@ clj -M:cljd init
 You can run on an iOS simulator, an iOS device, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
 
 ##### Device options
-We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
+We develop on a Mac, and have not explored other platforms. We usually test on an iOS sim, though lately also iPad and iPhone. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
 ``` bash
 open -a Simulator
 ```
-Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise.
+Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise. After changing the options, we will not see a different device until we quite the Simulator app and restart it.
 
 ##### Flutter devices
 Now to see what devices Flutter thinks are available, in a terminal enter:
