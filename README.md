@@ -71,14 +71,17 @@ Note that the build/run command does not return. Hit Control-C when done, or qui
 Our first task is to get the device capable of running in developer mode:
 * Open the device "Settings" app;
 * select "Privacy & Security";
-* scroll to the end to "Security" options; and
-* turn "Developer mode" on.
+* scroll to the end to "Security" options;
+* turn "Developer mode" on;
+* connect the iOS device to your laptop with a USB cable;
+* give permissions as requested when prompted on the device or computer;
+* in terminal, enter `flutter devices`, confirm the device appears in the listing, and note the ID.
 
 Now:
 ```bash
-clj -M:cljd flutter -d 00008020-0006021A02F1402E # <---!!!!! change the ID to your ID as shown in the device list
+clj -M:cljd flutter -d ACTUAL-ID-HERE # <---!!!!! change ACTUAL-ID-HERE to the numeric ID as shown in the device list
 ```
-Now we have to wait several minutes, not panic when the device puts up a blank screen, and ignore several fatal-sounding errors. Edited output:
+Now we have to wait several minutes, not panicking when the device puts up a blank screen for an eternity, and ignore several fatal-sounding errors. Edited output:
 ```
 Launching flutter run -d 00008020-0006021A02F1402E
 Launching lib/main.dart on Kenneth’s iPad in debug mode...
