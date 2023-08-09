@@ -9,14 +9,18 @@
 
 ;;; --- The Flutter Classic: A Counter App -----------------------
 ;;; A straight transliteration from the Dart example Counter app
+;;;
+;;; Note that, unlike the Dart original, this is not one big widget.
+;;; Each different widget below has its own build method and responds
+;;; to a different setState.
 
 (defn make-app []
   (material-app
     {:title "Flutter/MX Counter Demo"
      :theme (m/ThemeData
-              .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
-                             .seedColor m/Colors.deepPurple))}
+                             .seedColor m/Colors.deepPurple)
+              .useMaterial3 true)}
     (scaffold
       {:appBar
        (app-bar {:backgroundColor (fx/in-my-context [me ctx]
@@ -31,7 +35,7 @@
        :counter (cI 0)}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text "We have clicked (+) this many times:")
+          (text "You have pushed the button this many times:")
           (text
             {:style (in-my-context [me ctx]
                       (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}
