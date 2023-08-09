@@ -31,11 +31,11 @@ clj -M:cljd init
 You can run on an iOS simulator, an iOS device, your browser, or your Mac desktop. Let us explore your options. (Is it not great having this problem?)
 
 ##### Device options
-We develop on a Mac, and have not explored other platforms. Nor do we often connect mobile devices, but that may well work for you. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
+We develop on a Mac, and have not explored other platforms. We usually test on an iOS sim, though lately also iPad and iPhone. But we do enjoy developing on a mobile simulator, so we usually launch one. It is not required, but to do the same:
 ``` bash
 open -a Simulator
 ```
-Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise.
+Check the Mac menu bar and it should show the Simulator app, and all sorts of options to choose and control the device. Android SIMs left as an exercise. After changing the options, we will not see a different device until we quite the Simulator app and restart it.
 
 ##### Flutter devices
 Now to see what devices Flutter thinks are available, in a terminal enter:
@@ -156,7 +156,7 @@ The Flutter DevTools debugger and profiler on iPhone 14 Pro Max is available at:
 Enter the `Flutter DevTools` URL offered in our browser, `http://127.0.0.1:9100?uri=http://127.0.0.1:50022/9iEGXsRelsg=/`, we see a serious debugging tool!
 
 #### The Counter app, using Flutter/MX
-The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tiltontec/example/x01_counter.cljd). Yes, just two dozen lines. Lisp can hide a lot.
+The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-mx/blob/main/src/tilton/counter_app.cljc). Yes, just two dozen lines. Lisp can hide a lot.
 
 #### 4. Running other examples.
 To try a different example:
@@ -195,8 +195,9 @@ Here is how I work. We will extend this section greatly as we help others get st
 * start with the above;
 * edit this project in IntelliJ+Cursive, with the Flutter plug-in installed;
 * * IMPORTANT: tell IntelliJ to use clj formatting for .cljd files; more Cursive support is on the way;
-* after making changes, I save in IntelliJ and look at the "build" terminal for errors;
-* if all is well, I switch to the terminal and just hit ENTER to see the changed app;
+* after making changes, I save in IntelliJ and check the "build" terminal for errors;
+* if all is well, the app will have also done a hot reload. so I check the sim;
+* if I do not see my changes, I switch to the launch terminal and hit return, which does a hot restart;
 * if I am curious about some CLJD issue, such as how to run the Math `abs` method, I do this:
 * * add snippets of code to the main function, after the test suite runner;
 * * save;
