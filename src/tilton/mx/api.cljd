@@ -32,7 +32,11 @@
   (md/mset! me prop new-value))
 
 (defn mswap! [me prop swap-fn & swap-fn-args]
+  ;; DEPRECATED use mupdate!, the correct name/semantic
   (apply md/mswap! me prop swap-fn swap-fn-args))
+
+(defn mupdate! [me prop swap-fn & swap-fn-args]
+  (apply md/mupdate! me prop swap-fn swap-fn-args))
 
 (defn mget [me prop]
   (tilton.mx.model.core/mget me prop))

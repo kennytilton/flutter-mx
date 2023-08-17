@@ -104,6 +104,15 @@
       "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-extant prop \"" prop "\".\n"
       "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
 
+(defn mupdate! [me prop swap-fn & swap-fn-args]
+  (chk me (str "mupdate! passed nil as `me` accessing prop: " prop))
+  (chk (mref? me) (str "mupdate! passed non-model for me accessing prop: " prop ": " me))
+  (if (contains? @me prop)
+    (mset! me prop (apply swap-fn (without-c-dependency (mget me prop)) swap-fn-args))
+    (mx-throw
+      "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mupdate! was attempted on non-extant prop \"" prop "\".\n"
+      "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx$state :fx-class :fx-gen)))))
+
 (def +md-sid+ (atom 0))
 (defn md-sid [me]
   (:sid (meta me)))
