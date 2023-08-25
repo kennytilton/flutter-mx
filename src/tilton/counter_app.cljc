@@ -35,7 +35,7 @@
        :counter (cI 0)}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text "You have pushed the button this many times:")
+          (text "We have pushed the button this many times:")
           (text
             {:style (in-my-context [me ctx]
                       (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}

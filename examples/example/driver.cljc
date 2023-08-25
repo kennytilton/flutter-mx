@@ -2,6 +2,7 @@
   (:require
     [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]
+    [example.eg.x01-counter-desugared :as desugared]
     [example.eg.x02-two-counters-ala-flux :as ctr2flux]
     [example.eg.x02-two-counters-ala-matrix :as ctr2]
     [example.eg.x03-physics-sim :as x03]
@@ -36,4 +37,4 @@
     [example.eg.flutter-tts :as tts]))
 
 (defn select []
-  (counter/make-app))
+  (desugared/make-app))
