@@ -16,19 +16,19 @@
   (material-app {}
     {:name          :app
      :fts           (flutter-tts-initializer)
-     ;:language      (cI (mget (fm* )))
+     ; ;:language      (cI (mget (fm* )))
      :volume        (cI 0.8 :watch (fn [_ me new _ _]
-                                     (.setVolume (mget me :fts) new)))
+                                     (.setVolume ^FlutterTts (mget me :fts) new)))
      :speech-rate   (cI 0.5 :watch (fn [_ me new _ _]
-                                     (.setSpeechRate (mget me :fts) new)))
+                                     (.setSpeechRate ^FlutterTts (mget me :fts) new)))
      :pitch         (cI 1.0 :watch (fn [_ me new _ _]
-                                     (.setPitch (mget me :fts) new)))
+                                     (.setPitch ^FlutterTts (mget me :fts) new)))
      :lang-geos     (cF+ [:async? true
                           :watch (fn [_ _ lang-geos _ _]
                                    (dp :Lgs lang-geos)
                                    (let [langs (group-by #(subs % 0 2) (sort lang-geos))]
                                      (dp :langs (keys langs))))]
-                      (.-getLanguages (mget me :fts)))
+                      (.-getLanguages ^FlutterTts (mget me :fts)))
      :lang-geo-tree (cF (group-by #(subs % 0 2) (sort (mget me :lang-geos))))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
@@ -48,7 +48,7 @@
 
 (defn flutter-tts-initializer []
   (cF+ [:watch (fn [_ me newv _ _]
-                 (when-let [fts newv]
+                 (when-let [fts ^FlutterTts newv]
                    (.setSharedInstance fts true)
                    (.awaitSpeakCompletion fts true)))]
     (FlutterTts)))
@@ -102,7 +102,7 @@
                        (nth geos (min (mget me :value) (dec (count geos))))))
        :value (cI 0 :watch (fn [_ me newv _ _]
                              (let [new-geo (nth (mget me :geos) newv)]
-                               (dp :new-geo!!! new-geo))))
+                               (dp :new-geo!!! newv new-geo))))
        :geos (cF (get (mget (fasc :app) :lang-geo-tree)
                    (mget (fmu :lang-choice) :lang-code)))}
       (let [lang (mget (fmu :lang-choice) :lang-code)
@@ -172,7 +172,7 @@
 
 (defn do-speak [me]
   (let [app (fasc :app)
-        fts (mget app :fts)
+        fts ^FlutterTts (mget app :fts)
         speech (mget (fmu :text-in) :value)
         lang (mget (fmu :geo-choice) :geo-lang)]
     (dp :speaking!!!!! lang)
@@ -195,19 +195,22 @@
 
 ;;; --- languages dropdown ------------------------------------------------
 
+#_ ;; vestigial
 (defn language-selector []
   (fx/future-builder
     {:future  (cF (let [app (fasc :app)
                         fts ^FlutterTts (mget app :fts)]
                     (.-getLanguages fts)))
      :builder (cF (fx/->CBAsIs
-                    (fn [ctx snapshot]
+                    (fn [ctx ^#/(m/AsyncSnapshot dynamic) snapshot]
+                      (dp :snapshot snapshot)
                       (fx-render ctx
                         (cond
-                          (.-hasData snapshot) (language-dropdown me (.-data snapshot))
+                          (.-hasData  snapshot) (language-dropdown me (.-data snapshot))
                           (.-hasError snapshot) (text "Error loading languages...")
                           :else (fx/text "Loading languages..."))))))}))
 
+#_
 (defn language-dropdown [par languages]
   (container
     {:padding (m/EdgeInsets.only .top 10.0)}
