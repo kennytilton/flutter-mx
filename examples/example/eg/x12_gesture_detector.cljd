@@ -42,7 +42,7 @@
 
 (defn gesture-parallelogram []
   (fx/gesture-detector
-    {:onPanStart  (cF (fx/->CBAsIs
+    {:onPanStart  (cF (fx/cb-as-is
                         (fn [^g/DragStartDetails details]
                           (let [vertices (mget me :vertices)
                                 pointer (.-localPosition details)
@@ -61,7 +61,7 @@
                                              ;; fall thru binding id and delta to nil. The id being nil is key
                                              )]
                             (md/mset! me :drag-op {:dragee id :delta delta})))))
-     :onPanUpdate (cF (fx/->CBAsIs
+     :onPanUpdate (cF (fx/cb-as-is
                         (fn [^g/DragUpdateDetails details]
                           (let [{:keys [dragee delta]} (md/mget me :drag-op)
                                 new-pos (when delta

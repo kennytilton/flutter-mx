@@ -22,12 +22,10 @@
        :value (cI 0)}
       (fx/text (str/capitalize (name counter-key)))
       (fx/text {:style (fx/in-my-context [me ctx]
-                         ;; we hacked the text widget a bit to look for callback functions on "style"
-                         ;; so a style formula can tap the runtime context.
                          (-> (Theme/of ctx) .-textTheme .-displayLarge))}
         (str (mx/fmuval :ctr-col)))
       (fx/elevated-button
-        {:onPressed (fx/->CBAsIs
+        {:onPressed (fx/cb-as-is
                       (fn ^void []
                         (mx/mswap! (mx/fm* :ctr-col) :value inc)))}
         (fx/text "+")))))

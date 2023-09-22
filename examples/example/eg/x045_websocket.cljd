@@ -1,0 +1,91 @@
+;; package:web_socket_channel/web_socket_channel.dart
+(ns example.eg.x045-websocket
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [cF cF+ cFn cI dp minfo mget mset! mswap! maprop fasc]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             floating-action-button as-dart-callback]]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:web_socket_channel/web_socket_channel.dart" :as wsc]))
+
+(def +hello+ "Hello!! ")
+(def +bye+ "Bye!! ")
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Hello WebSocket"
+     :theme (cF (m/ThemeData .primarySwatch m/Colors.teal))}
+    {:name          :app
+     :channel       (cF+ [:watch (fn [_ me chan prior c]
+                                   (.listen (.-stream ^wsc/WebSocketChannel chan)
+                                     (fn [message]
+                                       (dp :listen-hears message)
+                                       (mset! me :socket-msg-in
+                                         {:msg message
+                                          :now (rand-int 99999)}))))]
+                      (.connect wsc/WebSocketChannel
+                        (Uri.parse "ws://localhost:10000/.ws")))
+     :salute        (cI +hello+)
+     :socket-msg-in (cI nil
+                      ; ephemeral? defeats MX policy of ignoring "new" values that
+                      ; are equal to the prior value. Normally an efficiency win, but
+                      ; if we get the same message twice in a row, we want to process it again.
+                      ; (Attaching a timestamp or other differentiator fails if a second dependency changes.)
+                      :ephemeral? true
+                      :watch (fn [_ _ new _ _]
+                               (dp :socket-msg-watch new)))}
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "WebSockets Demo")})
+       :floatingActionButton
+       (floating-action-button
+         {:onPressed (as-dart-callback []
+                       (when-let [c ^wsc/WebSocketChannel (maprop :channel)]
+                         (.add (.-sink c) (str "World"))))
+          :tooltip   "Send msg"}
+         (m/Icon m/Icons.add .color m/Colors.black))}
+      (center
+        (column
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (text {:overflow p.TextOverflow/ellipsis
+                 :style    (p/TextStyle .color m/Colors.black
+                             .fontSize 32.0)}
+            "hello, web socket.\\n")
+          (fx/text-button
+            {:onPressed (as-dart-callback []
+                          (let [s (maprop :salute)]
+                            (mset! (fasc :app) :salute
+                              (if (= s +hello+)
+                                +bye+ +hello+))))}
+            (fx/text "Toggle Greeting"))
+          (let [count (atom 0)]
+            (text {:overflow p.TextOverflow/ellipsis
+                   :style    (p/TextStyle .color m/Colors.cyan
+                               .fontSize 24.0)}
+              (let [{:keys [msg now]} (maprop :socket-msg-in)]
+                (dp :processing-new-msg msg :now now)
+                (cond
+                  msg (str (maprop :salute) "> " msg " #" (swap! count inc))
+                  :else
+                  ;; Text widgets given nil content throw "type 'Null' is not a subtype of type 'String' in type cast"
+                  "")))))))))
+
+#_(text {:overflow p.TextOverflow/ellipsis
+         :style    (p/TextStyle .color m/Colors.cyan
+                     .fontSize 24.0)}
+    (or (maprop :socket-msg-in)
+      "null msg"))
+
+#_(let [count (atom 0)]
+    (text {:overflow p.TextOverflow/ellipsis
+           :style    (p/TextStyle .color m/Colors.cyan
+                       .fontSize 24.0)}
+      (let [msg (maprop :socket-msg-in)]
+        (cond
+          msg (str msg " #" (swap! count inc))
+          :else
+          ;; Text widgets given nil content throw "type 'Null' is not a subtype of type 'String' in type cast"
+          "null msg"))))

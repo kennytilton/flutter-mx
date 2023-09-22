@@ -1,5 +1,6 @@
 (ns example.driver
   (:require
+    [tilton.mx.api :refer [dp] :as mx]
     [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]
     [example.eg.x01-counter-desugared :as desugared]
@@ -16,7 +17,7 @@
     [example.eg.x10-datatable :as x10]
     [example.eg.x11-grid-list :as x11]
     [example.eg.x12-gesture-detector :as x12]
-    [example.eg.x13-snackbar :as x13] ;; todo fx-gen leftover
+    [example.eg.x13-snackbar :as x13]
     [example.eg.x14-hero :as hero]
     [example.eg.x15-fade-widget :as fade]
     [example.eg.x020-reactive-stream :as x020]
@@ -25,16 +26,20 @@
     [example.demo.todoMVC.core :as todo]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
     [example.eg.x25-flutter-tex :as tek]
-    [example.eg.x26-latex-sandbox :as x26]
+    [example.eg.x26-latex-sandbox :as tekbox]
     [example.eg.x27-popup-menu :as x27]
     [example.eg.x028-bottom-navbar :as x028]
     ;[example.eg.x029_layout_builder :as x029]
     [example.eg.x030_codelab_namer :as x030]
     [example.eg.x035-timer-poll :as x035]
-    ;[example.eg.x040-named-routes :as x040]
+    [example.eg.x040-named-routes :as x040]
     [example.eg.x029a-layout-kid-builder :as x029]
     [example.eg.flutter-layout-tutorial :as dlayout]
-    [example.eg.flutter-tts :as tts]))
+    [example.eg.flutter-tts :as tts]
+    [example.eg.x045-websocket :as sock]))
 
 (defn select []
-  (desugared/make-app))
+  ;; NG: tek/x26, tts
+  (comment hello counter xo3 x05 x13 dlayout tts tek sock todo)
+  (tts/make-app))
+

@@ -14,89 +14,22 @@
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
     [tilton.mx.cell.base :refer [cinfo] :as cty]
     [tilton.mx.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
-    [tilton.fmx.factory :refer [deftag deftags] :as fxf]))
+    [tilton.fmx.factory :refer [deftag deftags deftags-plus] :as fxf]))
 
-(deftype CBAsIs [value]
-  ;; tells fx-resolve to leave mx value untouched
-  ;; used originally so a FX callback (the builder for AnimatedBuilder) was not
-  ;; treated as callback to MX to get the resolved value.
-  :extends mxf/MXImplementer)
+(defn cb-as-is
+  "Identifies FN as callback to be given to Flutter 'as is'"
+  ; some callbacks are used to defer thins until a build function context is in hand
+  [fn]
+  (fxf/->CBAsIs fn))
 
-(deftype CBToResolve [value]
-  ;; tells fx-resolve to call the mx value as a function of ctx and me.
-  ;; used where app needs to see the Flutter context to decide a value
-  :extends mxf/MXImplementer)
+(defn widget-key-clear []
+  (fxf/widget-key-clear))
 
-(defn fx-resolve-mget? [me prop ctx]
-  (fx-resolve prop me ctx
-    (mget? me prop)))
-
-(defn fx-resolve
-  ([me ctx widget-value]
-   (fx-resolve :anon me ctx widget-value))
-  ([prop me ctx widget-value]
-   ;(dp :resolving prop (minfo me) widget-value)
-   (wtrx [0 1000 nil :RESO prop (minfo me)]
-     (let [resolved
-           (cond
-             (nil? widget-value)
-             (do
-               (dpx :fx-res-nil!! prop)
-               nil)
-
-             (dart/is? widget-value CBAsIs)
-             (do
-               (dpx :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
-               (.-value ^CBAsIs widget-value))
-
-             (dart/is? widget-value CBToResolve)
-             ;; in the past, a naked function given, say, to onPress would be
-             ;; called like (naked-fn me ctx), but with v2 it simply gets passed
-             ;; as the onPress, so we have to do call a CBToResolve value here and
-             ;; then give that recursively to fx-resolve. So if the (cb-val me ctx) below
-             ;; returns a function, /that/ will be passed on to Flutter as is. ie CBToResolve
-             ;; exists so we can use params me and ctx to decide the handler to be given to Flutter.
-             (let [val ^CBToResolve widget-value]
-               (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
-               (let [cb-val (.-value val)]                  ;; ^CBToResolve widget-value)]
-                 (dpx :CBToResolveyields cb-val)
-                 (let [v (cb-val me ctx)]
-                   (dpx :recuring-unwrapped-fn?-return-val v)
-                   (fx-resolve prop me ctx v))
-                 #_(fx-resolve prop me ctx cb-val)))
-
-             (dart/is? widget-value m/Widget)
-             (do
-               (dpx :widget-value-is-widget widget-value)
-               widget-value)
-
-             (fn? widget-value)
-             (do
-               (dpx :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
-               widget-value)
-
-             (cty/c-ref? widget-value)
-             (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
-
-             (mref? widget-value)
-             (do
-               (dpx :fxres-sees-mref (minfo widget-value))
-               (let [fx (fx-render ctx widget-value)]
-                 (dpx :rfx-mdref-yielded-flutter fx)
-                 fx))
-
-             (vector? widget-value)
-             (do (dpx :fxres-seq!!!! prop (count widget-value))
-                 (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
-                   (dpx :vec-rez rzd)
-                   rzd))
-
-             :default (do (dpx :fxres-fall-thru-passthru prop (minfo me) widget-value
-                            (when (atom? widget-value)
-                              (deref widget-value)))
-                          widget-value))]
-       ;;(dp :resolved prop resolved)
-       resolved))))
+(defn widget-key
+  ([me ctx] (widget-key me ctx :untag))
+  ([me ctx tag]
+   (dp :API-widg-key! (minfo me))
+   (fxf/widget-key me ctx tag)))
 
 (defn ctx-page-push
   ([ctx fx-page-def]
@@ -115,28 +48,10 @@
   (.pop (-> ctx m/Navigator.of)))
 
 (defn fx-render [ctx fx]
-  (wtrx [0 999 nil :render-entry (minfo fx)]
-    (cond
-      (not (mref? fx))
-      (cond
-        (cty/c-ref? fx)
-        (mx-throw (str "fx-render passed Cell " (deref fx)))
-        :default (do
-                   #_(when-not (string? fx)
-                       (dp :render-sees-not-mref?-passing-thru fx))
-                   fx))
-      :else (let [gen (mget fx :fx-gen)]
-              (dpx :render-sees-gen!! gen)
-              (chk gen "OBAD: fx-render of model finds no fx-gen: ")
-              ;;(dp :fx-render-records (minfo fx) ctx)
-              ;; nope (fxf/record-fx$ctx fx ctx)
-              (let [g (gen fx ctx)]
-                (dpx :render-genned!!! g)
-                (rmap-meta-set! [:fx-dom fx] g)
-                g)))))
+  (fxf/fx-render ctx fx))
 
 (defmacro in-my-context [[me-var ctx-var] & body]
-  `(tilton.fmx.api/->CBToResolve
+  `(tilton.fmx.factory/->CBToResolve
      (fn [~me-var ~ctx-var]
        ~@body)))
 
@@ -147,8 +62,27 @@
 (defn ctx-nav [ctx]
   (m/Navigator.of ctx))
 
-(defmacro my-controller []
-  `^m/AnimationController? (tilton.mx.api/mget ~'me :controller))
+(defmacro my-controller [tag]
+  `(let [con# (:controller (deref ~'me))]
+     (assert con# (str "my-controller " ~tag
+                    " sees no controller in " (minfo ~'me)
+                    " keys " (keys (deref ~'me))))
+     ^m/AnimationController con#))
+
+(defmacro my-controller? [tag]
+  `(let [con# (:controller (deref ~'me))]
+     ^m/AnimationController? con#))
+
+(defn state-prop-get [me prop-key]
+  (assert (contains? (deref me) prop-key)
+    (str "my-state-prop> prop key " prop-key
+      " not contained by fx/state of " (tilton.mx.api/minfo me)))
+  (get (deref me) prop-key))
+
+(defmacro my-state-prop [prop-key]
+  `(do (assert (contains? ~'me ~prop-key) (str "my-state-prop> prop key " ~prop-key
+                                           " not contained by fx/state of " (tilton.mx.api/minfo ~'me)))
+       (get (deref ~'me) ~prop-key)))
 
 (defn standard-text-value-controller [me]
   ;; usage: (fx/text {:controller (cF (standard-text-value-controller me))}....
@@ -165,12 +99,11 @@
   `(tilton.mx.api/mget ~'me :animation))
 
 (defmacro my-state []
-  `(tilton.mx.api/mget ~'me :fx$state))
+  `(:fx$state (meta ~'me)))
 
 ;;; ---- sundry factories per Flutter variation on statefulness, child/children/content/body ------------------
 
-
-(deftags tilton.fmx.factory/k1-child-stateless
+(deftags-plus tilton.fmx.factory/konly-prop [:child]
   (dropdown-menu-item m/DropdownMenuItem)
   (theme m/Theme)
   (icon-theme m/IconTheme)
@@ -184,106 +117,117 @@
   (container m/Container)
   (card m/Card)
   (padding m/Padding)
-  (center m/Center)
+  ;; (center m/Center)
   (place-holder w/PlaceHolder)
   (single-child-scroll-view m/SingleChildScrollView)
   (expanded m/Expanded)
   (preferred-size m/PreferredSize)
   (animated-opacity m/AnimatedOpacity)
   (drawer-header m/DrawerHeader)
-  (floating-action-button m/FloatingActionButton)
+  ;; (floating-action-button m/FloatingActionButton)
   (align m/Align)
   (visibility m/Visibility)
   (drawer m/Drawer)
   (sized-box m/SizedBox)
   (opacity m/Opacity)
   (ink m/Ink)
-  (gesture-detector m/GestureDetector))
+  #_ (gesture-detector m/GestureDetector))
 
-(deftags tilton.fmx.factory/childless-stateless
+(deftags tilton.fmx.factory/kidless-childless
   (app-bar m/AppBar)
   (data-table m/DataTable)
-  (text-style p/TextStyle)
-  (rounded-rectangle-border p/RoundedRectangleBorder)
   (list-tile m/ListTile)
   (layout-builder w/LayoutBuilder)
   (flutter-logo m/FlutterLogo)
-  (bottom-navigation-bar-item w/BottomNavigationBarItem)
   (navigation-rail-destination w/NavigationRailDestination))
 
-(defmacro alert-dialog [fx-props mx-props & children]
-  `(tilton.fmx.factory/k1-content-stateless m/AlertDialog ~fx-props ~mx-props ~@children))
+(deftags tilton.fmx.factory/non-widget ;; todo better name
+  (text-style p/TextStyle)
+  (bottom-navigation-bar-item w/BottomNavigationBarItem)
+  (rounded-rectangle-border p/RoundedRectangleBorder))
 
-(deftags tilton.fmx.factory/childless-stateful
+(deftags tilton.fmx.factory/kidless-childless
   (slider m/Slider)
+  (snack-bar m/SnackBar)
   (dropdown-button m/DropdownButton)
   (future-builder m/FutureBuilder)
   (text-field m/TextField)
   (check-box m/Checkbox)
-  (elevated-button+icon m/ElevatedButton.icon))
+  (elevated-button+icon m/ElevatedButton.icon)
+  (icon-button m/IconButton))
 
-;; todo does snackbar still need this custom macro?
-(deftag tilton.fmx.factory/make-fx-snackbar snack-bar m/SnackBar)
-(deftag tilton.fmx.factory/konly-param1-stateless text m/Text)
-(deftag tilton.fmx.factory/prop-param1-childless-stateless icon m/Icon :icon)
+(deftag tilton.fmx.factory/konly-param1 text m/Text)
+(deftag tilton.fmx.factory/konly-prop material-app m/MaterialApp :home)
+(deftag tilton.fmx.factory/konly-prop scaffold m/Scaffold :body)
+(deftag tilton.fmx.factory/konly-prop alert-dialog m/AlertDialog :content)
 
-(deftag tilton.fmx.factory/k1-body-stateful scaffold m/Scaffold)
-
-(defmacro icon-button [& vargs]
-  (let [[fx-props mx-props] vargs]
-    `(tilton.fmx.factory/childless-stateless m/IconButton ~fx-props ~mx-props)))
-
-(deftag tilton.fmx.factory/kids-for-builder list-view+separated m/ListView.separated)
-(deftag tilton.fmx.factory/kids-for-builder list-view+builder m/ListView.builder)
-(deftag tilton.fmx.factory/k1-home-stateful material-app m/MaterialApp)
-(deftag tilton.fmx.factory/konly-for-builder-stateless layout-kid-builder w/LayoutBuilder)
-
-(deftags tilton.fmx.factory/k1-child-stateful
+(deftags-plus tilton.fmx.factory/konly-prop [:child]
+  (animated-container m/AnimatedContainer)
+  (center m/Center)
+  (hero m/Hero)
+  (floating-action-button m/FloatingActionButton)
+  (ink! m/Ink)
   (popup-menu-button m/PopupMenuButton)
   (popup-menu-item m/PopupMenuItem)
   (opacity! m/Opacity)
-  (ink! m/Ink)
   (focus m/Focus)
   (safe-area w/SafeArea)
-  (hero m/Hero)
   (ticker-mode w/TickerMode)
   (dismissible w/Dismissible)
-  (elevated-button m/ElevatedButton)
   (default-tab-controller m/DefaultTabController)
   (focus m/Focus)
   (focus-scope m/FocusScope)
   (text-button m/TextButton)
   (focus+focus-node m/Focus.withExternalFocusNode)
   (animated-builder m/AnimatedBuilder)
-  (animated-container m/AnimatedContainer))
+  )
 
-(deftag tilton.fmx.factory/kids->prop-stateful
-  navigation-rail m/NavigationRail :destinations)
+(deftags-plus tilton.fmx.factory/konly-prop [:child]
+  (elevated-button m/ElevatedButton))
 
-(deftags tilton.fmx.factory/children-stateless
+(defmacro sized-box+expand [fx-props mx-props & children]
+          `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
+
+
+(deftags tilton.fmx.factory/k1-child-stateful
+  (gesture-detector m/GestureDetector))
+
+(deftags-plus tilton.fmx.factory/kids-prop [:children]
   (stack m/Stack)
   (column m/Column)
   (row m/Row)
-  (list-view m/ListView))
+  (list-view m/ListView)
+  (grid-view+count m/GridView.count)
+  (wrap w/Wrap))
 
-(deftag tilton.fmx.factory/kids->prop-stateless
-  grid-view+count m/GridView.count :children)
-(deftag tilton.fmx.factory/kids->prop-stateless
+(deftag tilton.fmx.factory/kids-prop
+  navigation-rail m/NavigationRail :destinations)
+
+(deftag tilton.fmx.factory/kids-prop
   bottom-navigation-bar m/BottomNavigationBar :items)
-(deftag tilton.fmx.factory/kids->prop-stateless
-  wrap w/Wrap :children)
+
+(deftag tilton.fmx.factory/prop-param1-kidless icon m/Icon :icon)
+
+(deftag tilton.fmx.factory/kids-kids list-view+builder m/ListView.builder)
+(deftag tilton.fmx.factory/kids-kids list-view+separated m/ListView.separated) ;; untested
+
+;;; --- UNCONVERTED -------------------------------------
+
+(deftag tilton.fmx.factory/konly-layout-builder layout-kid-builder w/LayoutBuilder)
+
+(deftag tilton.fmx.factory/konly-builder builder w/Builder)
 
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
 ;;; these macros try to hide the plumbing without being obscure.
 
 (defmacro as-is [callback-fn]
-  `(tilton.fmx.api/->CBAsIs
+  `(tilton.fmx.factory/->CBAsIs
      ~callback-fn))
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
   `(tilton.fmx.api/in-my-context [~me ~ctx]
-     (tilton.fmx.api/->CBAsIs
+     (tilton.fmx.factory/->CBAsIs
        ~callback-fn)))
 
 (defmacro as-dart-callback [[& cb-params] & body]

@@ -13,8 +13,7 @@
 
 ;; --- the pulse ------------------------------
 
-(def ^:dynamic *one-pulse?* false)
-
+(def ^:dynamic *one-pulse?* false) ;; todo test (or implement altogether
 (def ^:dynamic *dp-log* false)
 
 (defn data-pulse-next
@@ -53,15 +52,11 @@
   (or (opcode unfin-biz)
     (mx-throw (str "ufb-queue> opcode unknown: " opcode))))
 
-(defn ufb-queue-ensure [opcode]
-  "vestigial"
-  (ufb-queue opcode))
-
 (defn ufb-add [opcode continuation]
-  (fifo-add (ufb-queue-ensure opcode) continuation))
+  (fifo-add (ufb-queue opcode) continuation))
 
 (defn ufb-assert-q-empty [opcode]
-  (if-let [uqp (fifo-peek (ufb-queue-ensure opcode))]
+  (if-let [uqp (fifo-peek (ufb-queue opcode))]
     (do
       (mx-throw (str "ufb queue %s not empty, viz %s")
         opcode uqp))
@@ -69,7 +64,6 @@
 
 ;; --- the ufb and integrity beef ----------------------
 ;;    proper ordering of state propagation
-
 
 (def ^:dynamic *ufb-do-q* nil)                              ;; debug aid
 
@@ -93,21 +87,20 @@
         (ufb-do :awaken)
 
         (recur
-          (if (fifo-peek (ufb-queue-ensure :tell-dependents))
+          (if (fifo-peek (ufb-queue :tell-dependents))
             "tell-dependents"
             "handle-clients")))
 
       "handle-clients"
       (do
-        (when-let [clientq (ufb-queue :client)]
-          (if-let [cqh @+client-q-handler+]
-            (cqh clientq)
-            (ufb-do clientq :client))
+        (if-let [cqh @+client-q-handler+]
+          (cqh (ufb-queue :client))
+          (ufb-do (ufb-queue :client) :client))
 
-          (recur
-            (if (fifo-peek (ufb-queue :client))
-              "handle-clients"
-              "ephemeral-reset"))))
+        (recur
+          (if (fifo-peek (ufb-queue :client))
+            "handle-clients"
+            "ephemeral-reset")))
 
       "ephemeral-reset"
       (do (ufb-do :ephemeral-reset)
@@ -126,7 +119,7 @@
 ;(declare call-with-integrity)
 
 (defmacro with-integrity [[opcode info] & body]
-  `(call-with-integrity
+  `(tilton.mx.cell.integrity/call-with-integrity
      ~opcode
      ~info
      (fn [~'opcode ~'defer-info]
@@ -134,7 +127,7 @@
 
 (defmacro with-cc [id & body]
   ;; todo STAT validate that id is keyword?
-  `(with-integrity (:change ~id)
+  `(tilton.mx.cell.integrity/with-integrity (:change ~id)
      ~@body))
 
 (defmacro without-integrity [& body]

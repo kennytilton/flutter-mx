@@ -2,7 +2,7 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tilton.mx.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc] :as mx]
+    [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
@@ -11,62 +11,36 @@
 (defn make-app []
   (material-app
     {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
+     :theme (m/ThemeData .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
     (scaffold
-      {:appBar
-       (app-bar
-         {:title (m/Text "Flutter/MX Counter")})
-       :floatingActionButton
-       (cF (floating-action-button
-             {:onPressed (as-dart-callback []
-                           (mswap! (fm* :scaffo) :counter inc))
-              :tooltip   "Increment"}
-             (m/Icon m/Icons.add .color m/Colors.black)))}
-      {:name :scaffo
-       :counter (cI 0)
-       :show-doc (cF (even? (mget me :counter)))}
-      (center
-        (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text {:style (p/TextStyle .color m/Colors.black
-                          .fontSize 14.0)}
-            "You have pushed the button this many times:")
-          (sized-box {:height 14.0})
-          (text
-            {:style (in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m/Theme.of ctx))))}
-            {:name  :z-counter
-             :value (cI 0)}
-            (str (mget (fasc :scaffo) :counter))))))))
+      {:appBar (app-bar
+                 {:title (m/Text "Flutter/MX Counter")
+                  :backgroundColor (cF (.-inversePrimary
+                                         (.-colorScheme ^m/ThemeData (maprop :theme))))})
 
-#_
-(defn make-app []
-  (material-app
-    {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .primarySwatch m/Colors.blue)}
-    (scaffold
-      {:appBar
-       (app-bar
-         {:title (m/Text "Flutter/MX Counter")})
+       ;----------  how abaout fma-get, -set!, -swap! ????
+
        :floatingActionButton
-       (cF (floating-action-button
-             {:onPressed (as-dart-callback []
-                           (mswap! (fm* :scaffo) :counter inc))
-              :tooltip   "Increment"}
-             (m/Icon m/Icons.add .color m/Colors.black)))}
-      {:name :scaffo
-       :counter (cI 0)
-       :show-doc (cF (even? (mget me :counter)))}
+       (floating-action-button
+         {:onPressed (as-dart-callback []
+                       (mswap! (fm* :scaffo) :counter inc))
+          :tooltip   "Increment"}
+         (m/Icon m/Icons.add .color m/Colors.black))}
+      {:name     :scaffo
+       :counter  (cI 0)}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
           (text {:style (p/TextStyle .color m/Colors.black
                           .fontSize 14.0)}
             "You have pushed the button this many times:")
-          (sized-box {:height 14.0})
+          (sized-box
+            {:height (cF (+ 14.0 (* 14 (maprop :counter))))})
           (text
-            {:style (in-my-context [me ctx]
-                      (.-headline4 (.-textTheme (m/Theme.of ctx))))}
-            {:name  :z-counter
-             :value (cI 0)}
-            (str (mget (fasc :scaffo) :counter))))))))
+            {:style (cF (.-headlineMedium (.-textTheme ^m/ThemeData (maprop :theme))))}
+            (str (maprop :counter))))))))
+
+
 
 

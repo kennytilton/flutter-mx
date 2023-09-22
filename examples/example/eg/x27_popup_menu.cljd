@@ -75,7 +75,7 @@
      :theme (m/ThemeData .primarySwatch m/Colors.blue)}
     (fx/scaffold
       {:appBar (fx/app-bar
-                 {:title (m/Text "Flutter/MX Popup")})}
+                 {:title (m/Text "Flutter/MX Popup 2")})}
       (fx/center {}
         {:name  :demo
          :sound (cI nil :ephemeral? true)}
@@ -85,19 +85,20 @@
             {:ignoring (cF (nil? (mget (fmu :lang-picker) :lang-preferred)))}
             (fx/text-button
               {:onPressed (as-dart-callback []
-                            (dp :knock!!!)
                             (mset! (fasc :demo) :sound
-                              :knock-knock #_ [:knock-knock (rand-int 99999)]))}
+                              :knock-knock))}
               (fx/text {:style (cF (p/TextStyle
                                      .color (if (mget (fmu :lang-picker) :lang-preferred)
-                                              m/Colors.green m/Colors.red)
+                                              m/Colors.green (-> m/Colors
+                                                               .-red
+                                                               .-shade100))
                                      .fontSize 24.0))}
                 "Knock")))
           (fx/text {:style (p/TextStyle
                              .color m/Colors.black
-                             .fontSize 36.0)}
+                             .fontSize 24.0)}
             (if-let [lang (mget (fmu :lang-picker) :lang-preferred)]
               (if (= :knock-knock (do (mget (fasc :demo) :sound)))
                 (str (swap! counter inc) ": " (:translation lang))
                 "<now click Knock>")
-              "<pick ^^^language>")))))))
+              "<pick a language!>")))))))

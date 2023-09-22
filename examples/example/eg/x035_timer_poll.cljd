@@ -8,7 +8,7 @@
     ["package:http/http.dart" :as dht]
     [tilton.mx.cell.base :as cb]
     ;[tilton.mx.model.core :refer [with-par]]
-    [tilton.mx.api :refer [with-par dp dpx cF cF+ cI mget mswap! mset! fasc fm* fmuval fmu minfo] :as mx]
+    [tilton.mx.api :refer [with-par dp dpx cF cF+ cI mget mswap! mset! maprop fasc fm* fmuval fmu minfo] :as mx]
     [tilton.fmx.api :refer [as-dart-callback] :as fx]))
 
 ;;; This is a half-baked example that shows a widget dispatching
@@ -41,22 +41,23 @@
       (fx/center
         (fx/wrap {:direction          m/Axis.vertical
                   :crossAxisAlignment m/WrapCrossAlignment.center
-                  :spacing            14}
-          (fx/container {}{:name :contnr}
+                  :spacing            40}
+          (fx/text {:style (p/TextStyle .color m/Colors.black
+                             ; (fontStyle: FontStyle.italic),
+                             .fontStyle m/FontStyle.italic
+                             .fontSize 12.0)}
+            "(Tap FAB to start/stop fetching.)")
+
+          (fx/container {}
             (when (mget (fasc :scaffo) :show-time?)
               (fx/text {:style (p/TextStyle .color m/Colors.black
                                  .fontSize 18.0)}
                 {:name :shotime
-                 :clock (cF+ [:debug false
-                              :watch (fn [_ _ new old c]
-                                       (dpx :shotime-watch-sees-new new))
-                              :on-quiesce (fn [c]
+                 :clock (cF+ [:on-quiesce (fn [c]
                                             (when-let [tmr ^async/Timer (cb/c-value c)]
-                                              (dp :cancelling-timer!!! tmr)
                                               (.cancel tmr)))]
                           (async/Timer.periodic (Duration .seconds 3)
                             (fn [^async/Timer tmr]
-                              (dp :tmr-fires!!!! (.-tick tmr)(minfo me))
                               (mset! (fmu :counter) :value (.-tick tmr)))))}
                 "Making fetch #")))
           (fx/text
@@ -76,4 +77,4 @@
                                         "search" (str "patient.drug.openfda.brand_name:"
                                                    (if (odd? (fmuval :counter))
                                                      "dogs" "cats"))}))))}
-            (str "AE says " (mget me :ae-lookup))))))))
+            (str "NIH AE search says " (mget me :ae-lookup))))))))

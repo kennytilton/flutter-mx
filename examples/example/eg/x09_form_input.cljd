@@ -1,7 +1,7 @@
 (ns example.eg.x09-form-input
   "Port of CLJD faithful port of https://docs.flutter.dev/cookbook/forms/retrieve-input"
   (:require
-    [tilton.mx.model.core :refer [mget mset! mswap!] :as md]
+    [tilton.mx.api :refer [dp mget mset! mswap!] :as md]
     [tilton.fmx.api :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -15,13 +15,15 @@
          :floatingActionButton
          (fx/floating-action-button
            {:onPressed (fx/in-my-context [me ctx]
-                         (fx/->CBAsIs
+                         (fx/cb-as-is
                            #(m/showDialog
                               .context ctx
-                              .builder (fn [_] (m/AlertDialog
-                                                 .content (m/Text (.-text ^m/TextEditingController
-                                                                    (md/mget (md/fm* :test-input) :controller))))))))
+                              .builder (fn [_]
+                                         (m/AlertDialog
+                                           .content (m/Text (.-text ^m/TextEditingController
+                                                              (md/mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}
+           {:with-builder? true}
            (m/Icon m/Icons.text_fields))}
         (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
           (fx/text "Enter some text, then hit the FAB!")

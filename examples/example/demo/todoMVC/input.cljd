@@ -5,30 +5,31 @@
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
     [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.api :refer [cF cI cFonce mget  mswap! mset!]]
+    [tilton.mx.api :as mx :refer [cF cI cF+ cFonce mget mswap! mset!]]
     [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
-    [example.demo.todoMVC.common :refer [ my-todo-list ] :as cmm]
+    [example.demo.todoMVC.common :refer [my-todo-list] :as cmm]
     [example.demo.todoMVC.todo :refer [td-completed] :as todo]))
 
 (defn todo-input-onSubmitted-formula []
   (cF (as-dart-callback [value]
-        ;; blank or not we need to restore focus to the input per the spec
-        (.requestFocus ^m/FocusNode (mget me :focusNode))
-        ;; spec says to trim, and to silently ignore blank entry
-        (let [trimmed (str/trim value)]
-          (when-not (str/blank? trimmed)
-            ;; --- we have a non-blank entry, so we save, clear entry, and store
-            (mset! me :value trimmed) ;; let text proxy know its cleaned value
-            (.clear ^m/TextEditingController
-              (mget me :controller))
-            (let [td-lst (my-todo-list)]
-              (mswap! td-lst :kids conj
-                (todo/make-ToDo td-lst trimmed false))))))))
+                        ;; blank or not we need to restore focus to the input per the spec
+                        (.requestFocus ^m/FocusNode (mget me :focusNode))
+                        ;; spec says to trim, and to silently ignore blank entry
+                        (let [trimmed (str/trim value)]
+                          (when-not (str/blank? trimmed)
+                            ;; --- we have a non-blank entry, so we save, clear entry, and store
+                            (mset! me :value trimmed)       ;; let text proxy know its cleaned value
+                            (.clear ^m/TextEditingController
+                                    (mget me :controller))
+                            (let [td-lst (my-todo-list)]
+                              (mswap! td-lst :kids conj
+                                      (todo/make-ToDo td-lst trimmed false))))))))
 
 (defn todo-input []
-  (fx/material {:elevation   20.0
-                :color       m/Colors.white
-                :shadowColor m/Colors.black}
+  (fx/material
+    {:elevation   20.0
+     :color       m/Colors.white
+     :shadowColor m/Colors.black}
     (fx/text-field {:autofocus   true
                     :focusNode   (m/FocusNode)
                     :decoration  (m/InputDecoration
@@ -36,9 +37,12 @@
                                    .border m.InputBorder/none
                                    .contentPadding (m/EdgeInsets.all 9.0))
                     :onSubmitted (todo-input-onSubmitted-formula)
-                    :controller  (cFonce (fx/standard-text-value-controller me))}
-      {:name  :todo-input
-       :value (cI "")})))
+                    :controller  (cFonce (fx/standard-text-value-controller me))
+                    #_#_ :key         (fx/in-my-context [me ctx]
+                                   (dp :key-by-context!!!!!!!!! (mx/minfo me))
+                                   (fx/widget-key me ctx :todo-input))}
+                   {:name  :todo-input
+                    :value (cI "")})))
 
 (defn todo-toggle-all []
   (fx/visibility
@@ -47,10 +51,11 @@
      ;; todo: composability with fixed arity reusables as case may be.
      :maintainSize          true
      :maintainSemantics     false
-     ;; todo why do not other visis specify these ^^^ vvvv?
+     ;; todo why do not other visis specify these ^^^ vv?
      :maintainInteractivity false
      :maintainAnimation     true
      :maintainState         true}
+    {:name :togg-vis}
     (fx/icon-button
       {:onPressed (as-dart-callback []
                     (let [todos (todo/app-todos (my-app))
@@ -63,10 +68,12 @@
 (defn todo-controls []
   (fx/row
     (fx/expanded {:flex 1}
-      ;; handy widget to mark all to-dos at once
-      (todo-toggle-all))
+                 ;; handy widget to mark all to-dos at once
+                 (todo-toggle-all))
     ; --- the to-do input field ----
     (fx/expanded {:flex 9}
-      (fx/padding
-        {:padding (m/EdgeInsets.all 16.0)}
-        (todo-input)))))
+                 {:unwrapped? true}
+                 (fx/padding
+                   {:padding (m/EdgeInsets.all 16.0)}
+                   {:unwrapped? true}
+                   (todo-input)))))

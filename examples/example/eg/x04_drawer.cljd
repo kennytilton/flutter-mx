@@ -10,8 +10,7 @@
 
 (defn make-app []
   (fx/material-app
-    {:title                      "Drawer Demo"
-     :debugShowCheckedModeBanner false}
+    {:title "Drawer Demo"}
     (fx/scaffold
       {:appBar (fx/app-bar
                  {:title (m/Text "Drawer Demo")})
@@ -21,16 +20,19 @@
                        (fx/drawer-header
                          {:decoration (m/BoxDecoration .color m/Colors.blue)}
                          (m/Text "Drawer Header 2"))
+                       ;; below we see two ways to handle insufficient context for ".of"
                        (fx/list-tile
                          {:title (m/Text "Item 1")
                           :onTap (fx/in-my-context [me ctx]
-                                   (fx/->CBAsIs
-                                     #(.pop (m/Navigator.of ctx))))})
-                       (fx/list-tile
-                         {:title (m/Text "Item 2")
-                          :onTap (fx/in-my-context [me ctx]
-                                   (fx/->CBAsIs
-                                     #(.pop (m/Navigator.of ctx))))}))))}
+                                   (fx/cb-as-is
+                                     #(.pop (m/Navigator.of ctx))))}
+                         {:with-builder? true})
+                       (fx/builder
+                         (fx/list-tile
+                           {:title (m/Text "Item 2")
+                            :onTap (fx/in-my-context [me ctx]
+                                     (fx/cb-as-is
+                                       #(.pop (m/Navigator.of ctx))))})))))}
       (fx/center
         (fx/text "My Ported Page!!")))))
 

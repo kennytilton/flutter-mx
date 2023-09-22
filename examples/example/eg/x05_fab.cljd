@@ -2,18 +2,15 @@
   (:require
     ["dart:math" :as math]
     [cljd.flutter.alpha :as f]
-    [tilton.mx.cell.base :as cbase]
+
     [tilton.mx.model.peek :refer [Model minfo mref?]]
-    [tilton.mx.base :refer [trx dpx dp]]
     [tilton.mx.api :refer [cF cF+ cI mget fmuv] :as mx]
     [tilton.fmx.api :refer [as-dart-callback] :as fx]
-    [tilton.fmx.factory :as fmk]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
 
 (defn make-app []
   (fx/material-app {:title "Expandable Fab"}
-    {:name :mat-app}
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
        :floatingActionButton (expandable-fab
@@ -28,58 +25,59 @@
          :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
-  (fmk/sized-box+expand-ful
+  (fx/sized-box+expand
     {}                                                      ;; <= necessary placeholder
     {:name             :fab
+     :ticker-mixin true
      ; --- Dart lifecycle ---------------------------
-     ;; todo how does this ever run?
-     :dispose          (fn [this me]
-                         (when-let [controller (fx/my-controller)]
+     :initState     (fn [state me]
+                      ;; todo dispose this controller
+                      (let [cont (mx/rmap-set! [:controller me]
+                                   (m/AnimationController
+                                     .value (if initial-open? 1.0 0.0)
+                                     .duration (dart:core/Duration .milliseconds 250)
+                                     .vsync state))]
+                        (mx/rmap-set! [:expand-animation me]
+                          (m/CurvedAnimation
+                            .curve m/Curves.fastOutSlowIn
+                            .reverseCurve m/Curves.easeOutQuad
+                            .parent cont))))
+     ;; todo how does this next ever run? md-quiesce?
+     :dispose          (fn [state me]
+                         (when-let [controller ^m/AnimationController (fx/my-controller? :dispo)]
                            (.dispose controller)))
      ; --- animation mechanics ----------------------
-     :controller       (cF (fx/when-my-state [state]
-                             (m/AnimationController
-                               .value (if initial-open? 1.0 0.0)
-                               .duration (dart:core/Duration .milliseconds 250)
-                               .vsync state)))
-     :expand-animation (cF (when-let [c (fx/my-controller)]
-                             (m/CurvedAnimation
-                               .curve m/Curves.fastOutSlowIn
-                               .reverseCurve m/Curves.easeOutQuad
-                               .parent c)))
-     ; --- behavior -------------------------
+
      :step             (/ 90.0 (dec (count actions)))
      :open?            (cI initial-open?)
      :ani-dir          (cF+ [:watch (fn [prop-name me new-value prior-value cell]
-                                      (when-let [c (fx/my-controller)]
+                                      (when-let [c (fx/my-controller? :ani-dir)]
                                         (case new-value
                                           :forward (.forward c)
                                           :reverse (.reverse c))))]
                          (if (mget me :open?)
                            :forward :reverse))}
+    (fx/stack
+      {:alignment    m/Alignment.bottomRight
+       :clipBehavior m/Clip.none}
+      (tap-to-close-fab me)
+      ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
+      (doall (map-indexed
+               (fn [i action]
+                 (expanding-action-button me
+                   :direction-degrees (* i (fmuv :fab :step))
+                   :max-distance distance
+                   :progress-key :expand-animation
+                   :action action))
+               actions))
+      (tap-to-open-fab me))))
 
-    (when-let [anime (mget me :expand-animation)]
-      (fx/stack
-        {:alignment    m/Alignment.bottomRight
-         :clipBehavior m/Clip.none}
-        {:name :fab-stack}
-        (tap-to-close-fab me)
-        ;; Matrix always flattens children, and discards nils, so we can offer a collection mid-children
-        (doall (map-indexed
-                 (fn [i action]
-                   (expanding-action-button me anime
-                     :direction-degrees (* i #_ 30.0 (fmuv :fab :step))
-                     :max-distance distance
-                     :progress-key :expand-animation
-                     :action action))
-                 actions))
-        (tap-to-open-fab me)))))
-
-(defn expanding-action-button [me anime & {:keys [action direction-degrees max-distance progress-key]}]
+(defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
-    {:animation anime                                       ;; (mget (mx/fasc :fab) :expand-animation)
+    {:animation (fx/in-my-context [me ctx]
+                  (fx/state-prop-get (mx/fasc :fab) :expand-animation))
      :builder   (as-dart-callback [ctx child]
-                  (let [progress ^m/CurvedAnimation anime #_(mget me :animation) #_(mget (mx/fasc :fab) :expand-animation)
+                  (let [progress ^m/CurvedAnimation (fx/state-prop-get (mx/fasc :fab) :expand-animation)
                         offset (m/Offset.fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
                                  (* (.-value progress) max-distance))]
@@ -93,14 +91,16 @@
                           .angle (* (- 1.0 (.-value progress))
                                    math/pi 0.5))
                         child))))}
-    {:name :ani-builder}
     (fx/fade-transition
-      {:opacity anime #_(mget (mx/fasc :fab) :expand-animation)}
+      {:opacity (fx/in-my-context [me ctx]
+                  (fx/state-prop-get (mx/fasc :fab) :expand-animation))}
       (action-button
         :icon (:icon action)
         :onPressed (fx/in-my-context [me ctx]
-                     (fx/->CBAsIs
+                     (fx/cb-as-is
                        #(show-action ctx action)))))))
+
+;;; -----------------------------------------------------------------
 
 (defn show-action [ctx action]
   (m/showDialog
@@ -114,8 +114,7 @@
                    {:actions [(m/TextButton
                                 .onPressed #(-> ctx m/Navigator.of .pop)
                                 .child (m/Text "CLOSE"))]}
-                   {}
-                   (fx/text {} {} (:title action)))))))
+                   (fx/text (:title action)))))))
 
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        (m/CircleBorder)
@@ -137,9 +136,7 @@
                     :clipBehavior m/Clip.antiAlias
                     :elevation    4.0}
         (fx/ink-well {:onTap (as-dart-callback []
-                               (assert (mref? par :par-close))
                                (let [fb (mx/fasc :fab par)]
-                                 (assert (mref? fb :fb-close))
                                  (mx/mswap! fb :open? not)))}
           (fx/padding {:padding (m/EdgeInsets.all 8.0)}
             (fx/icon {:icon  m/Icons.close
@@ -164,10 +161,7 @@
          :duration (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
           {:onPressed (as-dart-callback []
-                        (assert (mref? par :par-open))
-                        (let [fb (mx/fasc :fab par)]
-                          (assert (mref? fb :fb-open))
-                          (mx/mswap! fb :open? not)))}
+                        (mx/mswap! (mx/fasc :fab par) :open? not))}
           (fx/icon {:icon m/Icons.create}
             {:name :fabicon-open}))))))
 

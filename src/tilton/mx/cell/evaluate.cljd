@@ -139,16 +139,11 @@
       (c-value c))
 
     (c-quiesced? c)
-    (cond
-      (= (c-prop-name c) :fx$state)
-      (do
-        (dpx :cget-qi-fxstate-allowed (state-info (c-value c) c))
-        (c-value c))
-      :else (do
-              (dp :ILLOGIC-cget-sees-QUIESCED-c (cinfo c)
-                (minfo (c-model c)))
-              (throw (Exception. (str :CQI!! (cinfo c) (minfo (c-model c)))))
-              (c-value c)))
+    (do
+      (dp :ILLOGIC-cget-sees-QUIESCED-c (cinfo c)
+        #_ (minfo (c-model c)))
+      (throw (Exception. (str :CQI!! (cinfo c) #_ (minfo (c-model c)))))
+      (c-value c))
 
     :else
     (prog1

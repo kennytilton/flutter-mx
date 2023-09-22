@@ -5,6 +5,7 @@
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
     [tilton.fmx.api :refer [in-my-context as-dart-callback] :as fx]
+    [tilton.fmx.factory :as fxf]
     [example.demo.todoMVC.common :as cmm]
     [example.demo.todoMVC.todo :as todo]
     [example.demo.todoMVC.input :as input]
@@ -23,9 +24,8 @@
 (defn make-app []
   (let [title "todo"]
     (fx/material-app
-      {:title                      title
-       :theme                      app-theme
-       :debugShowCheckedModeBanner true}
+      {:title title
+       :theme app-theme}
       {:name      :app
        :db        (cF+ [:async? true
                         :watch (fn [_ me hv-box _ _]
@@ -40,8 +40,11 @@
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todos-dashboard)]}
+        {:unwrapped? true}                                  ;; needed todo why needed?
         (fx/ink {:color m/Colors.white}
-          (fx/column
+          {:unwrapped? true}                                ;; neeeded
+          (fx/column {}
+            {:unwrapped? true}                              ; needed
             (input/todo-controls)
             (items/todo-items)
             (about-credits)))))))
@@ -58,7 +61,7 @@
                                                 .fontFamily "Helvetica Neue"
                                                 .color (cmm/title-red)
                                                 .fontWeight m/FontWeight.w100
-                                                .fontSize 64.0)}
+                                                .fontSize 40.0 #_64.0)}
                                       title))})))
 
 ;;; --- footer filters -------------------------------------------------
@@ -72,7 +75,7 @@
 ;;; --- credits --------------------------------------------------------
 (defn about-credits []
   (let [faint (p/TextStyle
-                ;; todo does flutter let us place the style higher so referenced just once?
+                ;; todo explore Themes
                 .color m/Colors.grey
                 .fontSize 14.0)
         credits ["Double-click a todo to edit."
