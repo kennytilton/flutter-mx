@@ -44,8 +44,15 @@ There was one tiny breaking change: if existing code relied on every widget havi
                            :forward :reverse))}
 ...children...
 ```
-### New `builder` proxy for Builder, and an alternative: `:with-buildertrue`
-Flutter `context` is tricky: if I am in the same context as a `MaterialApp`, `(Navigator.of ctx)` will not find it. Often an interleaved stateful widget will establish the necessary new context, but not always. Example [x08_navigation](https://github.com/kennytilton/flutter-mx/blob/2f0905877876b38459ac2a9968e2a53d69eb6b29/examples/example/eg/x08_navigation.cljd#L26) had to be modified to wrap `elevated-button` in a new `builder` proxy, translating to [m/Builder](https://api.flutter.dev/flutter/widgets/Builder-class.html), which exists to generate the necessary new context.
+### Automatic "Stateful" replaced by dynamic decision based on reactivity (experiemental)
+In the prior version of `f/mx`, all widgets defined by stateful factories were implemented by reifying `StatefulWidget`, with the build function invoking the actual widget constructor. "Stateless" factories just invoked the specific widget constructor.
+
+In `f/mx 1.1`, the decision to add a stateful wrapper is made at run-time, based on whether the proxy has reactive cells.
+
+### New `builder` proxy for Builder, and an alternative: `:with-builder true`
+Flutter `context` is tricky: if I am in the same context as a `MaterialApp`, `(Navigator.of ctx)` will not find it. Often an interleaved stateful widget will establish the necessary new context, but not always, especially because of the preceding change eliminating "auto-Statefulness". 
+
+Example [x08_navigation](https://github.com/kennytilton/flutter-mx/blob/2f0905877876b38459ac2a9968e2a53d69eb6b29/examples/example/eg/x08_navigation.cljd#L26) had to be modified to wrap `elevated-button` in a new `builder` proxy, translating to [m/Builder](https://api.flutter.dev/flutter/widgets/Builder-class.html), which exists to generate the necessary new context.
 ```
 (defn make-app []
   (fx/material-app
@@ -61,9 +68,5 @@ Flutter `context` is tricky: if I am in the same context as a `MaterialApp`, `(N
             ;;{:with-builder? true} ;; alternate way of wrapping with fresh ctx
             (fx/text "Open route")))))))
 ```
-### Automatic "Stateful" replaced by dynamic decision based on reactivity (experiemental)
-In the prior version of `f/mx`, all widgets defined by stateful factories were implemented by reifying `StatefulWidget`, with the build function invoking the actual widget constructor. "Stateless" factories just invoked the specific widget constructor.
-
-In `f/mx 1.1`, the decision to add a stateful wrapper is made at run-time, based on whether the proxy has reactive cells.
 
 [More to come]
