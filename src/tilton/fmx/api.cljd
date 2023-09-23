@@ -81,13 +81,13 @@
 
 (defmacro my-state-prop [prop-key]
   `(do (assert (contains? ~'me ~prop-key) (str "my-state-prop> prop key " ~prop-key
-                                           " not contained by fx/state of " (tilton.mx.api/minfo ~'me)))
-       (get (deref ~'me) ~prop-key)))
+                                            " not contained by fx/state of " (tilton.mx.api/minfo ~'me)))
+     (get (deref ~'me) ~prop-key)))
 
 (defn standard-text-value-controller [me]
-  ;; usage: (fx/text {:controller (cF (standard-text-value-controller me))}....
-  (let [c (m/TextEditingController
-            .text (mx/mget me :value))]
+  ; todo this could take the prop name as a parameter, perhaps defaulting to :value
+  (let [v (m/TextEditingValue .text (mx/mget me :value))
+        c (m/TextEditingController.fromValue v)]
     (.addListener c
       (fn []
         (cty/with-mx-isolation
@@ -131,7 +131,7 @@
   (sized-box m/SizedBox)
   (opacity m/Opacity)
   (ink m/Ink)
-  #_ (gesture-detector m/GestureDetector))
+  #_(gesture-detector m/GestureDetector))
 
 (deftags tilton.fmx.factory/kidless-childless
   (app-bar m/AppBar)
@@ -141,7 +141,7 @@
   (flutter-logo m/FlutterLogo)
   (navigation-rail-destination w/NavigationRailDestination))
 
-(deftags tilton.fmx.factory/non-widget ;; todo better name
+(deftags tilton.fmx.factory/non-widget                      ;; todo better name
   (text-style p/TextStyle)
   (bottom-navigation-bar-item w/BottomNavigationBarItem)
   (rounded-rectangle-border p/RoundedRectangleBorder))
@@ -186,7 +186,7 @@
   (elevated-button m/ElevatedButton))
 
 (defmacro sized-box+expand [fx-props mx-props & children]
-          `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
+  `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
 
 
 (deftags tilton.fmx.factory/k1-child-stateful

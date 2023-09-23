@@ -24,8 +24,8 @@
                                      (.setPitch ^FlutterTts (mget me :fts) new)))
      :lang-geos     (cF+ [:async? true
                           :watch (fn [_ _ lang-geos _ _]
-                                   #_ (let [langs (group-by #(subs % 0 2) (sort lang-geos))]
-                                     (dp :langs (keys langs))))]
+                                   #_(let [langs (group-by #(subs % 0 2) (sort lang-geos))]
+                                       (dp :langs (keys langs))))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
      :lang-geo-tree (cF (group-by #(subs % 0 2) (sort (mget me :lang-geos))))}
     (scaffold
@@ -88,7 +88,7 @@
                             {:style (p/TextStyle .color m/Colors.black
                                       .fontSize 16.0)}
                             (subs (nth langs i) 0 2)))))))
-          (range (count (take 8 langs))))))))
+          (range (count (take 888 langs))))))))
 
 (defn geo-chooser []
   (expanded
@@ -110,25 +110,25 @@
                    (get (mget (fasc :app) :lang-geo-tree)
                      (mget (fmu :lang-choice) :lang-code)))}
       (let [geos (mget me :geos)]
-        (mapv
-          (fn [i] (fx/gesture-detector
-                    {:onTap (as-dart-callback []
-                              (mset! (fasc :geo-choice) :value i))}
-                    {:name :GD-geo-choice
-                     :key  (m/ValueKey. (nth geos i))}
-                    (container
-                      {:decoration (m/BoxDecoration
-                                     .border (when (= i (mget (fasc :geo-choice) :value))
-                                               (.all m/Border .color m/Colors.red .width 2))
-                                     .color (.-shade300 (cond
-                                                          (even? i) m/Colors.cyan
-                                                          :else m/Colors.yellow)))}
-                      (center
-                        (padding {:padding (m/EdgeInsets.all 4.0)}
-                          (fx/text
-                            {:style (p/TextStyle .color m/Colors.black
-                                      .fontSize 16.0)}
-                            (subs (nth geos i) 3)))))))
+        (mapv (fn [i]
+                (fx/gesture-detector
+                  {:key   (m/ValueKey. (nth geos i))
+                   :onTap (as-dart-callback []
+                            (mset! (fasc :geo-choice) :value i))}
+                  {:name :GD-geo-choice}
+                  (container
+                    {:decoration (m/BoxDecoration
+                                   .border (when (= i (mget (fasc :geo-choice) :value))
+                                             (.all m/Border .color m/Colors.red .width 2))
+                                   .color (.-shade300 (cond
+                                                        (even? i) m/Colors.cyan
+                                                        :else m/Colors.yellow)))}
+                    (center
+                      (padding {:padding (m/EdgeInsets.all 4.0)}
+                        (fx/text
+                          {:style (p/TextStyle .color m/Colors.black
+                                    .fontSize 16.0)}
+                          (subs (nth geos i) 3)))))))
           (range (count geos)))))))
 
 ;;; --- text input --------------------------------------------------------------
@@ -145,12 +145,12 @@
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI #_ "Turning and turning in the widening gyre, The falcon cannot hear the falconer."
+       :value (cI #_"Turning and turning in the widening gyre, The falcon cannot hear the falconer."
                 (str "\"Jealousy\"\nby Robert Graves\n\n"
-                    "I'd die for you or you for me, \n"
-                    "So furious is our jealousy. \n"
-                    "And if you doubt this to be true, \n"
-                    "Kill me outright, lest I kill you."))})))
+                  "I'd die for you or you for me, \n"
+                  "So furious is our jealousy. \n"
+                  "And if you doubt this to be true, \n"
+                  "Kill me outright, lest I kill you."))})))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 

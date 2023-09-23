@@ -41,5 +41,5 @@
 (defn select []
   ;; NG: tek/x26, tts
   (comment hello counter xo3 x05 x13 dlayout tts tek sock todo)
-  (tts/make-app))
+  (todo/make-app))
 
