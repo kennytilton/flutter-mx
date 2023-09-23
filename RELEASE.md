@@ -1,10 +1,10 @@
-# 2023-09-23 Flutter/MX 1.1
+# 2023-09-23 Flutter/MX 2.0.0
 
 SHA 4ad06ac67e09973c9704c06e5e6698aaa1947904
 
-tl;dr: Internal improvements mostly, and Ticker mixin now must be requested
+tl;dr: Internal improvements mostly, but some peak thru in the API
 
-This release consists almost entirely of improved internals, derived from your author's growing understanding of Flutter. Expect more! All examples ran unchanged.
+This release consists almost entirely of improved internals, derived from your author's growing understanding of Flutter. Expect more! All examples ran unchanged. That said, code might be relying on some of the things, set up by internals, that no longer obtain. More below.
 
 ### ticker mixins, and :vsync/state
 There was one tiny breaking change: if existing code relied on every widget having a [SingleTickerProviderMixin](https://api.flutter.dev/flutter/widgets/SingleTickerProviderStateMixin-mixin.html), that is no longer the case. It must be rquested by specifying `:ticker-mixin true` in the custom parameter block. Below is an extended example also demonstrating use of a custom `initState` for initialization where a widget must consider its `State` object, as with the `:vsync` option:
