@@ -26,7 +26,7 @@
     [tilton.mx.cell.core
      :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell]]
     [tilton.mx.cell.evaluate :refer [cget c-awaken]]
-    [tilton.mx.model.peek :refer [chk *md-quiescing* Model minfo cinfo mref? c-ref?]]
+    [tilton.mx.model.peek :refer [chk *md-quiescing* Model minfo cinfo mref? cref?]]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
 
 (defmacro pme [& mas]
@@ -133,7 +133,7 @@
                                            (not (some #{prop} [:fx$quiesce :mx-type]))
                                            #_(not (= :mx-type prop))))
                                  (map (fn [[k v]]
-                                        (vector k (if (c-ref? v)
+                                        (vector k (if (cref? v)
                                                     unbound
                                                     v))))
                                  (into {})))]

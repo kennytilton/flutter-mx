@@ -19,7 +19,7 @@
     [tilton.mx.cell.observer :refer [c-observe]]
     [tilton.mx.cell.integrity
      :refer [with-integrity *one-pulse?* c-current? c-pulse-update]]
-    [tilton.mx.model.peek :refer [chk mref? minfo cinfo c-ref? c-type *md-quiescing* md-quiesced?]]))
+    [tilton.mx.model.peek :refer [chk mref? minfo cinfo cref? c-type *md-quiescing* md-quiesced?]]))
 
 (defn ephemeral-reset [rc]
   (when (c-ephemeral? rc)                                   ;; allow call on any cell, catch here
@@ -39,7 +39,7 @@
 (defn record-dependency [used]
   (when-not (c-optimized-away? used)
     (chk *depender*)
-    #_(chk (c-ref? *depender*) (str/join " | "
+    #_(chk (cref? *depender*) (str/join " | "
                                      ["reco-dep sees non c-ref depender: " *depender*
                                       [:used (cinfo used)]
                                       (when (atom? *depender*) (deref *depender*))
@@ -130,7 +130,7 @@
   Ensures value is current, records any dependent, and
   notices if a standalone  cell has never been observed."
   [c]
-  (chk (c-ref? c) (str :CGET-sees-non-cref (cinfo c)))
+  (chk (cref? c) (str :CGET-sees-non-cref (cinfo c)))
 
   (cond
     (c-optimized-away? c)
@@ -199,14 +199,14 @@
                                                 cfo " cnow " c))
                                (chk (map? @c) (str "CNSET> in future then: map? false origc "
                                                 cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
-                               (chk (c-ref? c) (str "CNSET> in future then c-ref? false origc "
+                               (chk (cref? c) (str "CNSET> in future then cref? false origc "
                                                  cfo " derefnow " (deref c)))
                                (with-mx-isolation
                                  (with-integrity [:change :future-then]
                                    ;; todo if a cfu is meant to run repeatedly as dependencies change,
                                    ;;      do we need to clear :then? Or is opti-away not a problem
                                    ;;      since it would have happened were there no users??
-                                   (chk (c-ref? c) (str "CNSET> in future then withininetg c-ref? false origc "
+                                   (chk (cref? c) (str "CNSET> in future then withininetg cref? false origc "
                                                      cfo))
                                    (rmap-set! [:then? c] true)
                                    (c-value-assume c (if-let [and-then (:and-then? @c)]
@@ -237,7 +237,7 @@
   * Well, we also look to see if a synaptic cell has attached a
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c dbg-id]
-  (chk (c-ref? c) (str "calcnlink passed non-cref> " dbg-id ", " (cinfo c)))
+  (chk (cref? c) (str "calcnlink passed non-cref> " dbg-id ", " (cinfo c)))
 
   ;; first check for cycles
   (when (some #{c} *call-stack*)
@@ -301,7 +301,7 @@
                   ;(dp :c-awakening!!!!! (c-state c) (c-pulse c) @+pulse+ (cinfo c))
                   (calculate-and-set c :fn-c-awken nil))))
 
-      (c-ref? c)
+      (cref? c)
       (do
         (chk (c-input? c))
         (when (> @+pulse+ (c-pulse-observed c))             ;; safeguard against double-call
@@ -348,7 +348,7 @@
 
   [c new-value propagation-code]
 
-  (chk (c-ref? c) (str "CVASS> c not c-ref? "
+  (chk (cref? c) (str "CVASS> c not cref? "
                     (cinfo c true)
                     " assuming value " new-value
                     " atom? " (atom? c)
@@ -418,7 +418,7 @@ then clear our record of them."
   (rmap-set! [:useds c] #{}))
 
 (defn md-cell-flush [c]
-  (chk (c-ref? c) (str "c-ref? fail on md-cell-flush" c))
+  (chk (cref? c) (str "cref? fail on md-cell-flush" c))
   (when-let [me (c-model c)]
     (rmap-set! [:cells-flushed me]
       (conj (:cells-flushed me)
@@ -492,7 +492,7 @@ then clear our record of them."
     (mref? c)
     [tag :mref (minfo c)]
 
-    (c-ref? c)
+    (cref? c)
     [tag :cref (cinfo c)]
 
     (:opti (meta c))

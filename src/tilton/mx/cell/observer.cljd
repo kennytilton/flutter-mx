@@ -15,7 +15,7 @@
              +pulse+ c-prop c-value c-mname
              c-model] :as cty]
 
-    [tilton.mx.model.peek :refer [chk md-type mref? minfo cinfo c-ref?]]
+    [tilton.mx.model.peek :refer [chk md-type mref? minfo cinfo cref?]]
 
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]))
@@ -57,7 +57,7 @@ call parameters: prop, me, new, old, and c."
    (c-observe c unbound why))
 
   ([c prior-value why]
-   (chk (c-ref? c) (str "c-ref? fail on c-observe" c))
+   (chk (cref? c) (str "cref? fail on c-observe" c))
    (chk (dart/is? @+pulse+ int))
    ; (dp :c-observe> why (cinfo c))
 

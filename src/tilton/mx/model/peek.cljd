@@ -22,7 +22,7 @@
     (dart:core/print (str/join " - " (list* :DP
                                        (map #(cond (nil? %) :NIL
                                                (mref? %) (minfo %)
-                                               (c-ref? %) (cinfo %)
+                                               (cref? %) (cinfo %)
                                                :else %)
                                          bits))))))
 
@@ -42,7 +42,7 @@
   (when (atom? c)
     (:mx-type @c)))
 
-(defn c-ref? [c]
+(defn cref? [c]
   (and c (atom? c) (c-type c)
     (dart/is? (c-type c) Cell)))
 
@@ -60,7 +60,7 @@
      (not (atom? c)) (if verbose? [:not-atom-c c]
                        :not-atom-c)
 
-     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
+     (not (cref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
                         :not-cell-c)
      (:quiesced? @c) [:QUIESCED @c]
      :else (if verbose?

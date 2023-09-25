@@ -14,7 +14,7 @@
              :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
             [tilton.mx.foundation :as mxf :refer [mx-type PObserver observe]]
 
-            [tilton.mx.model.peek :refer [chk minfo cinfo c-ref? Model]]
+            [tilton.mx.model.peek :refer [chk minfo cinfo cref? Model]]
             [tilton.mx.cell.base :refer [dpc  c-model] :as cty]
             [tilton.mx.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
@@ -266,7 +266,7 @@
     (cond
       (not (mref? fx))
       (cond
-        (c-ref? fx)
+        (cref? fx)
         (mx-throw (str "fx-render passed a Cell " (deref fx)))
         :default (do
                    #_(when-not (string? fx)
@@ -344,7 +344,7 @@
                (dpx :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
                widget-value)
 
-             (c-ref? widget-value)
+             (cref? widget-value)
              (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
 
              (mref? widget-value)
@@ -395,11 +395,11 @@
     (or (tilton.mx.api/mget? me :unwrapped?)
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
     (do
-      (dp :GENGEN-unwrapping-by-request/match (minfo me))
+      (dpx :GENGEN-unwrapping-by-request/match (minfo me))
       (widget-maker me ctx))
 
     (tilton.mx.model.core/md-reactive? me)
-    (do (dp :GENGEN-wrap-Stateful (minfo me)
+    (do (dpx :GENGEN-wrap-Stateful (minfo me)
           (cinfo (tilton.mx.model.core/md-reactive? me)))
       (with-flutter-ref
         (dpx :state-wrap!!!!!!! (minfo me) (cinfo (tilton.mx.model.core/md-reactive? me)))
@@ -418,7 +418,7 @@
                   (dpx :initstate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
                   (tilton.fmx.factory/fx-state-init me this))
                 (build [_ ctx]
-                  (dp :build-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
+                  (dpx :build-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
                   (widget-maker me ctx))))))))
 
     (tilton.mx.api/mget? me :with-builder?)
@@ -429,7 +429,7 @@
                      (dpx :GENGEN-reactive (minfo me))
                      (widget-maker me ctx)))))
     :else (do
-            (dp :GENGEN-nobuilder (minfo me))
+            (dpx :GENGEN-nobuilder (minfo me))
             (widget-maker me ctx))))
 
 ;;; --- makers ------------------------------------------------
@@ -445,7 +445,7 @@
                    (dpx :konly-prop-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
-                       (dp :konly-prop-gen ~target-prop-name (tilton.mx.api/minfo ~'me))
+                       (dpx :konly-prop-gen ~target-prop-name (tilton.mx.api/minfo ~'me))
                        (~fx-class
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                 (tilton.mx.api/mget? ~'me :key))
@@ -470,7 +470,7 @@
                    (dpx :konly-PARAM1!!!!-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
-                       (dp :konly-param1-gen (tilton.mx.api/minfo ~'me))
+                       (dpx :konly-param1-gen (tilton.mx.api/minfo ~'me))
                        (~fx-class (tilton.fmx.api/fx-render ~'ctx
                                     (tilton.mx.api/mget ~'me :_param-1))
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
@@ -507,7 +507,7 @@
          :fx-gen (fn fgen [me# ctxtop#]
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
-                       (dp :kids-prop-gen (tilton.mx.api/minfo ~'me))
+                       (dpx :kids-prop-gen (tilton.mx.api/minfo ~'me))
                        (~fx-class
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                 (tilton.mx.api/mget? ~'me :key))
@@ -526,7 +526,7 @@
          :fx-gen (fn fgen [me# ctxtop#]
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
-                       (dp :kidless-childless-gen (tilton.mx.api/minfo ~'me))
+                       (dpx :kidless-childless-gen (tilton.mx.api/minfo ~'me))
                        (~fx-class
                          ~@(fx-props>mx (dissoc fx-props :key))))))))))
 
@@ -540,7 +540,7 @@
          :fx-gen (fn fgen [me# ctxtop#]
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
-                       (dp :non-widget-gen (tilton.mx.api/minfo ~'me))
+                       (dpx :non-widget-gen (tilton.mx.api/minfo ~'me))
                        (~fx-class
                          ~@(fx-props>mx fx-props)))))))))
 
@@ -560,7 +560,7 @@
                                            ~@(fx-props>mx (dissoc fx-props prop)))))]
                      (cond
                        (tilton.mx.model.core/md-reactive? ~'me)
-                       (do (dp :STATEFUL-prop-p1-builder!!!!!!!! (quote ~fx-class) (minfo ~'me))
+                       (do (dpx :STATEFUL-prop-p1-builder!!!!!!!! (quote ~fx-class) (minfo ~'me))
                          (w/StatefulBuilder
                            ;;  .key (tilton.fmx.factory/fx-resolve-mget? ~'me :key ~'ctx))
                            .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx

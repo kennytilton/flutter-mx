@@ -1,6 +1,6 @@
 (ns tilton.mx.cell.base
   (:require
-    [tilton.mx.model.peek :refer [chk mref? minfo c-ref? cinfo c-type CellFormula]]
+    [tilton.mx.model.peek :refer [chk mref? minfo cref? cinfo c-type CellFormula]]
     [tilton.mx.base :as utb
      :refer [mx-throw def-rmap-props dp]]
 
@@ -93,7 +93,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;; --- c-quiesce! -----------
 
 (defn c-quiesce! [c]
-  (chk (c-ref? c))
+  (chk (cref? c))
   (dpc c :quiesce :entry)
   (when-not false
     (chk (not (c-quiesced? c))
@@ -106,8 +106,8 @@ rule to get once behavior or just when fm-traversing to find someone"
     (rmap-set! [:quiesced? c] true)))
 
 (defn c-quiesced? [c]
-  (chk (c-ref? c)
-    (str "c-quiessed?> failed assertion c-ref? on:" c))
+  (chk (cref? c)
+    (str "c-quiessed?> failed assertion cref? on:" c))
   (:quiesced? @c))
 
 (defn c-formula? [c]
@@ -126,14 +126,14 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-value [c]
   (chk (atom? c))
   (cond
-    (c-ref? c)
+    (cref? c)
     (:value @c)
 
     :else @c))
 
 (defn c-optimized-away? [c]
   (chk (atom? c) (str :c-opti-away?-sees-not-atom c))
-  (chk (c-ref? c) (str :c-opti-away?-sees-NON-cref (cinfo c) :deref @c))
+  (chk (cref? c) (str :c-opti-away?-sees-NON-cref (cinfo c) :deref @c))
   (:optimized? @c))
 
 (defn c-model [rc]
@@ -170,7 +170,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn dpc [c category & bits]
   (when *dpc-enabled*
-    (chk (c-ref? c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)
+    (chk (cref? c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)
                          " bits " (apply str bits)))
     (when-let [dbg (c-debug c)]
       (when (or (true? dbg) (some #{category} dbg))
@@ -207,7 +207,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;; debug aids --------------
 
 (defn c-props [c k]
-  (chk (c-ref? c) (str "cslots c-ref? fail "))
+  (chk (cref? c) (str "cslots cref? fail "))
   ;; set conversion as convenience to test code
   (set (map c-prop (k @c))))
 
@@ -215,5 +215,5 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;;---
 
 (defn c-debug [c]
-  (chk (c-ref? c))
+  (chk (cref? c))
   (:debug @c))

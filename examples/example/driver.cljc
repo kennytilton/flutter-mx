@@ -39,7 +39,7 @@
     [example.eg.x045-websocket :as sock]))
 
 (defn select []
-  (comment hello counter xo3 x05 x13 dlayout tts tek sock todo)
-  (counter/make-app))
+  (comment hello counter x03 x05 x13 dlayout tts tek sock todo)
+  (todo/make-app))
 
 

@@ -26,7 +26,7 @@
     [tilton.mx.cell.evaluate :as ev
      :refer [cget cget c-value-assume
              record-dependency ensure-value-is-current]]
-    [tilton.mx.model.peek :refer [mref? c-ref? cinfo Cell CellFormula]]))
+    [tilton.mx.model.peek :refer [mref? cref? cinfo Cell CellFormula]]))
 
 ; todo: stand-alone cells with observers should be observed when they are made
 
@@ -271,7 +271,7 @@
 (defn cset! [c new-value]
   "The moral equivalent of a Common Lisp SETF, and indeed
 in the CL version of Cells SETF itself is the change API dunction."
-  (chk (c-ref? c))
+  (chk (cref? c))
   (dpc c :cset new-value (cinfo c) :fut? (c-async? c)
     :defer? *defer-changes*
     :winteg? cty/*within-integrity*
