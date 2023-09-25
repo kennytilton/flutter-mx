@@ -6,10 +6,9 @@
     ["package:flutter/services.dart" :as srvc]
     ["package:http/http.dart" :as dht]
     [clojure.string :as str]
-    [tilton.mx.cell.base :refer [cinfo] :as cty]
-    [tilton.mx.model.peek :refer [minfo]]
-    [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.api :refer [mget mswap! mset! mset! mkids fm* fmuval fmu fasc
+    [tilton.mx.cell.base :as cty]
+
+    [tilton.mx.api :refer [dp mget mswap! mset! mset! mkids fm* fmuval fmu fasc
                            cF cF+ cI cFonce with-mx-isolation dp dpx] :as mx]
     [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
     [example.demo.todoMVC.common :as cmm
@@ -122,8 +121,7 @@
                                                                   .contentPadding (m/EdgeInsets.all 9.0))
                                                    :onSubmitted (cF (as-dart-callback [value]
                                                                       (commit-to-do-editing me todo value)))
-                                                   :controller  (cFonce (m/TextEditingController
-                                                                          .text (mget me :value)))}
+                                                   :controller  (cFonce (fx/text-field-controller-basic me))}
                                                   {:name  :todo-editor
                                                    :value (cI title)}))))))}
     {:name :todo-edt

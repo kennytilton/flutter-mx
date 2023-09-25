@@ -14,8 +14,8 @@
              :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
             [tilton.mx.foundation :as mxf :refer [mx-type PObserver observe]]
 
-            [tilton.mx.model.peek :refer [chk minfo Model]]
-            [tilton.mx.cell.base :refer [dpc cinfo c-model] :as cty]
+            [tilton.mx.model.peek :refer [chk minfo cinfo c-ref? Model]]
+            [tilton.mx.cell.base :refer [dpc  c-model] :as cty]
             [tilton.mx.api
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
                      mpar mref? make mget mget? mkids mswap! cI cFkids]
@@ -266,7 +266,7 @@
     (cond
       (not (mref? fx))
       (cond
-        (cty/c-ref? fx)
+        (c-ref? fx)
         (mx-throw (str "fx-render passed a Cell " (deref fx)))
         :default (do
                    #_(when-not (string? fx)
@@ -344,7 +344,7 @@
                (dpx :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
                widget-value)
 
-             (cty/c-ref? widget-value)
+             (c-ref? widget-value)
              (mx-throw (str "fx-resolve sees Cell! " (cinfo widget-value)))
 
              (mref? widget-value)

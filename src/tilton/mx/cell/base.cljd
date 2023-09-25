@@ -1,6 +1,6 @@
 (ns tilton.mx.cell.base
   (:require
-    [tilton.mx.model.peek :refer [chk mref? minfo]]
+    [tilton.mx.model.peek :refer [chk mref? minfo c-ref? cinfo c-type CellFormula]]
     [tilton.mx.base :as utb
      :refer [mx-throw def-rmap-props dp]]
 
@@ -89,17 +89,6 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn +cause []
   (first *causation*))
 
-;; ------------------------------------------------------
-
-(deftype Cell []
-  :extends mx/MXImplementer)
-
-(deftype CellFormula []
-  :extends Cell)
-
-(defn c-type [c]
-  (when (atom? c)
-    (:mx-type @c)))
 
 ;; --- c-quiesce! -----------
 
@@ -120,10 +109,6 @@ rule to get once behavior or just when fm-traversing to find someone"
   (chk (c-ref? c)
     (str "c-quiessed?> failed assertion c-ref? on:" c))
   (:quiesced? @c))
-
-(defn c-ref? [c]
-  (and c (atom? c) (c-type c)
-    (dart/is? (c-type c) Cell)))
 
 (defn c-formula? [c]
   (and c (atom? c) (c-type c)
@@ -175,23 +160,6 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-valid? [rc]
   (= :valid (c-value-state rc)))
-
-(defn cinfo
-  ([c] (cinfo c false))
-  ([c verbose?]
-   (cond
-     (nil? c) :null-c
-     (not (atom? c)) (if verbose? [:not-atom-c c]
-                                  :not-atom-c)
-
-     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
-                                   :not-cell-c)
-     (c-quiesced? c) [:QUIESCED @c]
-     :else (if verbose?
-             [:cinfo-all @c]
-             (conj ((juxt c-prop-name c-mname c-pulse #_c-async? #_c-value) c)
-               [:used/users (count (c-useds c))
-                (count (c-callers c))])))))
 
 (defn atom-dump [a]
   (if (atom? a)

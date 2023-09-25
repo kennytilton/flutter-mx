@@ -8,11 +8,11 @@
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? unbound dpc
-             c-model c-valid? c-useds c-ref?
+             c-model c-valid? c-useds
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
-             c-synapses c-async? cinfo
+             c-synapses c-async?
              unlink-from-callers *causation*
              c-synaptic?
              c-pulse c-pulse-last-changed c-ephemeral? c-prop
@@ -26,7 +26,7 @@
     [tilton.mx.cell.evaluate :as ev
      :refer [cget cget c-value-assume
              record-dependency ensure-value-is-current]]
-    [tilton.mx.model.peek :refer [mref?]]))
+    [tilton.mx.model.peek :refer [mref? c-ref? cinfo Cell CellFormula]]))
 
 ; todo: stand-alone cells with observers should be observed when they are made
 
@@ -60,7 +60,7 @@
 (defn make-cell [& kvs]
   (let [options (apply hash-map (c-options-canonicalize kvs
                                   +valid-input-options+))]
-    (atom (merge {:mx-type            (cty/Cell.)
+    (atom (merge {:mx-type            (Cell.)
                   :value              unbound
                   :state              :nascent
                   :pulse              0
@@ -84,7 +84,7 @@
     (when-let [lazy (:lazy options)]
       (chk (some #{lazy} [true false :until-asked]) (str "make-cf sees invalid value for :lazy " lazy)))
 
-    (atom (merge {:mx-type            (cty/CellFormula.)
+    (atom (merge {:mx-type            (CellFormula.)
                   :value              unbound
                   :state              :nascent              ;; s/b :unbound?
                   :pulse              0

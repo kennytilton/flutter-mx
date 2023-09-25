@@ -13,17 +13,63 @@
     (throw (Exception. (str/join " - " bits)))))
 
 (defmacro chk [test & bits]
-  `(do) #_
+  #_ `(do)
   `(when-not (tilton.mx.model.peek/flutter-release-mode)
      (tilton.mx.model.peek/call-chk ~test ~@bits)))
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))
     (dart:core/print (str/join " - " (list* :DP
-                                       (map #(if (nil? %) :NIL %) bits))))))
+                                       (map #(cond (nil? %) :NIL
+                                               (mref? %) (minfo %)
+                                               (c-ref? %) (cinfo %)
+                                               :else %)
+                                         bits))))))
 
 (defn atom? [x]
   (dart/is? x cljd.core/Atom))
+
+;;; --- core MX ------------------------------
+;;;
+
+(deftype Cell []
+  :extends MXImplementer)
+
+(deftype CellFormula []
+  :extends Cell)
+
+(defn c-type [c]
+  (when (atom? c)
+    (:mx-type @c)))
+
+(defn c-ref? [c]
+  (and c (atom? c) (c-type c)
+    (dart/is? (c-type c) Cell)))
+
+(defn c-mname [c]
+  (if-let [md (:me @c)]
+    (or (:name @md)
+      "anon")
+    "no-md"))
+
+(defn cinfo
+  ([c] (cinfo c false))
+  ([c verbose?]
+   (cond
+     (nil? c) :null-c
+     (not (atom? c)) (if verbose? [:not-atom-c c]
+                       :not-atom-c)
+
+     (not (c-ref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
+                        :not-cell-c)
+     (:quiesced? @c) [:QUIESCED @c]
+     :else (if verbose?
+             [:cinfo-all @c]
+
+             (conj ((juxt :prop :pulse #_c-async? #_c-value) (deref c))
+               :mname (c-mname c)
+               :used/users (count (:useds @c))
+               (count (:callers @c)))))))
 
 (deftype Model []
   :extends MXImplementer
