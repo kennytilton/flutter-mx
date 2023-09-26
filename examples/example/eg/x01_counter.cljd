@@ -16,7 +16,7 @@
                              .seedColor m/Colors.deepPurple))}
     (scaffold
       {:appBar (app-bar
-                 {:title (m/Text "Flutter/MX Counter")
+                 {:title           (m/Text "Flutter/MX Counter")
                   :backgroundColor (cF (.-inversePrimary
                                          (.-colorScheme ^m/ThemeData (maprop :theme))))})
 
@@ -31,15 +31,21 @@
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
           (text {:style (p/TextStyle .color m/Colors.black
-                          .fontSize 14.0)}
-            "You have pushed the button this many times:")
+                          .fontSize 20.0)}
+            "The button push count now:")
           (sized-box
-            {:height 28.0 #_ (cF (+ 14.0 (* 14 (maprop :counter))))})
+            {:height 28.0})
           (text
-            {:style (cF (.-headlineMedium (.-textTheme ^m/ThemeData (maprop :theme))))}
-            {:name     :counter
-             :value  (cI 0)}
+            {:style (cF (fx/in-my-context [me ctx]
+                          (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
+                      #_ (.-displayLarge (.-textTheme ^m/ThemeData (maprop :theme))))}
+            {:name  :counter
+             :value (cI 0)}
             (str (mget me :value))))))))
+
+(comment
+  (cF (+ 28.0 (* 28 (mget (fmu :counter) :value))))
+  (cF (+ 28.0 (* 28 (maprop :counter)))))
 
 
 

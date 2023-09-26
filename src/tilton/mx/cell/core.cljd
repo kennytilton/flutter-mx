@@ -33,7 +33,7 @@
 (def +valid-input-options+ #{:obs :watch :prop :ephemeral? :unchanged-if
                              :value :input? :debug :on-quiesce :sink})
 (def +valid-formula-options+ #{:obs :watch :prop :input? :lazy :optimize :ephemeral? :unchanged-if
-                               :code :value :rule :async? :and-then? :sink :debug
+                               :code :value :rule :async? :async-then :sink :debug
                                :on-quiesce})
 
 (defn c-options-canonicalize [options allowed]
@@ -86,6 +86,7 @@
 
     (atom (merge {:mx-type            (CellFormula.)
                   :value              unbound
+                  ;; todo move internals into third map so they cannot be overridden
                   :state              :nascent              ;; s/b :unbound?
                   :pulse              0
                   :pulse-last-changed 0

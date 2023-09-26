@@ -24,6 +24,7 @@
     ;[example.eg.layout-explorer :as layo]
     ;[example.demo.localStorage-todoMVC.core :as todo-ls]
     [example.demo.todoMVC.core :as todo]
+    [example.demo.boiler.core :as boiler]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
     [example.eg.x25-flutter-tex :as tek]
     [example.eg.x26-latex-sandbox :as tekbox]
@@ -39,7 +40,7 @@
     [example.eg.x045-websocket :as sock]))
 
 (defn select []
-  (comment hello counter x03 x05 x13 dlayout tts tek sock todo)
-  (todo/make-app))
+  (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
+  (boiler/make-app))
 
 

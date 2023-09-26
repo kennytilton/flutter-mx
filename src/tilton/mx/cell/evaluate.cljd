@@ -91,7 +91,7 @@
       (c-value c)
 
       ;; --- above we had valid values so did not care. now... -------
-      (when-let [md (c-model c)]
+      (when-let [md (c-model c)] ;; standalone cells are supported
         (md-quiesced? md))
       (mx-throw (str/join " " ["evic> model: " (c-model c) "of cell" c "is quiessed"]))
 
@@ -105,25 +105,20 @@
             (or (> (c-pulse-last-changed used) (c-pulse c))
               (recur urest)))))
       (do
-        ;; we seem to need update, but check that other processing did not bring c current
+        ;; we seem to need update, but check that EVIC of useds did not bring c current,
+        ;; when a watch function needs this cell. It happens. The re-entry works, too.
         (when-not (c-current? c)
           ;; (dp :not-current-so-calc!!!!!!! (c-prop c) (c-state c) (c-valid? c))
           ;; happens if dependent changed and its observer read/updated me
           (calculate-and-set c :evic ensurer))
         (c-value c))
 
-      ;; we were behind the pulse but not affected by the changes that moved the pulse
-      ;; record that we are current to avoid future checking:
       :else (do
+              ;; we were behind the pulse, but not affected by the changes that moved the pulse.
+              ;; still record that we are current to avoid future checking.
               ;; (dp :just-pulse!!!!! (c-prop c))
               (c-pulse-update c :valid-uninfluenced)
               (c-value c)))))
-
-(defn state-info [^State? state c]
-  (concat (if state
-            [:mounted (.-mounted state) state]
-            [:null-state])
-    (cinfo c)))
 
 (defn cget
   "The API for determing the value associated with a Cell.
@@ -209,7 +204,7 @@
                                    (chk (cref? c) (str "CNSET> in future then withininetg cref? false origc "
                                                      cfo))
                                    (rmap-set! [:then? c] true)
-                                   (c-value-assume c (if-let [and-then (:and-then? @c)]
+                                   (c-value-assume c (if-let [and-then (:async-then @c)]
                                                        (and-then c fu-val) fu-val) nil)))))
                            ;; forcing nil pending future
                            ;; TODO support :pending-future-placeholder-value and force that instead
@@ -509,7 +504,7 @@ then clear our record of them."
 
 ;;--------------- change propagation  ----------------------------
 
-(def ^:dynamic *custom-propagater* nil)
+(def ^:dynamic *custom-propagator* nil)
 
 (defn propagate
   "A cell:
@@ -525,8 +520,8 @@ then clear our record of them."
   ;; (trx :propagate (:prop @c))
 
   (cond
-    *one-pulse?* (when *custom-propagater*
-                   (*custom-propagater* c prior-value))
+    *one-pulse?* (when *custom-propagator*
+                   (*custom-propagator* c prior-value))
     ;; ----------------------------------
     :else
     (do

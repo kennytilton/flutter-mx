@@ -11,14 +11,15 @@
      :refer [wtrx dp dpx trx]]
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.api :as fx]
-    [example.driver :as eg] ;; <--- comment out when excluding examples dir in deps.edn
-    [tilton.counter-app :as counter] ;; this one uses sugary defs for scaffold and material-app
-    ))
+    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+    [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
+    [tilton.keynote.boiler :as boiler]))
 
 (defn main []
-  (dp :main-entry-dp!!)
+  (dp :main-entry-dp2!!)
   (cty/cells-reset)
   (md/md-quiesce-feature! true)
+
   (fx/widget-key-clear)
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;; (fxk/fmx-debugger-set! sample-debugger)
@@ -27,11 +28,12 @@
     (fx/run-fx-app
       ;; Change the  namespace below to one above and rebuild to see a different example.
       ;; ------ VVVVV either/or next two--------------------------------------------
-      (if true
+      (if false
         (counter/make-app)
-        (eg/select)))) ;; <--- cannot use when excluding examples dir in deps.edn
+        (eg/select))))                                   ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
 
   ;; (testing/run-tests)
+
   (dp :main-exit))
 
 (defn sample-debugger [opcode data]
@@ -43,8 +45,8 @@
              (dp :cellkeys (keys @cell))
              (let [elt ^w/Element element]
                (when (not (and (.-mounted elt)
-                               (.-debugIsActive elt)
-                               (not (.-debugIsDefunct elt))))
+                            (.-debugIsActive elt)
+                            (not (.-debugIsDefunct elt))))
                  (dp :rebld-DEAD-ELT-me!!! (minfo (:me @cell)))
                  (dp :rebld-mounted (.-mounted elt))
                  (dp :rebld-active (.-debugIsActive elt))
