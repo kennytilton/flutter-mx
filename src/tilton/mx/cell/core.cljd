@@ -8,7 +8,7 @@
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? unbound dpc
-             c-model c-valid? c-useds
+             c-model c-valid? c-useds c-prop-name c-code$ c-code
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
              c-rule c-me c-value-state c-callers
@@ -279,6 +279,17 @@ in the CL version of Cells SETF itself is the change API dunction."
     @c)
   (chk (not (c-async? c)) (str "attempt to cset! cfuture " @c))
 
+  (when-not (c-input? c)
+    (dp :formula!!!!!! (c-code c))
+    (dp :formula!!!!!!!? (c-code$ c))
+    (mx-throw
+      "MXAPI_ILLEGAL_MUTATE_NON_INPUT_CELL> invalid mswap!/mset!/mset! to the property '" (c-prop-name c) "',\n"
+      "...> FYI: cell is " (if (c-formula? c) "" "NOT ") "a formula cell,\n"
+      (when (c-formula? c)
+        (str "...> FYI: the formula is: " (c-code$ c) "\n"))
+      "...> FYI: intended new value is [" new-value "]; current value is [" (:value @c) "].\n"
+      "...> FYI: instance is " (minfo (c-model c)) "\n."))
+
   (cond
     *defer-changes*
     #_(let [prop (c-prop-name c)
@@ -294,7 +305,7 @@ in the CL version of Cells SETF itself is the change API dunction."
         #_(mx-throw (cl-format true "MXAPI_UNDEFERRED_CHANGE> change to ~s must be deferred by wrapping it in WITH-INTEGRITY"
                       (c-prop c))))
     (do (dp :c-reset-rejecting-undeferred! (c-prop c))
-        (mx-throw (str "creset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
+        (mx-throw (str "cset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
                     (c-prop c) " :me " @(c-model c))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
@@ -306,9 +317,6 @@ in the CL version of Cells SETF itself is the change API dunction."
           (dpc c :cset :cset!-pre-ass-fires!!! (cinfo c) new-value)
           (c-value-assume c new-value nil)))))
 
-(defn creset! [c new-value]
-  (cset! c new-value))
-
 (defn cswap! [c swap-fn & swap-fn-args]
   (cset! c (apply swap-fn (cget c) swap-fn-args)))
 
@@ -316,7 +324,7 @@ in the CL version of Cells SETF itself is the change API dunction."
   "Observers should have side-effects only outside the
 cell-mediated model, but it can be useful to have an observer
 kick off further change to the model. To achieve this we
-allow an observer to explicitly queue a creset! for
+allow an observer to explicitly queue a cset! for
 execution as soon as the current change is manifested."
   `(cond
      (not *within-integrity*)

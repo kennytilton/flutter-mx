@@ -2,6 +2,8 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    [tilton.mx.cell.base :as cty]
+    [tilton.mx.model.core :refer [make]]
     [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
@@ -9,7 +11,26 @@
              center column text sized-box]]))
 
 (defn make-app []
-  (let [title "Boiler Demo"]
+  (cty/cells-reset)
+  (let [b (make :on? (tilton.mx.cell.core/make-cell
+                       :watch (fn [slot me new prior c]
+                                (dp :CHG! slot :now new :was prior))
+                       :value true
+                       :input? true)
+            :burner (tilton.mx.cell.core/make-c-formula
+                      :watch (fn [slot me new prior c]
+                               (dp :CHG! slot :now new :was prior))
+                      :rule (tilton.mx.cell.core/c-fn
+                              (if (mget me :on?)
+                                :blasting :off)))
+            #_ (cF (if (mget me :on?)
+                          :blasting :off)))]
+    ;(dp :startxx :on (mget b :on?) :burner-on (mget b :burner))
+    ;;(mset! b :burner :off) ;; todo fails on wrong error, but only if :on? is not cI
+    (mset! b :on? false)
+    #_ (dp :post-on-false :on (mget b :on?) :burner-on (mget b :burner)))
+
+  (let [title "Boiler Demo X"]
     (material-app
       {:title title
        :theme (m/ThemeData .useMaterial3 true

@@ -24,7 +24,7 @@
     [tilton.mx.cell.observer :refer [fx-observe observer-register fn-obs]]
 
     [tilton.mx.cell.core
-     :refer [cF cF+ c-reset-next! cFonce cFn cI creset! make-cell]]
+     :refer [cF cF+ c-reset-next! cFonce cFn cI cset! make-cell]]
     [tilton.mx.cell.evaluate :refer [cget c-awaken]]
     [tilton.mx.model.peek :refer [chk *md-quiescing* Model minfo cinfo mref? cref?]]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
@@ -80,21 +80,31 @@
   (chk (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
     (do
-      (dpx :mset-gotc!!! (cinfo c) :newv new-value)
-      (creset! c new-value))
-    (do
-      (if (contains? @me prop)
-        (mx-throw
-          "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/mset! to the property '" prop "', which is not mediated by any cell.\n"
-          "...> if such post-make mutation is in fact required, wrap the initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
-          "...> look for MXAPI_ILLEGAL_MUTATE_NONCELL in the Errors documentation for  more details.\n"
-          "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me prop :no-such-prop) "].\n"
-          "...> FYI: instance is of type " (mx-type me) ".\n"
-          "...> FYI: full instance is " @me "\n"
-          "...> FYI: instance meta is " (meta me) "\n.")
-        (mx-throw
-          "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mset! was attempted on non-existent prop \"" prop "\".\n"
-          "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx-class :fx-gen)))))))
+      ;; (dp :mset-gotc!!! (cinfo c) :newv new-value)
+      (cset! c new-value))
+    (if (contains? (md-cz me) prop)
+      ;; it was a formula optimized away
+      (mx-throw
+        "MXAPI_ILLEGAL_MUTATE_FORMULA_CELL> invalid mswap!/mset!/mset! to the property '" prop "',\n"
+        " which was mediated by a formula cell but optimized away.\n"
+        "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me prop :no-such-prop) "].\n"
+        "...> FYI: instance is of type " (mx-type me) ".\n"
+        "...> FYI: full instance is " @me "\n"
+        "...> FYI: instance meta is " (meta me) "\n.")
+
+      (do
+        (if (contains? @me prop)
+          (mx-throw
+            "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/mset! to the property '" prop "', which is not mediated by any cell.\n"
+            "...> if such post-make mutation is in fact required, wrap the initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
+            "...> look for MXAPI_ILLEGAL_MUTATE_NONCELL in the Errors documentation for  more details.\n"
+            "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me prop :no-such-prop) "].\n"
+            "...> FYI: instance is of type " (mx-type me) ".\n"
+            "...> FYI: full instance is " @me "\n"
+            "...> FYI: instance meta is " (meta me) "\n.")
+          (mx-throw
+            "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mset! was attempted on non-existent prop \"" prop "\".\n"
+            "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx-class :fx-gen))))))))
 
 (defn mswap! [me prop swap-fn & swap-fn-args]
   (chk me (str "mswap! passed nil for me accessing prop: " prop))
@@ -328,8 +338,8 @@
           (mx-throw (str/join "-" [:fm-navig-must-failed what where options]))))
 
       (and where what (atom? where))
-      (let [options (merge {:me? false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
-                            :must? false} ;; todo test
+      (let [options (merge {:me?   false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
+                            :must? false}                   ;; todo test
                       (apply hash-map options))]
         ;;(dp :fm-NET-navig-opts (assoc options :skip (minfo (:skip options))))
         (binding [*depender* (if (:wocd? options) nil *depender*)]
@@ -581,7 +591,7 @@
   (dp :md-quiesce-feature (if on-off :ON :OFF))
   (reset! +md-quiesce-feature+ on-off))
 
-(def ^:dynamic *md-quiesce-log?* false )
+(def ^:dynamic *md-quiesce-log?* false)
 
 (defn md-quiesce!
   ([me] (md-quiesce! me (md-quiesce-feature?)))
