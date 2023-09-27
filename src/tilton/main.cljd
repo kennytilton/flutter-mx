@@ -30,9 +30,10 @@
     (fx/run-fx-app
       ;; Change the  namespace below to one above and rebuild to see a different example.
       ;; ------ VVVVV either/or next two--------------------------------------------
-      (if false
+      (binding [cty/*dpc-enabled* true]
+      (if true
         (counter/make-app)
-        (eg/select))))                                   ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
+        (eg/select)))) )                                  ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
 
   (testing/run-tests)
 
@@ -46,8 +47,8 @@
       (fx/widget-key-clear)
       (.ensureInitialized w/WidgetsFlutterBinding)
       ;; (fxk/fmx-debugger-set! sample-debugger)
-      (binding [cty/*dpc-enabled* false]
-        ;(testing/run-tests)
+      (binding [cty/*dpc-enabled* true]
+        (testing/run-tests)
         (fx/fx-render nil
           (if false
             (counter/make-app)

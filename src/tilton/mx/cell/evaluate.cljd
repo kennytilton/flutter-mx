@@ -101,7 +101,7 @@
           (when used
             (ensure-value-is-current used :nested c)
             ;; now see if it actually changed
-            ;; (dp :pulse-checks (c-prop used)(c-pulse-last-changed used)(c-prop c)(c-pulse c))
+            (dpc c :evic :pulse-checks-------------- :used (c-prop used) :last (c-pulse-last-changed used) :c (c-prop c)(c-pulse c))
             (or (> (c-pulse-last-changed used) (c-pulse c))
               (recur urest)))))
       (do
@@ -360,7 +360,7 @@
           ;; --- cell maintenance ---
           ;; even if no news at least honor the reset!
           ;;
-          (dpc c :cnset :CVASS_SETS!!!! new-value)
+          (dpc c :cnset :CVASS_SETS!!!!============================================= new-value)
           (rmap-set! [:value c] new-value)
           (rmap-set! [:state c] :awake)
 
@@ -376,6 +376,10 @@
           ; we optimize here because even if unchanged we may not have c-useds,
           ; now that, with the :freeze option, we are doing "late" optimize-away
           ; Note that the :async? option likewise introduces late optimize
+
+          (when (c-value-changed? c new-value prior-value)
+            (dpc c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
+            (rmap-set! [:pulse-last-changed c] @+pulse+))
 
           (when-let [optimize (and (c-formula? c)
                                 (c-optimize c))]
@@ -397,7 +401,7 @@
             ;; we now can look to see if we can be optimized away
             (let []
               ;; --- data flow propagation -----------
-              (when (or @known-changed?
+              #_ (when (or @known-changed?
                       ; next happens if changed test in conditional not reached
                       (and (nil? @known-changed?)
                         (c-value-changed? c new-value prior-value)))
@@ -454,7 +458,7 @@ then clear our record of them."
           (c-valid? c)                                      ;; /// when would this not be the case? and who cares?
           (not (c-synaptic? c))                             ;; no prop to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
-    (dpc c :opti :optimizing-away!!!! (c-prop c) (c-async? c) (:then? @c))
+    (dpc c :opti :============optimizing-away!!!!========================= (c-prop c) (c-async? c) (:then? @c))
     (when (= :freeze (c-optimize c))
       ;; we could just blindly call unlink-from-unused since normally
       ;; we are here because there are no useds, but the precision may pay off some day

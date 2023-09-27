@@ -28,15 +28,19 @@
        :theme app-theme}
       {:name      :app
        :db        (cF+ [:async? true
+                        :debug true
                         :watch (fn [_ me hv-box _ _]
+                                 (dp :db-new================!!!!!! hv-box)
                                  (stg/DB! hv-box))]
                     (-> hv/Hive hv/HiveX .initFlutter await)
                     (-> hv/Hive (.openBox "todo")))
-       :todo-list (cF (when-let [db (mget me :db)]
-                        (assert (stg/DB) (str "DB not populated but cell :db is: " db))
-                        ;; Now we can load any existing todos from storage...
-                        (todo/make-ToDoList "todo"
-                          (stg/collection-docs "todo"))))}
+       :todo-list (cF+ [:debug true]
+                    (when-let [db (mget me :db)]
+                      (assert (stg/DB) (str "DB not populated but cell :db is: " db))
+                      ;; Now we can load any existing todos from storage...
+                      (dp :todos-see-sdb db)
+                      (todo/make-ToDoList "todo"
+                        (stg/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todos-dashboard)]}
