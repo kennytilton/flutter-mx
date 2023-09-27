@@ -5,6 +5,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
+    [tilton.mx.api :refer [with-par dp dpx cF cF+ cI mget mswap! mset! maprop fasc fm* fmuval fmu minfo] :as mx]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding in-my-context]]))
@@ -22,13 +23,15 @@
 
           (title-section)
 
-          (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-            (into [] (for [[ico label] [[m/Icons.call "CALL"]
-                                        [m/Icons.near_me "ROUTE"]
-                                        [m/Icons.share "SHARE"]]]
-                       (button-column (in-my-context [me ctx]
-                                        (.-primaryColor (m/Theme.of ctx)))
-                         ico label))))
+          (fx/builder
+            (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+              (into [] (for [[ico label] [[m/Icons.call "CALL"]
+                                          [m/Icons.near_me "ROUTE"]
+                                          [m/Icons.share "SHARE"]]]
+                         (button-column (in-my-context [me ctx]
+                                          (dp :butt-col-sees-ctx ctx (minfo me))
+                                          (.-primaryColor (m/Theme.of ctx)))
+                           ico label)))))
 
           (padding {:padding (m/EdgeInsets.all 32)}
             (text {:softWrap true}
@@ -52,6 +55,7 @@
       (text "41"))))
 
 (defn button-column [color icon label]
+  (dp :buttcol-sees-color color)
   (column {:mainAxisSize      m/MainAxisSize.min
            :mainAxisAlignment m/MainAxisAlignment.center}
     {:name :button-col}
