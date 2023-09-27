@@ -14,6 +14,7 @@
 
 (def +hello+ "Hello!! ")
 (def +bye+ "Bye!! ")
+(def +socket-server+ "wss://socketsbay.com/wss/v2/1/demo/")
 
 (defn make-app []
   (material-app
@@ -28,7 +29,7 @@
                                          {:msg message
                                           :now (rand-int 99999)}))))]
                       (.connect wsc/WebSocketChannel
-                        (Uri.parse "ws://localhost:10000/.ws")))
+                        (Uri.parse +socket-server+ #_ "ws://localhost:10000/.ws")))
      :salute        (cI +hello+)
      :socket-msg-in (cI nil
                       ; ephemeral? defeats MX policy of ignoring "new" values that
