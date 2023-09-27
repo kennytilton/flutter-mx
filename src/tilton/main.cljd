@@ -41,12 +41,17 @@
 (defn main [] ;<id:1673573645>
   (fx/run-app
     (hot-reload-detector
-      (dp :main-entry-dp4!!!!!)
       (cty/cells-reset)
       (md/md-quiesce-feature! true)
-      (binding [cty/*dpc-enabled* true]
-        (testing/run-tests)
-        (fx/fx-render nil (counter/make-app))))))
+      (fx/widget-key-clear)
+      (.ensureInitialized w/WidgetsFlutterBinding)
+      ;; (fxk/fmx-debugger-set! sample-debugger)
+      (binding [cty/*dpc-enabled* false]
+        ;(testing/run-tests)
+        (fx/fx-render nil
+          (if false
+            (counter/make-app)
+            (eg/select)))))))
 
 
 (defmacro hot-reload-detector
