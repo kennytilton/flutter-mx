@@ -172,7 +172,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (chk (cref? c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)
                          " bits " (apply str bits)))
     (when-let [dbg (c-debug c)]
-      (when (or (true? dbg) (some #{category} dbg))
+      (when (or (true? dbg) (= category dbg) (when (vector? dbg) (some #{category} dbg)))
         (apply dp :DPC category (first bits) (cinfo c) (rest bits))))))
 
 ;; --- dependency maintenance --------------------------------

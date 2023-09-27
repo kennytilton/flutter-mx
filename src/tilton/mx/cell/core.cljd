@@ -188,6 +188,7 @@
      :value tilton.mx.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
+#_
 (defmacro cFn-until [args & body]
   `(make-c-formula
      :optimize :when-value-t
@@ -255,7 +256,7 @@
      :rule (c-fn ~@body)
      ~@keys))
 
-(defmacro cf-freeze [& [value]]
+(defmacro cf-freeze! [& [value]]
   (let [value-ref (or value '_cache)]
     `(do
        (rmap-set! [:optimize ~'_cell] :freeze)
@@ -312,9 +313,9 @@ in the CL version of Cells SETF itself is the change API dunction."
     (c-value-assume c new-value nil)
     ;-------------------------------------------
     :else
-    (do (dpc c :cset :cset!!!-integrity!!!!!!!!! new-value (cinfo c))
+    (do (dpc c :cset :cset!!!-pre-w-integrity!!!!!!!!! new-value (cinfo c))
         (with-integrity (:change (c-prop c))
-          (dpc c :cset :cset!-pre-ass-fires!!! (cinfo c) new-value)
+          (dpc c :cset :cset!-pre-cvass-fires!!! (cinfo c) new-value)
           (c-value-assume c new-value nil)))))
 
 (defn cswap! [c swap-fn & swap-fn-args]

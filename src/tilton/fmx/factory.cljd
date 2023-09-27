@@ -224,7 +224,7 @@
   (when (mx/md-quiesce-feature?)
     (when prior-value
       (cond
-        (mref? prior-value) (wtrx [0 999 nil :mdq-lost-solo!!!!!!! (cinfo cell) :prior (minfo prior-value)]
+        (mref? prior-value) (wtrx [0 999 :mdq-lost-solo!!!!!!! (cinfo cell) :prior (minfo prior-value)]
                               (md-quiesce-if-owned! (c-model cell) prior-value))
         (coll? new-value) (cond
                             (coll? prior-value)
@@ -232,11 +232,11 @@
                               (when-not (empty? lost)
                                 (doseq [md lost]
                                   (when (mref? md)
-                                    (wtrx [0 999 nil :mdq-lost-coll-diff (cinfo cell) :lostk (minfo md)]
+                                    (wtrx [0 999 :mdq-lost-coll-diff (cinfo cell) :lostk (minfo md)]
                                       (md-quiesce-if-owned! (c-model cell) md))))))
                             :else (when (mref? prior-value)
                                     (when-not (some #{prior-value} new-value)
-                                      (wtrx [0 999 nil :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
+                                      (wtrx [0 999 :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
                                         (md-quiesce-if-owned! (c-model cell) prior-value)))))))))
 
 (deftype FXDartWidget []

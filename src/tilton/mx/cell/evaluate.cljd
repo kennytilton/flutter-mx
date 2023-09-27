@@ -85,7 +85,7 @@
       ;; --- also easy with an optimize edge case lost to history -------
       (and (c-input? c)
         (c-valid? c)                                        ;; a cFn (ruled-then-input) cell will not be valid at first
-        (not (and (c-formula? c)
+        #_ (not (and (c-formula? c)
                (= (c-optimize c) :when-value-t)
                (nil? (c-value c)))))
       (c-value c)
@@ -130,7 +130,7 @@
   (cond
     (c-optimized-away? c)
     (do
-      (dp :ILLOGIC-cget-sees-OPTI-c (cinfo c))
+      (dp :WARNING-cget-sees-OPTI-c @c)
       (c-value c))
 
     (c-quiesced? c)
@@ -363,7 +363,6 @@
           (dpc c :cnset :CVASS_SETS!!!! new-value)
           (rmap-set! [:value c] new-value)
           (rmap-set! [:state c] :awake)
-          (rmap-set! [:pulse-last-changed c] @+pulse+)
 
           #_(trx :new-vlue-installed (c-prop c) new-value (:value c))
           ;;
@@ -384,22 +383,33 @@
 
           (dpc c :propagate :PROP-maybe-caller-ct (count callers))
 
-          (when (or
+          (let [known-changed? (atom nil)]
+            (if (or
                   (not (some #{prior-state} [:valid :uncurrent]))
                   (= propagation-code true)                 ;; forcing
                   (when-not (= propagation-code false)
-                    (c-value-changed? c new-value prior-value)))
+                    (dpc c :evic :evic-checking-changed!! (c-value-changed? c new-value prior-value)
+                      (cinfo c))
+                    (reset! known-changed?
+                      (c-value-changed? c new-value prior-value))))
             ;; --- something happened ---
             ;; we may be overridden by a :no-propagate below, but anyway
             ;; we now can look to see if we can be optimized away
             (let []
               ;; --- data flow propagation -----------
+              (when (or @known-changed?
+                      ; next happens if changed test in conditional not reached
+                      (and (nil? @known-changed?)
+                        (c-value-changed? c new-value prior-value)))
+                (dpc c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
+                (rmap-set! [:pulse-last-changed c] @+pulse+))
 
               (when-not (or (= propagation-code :no-propagate)
                           #_(c-optimized-away? c))
                 ;;(chk (map? @c))
                 (dpc c :propagate :PROP-YES-caller-ct (count callers))
-                (propagate c prior-value callers)))))))))
+                (propagate c prior-value callers)))
+            (dpc c :propagate :NOT-PROPAGATING))))))))
 
 ;; --- unlinking ----------------------------------------------
 (defn unlink-from-used [c why]
@@ -434,7 +444,7 @@ then clear our record of them."
   (when (and (c-formula? c)
           (or (empty? (c-useds c))
             (= :freeze (c-optimize c))
-            (and (= :when-value-t (c-optimize c))
+            #_ (and (= :when-value-t (c-optimize c))
               (not (nil? (c-value c)))))
           (not (c-on-quiesce c))
           (c-optimize c)

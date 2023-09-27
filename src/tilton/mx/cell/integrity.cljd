@@ -20,17 +20,17 @@
   ([] (data-pulse-next :anon))
   ([pulse-info]
    (when-not *one-pulse?*
-     ;(dp :PULSE-NEXT!! pulse-info (inc @+pulse+))
+     (dpx :PULSE-NEXT!! pulse-info (inc @+pulse+))
      (swap! +pulse+ inc))))            ;; try as commute?
 
 (defn c-current? [c]
-  (cty/dpc c :pulse :current?-SEES-C-at (c-pulse c) :now-at (cty/pulse-now))
+  (cty/dpc c :c-current?-SEES-C-pulse (c-pulse c) :+PULSE+ (cty/pulse-now))
   (= (c-pulse c) (cty/pulse-now)))
 
 (defn c-pulse-update [c key]
   (when-not (c-optimized-away? c)
     (chk (>= (pulse-now) (c-pulse c)))
-    (dpc c :pulse :PULSE-BUMP!!! key (c-pulse c) (pulse-now))
+    (dpc c :pulse :c-pulse-upd!!! key (c-pulse c) (pulse-now))
     (swap! c assoc :pulse (pulse-now))))
 
 ;; --- ufb utils ----------------------------
@@ -174,6 +174,7 @@
               (dpx :cwi-go-1 opcode @wi-depth)
               (when (or (zero? @+pulse+)
                       (= opcode :change))
+                ;; todo do not bump pulse until actual change confirmed
                 (data-pulse-next [:cwi opcode defer-info]))
 
               ;;(pln :cwi-action!! opcode )

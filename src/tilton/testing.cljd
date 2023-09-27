@@ -1,0 +1,40 @@
+(ns tilton.testing
+  (:require
+    [tilton.mx.base :refer [dp]]
+    [tilton.test.cell-core :refer [run-tests] :as test-cell-core]
+    [tilton.test.hello-cells :refer [run-tests] :as hello-cells]
+    [tilton.test.evaluate :refer [run-tests] :as test-eval]
+    [tilton.test.observer :refer [run-tests] :as test-obs]
+    [tilton.test.integrity :refer [run-tests] :as test-integ]
+    [tilton.test.lazy-cells :refer [run-tests] :as test-lazy]
+    ;[tilton.test.synapse :refer [run-tests] :as test-syn]
+    [tilton.test.model-core :refer [run-tests] :as md]
+    [tilton.test.family-kids :refer [run-tests] :as fm-kids]
+    ))
+
+(defn run-test-lazy []
+  (test-lazy/run-tests)
+  (dp :test-lzy-ok))
+
+(defn run-tests []
+  (dp :start-tests)
+  (do (test-cell-core/run-tests)
+    (dp :cell-core-ok))
+  (hello-cells/run-tests)
+  (dp :hello-cells-ok)
+  (test-eval/run-tests)
+  (dp :eval-ok)
+  (test-obs/run-tests)
+  (dp :obs-watch-ok)
+  (test-integ/run-tests)
+  (dp :integ-ok)
+  (test-lazy/run-tests)
+  (dp :lazy-ok)
+  (md/run-tests)
+  (dp :md-ok)
+  (fm-kids/run-tests)
+  (dp :fm-kids-ok)
+  ; TODO synapses (test-syn/run-tests)
+  (hello-cells/run-tests)
+  (dp "testing-OK"))
+

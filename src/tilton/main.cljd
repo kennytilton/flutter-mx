@@ -11,10 +11,12 @@
      :refer [wtrx dp dpx trx]]
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.api :as fx]
+    [tilton.testing :as testing]
     [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     ))
 
+#_
 (defn main []
   (dp :main-entry-dp2!!)
   (cty/cells-reset)
@@ -32,9 +34,58 @@
         (counter/make-app)
         (eg/select))))                                   ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
 
-  ;; (testing/run-tests)
+  (testing/run-tests)
 
   (dp :main-exit))
+
+(defn main [] ;<id:1673573645>
+  (fx/run-app
+    (hot-reload-detector
+      (dp :main-entry-dp4!!!!!)
+      (cty/cells-reset)
+      (md/md-quiesce-feature! true)
+      (binding [cty/*dpc-enabled* true]
+        (testing/run-tests)
+        (fx/fx-render nil (counter/make-app))))))
+
+
+(defmacro hot-reload-detector
+  [& body]
+  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
+        state-sym `^w/State state#
+        super-sym `super#
+        user-widget
+        `(reify :extends (w/StatefulWidget.)
+           :no-meta true
+           (~'createState [_#]
+             (reify :extends w/State
+               :no-meta true
+               (~'initState [~state-sym]
+                 (.initState ~(vary-meta state-sym assoc :tag 'super))
+                 nil)
+               (^void ~'reassemble [this#]
+                 (.reassemble ^{:tag ~'super} this#)
+                 (repl-ish))
+               (~'dispose [~state-sym]
+                 (.dispose ~(vary-meta state-sym assoc :tag 'super)))
+               (~'build [~state-sym ~flutter-build-ctx]
+                 ~@body))))]
+    user-widget))
+
+;; (set! r/debugPaintSizeEnabled true)
+;; (w/debugDumpApp)
+
+ (defn repl-ish []
+   (dp :REPL-ish-on-reload!!!!!!!!!!!))
+
+
+
+
+
+ ;(defn main [] ;<id:1673573645>
+ ; (fx/run-app
+ ;  (hot-reload-detector
+ ;   (fx/fx-render nil (home/make)))))
 
 (defn sample-debugger [opcode data]
   (case opcode
@@ -53,44 +104,3 @@
                  (dp :rebld-sees-defunct (.-debugIsDefunct elt))
                  (dp :rebld-elt-str (.toString elt)))))
     (dp :unrecognized-debug-opcode opcode data)))
-
-;; (set! r/debugPaintSizeEnabled true)
-;; (w/debugDumpApp)
-
-; (defn repl-ish []
-;  (do (dart:core/print :on-reload)
-;      (bt/scan! 3)
-;      (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
-;      (await (.delayed dc/Future (dc/Duration .milliseconds 2000)))
-;      (await (.delayed dc/Future (dc/Duration .milliseconds 2000))))
-;  (do
-;    nil
-;    ))
-
-;(defmacro hot-reload-detector
-;  [& body]
-;  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
-;        state-sym `^w/State state#
-;        super-sym `super#
-;        user-widget
-;        `(reify :extends (w/StatefulWidget.)
-;           :no-meta true
-;           (~'createState [_#]
-;            (reify :extends w/State
-;              :no-meta true
-;              (~'initState [~state-sym]
-;               (.initState ~(vary-meta state-sym assoc :tag 'super))
-;               nil)
-;              (^void ~'reassemble [this#]
-;               (.reassemble ^{:tag ~'super} this#)
-;               (repl-ish))
-;              (~'dispose [~state-sym]
-;               (.dispose ~(vary-meta state-sym assoc :tag 'super)))
-;              (~'build [~state-sym ~flutter-build-ctx]
-;               ~@body))))]
-;    user-widget))
-;
-; (defn main [] ;<id:1673573645>
-;  (fx/run-app
-;   (fx/hot-reload-detector
-;    (fx/fx-render nil (home/make)))))
