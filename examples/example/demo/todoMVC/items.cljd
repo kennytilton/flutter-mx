@@ -26,7 +26,7 @@
 (defn todo-delete-callback [todo tag]
   (as-dart-callback [& [direction]]
     (todo/ToDoList-delete! (my-todo-list)
-                           (todo/td-stg-id todo))))
+      (todo/td-stg-id todo))))
 
 (defn- delete-button [todo]
   (fx/visibility
@@ -42,7 +42,7 @@
                          .color (cmm/title-red)
                          .fontWeight m/FontWeight.w200
                          .fontSize 20.0)}
-               "X"))))
+        "X"))))
 
 (defn to-do-display [todo]
   (fx/list-tile
@@ -54,9 +54,9 @@
                                      .color m/Colors.grey
                                      .decoration p.TextDecoration/lineThrough)
                                    (p/TextStyle .color
-                                                (if (mget todo :ae-events?)
-                                                  m/Colors.red
-                                                  m/Colors.blue))))}
+                                     (if (mget todo :ae-events?)
+                                       m/Colors.red
+                                       m/Colors.blue))))}
                      {:name :todo-li-title-text}
                      (td-title todo)))}
     {:name :todo-dsp
@@ -72,7 +72,7 @@
          trimmed (str/trim value)]
      (cond
        (str/blank? trimmed) (mswap! (my-todo-list) :kids
-                                    (partial remove (fn [td] (= stg-id (td-stg-id td)))))
+                              (partial remove (fn [td] (= stg-id (td-stg-id td)))))
        :else (do
                (mset! todo :title trimmed)                  ;; two dataflow triggers
                (mset! (fasc :item-control) :editing? false))))))
@@ -101,29 +101,29 @@
                       (fx/material {:elevation   3.0
                                     :color       m/Colors.white
                                     :shadowColor m/Colors.black}
-                                   ;; doing our best ^^^^ to emulate official TodoMVC styling. Looks great.
-                                   (fx/text-field {:autofocus   true
-                                                   :focusNode   (cF (m/FocusNode
-                                                                      .onKeyEvent (fn [node ^m/KeyEvent event]
-                                                                                    ;; spec says to abandon edit if Escape key pressed
-                                                                                    (cty/with-mx-isolation
-                                                                                      (cond
-                                                                                        (and (dart/is? event srvc/KeyDownEvent)
-                                                                                             (= "Escape" (.-keyLabel (.-logicalKey event))))
-                                                                                        (do
-                                                                                          (mset! (fasc :item-control) :editing? false)
-                                                                                          m/KeyEventResult.handled)
-                                                                                        :else m/KeyEventResult.ignored)))))
-                                                   :decoration  (m/InputDecoration
-                                                                  .border (m/OutlineInputBorder
-                                                                            .borderRadius (m/BorderRadius.all
-                                                                                            (m.Radius/circular 0.0)))
-                                                                  .contentPadding (m/EdgeInsets.all 9.0))
-                                                   :onSubmitted (cF (as-dart-callback [value]
-                                                                      (commit-to-do-editing me todo value)))
-                                                   :controller  (cFonce (fx/text-field-controller-basic me))}
-                                                  {:name  :todo-editor
-                                                   :value (cI title)}))))))}
+                        ;; doing our best ^^^^ to emulate official TodoMVC styling. Looks great.
+                        (fx/text-field {:autofocus   true
+                                        :focusNode   (cF (m/FocusNode
+                                                           .onKeyEvent (fn [node ^m/KeyEvent event]
+                                                                         ;; spec says to abandon edit if Escape key pressed
+                                                                         (cty/with-mx-isolation
+                                                                           (cond
+                                                                             (and (dart/is? event srvc/KeyDownEvent)
+                                                                               (= "Escape" (.-keyLabel (.-logicalKey event))))
+                                                                             (do
+                                                                               (mset! (fasc :item-control) :editing? false)
+                                                                               m/KeyEventResult.handled)
+                                                                             :else m/KeyEventResult.ignored)))))
+                                        :decoration  (m/InputDecoration
+                                                       .border (m/OutlineInputBorder
+                                                                 .borderRadius (m/BorderRadius.all
+                                                                                 (m.Radius/circular 0.0)))
+                                                       .contentPadding (m/EdgeInsets.all 9.0))
+                                        :onSubmitted (cF (as-dart-callback [value]
+                                                           (commit-to-do-editing me todo value)))
+                                        :controller  (cFonce (fx/text-field-controller-basic me))}
+                          {:name  :todo-editor
+                           :value (cI title)}))))))}
     {:name :todo-edt
      :todo todo
      :host me}))
@@ -153,8 +153,8 @@
                        ;; list with separator cannot hide separator when item hidden, so
                        ;; we fake a separator with a top border on the container
                        (m/BoxDecoration .border
-                                        (m/Border .top (m/BorderSide .width 0.5
-                                                                     .color (.-dividerColor (.of m/Theme context))))))}
+                         (m/Border .top (m/BorderSide .width 0.5
+                                          .color (.-dividerColor (.of m/Theme context))))))}
         (fx/gesture-detector
           {:onDoubleTap (as-dart-callback []
                           (when (not (mget me :editing?))
@@ -193,8 +193,8 @@
                    exg (some (fn [li]
                                (when (= stg-id (.-value ^m/ValueKey (mget li :key)))
                                  li))
-                             (when (not= mx/unbound _cache) _cache))
+                         (when (not= mx/unbound _cache) _cache))
                    ]
                (or exg (todo-list-item todo))))
-           (sort-by todo/td-created-at
-                    (todo/app-todos (my-app)))))))
+        (sort-by todo/td-created-at
+          (todo/app-todos (my-app)))))))

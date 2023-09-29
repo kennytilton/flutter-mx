@@ -23,13 +23,12 @@
 
           (title-section)
 
-          (fx/builder
+          (fx/builder                                       ;; supplies extra context to support Theme.of
             (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
               (into [] (for [[ico label] [[m/Icons.call "CALL"]
                                           [m/Icons.near_me "ROUTE"]
                                           [m/Icons.share "SHARE"]]]
                          (button-column (in-my-context [me ctx]
-                                          (dp :butt-col-sees-ctx ctx (minfo me))
                                           (.-primaryColor (m/Theme.of ctx)))
                            ico label)))))
 
@@ -55,7 +54,6 @@
       (text "41"))))
 
 (defn button-column [color icon label]
-  (dp :buttcol-sees-color color)
   (column {:mainAxisSize      m/MainAxisSize.min
            :mainAxisAlignment m/MainAxisAlignment.center}
     {:name :button-col}

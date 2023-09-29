@@ -12,8 +12,10 @@
     ["package:flutter/painting.dart" :as p]
     ["package:web_socket_channel/web_socket_channel.dart" :as wsc]))
 
-(def +hello+ "Hello!! ")
+(def +hello+ "Hello!! Is this thing on?")
 (def +bye+ "Bye!! ")
+
+;;; Visit https://socketsbay.com/test-websockets and connect
 (def +socket-server+ "wss://socketsbay.com/wss/v2/1/demo/")
 
 (defn make-app []
@@ -37,6 +39,7 @@
                       ; if we get the same message twice in a row, we want to process it again.
                       ; (Attaching a timestamp or other differentiator fails if a second dependency changes.)
                       :ephemeral? true
+                      :debug true
                       :watch (fn [_ _ new _ _]
                                (dp :socket-msg-watch new)))}
     (scaffold
@@ -45,6 +48,7 @@
        (floating-action-button
          {:onPressed (as-dart-callback []
                        (when-let [c ^wsc/WebSocketChannel (maprop :channel)]
+                         (dp :sending-World!!!! )
                          (.add (.-sink c) (str "World"))))
           :tooltip   "Send msg"}
          (m/Icon m/Icons.add .color m/Colors.black))}
