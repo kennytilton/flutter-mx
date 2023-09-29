@@ -37,10 +37,11 @@
     [example.eg.x029a-layout-kid-builder :as x029]
     [example.eg.flutter-layout-tutorial :as dlayout]
     [example.eg.flutter-tts :as tts]
-    [example.eg.x045-websocket :as sock]))
+    [example.eg.x045-websocket :as sock]
+    [example.eg.x050-just-audio :as just]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (counter/make-app))
+  (just/make-app))
 
 

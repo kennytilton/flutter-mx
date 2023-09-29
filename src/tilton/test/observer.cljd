@@ -1,0 +1,96 @@
+(ns tilton.test.observer
+  (:require
+    [tilton.mx.base
+     :refer [trx dp dpx prog1]]
+
+    [tilton.mx.foundation :refer [mx-type]]
+    [tilton.mx.model.peek :refer [minfo mref? minfo c-type cref? cinfo Cell CellFormula]]
+    [tilton.mx.cell.base
+     :refer [without-c-dependency c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input?
+              cells-init c-callers c-useds
+             c-model  c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes*
+             c-rule c-me c-value-state c-callers
+             unlink-from-callers *causation*
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
+             c-lazy] :as cty]
+    [tilton.mx.cell.evaluate :refer [cget]]
+    [tilton.mx.cell.observer :refer [fn-obs]]
+
+    [tilton.mx.cell.core
+     :refer [cF cF+ cI cset!]]
+    [tilton.mx.model.peek :refer [mref?]]
+    ))
+
+(defn t-formula []
+  (cells-init)
+  (let [bingo (atom false)
+        c (cF+ [:prop :bingo
+                :watch (fn-obs
+                         (reset! bingo true))]
+            (+ 40 2))]
+    (assert (dart/is? (c-type c) CellFormula))
+    (assert (= (c-value-state c) :unbound))
+    (assert (= #{} (c-callers c)))
+    (assert (= #{} (c-useds c)))
+    (assert (not (c-input? c)))
+    (assert (not (c-valid? c)))
+    (assert (nil? (c-model c)))
+    (dp :cget-before (cget c) :deref @c)
+    (assert (= (cget c) 42))
+    (assert @bingo)
+    ))
+
+(defn test-input []
+  (let [bingo2 (atom 0)
+        c (cI 42 :prop :bingo2
+            :watch (fn-obs
+                     (dp :test-input-obs-runs!!!)
+                     (swap! bingo2 inc)))]
+    (assert (dart/is? (c-type c) Cell))
+    (assert (= (c-value-state c) :valid))
+    (assert (= #{} (c-callers c)))
+    (assert (c-input? c))
+    (assert (c-valid? c))
+    (assert (nil? (c-model c)))
+    (assert (= :bingo2 (c-prop c) (c-prop-name c)))
+    (assert (= (cget c) 42))
+    (assert (= 1 @bingo2))
+
+    (cset! c 54)
+    (assert (= (cget c) 54))
+    (assert (= 2 @bingo2))))
+
+(defn t-custom-obs []
+  (let [bobs (atom nil)
+        b (cI 2 :prop :bb
+            :watch (fn-obs
+                     (dp :watch-b prop me new old)
+                     (reset! bobs new)))
+        cobs (atom nil)
+        c (cF+ [:watch (fn-obs [prop me new old c]
+                         (trx prop me new old)
+                         (reset! cobs new))]
+            (* 10 (cget b)))]
+    (do
+      (dp :MX-built!------------------)
+      (assert (= @bobs nil) (str "@bobs not nil: " @bobs))
+      (assert (= (cget b) 2))
+      (assert (= @bobs 2) (str "@bobs not nil: " @bobs))
+      (assert (= (cget c) 20))
+      (assert (= @cobs 20))
+      (cset! b 3)
+      (assert (= 3 @bobs))
+      (assert (= 30 (cget c)))
+      (assert (= 30 @cobs)))))
+
+(defn run-tests []
+  (t-formula)
+  (test-input)
+  (t-custom-obs)
+  (dp :observer-tests-OK))
+
+

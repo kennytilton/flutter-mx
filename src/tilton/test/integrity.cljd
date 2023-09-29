@@ -1,0 +1,197 @@
+(ns tilton.test.integrity
+  (:require
+    [tilton.mx.base :refer [trx dp dpx prog1]]
+
+    [tilton.mx.cell.base
+     :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input?
+             c-model c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes*
+             c-rule c-me c-value-state c-callers
+             unlink-from-callers *causation*
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
+             c-lazy] :as cty]
+    [tilton.mx.cell.integrity :refer [with-integrity ufb-add]]
+    [tilton.mx.cell.evaluate :refer [cget cget]]
+    [tilton.mx.cell.observer
+     :refer [fn-obs]]
+
+    [tilton.mx.cell.core
+     :refer [cF cF+ c-reset-next! cI cset! cset!]]
+    [tilton.mx.model.peek :refer [mref?]]
+    ))
+
+(defn obsdbg []
+  ;;(fn-obs (trx :obsdbg prop new old (type-of c)))
+  )
+
+
+(defn obs-set! []
+  (cells-init)
+  (assert (zero? @+pulse+))
+  (do                                                       ;;binding [*dp-log* true]
+    (let [alarm (cI :undefined :watch (obsdbg))
+          act (cI nil :watch (obsdbg))
+          loc (cF+ [:watch (fn-obs
+                             (when-not (= new :missing)
+                               (assert (= @+pulse+ 2))
+                               (c-reset-next! alarm
+                                 (case new
+                                   :home :off
+                                   :away :on
+                                   (throw (Exception. (str "unexpected loc " new)))))))]
+                (case (cget act)
+                  :leave :away
+                  :return :home
+                  :missing))
+          alarm-speak (cF+ [:watch (fn-obs
+                                     (assert (= (cget alarm) (case (cget act)
+                                                               :return :off
+                                                               :leave :on
+                                                               :undefined)))
+                                     (assert (= +pulse+
+                                               (c-pulse act)
+                                               (c-pulse loc)
+                                               (c-pulse c))))]
+                        (str "alarm-speak sees act " (cget act)))]
+      (assert (= (cget alarm) :undefined))
+      (assert (= 1 @+pulse+))
+      (assert (= (cget loc) :missing))
+      (assert (= 1 @+pulse+))
+
+      (cset! act :leave)
+      (assert (= 3 @+pulse+))
+      )))
+
+;; -----------------------------------------------------------------
+
+
+(defn obs-set!-bad-caught []
+  (cells-init)
+
+  (let [alarm (cI :undefined :watch (obsdbg))
+        act (cI nil :watch (obsdbg))
+        loc (cF+ [:watch (fn-obs
+                           #_;; fails on empty str or sth
+                                   (assert (thrown-with-msg?
+                                             #?(:clj Exception :cljs js/Error)
+                                             #"cset!> change"
+                                             (cset! act :leave)))
+                           (when-not (= new :missing)
+                             (c-reset-next! alarm (case new
+                                                    :home :off
+                                                    :away :on
+                                                    (throw (Exception. (str "unexpected loc " new)))))))]
+              (case (cget act)
+                :leave :away
+                :return :home
+                :missing))
+        alarm-speak (cF+ [:watch (fn-obs
+                                   (dp :alarm-speak (cget act) :sees (cget alarm) (cget loc))
+                                   (assert (= (cget alarm) (case (cget act)
+                                                             :return :off
+                                                             :leave :on
+                                                             :undefined)))
+                                   (assert (= +pulse+
+                                             (c-pulse act)
+                                             (c-pulse loc)
+                                             (c-pulse c))))]
+                      (str "alarm-speak sees act " (cget act)))]
+    (assert (= (cget alarm) :undefined))
+    (assert (= 1 @+pulse+))
+    (assert (= (cget loc) :missing))
+    (assert (= 1 @+pulse+))
+
+    ))
+
+;; --------------------------------------------------------
+
+(defn see-into-fn []
+  (let [sia (cI 0)
+        rsic (atom false)
+        sic (cF (reset! rsic true)
+              (+ 42 (cget sia)))
+        fsia #(cget sia)
+        sib (cF (or (+ 1 (fsia))
+                  (cget sic)))]
+    (assert (= (cget sib) 1))
+    (assert (= (:useds @sib) #{sia}))
+    (assert (not @rsic))
+    (cset! sia 1)
+    (assert (= 2 (:value @sib)))
+    (assert (= (cget sib) 2))))
+
+(defn obs-sees-current []
+  ;
+  ; Confirm that observers only see values current with
+  ; the current update. Todo: have observers kick off deferred
+  ; updates and confirm we do not see *future* updates.
+  ;
+  (let [obs (atom nil)
+        obsd (atom {})
+        obsr (fn [tag]
+               (fn-obs (let [o (apply concat
+                                 (sort-by first
+                                   (for [[k v] @obs]
+                                     [k (cget v)])))]
+                         (swap! obsd update-in [(cget (:a @obs))] conj o)
+                         ;(dp :tag tag :a (cget (:a @obs)))
+                         ;(dp :tag tag :sees o)
+                         )))
+        a (cI 0 :watch (fn-obs (dp :a-now new)))
+        b (cF+ [:watch (obsr :b)]
+            (* 10 (cget a)))
+        c (cF+ [:watch (obsr :c)]
+            (* 100 (cget a)))
+        d (cF+ [:watch (fn-obs (dp :d-now new))]
+            (+ (cget b) (cget c) (cget a)))
+        e (cF+ [:watch (fn-obs (dp :e-now new))]
+            (+ (cget c) (cget b) (cget a)))
+        ]
+    (reset! obs {:a a :b b :c c})
+    (assert (= 0 (cget d) (cget e) (cget a) (cget c) (cget b)))
+
+    (cset! a 1)
+    (assert (= 1 (cget a)))
+    (assert (= 10 (cget b)))
+    (assert (= 100 (cget c)))
+    (assert (= 111 (cget d)))
+    (assert (= 111 (cget e)))
+    (dp @obsd)
+    (doseq [[k v] @obsd]
+      (assert (apply = v)))))
+
+(defn no-prop-no-obs []
+  (let [sia (cI 0)
+
+        obs (atom false)
+        sib (cF+ [:watch (fn-obs (reset! obs true))]
+              (if (even? (cget sia))
+                42
+                10))
+        run (atom false)
+        sic (cF (reset! run true)
+              (/ (cget sib) 2))]
+    (assert (= (cget sib) 42))
+    (assert (= (cget sic) 21))
+    (assert @obs)
+    (assert @run)
+    (do
+      (reset! obs false)
+      (reset! run false))
+    (cset! sia 2)
+    (assert (= (cget sib) 42))
+    (assert (= (cget sic) 21))
+    (assert (not @obs))
+    (assert (not @run))))
+
+(defn run-tests []
+  (obs-set!)
+  (obs-set!-bad-caught)
+  (see-into-fn)
+  (obs-sees-current)
+  (no-prop-no-obs)
+  (dp :integrity-tests-OK))
+

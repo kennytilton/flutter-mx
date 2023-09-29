@@ -1,0 +1,69 @@
+(ns tilton.test.family-kids
+  (:require
+    [tilton.mx.foundation :refer [mx-type]]
+    [tilton.mx.base
+     :refer [trx dp dpx prog1 *trx?*]]
+
+    [tilton.mx.cell.base
+     :refer [without-c-dependency cells-init c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input?
+             c-model c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes* unbound
+             c-rule c-me c-value-state c-callers
+             unlink-from-callers *causation*
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
+             c-lazy] :as cty]
+    [tilton.mx.cell.integrity :refer [with-integrity]]
+    [tilton.mx.cell.observer
+     :refer [fn-obs]]
+    [tilton.mx.cell.core
+     :refer [cF cF+ c-reset-next! cFonce cFn
+             cI cset! make-cell make-c-formula]]
+    [tilton.mx.cell.evaluate :refer [cget]]
+    [tilton.mx.model.peek :refer [mref? cref?]]
+    [tilton.mx.model.base :refer [md-cz md-cell]]
+    [tilton.mx.model.core
+     :refer [the-kids mdv! mget fm! make mset! *md-quiesce-log?*]
+     :as md]
+    ))
+
+(defn k-notq2be []
+  (binding [*md-quiesce-log?* true]
+    (let [f (md/make-family
+              :ee (cI 2)
+              :kids (cF (the-kids
+                          (when (odd? (mget me :ee))
+                            (md/make
+                              :name :yep
+                              :value (cF+ [:debug :quiesce]
+                                       (do
+                                         (let [par (:parent @me)]
+                                           (let [ee (mget par :ee)]
+                                             (* 14 ee))))))))))]
+      (assert (dart/is? (mx-type f) md/Family)
+        (str "k-notq2be bad family"))
+      (assert (empty? (mget f :kids)))
+
+      (do
+        (mset! f :ee 3)
+        (assert (not (empty? (mget f :kids))))
+        (assert (= 42 (mdv! :yep :value f)))
+
+        (dp :ok-42!!!!!!!!)
+        (let [dmw (first (mget f :kids))]
+          (assert (mref? dmw))
+          (mset! f :ee 0)
+          (assert (empty? (mget f :kids)))
+
+          (dp :dmw @dmw :meta (meta dmw))
+          ;; todo get kids observe to quiesce kids
+
+          (assert (= :md-quiesced (:state (meta dmw)))))))))
+
+(defn run-tests []
+  (k-notq2be)
+  (dp :family-kids-OK))
+
+

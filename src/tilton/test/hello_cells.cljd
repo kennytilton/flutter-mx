@@ -1,0 +1,202 @@
+(ns tilton.test.hello-cells
+  (:require
+    [tilton.mx.base
+     :refer [trx dp dpx prog1 *trx?* dp]]
+
+    [tilton.mx.model.peek :refer [minfo mref? cref?]]
+    [tilton.mx.cell.base
+     :refer [without-c-dependency
+             cells-init c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input?
+             c-model  c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes* unbound
+             c-rule c-me c-value-state c-callers
+             unlink-from-callers *causation*
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
+             c-lazy] :as cty]
+    [tilton.mx.cell.integrity :refer [with-integrity]]
+    [tilton.mx.cell.observer
+     :refer [ fn-obs]]
+    [tilton.mx.cell.core
+     :refer [cF cF+ c-reset-next! cFonce cFn cI cset! make-cell make-c-formula]]
+    [tilton.mx.cell.evaluate :refer [cget c-awaken]]))
+
+(defn hw-01 []
+  (let [v ;;"visitor"
+        {:name "World"
+         :action (make-cell :value "knocks"
+                   :input? true)}]
+
+    ; commenting out obsoletes:
+    ;   cget now must be passed a cell
+    ;   if we want vars possibly holding standalone cells to
+    ;   sometimes not be a cell, we need some work.
+    (dp :hw01 v)
+
+    ;(dp :name (cget (:name v)))
+
+    (dp :name-act (:name v)
+      (cget (:action v)))
+
+
+
+    (assert (=  (:name v) "World"))
+    (assert (=  (cget (:action v)) "knocks"))))
+
+(defn hw-02 []
+  (let [obs-action (atom nil)
+        v ;;"visitor"
+        {:name "World"
+         :action (cI nil
+                   :prop :v-action
+                   :watch ;; short for observer
+                   (fn [prop me new old c]
+                     (reset! obs-action new)
+                     (dp :observing prop new old)))}]
+    (assert (=  (:name v) "World"))
+    (cset! (:action v) "knocks")
+    (assert (=  (cget (:action v)) "knocks"))
+    (assert (= "knocks" @obs-action))))
+
+(defn hw-03 []
+  (let [action (atom nil)
+        obs-action (fn [prop me new old c]
+                     (reset! action new)
+                     (dp :observing prop new old))
+        v {:name "World"
+           :action (cI nil :prop :v-action
+                     :watch obs-action)}]
+
+    (assert (nil? (cget (:action v))))
+    (assert (nil? @action))
+
+    (cset! (:action v) "knock-knock")
+    (assert (= "knock-knock" @action))
+    (assert (= (cget (:action v)) "knock-knock"))))
+
+(defn gobs [prop me new old c]
+  (dp :gobs> prop new old))
+
+(defn hw-04 []
+  (let [r-action (cI nil
+                   :prop :r-action
+                   :watch gobs)
+        r-loc (make-c-formula
+                :prop :r-loc
+                :watch gobs
+                :rule (fn [c]
+                        (case (cget r-action)
+                          :leave :away
+                          :return :at-home
+                          :missing)))]
+    (c-awaken r-loc)
+    (assert (= :missing (:value @r-loc)))
+    (dp :---about-to-leave------------------)
+    (cset! r-action :leave)
+    (dp :---left------------------)
+    (assert (= :away (cget r-loc)))))
+
+(defn hw-05 []
+  (dp :--go------------------)
+  (let [obs-action (fn [prop me new old c]
+                     (dp prop new old))
+        v {:name "World"
+           :action (cI nil :prop :v-action
+                     :watch obs-action)}
+        r-action (cI nil)
+        r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
+                (case (cget r-action)
+                  :leave :away
+                  :return :home
+                  :missing))
+        r-response (cF+ [:watch (fn-obs (trx :r-resp new))]
+                     (when (= :home (cget r-loc))
+                       (when-let [act (cget (:action v))]
+                         (case act
+                           :knock-knock "hello, world"))))]
+    (assert (nil? (cget r-response)))
+    (cset! (:action v) :knock-knock)
+    (cset! r-action :return)
+    (assert (= :home (cget r-loc)))))
+
+(defn hello-world []
+  (dp :--go------------------)
+  (let [obs-action (fn [prop me new old c]
+                     (dp prop new old))
+        v {:name "World"
+           :action (cI nil
+                     :prop :v-action
+                     :ephemeral? true
+                     :watch obs-action)}
+        r-action (cI nil)
+        r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
+                (case (cget r-action)
+                  :leave :away
+                  :return :home
+                  :missing))
+        r-response (cF+ [:watch (fn-obs (trx :r-response new))
+                         :ephemeral? true]
+                     (when (= :home (cget r-loc))
+                       (when-let [act (cget (:action v))]
+                         (case act
+                           :knock-knock "hello, world"))))]
+    (assert (nil? (cget r-response)))
+    (cset! (:action v) :knock-knock)
+    (cset! r-action :return)
+    (assert (= :home (cget r-loc)))
+    (cset! (:action v) :knock-knock)))
+
+(defn hello-world-2 []
+  (dp :--go------------------)
+  (let [obs-action (fn [prop me new old c]
+                     (when new (trx visitor-did new)))
+        v {:name "World"
+           :action (cI nil
+                     :prop :v-action
+                     :ephemeral? true
+                     :watch obs-action)}
+        r-action (cI nil)
+        r-loc (cF+ [:watch (fn-obs (when new (trx :honey-im new)))]
+                (case (cget r-action)
+                  :leave :away
+                  :return :home
+                  :missing))
+        r-response (cF+ [:watch (fn-obs (when new
+                                        (trx :r-response new)))
+                         :ephemeral? true
+                         ]
+                     (when (= :home (cget r-loc))
+                       (when-let [act (cget (:action v))]
+                         (case act
+                           :knock-knock "hello, world"))))
+        alarm (cF+ [:watch (fn-obs
+                           (trx :telling-alarm-api new))]
+                (if (= :home (cget r-loc)) :off :on))
+        alarm-do (cF+ [:watch (fn-obs
+                              (case new
+                                :call-police (trx :auto-dialing-911)
+                                nil))]
+                   (when (= :on (cget alarm))
+                     (when-let [action (cget (:action v))]
+                       (case action
+                         :smashing-window :call-police
+                         nil))))]
+    (map c-awaken [alarm-do r-response r-loc (:action v)])
+    (assert (= :missing (:value @r-loc)))
+    (cset! (:action v) :knock-knock)
+    (cset! (:action v) :smashing-window)
+    (cset! r-action :return)
+    (assert (= :home (cget r-loc)))
+    (cset! (:action v) :knock-knock)))
+
+(defn run-tests []
+  (hw-01)
+  (hw-02)
+  (hw-03)
+  (hw-04)
+  (hw-05)
+  (hello-world)
+  (dp :hello-cells-OK))
+

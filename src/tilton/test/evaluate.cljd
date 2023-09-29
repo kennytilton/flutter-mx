@@ -1,0 +1,387 @@
+(ns tilton.test.evaluate
+  (:require
+    ["dart:developer" :as dev]
+    [tilton.mx.foundation :refer [mx-type]]
+    [tilton.mx.base :as ub
+     :refer [def-rmap-props trx dp dpx prog1 *trx?*]]
+    [tilton.mx.util
+     :refer [cl-find set-ify atom?
+             make-fifo-queue fifo-empty? fifo-peek fifo-pop
+             fifo-data fifo-add rmap-set!]
+     :as utc]
+    [tilton.mx.model.peek :refer [minfo mref? minfo c-type cref? cinfo Cell CellFormula]]
+    [tilton.mx.cell.base
+     :refer [without-c-dependency cells-init
+             c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input? unbound
+             c-model c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes*
+             c-rule c-me c-value-state c-callers
+             c-synapses c-prop-name c-props
+             unlink-from-callers *causation*
+             c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop
+             c-lazy] :as cty]
+    [tilton.mx.cell.core
+     :refer [make-cell cI cF cFn cFonce cF+ cF+n cset!]]
+    [tilton.mx.cell.observer
+     :refer [fn-obs]]
+    [tilton.mx.cell.integrity
+     :refer [with-integrity data-pulse-next]]
+    [tilton.mx.cell.evaluate :refer [cget cget c-value-assume c-awaken
+                                     record-dependency ensure-value-is-current]]))
+
+(defn test-input []
+  (let [c (cI 42 :prop :bingo)]
+    (assert (dart/is? (c-type c) Cell))
+    (assert (cref? c))
+    (assert (= (c-value-state c) :valid))
+    (assert (= #{} (c-callers c)))
+    (assert (c-input? c))
+    (assert (c-valid? c))
+    (assert (nil? (c-model c)))
+    (assert (= :bingo (c-prop c) (c-prop-name c)))
+    (assert (= (cget c) 42))
+    (dp :test-input-OK)))
+
+(defn t-formula []
+  (let [c (cF (+ 40 2))]
+    (assert (dart/is? (c-type c) CellFormula))
+    (assert (= (c-value-state c) :unbound))
+    (assert (= #{} (c-callers c)))
+    (assert (= #{} (c-useds c)))
+    (assert (not (c-input? c)))
+    (assert (not (c-valid? c)))
+    (assert (nil? (c-model c)))
+    (trx nil :readddd (cget c))
+    (assert (= (cget c) 42))
+    (dp :t-formula-OK)))
+
+(defn t-formula-2 []
+  (let [b (cI 2)
+        cct (atom 0)
+        dct (atom 0)
+        c (cF (swap! cct inc)
+            (+ 40 (cget b)))
+        d (cF (swap! dct inc)
+            (/ (cget c)
+              (cget b)))]
+    (assert (= (cget d) 21))
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
+    (assert (= 1 @dct))
+    (assert (= 1 @cct))
+    (assert (= 0 (count (c-useds b))))
+    (assert (= 2 (count (c-callers b))))
+    (assert (= 1 (count (c-useds c))))
+    (assert (= 1 (count (c-callers c))))
+    (assert (= 2 (count (c-useds d))))
+    (assert (= 0 (count (c-callers d))))
+
+    (dp :t-formula-2-OK)))
+
+(defn t-formula-22 []
+  (cells-init)
+
+  (let [b (cI 2 :prop :bb)
+        cct (atom 0)
+        dct (atom 0)
+        c (cF+ [:prop :cc]
+            (swap! cct inc)
+            (+ 40 (cget b)))
+        d (cF+ [:prop :dd]
+            (swap! dct inc)
+            (/ (cget c)
+              (cget b)))]
+    (do
+      (assert (= (cget d) 21))
+      (assert (= (cget c) 42))
+      (assert (= (cget b) 2))
+      (assert (= 1 @dct))
+      (assert (= 1 @cct)))
+
+    (cset! b 3)
+    (assert (= (cget d) 43/3))
+    (assert (= (cget c) 43))
+    (assert (= (cget b) 3))
+    (assert (= 2 @dct))
+    (assert (= 2 @cct))
+
+    (dp :t-formula-22-OK)
+    ))
+
+
+
+;;; --- The Pentagram of Death: a hard use case for data integrity ------
+
+(defn pentagram-of-death []
+  ;;
+  ;; Christened the Pentagram of Death by Phillip J Eby, this
+  ;; is the use case that challenges an engine not to calculate
+  ;; and observe transiently* inconsistent values when two different
+  ;; dependency paths of one prop (here :ee) lead back to
+  ;; the same prop (:aa).
+  ;;
+  ;; * "Transiently" because the state change propagation eventually**
+  ;;   gets :ee to the value consistent with the new state.
+  ;; ** which is not
+  ;;   good enough because observers may have already fired and produced
+  ;;   side effects off the invalid state.
+  ;;
+  ;; The example is contrived but was contrived to replicate
+  ;; a real dataflow failure that arose in my RoboCup simulation and
+  ;; prompted Cells 3 and the concept of data integrity.
+  ;;
+  ;; For the telling story behind the useless prop names :aa, :bb et al
+  ;; please see: http://smuglispweeny.blogspot.com/2008/07/aa-bb-cc-and-dd.html
+  ;;
+  (cells-init)
+  (dp :pod-entry)
+  (let [run (atom {})
+        obs (atom {})
+
+        rset (fn []
+               (swap! run empty)
+               (swap! obs empty))
+
+        logit (fn [log key]
+                (swap! run assoc key
+                  (inc (key @run 0))))
+
+        logrun #(logit run %)
+
+        cr (fn [c]
+             (cget c))
+
+        podobs (fn [prop me new old c]
+                 (swap! obs assoc prop
+                   (inc (prop @obs 0))))
+
+        aa (cI 1 :prop :aa :watch podobs)
+        a7 (cI 7 :prop :a7 :watch podobs)
+        _ (dp :starting-cF+)
+        a70 (cF+ [:prop :a70 :watch podobs]
+              (logrun :a70)
+              (* 10 (cr a7)))
+        bb (cF+ [:prop :bb :watch podobs]
+             (logrun :bb)
+             (cr aa))
+        cc (cF+ [:prop :cc :watch podobs]
+             (logrun :cc)
+             (* 10 (cr aa)))
+        dd (cF+ [:prop :dd :watch podobs]
+             (logrun :dd)
+             (if (even? (cr bb))
+               (* 10 (cr cc))
+               42))
+        ee (cF+ [:prop :ee :watch podobs]
+             (logrun :ee)
+             (+ (cr a70) (cr bb) (* 10000 (cr dd))))
+        verify-p-current (fn []
+                           (assert (= 2 (cr aa)))
+                           (assert (= 2 (cr bb)))
+                           (assert (= 20 (cr cc)))
+                           (assert (= 200 (cr dd)))
+                           (assert (= 2000072 (cr ee))))
+        ]
+
+    ;; next checks are just that the engine calculated well
+    ;; and built a good dependency graph
+    ;;
+    (assert (= 1 (cr aa)))
+    (assert (= 1 (cr bb)))
+    (assert (= 10 (cr cc)))
+
+    (assert (= 42 (cr dd)))
+    (assert (= 420071 (cr ee)))
+
+    (assert (= nil (c-useds aa)))
+    (assert (= #{:bb :cc} (c-props aa :callers)))
+
+    (assert (= #{:aa} (c-props bb :useds)))
+    (assert (= #{:dd :ee} (c-props bb :callers)))
+
+    (assert (= #{:aa} (c-props cc :useds)))
+    (assert (= #{} (c-props cc :callers)))
+
+    (assert (= #{:bb} (c-props dd :useds)))
+    (assert (= #{:ee} (c-props dd :callers)))
+
+    (assert (= #{:a70 :bb :dd} (c-props ee :useds)))
+    (assert (= #{} (c-props ee :callers)))
+
+    ;; ;; now we come to data integrity: when change happens
+    ;; ;; do all and only those cells affected recalculate
+    ;; ;; and reobserve and do so exactly once.
+    ;; ;;
+
+    (binding [*trx?* false]
+      (rset)
+      (doseq [[k v] (seq @obs)]
+        (trx nil :obschk k v)
+        (assert (and (keyword? k)
+                  (= 0 v))))
+
+      (cset! aa (inc (cr aa)))
+
+      ; check which rules ran
+      ;
+      (= #{:bb :cc :dd :ee}                                 ;; but not a7
+        (set (keys @run)))
+      ;
+      ; check those rules ran exactly once
+      ;
+      (doseq [[k v] (seq @run)]
+        (trx nil :runchk k v)
+        (assert (and (keyword? k)
+                  (= 1 v))))
+
+      ; check which observers ran
+      ;
+      (assert (= #{:aa :bb :cc :dd :ee}
+                (set (keys @obs))))
+      ;
+      ; check those observers ran exactly once
+      ;
+      (doseq [[k v] (seq @obs)]
+        (assert (and (keyword? k)
+                  (= 1 v))))
+
+      ; check that this time dd branched to use cc as well as bb
+      ;
+      (assert (= #{:bb :cc} (c-props dd :useds)))
+
+      (verify-p-current)
+      (cset! aa (inc (cr aa)))
+
+      ; :aa hence :bb now odd so :dd goes back to 42
+      ;
+      (assert (= 42 (cr dd)))
+      ;
+      ; ...and check dependency on :cc got pruned
+      ;
+      (assert (= #{:bb} (c-props dd :useds)))
+      ))
+  (dp :pentagram-of-death-OK))
+
+(defn t-cell-unchanged-eql-test []
+  (cells-init)
+  (data-pulse-next)
+
+  (let [ob (atom 0)
+        b (cI 2 :prop :bb
+            :debug false
+            :watch (fn-obs
+                     (dpx :watch-bb!! new old)
+                     (swap! ob inc)))
+        _ (c-awaken b)
+        _ (dpx :b-start @b)
+        cct (atom 0)
+        c (cF+ [:prop :cc :debug false]
+            (dpx :calculating-c!!!!!!! *causation*)
+            (swap! cct inc)
+            (+ 40 (cget b)))]
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
+    (assert (= 1 @ob))
+    (assert (= 1 @cct))
+    (dp :t-cell-unchanged-eql-test-set-up-OK )
+
+    (dp :reseeting-b-2!!!!!!!!! (cinfo b))
+    (cset! b 2)
+    (dp :pre-b-read )
+
+    (dp :cget-sees (cget b))
+    (dp :pre-c-read )
+    (dp :cget-sees (cget c))
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
+    (assert (= 1 @ob))
+    (assert (= 1 @cct))
+    (dp :t-cell-unchanged-eql-test-set-2-OK)
+
+    (cset! b 5)
+    (assert (= (cget c) 45))
+    (assert (= (cget b) 5))
+    (assert (= 2 @ob))
+    (assert (= 2 @cct))
+    (dp :t-cell-unchanged-eql-test-set-5-OK))
+  (dp :t-cell-unchanged-eql-test-OK))
+
+(defn t-cell-unchanged-test []
+  (cells-init)
+  (data-pulse-next)
+
+  (let [ob (atom 0)
+        b (cI 2 :prop :bb
+            :debug false
+            :watch (fn-obs
+                     (dpx :watch-bb!! new old)
+                     (swap! ob inc))
+            :unchanged-if (fn [n p]
+                            (dpx :ucif-sees n p)
+                            (let [d (and (number? n)
+                                      (number? p)
+                                      (or (and (even? n) (even? p))
+                                        (and (odd? n) (odd? p))))]
+                              (dpx :ucf-decides-unchanged-is d)
+                              d)))
+        _ (c-awaken b)
+        _ (dpx :b-start @b)
+        cct (atom 0)
+        c (cF+ [:prop :cc :debug false]
+            (dpx :calculating-c!!!!!!! *causation*)
+            (swap! cct inc)
+            (+ 40 (cget b)))]
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
+    (assert (= 1 @ob))
+    (assert (= 1 @cct))
+    (dp :t-cell-unchanged-test-set-up-OK)
+
+
+    (cset! b 2)
+    (dp :cget-sees (cget b))
+    (dp :cget-sees (cget c))
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 2))
+    (assert (= 1 @ob))
+    (assert (= 1 @cct))
+    (dp :t-cell-unchanged-test-set-2-OK)
+
+    (cset! b 4)
+    (dp :cget-sees (cget b))
+    (dp :cget-sees (cget c))
+    (assert (= (cget c) 42))
+    (assert (= (cget b) 4))
+    (assert (= 1 @ob))
+    (assert (= 1 @cct))
+    (dp :t-cell-unchanged-test-set-4-OK)
+
+    (cset! b 5)
+    (assert (= (cget c) 45))
+    (assert (= (cget b) 5))
+    (assert (= 2 @ob))
+    (assert (= 2 @cct))
+    (dp :t-cell-unchanged-test-set-5-OK))
+  (dp :t-cell-unchanged-test-OK))
+
+(defn opti-away []
+  (let [aa (cF 42)]
+    (assert (= 42 (cget aa)))
+    (dp :aa @aa)
+    (assert (c-optimized-away? aa))
+    (assert (= 42 @aa)))
+  (dp :opti-away-OK))
+
+(defn run-tests []
+  (test-input)
+  (t-formula)
+  (t-formula-2)
+  (t-formula-22)
+  (pentagram-of-death)
+  (t-cell-unchanged-eql-test)
+  ;; todo (t-cell-unchanged-test)
+  ;(opti-away)
+  (dp :test.evaluate-tests-OK))

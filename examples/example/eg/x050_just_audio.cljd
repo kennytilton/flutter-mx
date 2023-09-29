@@ -1,0 +1,107 @@
+(ns example.eg.x050-just-audio
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ;; import 'package:just_audio/just_audio.dart';
+    ["package:just_audio/just_audio.dart" :as j]
+    [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [as-dart-callback in-my-context
+             material-app scaffold app-bar floating-action-button
+             center column text sized-box]]))
+
+#_(.setUrl (mget me :player)
+    #_"http://www.example.com/music/Mine.mp3"
+    "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3")
+
+; // Define the playlist
+;final playlist = ConcatenatingAudioSource(
+;  // Start loading next item just before reaching it
+;  useLazyPreparation: true,
+;  // Customise the shuffle algorithm
+;  shuffleOrder: DefaultShuffleOrder(),
+;  // Specify the playlist items
+;  children: [
+;    AudioSource.uri(Uri.parse('https://example.com/track1.mp3')),
+;    AudioSource.uri(Uri.parse('https://example.com/track2.mp3')),
+;    AudioSource.uri(Uri.parse('https://example.com/track3.mp3')),
+;  ],
+;);
+;
+;// Load and play the playlist
+;await player.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
+;await player.seekToNext();                     // Skip to the next item
+;await player.seekToPrevious();                 // Skip to the previous item
+;await player.seek(Duration.zero, index: 2);    // Skip to the start of track3.mp3
+;await player.setLoopMode(LoopMode.all);        // Set playlist to loop (off|all|one)
+;await player.setShuffleModeEnabled(true);      // Shuffle playlist order (true|false)
+;
+;// Update the playlist
+;await playlist.add(newChild1);
+;await playlist.insert(3, newChild2);
+;await playlist.removeAt(3);
+
+(defmacro my-player []
+  `^j/AudioPlayer (mget ~'me :player))
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Just Audio Demo"
+     :theme (m/ThemeData .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    {:player      (cF+ [:watch (fn [_ _ new _ _]
+                                 (dp :player new))]
+                    (j/AudioPlayer))
+     :now-playing (cI "intro-1")
+     :duration    (cF+ [:async? true
+                        :watch (fn [_ me new _ _]
+                                 (dp :duration new))]
+                    (when-let [nowp (mget me :now-playing)]
+                      (.setAsset (my-player) (str "audio/" nowp ".mp3"))))
+
+     :playback    (cF+ [:async? true
+                        :async-then (fn [c r] :fini)
+                        :watch (fn [_ _ new _ _]
+                                 (dp :pb-watch-sees new))]
+                    (when-let [d (mget me :duration)]
+                      (dp :duration-is d)
+                      (.play (my-player))))
+     :next-up     (cF+ [:watch (fn [_ me new _ _]
+                                 (when new
+                                   (dp :next-set new)
+                                   (mx/with-cc :auto-next
+                                     (mset! me :now-playing new))))]
+                    (when (= :fini (mget me :playback))
+                      (dp :picking-next!!!!! (mget me :now-playing))
+                      (when (= "intro-1" (mget me :now-playing))
+                        "scary")))}
+    (scaffold
+      {:appBar (app-bar
+                 {:title           (m/Text "Flutter/MX Just Audio")
+                  :backgroundColor (cF (.-inversePrimary
+                                         (.-colorScheme ^m/ThemeData (maprop :theme))))})
+
+       :floatingActionButton
+       (floating-action-button
+         {:onPressed (as-dart-callback []
+                       (mswap! (fm* :counter) :value inc))
+          :tooltip   "Increment"}
+         (m/Icon m/Icons.add .color m/Colors.black))}
+      (center
+        (column {:mainAxisAlignment m/MainAxisAlignment.center}
+          (text {:style (p/TextStyle .color m/Colors.black
+                          .fontSize 20.0)}
+            "The button push count now:")
+          (sized-box
+            {:height 28.0})
+          (text
+            {:style (cF (fx/in-my-context [me ctx]
+                          (-> (m/Theme.of ctx) .-textTheme .-displayMedium)))}
+            {:name  :counter
+             :value (cI 0)}
+            (str (mget me :value))))))))
+
+
+
+
