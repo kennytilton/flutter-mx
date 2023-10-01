@@ -6,11 +6,21 @@
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cFn cFonce mget mget? mset! minfo fasc fmu]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! minfo fasc fmu maprop]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding
              icon-button fx-render as-dart-callback]]))
+
+(declare lang-chooser
+  geo-chooser
+  speaking-controls
+  property-slider
+  text-input
+  do-speak
+  flutter-tts-initializer
+  lang-button geo-button
+  lg-lang)
 
 (defn make-app []
   (material-app {}
@@ -21,14 +31,17 @@
      :speech-rate   (cI 0.5 :watch (fn [_ me new _ _]
                                      (.setSpeechRate ^FlutterTts (mget me :fts) new)))
      :pitch         (cI 1.0 :watch (fn [_ me new _ _]
-                                     (dp :setting-pitch!!!!! new)
                                      (.setPitch ^FlutterTts (mget me :fts) new)))
-     :lang-geos     (cF+ [:async? true
-                          :watch (fn [_ _ lang-geos _ _]
-                                   #_(let [langs (group-by #(subs % 0 2) (sort lang-geos))]
-                                       (dp :langs (keys langs))))]
+     ; -------------------------------------------------------------------------------
+     :lang-geo-tree (cF+ [:async? true
+                          :async-then (fn [c lg-flat]
+                                        (group-by lg-lang (sort lg-flat)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
-     :lang-geo-tree (cF (group-by #(subs % 0 2) (sort (mget me :lang-geos))))}
+     :lg-pref       "en-AU"                                 ;; todo store as upref
+     :lgc           (cF+n [:watch (fn [_ me new _ _]
+                                    (dp :LGC-speaks!!!!!!!!!!!!!!!!!!!!! new)
+                                    (do-speak me))]
+                      (mget me :lg-pref))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
@@ -39,98 +52,75 @@
           (column
             (text-input)
             (speaking-controls)
-            ;; oskool pulldown: (language-selector)
             (column
               (property-slider :volume "Volume" m/Colors.blue 0 1 10)
               (property-slider :pitch "Pitch" m/Colors.red 0.5 2 15)
               (property-slider :speech-rate "Rate" m/Colors.green 0 1 20))))))))
 
-(defn flutter-tts-initializer []
-  (cF+ [:watch (fn [_ me newv _ _]
-                 (when-let [fts ^FlutterTts newv]
-                   (.setSharedInstance fts true)
-                   (.awaitSpeakCompletion fts true)))]
-    (FlutterTts)))
+;;; --- components -------------------------------------------------
 
 (defn lang-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount   8
-       :mainAxisSpacing  4
-       :crossAxisSpacing 4
-       :childAspectRatio 1.5
-       :padding          (m/EdgeInsets.all 8)}
-      {:name      :lang-choice
-       :langs     (cF+ [:watch (fn [_ _ new _ _]
-                                 (dpx :langs-watch new))]
-                    (sort (keys (mget (fasc :app) :lang-geo-tree))))
-       :value     (cI 5)
-       :lang-code (cF (when-let [langs (seq (mget me :langs))]
-                        (let [choice (mget me :value)]
-                          (nth langs (if (>= choice (count langs))
-                                       0 choice)))))}
-      (let [langs (mget me :langs)]
-        (mapv
-          (fn [i] (fx/gesture-detector
-                    {:onTap (as-dart-callback []
-                              (mset! (fasc :lang-choice) :value i))}
-                    {:name :lang-option}
-                    (container
-                      {:decoration (m/BoxDecoration
-                                     .border (when (= i (mget (fasc :lang-choice) :value))
-                                               (.all m/Border .color m/Colors.red .width 2))
-                                     .color (.-shade300 (cond
-                                                          (even? i) m/Colors.cyan
-                                                          :else m/Colors.yellow)))}
-                      {:name :lang-cont}
-                      (center
-                        (padding {:padding (m/EdgeInsets.all 4.0)}
-                          (fx/text
-                            {:style (p/TextStyle .color m/Colors.black
-                                      .fontSize 16.0)}
-                            (subs (nth langs i) 0 2)))))))
-          (range (count (take 888 langs))))))))
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.2
+       :padding         (m/EdgeInsets.all 8)}
+      (map-indexed lang-button
+        (sort (keys (maprop :lang-geo-tree)))))))
 
 (defn geo-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount   8
-       :mainAxisSpacing  4
-       :crossAxisSpacing 4
-       :childAspectRatio 1.0
+      {:crossAxisCount   8 :crossAxisSpacing 4
+       :mainAxisSpacing  4 :childAspectRatio 1.0
        :padding          (m/EdgeInsets.all 8)}
-      {:name     :geo-choice
-       :geo-lang (cF (let [geos (mget me :geos)]
-                       (nth geos (min (mget me :value) (dec (count geos))))))
-       :value    (cI 0 :watch (fn [_ me newv _ _]
-                                (let [new-geo (nth (mget me :geos) newv)]
-                                  (dpx :new-geo!!! newv new-geo))))
-       :geos     (cF+ [:watch (fn [_ me _ _ _]
-                                (mx/with-cc :new-geos
-                                  (mset! me :value 0)))]
-                   (get (mget (fasc :app) :lang-geo-tree)
-                     (mget (fmu :lang-choice) :lang-code)))}
-      (let [geos (mget me :geos)]
-        (mapv (fn [i]
-                (fx/gesture-detector
-                  {:key   (m/ValueKey. (nth geos i))
-                   :onTap (as-dart-callback []
-                            (mset! (fasc :geo-choice) :value i))}
-                  {:name :GD-geo-choice}
-                  (container
-                    {:decoration (m/BoxDecoration
-                                   .border (when (= i (mget (fasc :geo-choice) :value))
-                                             (.all m/Border .color m/Colors.red .width 2))
-                                   .color (.-shade300 (cond
-                                                        (even? i) m/Colors.cyan
-                                                        :else m/Colors.yellow)))}
-                    (center
-                      (padding {:padding (m/EdgeInsets.all 4.0)}
-                        (fx/text
-                          {:style (p/TextStyle .color m/Colors.black
-                                    .fontSize 16.0)}
-                          (subs (nth geos i) 3)))))))
-          (range (count geos)))))))
+      (map-indexed geo-button
+        (when-let [lgc (lg-lang (maprop :lgc))]
+          (get (maprop :lang-geo-tree) lgc))))))
+
+;;; --- lang and geo buttons ----------------------------------------------------
+
+(defn lang-button [i lang]
+  (fx/gesture-detector
+    {:onTap (as-dart-callback []
+              (mset! (fasc :app) :lgc
+                (first (get (maprop :lang-geo-tree) lang))))}
+    (container
+      ;; todo need box-decoration to avoid excess rebuild?
+      {:decoration (m/BoxDecoration
+                     .border (when (= lang (lg-lang (maprop :lgc)))
+                               (.all m/Border .color m/Colors.red .width 2))
+                     .color (.-shade300 (cond
+                                          (even? i) m/Colors.cyan
+                                          :else m/Colors.yellow)))}
+      {:name :lang-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            lang))))))
+
+(defn geo-button [i lang-geo]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang-geo)
+     :onTap (as-dart-callback []
+              (mset! (fasc :app) :lgc lang-geo))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang-geo (maprop :lgc))
+                                    (.all m/Border .color m/Colors.red .width 2)))
+                      :color  (.-shade300 (cond
+                                            (even? i) m/Colors.cyan
+                                            :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :geo-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            (subs lang-geo 3)))))))
 
 ;;; --- text input --------------------------------------------------------------
 
@@ -147,11 +137,12 @@
        :minLines   6 :maxLines 11}
       {:name  :text-in
        :value (cI #_"Turning and turning in the widening gyre, The falcon cannot hear the falconer."
-                (str "\"Jealousy\"\nby Robert Graves\n\n"
-                  "I'd die for you or you for me, \n"
-                  "So furious is our jealousy. \n"
-                  "And if you doubt this to be true, \n"
-                  "Kill me outright, lest I kill you."))})))
+                (str                                        ; "\"Jealousy\"\nby Robert Graves\n\n"
+                  "I'd die for you."                        ;; , or you for me, \n"
+                  ;"So furious is our jealousy. \n"
+                  ;"And if you doubt this to be true, \n"
+                  ;"Kill me outright, lest I kill you."
+                  ))})))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
@@ -160,15 +151,6 @@
         fts ^FlutterTts (mget app :fts)]
     (dp :pausing!!!!!!!!)
     (await (.pause fts))))
-
-(defn speaking-controls []
-  (container
-    {:padding (m/EdgeInsets.only .top 50.0)}
-    (row
-      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)
-      (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))))
 
 (defn speaking-control [color splash-color icon label func]
   (column
@@ -180,15 +162,23 @@
        :splashColor splash-color
        :onPressed   (fn [] (func me))})))
 
+(defn speaking-controls []
+  (container
+    {:padding (m/EdgeInsets.only .top 50.0)}
+    (row
+      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)
+      (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))))
+
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [app (fasc :app)
+  (let [app (mx/navdbg :all (mx/fascinc :app))
         fts ^FlutterTts (mget app :fts)
-        speech (mget (fmu :text-in) :value)
-        lang (mget (fmu :geo-choice) :geo-lang)]
-    (dpx :speaking!!!!! lang)
-    (when (not (str/blank? speech))
+        speech (mget (mx/fm* :text-in) :value)
+        lang (maprop :lgc)]
+    (when (and lang (not (str/blank? speech)))
       (.setSpeechRate fts (mget app :speech-rate))
       (.setPitch fts (mget app :pitch))
       (.setVolume fts (mget app :volume))
@@ -211,9 +201,21 @@
      :label       (cF (str label " " (mget me :value)))
      :activeColor color}))
 
+;;; --- subroutines ------------------------------------------------
+
+(defn flutter-tts-initializer []
+  (cF+ [:watch (fn [_ me newv _ _]
+                 (when-let [fts ^FlutterTts newv]
+                   (.setSharedInstance fts true)
+                   (.awaitSpeakCompletion fts true)))]
+    (FlutterTts)))
+
+(defn lg-lang [lg]
+  (subs lg 0 2))
+
 ;;; --- languages dropdown ------------------------------------------------
 
-#_;; vestigial
+#_;; save
         (defn language-selector []
           (fx/future-builder
             {:future  (cF (let [app (fasc :app)

@@ -4,7 +4,7 @@
     ["package:flutter/painting.dart" :as p]
     ;; import 'package:just_audio/just_audio.dart';
     ["package:just_audio/just_audio.dart" :as j]
-    [tilton.mx.cell.base :refer [dpc  c-model] :as cty]
+    [tilton.mx.cell.base :refer [dpc c-model] :as cty]
     [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
@@ -23,11 +23,11 @@
      :theme (m/ThemeData .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
-    {:name :app
+    {:name        :app
      :player      (cF+ [:watch (fn [_ _ new _ _]
                                  (dp :player new))]
                     (j/AudioPlayer))
-     :now-playing (cI nil #_ "intro-1")
+     :now-playing (cI nil #_"intro-1")
      :duration    (cF+ [:async? true
                         :watch (fn [_ me new _ _]
                                  (dp :duration new))]
@@ -84,26 +84,26 @@
      :theme (m/ThemeData .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
-    {:name :app
-     :player      (j/AudioPlayer)
-     :playlist (cF (j/ConcatenatingAudioSource
-                     .useLazyPreparation true
-                     .shuffleOrder (j/DefaultShuffleOrder)
-                     .children (vector
-                                 (j/AudioSource.asset "audio/scary.mp3")
-                                 (j/AudioSource.asset "audio/drum-1.mp3")
-                                 (j/AudioSource.asset "audio/notify-1.mp3")
-                                 (j/AudioSource.asset "audio/notify-2.mp3")
-                                 (j/AudioSource.asset "audio/intro-1.mp3"))))
+    {:name           :app
+     :player         (j/AudioPlayer)
+     :playlist       (cF (j/ConcatenatingAudioSource
+                           .useLazyPreparation true
+                           .shuffleOrder (j/DefaultShuffleOrder)
+                           .children (vector
+                                       (j/AudioSource.asset "audio/scary.mp3")
+                                       (j/AudioSource.asset "audio/drum-1.mp3")
+                                       (j/AudioSource.asset "audio/notify-1.mp3")
+                                       (j/AudioSource.asset "audio/notify-2.mp3")
+                                       (j/AudioSource.asset "audio/intro-1.mp3"))))
      :start-playlist (cI false :ephemeral? true)
-     :set-source (cF+ [:async? true
-                       :async-then (fn [c duration?]
-                                     (let [me (c-model c)]
-                                       (.play (my-player))))]
-                   (when (mget me :start-playlist)
-                     (.setAudioSource (my-player) (mget me :playlist)
-                     .initialIndex 0
-                     .initialPosition Duration.zero)))}
+     :set-source     (cF+ [:async? true
+                           :async-then (fn [c duration?]
+                                         (let [me (c-model c)]
+                                           (.play (my-player))))]
+                       (when (mget me :start-playlist)
+                         (.setAudioSource (my-player) (mget me :playlist)
+                           .initialIndex 0
+                           .initialPosition Duration.zero)))}
     (scaffold
       {:appBar (app-bar
                  {:title           (m/Text "F/MX Just Audio Playlist")

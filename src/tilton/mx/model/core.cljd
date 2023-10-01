@@ -276,6 +276,7 @@
             (= seek poss))))
 
 (defn fm-ascendant [what where & options]
+  ;; todo validate options
   (when (and where what)
     (let [options (merge {:me? false :wocd? true}
                     (apply hash-map options))]
@@ -565,7 +566,7 @@
       (md-quiesce! val))))
 
 (defn md-quiesce-self! [me]
-  (wtrx [0 999  :mdq-self (minfo me)]
+  (wtrx [0 999 nil :mdq-self (minfo me)]
     (when-let [onq (get @me :on-quiesce)]
       (wtrx [0 999 nil :mdq-onq (minfo me)]
         (onq me)))

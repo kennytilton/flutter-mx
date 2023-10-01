@@ -145,6 +145,7 @@
      :rule (c-fn ~@body)))
 
 (defmacro cFnil [& body]
+  ;; todo why does this exist?
   `(make-c-formula
      ;;:code '~body
      :value nil
@@ -163,6 +164,25 @@
      :input? true
      :value tilton.mx.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
+
+(defmacro cFn>
+  "Continues as reactive formula /and/ input Cell"
+  ;; See TTS example for use case: modify freely after
+  ;; initial calc, but then re-calc/init when input changes
+  [& body]
+  `(make-c-formula
+     :code '(do ~@body)
+     :input? true
+     :value tilton.mx.cell.base/unbound
+     :rule (c-fn ~@body)))
+
+(defmacro cF+n> [[& options] & body]
+  `(make-c-formula
+     ~@options
+     :code '(do ~@body)
+     :input? true
+     :value tilton.mx.cell.base/unbound
+     :rule (c-fn ~@body)))
 
 (defmacro cF+n [[& options] & body]
   `(make-c-formula

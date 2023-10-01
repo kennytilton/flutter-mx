@@ -38,17 +38,13 @@
                     (when-let [db (mget me :db)]
                       (assert (stg/DB) (str "DB not populated but cell :db is: " db))
                       ;; Now we can load any existing todos from storage...
-                      (dp :todos-see-sdb db)
                       (todo/make-ToDoList "todo"
                         (stg/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todos-dashboard)]}
-        {:unwrapped? true}                                  ;; needed todo why needed?
         (fx/ink {:color m/Colors.white}
-          {:unwrapped? true}                                ;; neeeded
           (fx/column {}
-            {:unwrapped? true}                              ; needed
             (input/todo-controls)
             (items/todo-items)
             (about-credits)))))))

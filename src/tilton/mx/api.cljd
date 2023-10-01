@@ -173,6 +173,7 @@
 (defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
+       (tilton.mx.model.core/fmdp :fmu :seeking name#)
        (fm-navig #(= name# (mget? % :name))
          ~me-ref :me? false :up? true :inside? false))))
 
@@ -183,11 +184,11 @@
        (fm-navig #(= name# (mget? % :name))
          ~me-ref :me? true :up? true :inside? false))))
 
-(defmacro fasc "Search strictly up"
+(defmacro fascinc "Search strictly up"
   [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (tilton.mx.model.core/fm-ascendant name# ~me-ref))))
+       (tilton.mx.model.core/fm-ascendant name# ~me-ref :me? true))))
 
 (defmacro fasc "Search strictly up"
   [name & [me]]
@@ -202,14 +203,17 @@
   ([prop-name md]
    (faprop prop-name md md))
   ([prop-name md start]
+   (assert md (str "no md passed to faprop seeking " prop-name))
    (cond
      (contains? @md prop-name)
      (mget md prop-name)
      :else (if-let [par (mpar md)]
              (recur prop-name par start)
-             (mx-throw (str "faprop> did not find model with property " prop-name
-                            " searching up from " (tilton.mx.model.peek/mname md)
-                            " seeking property " ~prop-name " value."))))))
+             (if-let [host (mhost md)]
+               (recur prop-name host start)
+               (mx-throw (str "faprop> did not find model with property " prop-name
+                           " searching up from " (mname md)
+                           " seeking property " prop-name " value.")))))))
 
 (defmacro fmav "Search strictly up and mget value"
   [name prop-name & [me]]
