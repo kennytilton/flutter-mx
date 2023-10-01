@@ -39,7 +39,6 @@
                       (.-getLanguages ^FlutterTts (mget me :fts)))
      :lg-pref       "en-AU"                                 ;; todo store as upref
      :lgc           (cF+n [:watch (fn [_ me new _ _]
-                                    (dp :LGC-speaks!!!!!!!!!!!!!!!!!!!!! new)
                                     (do-speak me))]
                       (mget me :lg-pref))}
     (scaffold
@@ -82,17 +81,18 @@
 
 (defn lang-button [i lang]
   (fx/gesture-detector
-    {:onTap (as-dart-callback []
+    {:key   (m/ValueKey. lang)
+     :onTap (as-dart-callback []
               (mset! (fasc :app) :lgc
                 (first (get (maprop :lang-geo-tree) lang))))}
     (container
-      ;; todo need box-decoration to avoid excess rebuild?
-      {:decoration (m/BoxDecoration
-                     .border (when (= lang (lg-lang (maprop :lgc)))
-                               (.all m/Border .color m/Colors.red .width 2))
-                     .color (.-shade300 (cond
-                                          (even? i) m/Colors.cyan
-                                          :else m/Colors.yellow)))}
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang (lg-lang (maprop :lgc)))
+                                    (.all m/Border .color m/Colors.red .width 2)))
+                      :color  (.-shade300 (cond
+                                            (even? i) m/Colors.cyan
+                                            :else m/Colors.yellow))}
+                     {:unwrapped? true})}
       {:name :lang-cont}
       (center
         (padding {:padding (m/EdgeInsets.all 4.0)}
@@ -137,11 +137,12 @@
        :minLines   6 :maxLines 11}
       {:name  :text-in
        :value (cI #_"Turning and turning in the widening gyre, The falcon cannot hear the falconer."
-                (str                                        ; "\"Jealousy\"\nby Robert Graves\n\n"
-                  "I'd die for you."                        ;; , or you for me, \n"
-                  ;"So furious is our jealousy. \n"
-                  ;"And if you doubt this to be true, \n"
-                  ;"Kill me outright, lest I kill you."
+                (str
+                  "\"Jealousy\"\nby Robert Graves\n\n"
+                  "I'd die for you, or you for me, \n"
+                  "So furious is our jealousy-- \n"
+                  "And if you doubt this to be true, \n"
+                  "Kill me outright, lest I kill you."
                   ))})))
 
 ;;; --- play, stop, pause -------------------------------------------------------
@@ -149,7 +150,6 @@
 (defn do-pause [me]
   (let [app (fasc :app)
         fts ^FlutterTts (mget app :fts)]
-    (dp :pausing!!!!!!!!)
     (await (.pause fts))))
 
 (defn speaking-control [color splash-color icon label func]
@@ -174,7 +174,7 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [app (mx/navdbg :all (mx/fascinc :app))
+  (let [app (mx/fascinc :app)
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)
         lang (maprop :lgc)]
