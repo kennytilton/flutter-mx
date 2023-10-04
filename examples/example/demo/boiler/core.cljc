@@ -65,9 +65,7 @@
                :value (cI 0)}
               (str (mget me :value)))))))))
 
-(comment
-  (cF (+ 28.0 (* 28 (mget (fmu :counter) :value))))
-  (cF (+ 28.0 (* 28 (maprop :counter)))))
+
 
 
 

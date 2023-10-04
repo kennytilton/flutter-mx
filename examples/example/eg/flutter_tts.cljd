@@ -44,17 +44,27 @@
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
-        (lang-chooser)
         (geo-chooser)
+        (lang-chooser)
+
         (fx/single-child-scroll-view
           {:scrollDirection m/Axis.vertical}
           (column
             (text-input)
             (speaking-controls)
             (column
-              (property-slider :volume "Volume" m/Colors.blue 0 1 10)
-              (property-slider :pitch "Pitch" m/Colors.red 0.5 2 15)
-              (property-slider :speech-rate "Rate" m/Colors.green 0 1 20))))))))
+              (fx/row
+                {:mainAxisAlignment m/MainAxisAlignment.center}
+                (m/Text "Volume")
+                (property-slider :volume "Volume" m/Colors.blue 0 1 10))
+              (fx/row
+                {:mainAxisAlignment m/MainAxisAlignment.center}
+                (m/Text "Pitch")
+                (property-slider :pitch "Pitch" m/Colors.red 0.5 2 15))
+              (fx/row
+                {:mainAxisAlignment m/MainAxisAlignment.center}
+                (m/Text "Rate")
+                (property-slider :speech-rate "Rate" m/Colors.green 0 1 20)))))))))
 
 ;;; --- components -------------------------------------------------
 
@@ -138,11 +148,11 @@
       {:name  :text-in
        :value (cI #_"Turning and turning in the widening gyre, The falcon cannot hear the falconer."
                 (str
-                  "\"Jealousy\"\nby Robert Graves\n\n"
+                  ; "\"Jealousy\"\nby Robert Graves\n\n"
                   "I'd die for you, or you for me, \n"
-                  "So furious is our jealousy-- \n"
-                  "And if you doubt this to be true, \n"
-                  "Kill me outright, lest I kill you."
+                  ;"So furious is our jealousy-- \n"
+                  ;"And if you doubt this to be true, \n"
+                  ;"Kill me outright, lest I kill you."
                   ))})))
 
 ;;; --- play, stop, pause -------------------------------------------------------
@@ -161,6 +171,8 @@
        :color       color
        :splashColor splash-color
        :onPressed   (fn [] (func me))})))
+
+
 
 (defn speaking-controls []
   (container

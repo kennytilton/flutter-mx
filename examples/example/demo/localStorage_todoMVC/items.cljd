@@ -9,7 +9,7 @@
     [tilton.mx.model.peek :refer [minfo]]
     [tilton.mx.cell.base :as cty]
     [tilton.mx.api :refer [mget mswap! mset! mset! mkids fm* fmuval fmu fasc
-                                  cF cI cFonce with-mx-isolation dp dpx] :as mx]
+                           cF cI cFonce with-mx-isolation dp dpx] :as mx]
     [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
     [example.demo.localStorage-todoMVC.common :as cmm
      :refer [my-todo-list]]
@@ -169,6 +169,22 @@
               (if (mget (fasc :item-control) :editing?)
                 (to-do-editor me todo)
                 (to-do-display todo)))))))))
+
+(defn todo-list-item [todo]
+  (fx/visibility
+    {:visible (cF (mget me :selected?))}
+    {:selected? (cF (case (fmuval :completions :selection)
+                      :all true
+                      :active (not (td-completed todo))
+                      :done (td-completed todo)))}
+    (fx/container
+      (fx/gesture-detector
+        {:onDoubleTap (as-dart-callback []
+                        (mset! me :editing? true))}
+        {:editing? (cI false)}
+        (cF (if (mget me :editing?)
+              (to-do-editor me todo)
+              (to-do-display todo)))))))
 
 (defn todo-items []
   (fx/expanded

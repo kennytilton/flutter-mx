@@ -8,7 +8,7 @@
     [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
 
     [example.demo.localStorage-todoMVC.common :as cmm
-     :refer [ my-todo-list ]]
+     :refer [my-todo-list]]
     [example.demo.localStorage-todoMVC.todo :refer [td-completed] :as todo]))
 
 (defn items-remaining-display []
@@ -21,6 +21,8 @@
           (when (not= 1 (count remaining)) "s")))
       ;;; text widget won't take nil, so...
       "")))
+
+
 
 (defn completion-filters []
   (fx/row
@@ -51,7 +53,7 @@
                                         (m/BoxDecoration
                                           .border (.all m/Border .color (cmm/title-red) .width 0.5)
                                           .borderRadius (m/BorderRadius.all (m.Radius/circular 4.0)))))}
-                       {:selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
+                       {:selected? (cF                      ;; for a bit of readability, we reify an ad hoc "selected?" property
                                      ;; so it can be used directly by the decoration rule ^^^.
                                      (= completion-enum
                                        (mget selector :selection)))}
@@ -63,6 +65,7 @@
       [(choice :all "All")
        (choice :active "Active")
        (choice :done "Done")])))
+
 
 (defn clear-completed-button []
   (fx/visibility
@@ -79,3 +82,4 @@
                     (mswap! (my-todo-list) :kids
                       (partial remove td-completed)))}
       (fx/text "Clear done"))))
+
