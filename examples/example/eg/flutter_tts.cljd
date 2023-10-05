@@ -44,8 +44,8 @@
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
-        (geo-chooser)
         (lang-chooser)
+        (geo-chooser)
 
         (fx/single-child-scroll-view
           {:scrollDirection m/Axis.vertical}
@@ -53,18 +53,16 @@
             (text-input)
             (speaking-controls)
             (column
-              (fx/row
-                {:mainAxisAlignment m/MainAxisAlignment.center}
-                (m/Text "Volume")
-                (property-slider :volume "Volume" m/Colors.blue 0 1 10))
-              (fx/row
-                {:mainAxisAlignment m/MainAxisAlignment.center}
-                (m/Text "Pitch")
-                (property-slider :pitch "Pitch" m/Colors.red 0.5 2 15))
-              (fx/row
-                {:mainAxisAlignment m/MainAxisAlignment.center}
-                (m/Text "Rate")
-                (property-slider :speech-rate "Rate" m/Colors.green 0 1 20)))))))))
+              (doall (for [[label & opnds]
+                           [["Volume" :volume m/Colors.blue 0 1 10]
+                            ["Pitch" :pitch  m/Colors.red 0.5 2 15]
+                            ["Rate" :speech-rate  m/Colors.green 0 1 20]]]
+                       (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+                         (fx/row
+                           {:mainAxisAlignment m/MainAxisAlignment.end}
+                           (m/Text label)
+                           (apply property-slider label opnds)))
+                       )))))))))
 
 ;;; --- components -------------------------------------------------
 
@@ -204,7 +202,7 @@
 
 ;;; --- property sliders -----------------------------------------------------------
 
-(defn property-slider [prop label color min max divisions]
+(defn property-slider [label prop color min max divisions]
   (fx/slider
     {:value       (cF (mget (fasc :app) prop))
      :onChanged   (cF (fn [val]
