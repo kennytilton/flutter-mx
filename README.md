@@ -2,6 +2,9 @@
 
 Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE14sd2MGLJW35qeuJynmTRjqpUL3SbIUhOiS4TihjyZ9iTVRoCJkoQAvD_BwE&gclsrc=aw.ds) with [ClojureDart](https://github.com/Tensegritics/ClojureDart) and [Matrix](https://github.com/kennytilton/matrix), a generic, fine-grained, transparent, reactive state manager.
 
+> [!WARNING]  
+I just upgraded to Mac OS X Sonoma, forcing an upgrade of XCode _and_ Simulator. At least one package, `flutter_tts` then had to be upgraded, and that that still did not work. Googling revealed that `flutter_tts` has a fix in Beta, and that sims built to run on iOS 16.4 will work. Yay.
+
 ## Documentation
 Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or just ping @kennytilton on the #clojurians or #fluttercommunity Slacks and we can pair to get you rolling.
 
