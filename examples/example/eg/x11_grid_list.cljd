@@ -10,7 +10,8 @@
     (fx/material-app {:title title}
       (fx/scaffold {:appBar (fx/app-bar {:title (m/Text "A Grid List Example")})}
         ; --- implicit body ---
-        (fx/grid-view+count
+        (fx/builder
+          (fx/grid-view+count
           {:crossAxisCount 2}
           (mapv
             (fn [i] (fx/center
@@ -18,4 +19,4 @@
                         {:style (fx/in-my-context [me ctx]
                                   (-> (m/Theme.of ctx) .-textTheme .-headline3))}
                         (str "Item " i))))
-            (range 100)))))))
+            (range 100))))))))

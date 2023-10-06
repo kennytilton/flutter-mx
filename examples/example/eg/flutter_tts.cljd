@@ -38,7 +38,7 @@
                                         (group-by lg-lang (sort lg-flat)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
      :lg-pref       "en-AU"                                 ;; todo store as upref
-     :lgc           (cF+n [:watch (fn [_ me new _ _]
+     :lg-current    (cF+n [:watch (fn [_ me new _ _]
                                     (do-speak me))]
                       (mget me :lg-pref))}
     (scaffold
@@ -55,8 +55,8 @@
             (column
               (doall (for [[label & opnds]
                            [["Volume" :volume m/Colors.blue 0 1 10]
-                            ["Pitch" :pitch  m/Colors.red 0.5 2 15]
-                            ["Rate" :speech-rate  m/Colors.green 0 1 20]]]
+                            ["Pitch" :pitch m/Colors.red 0.5 2 15]
+                            ["Rate" :speech-rate m/Colors.green 0 1 20]]]
                        (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
                          (fx/row
                            {:mainAxisAlignment m/MainAxisAlignment.end}
@@ -78,11 +78,11 @@
 (defn geo-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount   8 :crossAxisSpacing 4
-       :mainAxisSpacing  4 :childAspectRatio 1.0
-       :padding          (m/EdgeInsets.all 8)}
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.0
+       :padding         (m/EdgeInsets.all 8)}
       (map-indexed geo-button
-        (when-let [lgc (lg-lang (maprop :lgc))]
+        (when-let [lgc (lg-lang (maprop :lg-current))]
           (get (maprop :lang-geo-tree) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
@@ -91,11 +91,11 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
-              (mset! (fasc :app) :lgc
+              (mset! (fasc :app) :lg-current
                 (first (get (maprop :lang-geo-tree) lang))))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang (lg-lang (maprop :lgc)))
+                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
                                     (.all m/Border .color m/Colors.red .width 2)))
                       :color  (.-shade300 (cond
                                             (even? i) m/Colors.cyan
@@ -113,10 +113,10 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang-geo)
      :onTap (as-dart-callback []
-              (mset! (fasc :app) :lgc lang-geo))}
+              (mset! (fasc :app) :lg-current lang-geo))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang-geo (maprop :lgc))
+                     {:border (cF (when (= lang-geo (maprop :lg-current))
                                     (.all m/Border .color m/Colors.red .width 2)))
                       :color  (.-shade300 (cond
                                             (even? i) m/Colors.cyan
@@ -144,13 +144,13 @@
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI #_"Turning and turning in the widening gyre, The falcon cannot hear the falconer."
-                (str
-                  ; "\"Jealousy\"\nby Robert Graves\n\n"
+       :value (cI "Turning and turning in the widening gyre, The falcon cannot hear the falconer."
+                #_ (str
+                  "\"Jealousy\"\nby Robert Graves\n\n"
                   "I'd die for you, or you for me, \n"
-                  ;"So furious is our jealousy-- \n"
-                  ;"And if you doubt this to be true, \n"
-                  ;"Kill me outright, lest I kill you."
+                  "So furious is our jealousy-- \n"
+                  "And if you doubt this to be true, \n"
+                  "Kill me outright, lest I kill you."
                   ))})))
 
 ;;; --- play, stop, pause -------------------------------------------------------
@@ -187,9 +187,13 @@
   (let [app (mx/fascinc :app)
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)
-        lang (maprop :lgc)]
+        lang (maprop :lg-current)]
+    (dp :speaking??? lang speech)
     (when (and lang (not (str/blank? speech)))
-      (.setSpeechRate fts (mget app :speech-rate))
+      (dp :speaking!!!!!!!! lang speech)
+      (dp :params (mget app :speech-rate)
+        (mget app :pitch)
+        (mget app :volume))
       (.setPitch fts (mget app :pitch))
       (.setVolume fts (mget app :volume))
       (.setLanguage fts lang)
@@ -216,6 +220,7 @@
 (defn flutter-tts-initializer []
   (cF+ [:watch (fn [_ me newv _ _]
                  (when-let [fts ^FlutterTts newv]
+                   (dp :BAM-fts!!! fts)
                    (.setSharedInstance fts true)
                    (.awaitSpeakCompletion fts true)))]
     (FlutterTts)))
