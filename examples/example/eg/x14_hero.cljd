@@ -18,13 +18,14 @@
       {:debugShowCheckedModeBanner false}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text "Main Screen")})}
-        (fx/gesture-detector
-          {:onTap (as-dart-callback []
-                    (.push (m/Navigator.of ctx)
-                      (#/(m/MaterialPageRoute Object)
-                        .builder (fn [_]
-                                   (fx/fx-render ctx
-                                     detail-screen)))))}
-          (fx/hero {:tag "imageHero"}
-            ;; required a pubspec.yaml "assets:" entry and add a path to a JPEG,
-            (m/Image .image (m/AssetImage "image/john.jpeg"))))))))
+        (fx/builder
+          (fx/gesture-detector
+            {:onTap (as-dart-callback []
+                      (.push (m/Navigator.of ctx)
+                        (#/(m/MaterialPageRoute Object)
+                          .builder (fn [_]
+                                     (fx/fx-render ctx
+                                       detail-screen)))))}
+            (fx/hero {:tag "imageHero"}
+              ;; required a pubspec.yaml "assets:" entry and add a path to a JPEG,
+              (m/Image .image (m/AssetImage "image/john.jpeg")))))))))
