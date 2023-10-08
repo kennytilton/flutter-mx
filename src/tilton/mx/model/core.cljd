@@ -177,13 +177,19 @@
   ;; todo should this be memoized?
   [me]
   (some (fn [[ky c]]
-          (dp :MDR?-sees-key ky :c? (not (nil? c)) :me (minfo me))
-          (when c
-            (dp :MDR?-sees ky (cinfo c) :me (minfo me))
-            (when (or (c-input? c)
-                    (c-formula? c))
-              ;; (dp :bingo-reactive (:state @c) (cinfo c))
-              c)))
+          (dpx :MDR?-sees-key ky :c? (not (nil? c)) :me (minfo me))
+          (or
+            (when c
+              (dpx :MDR?-sees ky (cinfo c) :me (minfo me))
+              (when (or (c-input? c)
+                      (c-formula? c))
+                ;; (dp :bingo-reactive (:state @c) (cinfo c))
+                c))
+            (when-let [d (mget me ky)]
+              (when (and (mref? d)
+                      (md-reactive? d))
+                (dpx :reactivee-delegate!! (minfo d) :of (minfo me))
+                true))))
     (md-cz me)))
 
 ;;; --- family ------------------------------------

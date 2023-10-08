@@ -20,9 +20,6 @@
                  {:title           (m/Text "Flutter/MX Counter")
                   :backgroundColor (cF (.-inversePrimary
                                          (.-colorScheme ^m/ThemeData (maprop :theme))))})
-
-       ;----------  how abaout fma-get, -set!, -swap! ????
-
        :floatingActionButton
        (floating-action-button
          {:onPressed (as-dart-callback []
@@ -31,35 +28,20 @@
          (m/Icon m/Icons.add .color m/Colors.black))}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (fx/stateful-builder {}{:name :bilder}
-            (text {:style (cF+ [:debug :all]
-                          (do ;; binding [*md-host* me]
-                              (dp :hostbinding!! (minfo *md-host*))
-                              (fx/text-style
-
-                          ;; need to get *host* for text-style
-
-                                {:color m/Colors.black
-                                 :fontSize (cF (dp :fontsize-runs-host!!!! (minfo *md-host*))
-                                             (+ 24.0 (* 4.0 (mget (fm* :counter) :value))))}
-                                {:name :stylox})))
-                 #_ (cF (dp :computimg!! (mget (fm* :counter) :value))
-                          (fx/text-style
-                              {:color m/Colors.black
-                               :fontSize (+ 24.0 (* 4.0 (mget (fm* :counter) :value)))}))
-                 #_
-                 (fx/text-style ;; does not find state to setstate sans parent/host
-                          {:color m/Colors.black
-                          :fontSize (cF (dp :computimg!! (mget (fm* :counter) :value))
-                                      (+ 24.0 (* 4.0 (mget (fm* :counter) :value))))})}
-            {:name :styhost :dbg true :Hunh 42 #_  (cI 1)}
-            "The button push count now:"))
-          #_ (sized-box
+          (text {:style
+                 ;;; this silliness is a test to see if the engine can propagate to setState
+                 ;; when the reactivity is embedded in a delegate model, the text-style. So far so good.
+                 ;; If it fails, try just wrapping the non-updating widget in `(fx/stateful-builder....)`
+                 (cF (fx/text-style
+                              {:color    m/Colors.black
+                               :fontSize (cF (+ 24.0 (* 1.0 (mget (fm* :counter) :value))))}))}
+            "The button push count now:")
+          (sized-box
             {:height 28.0})
           (text
             {:style (cF (fx/in-my-context [me ctx]
                           (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
-                      #_ (.-displayLarge (.-textTheme ^m/ThemeData (maprop :theme))))}
+                      #_(.-displayLarge (.-textTheme ^m/ThemeData (maprop :theme))))}
             {:name  :counter
              :value (cI 0)}
             (str (mget me :value))))))))

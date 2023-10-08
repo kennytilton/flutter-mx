@@ -157,38 +157,38 @@
 
 (defn trigger-build [me cell]
   (when-not *fx-building?*                                  ;; todo vestigial?
-    (dp :TRG-build :pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me))
+    (dpx :TRG-build :pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me))
     (if-let [^State? state (:fx$state (meta me))]
       (if (.-mounted state)
-        (do (dp :TRG-build-settingimmediatestate (minfo me) (cinfo cell))
+        (do (dpx :TRG-build-settingimmediatestate (minfo me) (cinfo cell))
           (trigger-state state me))
-        (dp :TRG-build-settingimmediatestate-UNMOUNTED!! (minfo me) (.-mounted state) (cinfo cell)))
+        (dpx :TRG-build-settingimmediatestate-UNMOUNTED!! (minfo me) (.-mounted state) (cinfo cell)))
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
-          (dp :TRG-stateful-ctx!!!!! ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
+          (dpx :TRG-stateful-ctx!!!!! ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
           (if (.-debugIsDefunct ^m/Element ctx)
-            (do (dp :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
+            (do (dpx :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
               (trigger-state-above (mabove)))
-            (do (dp :TRG-build-using-state-setter!!!!!!!!! (minfo me) (cinfo cell))
+            (do (dpx :TRG-build-using-state-setter!!!!!!!!! (minfo me) (cinfo cell))
               (state-setter (fn [] (do))))))
         (do
-          (dp :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
+          (dpx :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
           (trigger-state-above (mabove)))))))
 
 (defn trigger-state-above [me]
   ;; todo DRY with trigger-statecc
   (when-not me
-    (dp :TRG-ABOVE-WARNING!!!!!!-setstate-above-topped-out))
+    (dpx :TRG-ABOVE-WARNING!!!!!!-setstate-above-topped-out))
   (when me
     ;; todo why is :fx$state in me but fx$state-setter in meta
     (if-let [^State? state (:fx$state (meta me))]
       (if (.-mounted state)
-        (do (dp :TRG-ABOVE-bingo (minfo me))
+        (do (dpx :TRG-ABOVE-bingo (minfo me))
           (trigger-state state me))
-        (dp :TRG-ABOVE-UNMOUNTED!! (minfo me)))
+        (dpx :TRG-ABOVE-UNMOUNTED!! (minfo me)))
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
-          (dp :TRG-ABOVE-statesetter-ctx!!!!! ctx (minfo me))
+          (dpx :TRG-ABOVE-statesetter-ctx!!!!! ctx (minfo me))
 
           ; the problem is hot reload leaves the app broken
           ; witness the lack of blinking caret
@@ -203,13 +203,13 @@
 
           (if (and ctx (.-debugIsDefunct ^m/Element ctx))
             (do
-              (dp :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
+              (dpx :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
               (trigger-state-above (mabove)))
-            (do (dp :TRG-build-using-state-setter!!!!!!!!! (minfo me))
+            (do (dpx :TRG-build-using-state-setter!!!!!!!!! (minfo me))
               (state-setter (fn [] (do))))))
         (do
           ;; todo expand on this message
-          (dp :TRG-no-state/setter-so-trying-above!!! (minfo me))
+          (dpx :TRG-no-state/setter-so-trying-above!!! (minfo me))
           (trigger-state-above (mabove)))))))
 
 (defn trigger-state
@@ -217,9 +217,9 @@
    (trigger-state state nil))
   ([^State state me]
    (if (.-mounted state)
-     (do (dp :TGSTATE--BAM!!!! state (minfo me))
+     (do (dpx :TGSTATE--BAM!!!! state (minfo me))
        (.setState state (fn [] (do))))
-     (dp :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
+     (dpx :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
 
 (defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
@@ -249,7 +249,7 @@
     (when-not (= prior-value cty/unbound)
       (when-not (some #{prop} [:parent :name :mx-type :on-quiesce :initState :fx-class :cells-flushed
                                :fx$state :fx$ikeys :fx$notifier :fx$observer])
-        (dp :FXDartWidget-observing!!! (cinfo cell))
+        (dpx :FXDartWidget-observing!!! (cinfo cell))
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (minfo me) (cinfo cell))
         (dpx :FXDartWidget-observing-md!!! prop (minfo me) #_#_:deref @me)
         (when true                                          ;; (= prop :kids)
@@ -394,7 +394,7 @@
 
 (defn gen-gen [me ctx widget-maker]
   (when (mget? me :dbg)
-    (dp :gen-gen-entry (minfo me) :react? (tilton.mx.model.core/md-reactive? me)))
+    (dpx :gen-gen-entry (minfo me) :react? (tilton.mx.model.core/md-reactive? me)))
   (cond
     (or (tilton.mx.api/mget? me :unwrapped?)
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
@@ -403,10 +403,10 @@
       (widget-maker me ctx))
 
     (tilton.mx.model.core/md-reactive? me)
-    (do (dp :GENGEN-wrap-Stateful (minfo me)
+    (do (dpx :GENGEN-wrap-Stateful (minfo me)
           (cinfo (tilton.mx.model.core/md-reactive? me)))
       (with-flutter-ref
-        (dp :state-wrap!!!!!!! (minfo me) (cinfo (tilton.mx.model.core/md-reactive? me)))
+        (dpx :state-wrap!!!!!!! (minfo me) (cinfo (tilton.mx.model.core/md-reactive? me)))
         (reify :extends (m/StatefulWidget .key (widget-key me ctx :auto-stateful))
           (createState [_]
             (dpx :crestate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
