@@ -177,8 +177,9 @@
   ;; todo should this be memoized?
   [me]
   (some (fn [[ky c]]
+          (dp :MDR?-sees-key ky :c? (not (nil? c)) :me (minfo me))
           (when c
-            ;; (dp :MDR?-sees ky (cinfo c) :me (minfo me))
+            (dp :MDR?-sees ky (cinfo c) :me (minfo me))
             (when (or (c-input? c)
                     (c-formula? c))
               ;; (dp :bingo-reactive (:state @c) (cinfo c))
@@ -220,9 +221,9 @@
   (let [me (or me 'me)]
     `(:parent @~me)))
 
-(defn mhost [md]
-  (chk (mref? md))
-  (:host @md))
+(defmacro mhost [& [me]]
+  (let [me (or me 'me)]
+    `(:host @~me)))
 
 (defn make-family [& arg-list]
   (dp :make-fanily!!!)

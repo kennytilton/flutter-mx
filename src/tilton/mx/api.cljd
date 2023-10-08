@@ -69,8 +69,13 @@
   (let [me (or me 'me)]
     `(:parent @~me)))
 
-(defn mhost [md]
-  (md/mhost md))
+(defmacro mhost [& [me]]
+  (let [me (or me 'me)]
+    `(:host @~me)))
+
+(defmacro mabove [& [me]]
+  (let [me (or me 'me)]
+    `(or (:parent @~me)(:host @~me))))
 
 (defmacro with-par [meform & body]
   `(tilton.mx.model.core/with-par ~meform

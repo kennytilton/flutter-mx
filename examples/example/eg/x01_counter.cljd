@@ -2,7 +2,8 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]
+    [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
@@ -30,10 +31,30 @@
          (m/Icon m/Icons.add .color m/Colors.black))}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text {:style (p/TextStyle .color m/Colors.black
-                          .fontSize 20.0)}
-            "The button push count now:")
-          (sized-box
+          (fx/stateful-builder {}{:name :bilder}
+            (text {:style (cF+ [:debug :all]
+                          (do ;; binding [*md-host* me]
+                              (dp :hostbinding!! (minfo *md-host*))
+                              (fx/text-style
+
+                          ;; need to get *host* for text-style
+
+                                {:color m/Colors.black
+                                 :fontSize (cF (dp :fontsize-runs-host!!!! (minfo *md-host*))
+                                             (+ 24.0 (* 4.0 (mget (fm* :counter) :value))))}
+                                {:name :stylox})))
+                 #_ (cF (dp :computimg!! (mget (fm* :counter) :value))
+                          (fx/text-style
+                              {:color m/Colors.black
+                               :fontSize (+ 24.0 (* 4.0 (mget (fm* :counter) :value)))}))
+                 #_
+                 (fx/text-style ;; does not find state to setstate sans parent/host
+                          {:color m/Colors.black
+                          :fontSize (cF (dp :computimg!! (mget (fm* :counter) :value))
+                                      (+ 24.0 (* 4.0 (mget (fm* :counter) :value))))})}
+            {:name :styhost :dbg true :Hunh 42 #_  (cI 1)}
+            "The button push count now:"))
+          #_ (sized-box
             {:height 28.0})
           (text
             {:style (cF (fx/in-my-context [me ctx]

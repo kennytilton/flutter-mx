@@ -2,22 +2,29 @@
   (:require
     [clojure.string :as str]
     [tilton.mx.api :refer [cF mget mset! mswap!] :as md]
+    [tilton.fmx.factory :refer [deftag] :as fxf]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app]]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
 
+(deftag fxf/non-widget theme-data m/ThemeData)
+(deftag fxf/kidless-childless image w/Image  )
+
+;(deftag fxf/kidless-childless asset-image p/AssetImage  )
+; no, this has to be konly-param0 or sth
+
 (defn make-app []
   (material-app
-    {:title "Flutter/MX Hello World, Teal"
-     :theme (cF (m/ThemeData .primarySwatch
-                  (let [ttl (mget me :title)]
-                    ;; silly derivation
-                    (cond
-                      (str/includes? ttl "Teal") m/Colors.teal
-                      (str/includes? ttl "Red") m/Colors.red
-                      :else m/Colors.blue))))}
+    {:title "Flutter/MX Hello Teal World"
+     :theme (cF (theme-data
+                  {:primarySwatch (let [ttl (mget me :title)]
+                                    ;; silly derivation
+                                    (cond
+                                      (str/includes? ttl "Teal") m/Colors.teal
+                                      (str/includes? ttl "Red") m/Colors.red
+                                      :else m/Colors.blue))}))}
     (scaffold
       {:appBar (app-bar
                  {:title (m/Text "Welcome to Flutter/MX")})}
@@ -25,15 +32,15 @@
         (column
           {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (text {:overflow p.TextOverflow/ellipsis
-                 :style    (p/TextStyle
-                             .color m/Colors.cyan
-                             .fontSize 32.0)}
+                 :style    (fx/text-style {:fontSize   40
+                                           :fontWeight m/FontWeight.w600
+                                           :color      m/Colors.blue})}
             "hello, world\\n")
           (hero {:tag "imageHero"}
-            (m/Image .image (m/AssetImage "image/kernighan.jpeg")
-              .height 512))
+            (image {:image (m/AssetImage "image/kernighan.jpeg")
+                    :height 512}))
           (text {:overflow p.TextOverflow/ellipsis
-                 :style    (p/TextStyle
-                             .color m/Colors.cyan
-                             .fontSize 16.0)}
+                 :style    (fx/text-style {:fontSize   20
+                                           :fontWeight m/FontWeight.w400
+                                           :color      m/Colors.blue})}
             "Brian Kernighan"))))))
