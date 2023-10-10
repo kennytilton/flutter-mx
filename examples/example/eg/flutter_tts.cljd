@@ -12,17 +12,22 @@
              container row expanded icon padding
              icon-button fx-render as-dart-callback]]))
 
-(declare lang-chooser
-  geo-chooser
-  speaking-controls
-  equalizer property-slider
-  text-input
-  do-speak
-  lang-button geo-button
-  lg-lang)
+(declare lang-chooser geo-chooser speaking-controls
+  equalizer property-slider text-input do-speak
+  lang-button geo-button lg-lang)
 
-(defmacro myapp []
-  `(mx/fascinc :app ~'me))
+(def speech-initial
+  (str "Turning and turning in the widening gyre\n"
+    "The falcon cannot hear the falconer;\n"
+    "Things fall apart; the centre cannot hold;\n"
+    "Mere anarchy is loosed upon the world,")
+  #_(str
+      "\"Jealousy\"\nby Robert Graves\n\n"
+      "I'd die for you, or you for me, \n"
+      "So furious is our jealousy-- \n"
+      "And if you doubt this to be true, \n"
+      "Kill me outright, lest I kill you."
+      ))
 
 (defn make-app []
   (material-app {}
@@ -76,7 +81,7 @@
 
 (defn speaking-controls []
   (container
-    {:padding    (m/EdgeInsets.only .top 8 .bottom 8)}
+    {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
@@ -86,12 +91,12 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [app (myapp) ;(mx/fascinc :app)
+  (let [app (mx/fascinc :app) ;; turns out 'me' _is_ the app
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)
         lang (maprop :lg-current)]
     (when (and lang (not (str/blank? speech)))
-      (dp :speaking!!!!!!!! lang speech :params (mget app :speech-rate)
+      (dp :speaking!!!!!!!! lang :params (mget app :speech-rate)
         (mget app :pitch)
         (mget app :volume))
       (.setPitch fts (mget app :pitch))
@@ -171,8 +176,8 @@
                      {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
                                     (.all m/Border .color m/Colors.blue .width 2)))
                       :color  (.-shade50 (cond
-                                            (even? i) m/Colors.blue
-                                            :else m/Colors.yellow))}
+                                           (even? i) m/Colors.blue
+                                           :else m/Colors.yellow))}
                      {:unwrapped? true})}
       {:name :lang-cont}
       (center
@@ -217,17 +222,7 @@
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI (str "Turning and turning in the widening gyre\n"
-                    "The falcon cannot hear the falconer;\n"
-                    "Things fall apart; the centre cannot hold;\n"
-                    "Mere anarchy is loosed upon the world,")
-                #_(str
-                    "\"Jealousy\"\nby Robert Graves\n\n"
-                    "I'd die for you, or you for me, \n"
-                    "So furious is our jealousy-- \n"
-                    "And if you doubt this to be true, \n"
-                    "Kill me outright, lest I kill you."
-                    ))})))
+       :value (cI speech-initial)})))
 
 ;;; --- utils -----------------------------
 
