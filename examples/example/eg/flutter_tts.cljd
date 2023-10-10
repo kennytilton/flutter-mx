@@ -60,10 +60,25 @@
                             ["Rate" :speech-rate m/Colors.green 0 1 20]]]
                        (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
                          (fx/row
-                           {:mainAxisAlignment m/MainAxisAlignment.end}
-                           (m/Text label)
-                           (apply property-slider label opnds)))
-                       )))))))))
+                           {:mainAxisAlignment m/MainAxisAlignment.end
+                            :mainAxisSize m/MainAxisSize.min}
+                           (container {:width 64
+                                       :alignment m/Alignment.topRight}
+                             (m/Text label))
+                           (apply property-slider label opnds))))))))))))
+
+;;; --- property sliders -----------------------------------------------------------
+
+(defn property-slider [label prop color min max divisions]
+  (fx/slider
+    {:value       (cF (mget (fasc :app) prop))
+     :onChanged   (cF (fn [val]
+                        (mset! (fasc :app) prop val)))
+     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+     :label       (cF (str label " " (mget me :value)))
+     :activeColor color}))
+
+
 
 ;;; --- components -------------------------------------------------
 
@@ -174,7 +189,11 @@
 
 (defn speaking-controls []
   (container
-    {:padding (m/EdgeInsets.only .top 50.0)}
+    {:padding (m/EdgeInsets.only .top 8 .bottom 8)
+     :decoration (m/BoxDecoration
+                   .color (.-shade50 m/Colors.red)
+                   #_#_ .border (m/Border.all .width 2.0
+                     .color (m/Colors.red)))}
     {:name :ctlz
      :mode (cI :off :watch (fn [_ me new prior _]
                              (dp :mode-now new :was prior)))}
@@ -211,17 +230,6 @@
         fts ^FlutterTts (mget app :fts)]
     (await (.stop fts))))
 
-;;; --- property sliders -----------------------------------------------------------
-
-(defn property-slider [label prop color min max divisions]
-  (fx/slider
-    {:value       (cF (mget (fasc :app) prop))
-     :onChanged   (cF (fn [val]
-                        (mset! (fasc :app) prop val)))
-     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
-     :label       (cF (str label " " (mget me :value)))
-     :activeColor color}))
-
 ;;; --- subroutines ------------------------------------------------
 
 (defn flutter-tts-initializer []
@@ -229,41 +237,18 @@
                  (when-let [fts ^FlutterTts newv]
                    (dp :BAM-fts!!! fts)
                    (.setSharedInstance fts true)
-                   (.awaitSpeakCompletion fts true)))]
+                   (.setCompletionHandler fts
+                     (fn []
+                       (dp :completion!!!!!!! (minfo (mx/fm* :ctlz)))
+                       (mset! (mx/fm* :ctlz) :status :not-playing)))
+                   (.setProgressHandler fts
+                     (fn [text startOffset endOffset word]
+                       (dp :progress!!!!!! word text startOffset endOffset)))
+                   (.setErrorHandler fts
+                     (fn [msg]
+                       (dp :tts-err!!!!! msg)))
+                   #_ (.awaitSpeakCompletion fts true)))]
     (FlutterTts)))
 
 (defn lg-lang [lg]
   (subs lg 0 2))
-
-;;; --- languages dropdown ------------------------------------------------
-
-#_;; save
-        (defn language-selector []
-          (fx/future-builder
-            {:future  (cF (let [app (fasc :app)
-                                fts ^FlutterTts (mget app :fts)]
-                            (.-getLanguages fts)))
-             :builder (cF (fx/cb-as-is
-                            (fn [ctx ^#/(m/AsyncSnapshot dynamic) snapshot]
-                              (dp :snapshot snapshot)
-                              (fx-render ctx
-                                (cond
-                                  (.-hasData snapshot) (language-dropdown me (.-data snapshot))
-                                  (.-hasError snapshot) (text "Error loading languages...")
-                                  :else (fx/text "Loading languages..."))))))}))
-
-#_(defn language-dropdown [par languages]
-    (container
-      {:padding (m/EdgeInsets.only .top 10.0)}
-      (row
-        {:mainAxisAlignment m/MainAxisAlignment.center}
-        (fx/dropdown-button
-          {:value     (cF (mget (fasc :app par) :language))
-           :items     (mapv (fn [lang]
-                              (fx/dropdown-menu-item
-                                {:value lang}
-                                (text lang)))
-                        (sort languages))
-           :onChanged (fn [new-lang]
-                        (mset! (fasc :app par) :language new-lang))}))))
-
