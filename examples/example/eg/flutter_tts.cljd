@@ -26,7 +26,7 @@
   (material-app {}
     {:name          :app
      :fts           (flutter-tts-initializer)
-     :volume        (cI 0.8 :watch (fn [_ me new _ _]
+     :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
      :speech-rate   (cI 0.5 :watch (fn [_ me new _ _]
                                      (.setSpeechRate ^FlutterTts (mget me :fts) new)))
@@ -38,8 +38,9 @@
                                         (group-by lg-lang (sort lg-flat)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
      :lg-pref       "en-AU"                                 ;; todo store as upref
-     :lg-current    (cF+n [:watch (fn [_ me new _ _]
-                                    (do-speak me))]
+     :lg-current    (cF+n [:watch (fn [_ me new prior _]
+                                    (when (not= prior mx/unbound)
+                                      (do-speak me)))]
                       (mget me :lg-pref))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
@@ -144,7 +145,10 @@
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in
-       :value (cI "Turning and turning in the widening gyre, The falcon cannot hear the falconer."
+       :value (cI (str "Turning and turning " #_ "in the widening gyre \n"
+                    #_ "The falcon cannot hear the falconer;\n"
+                    #_#_"Things fall apart; the centre cannot hold;\n"
+                    "Mere anarchy is loosed upon the world,")
                 #_ (str
                   "\"Jealousy\"\nby Robert Graves\n\n"
                   "I'd die for you, or you for me, \n"
@@ -155,10 +159,8 @@
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
-(defn do-pause [me]
-  (let [app (fasc :app)
-        fts ^FlutterTts (mget app :fts)]
-    (await (.pause fts))))
+
+;; todo if user changes volume et al while paused, warn that it will not take effect until fresh play
 
 (defn speaking-control [color splash-color icon label func]
   (column
@@ -170,11 +172,12 @@
        :splashColor splash-color
        :onPressed   (fn [] (func me))})))
 
-
-
 (defn speaking-controls []
   (container
     {:padding (m/EdgeInsets.only .top 50.0)}
+    {:name :ctlz
+     :mode (cI :off :watch (fn [_ me new prior _]
+                             (dp :mode-now new :was prior)))}
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
@@ -188,7 +191,6 @@
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)
         lang (maprop :lg-current)]
-    (dp :speaking??? lang speech)
     (when (and lang (not (str/blank? speech)))
       (dp :speaking!!!!!!!! lang speech)
       (dp :params (mget app :speech-rate)
@@ -198,6 +200,11 @@
       (.setVolume fts (mget app :volume))
       (.setLanguage fts lang)
       (.speak fts speech))))
+
+(defn do-pause [me]
+  (let [app (fasc :app)
+        fts ^FlutterTts (mget app :fts)]
+    (await (.pause fts))))
 
 (defn do-stop [me]
   (let [app (fasc :app)

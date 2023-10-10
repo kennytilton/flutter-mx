@@ -45,7 +45,7 @@
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   ;; broken: x11, sock?,
   ;; failed on hot reload, had to restart: x040
-  (counter/make-app))
+  (tts/make-app))
 
 
 
