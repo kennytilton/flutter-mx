@@ -1,5 +1,5 @@
 (ns example.eg.flutter-tts
-  "Port of flutter_tts package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -15,17 +15,26 @@
 (declare lang-chooser
   geo-chooser
   speaking-controls
-  property-slider
+  equalizer property-slider
   text-input
   do-speak
-  flutter-tts-initializer
   lang-button geo-button
   lg-lang)
+
+(defmacro myapp []
+  `(mx/fascinc :app ~'me))
 
 (defn make-app []
   (material-app {}
     {:name          :app
-     :fts           (flutter-tts-initializer)
+     :fts           (cF+ [:watch (fn [_ me newv _ _]
+                                   (when-let [fts ^FlutterTts newv]
+                                     (.setSharedInstance fts true)
+                                     (.setErrorHandler fts
+                                       (fn [msg]
+                                         (throw (Exception. (str "FlutterTts error: " msg)))))))]
+                      (FlutterTts))
+
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
      :speech-rate   (cI 0.5 :watch (fn [_ me new _ _]
@@ -39,138 +48,16 @@
                       (.-getLanguages ^FlutterTts (mget me :fts)))
      :lg-pref       "en-AU"                                 ;; todo store as upref
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
-                                    (when (not= prior mx/unbound)
-                                      (do-speak me)))]
+                                    (do-speak me))]
                       (mget me :lg-pref))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
         (lang-chooser)
         (geo-chooser)
-
-        (fx/single-child-scroll-view
-          {:scrollDirection m/Axis.vertical}
-          (column
-            (text-input)
-            (speaking-controls)
-            (column
-              (doall (for [[label & opnds]
-                           [["Volume" :volume m/Colors.blue 0 1 10]
-                            ["Pitch" :pitch m/Colors.red 0.5 2 15]
-                            ["Rate" :speech-rate m/Colors.green 0 1 20]]]
-                       (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
-                         (fx/row
-                           {:mainAxisAlignment m/MainAxisAlignment.end
-                            :mainAxisSize m/MainAxisSize.min}
-                           (container {:width 64
-                                       :alignment m/Alignment.topRight}
-                             (m/Text label))
-                           (apply property-slider label opnds))))))))))))
-
-;;; --- property sliders -----------------------------------------------------------
-
-(defn property-slider [label prop color min max divisions]
-  (fx/slider
-    {:value       (cF (mget (fasc :app) prop))
-     :onChanged   (cF (fn [val]
-                        (mset! (fasc :app) prop val)))
-     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
-     :label       (cF (str label " " (mget me :value)))
-     :activeColor color}))
-
-
-
-;;; --- components -------------------------------------------------
-
-(defn lang-chooser []
-  (expanded
-    (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.2
-       :padding         (m/EdgeInsets.all 8)}
-      (map-indexed lang-button
-        (sort (keys (maprop :lang-geo-tree)))))))
-
-(defn geo-chooser []
-  (expanded
-    (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.0
-       :padding         (m/EdgeInsets.all 8)}
-      (map-indexed geo-button
-        (when-let [lgc (lg-lang (maprop :lg-current))]
-          (get (maprop :lang-geo-tree) lgc))))))
-
-;;; --- lang and geo buttons ----------------------------------------------------
-
-(defn lang-button [i lang]
-  (fx/gesture-detector
-    {:key   (m/ValueKey. lang)
-     :onTap (as-dart-callback []
-              (mset! (fasc :app) :lg-current
-                (first (get (maprop :lang-geo-tree) lang))))}
-    (container
-      {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
-                                    (.all m/Border .color m/Colors.red .width 2)))
-                      :color  (.-shade300 (cond
-                                            (even? i) m/Colors.cyan
-                                            :else m/Colors.yellow))}
-                     {:unwrapped? true})}
-      {:name :lang-cont}
-      (center
-        (padding {:padding (m/EdgeInsets.all 4.0)}
-          (fx/text
-            {:style (p/TextStyle .color m/Colors.black
-                      .fontSize 16.0)}
-            lang))))))
-
-(defn geo-button [i lang-geo]
-  (fx/gesture-detector
-    {:key   (m/ValueKey. lang-geo)
-     :onTap (as-dart-callback []
-              (mset! (fasc :app) :lg-current lang-geo))}
-    (container
-      {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang-geo (maprop :lg-current))
-                                    (.all m/Border .color m/Colors.red .width 2)))
-                      :color  (.-shade300 (cond
-                                            (even? i) m/Colors.cyan
-                                            :else m/Colors.yellow))}
-                     {:unwrapped? true})}
-      {:name :geo-cont}
-      (center
-        (padding {:padding (m/EdgeInsets.all 4.0)}
-          (fx/text
-            {:style (p/TextStyle .color m/Colors.black
-                      .fontSize 16.0)}
-            (subs lang-geo 3)))))))
-
-;;; --- text input --------------------------------------------------------------
-
-(defn text-input []
-  (container
-    {:alignment m/Alignment.topCenter
-     :padding   (m/EdgeInsets.only
-                  .top 25.0 .left 25.0 .right 25.0)}
-    (fx/text-field
-      {:controller (cFonce
-                     (m/TextEditingController .text (mget me :value)))
-       :onChanged  (as-dart-callback [text]
-                     (mset! me :value text))
-       :minLines   6 :maxLines 11}
-      {:name  :text-in
-       :value (cI (str "Turning and turning " #_ "in the widening gyre \n"
-                    #_ "The falcon cannot hear the falconer;\n"
-                    #_#_"Things fall apart; the centre cannot hold;\n"
-                    "Mere anarchy is loosed upon the world,")
-                #_ (str
-                  "\"Jealousy\"\nby Robert Graves\n\n"
-                  "I'd die for you, or you for me, \n"
-                  "So furious is our jealousy-- \n"
-                  "And if you doubt this to be true, \n"
-                  "Kill me outright, lest I kill you."
-                  ))})))
+        (text-input)
+        (speaking-controls)
+        (equalizer)))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
@@ -189,12 +76,7 @@
 
 (defn speaking-controls []
   (container
-    {:padding (m/EdgeInsets.only .top 8 .bottom 8)
-     :decoration (m/BoxDecoration
-                   .color (.-shade50 m/Colors.green))}
-    {:name :ctlz
-     :mode (cI :off :watch (fn [_ me new prior _]
-                             (dp :mode-now new :was prior)))}
+    {:padding    (m/EdgeInsets.only .top 8 .bottom 8)}
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
@@ -204,13 +86,12 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [app (mx/fascinc :app)
+  (let [app (myapp) ;(mx/fascinc :app)
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)
         lang (maprop :lg-current)]
     (when (and lang (not (str/blank? speech)))
-      (dp :speaking!!!!!!!! lang speech)
-      (dp :params (mget app :speech-rate)
+      (dp :speaking!!!!!!!! lang speech :params (mget app :speech-rate)
         (mget app :pitch)
         (mget app :volume))
       (.setPitch fts (mget app :pitch))
@@ -219,34 +100,136 @@
       (.speak fts speech))))
 
 (defn do-pause [me]
-  (let [app (fasc :app)
-        fts ^FlutterTts (mget app :fts)]
+  (let [fts ^FlutterTts (mget (fasc :app) :fts)]
     (await (.pause fts))))
 
 (defn do-stop [me]
-  (let [app (fasc :app)
-        fts ^FlutterTts (mget app :fts)]
+  (let [fts ^FlutterTts (mget (fasc :app) :fts)]
     (await (.stop fts))))
 
-;;; --- subroutines ------------------------------------------------
+;;; --- equalizer property sliders -----------------------------------------------------------
 
-(defn flutter-tts-initializer []
-  (cF+ [:watch (fn [_ me newv _ _]
-                 (when-let [fts ^FlutterTts newv]
-                   (dp :BAM-fts!!! fts)
-                   (.setSharedInstance fts true)
-                   (.setCompletionHandler fts
-                     (fn []
-                       (dp :completion!!!!!!! (minfo (mx/fm* :ctlz)))
-                       (mset! (mx/fm* :ctlz) :status :not-playing)))
-                   (.setProgressHandler fts
-                     (fn [text startOffset endOffset word]
-                       (dp :progress!!!!!! word text startOffset endOffset)))
-                   (.setErrorHandler fts
-                     (fn [msg]
-                       (dp :tts-err!!!!! msg)))
-                   #_ (.awaitSpeakCompletion fts true)))]
-    (FlutterTts)))
+(defn equalizer []
+  (column
+    (doall (for [[label & opnds]
+                 [["Volume" :volume m/Colors.blue 0 1 10]
+                  ["Pitch" :pitch m/Colors.red 0.5 2 15]
+                  ["Rate" :speech-rate m/Colors.green 0 1 20]]]
+             (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+               (fx/row
+                 {:mainAxisAlignment m/MainAxisAlignment.end
+                  :mainAxisSize      m/MainAxisSize.min}
+                 (container {:width     64
+                             :alignment m/Alignment.topRight}
+                   (m/Text label))
+                 (apply property-slider label opnds)))))))
+
+(defn property-slider [label prop color min max divisions]
+  (fx/slider
+    {:value       (cF (mget (fasc :app) prop))
+     :onChanged   (cF (fn [val]
+                        (mset! (fasc :app) prop val)))
+     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+     :label       (cF (str label " " (mget me :value)))
+     :activeColor color}))
+
+;;; --- lang/geo choosers -------------------------------------------------
+
+(defn lang-chooser []
+  (expanded
+    (fx/grid-view+count
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.2
+       :padding         (m/EdgeInsets.all 8)}
+      (map-indexed lang-button
+        (sort (keys (maprop :lang-geo-tree)))))))
+
+(defn geo-chooser []
+  (expanded
+    (column
+      (m/Text "Geography")
+      ;;(m/Text "bam") #_
+      (fx/grid-view+count
+        {:crossAxisCount  8 :crossAxisSpacing 4
+         :mainAxisSpacing 4 :childAspectRatio 1.0
+         :padding         (m/EdgeInsets.all 8)
+         :shrinkWrap      true}
+        (map-indexed geo-button
+          (when-let [lgc (lg-lang (maprop :lg-current))]
+            (get (maprop :lang-geo-tree) lgc)))))))
+
+;;; --- lang and geo buttons ----------------------------------------------------
+
+(defn lang-button [i lang]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang)
+     :onTap (as-dart-callback []
+              (mset! (fasc :app) :lg-current
+                (first (get (maprop :lang-geo-tree) lang))))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
+                                    (.all m/Border .color m/Colors.blue .width 2)))
+                      :color  (.-shade50 (cond
+                                            (even? i) m/Colors.blue
+                                            :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :lang-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            lang))))))
+
+(defn geo-button [i lang-geo]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang-geo)
+     :onTap (as-dart-callback []
+              (mset! (fasc :app) :lg-current lang-geo))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang-geo (maprop :lg-current))
+                                    (.all m/Border .color m/Colors.blue .width 2)))
+                      :color  (.-shade50 (cond
+                                           (even? i) m/Colors.blue
+                                           :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :geo-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            (subs lang-geo 3)))))))
+
+;;; --- text input --------------------------------------------------------------
+
+(defn text-input []
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:controller (cFonce
+                     (m/TextEditingController .text (mget me :value)))
+       :onChanged  (as-dart-callback [text]
+                     (mset! me :value text))
+       :minLines   6 :maxLines 11}
+      {:name  :text-in
+       :value (cI (str "Turning and turning in the widening gyre\n"
+                    "The falcon cannot hear the falconer;\n"
+                    "Things fall apart; the centre cannot hold;\n"
+                    "Mere anarchy is loosed upon the world,")
+                #_(str
+                    "\"Jealousy\"\nby Robert Graves\n\n"
+                    "I'd die for you, or you for me, \n"
+                    "So furious is our jealousy-- \n"
+                    "And if you doubt this to be true, \n"
+                    "Kill me outright, lest I kill you."
+                    ))})))
+
+;;; --- utils -----------------------------
 
 (defn lg-lang [lg]
   (subs lg 0 2))
