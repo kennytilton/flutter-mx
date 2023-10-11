@@ -51,10 +51,15 @@
                           :async-then (fn [c lg-flat]
                                         (group-by lg-lang (sort lg-flat)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
-     :lg-pref       "en-AU"                                 ;; todo store as upref
+
+     :lg-pref       "en-AU"
+     ; "current lang-geo"
+     ; as a convenience, we "auto-play" when the user selects a new one.
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
                                     (do-speak me))]
-                      (mget me :lg-pref))}
+                      (mget me :lg-pref))
+
+     }
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
