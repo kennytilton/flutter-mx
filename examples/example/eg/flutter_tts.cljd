@@ -6,7 +6,7 @@
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! minfo fasc fmu maprop]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! minfo fasc fm* maprop mx-bound?]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding
@@ -14,11 +14,11 @@
 
 (declare lang-chooser geo-chooser speaking-controls
   equalizer property-slider text-input do-speak
-  lang-button geo-button lg-lang)
+  lang-button geo-button lg-lang choice-header)
 
 (def speech-initial
-  (str ;"Turning and turning in the widening gyre\n"
-    #_#_"The falcon cannot hear the falconer;\n"
+  (str "Turning and turning in the widening gyre\n"
+    "The falcon cannot hear the falconer;\n"
     "Things fall apart; the centre cannot hold;\n"
     "Mere anarchy is loosed upon the world,")
   #_(str
@@ -32,14 +32,10 @@
 (defn make-app []
   (material-app {}
     {:name          :app
-     :fts           (cF+ [:watch (fn [_ me newv _ _]
-                                   (when-let [fts ^FlutterTts newv]
-                                     (.setSharedInstance fts true)
-                                     (.setErrorHandler fts
-                                       (fn [msg]
-                                         (throw (Exception. (str "FlutterTts error: " msg)))))))]
+     :fts           (cF+ [:watch (fn [_ me fts _ _]
+                                   (.setErrorHandler ^FlutterTts fts
+                                     #(throw (Exception. (str "FlutterTts error: " %1)))))]
                       (FlutterTts))
-
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
      :speech-rate   (cI 0.5 :watch (fn [_ me new _ _]
@@ -63,6 +59,7 @@
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
+        (choice-header "Languages")
         (lang-chooser)
         (geo-chooser)
         (text-input)
@@ -80,6 +77,7 @@
      :mainAxisAlignment m/MainAxisAlignment.center}
     (icon-button
       {:icon        (fx/icon {:icon icon})
+       :iconSize    48
        :color       color
        :splashColor splash-color
        :onPressed   (fn [] (func me))})))
@@ -87,8 +85,7 @@
 (defn speaking-controls []
   (container
     {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
-    (row
-      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
       (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)
       (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))))
@@ -96,17 +93,16 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [app (mx/fascinc :app) ;; turns out 'me' _is_ the app
+  (let [app (mx/fascinc :app)                               ;; turns out 'me' _is_ the app
         fts ^FlutterTts (mget app :fts)
-        speech (mget (mx/fm* :text-in) :value)
-        lang (maprop :lg-current)]
-    (when (and lang (not (str/blank? speech)))
-      (dp :speaking!!!!!!!! lang :params (mget app :speech-rate)
-        (mget app :pitch)
-        (mget app :volume))
-      (.setPitch fts (mget app :pitch))
-      (.setVolume fts (mget app :volume))
-      (.setLanguage fts lang)
+        speech (mget (mx/fm* :text-in) :value)]
+    (when (and (maprop :lg-current) (not (str/blank? speech)))
+      (dp :speaking!!!!!!!! (maprop :lg-current)
+        :params (maprop :speech-rate) (maprop :pitch) (maprop :volume))
+      (.setPitch fts (maprop :pitch))
+      (.setVolume fts (maprop :volume))
+      (.setLanguage fts (maprop :lg-current))
+      (.setSpeechRate fts (maprop :speech-rate))
       (.speak fts speech))))
 
 (defn do-pause [me]
@@ -149,7 +145,7 @@
   (expanded
     (fx/grid-view+count
       {:crossAxisCount  8 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.2
+       :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
       (map-indexed lang-button
         (sort (keys (maprop :lang-geo-tree)))))))
@@ -157,11 +153,10 @@
 (defn geo-chooser []
   (expanded
     (column
-      (m/Text "Geography")
-      ;;(m/Text "bam") #_
+      (choice-header "Geography")
       (fx/grid-view+count
         {:crossAxisCount  8 :crossAxisSpacing 4
-         :mainAxisSpacing 4 :childAspectRatio 1.0
+         :mainAxisSpacing 4 :childAspectRatio 1.8
          :padding         (m/EdgeInsets.all 8)
          :shrinkWrap      true}
         (map-indexed geo-button
@@ -221,7 +216,10 @@
      :padding   (m/EdgeInsets.only
                   .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
     (fx/text-field
-      {:controller (cFonce
+      {:style (p/TextStyle
+                 .fontFamily "Helvetica Neue"
+                 .fontSize 20.0)
+       :controller (cFonce
                      (m/TextEditingController .text (mget me :value)))
        :onChanged  (as-dart-callback [text]
                      (mset! me :value text))
@@ -233,3 +231,7 @@
 
 (defn lg-lang [lg]
   (subs lg 0 2))
+
+(defn choice-header [text]
+  (padding {:padding (m/EdgeInsets.all 4)}
+    (m/Text text)))
