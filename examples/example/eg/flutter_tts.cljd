@@ -32,8 +32,8 @@
 (defn make-app []
   (material-app {}
     {:name          :app
-     :fts           (cF+ [:watch (fn [_ me fts _ _]
-                                   (.setErrorHandler ^FlutterTts fts
+     :fts           (cF+ [:watch (fn [_ me ^FlutterTts fts _ _]
+                                   (.setErrorHandler fts
                                      #(throw (Exception. (str "FlutterTts error: " %1)))))]
                       (FlutterTts))
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
