@@ -33,23 +33,12 @@
 (defn make-app []
   (material-app {}
     {:name          :app
-     :fts           (cF+ [:watch (fn [_ me ^FlutterTts fts _ _]
-                                   (.setStartHandler fts #(mset! (fm* :dash)
-                                                            :play-state :on))
-                                   (.setPauseHandler fts #(mset! (fm* :dash)
-                                                            :play-state :paused))
-                                   (.setContinueHandler fts #(mset! (fm* :dash)
-                                                            :play-state :on))
-                                   (.setCancelHandler fts #(mset! (fm* :dash)
-                                                            :play-state :off))
-                                   (.setCompletionHandler fts #(mset! (fm* :dash)
-                                                            :play-state :off))
-                                   (.setProgressHandler fts
-                                     (fn [text startOffset endOffset word]
-                                       (dp :progress!!!!!! word  startOffset endOffset)))
-
-                                   (.setErrorHandler fts
-                                     #(throw (Exception. (str "FlutterTts error: " %1)))))]
+     :fts           (cF+ [:watch (fn [_ me newv _ _]
+                                   (when-let [fts ^FlutterTts newv]
+                                     (.setSharedInstance fts true)
+                                     (.setErrorHandler fts
+                                       (fn [msg]
+                                         (throw (Exception. (str "FlutterTts error: " msg)))))))]
                       (FlutterTts))
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
@@ -67,8 +56,7 @@
      ; "current lang-geo"
      ; as a convenience, we "auto-play" when the user selects a new one.
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
-                                    (when (mx-bound? prior)
-                                      (do-speak me)))]
+                                    (do-speak me))]
                       (mget me :lg-pref))
 
      }
@@ -101,15 +89,11 @@
 (defn speaking-controls []
   (container
     {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
-    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      {:name :dash
-       :play-state (cI :off)} ;; off, paused, or on
-      (if (= :on (maprop :play-state))
-        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause)
-        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak))
-      (fx/opacity {:opacity (cF (if (= :off (maprop :play-state))
-                               0.0 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
+    (row
+      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)
+      (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))))
 
 ;;; --- speech control actions -----------------------------------------------
 
