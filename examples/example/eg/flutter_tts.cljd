@@ -17,7 +17,8 @@
   lang-button geo-button lg-lang choice-header)
 
 (def speech-initial
-  (str "Turning and turning in the widening gyre\n"
+  (str
+    "Turning and turning in the widening gyre\n"
     "The falcon cannot hear the falconer;\n"
     "Things fall apart; the centre cannot hold;\n"
     "Mere anarchy is loosed upon the world,")
@@ -33,6 +34,20 @@
   (material-app {}
     {:name          :app
      :fts           (cF+ [:watch (fn [_ me ^FlutterTts fts _ _]
+                                   (.setStartHandler fts #(mset! (fm* :dash)
+                                                            :play-state :on))
+                                   (.setPauseHandler fts #(mset! (fm* :dash)
+                                                            :play-state :paused))
+                                   (.setContinueHandler fts #(mset! (fm* :dash)
+                                                            :play-state :on))
+                                   (.setCancelHandler fts #(mset! (fm* :dash)
+                                                            :play-state :off))
+                                   (.setCompletionHandler fts #(mset! (fm* :dash)
+                                                            :play-state :off))
+                                   (.setProgressHandler fts
+                                     (fn [text startOffset endOffset word]
+                                       (dp :progress!!!!!! word  startOffset endOffset)))
+
                                    (.setErrorHandler fts
                                      #(throw (Exception. (str "FlutterTts error: " %1)))))]
                       (FlutterTts))
@@ -52,7 +67,8 @@
      ; "current lang-geo"
      ; as a convenience, we "auto-play" when the user selects a new one.
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
-                                    (do-speak me))]
+                                    (when (mx-bound? prior)
+                                      (do-speak me)))]
                       (mget me :lg-pref))
 
      }
@@ -86,9 +102,14 @@
   (container
     {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)
-      (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))))
+      {:name :dash
+       :play-state (cI :off)} ;; off, paused, or on
+      (if (= :on (maprop :play-state))
+        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause)
+        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak))
+      (fx/opacity {:opacity (cF (if (= :off (maprop :play-state))
+                               0.0 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
 
 ;;; --- speech control actions -----------------------------------------------
 
@@ -220,6 +241,7 @@
                      .fontFamily "Helvetica Neue"
                      .fontSize 20.0)
        :controller (cFonce
+                     ;(fx/text-editing-controller)
                      (m/TextEditingController .text (mget me :value)))
        :onChanged  (as-dart-callback [text]
                      (mset! me :value text))
