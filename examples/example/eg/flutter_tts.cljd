@@ -19,9 +19,9 @@
 
 (def speech-initial
   (str
-    ;"Turning and turning in the widening gyre\n"
-    ;"The falcon cannot hear the falconer;\n"
-    ;"Things fall apart; the centre cannot hold;\n"
+    "Turning and turning in the widening gyre\n"
+    "The falcon cannot hear the falconer;\n"
+    "Things fall apart; the centre cannot hold;\n"
     "Mere anarchy is loosed upon the world,")
   #_(str
       "\"Jealousy\"\nby Robert Graves\n\n"
@@ -37,6 +37,17 @@
      :fts           (cF+ [:watch (fn [_ me newv _ _]
                                    (when-let [fts ^FlutterTts newv]
                                      (.setSharedInstance fts true)
+                                     (.setStartHandler fts #(with-mx-isolation
+                                                              (mset! (fm* :dash) :play-status :on)))
+                                     (.setCompletionHandler fts #(with-mx-isolation
+                                                              (mset! (fm* :dash) :play-status :off)))
+                                     (.setCancelHandler fts #(with-mx-isolation
+                                                              (mset! (fm* :dash) :play-status :off)))
+                                     (.setPauseHandler fts #(with-mx-isolation
+                                                              (mset! (fm* :dash) :play-status :paused)))
+                                     (.setContinueHandler fts #(with-mx-isolation
+                                                              (mset! (fm* :dash) :play-status :on)))
+
                                      (.setErrorHandler fts
                                        (fn [msg]
                                          (throw (Exception. (str "FlutterTts error: " msg)))))))]
@@ -82,7 +93,8 @@
     {:mainAxisSize      m/MainAxisSize.min
      :mainAxisAlignment m/MainAxisAlignment.center}
     (icon-button
-      {:icon        (fx/icon {:icon icon})
+      {:key (m/ValueKey label)
+       :icon        (fx/icon {:icon icon})
        :iconSize    48
        :color       color
        :splashColor splash-color
@@ -93,9 +105,14 @@
     {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
-      (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause)
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+      {:name :dash
+       :play-status (cI :off)}
+      (if (some #{(maprop :play-status)} [:off :paused])
+        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
+        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
+      (opacity {:opacity (cF (if (= :off (maprop :play-status))
+                               0.0 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
 
 ;;; --- speech control actions -----------------------------------------------
 
