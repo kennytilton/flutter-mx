@@ -6,7 +6,7 @@
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! minfo fasc
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! minfo fasc fascinc
              fm* maprop mx-bound? with-mx-isolation]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
@@ -14,7 +14,7 @@
              icon-button fx-render as-dart-callback]]))
 
 (declare lang-chooser geo-chooser speaking-controls
-  equalizer property-slider text-input do-speak
+  equalizer property-slider text-input do-speak do-stop
   lang-button geo-button lg-lang choice-header)
 
 (def speech-initial
@@ -34,23 +34,23 @@
 (defn make-app []
   (material-app {}
     {:name          :app
-     :fts           (cF+ [:watch (fn [_ me newv _ _]
-                                   (when-let [fts ^FlutterTts newv]
-                                     (.setSharedInstance fts true)
-                                     (.setStartHandler fts #(with-mx-isolation
-                                                              (mset! (fm* :dash) :play-status :on)))
-                                     (.setCompletionHandler fts #(with-mx-isolation
-                                                              (mset! (fm* :dash) :play-status :off)))
-                                     (.setCancelHandler fts #(with-mx-isolation
-                                                              (mset! (fm* :dash) :play-status :off)))
-                                     (.setPauseHandler fts #(with-mx-isolation
-                                                              (mset! (fm* :dash) :play-status :paused)))
-                                     (.setContinueHandler fts #(with-mx-isolation
-                                                              (mset! (fm* :dash) :play-status :on)))
-
-                                     (.setErrorHandler fts
-                                       (fn [msg]
-                                         (throw (Exception. (str "FlutterTts error: " msg)))))))]
+     :fts           (cF+ [:watch
+                          (fn [_ me newv _ _]
+                            (when-let [fts ^FlutterTts newv]
+                              (.setSharedInstance fts true)
+                              (.setStartHandler fts #(with-mx-isolation
+                                                       (mset! (fm* :dash) :play-status :on)))
+                              (.setCompletionHandler fts #(with-mx-isolation
+                                                            (mset! (fm* :dash) :play-status :off)))
+                              (.setCancelHandler fts #(with-mx-isolation
+                                                        (mset! (fm* :dash) :play-status :off)))
+                              (.setPauseHandler fts #(with-mx-isolation
+                                                       (mset! (fm* :dash) :play-status :paused)))
+                              (.setContinueHandler fts #(with-mx-isolation
+                                                          (mset! (fm* :dash) :play-status :on)))
+                              (.setErrorHandler fts
+                                (fn [msg]
+                                  (throw (Exception. (str "FlutterTts error: " msg)))))))]
                       (FlutterTts))
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
@@ -64,9 +64,11 @@
                                         (group-by lg-lang (sort lg-flat)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
 
-     :lg-pref       "en-AU"
-     ; "current lang-geo"
-     ; as a convenience, we "auto-play" when the user selects a new one.
+     :lg-pref       "en-AU" ;; imagine this is being loaded async from local storage
+     ; ---
+     ; lg-current = "current lang-geo"
+     ; as a convenience, we "auto-play" when the user selects a new one, using
+     ; a "watch" on the value and triggering FTS to speak.
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
                                     (when (mx-bound? prior)
                                       (do-speak me)))]
@@ -93,7 +95,7 @@
     {:mainAxisSize      m/MainAxisSize.min
      :mainAxisAlignment m/MainAxisAlignment.center}
     (icon-button
-      {:key (m/ValueKey label)
+      {:key         (m/ValueKey label)
        :icon        (fx/icon {:icon icon})
        :iconSize    48
        :color       color
@@ -105,7 +107,7 @@
     {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      {:name :dash
+      {:name        :dash
        :play-status (cI :off)}
       (if (some #{(maprop :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
@@ -134,7 +136,7 @@
     (await (.pause fts))))
 
 (defn do-stop [me]
-  (let [fts ^FlutterTts (mget (fasc :app) :fts)]
+  (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
     (await (.stop fts))))
 
 ;;; --- equalizer property sliders -----------------------------------------------------------
