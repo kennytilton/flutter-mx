@@ -321,6 +321,13 @@
              tilton.mx.cell.base/*call-stack* nil]
      ~@body))
 
+(defmacro wmx-iso [& body]
+  `(binding [tilton.mx.cell.base/*within-integrity* nil
+             tilton.mx.cell.base/*depender* nil
+             tilton.mx.cell.base/*defer-changes* false
+             tilton.mx.cell.base/*call-stack* nil]
+     ~@body))
+
 (defmacro def-mx-props [reader-prefix & slots]
   `(do
      ~@(map (fn [prop#]

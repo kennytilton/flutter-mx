@@ -13,7 +13,8 @@
     [tilton.mx.base :refer [wtrx dp dpx mx-throw]]
     [tilton.mx.util :refer [atom?]]
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
-    [tilton.mx.api :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids] :as mx]
+    [tilton.mx.api :as mx
+     :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
     [tilton.fmx.factory :refer [deftag deftags deftags-plus] :as fxf]))
 
 (defn cb-as-is
@@ -96,7 +97,7 @@
                             .extentOffset (count prefill))))
        (.addListener
          (fn []
-           (cty/with-mx-isolation
+           (wmx-iso
              (mx/mset! me prop (.-text c)))))))
    (let [txt (mx/mget me prop)
            c (m/TextEditingController.fromValue
@@ -107,7 +108,7 @@
                               .extentOffset (count txt))))]
        (.addListener c
          (fn []
-           (cty/with-mx-isolation
+           (wmx-iso
              (mx/mset! me prop (.-text c)))))
        c)))
 
@@ -250,7 +251,7 @@
 (defmacro as-dart-callback [[& cb-params] & body]
   `(tilton.fmx.api/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
-       (tilton.mx.cell.base/with-mx-isolation
+       (tilton.mx.cell.base/wmx-iso
          ~@body))))
 
 (defmacro my-app []

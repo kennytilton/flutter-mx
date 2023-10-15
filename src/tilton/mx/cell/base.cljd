@@ -47,17 +47,18 @@ rule to get once behavior or just when fm-traversing to find someone"
      ~@body))
 
 (defmacro with-mx-isolation [& body]
-  `(do
-     #_(tilton.mx.base/dp :mx-iso-overriding!!!S
-         tilton.mx.cell.base/*within-integrity*
-         tilton.mx.cell.base/*depender*
-         tilton.mx.cell.base/*defer-changes*
-         tilton.mx.cell.base/*call-stack*)
-     (binding [tilton.mx.cell.base/*within-integrity* nil
+  `(binding [tilton.mx.cell.base/*within-integrity* nil
                tilton.mx.cell.base/*depender* nil
                tilton.mx.cell.base/*defer-changes* false
                tilton.mx.cell.base/*call-stack* nil]
-       ~@body)))
+       ~@body))
+
+(defmacro wmx-iso [& body]
+  `(binding [tilton.mx.cell.base/*within-integrity* nil
+             tilton.mx.cell.base/*depender* nil
+             tilton.mx.cell.base/*defer-changes* false
+             tilton.mx.cell.base/*call-stack* nil]
+     ~@body))
 
 (def unbound (gensym "unbound-cell-value"))
 (defn when-bound [x]

@@ -7,7 +7,7 @@
     [tilton.mx.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tilton.mx.cell.base
-     :refer [without-c-dependency with-mx-isolation c-optimized-away? c-formula? c-value c-optimize
+     :refer [without-c-dependency wmx-iso c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? c-code$
              c-model c-valid? c-useds  c-quiesced? c-on-quiesce
              c-state +pulse+ c-pulse-observed
@@ -196,7 +196,7 @@
                                                 cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
                                (chk (cref? c) (str "CNSET> in future then cref? false origc "
                                                  cfo " derefnow " (deref c)))
-                               (with-mx-isolation
+                               (wmx-iso
                                  (with-integrity [:change :future-then]
                                    ;; todo if a cfu is meant to run repeatedly as dependencies change,
                                    ;;      do we need to clear :then? Or is opti-away not a problem

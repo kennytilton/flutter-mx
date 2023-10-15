@@ -9,7 +9,7 @@
      :refer [TextStyle Alignment]]
     [tilton.mx.base :refer [dprn dp dpx]]
 
-    [tilton.mx.api :refer [minfo cF cI make mget mpar cFkids fmu fmuv with-mx-isolation] :as mx]
+    [tilton.mx.api :refer [minfo cF cI make mget mpar cFkids fmu fmuv wmx-iso] :as mx]
     [tilton.fmx.api :as fx]))
 
 (defn make-app []
@@ -34,7 +34,7 @@
                       (fx/cb-as-is
                         (fn [^m/DragUpdateDetails details]
                           (let [size (.-size (MediaQuery/of ctx))]
-                            (with-mx-isolation
+                            (wmx-iso
                               (mx/mswap! me :dragAlignment
                                 #(.+ ^m/Alignment %
                                    (m/Alignment

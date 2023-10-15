@@ -6,8 +6,8 @@
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! minfo fasc fascinc
-             fm* maprop mx-bound? with-mx-isolation]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
+             fm* maprop mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity
@@ -23,7 +23,7 @@
     "The falcon cannot hear the falconer;\n"
     "Things fall apart; the centre cannot hold;\n"
     "Mere anarchy is loosed upon the world,")
-  #_(str
+  #_ (str
       "\"Jealousy\"\nby Robert Graves\n\n"
       "I'd die for you, or you for me, \n"
       "So furious is our jealousy-- \n"
@@ -38,19 +38,18 @@
                           (fn [_ me newv _ _]
                             (when-let [fts ^FlutterTts newv]
                               (.setSharedInstance fts true)
-                              (.setStartHandler fts #(with-mx-isolation
-                                                       (mset! (fm* :dash) :play-status :on)))
-                              (.setCompletionHandler fts #(with-mx-isolation
-                                                            (mset! (fm* :dash) :play-status :off)))
-                              (.setCancelHandler fts #(with-mx-isolation
-                                                        (mset! (fm* :dash) :play-status :off)))
-                              (.setPauseHandler fts #(with-mx-isolation
-                                                       (mset! (fm* :dash) :play-status :paused)))
-                              (.setContinueHandler fts #(with-mx-isolation
-                                                          (mset! (fm* :dash) :play-status :on)))
+                              (.setStartHandler fts
+                                #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+                              (.setCompletionHandler fts
+                                #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+                              (.setCancelHandler fts
+                                #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+                              (.setPauseHandler fts
+                                #(wmx-iso (mset! (fm* :dash) :play-status :paused)))
+                              (.setContinueHandler fts
+                                #(wmx-iso (mset! (fm* :dash) :play-status :on)))
                               (.setErrorHandler fts
-                                (fn [msg]
-                                  (throw (Exception. (str "FlutterTts error: " msg)))))))]
+                                #(throw (Exception. (str "FlutterTts error: " %))))))]
                       (FlutterTts))
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
@@ -73,7 +72,6 @@
                                     (when (mx-bound? prior)
                                       (do-speak me)))]
                       (mget me :lg-pref))
-
      }
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
@@ -159,8 +157,8 @@
 (defn property-slider [label prop color min max divisions]
   (fx/slider
     {:value       (cF (mget (fasc :app) prop))
-     :onChanged   (cF (fn [val]
-                        (mset! (fasc :app) prop val)))
+     :onChanged   (cF #(mx/wmx-iso
+                         (mset! (fasc :app) prop %)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str label " " (mget me :value)))
      :activeColor color}))
