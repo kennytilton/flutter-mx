@@ -40,11 +40,11 @@
    (chk (atom? mut)
      "util.core/mut-set!> prop:" prop :tag tag
        "new-value:" new-value
-       "failed assertion any-ref? on ref:" mut)
+       "failed assertion any-ref? on ref:" )
    (when-not (map? @mut)
      (pln "util.core/mut-set!> prop:" prop :tag tag
        "new-value:" (or new-value :NIL)
-       "failed assertion map? on ref:" @mut)
+       "failed assertion map? on ref:" )
      (chk false))
    (swap! mut assoc prop new-value)
    new-value))
@@ -53,11 +53,11 @@
   (chk (atom? ref)
     (str "model.util.core/rmap-set!> prop:" prop
       "new-value:" new-value
-      "failed assertion atom? on ref:" (deref ref)))
+      "failed assertion atom? on ref:" ))
   (chk (map? (deref ref))
     (str "model.util.core/rmap-set!> prop " prop
       " new-value " new-value
-      " failed assertion map? on ref: " (or (deref ref) ":NIL") " <<<"))
+      " failed assertion map? on ref: "  " <<<"))
   (swap! ref assoc prop new-value)
   new-value)
 
@@ -65,7 +65,7 @@
   (chk (atom? ref)
     (str "rmap-meta-set!> prop:" prop
       "new-value:" new-value
-      "failed assertion atom? on ref:" ref))
+      "failed assertion atom? on ref:" ))
   (alter-meta! ref assoc prop new-value)
   new-value)
 

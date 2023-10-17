@@ -13,8 +13,8 @@
     (throw (Exception. (str/join " - " bits)))))
 
 (defmacro chk [test & bits]
-  #_ `(do)
-  `(when-not (tilton.mx.model.peek/flutter-release-mode)
+  `(do)
+  #_ `(when-not (tilton.mx.model.peek/flutter-release-mode)
      (tilton.mx.model.peek/call-chk ~test '~test ~@bits)))
 
 (defn dp [& bits]
@@ -83,9 +83,9 @@
    (chk md
      (str "md-type> argument null: " tag))
    (chk (atom? md)
-     (str "md-type> argument not atom " md tag))
+     (str "md-type> argument not atom "  tag))
    (chk (map? @md)
-     (str "md-type> argument atom not map deref: " (or @md :NIL) "<<<<deref: " tag))
+     (str "md-type> argument atom not map deref: "  "<<<<deref: " tag))
    (mx-type md)))
 
 (defn mname [me]

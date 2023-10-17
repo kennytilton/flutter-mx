@@ -108,7 +108,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-quiesced? [c]
   (chk (cref? c)
-    (str "c-quiessed?> failed assertion cref? on:" c))
+    (str "c-quiessed?> failed assertion cref? on:" (cinfo c)))
   (:quiesced? @c))
 
 (defn c-formula? [c]
@@ -132,8 +132,8 @@ rule to get once behavior or just when fm-traversing to find someone"
     :else @c))
 
 (defn c-optimized-away? [c]
-  (chk (atom? c) (str :c-opti-away?-sees-not-atom c))
-  (chk (cref? c) (str :c-opti-away?-sees-NON-cref (cinfo c) :deref @c))
+  (chk (atom? c) (str :c-opti-away?-sees-not-atom (cinfo c)))
+  (chk (cref? c) (str :c-opti-away?-sees-NON-cref (cinfo c)))
   (:optimized? @c))
 
 (defn c-model [rc]
@@ -170,8 +170,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn dpc [c category & bits]
   (when *dpc-enabled*
-    (chk (cref? c) (str "DPC got non-c: " category " info " (atom-dump c) " meta " (meta c)
-                         " bits " (apply str bits)))
+    (chk (cref? c) :dpc-ngc category )
     (when-let [dbg (c-debug c)]
       (when (or (true? dbg) (= category dbg) (when (vector? dbg) (some #{category} dbg)))
         (apply dp :DPC category (first bits) (cinfo c) (rest bits))))))

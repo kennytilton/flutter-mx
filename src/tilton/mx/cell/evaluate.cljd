@@ -191,11 +191,11 @@
                                ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
                                ;(dp :FUVAL-RECEIVED!!!!! fu-val)
                                (chk (atom? c) (str "CNSET> in future then atom? false origc "
-                                                cfo " cnow " c))
+                                                cfo " cnow " (cinfo c)))
                                (chk (map? @c) (str "CNSET> in future then: map? false origc "
-                                                cfo " derefc now " (or (deref c) "nada hunh") :meta (meta c)))
+                                                cfo :meta (meta c)))
                                (chk (cref? c) (str "CNSET> in future then cref? false origc "
-                                                 cfo " derefnow " (deref c)))
+                                                 cfo " derefnow " (cinfo c)))
                                (wmx-iso
                                  (with-integrity [:change :future-then]
                                    ;; todo if a cfu is meant to run repeatedly as dependencies change,
@@ -232,7 +232,7 @@
   * Well, we also look to see if a synaptic cell has attached a
   propagation code to a vector used to wrap the raw value, which we then unpack."
   [c dbg-id]
-  (chk (cref? c) (str "calcnlink passed non-cref> " dbg-id ", " (cinfo c)))
+  (chk (cref? c) "calcnlink passed non-cref> " dbg-id ", " (cinfo c))
 
   ;; first check for cycles
   (when (some #{c} *call-stack*)
@@ -349,8 +349,7 @@
                     (cinfo c true)
                     " assuming value " new-value
                     " atom? " (atom? c)
-                    " map? " (when (atom? c) (map? (deref c)))
-                    " deref? " (when (atom? c) (deref c))))
+                    " map? " (when (atom? c) (map? (deref c)))))
   ;; (println :cva-entry (c-prop c) new-value)
   (do                                                       ;; (wtrx (0 100 :cv-ass (:prop @c) new-value)
     (prog1 new-value                                        ;; sans doubt
@@ -429,7 +428,7 @@ then clear our record of them."
   (rmap-set! [:useds c] #{}))
 
 (defn md-cell-flush [c]
-  (chk (cref? c) (str "cref? fail on md-cell-flush" c))
+  (chk (cref? c) "cref? fail on md-cell-flush" (cinfo c))
   (when-let [me (c-model c)]
     (rmap-set! [:cells-flushed me]
       (conj (:cells-flushed me)

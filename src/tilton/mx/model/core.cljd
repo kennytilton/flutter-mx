@@ -41,7 +41,7 @@
 
 (defn mget [me prop]
   (chk me (str "mget passed nil for me accessing prop: " prop))
-  (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+  (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " (minfo me)))
   (if (not (contains? @me prop))
     (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
       ;(dp :mget prop (minfo me))
@@ -62,7 +62,7 @@
    (mget? me prop nil))
   ([me prop alt-val]
    (chk me (str "mget passed nil for me accessing prop: " prop))
-   (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " me))
+   (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " (minfo me)))
    (if (contains? @me prop)
      (mget me prop)
      alt-val)))
@@ -108,7 +108,7 @@
 
 (defn mswap! [me prop swap-fn & swap-fn-args]
   (chk me (str "mswap! passed nil for me accessing prop: " prop))
-  (chk (mref? me) (str "mswap! passed non-model for me accessing prop: " prop ": " me))
+  (chk (mref? me) (str "mswap! passed non-model for me accessing prop: " prop ": " (minfo me)))
   (if (contains? @me prop)
     (mset! me prop (apply swap-fn (mget me prop) swap-fn-args))
     (mx-throw
@@ -117,7 +117,7 @@
 
 (defn mupdate! [me prop swap-fn & swap-fn-args]
   (chk me (str "mupdate! passed nil as `me` accessing prop: " prop))
-  (chk (mref? me) (str "mupdate! passed non-model for me accessing prop: " prop ": " me))
+  (chk (mref? me) (str "mupdate! passed non-model for me accessing prop: " prop ": " (minfo me)))
   (if (contains? @me prop)
     (mset! me prop (apply swap-fn (without-c-dependency (mget me prop)) swap-fn-args))
     (mx-throw
