@@ -12,9 +12,30 @@
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
-    ;; [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     ))
+
+(defn main [] ;<id:1673573645>
+  (cty/cells-reset)
+  (md/md-quiesce-feature! true)
+  (fx/widget-key-clear)
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  ;; (fxk/fmx-debugger-set! sample-debugger)
+
+  (f/run (fx/fx-render nil
+           (if false
+             (counter/make-app)
+             (eg/select))))
+  #_
+          (fx/run-app
+            (hot-reload-detector
+              (binding [cty/*dpc-enabled* false]
+                ;;(testing/run-tests)
+                (fx/fx-render nil
+                  (if nil
+                    (counter/make-app)
+                    (eg/select)))))))
 
 #_
 (defn main []
@@ -39,26 +60,7 @@
 
   (dp :main-exit))
 
-(defn main [] ;<id:1673573645>
-  (cty/cells-reset)
-  (md/md-quiesce-feature! true)
-  (fx/widget-key-clear)
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;; (fxk/fmx-debugger-set! sample-debugger)
 
-  (f/run (fx/fx-render nil
-           (if true
-             (counter/make-app)
-             #_ (eg/select))))
-  #_
-  (fx/run-app
-    (hot-reload-detector
-      (binding [cty/*dpc-enabled* false]
-        ;;(testing/run-tests)
-        (fx/fx-render nil
-          (if nil
-            (counter/make-app)
-            (eg/select)))))))
 
 
 (defmacro hot-reload-detector

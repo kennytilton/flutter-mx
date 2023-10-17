@@ -51,21 +51,21 @@
 
 (defn rmap-set! [[prop ref] new-value]
   (chk (atom? ref)
-    (str "model.util.core/rmap-set!> prop:" prop
-      "new-value:" new-value
-      "failed assertion atom? on ref:" ))
+     "model.util.core/rmap-set!> prop:" prop
+      "new-value:" ;; new-value
+      "failed assertion atom? on ref:" )
   (chk (map? (deref ref))
-    (str "model.util.core/rmap-set!> prop " prop
-      " new-value " new-value
-      " failed assertion map? on ref: "  " <<<"))
+    "model.util.core/rmap-set!> prop " prop
+      " new-value " ;; new-value
+      " failed assertion map? on ref: "  " <<<")
   (swap! ref assoc prop new-value)
   new-value)
 
 (defn rmap-meta-set! [[prop ref] new-value]
   (chk (atom? ref)
-    (str "rmap-meta-set!> prop:" prop
-      "new-value:" new-value
-      "failed assertion atom? on ref:" ))
+    "rmap-meta-set!> prop:" prop
+    "new-value:" #_ new-value
+    "failed assertion atom? on ref:" )
   (alter-meta! ref assoc prop new-value)
   new-value)
 

@@ -13,8 +13,9 @@
     (throw (Exception. (str/join " - " bits)))))
 
 (defmacro chk [test & bits]
-  `(do)
-  #_ `(when-not (tilton.mx.model.peek/flutter-release-mode)
+  #_ `(do)
+  `(when-not (tilton.mx.model.peek/flutter-release-mode)
+     (dp :chk-of '~test)
      (tilton.mx.model.peek/call-chk ~test '~test ~@bits)))
 
 (defn dp [& bits]
@@ -60,11 +61,11 @@
      (not (atom? c)) (if verbose? [:not-atom-c c]
                        :not-atom-c)
 
-     (not (cref? c)) (if verbose? [:not-cell-c @c :meta (meta c)]
+     (not (cref? c)) (if verbose? [:not-cell-c #_  @c :meta (meta c)]
                         :not-cell-c)
-     (:quiesced? @c) [:QUIESCED @c]
+     (:quiesced? @c) [:QUIESCED #_ @c]
      :else (if verbose?
-             [:cinfo-all @c]
+             [:cinfo-all ]
 
              (conj ((juxt :prop :pulse :pulse-last-changed #_c-async? #_c-value) (deref c))
                :mname (c-mname c)

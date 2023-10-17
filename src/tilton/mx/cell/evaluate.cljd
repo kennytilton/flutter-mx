@@ -130,7 +130,7 @@
   (cond
     (c-optimized-away? c)
     (do
-      (dp :WARNING-cget-sees-OPTI-c @c)
+      (dp :WARNING-cget-sees-OPTI-c (cinfo c))
       (c-value c))
 
     (c-quiesced? c)
@@ -163,7 +163,7 @@
         (dpx :cget-depender!! (cinfo *depender*))
         (dpx :cget-depender!! (meta *depender*))
         (when-not (cty/c-optimized-away? *depender*)
-          (dpx :cget-reco-dependency (cinfo c) @c (meta c))
+          (dpx :cget-reco-dependency (cinfo c) (meta c))
           (record-dependency c)
           (dpx :cget-reco-dependency-cool (cinfo c)))))))
 
@@ -172,7 +172,7 @@
   [c dbgid dbgdata]
   (do
     ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
-    (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata @c)
+    (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata (cinfo c))
     (let [[raw-value propagation-code] (calculate-and-link c dbgid)]
       (dpc c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
         #_#_:meta-mw (meta (c-me c)))
@@ -244,7 +244,7 @@
         "...> formula for " prop ":\n"
         (c-code$ c)
         "\n...> full cell: \n"
-        @c
+        (cinfo c)
         "\n\n...> callstack, latest first: \n"
         (str/join "\n" (mapv (fn [cd]
                                (str "....> mname:" (c-mname cd) " prop: " (c-prop-name cd)
@@ -312,8 +312,8 @@
 
       :else
       (dp :c-awaken-fall-thru (if (atom? c)
-                                [:ref-of (meta c) @c]
-                                [:unref c])))
+                                [:ref-of (meta c) (cinfo c)]
+                                [:unref (cinfo c)])))
     #_ (catch Exception e
       (dprn :awaken-error-calculating-cinfo (cinfo c))
       (dprn :c-awaken-exception e)
@@ -345,11 +345,11 @@
 
   [c new-value propagation-code]
 
-  (chk (cref? c) (str "CVASS> c not cref? "
-                    (cinfo c true)
-                    " assuming value " new-value
+  (chk (cref? c) "CVASS> c not cref? "
+                    (cinfo c)
+                    " assuming value " ;; new-value
                     " atom? " (atom? c)
-                    " map? " (when (atom? c) (map? (deref c)))))
+                    " map? " (when (atom? c) (map? (deref c))))
   ;; (println :cva-entry (c-prop c) new-value)
   (do                                                       ;; (wtrx (0 100 :cv-ass (:prop @c) new-value)
     (prog1 new-value                                        ;; sans doubt
