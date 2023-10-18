@@ -4,6 +4,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
@@ -69,7 +70,8 @@
      ; as a convenience, we "auto-play" when the user selects a new one, using
      ; a "watch" on the value and triggering FTS to speak.
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
-                                    (when (mx-bound? prior)
+                                    (when true ;; (mx-bound? prior)
+                                      (do-stop me)
                                       (do-speak me)))]
                       (mget me :lg-pref))
      }
@@ -110,9 +112,10 @@
       (if (some #{(maprop :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
-      (opacity {:opacity (cF (if (= :off (maprop :play-status))
-                               0.0 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
+      (fx/ignore-pointer {:ignoring (cF (= :off (maprop :play-status)))}
+        (opacity {:opacity (cF (if (= :off (maprop :play-status))
+                               0.2 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))))
 
 ;;; --- speech control actions -----------------------------------------------
 
@@ -158,7 +161,9 @@
   (fx/slider
     {:value       (cF (mget (fasc :app) prop))
      :onChanged   (cF #(mx/wmx-iso
-                         (mset! (fasc :app) prop %)))
+                         (mset! (fasc :app) prop %)
+                         (do-stop me)
+                         (do-speak me)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str label " " (mget me :value)))
      :activeColor color}))
