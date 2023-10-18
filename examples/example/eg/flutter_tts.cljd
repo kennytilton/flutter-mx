@@ -11,46 +11,31 @@
              fm* maprop mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
-             container row expanded icon padding opacity
-             icon-button fx-render as-dart-callback]]))
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
-(declare lang-chooser geo-chooser speaking-controls
+(declare lang-chooser geo-chooser speaking-controls fts-init
   equalizer property-slider text-input do-speak do-stop
   lang-button geo-button lg-lang choice-header)
 
 (def speech-initial
-  (str
+  #_ (str
     "Turning and turning in the widening gyre\n"
     "The falcon cannot hear the falconer;\n"
     "Things fall apart; the centre cannot hold;\n"
     "Mere anarchy is loosed upon the world,")
-  #_ (str
+  (str
       "\"Jealousy\"\nby Robert Graves\n\n"
       "I'd die for you, or you for me, \n"
-      "So furious is our jealousy-- \n"
-      "And if you doubt this to be true, \n"
-      "Kill me outright, lest I kill you."
+      ;"So furious is our jealousy-- \n"
+      ;"And if you doubt this to be true, \n"
+      ;"Kill me outright, lest I kill you."
       ))
 
 (defn make-app []
   (material-app {}
     {:name          :app
-     :fts           (cF+ [:watch
-                          (fn [_ me newv _ _]
-                            (when-let [fts ^FlutterTts newv]
-                              (.setSharedInstance fts true)
-                              (.setStartHandler fts
-                                #(wmx-iso (mset! (fm* :dash) :play-status :on)))
-                              (.setCompletionHandler fts
-                                #(wmx-iso (mset! (fm* :dash) :play-status :off)))
-                              (.setCancelHandler fts
-                                #(wmx-iso (mset! (fm* :dash) :play-status :off)))
-                              (.setPauseHandler fts
-                                #(wmx-iso (mset! (fm* :dash) :play-status :paused)))
-                              (.setContinueHandler fts
-                                #(wmx-iso (mset! (fm* :dash) :play-status :on)))
-                              (.setErrorHandler fts
-                                #(throw (Exception. (str "FlutterTts error: " %))))))]
+     :fts           (cF+ [:watch fts-init]
                       (FlutterTts))
      :volume        (cI 0.3 :watch (fn [_ me new _ _]
                                      (.setVolume ^FlutterTts (mget me :fts) new)))
@@ -83,10 +68,44 @@
         (geo-chooser)
         (text-input)
         (speaking-controls)
+        (auto-play)
         (equalizer)))))
+
+(defn auto-play []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {;;:key (m/ValueKey "auto-play")
+       :controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-play")
+       :value           (cI false #_#_:watch (fn [_ _ new prior _]
+                                               (when (mx-bound? prior)
+                                                 (when-let [db (mget (fasc :app) :db)]
+                                                   (dp :writing-auto-apply!! new :db db)
+                                                   (.put ^hv/Box db "auto-play" new)))))
+       :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
+      {:name :auto-play})))
+
+
+(defn fts-init [_ me newv _ _]
+    (when-let [fts ^FlutterTts newv]
+      (.setSharedInstance fts true)
+      (.setStartHandler fts
+        #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+      (.setCompletionHandler fts
+        #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+      (.setCancelHandler fts
+        #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+      (.setPauseHandler fts
+        #(wmx-iso (mset! (fm* :dash) :play-status :paused)))
+      (.setContinueHandler fts
+        #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+      (.setErrorHandler fts
+        #(throw (Exception. (str "FlutterTts error: " %))))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
+(defn watch-dbg [slot me new prior c]
+  (dp :WATCH slot (minfo me) :new new :prior))
 
 ;; todo if user changes volume et al while paused, warn that it will not take effect until fresh play
 
@@ -108,14 +127,18 @@
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
-       :play-status (cI :off)}
+       :play-status (cI :off :watch watch-dbg)}
       (if (some #{(maprop :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
-      (fx/ignore-pointer {:ignoring (cF (= :off (maprop :play-status)))}
-        (opacity {:opacity (cF (if (= :off (maprop :play-status))
-                               0.2 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))))
+      (stop-button))))
+
+(defn stop-button []
+  (ignore-pointer {:ignoring (cF (mget me :disabled?))}
+    {:disabled? (cF (= :off (maprop :play-status)))}
+    (opacity {:opacity (cF (if (maprop :disabled?)
+                             0.2 1.0))}
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
 
 ;;; --- speech control actions -----------------------------------------------
 
