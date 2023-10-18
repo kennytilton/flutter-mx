@@ -27,9 +27,9 @@
   (str
       "\"Jealousy\"\nby Robert Graves\n\n"
       "I'd die for you, or you for me, \n"
-      ;"So furious is our jealousy-- \n"
-      ;"And if you doubt this to be true, \n"
-      ;"Kill me outright, lest I kill you."
+      "So furious is our jealousy-- \n"
+      "And if you doubt this to be true, \n"
+      "Kill me outright, lest I kill you."
       ))
 
 (defn make-app []
@@ -55,7 +55,7 @@
      ; as a convenience, we "auto-play" when the user selects a new one, using
      ; a "watch" on the value and triggering FTS to speak.
      :lg-current    (cF+n [:watch (fn [_ me new prior _]
-                                    (when true ;; (mx-bound? prior)
+                                    (when (mget (fm* :auto-play) :value) ;; (mx-bound? prior)
                                       (do-stop me)
                                       (do-speak me)))]
                       (mget me :lg-pref))
@@ -67,28 +67,45 @@
         (lang-chooser)
         (geo-chooser)
         (text-input)
-        (speaking-controls)
-        (auto-play)
+
+        (container
+          {:color m/Colors.yellow
+           :padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+          (fx/text {:textAlign m/TextAlign.right}
+            {:name     :chiron
+             :progress (cI nil)
+             :phrase #_ ["four" "score" "and" "seven"]
+             (cF (when (not= :off (mget (fm* :dash) :play-status))
+                   (let [[text startOffset endOffset word] (mget me :progress)]
+                     (if (nil? word) []
+                       (take 8 (conj (if (mx-bound? _cache) _cache []) word))))))}
+            (str/join "..." (mget me :phrase))))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (speaking-controls)
+          (auto-play))
         (equalizer)))))
 
 (defn auto-play []
   (fx/sized-box {:width 180}
     (checkbox-list-tile
-      {;;:key (m/ValueKey "auto-play")
-       :controlAffinity m/ListTileControlAffinity.leading
+      {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI false #_#_:watch (fn [_ _ new prior _]
-                                               (when (mx-bound? prior)
-                                                 (when-let [db (mget (fasc :app) :db)]
-                                                   (dp :writing-auto-apply!! new :db db)
-                                                   (.put ^hv/Box db "auto-play" new)))))
-       :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
+       :value           (cI false)
+       :onChanged       (cF (fn [new]
+                              (wmx-iso (mswap! me :value not))
+                              (when new
+                                (do-speak me))))}
       {:name :auto-play})))
 
 
 (defn fts-init [_ me newv _ _]
     (when-let [fts ^FlutterTts newv]
       (.setSharedInstance fts true)
+      (.setProgressHandler fts
+        (fn [& progress] ;; text startOffset endOffset word]
+          (dp :progress!!!!!! (rest progress))
+          (wmx-iso
+            (mset! (fm* :chiron) :progress progress))))
       (.setStartHandler fts
         #(wmx-iso (mset! (fm* :dash) :play-status :on)))
       (.setCompletionHandler fts
@@ -185,8 +202,9 @@
     {:value       (cF (mget (fasc :app) prop))
      :onChanged   (cF #(mx/wmx-iso
                          (mset! (fasc :app) prop %)
-                         (do-stop me)
-                         (do-speak me)))
+                         (when (mget (fm* :auto-play) :value)
+                           (do-stop me)
+                           (do-speak me))))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str label " " (mget me :value)))
      :activeColor color}))

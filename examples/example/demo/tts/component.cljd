@@ -1,0 +1,154 @@
+(ns example.demo.tts.component
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
+             fmu fm* maprop mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback]]
+    [example.demo.tts.util :refer [do-speak do-pause do-stop choice-header lg-lang]]))
+
+;;; --- lang/geo choosers -------------------------------------------------
+
+(defn lang-chooser []
+  (expanded
+    (fx/grid-view+count
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.8
+       :padding         (m/EdgeInsets.all 8)}
+      {:name :lang-chooser
+       :lg-pref    "en-AU"                                  ;; imagine this is being loaded async from local storage
+       ; ---
+       ; lg-current = "current lang-geo"
+       ; as a convenience, we "auto-play" when the user selects a new one, using
+       ; a "watch" on the value and triggering FTS to speak.
+       :lg-current (cF+n [:watch (fn [_ me new prior c]
+                                   (when (mget (fm* :auto-play) :value) ;; (mx-bound? prior)
+                                     (do-stop me)
+                                     (do-speak me)))]
+                     (mget me :lg-pref))}
+      (map-indexed lang-button
+        (sort (keys (mget (fasc :app) :lang-geo-tree)))))))
+
+(defn geo-chooser []
+  (expanded
+    (column
+      (choice-header "Geography")
+      (fx/grid-view+count
+        {:crossAxisCount  8 :crossAxisSpacing 4
+         :mainAxisSpacing 4 :childAspectRatio 1.8
+         :padding         (m/EdgeInsets.all 8)
+         :shrinkWrap      true}
+        (map-indexed geo-button
+          (when-let [lgc (lg-lang (mget (fmu :lang-chooser) :lg-current))]
+            (get (mget (fasc :app) :lang-geo-tree) lgc)))))))
+
+
+
+;;; --- lang and geo buttons ----------------------------------------------------
+
+(defn lang-button [i lang]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang)
+     :onTap (as-dart-callback []
+              (mset! (fasc :lang-chooser) :lg-current
+                (first (get (maprop :lang-geo-tree) lang))))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
+                                    (.all m/Border .color m/Colors.blue .width 2)))
+                      :color  (.-shade50 (cond
+                                           (even? i) m/Colors.blue
+                                           :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :lang-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            lang))))))
+
+(defn geo-button [i lang-geo]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang-geo)
+     :onTap (as-dart-callback []
+              (mset! (fmu :lang-chooser) :lg-current lang-geo))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang-geo (mget (fmu :lang-chooser) :lg-current))
+                                    (.all m/Border .color m/Colors.blue .width 2)))
+                      :color  (.-shade50 (cond
+                                           (even? i) m/Colors.blue
+                                           :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :geo-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            (subs lang-geo 3)))))))
+
+;;; --- soeaking controls ------------------------------------
+
+(defn speaking-control [color splash-color icon label func]
+  (column
+    {:mainAxisSize      m/MainAxisSize.min
+     :mainAxisAlignment m/MainAxisAlignment.center}
+    (icon-button
+      {:key         (m/ValueKey label)
+       :icon        (fx/icon {:icon icon})
+       :iconSize    48
+       :color       color
+       :splashColor splash-color
+       :onPressed   (fn [] (func me))})))
+
+;;; --- text input --------------------------------------------------------------
+
+#_
+(def speech-initial
+  #_(str
+      "Turning and turning in the widening gyre\n"
+      "The falcon cannot hear the falconer;\n"
+      "Things fall apart; the centre cannot hold;\n"
+      "Mere anarchy is loosed upon the world,")
+  (str
+    "\"Jealousy\"\nby Robert Graves\n\n"
+    "I'd die for you, or you for me, \n"
+    "So furious is our jealousy-- \n"
+    "And if you doubt this to be true, \n"
+    "Kill me outright, lest I kill you."
+    ))
+
+(defn text-input []
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 20.0)
+       :controller (cFonce
+                     ;(fx/text-editing-controller)
+                     (m/TextEditingController .text (mget me :value)))
+       :onChanged  (as-dart-callback [text]
+                     (mset! me :value text))
+       :minLines   6 :maxLines 11}
+      {:name  :text-in
+       :value (cI (str
+                    "\"Jealousy\"\nby Robert Graves\n\n"
+                    "I'd die for you, or you for me, \n"
+                    "So furious is our jealousy-- \n"
+                    "And if you doubt this to be true, \n"
+                    "Kill me outright, lest I kill you."
+                    ))})))
+

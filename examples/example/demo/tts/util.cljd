@@ -1,0 +1,72 @@
+(ns example.demo.tts.util
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
+             fmu fmuval fm* maprop mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback]]))
+
+(defn fts-init [_ me newv _ _]
+  (when-let [fts ^FlutterTts newv]
+    (.setSharedInstance fts true)
+    (.setProgressHandler fts
+      (fn [& progress] ;; text startOffset endOffset word]
+        (dp :progress!!!!!! (rest progress))
+        (wmx-iso
+          (mset! (fm* :chiron) :progress progress))))
+    (.setStartHandler fts
+      #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+    (.setCompletionHandler fts
+      #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+    (.setCancelHandler fts
+      #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+    (.setPauseHandler fts
+      #(wmx-iso (mset! (fm* :dash) :play-status :paused)))
+    (.setContinueHandler fts
+      #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+    (.setErrorHandler fts
+      #(throw (Exception. (str "FlutterTts error: " %))))))
+
+;;; --- speech control actions -----------------------------------------------
+
+(defn do-speak [me]
+  (dp :do-speak-me (minfo me))
+  (let [app (mx/fascinc :app)                               ;; turns out 'me' _is_ the app
+        fts ^FlutterTts (mget app :fts)
+        speech (mget (fm* :text-in) :value)]
+    (when-let [lg (mget (fm* :lang-chooser) :lg-current)]
+      (when (not (str/blank? speech))
+        (dp :speaking!!!!!!!! lg);  :params (maprop :speech-rate) (maprop :pitch) (maprop :volume))
+        (.setPitch fts (fmuval :pitch))
+        (.setVolume fts (fmuval :volume))
+        (.setLanguage fts lg)
+        (.setSpeechRate fts (fmuval :speech-rate))
+        (.speak fts speech)))))
+
+(defn do-pause [me]
+  (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
+    (await (.pause fts))))
+
+(defn do-stop [me]
+  (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
+    (await (.stop fts))))
+
+;;; ---------------------------------------------------
+
+(defn lg-lang [lg]
+  (subs lg 0 2))
+
+(defn choice-header [text]
+  (padding {:padding (m/EdgeInsets.all 4)}
+    (m/Text text)))
+
+(defn watch-dbg [slot me new prior c]
+  (dp :WATCH slot (minfo me) :new new :prior))
