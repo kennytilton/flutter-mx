@@ -60,7 +60,12 @@
                       (doseq [td todos]
                         ;; todo do all these in one change pulse
                         (mset! td :completed (if all-done? false true)))))
-       :icon      (m/Icon m.Icons/expand_more .color m/Colors.blueGrey)})))
+       :icon (fx/icon
+               {:icon m.Icons/expand_more
+                :color (cF (if (every? td-completed (todo/app-todos (my-app)))
+                             m/Colors.black m/Colors.blueGrey))})})))
+
+#_ (m/Icon m.Icons/expand_more .color m/Colors.blueGrey)
 
 (defn todo-controls []
   (fx/row
