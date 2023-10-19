@@ -20,4 +20,24 @@
   (when (mget (fm* :auto-play) :value)
     (do-stop me)
     (do-speak me))
+
+  ; --- chyron -----------------------------------------
+  (.setProgressHandler fts
+    (fn [& progress] ;; text startOffset endOffset word]
+      (dp :progress!!!!!! (rest progress))
+      (wmx-iso
+        (mset! (fm* :chyron) :progress progress))))
+  
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:name     :chyron
+         :progress (cI nil)
+         :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
+                         (let [[text startOffset endOffset word] (mget me :progress)]
+                           (if (nil? word) []
+                             (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
+        (str/join "..." (mget me :phrase)))))
+
   )
