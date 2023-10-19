@@ -30,9 +30,7 @@
        ; as a convenience, we "auto-play" when the user selects a new one, using
        ; a "watch" on the value and triggering FTS to speak.
        :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                   (when (mget (fm* :auto-play) :value) ;; (mx-bound? prior)
-                                     (do-stop me)
-                                     (do-speak me)))]
+                                   (do-speak me))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
         (sort (keys (mget (fasc :app) :lang-geo-tree)))))))

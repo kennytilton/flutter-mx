@@ -17,11 +17,6 @@
 (defn fts-init [_ me newv _ _]
   (when-let [fts ^FlutterTts newv]
     (.setSharedInstance fts true)
-    (.setProgressHandler fts
-      (fn [& progress] ;; text startOffset endOffset word]
-        (dp :progress!!!!!! (rest progress))
-        (wmx-iso
-          (mset! (fm* :chyron) :progress progress))))
     (.setStartHandler fts
       #(wmx-iso (mset! (fm* :dash) :play-status :on)))
     (.setCompletionHandler fts
@@ -38,8 +33,7 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (dp :do-speak-me (minfo me))
-  (let [app (mx/fascinc :app)                               ;; turns out 'me' _is_ the app
+  (let [app (mx/fascinc :app)
         fts ^FlutterTts (mget app :fts)
         speech (mget (fm* :text-in) :value)]
     (when-let [lg (mget (fm* :lang-chooser) :lg-current)]
