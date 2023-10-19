@@ -31,23 +31,12 @@
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
+        {:crossAxisAlignment m/CrossAxisAlignment.stretch}
         (choice-header "Languages")
         (lang-chooser)
         (geo-chooser)
         (text-input)
-
-        (container
-          {:color m/Colors.yellow
-           :padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-          (fx/text {:textAlign m/TextAlign.right}
-            {:name     :chiron
-             :progress (cI nil)
-             :phrase #_ ["four" "score" "and" "seven"]
-             (cF (when (not= :off (mget (fm* :dash) :play-status))
-                   (let [[text startOffset endOffset word] (mget me :progress)]
-                     (if (nil? word) []
-                       (take 8 (conj (if (mx-bound? _cache) _cache []) word))))))}
-            (str/join "..." (mget me :phrase))))
+        (chyron)
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (speaking-controls)
           (auto-play))
@@ -64,6 +53,18 @@
                               (when new
                                 (do-speak me))))}
       {:name :auto-play})))
+
+(defn chyron []
+  (container
+    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+    (fx/text {:textAlign m/TextAlign.center}
+      {:name     :chyron
+       :progress (cI nil)
+       :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
+                       (let [[text startOffset endOffset word] (mget me :progress)]
+                         (if (nil? word) []
+                           (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
+      (str/join "..." (mget me :phrase)))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 

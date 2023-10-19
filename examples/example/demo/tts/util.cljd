@@ -21,7 +21,7 @@
       (fn [& progress] ;; text startOffset endOffset word]
         (dp :progress!!!!!! (rest progress))
         (wmx-iso
-          (mset! (fm* :chiron) :progress progress))))
+          (mset! (fm* :chyron) :progress progress))))
     (.setStartHandler fts
       #(wmx-iso (mset! (fm* :dash) :play-status :on)))
     (.setCompletionHandler fts
@@ -45,10 +45,10 @@
     (when-let [lg (mget (fm* :lang-chooser) :lg-current)]
       (when (not (str/blank? speech))
         (dp :speaking!!!!!!!! lg);  :params (maprop :speech-rate) (maprop :pitch) (maprop :volume))
-        (.setPitch fts (fmuval :pitch))
-        (.setVolume fts (fmuval :volume))
+        (.setPitch fts (mget (fm* :pitch) :value))
+        (.setVolume fts (mget (fm* :volume) :value))
         (.setLanguage fts lg)
-        (.setSpeechRate fts (fmuval :speech-rate))
+        (.setSpeechRate fts (mget (fm* :speech-rate) :value))
         (.speak fts speech)))))
 
 (defn do-pause [me]
