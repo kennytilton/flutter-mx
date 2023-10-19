@@ -24,12 +24,14 @@
      :mainAxisSpacing 4 :childAspectRatio 1.6
      :padding         (m/EdgeInsets.all 8)}
     {:name :lang-chooser
-     :lg-pref    "en-AU"                                  ;; imagine this is being loaded async from local storage
+     ;; imagine this is being loaded async from local storage:
+     :lg-pref    "en-AU"
      ; ---
      ; lg-current = "current lang-geo"
      :lg-current (cF+n [:watch (fn [_ me new prior c]
                                  (when (mx-bound? prior)
                                    (do-speak me)))]
+                   ; start from pref, then allow user change
                    (mget me :lg-pref))}
     (map-indexed lang-button
       (take 24 ;; hhack
