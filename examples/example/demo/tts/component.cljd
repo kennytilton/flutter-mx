@@ -28,7 +28,8 @@
      ; ---
      ; lg-current = "current lang-geo"
      :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                 (do-speak me))]
+                                 (when (mx-bound? prior)
+                                   (do-speak me)))]
                    (mget me :lg-pref))}
     (map-indexed lang-button
       (take 24 ;; hhack
