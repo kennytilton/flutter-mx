@@ -1,0 +1,27 @@
+(ns example.demo.tts.draft)
+
+(comment
+
+
+  ; --- auto-play ----------------------------
+
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (speaking-controls)
+    (auto-play))
+
+  (defn auto-play []
+    (fx/sized-box {:width 180}
+      (checkbox-list-tile
+        {:controlAffinity m/ListTileControlAffinity.leading
+         :title           (m/Text "Auto-play")
+         :value           (cI false)
+         :onChanged       (cF (fn [new]
+                                (wmx-iso (mswap! me :value not))
+                                (when new
+                                  (do-speak me))))}
+        {:name :auto-play})))
+
+  (when (mget (fm* :auto-play) :value)
+    (do-stop me)
+    (do-speak me))
+  )

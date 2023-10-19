@@ -20,35 +20,30 @@
 (defn lang-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.8
-       :padding         (m/EdgeInsets.all 8)}
-      {:name :lang-chooser
-       :lg-pref    "en-AU"                                  ;; imagine this is being loaded async from local storage
-       ; ---
-       ; lg-current = "current lang-geo"
-       ; as a convenience, we "auto-play" when the user selects a new one, using
-       ; a "watch" on the value and triggering FTS to speak.
-       :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                   (do-speak me))]
-                     (mget me :lg-pref))}
-      (map-indexed lang-button
-        (sort (keys (mget (fasc :app) :lang-geo-tree)))))))
+    {:crossAxisCount  8 :crossAxisSpacing 4
+     :mainAxisSpacing 4 :childAspectRatio 1.6
+     :padding         (m/EdgeInsets.all 8)}
+    {:name :lang-chooser
+     :lg-pref    "en-AU"                                  ;; imagine this is being loaded async from local storage
+     ; ---
+     ; lg-current = "current lang-geo"
+     :lg-current (cF+n [:watch (fn [_ me new prior c]
+                                 (do-speak me))]
+                   (mget me :lg-pref))}
+    (map-indexed lang-button
+      (take 24 ;; hhack
+        (sort (keys (mget (fasc :app) :lang-geo-tree))))))))
 
 (defn geo-chooser []
   (expanded
-    (column
-      (choice-header "Geography")
-      (fx/grid-view+count
-        {:crossAxisCount  8 :crossAxisSpacing 4
-         :mainAxisSpacing 4 :childAspectRatio 1.8
-         :padding         (m/EdgeInsets.all 8)
-         :shrinkWrap      true}
-        (map-indexed geo-button
-          (when-let [lgc (lg-lang (mget (fmu :lang-chooser) :lg-current))]
-            (get (mget (fasc :app) :lang-geo-tree) lgc)))))))
-
-
+    (fx/grid-view+count
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.8
+       :padding         (m/EdgeInsets.all 8)
+       :shrinkWrap      true}
+      (map-indexed geo-button
+        (when-let [lgc (lg-lang (mget (fmu :lang-chooser) :lg-current))]
+          (get (mget (fasc :app) :lang-geo-tree) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -95,7 +90,7 @@
                       .fontSize 16.0)}
             (subs lang-geo 3)))))))
 
-;;; --- soeaking controls ------------------------------------
+;;; --- speaking controls ------------------------------------
 
 (defn speaking-control [color splash-color icon label func]
   (column
@@ -111,22 +106,7 @@
 
 ;;; --- text input --------------------------------------------------------------
 
-
-(def speech-initial
-  #_(str
-      "Turning and turning in the widening gyre\n"
-      "The falcon cannot hear the falconer;\n"
-      "Things fall apart; the centre cannot hold;\n"
-      "Mere anarchy is loosed upon the world,")
-  (str
-    "\"Jealousy\"\nby Robert Graves\n\n"
-    "I'd die for you, or you for me, \n"
-    "So furious is our jealousy-- \n"
-    "And if you doubt this to be true, \n"
-    "Kill me outright, lest I kill you."
-    ))
-
-(defn text-input []
+(defn speech-input [speech-initial]
   (container
     {:alignment m/Alignment.topCenter
      :padding   (m/EdgeInsets.only
@@ -136,7 +116,6 @@
                      .fontFamily "Helvetica Neue"
                      .fontSize 20.0)
        :controller (cFonce
-                     ;(fx/text-editing-controller)
                      (m/TextEditingController .text (mget me :value)))
        :onChanged  (as-dart-callback [text]
                      (mset! me :value text))

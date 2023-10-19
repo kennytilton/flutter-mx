@@ -15,7 +15,21 @@
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     [example.demo.tts.util :refer [fts-init do-speak do-pause do-stop lg-lang choice-header watch-dbg]]
     [example.demo.tts.component
-     :refer [lang-chooser geo-chooser text-input speaking-control]]))
+     :refer [lang-chooser geo-chooser speech-input speaking-control]]))
+
+(def yeats-second-coming
+  (str "\"The Second Coming\"\nby Wm B Yeats\n\n"
+    "Turning and turning in the widening gyre\n"
+    "The falcon cannot hear the falconer;\n"
+    "Things fall apart; the centre cannot hold;\n"
+    "Mere anarchy is loosed upon the world,"))
+
+(def graves-jealousy
+  (str "\"Jealousy\"\nby Robert Graves\n\n"
+    "I'd die for you, or you for me, \n"
+    "So furious is our jealousy-- \n"
+    "And if you doubt this to be true, \n"
+    "Kill me outright, lest I kill you."))
 
 (defn make-app []
   (material-app {}
@@ -25,17 +39,16 @@
      :lang-geo-tree (cF+ [:async? true
                           :async-then (fn [c lg-flat]
                                         (group-by lg-lang (sort lg-flat)))]
-                      (.-getLanguages ^FlutterTts (mget me :fts)))
-     ; ----------------------------------------------------------------------------
-     }
+                      (.-getLanguages ^FlutterTts (mget me :fts)))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
         {:crossAxisAlignment m/CrossAxisAlignment.stretch}
         (choice-header "Languages")
         (lang-chooser)
+        (choice-header "Geography")
         (geo-chooser)
-        (text-input)
+        (speech-input yeats-second-coming)
         (speaking-controls)
         (equalizer)))))
 
@@ -53,37 +66,39 @@
                                0.0 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
 
-;;; --- equalizer property sliders -----------------------------------------------------------
+;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
+
+(def equalizer-sliders
+  [["Volume" :volume m/Colors.blue 0.3 0 1 10
+    (fn [_ me new _ _]
+      (.setVolume ^FlutterTts (maprop :fts) new))]
+   ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
+    (fn [_ me new _ _]
+      (.setPitch ^FlutterTts (maprop :fts) new))]
+   ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
+    (fn [_ me new _ _]
+      (.setSpeechRate ^FlutterTts (maprop :fts) new))]])
 
 (defn equalizer []
   (column
-    (doall (for [[label & opnds]
-                 [["Volume" :volume m/Colors.blue 0.3 0 1 10
-                   (fn [_ me new _ _]
-                     (.setVolume ^FlutterTts (maprop :fts) new))]
-                  ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
-                   (fn [_ me new _ _]
-                     (.setPitch ^FlutterTts (maprop :fts) new))]
-                  ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
-                   (fn [_ me new _ _]
-                     (.setSpeechRate ^FlutterTts (maprop :fts) new))]]]
-             (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
-               (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
-                        :mainAxisSize      m/MainAxisSize.min}
-                 (container {:width     64
-                             :alignment m/Alignment.topRight}
-                   (m/Text label))
-                 (apply property-slider label opnds)))))))
+    (doall
+      (for [[label & opnds] equalizer-sliders]
+        (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+          (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
+                   :mainAxisSize      m/MainAxisSize.min}
+            (container {:width     64
+                        :alignment m/Alignment.topRight}
+              (m/Text label))
+            (apply property-slider label opnds)))))))
 
 (defn property-slider [label prop color init-val min max divisions value-watch]
   (fx/slider
     {:value       (cI init-val :watch value-watch)
      :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)
-                         #_(when (mget (fm* :auto-play) :value)
-                             (do-stop me)
-                             (do-speak me))))
-     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+                         (mset! me :value %)))
+     :min         (+ 0.0 min)
+     :max         (+ 0.0 max)
+     :divisions   divisions
      :label       (cF (str label " " (mget me :value)))
      :activeColor color}
     {:name prop}))
