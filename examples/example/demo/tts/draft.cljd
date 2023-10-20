@@ -4,8 +4,18 @@
   ; --- chyron -----------------------------------------
 
   (.setProgressHandler fts
-    (fn [& progress] ;; text startOffset endOffset word]
+    (fn [& progress] ;; [text startOffset endOffset word]
       (dp :progress!! (rest progress))))
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:name     :chyron
+         :progress (cI nil)
+         :word     (cF (let [[text startOffset endOffset word] (mget me :progress)]
+                         word))}
+        (or (mget me :word) ""))))
 
   (.setProgressHandler fts
     (fn [& progress] ;; text startOffset endOffset word]
@@ -18,22 +28,41 @@
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
       (fx/text {:textAlign m/TextAlign.center}
         {:name     :chyron
-         :progress (cI nil)
+         :progress (cF (mget (fm* :dash) :progress))
          :word     (cF (let [[text startOffset endOffset word] (mget me :progress)]
                          word))}
-        (or word ""))))
+        (or (mget me :word) ""))))
 
   (defn chyron []
     (container
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
       (fx/text {:textAlign m/TextAlign.center}
         {:name     :chyron
-         :progress (cI nil)
+         :progress (cF (mget (fm* :dash) :progress))
          :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
                          (let [[text startOffset endOffset word] (mget me :progress)]
                            (if (nil? word) []
                              (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
         (str/join "..." (mget me :phrase)))))
+
+  ; --- stop highlighting ------------------------
+
+  (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
+                                   (let [[text startOffset endOffset word] (maprop :progress)]
+                                     (< endOffset (/ (count text) 2)))))}
+    (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))
+
+  ; --- fancy stop highlighting -------------------------
+
+  {:name        :dash
+   :progress    (cI nil :watch watch-dbg)
+   :play-status (cI :off)}
+
+  (.setProgressHandler fts
+    (fn [& progress] ;; text startOffset endOffset word]
+      (dp :progress!!!!!! (rest progress))
+      (wmx-iso (mset! (fm* :dash) :progress progress))))
 
   ; --- auto-play ----------------------------
 
@@ -55,6 +84,8 @@
     (do-stop me)
     (do-speak me))
 
+
   ;; fin
   )
+
 

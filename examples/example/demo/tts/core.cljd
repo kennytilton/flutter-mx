@@ -13,36 +13,20 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.util :refer [fts-init do-speak do-pause do-stop lg-lang choice-header watch-dbg]]
+    [example.demo.tts.util :as util
+     :refer [fts-init do-speak do-pause do-stop lg-lang choice-header watch-dbg]]
     [example.demo.tts.component
-     :refer [lang-chooser geo-chooser speech-input speaking-control]]))
+     :refer [lang-chooser geo-chooser speech-input speaking-control]]
+    [example.demo.tts.poetry :as poetry]))
 
 (declare speaking-controls equalizer)
-
-(def yeats-second-coming
-  (str "\"The Second Coming\"\nby William Butler Yeats\n\n"
-    "Turning and turning in the widening gyre\n"
-    "The falcon cannot hear the falconer;\n"
-    "Things fall apart; the centre cannot hold;\n"
-    "Mere anarchy is loosed upon the world,"))
-
-(def graves-jealousy
-  (str "\"Jealousy\"\nby Robert Graves\n\n"
-    "I'd die for you, or you for me, \n"
-    "So furious is our jealousy-- \n"
-    "And if you doubt this to be true, \n"
-    "Kill me outright, lest I kill you."))
-
 
 (defn make-app []
   (material-app {}
     {:name          :app
      :fts           (cF+ [:watch fts-init]
                       (FlutterTts))
-     :lang-geo-tree (cF+ [:async? true
-                          :async-then (fn [c lg-flat]
-                                        (group-by lg-lang (sort lg-flat)))]
-                      (.-getLanguages ^FlutterTts (mget me :fts)))}
+     :lang-geo-tree (util/cf-lang-geo-tree)}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
@@ -51,7 +35,7 @@
         (lang-chooser)
         (choice-header "Geography")
         (geo-chooser)
-        (speech-input yeats-second-coming)
+        (speech-input poetry/frost-reluctance)
         (speaking-controls)
         (equalizer)))))
 

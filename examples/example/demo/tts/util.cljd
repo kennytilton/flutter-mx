@@ -14,6 +14,8 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
+;;; --- start-up ----------------------------------------------
+
 (defn fts-init [_ me newv _ _]
   (when-let [fts ^FlutterTts newv]
     (.setSharedInstance fts true)
@@ -29,6 +31,12 @@
       #(wmx-iso (mset! (fm* :dash) :play-status :on)))
     (.setErrorHandler fts
       #(throw (Exception. (str "FlutterTts error: " %))))))
+
+(defn cf-lang-geo-tree []
+  (cF+ [:async? true
+        :async-then (fn [c lg-flat]
+                      (group-by lg-lang (sort lg-flat)))]
+    (.-getLanguages ^FlutterTts (mget me :fts))))
 
 ;;; --- speech control actions -----------------------------------------------
 
