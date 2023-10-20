@@ -35,23 +35,42 @@
         (lang-chooser)
         (choice-header "Geography")
         (geo-chooser)
-        (speech-input poetry/frost-reluctance)
+        (speech-input poetry/shakespeare-sonnet-24)
+        (chyron)
         (speaking-controls)
         (equalizer)))))
 
+(defn chyron []
+  (container
+    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+    (fx/text {:textAlign m/TextAlign.center}
+      {:name     :chyron
+       :progress (cI nil)
+       :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
+                       (let [[text startOffset endOffset word] (mget (fm* :dash) :progress)]
+                         (if (nil? word) []
+                           (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
+      (str/join "..." (mget me :phrase)))))
+
 ;;; --- play, stop, pause -------------------------------------------------------
+
+(defn stop-button []
+  (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
+                                   (let [[text _ endOffset _] (maprop :progress)]
+                                     (< endOffset (/ (count text) 2)))))}
+    (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
 
 (defn speaking-controls []
   (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
+       :progress    (cI nil)
        :play-status (cI :off)}
       (if (some #{(maprop :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
-      (opacity {:opacity (cF (if (= :off (maprop :play-status))
-                               0.0 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
+      (stop-button))))
 
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
@@ -82,7 +101,9 @@
   (fx/slider
     {:value       (cI init-val :watch value-watch)
      :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)))
+                         (do-stop me)
+                         (mset! me :value %)
+                         (do-speak me)))
      :min         (+ 0.0 min)
      :max         (+ 0.0 max)
      :divisions   divisions

@@ -19,7 +19,6 @@
 
   (.setProgressHandler fts
     (fn [& progress] ;; text startOffset endOffset word]
-      (dp :progress!!!!!! (rest progress))
       (wmx-iso
         (mset! (fm* :chyron) :progress progress))))
 
@@ -45,27 +44,38 @@
                              (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
         (str/join "..." (mget me :phrase)))))
 
-  ; --- stop highlighting ------------------------
+  ; --- rate-limited stop  ------------------------
 
-  (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
-                                   (let [[text startOffset endOffset word] (maprop :progress)]
-                                     (< endOffset (/ (count text) 2)))))}
-    (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))
-
-  ; --- fancy stop highlighting -------------------------
-
+  ;; add to speaking-controls
   {:name        :dash
    :progress    (cI nil :watch watch-dbg)
    :play-status (cI :off)}
 
   (.setProgressHandler fts
-    (fn [& progress] ;; text startOffset endOffset word]
-      (dp :progress!!!!!! (rest progress))
+    (fn [& progress]
       (wmx-iso (mset! (fm* :dash) :progress progress))))
 
-  ; --- auto-play ----------------------------
+  {:name     :chyron
+   :progress (cI nil) ;; lose this
+   :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
+                   (let [[text startOffset endOffset word] (mget (fm* :dash) :progress)]
+                     (if (nil? word) []
+                       (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
 
+  ;; bingo
+  (defn stop-button []
+    (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
+                                     (let [[text _ endOffset _] (maprop :progress)]
+                                       (< endOffset (/ (count text) 2)))))}
+      (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+
+
+  ;; fin
+  )
+
+(comment
+  ; --- auto-play ----------------------------
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
     (speaking-controls)
     (auto-play))
@@ -82,10 +92,6 @@
 
   (when (mget (fm* :auto-play) :value)
     (do-stop me)
-    (do-speak me))
-
-
-  ;; fin
-  )
+    (do-speak me)))
 
 

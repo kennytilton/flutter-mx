@@ -24,17 +24,14 @@
      :mainAxisSpacing 4 :childAspectRatio 1.6
      :padding         (m/EdgeInsets.all 8)}
     {:name :lang-chooser
-     ;; imagine this is being loaded async from local storage:
-     :lg-pref    "en-AU"
-     ; ---
-     ; lg-current = "current lang-geo"
+     :lg-pref    "en-AU" ;; faux stored preference
      :lg-current (cF+n [:watch (fn [_ me new prior c]
                                  (when (mx-bound? prior)
+                                   (do-stop me)
                                    (do-speak me)))]
-                   ; start from pref, then allow user change
                    (mget me :lg-pref))}
     (map-indexed lang-button
-      (take 16 ;; hhack
+      (take 16 ;; duck widget layout issue
         (sort (keys (mget (fasc :app) :lang-geo-tree))))))))
 
 (defn geo-chooser []
