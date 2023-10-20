@@ -1,11 +1,64 @@
 (ns example.demo.tts.draft)
 
 (comment
-  ; --- chyron -----------------------------------------
+  ; --- chyron 1.0 -----------------------------------------
 
   (.setProgressHandler fts
-    (fn [& progress] ;; [text startOffset endOffset word]
-      (dp :progress!! (rest progress))))
+    (fn [text startOffset endOffset word]
+      (dp :progress!! word startOffset endOffset text)))
+
+  ;; then
+
+  (.setProgressHandler fts
+    (fn [text startOffset endOffset word]
+      (wmx-iso ;; <==========
+        (mset! (fm* :chyron)
+          :progress {:word word}))))
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:name     :chyron
+         :progress (cI nil)}
+        (or ;; <==== no cF?!
+          (:word (mget me :progress) "")))))
+
+  ; --- chyron 2.0 ----------------------------------------------------
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:name     :chyron
+         :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
+                         (let [{:keys [word]} (mget (fm* :dash) :progress)]
+                           (if (nil? word) []
+                             (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
+        (str/join "..." (mget me :phrase)))))
+
+
+
+  ; --- finale ---------------------------------------------------
+
+  (.setProgressHandler fts
+    (fn [text startOffset endOffset word]
+      (wmx-iso
+        (mset! (fm* :dash)
+          :progress {:full-text text
+                     :word word
+                     :word-offset startOffset
+                     :word-end endOffset}))))
+
+  (defn stop-button []
+    (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
+                                     (let [{:keys [full-text word-end]} (maprop :progress)]
+                                       (< word-end (/ (count full-text) 2)))))}
+      (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+
+
+  ;---------------------- archive
 
   (defn chyron []
     (container
