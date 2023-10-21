@@ -1,20 +1,59 @@
 (ns example.demo.tts.draft)
 
 (comment
-  ; --- chyron 1.0 -----------------------------------------
+  ; === stop 1.0 ------------------------------------------
 
+  ; do not hide stop completely; bad u/x; show dimmed
+  (opacity {:opacity (cF (if (= :off (mget (fm* :dash) :play-status))
+                           0.15 1.0))}
+    (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))
+
+  ; fix flashing on tap
+  (ignore-pointer {:ignoring (cF (= :off (mget (fm* :dash) :play-status)))}
+    (opacity {:opacity (cF (if (= :off (mget (fm* :dash) :play-status))
+                             0.15 1.0))}
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))
+
+  ; DRY and break out since getting big
+  (defn stop-button []
+    (ignore-pointer {:ignoring (cF (= :off (maprop :play-status)))}
+      (opacity {:opacity (cF (if (maprop :ignoring)
+                               0.15 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+
+  ; === auto play =====================
+
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (speaking-controls)
+    (auto-play)) ;; <=== existing component
+
+  :lg-current (cF+n [:watch (fn [_ me new prior c]
+                              (when (mx-bound? prior)
+                                (when (fmuval :auto-play)
+                                  (do-speak me))))]
+                (mget me :lg-pref))
+
+  ; now enhance
+  #_#_ :watch (fn [_ _ new prior _]
+                (when (and (= prior false)
+                        (= new true))
+                  (do-speak me)))
+
+  ;=== ESL 1.0 ===========================
   (.setProgressHandler fts
     (fn [text startOffset endOffset word]
       (dp :progress!! word startOffset endOffset text)))
 
-  ;; then
-
   (.setProgressHandler fts
     (fn [text startOffset endOffset word]
-      (wmx-iso ;; <==========
+      (wmx-iso ;; <===========
         (mset! (fm* :chyron)
-          :progress {:word word}))))
+          :progress {:full-text text
+                     :word word
+                     :word-offset startOffset
+                     :word-end endOffset}))))
 
+  ;; then the chyron
   (defn chyron []
     (container
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
@@ -24,31 +63,69 @@
         (or ;; <==== no cF?!
           (:word (mget me :progress) "")))))
 
-  ; --- chyron 2.0 ----------------------------------------------------
+  ;; and connect to progress handler
+  (.setProgressHandler fts
+    (fn [text startOffset endOffset word]
+      (wmx-iso ;; <==========
+        (mset! (fm* :chyron)
+          :progress {:word word}))))
+
+  ; instant EQ effect
+  (defn property-slider [label prop color init-val min max divisions value-watch]
+    (fx/slider
+      {:value       (cI init-val :watch value-watch)
+       :onChanged   (cF #(mx/wmx-iso
+                           (do-stop me)
+                           (mset! me :value %)
+                           (do-speak me)))
+       :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+       :label       (cF (str label " " (mget me :value)))
+       :activeColor color}
+      {:name prop}))
+
+  ; === chyron 2.0 ----------------------------------------------------
 
   (defn chyron []
     (container
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
       (fx/text {:textAlign m/TextAlign.center}
         {:name     :chyron
+         :progress (cI nil)
          :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
-                         (let [{:keys [word]} (mget (fm* :dash) :progress)]
+                         (let [{:keys [word]} (mget me :progress)]
                            (if (nil? word) []
-                             (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
+                             (take-last 5
+                               (concat (if (mx-bound? _cache) _cache [])
+                                 [word]))))))}
         (str/join "..." (mget me :phrase)))))
 
+  ;;; === rate limit speech skip =================================
 
-
-  ; --- finale ---------------------------------------------------
+  ; --- add :progress to dash, remove from chyron
 
   (.setProgressHandler fts
     (fn [text startOffset endOffset word]
-      (wmx-iso
+      (wmx-iso ;; <===========
         (mset! (fm* :dash)
           :progress {:full-text text
                      :word word
                      :word-offset startOffset
                      :word-end endOffset}))))
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:name     :chyron
+         :progress (cI nil)
+         :phrase   (cF (let [dash (fm* :dash)]
+                         (when (not= :off (mget dash :play-status))
+                           (let [{:keys [word]} (mget dash :progress)]
+                             (if (nil? word) []
+                               (take-last 5
+                                 (concat (if (mx-bound? _cache) _cache [])
+                                   [word])))))))}
+        (str/join "..." (mget me :phrase)))))
 
   (defn stop-button []
     (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
@@ -57,73 +134,13 @@
       (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
 
-
-  ;---------------------- archive
-
-  (defn chyron []
-    (container
-      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-      (fx/text {:textAlign m/TextAlign.center}
-        {:name     :chyron
-         :progress (cI nil)
-         :word     (cF (let [[text startOffset endOffset word] (mget me :progress)]
-                         word))}
-        (or (mget me :word) ""))))
-
-  (.setProgressHandler fts
-    (fn [& progress] ;; text startOffset endOffset word]
-      (wmx-iso
-        (mset! (fm* :chyron) :progress progress))))
-
-  (defn chyron []
-    (container
-      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-      (fx/text {:textAlign m/TextAlign.center}
-        {:name     :chyron
-         :progress (cF (mget (fm* :dash) :progress))
-         :word     (cF (let [[text startOffset endOffset word] (mget me :progress)]
-                         word))}
-        (or (mget me :word) ""))))
-
-  (defn chyron []
-    (container
-      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-      (fx/text {:textAlign m/TextAlign.center}
-        {:name     :chyron
-         :progress (cF (mget (fm* :dash) :progress))
-         :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
-                         (let [[text startOffset endOffset word] (mget me :progress)]
-                           (if (nil? word) []
-                             (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
-        (str/join "..." (mget me :phrase)))))
-
-  ; --- rate-limited stop  ------------------------
-
-  ;; add to speaking-controls
-  {:name        :dash
-   :progress    (cI nil :watch watch-dbg)
-   :play-status (cI :off)}
-
-  (.setProgressHandler fts
-    (fn [& progress]
-      (wmx-iso (mset! (fm* :dash) :progress progress))))
-
-  {:name     :chyron
-   :progress (cI nil) ;; lose this
-   :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
-                   (let [[text startOffset endOffset word] (mget (fm* :dash) :progress)]
-                     (if (nil? word) []
-                       (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
-
-  ;; bingo
   (defn stop-button []
     (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
-                                     (let [[text _ endOffset _] (maprop :progress)]
-                                       (< endOffset (/ (count text) 2)))))}
-      (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
+                                     (and (fmuval :rate-limited?)
+                                       (let [{:keys [full-text word-end]} (maprop :progress)]
+                                         (< word-end (/ (count full-text) 4))))))}
+      (opacity {:opacity (cF (if (maprop :ignoring) 0.20 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
-
-
   ;; fin
   )
 
@@ -138,7 +155,7 @@
       (checkbox-list-tile
         {:controlAffinity m/ListTileControlAffinity.leading
          :title           (m/Text "Auto-play")
-         :value           (cI false)
+         :value           (cI false :watch )
          :onChanged       (cF (fn [new]
                                 (wmx-iso (mswap! me :value not))))}
         {:name :auto-play})))

@@ -3,7 +3,8 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:flutter_tts/flutter_tts.dart" :as fts
+     :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
     [tilton.mx.api :as mx
@@ -16,9 +17,19 @@
 
 ;;; --- start-up ----------------------------------------------
 
-(defn fts-init [_ me newv _ _]
+(defn fts-init
+  "Watch function to initialize an FTS instance"
+  [_ me newv _ _]
   (when-let [fts ^FlutterTts newv]
     (.setSharedInstance fts true)
+    (.setProgressHandler fts
+      (fn [text startOffset endOffset word]
+        (wmx-iso ;; <===========
+          (mset! (fm* :dash)
+            :progress {:full-text text
+                       :word word
+                       :word-offset startOffset
+                       :word-end endOffset}))))
     (.setStartHandler fts
       #(wmx-iso (mset! (fm* :dash) :play-status :on)))
     (.setCompletionHandler fts
@@ -32,7 +43,10 @@
     (.setErrorHandler fts
       #(throw (Exception. (str "FlutterTts error: " %))))))
 
-(defn cf-lang-geo-tree []
+(defn cf-lang-geo-tree
+  "Async formula cell that retrieves FTS languages and converts to
+  a tree of languages with one or more regions"
+  []
   (cF+ [:async? true
         :async-then (fn [c lg-flat]
                       (group-by lg-lang (sort lg-flat)))]
@@ -61,9 +75,18 @@
   (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
     (await (.stop fts))))
 
-;;; ---------------------------------------------------
+(defn do-speech-param-change [me]
+  (when (fmuval :auto-play)
+    (do-stop me)
+    (do-speak me)))
 
-(defn lg-lang [lg]
+;;; --- detritus ------------------------------------------------
+
+(defn lg-lang
+  "Return the leading two-char language designator of a five char language-region pair."
+  [lg]
+  ;; eg "fr-FR" -> "fr"
+  ;; used to group FTS languages by languages
   (subs lg 0 2))
 
 (defn choice-header [text]

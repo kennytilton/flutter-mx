@@ -6,33 +6,59 @@
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
+    [example.demo.tts.util :as util]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fmu fm* maprop mx-bound? wmx-iso]]
+             fmu fmuval fm* maprop mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     [example.demo.tts.util :refer [do-speak do-pause do-stop choice-header lg-lang]]))
 
+;;; --- auto play --------------------------------------------------------
+
+(defn auto-play []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-play")
+       :value           (cI true :watch (fn [_ _ new prior _]
+                                          (when (and (= prior false)
+                                                  (= new true))
+                                            (do-speak me))))
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :auto-play})))
+
+(defn rate-limited? []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Limit")
+       :value           (cI true :watch (fn [_ _ new prior _]
+                                          (when (and (= prior false)
+                                                  (= new true))
+                                            (do-speak me))))
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :rate-limited?})))
+
 ;;; --- lang/geo choosers -------------------------------------------------
 
 (defn lang-chooser []
   (expanded
     (fx/grid-view+count
-    {:crossAxisCount  8 :crossAxisSpacing 4
-     :mainAxisSpacing 4 :childAspectRatio 1.6
-     :padding         (m/EdgeInsets.all 8)}
-    {:name :lang-chooser
-     :lg-pref    "en-AU" ;; faux stored preference
-     :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                 (when (mx-bound? prior)
-                                   (do-stop me)
-                                   (do-speak me)))]
-                   (mget me :lg-pref))}
-    (map-indexed lang-button
-      (take 16 ;; duck widget layout issue
-        (sort (keys (mget (fasc :app) :lang-geo-tree))))))))
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.6
+       :padding         (m/EdgeInsets.all 8)}
+      {:name       :lang-chooser
+       :lg-pref    "en-AU"                                  ;; faux stored preference
+       :lg-current (cF+n [:watch (fn [_ me new prior c]
+                                   (when (mx-bound? prior)
+                                     (util/do-speech-param-change me)))]
+                     (mget me :lg-pref))}
+      (map-indexed lang-button
+        (take 16                                            ;; duck widget layout issue
+          (sort (keys (mget (fasc :app) :lang-geo-tree))))))))
 
 (defn geo-chooser []
   (expanded
