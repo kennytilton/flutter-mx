@@ -2,7 +2,9 @@
   (:require [clojure.string :as str]))
 
 (defn mx-throw [& bits]
-  (throw (Exception. (str/join " " bits))))
+  (let [emsg (str/join " " bits)]
+    (dp :MXTHROW!! emsg) ;; flutter_tts traps/hides handler exceptions
+    (throw (Exception. emsg))))
 
 (defn trc [x]
   (dart:core/print (str "trx> " x)))
