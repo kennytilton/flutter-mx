@@ -21,6 +21,15 @@
                                0.15 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
+  ; === Fix run-on
+
+  (cF+n [:watch (fn [_ me new prior c]
+                  (when (mx-bound? prior)
+                    (when (some #{(mget (fmu :dash) :play-status)} [:on :paused])
+                      (fts-stop me))
+                    (fts-speak me)))]
+    (mget me :lg-pref))
+
   ; === auto play =====================
 
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
@@ -30,6 +39,8 @@
   :lg-current (cF+n [:watch (fn [_ me new prior c]
                               (when (mx-bound? prior)
                                 (when (fmuval :auto-play)
+                                  (when (some #{(mget (fmu :dash) :play-status)} [:on :paused])
+                                    (fts-stop me))
                                   (fts-speak me))))]
                 (mget me :lg-pref))
 
