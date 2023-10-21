@@ -22,14 +22,6 @@
   [_ me newv _ _]
   (when-let [fts ^FlutterTts newv]
     (.setSharedInstance fts true)
-    (.setProgressHandler fts
-      (fn [text startOffset endOffset word]
-        (wmx-iso ;; <===========
-          (mset! (fm* :dash)
-            :progress {:full-text text
-                       :word word
-                       :word-offset startOffset
-                       :word-end endOffset}))))
     (.setStartHandler fts
       #(wmx-iso (mset! (fm* :dash) :play-status :on)))
     (.setCompletionHandler fts
