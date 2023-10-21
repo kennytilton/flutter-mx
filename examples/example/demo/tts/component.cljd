@@ -14,7 +14,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.util :refer [do-speak do-pause do-stop choice-header lg-lang]]))
+    [example.demo.tts.util :refer [fts-speak fts-pause fts-stop choice-header lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
 
@@ -23,10 +23,7 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI true :watch (fn [_ _ new prior _]
-                                          (when (and (= prior false)
-                                                  (= new true))
-                                            (do-speak me))))
+       :value           (cI true)
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
 
@@ -42,7 +39,7 @@
        :lg-pref    "en-AU"                                  ;; faux stored preference
        :lg-current (cF+n [:watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
-                                       (do-speak me)))]
+                                       (fts-speak me)))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
         (take 16                                            ;; duck widget layout issue

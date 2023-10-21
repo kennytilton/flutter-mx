@@ -54,7 +54,7 @@
 
 ;;; --- speech control actions -----------------------------------------------
 
-(defn do-speak [me]
+(defn fts-speak [me]
   (let [app (mx/fascinc :app)
         fts ^FlutterTts (mget app :fts)
         speech (mget (fm* :text-in) :value)]
@@ -67,11 +67,11 @@
         (.setSpeechRate fts (mget (fm* :speech-rate) :value))
         (.speak fts speech)))))
 
-(defn do-pause [me]
+(defn fts-pause [me]
   (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
     (await (.pause fts))))
 
-(defn do-stop [me]
+(defn fts-stop [me]
   (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
     (await (.stop fts))))
 

@@ -15,7 +15,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     [example.demo.tts.util :as util
-     :refer [fts-init do-speak do-pause do-stop lg-lang choice-header watch-dbg]]
+     :refer [fts-init fts-speak fts-pause fts-stop lg-lang choice-header watch-dbg]]
     [example.demo.tts.component :as comp
      :refer [lang-chooser geo-chooser speech-input speaking-control auto-play]]
     [example.demo.tts.poetry :as poetry]))
@@ -28,10 +28,10 @@
       {:name        :dash
        :play-status (cI :off)}
       (if (some #{(maprop :play-status)} [:off :paused])
-        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
-        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
+        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" fts-speak)
+        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" fts-pause))
       (opacity {:opacity (cF (if (= :off (maprop :play-status)) 0.0 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop)))))
 
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 

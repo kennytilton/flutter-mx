@@ -6,20 +6,20 @@
   ; do not hide stop completely; bad u/x; show dimmed
   (opacity {:opacity (cF (if (= :off (mget (fm* :dash) :play-status))
                            0.15 1.0))}
-    (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))
+    (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))
 
   ; fix flashing on tap
   (ignore-pointer {:ignoring (cF (= :off (mget (fm* :dash) :play-status)))}
     (opacity {:opacity (cF (if (= :off (mget (fm* :dash) :play-status))
                              0.15 1.0))}
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop)))
 
   ; DRY and break out since getting big
   (defn stop-button []
     (ignore-pointer {:ignoring (cF (= :off (maprop :play-status)))}
       (opacity {:opacity (cF (if (maprop :ignoring)
                                0.15 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
   ; === auto play =====================
 
@@ -30,14 +30,14 @@
   :lg-current (cF+n [:watch (fn [_ me new prior c]
                               (when (mx-bound? prior)
                                 (when (fmuval :auto-play)
-                                  (do-speak me))))]
+                                  (fts-speak me))))]
                 (mget me :lg-pref))
 
   ; now enhance
   #_#_ :watch (fn [_ _ new prior _]
                 (when (and (= prior false)
                         (= new true))
-                  (do-speak me)))
+                  (fts-speak me)))
 
   ;=== ESL 1.0 ===========================
   (.setProgressHandler fts
@@ -75,9 +75,9 @@
     (fx/slider
       {:value       (cI init-val :watch value-watch)
        :onChanged   (cF #(mx/wmx-iso
-                           (do-stop me)
+                           (fts-stop me)
                            (mset! me :value %)
-                           (do-speak me)))
+                           (fts-speak me)))
        :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
        :label       (cF (str label " " (mget me :value)))
        :activeColor color}
@@ -132,7 +132,7 @@
                                      (let [{:keys [full-text word-end]} (maprop :progress)]
                                        (< word-end (/ (count full-text) 2)))))}
       (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
   (defn stop-button []
     (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
@@ -140,12 +140,12 @@
                                        (let [{:keys [full-text word-end]} (maprop :progress)]
                                          (< word-end (/ (count full-text) 4))))))}
       (opacity {:opacity (cF (if (maprop :ignoring) 0.20 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
-  (defn do-speaking-change [me]
+  (defn fts-speaking-change [me]
     (when (fmuval :auto-play)
-      (do-stop me)
-      (do-speak me)))
+      (fts-stop me)
+      (fts-speak me)))
   ;; fin
   )
 
@@ -166,7 +166,7 @@
         {:name :auto-play})))
 
   (when (mget (fm* :auto-play) :value)
-    (do-stop me)
-    (do-speak me)))
+    (fts-stop me)
+    (fts-speak me)))
 
 
