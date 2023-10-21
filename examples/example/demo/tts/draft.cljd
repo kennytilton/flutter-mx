@@ -141,6 +141,11 @@
                                          (< word-end (/ (count full-text) 4))))))}
       (opacity {:opacity (cF (if (maprop :ignoring) 0.20 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
+
+  (defn do-speaking-change [me]
+    (when (fmuval :auto-play)
+      (do-stop me)
+      (do-speak me)))
   ;; fin
   )
 

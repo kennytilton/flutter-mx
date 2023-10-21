@@ -20,65 +20,18 @@
      :refer [lang-chooser geo-chooser speech-input speaking-control auto-play]]
     [example.demo.tts.poetry :as poetry]))
 
-(declare speaking-controls equalizer)
-
-(defn make-app []
-  (material-app {}
-    {:name          :app
-     :fts           (cF+ [:watch fts-init]
-                      (FlutterTts))
-     :lang-geo-tree (util/cf-lang-geo-tree)}
-    (scaffold
-      {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
-      (column
-        {:crossAxisAlignment m/CrossAxisAlignment.stretch}
-        (choice-header "Languages")
-        (lang-chooser)
-        (choice-header "Geography")
-        (geo-chooser)
-        (speech-input poetry/graves-reproach-s1)
-        (chyron)
-        (speaking-controls)
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (auto-play)
-          (comp/rate-limited?))
-        (equalizer)))))
-
-(defn chyron []
-  (container
-    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-    (fx/text {:textAlign m/TextAlign.center}
-      {:name     :chyron
-       :progress (cI nil)
-       :phrase   (cF (let [dash (fm* :dash)]
-                       (when (not= :off (mget dash :play-status))
-                         (let [{:keys [word]} (mget dash :progress)]
-                           (if (nil? word) []
-                             (take-last 5
-                               (concat (if (mx-bound? _cache) _cache [])
-                                 [word])))))))}
-      (str/join "..." (mget me :phrase)))))
-
 ;;; --- play, stop, pause -------------------------------------------------------
-
-(defn stop-button []
-  (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
-                                   (and (fmuval :rate-limited?)
-                                     (let [{:keys [full-text word-end]} (maprop :progress)]
-                                       (< word-end (/ (count full-text) 4))))))}
-    (opacity {:opacity (cF (if (maprop :ignoring) 0.20 1.0))}
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
 
 (defn speaking-controls []
   (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
-       :progress    (cI nil)
        :play-status (cI :off)}
       (if (some #{(maprop :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
-      (stop-button))))
+      (opacity {:opacity (cF (if (= :off (maprop :play-status)) 0.0 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
 
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
@@ -86,8 +39,7 @@
   (fx/slider
     {:value       (cI init-val :watch value-watch)
      :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)
-                         (util/do-speech-param-change me)))
+                         (mset! me :value %)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str label " " (mget me :value)))
      :activeColor color}
@@ -106,15 +58,33 @@
 
 (defn equalizer []
   (column
-    (doall
-      (for [[label & opnds] equalizer-sliders]
-        (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
-          (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
-                   :mainAxisSize      m/MainAxisSize.min}
-            (container {:width     64
-                        :alignment m/Alignment.topRight}
-              (m/Text label))
-            (apply property-slider label opnds)))))))
+    (mapv (fn [[label & opnds]]
+            (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+              (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
+                       :mainAxisSize      m/MainAxisSize.min}
+                (container {:width     64
+                            :alignment m/Alignment.topRight}
+                  (m/Text label))
+                (apply property-slider label opnds))))
+      equalizer-sliders)))
 
+;;; ---  make app --------------------------------------------
 
+(defn make-app []
+  (material-app {}
+    {:name          :app
+     :fts           (cF+ [:watch fts-init]
+                      (FlutterTts))
+     :lang-geo-tree (util/cf-lang-geo-tree)}
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
+      (column
+        {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+        (choice-header "Languages")
+        (lang-chooser)
+        (choice-header "Geography")
+        (geo-chooser)
+        (speech-input poetry/graves-reproach-s1)
+        (speaking-controls)
+        (equalizer)))))
 
