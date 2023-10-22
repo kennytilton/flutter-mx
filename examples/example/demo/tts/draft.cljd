@@ -45,10 +45,10 @@
                 (mget me :lg-pref))
 
   ; now enhance
-  #_#_ :watch (fn [_ _ new prior _]
-                (when (and (= prior false)
-                        (= new true))
-                  (fts-speak me)))
+  (cI true :watch (fn [_ _ new prior _]
+                    (when (and (mx-bound? prior)
+                            (= new true))
+                      (fts-speak me))))
 
   ;=== ESL 1.0 ===========================
   (.setProgressHandler fts
