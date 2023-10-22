@@ -1,49 +1,16 @@
 (ns example.demo.tts.draft)
 
 (comment
-  ; === stop 1.0 ------------------------------------------
-
-  ; do not hide stop completely; bad u/x; show dimmed
-  (opacity {:opacity (cF (if (= :off (mget (fm* :dash) :play-status))
-                           0.15 1.0))}
-    (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))
-
-  ; fix flashing on tap
-  (ignore-pointer {:ignoring (cF (= :off (mget (fm* :dash) :play-status)))}
-    (opacity {:opacity (cF (if (= :off (mget (fm* :dash) :play-status))
-                             0.15 1.0))}
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop)))
-
-  ; DRY and break out since getting big
-  (defn stop-button []
-    (ignore-pointer {:ignoring (cF (= :off (maprop :play-status)))}
-      (opacity {:opacity (cF (if (maprop :ignoring)
-                               0.15 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
-
   ; === Fix run-on
 
   (cF+n [:watch (fn [_ me new prior c]
                   (when (mx-bound? prior)
-                    (when (some #{(mget (fmu :dash) :play-status)} [:on :paused])
+                    (when (not= :off (mget (fmu :dash) :play-status))
                       (fts-stop me))
                     (fts-speak me)))]
     (mget me :lg-pref))
 
   ; === auto play =====================
-
-  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-    (speaking-controls)
-    (auto-play)) ;; <=== existing component
-
-  :lg-current (cF+n [:watch (fn [_ me new prior c]
-                              (when (mx-bound? prior)
-                                (when (fmuval :auto-play)
-                                  (when (some #{(mget (fmu :dash) :play-status)} [:on :paused])
-                                    (fts-stop me))
-                                  (fts-speak me))))]
-                (mget me :lg-pref))
-
   ; now enhance
   (cI true :watch (fn [_ _ new prior _]
                     (when (and (mx-bound? prior)
@@ -51,9 +18,15 @@
                       (fts-speak me))))
 
   ;=== ESL 1.0 ===========================
-  (.setProgressHandler fts
-    (fn [text startOffset endOffset word]
-      (dp :progress!! word startOffset endOffset text)))
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:name     :chyron
+         :progress (cI nil)}
+        (or ;; <==== no cF?!
+          (:word (mget me :progress) "")))))
 
   (.setProgressHandler fts
     (fn [text startOffset endOffset word]
@@ -64,37 +37,7 @@
                      :word-offset startOffset
                      :word-end endOffset}))))
 
-  ;; then the chyron
-  (defn chyron []
-    (container
-      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-      (fx/text {:textAlign m/TextAlign.center}
-        {:name     :chyron
-         :progress (cI nil)}
-        (or ;; <==== no cF?!
-          (:word (mget me :progress) "")))))
-
-  ;; and connect to progress handler
-  (.setProgressHandler fts
-    (fn [text startOffset endOffset word]
-      (wmx-iso ;; <==========
-        (mset! (fm* :chyron)
-          :progress {:word word}))))
-
-  ; instant EQ effect
-  (defn property-slider [label prop color init-val min max divisions value-watch]
-    (fx/slider
-      {:value       (cI init-val :watch value-watch)
-       :onChanged   (cF #(mx/wmx-iso
-                           (fts-stop me)
-                           (mset! me :value %)
-                           (fts-speak me)))
-       :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
-       :label       (cF (str label " " (mget me :value)))
-       :activeColor color}
-      {:name prop}))
-
-  ; === chyron 2.0 ----------------------------------------------------
+  ; === multi word chyron ----------------------------------------------------
 
   (defn chyron []
     (container
@@ -112,32 +55,6 @@
 
   ;;; === rate limit speech skip =================================
 
-  ; --- add :progress to dash, remove from chyron
-
-  (.setProgressHandler fts
-    (fn [text startOffset endOffset word]
-      (wmx-iso ;; <===========
-        (mset! (fm* :dash)
-          :progress {:full-text text
-                     :word word
-                     :word-offset startOffset
-                     :word-end endOffset}))))
-
-  (defn chyron []
-    (container
-      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-      (fx/text {:textAlign m/TextAlign.center}
-        {:name     :chyron
-         :progress (cI nil)
-         :phrase   (cF (let [dash (fm* :dash)]
-                         (when (not= :off (mget dash :play-status))
-                           (let [{:keys [word]} (mget dash :progress)]
-                             (if (nil? word) []
-                               (take-last 5
-                                 (concat (if (mx-bound? _cache) _cache [])
-                                   [word])))))))}
-        (str/join "..." (mget me :phrase)))))
-
   (defn stop-button []
     (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
                                      (let [{:keys [full-text word-end]} (maprop :progress)]
@@ -145,39 +62,13 @@
       (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
-  (defn stop-button []
-    (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
-                                     (and (fmuval :rate-limited?)
-                                       (let [{:keys [full-text word-end]} (maprop :progress)]
-                                         (< word-end (/ (count full-text) 4))))))}
-      (opacity {:opacity (cF (if (maprop :ignoring) 0.20 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (auto-play)
+    (rate-limit?))
 
-  (defn fts-speaking-change [me]
-    (when (fmuval :auto-play)
-      (fts-stop me)
-      (fts-speak me)))
   ;; fin
   )
 
-(comment
-  ; --- auto-play ----------------------------
-  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-    (speaking-controls)
-    (auto-play))
 
-  (defn auto-play []
-    (fx/sized-box {:width 180}
-      (checkbox-list-tile
-        {:controlAffinity m/ListTileControlAffinity.leading
-         :title           (m/Text "Auto-play")
-         :value           (cI false :watch )
-         :onChanged       (cF (fn [new]
-                                (wmx-iso (mswap! me :value not))))}
-        {:name :auto-play})))
-
-  (when (mget (fm* :auto-play) :value)
-    (fts-stop me)
-    (fts-speak me)))
 
 
