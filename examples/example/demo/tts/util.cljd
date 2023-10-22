@@ -35,15 +35,6 @@
     (.setErrorHandler fts
       #(throw (Exception. (str "FlutterTts error: " %))))))
 
-(defn cf-lang-geo-tree
-  "Async formula cell that retrieves FTS languages and converts to
-  a tree of languages with one or more regions"
-  []
-  (cF+ [:async? true
-        :async-then (fn [c lg-flat]
-                      (group-by lg-lang (sort lg-flat)))]
-    (.-getLanguages ^FlutterTts (mget me :fts))))
-
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-speak [me]

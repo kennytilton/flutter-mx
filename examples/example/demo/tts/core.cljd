@@ -75,7 +75,10 @@
     {:name          :app
      :fts           (cF+ [:watch fts-init]
                       (FlutterTts))
-     :lang-geo-tree (util/cf-lang-geo-tree)}
+     :lang-geo-tree (cF+ [:async? true
+                          :async-then (fn [c locales]
+                                        (group-by lg-lang (sort locales)))]
+                      (.-getLanguages ^FlutterTts (mget me :fts)))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
