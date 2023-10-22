@@ -134,3 +134,39 @@
       {:name  :text-in
        :value (cI speech-initial)})))
 
+
+;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
+
+(defn property-slider [label prop color init-val min max divisions value-watch]
+  (fx/slider
+    {:value       (cI init-val :watch value-watch)
+     :onChanged   (cF #(mx/wmx-iso
+                         (mset! me :value %)))
+     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+     :label       (cF (str label " " (mget me :value)))
+     :activeColor color}
+    {:name prop}))
+
+(def equalizer-sliders
+  [["Volume" :volume m/Colors.blue 0.3 0 1 10
+    (fn [_ me new _ _]
+      (.setVolume ^FlutterTts (maprop :fts) new))]
+   ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
+    (fn [_ me new _ _]
+      (.setPitch ^FlutterTts (maprop :fts) new))]
+   ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
+    (fn [_ me new _ _]
+      (.setSpeechRate ^FlutterTts (maprop :fts) new))]])
+
+(defn equalizer []
+  (column
+    (mapv (fn [[label & opnds]]
+            (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+              (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
+                       :mainAxisSize      m/MainAxisSize.min}
+                (container {:width     64
+                            :alignment m/Alignment.topRight}
+                  (m/Text label))
+                (apply property-slider label opnds))))
+      equalizer-sliders)))
+
