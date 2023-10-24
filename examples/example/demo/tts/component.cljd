@@ -42,11 +42,11 @@
                                      (fts-speak me)))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
-        (take 16                                            ;; hack widget layout issue
+        (take 99                                         ;; hack widget layout issue
           (sort (keys (mget (fasc :app) :lang-geo-tree))))))))
 
 (defn geo-chooser []
-  (expanded
+  (do ;; expanded
     (fx/grid-view+count
       {:crossAxisCount  8 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
@@ -159,14 +159,15 @@
       (.setSpeechRate ^FlutterTts (maprop :fts) new))]])
 
 (defn equalizer []
-  (column
+  (container {:margin (m/EdgeInsets.only .bottom 24)}
+    (column
     (mapv (fn [[label & opnds]]
-            (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+            (container {:margin (m/EdgeInsets.only .right 24 .bottom 0)}
               (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
                        :mainAxisSize      m/MainAxisSize.min}
                 (container {:width     64
                             :alignment m/Alignment.topRight}
                   (m/Text label))
                 (apply property-slider label opnds))))
-      equalizer-sliders)))
+      equalizer-sliders))))
 

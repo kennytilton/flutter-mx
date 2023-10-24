@@ -10,23 +10,18 @@
                     (fts-speak me)))]
     (mget me :lg-pref))
 
-  ; === auto play =====================
-  ; now enhance
-  (cI true :watch (fn [_ _ new prior _]
-                    (when (and (mx-bound? prior)
-                            (= new true))
-                      (fts-speak me))))
-
-  ;=== ESL 1.0 ===========================
+  ;=== One word chyron ===========================
 
   (defn chyron []
     (container
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-      (fx/text {:textAlign m/TextAlign.center}
+      (fx/text {:textAlign m/TextAlign.center
+                :style (p/TextStyle .color m/Colors.black
+                         .fontSize 18.0)}
         {:name     :chyron
          :progress (cI nil)}
-        (or ;; <==== no cF?!
-          (:word (mget me :progress) "")))))
+        (or (:word (mget me :progress)
+              "*waiting*")))))
 
   (.setProgressHandler fts
     (fn [text startOffset endOffset word]
