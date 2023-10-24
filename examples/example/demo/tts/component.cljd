@@ -9,7 +9,7 @@
     [example.demo.tts.util :as util]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fmu fmuval fm* maprop mx-bound? wmx-iso]]
+             fmu muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -63,10 +63,10 @@
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
               (mset! (fasc :lang-chooser) :lg-current
-                (first (get (maprop :lang-geos) lang))))}
+                (first (get (mav :lang-geos) lang))))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
+                     {:border (cF (when (= lang (lg-lang (mav :lg-current)))
                                     (.all m/Border .color m/Colors.blue .width 2)))
                       :color  (.-shade50 (cond
                                            (even? i) m/Colors.blue
@@ -137,9 +137,9 @@
 
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
-(defn property-slider [label prop color init-val min max divisions value-watch]
+(defn property-slider [label prop color init-val min max divisions watch]
   (fx/slider
-    {:value       (cI init-val :watch value-watch)
+    {:value       (cI init-val :watch watch)
      :onChanged   (cF #(mx/wmx-iso
                          (mset! me :value %)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
@@ -150,13 +150,13 @@
 (def equalizer-sliders
   [["Volume" :volume m/Colors.blue 0.3 0 1 10
     (fn [_ me new _ _]
-      (.setVolume ^FlutterTts (maprop :fts) new))]
+      (.setVolume ^FlutterTts (mav :fts) new))]
    ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
     (fn [_ me new _ _]
-      (.setPitch ^FlutterTts (maprop :fts) new))]
+      (.setPitch ^FlutterTts (mav :fts) new))]
    ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
     (fn [_ me new _ _]
-      (.setSpeechRate ^FlutterTts (maprop :fts) new))]])
+      (.setSpeechRate ^FlutterTts (mav :fts) new))]])
 
 (defn equalizer []
   (container {:margin (m/EdgeInsets.only .bottom 24)}

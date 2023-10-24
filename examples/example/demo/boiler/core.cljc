@@ -4,7 +4,7 @@
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.cell.base :as cty]
     [tilton.mx.model.core :refer [make]]
-    [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
+    [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
@@ -40,7 +40,7 @@
         {:appBar (app-bar
                    {:title           (m/Text title)
                     :backgroundColor (cF (.-inversePrimary
-                                           (.-colorScheme ^m/ThemeData (maprop :theme))))})
+                                           (.-colorScheme ^m/ThemeData (mav :theme))))})
 
          ;----------  how abaout fma-get, -set!, -swap! ????
 
@@ -60,7 +60,7 @@
             (text
               {:style (cF (fx/in-my-context [me ctx]
                             (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
-                        #_(.-displayLarge (.-textTheme ^m/ThemeData (maprop :theme))))}
+                        #_(.-displayLarge (.-textTheme ^m/ThemeData (mav :theme))))}
               {:name  :counter
                :value (cI 0)}
               (str (mget me :value)))))))))

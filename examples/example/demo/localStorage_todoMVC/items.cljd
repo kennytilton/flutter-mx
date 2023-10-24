@@ -8,7 +8,7 @@
     [clojure.string :as str]
     [tilton.mx.model.peek :refer [minfo]]
     [tilton.mx.cell.base :as cty]
-    [tilton.mx.api :refer [mget mswap! mset! mset! mkids fm* fmuval fmu fasc
+    [tilton.mx.api :refer [mget mswap! mset! mset! mkids fm* muv fmu fasc
                            cF cI cFonce wmx-iso dp dpx] :as mx]
     [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
     [example.demo.localStorage-todoMVC.common :as cmm
@@ -139,7 +139,7 @@
        :maintainSize      false
        :maintainAnimation true
        :maintainState     true}
-      {:selected? (cF (case (fmuval :completions :selection)
+      {:selected? (cF (case (muv :completions :selection)
                         :all true
                         :active (not (td-completed todo))
                         :done (td-completed todo)))}
@@ -173,7 +173,7 @@
 (defn todo-list-item [todo]
   (fx/visibility
     {:visible (cF (mget me :selected?))}
-    {:selected? (cF (case (fmuval :completions :selection)
+    {:selected? (cF (case (muv :completions :selection)
                       :all true
                       :active (not (td-completed todo))
                       :done (td-completed todo)))}

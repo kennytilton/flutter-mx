@@ -204,7 +204,7 @@
     `(let [name# ~name]
        (tilton.mx.model.core/fm-ascendant name# ~me-ref))))
 
-(defmacro maprop [prop-name]
+(defmacro mav [prop-name]
   `(tilton.mx.api/faprop ~prop-name ~'me))
 
 (defn faprop "Search strictly up and mget value of first asc w that property"
@@ -279,12 +279,12 @@
        (tilton.mx.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
-(defmacro fmuval [name & [prop me]]
+(defmacro muv [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.model.core/fm-navig (fn [node#]
                                                    #_ (when (mget? node# :name)
-                                                     (dp :fmuval-sees (mget? node# :name)
+                                                     (dp :muv-sees (mget? node# :name)
                                                        (mget? node# :selection)))
                                                    (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]

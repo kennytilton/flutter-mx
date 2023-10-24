@@ -9,7 +9,7 @@
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fmu fmuval fm* maprop mx-bound? wmx-iso]]
+             fmu muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -49,7 +49,7 @@
         speech (mget (fm* :text-in) :value)]
     (when-let [lg (mget (fm* :lang-chooser) :lg-current)]
       (when (not (str/blank? speech))
-        (dp :speaking!!!!!!!! lg);  :params (maprop :speech-rate) (maprop :pitch) (maprop :volume))
+        (dp :speaking!!!!!!!! lg :pitch (mget (fm* :pitch) :value));  :params (mav :speech-rate) (mav :pitch) (mav :volume))
         (.setPitch fts (mget (fm* :pitch) :value))
         (.setVolume fts (mget (fm* :volume) :value))
         (.setLanguage fts lg)

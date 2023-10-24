@@ -8,7 +8,7 @@
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fm* maprop mx-bound? wmx-iso]]
+             fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -146,15 +146,15 @@
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
        :play-status (cI :off :watch watch-dbg)}
-      (if (some #{(maprop :play-status)} [:off :paused])
+      (if (some #{(mav :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
       (stop-button))))
 
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (mget me :disabled?))}
-    {:disabled? (cF (= :off (maprop :play-status)))}
-    (opacity {:opacity (cF (if (maprop :disabled?)
+    {:disabled? (cF (= :off (mav :play-status)))}
+    (opacity {:opacity (cF (if (mav :disabled?)
                              0.2 1.0))}
       (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
 
@@ -164,13 +164,13 @@
   (let [app (mx/fascinc :app)                               ;; turns out 'me' _is_ the app
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)]
-    (when (and (maprop :lg-current) (not (str/blank? speech)))
-      (dp :speaking!!!!!!!! (maprop :lg-current)
-        :params (maprop :speech-rate) (maprop :pitch) (maprop :volume))
-      (.setPitch fts (maprop :pitch))
-      (.setVolume fts (maprop :volume))
-      (.setLanguage fts (maprop :lg-current))
-      (.setSpeechRate fts (maprop :speech-rate))
+    (when (and (mav :lg-current) (not (str/blank? speech)))
+      (dp :speaking!!!!!!!! (mav :lg-current)
+        :params (mav :speech-rate) (mav :pitch) (mav :volume))
+      (.setPitch fts (mav :pitch))
+      (.setVolume fts (mav :volume))
+      (.setLanguage fts (mav :lg-current))
+      (.setSpeechRate fts (mav :speech-rate))
       (.speak fts speech))))
 
 (defn do-pause [me]
@@ -219,7 +219,7 @@
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
       (map-indexed lang-button
-        (sort (keys (maprop :lang-geos)))))))
+        (sort (keys (mav :lang-geos)))))))
 
 (defn geo-chooser []
   (expanded
@@ -231,8 +231,8 @@
          :padding         (m/EdgeInsets.all 8)
          :shrinkWrap      true}
         (map-indexed geo-button
-          (when-let [lgc (lg-lang (maprop :lg-current))]
-            (get (maprop :lang-geos) lgc)))))))
+          (when-let [lgc (lg-lang (mav :lg-current))]
+            (get (mav :lang-geos) lgc)))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -241,10 +241,10 @@
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
               (mset! (fasc :app) :lg-current
-                (first (get (maprop :lang-geos) lang))))}
+                (first (get (mav :lang-geos) lang))))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
+                     {:border (cF (when (= lang (lg-lang (mav :lg-current)))
                                     (.all m/Border .color m/Colors.blue .width 2)))
                       :color  (.-shade50 (cond
                                            (even? i) m/Colors.blue
@@ -265,7 +265,7 @@
               (mset! (fasc :app) :lg-current lang-geo))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang-geo (maprop :lg-current))
+                     {:border (cF (when (= lang-geo (mav :lg-current))
                                     (.all m/Border .color m/Colors.blue .width 2)))
                       :color  (.-shade50 (cond
                                            (even? i) m/Colors.blue

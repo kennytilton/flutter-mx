@@ -51,10 +51,10 @@
   ;;; === rate limit speech skip =================================
 
   (defn stop-button []
-    (ignore-pointer {:ignoring (cF (or (= :off (maprop :play-status))
-                                     (let [{:keys [full-text word-end]} (maprop :progress)]
+    (ignore-pointer {:ignoring (cF (or (= :off (mav :play-status))
+                                     (let [{:keys [full-text word-end]} (mav :progress)]
                                        (< word-end (/ (count full-text) 4)))))}
-      (opacity {:opacity (cF (if (maprop :ignoring) 0.2 1.0))}
+      (opacity {:opacity (cF (if (mav :ignoring) 0.2 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}

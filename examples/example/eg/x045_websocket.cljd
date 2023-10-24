@@ -3,7 +3,7 @@
   (:require
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [cF cF+ cFn cI dp minfo mget mset! mswap! maprop fasc]]
+     :refer [cF cF+ cFn cI dp minfo mget mset! mswap! mav fasc]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              floating-action-button as-dart-callback]]
@@ -47,7 +47,7 @@
        :floatingActionButton
        (floating-action-button
          {:onPressed (as-dart-callback []
-                       (when-let [c ^wsc/WebSocketChannel (maprop :channel)]
+                       (when-let [c ^wsc/WebSocketChannel (mav :channel)]
                          (dp :sending-World!!!! )
                          (.add (.-sink c) (str "World"))))
           :tooltip   "Send msg"}
@@ -61,7 +61,7 @@
             "hello, web socket.\\n")
           (fx/text-button
             {:onPressed (as-dart-callback []
-                          (let [s (maprop :salute)]
+                          (let [s (mav :salute)]
                             (mset! (fasc :app) :salute
                               (if (= s +hello+)
                                 +bye+ +hello+))))}
@@ -70,10 +70,10 @@
             (text {:overflow p.TextOverflow/ellipsis
                    :style    (p/TextStyle .color m/Colors.cyan
                                .fontSize 24.0)}
-              (let [{:keys [msg now]} (maprop :socket-msg-in)]
+              (let [{:keys [msg now]} (mav :socket-msg-in)]
                 (dp :processing-new-msg msg :now now)
                 (cond
-                  msg (str (maprop :salute) "> " msg " #" (swap! count inc))
+                  msg (str (mav :salute) "> " msg " #" (swap! count inc))
                   :else
                   ;; Text widgets given nil content throw "type 'Null' is not a subtype of type 'String' in type cast"
                   "")))))))))
@@ -81,14 +81,14 @@
 #_(text {:overflow p.TextOverflow/ellipsis
          :style    (p/TextStyle .color m/Colors.cyan
                      .fontSize 24.0)}
-    (or (maprop :socket-msg-in)
+    (or (mav :socket-msg-in)
       "null msg"))
 
 #_(let [count (atom 0)]
     (text {:overflow p.TextOverflow/ellipsis
            :style    (p/TextStyle .color m/Colors.cyan
                        .fontSize 24.0)}
-      (let [msg (maprop :socket-msg-in)]
+      (let [msg (mav :socket-msg-in)]
         (cond
           msg (str msg " #" (swap! count inc))
           :else

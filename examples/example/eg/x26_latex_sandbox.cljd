@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.cell.core :refer [cF cF+ cI cFonce]]
-    [tilton.mx.model.core :refer [mget mset! mswap! fmuval] :as md]
+    [tilton.mx.model.core :refer [mget mset! mswap! muv] :as md]
 
     [tilton.fmx.api :as fx
      :refer [as-dart-callback scaffold app-bar text center column hero material-app]]
@@ -52,7 +52,7 @@
              :onChanged  (as-dart-callback [text]
                            (md/mset! (md/fmu :tex-pair) :value text))}
             {:name  :raw-tex
-             :value (cF (fmuval :tex-pair))})
+             :value (cF (muv :tex-pair))})
 
           (fx/ignore-pointer
             (tk/TeXView

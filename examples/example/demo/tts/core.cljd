@@ -9,7 +9,7 @@
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fmu fmuval fm* maprop mx-bound? wmx-iso]]
+             fmu muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -27,10 +27,10 @@
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
        :play-status (cI :off)}
-      (if (some #{(maprop :play-status)} [:off :paused])
+      (if (some #{(mav :play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" fts-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" fts-pause))
-      (opacity {:opacity (cF (if (= :off (maprop :play-status)) 0.0 1.0))}
+      (opacity {:opacity (cF (if (= :off (mav :play-status)) 0.0 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop)))))
 
 ;;; ---  make app --------------------------------------------
@@ -38,13 +38,13 @@
 
 (defn make-app []
   (material-app {}
-    {:name          :app
-     :fts           (cF+ [:watch fts-init]
-                      (FlutterTts))
+    {:name      :app
+     :fts       (cF+ [:watch fts-init]
+                  (FlutterTts))
      :lang-geos (cF+ [:async? true
-                          :async-then (fn [c locales]
-                                        (group-by lg-lang (sort locales)))]
-                      (.-getLanguages ^FlutterTts (mget me :fts)))}
+                      :async-then (fn [c locales]
+                                    (group-by lg-lang (sort locales)))]
+                  (.-getLanguages ^FlutterTts (mget me :fts)))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
