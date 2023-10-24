@@ -22,7 +22,7 @@
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
-(defn speaking-controls []
+(defn dashboard []
   (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
@@ -41,7 +41,7 @@
     {:name          :app
      :fts           (cF+ [:watch fts-init]
                       (FlutterTts))
-     :lang-geo-tree (cF+ [:async? true
+     :lang-geos (cF+ [:async? true
                           :async-then (fn [c locales]
                                         (group-by lg-lang (sort locales)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))}
@@ -53,7 +53,7 @@
         (lang-chooser)
         (choice-header "Geography")
         (geo-chooser)
-        (speech-input poetry/graves-jealousy)
-        (speaking-controls)
+        (speech-input poetry/shakespeare-sonnet-24)
+        (dashboard)
         (equalizer)))))
 

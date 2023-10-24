@@ -43,7 +43,7 @@
                      (mget me :lg-pref))}
       (map-indexed lang-button
         (take 99                                         ;; hack widget layout issue
-          (sort (keys (mget (fasc :app) :lang-geo-tree))))))))
+          (sort (keys (mget (fasc :app) :lang-geos))))))))
 
 (defn geo-chooser []
   (do ;; expanded
@@ -54,7 +54,7 @@
        :shrinkWrap      true}
       (map-indexed geo-button
         (when-let [lgc (lg-lang (mget (fmu :lang-chooser) :lg-current))]
-          (get (mget (fasc :app) :lang-geo-tree) lgc))))))
+          (get (mget (fasc :app) :lang-geos) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -63,7 +63,7 @@
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
               (mset! (fasc :lang-chooser) :lg-current
-                (first (get (maprop :lang-geo-tree) lang))))}
+                (first (get (maprop :lang-geos) lang))))}
     (container
       {:decoration (fx/box-decoration
                      {:border (cF (when (= lang (lg-lang (maprop :lg-current)))

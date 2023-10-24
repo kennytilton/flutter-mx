@@ -14,7 +14,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
-(declare lang-chooser geo-chooser speaking-controls fts-init
+(declare lang-chooser geo-chooser dashboard fts-init
   equalizer property-slider text-input do-speak do-stop
   lang-button geo-button lg-lang choice-header)
 
@@ -25,11 +25,11 @@
     "Things fall apart; the centre cannot hold;\n"
     "Mere anarchy is loosed upon the world,")
   (str
-      "\"Jealousy\"\nby Robert Graves\n\n"
+      ;"\"Jealousy\"\nby Robert Graves\n\n"
       "I'd die for you, or you for me, \n"
-      "So furious is our jealousy-- \n"
-      "And if you doubt this to be true, \n"
-      "Kill me outright, lest I kill you."
+      ;"So furious is our jealousy-- \n"
+      ;"And if you doubt this to be true, \n"
+      ;"Kill me outright, lest I kill you."
       ))
 
 (defn make-app []
@@ -44,7 +44,7 @@
      :pitch         (cI 1.0 :watch (fn [_ me new _ _]
                                      (.setPitch ^FlutterTts (mget me :fts) new)))
      ; -------------------------------------------------------------------------------
-     :lang-geo-tree (cF+ [:async? true
+     :lang-geos (cF+ [:async? true
                           :async-then (fn [c lg-flat]
                                         (group-by lg-lang (sort lg-flat)))]
                       (.-getLanguages ^FlutterTts (mget me :fts)))
@@ -81,7 +81,7 @@
                        (take 8 (conj (if (mx-bound? _cache) _cache []) word))))))}
             (str/join "..." (mget me :phrase))))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (speaking-controls)
+          (dashboard)
           (auto-play))
         (equalizer)))))
 
@@ -103,7 +103,10 @@
       (.setSharedInstance fts true)
       (.setProgressHandler fts
         (fn [& progress] ;; text startOffset endOffset word]
-          (wmx-iso (mset! (fm* :chyron) :progress progress))))
+          (try
+            (wmx-iso (mset! (fm* :chyron) :progress progress))
+            (catch Exception e
+              (dp :caught!!!! e)))))
       (.setStartHandler fts
         #(wmx-iso (mset! (fm* :dash) :play-status :on)))
       (.setCompletionHandler fts
@@ -136,7 +139,7 @@
        :splashColor splash-color
        :onPressed   (fn [] (func me))})))
 
-(defn speaking-controls []
+(defn dashboard []
   (container
     {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row
@@ -216,7 +219,7 @@
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
       (map-indexed lang-button
-        (sort (keys (maprop :lang-geo-tree)))))))
+        (sort (keys (maprop :lang-geos)))))))
 
 (defn geo-chooser []
   (expanded
@@ -229,7 +232,7 @@
          :shrinkWrap      true}
         (map-indexed geo-button
           (when-let [lgc (lg-lang (maprop :lg-current))]
-            (get (maprop :lang-geo-tree) lgc)))))))
+            (get (maprop :lang-geos) lgc)))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -238,7 +241,7 @@
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
               (mset! (fasc :app) :lg-current
-                (first (get (maprop :lang-geo-tree) lang))))}
+                (first (get (maprop :lang-geos) lang))))}
     (container
       {:decoration (fx/box-decoration
                      {:border (cF (when (= lang (lg-lang (maprop :lg-current)))

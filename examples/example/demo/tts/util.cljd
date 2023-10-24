@@ -16,6 +16,11 @@
              checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
 ;;; --- start-up ----------------------------------------------
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso  ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
 
 (defn fts-init
   "Watch function to initialize an FTS instance"
@@ -23,17 +28,18 @@
   (when-let [fts ^FlutterTts newv]
     (.setSharedInstance fts true)
     (.setStartHandler fts
-      #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+      #(try-wmx-iso  (mset! (fm* :dash) :play-status :on)))
     (.setCompletionHandler fts
-      #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :off)))
     (.setCancelHandler fts
-      #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :off)))
     (.setPauseHandler fts
-      #(wmx-iso (mset! (fm* :dash) :play-status :paused)))
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :paused)))
     (.setContinueHandler fts
-      #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :on)))
     (.setErrorHandler fts
-      #(throw (Exception. (str "FlutterTts error: " %))))))
+      (fn [e]
+        (dp :flutter-error!!!!!!!! e)))))
 
 ;;; --- speech control actions -----------------------------------------------
 
