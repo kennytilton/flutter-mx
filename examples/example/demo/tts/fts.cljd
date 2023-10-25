@@ -10,7 +10,7 @@
     [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv fm* mav mx-bound? wmx-iso]]
+             fmu muv muiv m*v fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -78,16 +78,16 @@
   (fts-speak me))
 
 (defn fts-speak [me]
-  (let [app (mx/fasc-inclusive :app)
-        fts ^FlutterTts (app-tts)
-        speech (mget (fm* :text-in) :value)]
-    (when-let [lg (mget (fm* :lang-chooser) :lg-current)]
+  (let [fts ^FlutterTts (app-tts)
+        speech (muv :text-in)]
+    (dp :fts-speak-me (minfo me))
+    (when-let [lg (m*v :lang-chooser :lg-current)]
       (when (not (str/blank? speech))
-        (dp :speaking!!!!!!!! lg :pitch (mget (fm* :pitch) :value)) ;  :params (mav :speech-rate) (mav :pitch) (mav :volume))
-        (.setPitch fts (mget (fm* :pitch) :value))
-        (.setVolume fts (mget (fm* :volume) :value))
+        (dp :speaking!!!!!!!! lg :pitch (muiv :pitch)) ;  :params (mav :speech-rate) (mav :pitch) (mav :volume))
+        (.setPitch fts (muiv :pitch))
+        (.setVolume fts (muiv :volume))
         (.setLanguage fts lg)
-        (.setSpeechRate fts (mget (fm* :speech-rate) :value))
+        (.setSpeechRate fts (muiv :speech-rate))
         (.speak fts speech)))))
 
 (defn fts-pause [me]

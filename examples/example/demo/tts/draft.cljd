@@ -1,14 +1,20 @@
 (ns example.demo.tts.draft)
 
 (comment
-  ; === Fix run-on
+  :lg-current (cF+n [:watch (fn [_ me new prior c]
+                              (when (mx-bound? prior)
+                                (when (muv :auto-play)
+                                  (when (not= :off (app-fts-status))
+                                    (fts-stop me))
+                                  (fts-speak me))))]
+                (mget me :lg-pref))
 
-  (cF+n [:watch (fn [_ me new prior c]
-                  (when (mx-bound? prior)
-                    (when (not= :off (mget (fmu :dash) :fts-status))
-                      (fts-stop me))
-                    (fts-speak me)))]
-    (mget me :lg-pref))
+  :watch (fn [_ me new prior _]
+           (when (and (mx-bound? prior)
+                   new
+                   (= :off (app-fts-status)))
+             (fts-speak me)))
+
 
   ;=== One word chyron ===========================
 
@@ -50,9 +56,10 @@
 
   (defn stop-button []
     (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
-                                     (let [{:keys [full-text word-end]} (app-fts-progress)]
-                                       (< word-end (/ (count full-text) 4)))))}
-      (opacity {:opacity (cF (if (mav :ignoring) 0.2 1.0))}
+                                     (and (muv :rate-limit?)
+                                       (let [{:keys [full-text word-end]} (app-fts-progress)]
+                                         (< word-end (/ (count full-text) 4))))))}
+      (opacity {:opacity (cF (if (mav :ignoring) 0.15 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
