@@ -315,11 +315,15 @@
      ~@body))
 
 (defmacro wmx-iso [& body]
-  `(binding [tilton.mx.cell.base/*within-integrity* nil
-             tilton.mx.cell.base/*depender* nil
-             tilton.mx.cell.base/*defer-changes* false
-             tilton.mx.cell.base/*call-stack* nil]
-     ~@body))
+  `(try
+     (binding [tilton.mx.cell.base/*within-integrity* nil
+               tilton.mx.cell.base/*depender* nil
+               tilton.mx.cell.base/*defer-changes* false
+               tilton.mx.cell.base/*call-stack* nil]
+       ~@body)
+     (catch Exception e#
+       (dp :WMX-ISO-CAUGHT!!! e#)
+       (throw e#))))
 
 (defmacro def-mx-props [reader-prefix & slots]
   `(do

@@ -75,7 +75,7 @@
             {:name     :chyron
              :progress (cI nil)
              :phrase #_ ["four" "score" "and" "seven"]
-             (cF (when (not= :off (mget (fm* :dash) :play-status))
+             (cF (when (not= :off (mget (fm* :dash) :fts-status))
                    (let [[text startOffset endOffset word] (mget me :progress)]
                      (if (nil? word) []
                        (take 8 (conj (if (mx-bound? _cache) _cache []) word))))))}
@@ -108,15 +108,15 @@
             (catch Exception e
               (dp :caught!!!! e)))))
       (.setStartHandler fts
-        #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+        #(wmx-iso (mset! (fm* :dash) :fts-status :on)))
       (.setCompletionHandler fts
-        #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+        #(wmx-iso (mset! (fm* :dash) :fts-status :off)))
       (.setCancelHandler fts
-        #(wmx-iso (mset! (fm* :dash) :play-status :off)))
+        #(wmx-iso (mset! (fm* :dash) :fts-status :off)))
       (.setPauseHandler fts
-        #(wmx-iso (mset! (fm* :dash) :play-status :paused)))
+        #(wmx-iso (mset! (fm* :dash) :fts-status :paused)))
       (.setContinueHandler fts
-        #(wmx-iso (mset! (fm* :dash) :play-status :on)))
+        #(wmx-iso (mset! (fm* :dash) :fts-status :on)))
       (.setErrorHandler fts
         #(throw (Exception. (str "FlutterTts error: " %))))))
 
@@ -145,15 +145,15 @@
     (row
       {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       {:name        :dash
-       :play-status (cI :off :watch watch-dbg)}
-      (if (some #{(mav :play-status)} [:off :paused])
+       :fts-status (cI :off :watch watch-dbg)}
+      (if (some #{(mav :fts-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
       (stop-button))))
 
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (mget me :disabled?))}
-    {:disabled? (cF (= :off (mav :play-status)))}
+    {:disabled? (cF (= :off (mav :fts-status)))}
     (opacity {:opacity (cF (if (mav :disabled?)
                              0.2 1.0))}
       (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))

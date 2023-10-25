@@ -5,7 +5,7 @@
 
   (cF+n [:watch (fn [_ me new prior c]
                   (when (mx-bound? prior)
-                    (when (not= :off (mget (fmu :dash) :play-status))
+                    (when (not= :off (mget (fmu :dash) :fts-status))
                       (fts-stop me))
                     (fts-speak me)))]
     (mget me :lg-pref))
@@ -39,7 +39,7 @@
       (fx/text {:textAlign m/TextAlign.center}
         {:name     :chyron
          :progress (cI nil)
-         :phrase   (cF (when (not= :off (app-play-status))
+         :phrase   (cF (when (not= :off (app-fts-status))
                          (let [{:keys [word]} (mget me :progress)]
                            (if (nil? word) []
                              (take-last 5
@@ -50,7 +50,7 @@
   ;;; === rate limit speech skip =================================
 
   (defn stop-button []
-    (ignore-pointer {:ignoring (cF (or (= :off (app-play-status))
+    (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
                                      (let [{:keys [full-text word-end]} (app-fts-progress)]
                                        (< word-end (/ (count full-text) 4)))))}
       (opacity {:opacity (cF (if (mav :ignoring) 0.2 1.0))}

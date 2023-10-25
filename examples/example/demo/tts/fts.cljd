@@ -1,4 +1,4 @@
-(ns example.demo.tts.util
+(ns example.demo.tts.fts
   "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
   (:require
     ["package:flutter/material.dart" :as m]
@@ -23,14 +23,12 @@
      (catch Exception e#
        (dp :FLUTTERCATCH!! e#))))
 
-
-
 (defn make-flutter-tts []
   (dp :mkfts-entry!!!!!!!!!)
   (md/make ;; ::mx-flutter-tts
     ;; todo implement :no-setState for next two
     :progress (cI nil)
-    :play-status (cI :off)                                  ;; :off, :on, or :paused
+    :fts-status (cI :off)                                  ;; :off, :on, or :paused
     ;; todo make sure next two optimized away
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
@@ -45,15 +43,15 @@
                                                  :word-offset startOffset
                                                  :word-end    endOffset}))))
                (.setStartHandler fts
-                 #(try-wmx-iso (mset! me :play-status :on)))
+                 #(try-wmx-iso (mset! me :fts-status :on)))
                (.setCompletionHandler fts
-                 #(try-wmx-iso (mset! me :play-status :off)))
+                 #(try-wmx-iso (mset! me :fts-status :off)))
                (.setCancelHandler fts
-                 #(try-wmx-iso (mset! me :play-status :off)))
+                 #(try-wmx-iso (mset! me :fts-status :off)))
                (.setPauseHandler fts
-                 #(try-wmx-iso (mset! me :play-status :paused)))
+                 #(try-wmx-iso (mset! me :fts-status :paused)))
                (.setContinueHandler fts
-                 #(try-wmx-iso (mset! me :play-status :on)))
+                 #(try-wmx-iso (mset! me :fts-status :on)))
                (.setErrorHandler fts
                  (fn [e] (dp :flutter-error!!!!!!!! e)))
                (dp :built-tts)
@@ -65,20 +63,20 @@
 (defmacro app-fts-progress []
   `(mget (mget (fascinc :app) :fts) :progress))
 
-(defmacro app-play-status []
+(defmacro app-fts-status []
   `(let [fts# (mget (fascinc :app) :fts)]
-     (mget fts# :play-status)))
+     (mget fts# :fts-status)))
 
 (defmacro app-lang-geos []
   `(mget (mget (fascinc :app) :fts) :lang-geos))
 
-(defmacro app-play-status-is? [value]
-  `(= value (app-play-status)))
+(defmacro app-fts-status-is? [value]
+  `(= value (app-fts-status)))
 
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-restart [me]
-  (when (not= :off (app-play-status))
+  (when (not= :off (app-fts-status))
     (fts-stop me))
   (fts-speak me))
 
@@ -105,21 +103,9 @@
   (let [fts ^FlutterTts (app-tts)]
     (await (.stop fts))))
 
-;;; --- detritus ------------------------------------------------
-
 (defn lg-lang
   "Return the leading two-char language designator of a five char language-region pair."
   [lg]
   ;; eg "fr-FR" -> "fr"
   ;; used to group FTS languages by languages
   (subs lg 0 2))
-
-(defn choice-header [text]
-  (padding {:padding (m/EdgeInsets.all 12)}
-    (fx/text
-      {:style (p/TextStyle .color m/Colors.black
-                .fontSize 20.0)}
-      text)))
-
-(defn watch-dbg [slot me new prior c]
-  (dp :WATCH slot (minfo me) :new new :prior))
