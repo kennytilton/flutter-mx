@@ -18,15 +18,14 @@
       (fx/text {:textAlign m/TextAlign.center
                 :style (p/TextStyle .color m/Colors.black
                          .fontSize 18.0)}
-        {:name     :chyron
-         :progress (cI nil)}
-        (or (:word (mget me :progress)
+        {:name     :chyron}
+        (or (:word (app-fts-progress)
               "*waiting*")))))
 
   (.setProgressHandler fts
     (fn [text startOffset endOffset word]
       (wmx-iso ;; <===========
-        (mset! (fm* :chyron)
+        (mset! me
           :progress {:full-text text
                      :word word
                      :word-offset startOffset
@@ -40,7 +39,7 @@
       (fx/text {:textAlign m/TextAlign.center}
         {:name     :chyron
          :progress (cI nil)
-         :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
+         :phrase   (cF (when (not= :off (app-play-status))
                          (let [{:keys [word]} (mget me :progress)]
                            (if (nil? word) []
                              (take-last 5
@@ -51,8 +50,8 @@
   ;;; === rate limit speech skip =================================
 
   (defn stop-button []
-    (ignore-pointer {:ignoring (cF (or (= :off (mav :play-status))
-                                     (let [{:keys [full-text word-end]} (mav :progress)]
+    (ignore-pointer {:ignoring (cF (or (= :off (app-play-status))
+                                     (let [{:keys [full-text word-end]} (app-fts-progress)]
                                        (< word-end (/ (count full-text) 4)))))}
       (opacity {:opacity (cF (if (mav :ignoring) 0.2 1.0))}
         (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))

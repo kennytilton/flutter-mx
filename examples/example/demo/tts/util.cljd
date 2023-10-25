@@ -7,6 +7,7 @@
      :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
+    [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
              fmu muv fm* mav mx-bound? wmx-iso]]
@@ -18,52 +19,76 @@
 ;;; --- start-up ----------------------------------------------
 (defmacro try-wmx-iso [& body]
   `(try
-     (tilton.mx.api/wmx-iso  ~@body)
+     (tilton.mx.api/wmx-iso ~@body)
      (catch Exception e#
        (dp :FLUTTERCATCH!! e#))))
 
-(defn fts-init
-  "Watch function to initialize an FTS instance"
-  [_ me newv _ _]
-  (when-let [fts ^FlutterTts newv]
-    (.setSharedInstance fts true)
-    (.setProgressHandler fts
-      (fn [text startOffset endOffset word]
-        (wmx-iso ;; <===========
-          (mset! (fm* :dash)
-            :progress {:full-text text
-                       :word word
-                       :word-offset startOffset
-                       :word-end endOffset}))))
-    (.setStartHandler fts
-      #(try-wmx-iso  (mset! (fm* :dash) :play-status :on)))
-    (.setCompletionHandler fts
-      #(try-wmx-iso (mset! (fm* :dash) :play-status :off)))
-    (.setCancelHandler fts
-      #(try-wmx-iso (mset! (fm* :dash) :play-status :off)))
-    (.setPauseHandler fts
-      #(try-wmx-iso (mset! (fm* :dash) :play-status :paused)))
-    (.setContinueHandler fts
-      #(try-wmx-iso (mset! (fm* :dash) :play-status :on)))
-    (.setErrorHandler fts
-      (fn [e]
-        (dp :flutter-error!!!!!!!! e)))))
+
+
+(defn make-flutter-tts []
+  (dp :mkfts-entry!!!!!!!!!)
+  (md/make ;; ::mx-flutter-tts
+    ;; todo implement :no-setState for next two
+    :progress (cI nil)
+    :play-status (cI :off)                                  ;; :off, :on, or :paused
+    ;; todo make sure next two optimized away
+    :lang-geos (cF+ [:async? true
+                     :async-then (fn [c locales]
+                                   (group-by lg-lang (sort locales)))]
+                 (.-getLanguages ^FlutterTts (mget me :tts)))
+    :tts (cF (let [fts ^FlutterTts (FlutterTts)]
+               (.setSharedInstance fts true)
+               (.setProgressHandler fts
+                 (fn [text startOffset endOffset word]
+                   (wmx-iso (mset! me :progress {:full-text   text
+                                                 :word        word
+                                                 :word-offset startOffset
+                                                 :word-end    endOffset}))))
+               (.setStartHandler fts
+                 #(try-wmx-iso (mset! me :play-status :on)))
+               (.setCompletionHandler fts
+                 #(try-wmx-iso (mset! me :play-status :off)))
+               (.setCancelHandler fts
+                 #(try-wmx-iso (mset! me :play-status :off)))
+               (.setPauseHandler fts
+                 #(try-wmx-iso (mset! me :play-status :paused)))
+               (.setContinueHandler fts
+                 #(try-wmx-iso (mset! me :play-status :on)))
+               (.setErrorHandler fts
+                 (fn [e] (dp :flutter-error!!!!!!!! e)))
+               (dp :built-tts)
+               fts))))
+
+(defmacro app-tts []
+  `(mget (mget (fascinc :app) :fts) :tts))
+
+(defmacro app-fts-progress []
+  `(mget (mget (fascinc :app) :fts) :progress))
+
+(defmacro app-play-status []
+  `(let [fts# (mget (fascinc :app) :fts)]
+     (mget fts# :play-status)))
+
+(defmacro app-lang-geos []
+  `(mget (mget (fascinc :app) :fts) :lang-geos))
+
+(defmacro app-play-status-is? [value]
+  `(= value (app-play-status)))
 
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-restart [me]
-  (when (muv :auto-play)
-    (when (not= :off (muv :dash :play-status))
-      (fts-stop me))
-    (fts-speak me)))
+  (when (not= :off (app-play-status))
+    (fts-stop me))
+  (fts-speak me))
 
 (defn fts-speak [me]
   (let [app (mx/fascinc :app)
-        fts ^FlutterTts (mget app :fts)
+        fts ^FlutterTts (app-tts)
         speech (mget (fm* :text-in) :value)]
     (when-let [lg (mget (fm* :lang-chooser) :lg-current)]
       (when (not (str/blank? speech))
-        (dp :speaking!!!!!!!! lg :pitch (mget (fm* :pitch) :value));  :params (mav :speech-rate) (mav :pitch) (mav :volume))
+        (dp :speaking!!!!!!!! lg :pitch (mget (fm* :pitch) :value)) ;  :params (mav :speech-rate) (mav :pitch) (mav :volume))
         (.setPitch fts (mget (fm* :pitch) :value))
         (.setVolume fts (mget (fm* :volume) :value))
         (.setLanguage fts lg)
@@ -72,12 +97,12 @@
 
 (defn fts-pause [me]
   (dp :pausing!!!!!!! (minfo me))
-  (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
+  (let [fts ^FlutterTts (app-tts)]
     (await (.pause fts))))
 
 (defn fts-stop [me]
   (dp :stopping!!!!!!! (minfo me))
-  (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
+  (let [fts ^FlutterTts (app-tts)]
     (await (.stop fts))))
 
 ;;; --- detritus ------------------------------------------------

@@ -15,7 +15,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     [example.demo.tts.util :as util
-     :refer [fts-init fts-speak fts-pause fts-stop lg-lang choice-header watch-dbg]]
+     :refer [app-play-status app-fts-progress fts-speak fts-pause fts-stop lg-lang choice-header watch-dbg]]
     [example.demo.tts.component :as comp
      :refer [lang-chooser geo-chooser speech-input speaking-control auto-play rate-limit?
              equalizer]]
@@ -26,16 +26,14 @@
 (defn dashboard []
   (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      {:name        :dash
-       :progress    (cI nil)
-       :play-status (cI :off)}
-      (if (some #{(mav :play-status)} [:off :paused])
+      {:name        :dash}
+      (if (some #{(app-play-status)} [:off :paused])
         (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" fts-speak)
         (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" fts-pause))
-      (ignore-pointer {:ignoring (cF (or (= :off (mav :play-status))
+      (ignore-pointer {:ignoring (cF (or (= :off (app-play-status))
                                        (and (muv :rate-limit?)
                                          (let [{:keys [full-text word-end]}
-                                               (mav :progress)]
+                                               (app-fts-progress)]
                                            (< word-end (* 0.25 (count full-text)))))))}
         (opacity {:opacity (cF (if (mav :ignoring) 0.15 1.0))}
           (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))))
@@ -47,8 +45,8 @@
     {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
     (fx/text {:textAlign m/TextAlign.center}
       {:name   :chyron
-       :phrase (cF (when (not= :off (mget (fm* :dash) :play-status))
-                     (let [{:keys [word]} (muv :dash :progress)]
+       :phrase (cF (when (not= :off (app-play-status))
+                     (let [{:keys [word]} (app-fts-progress)]
                        (if (nil? word) []
                          (take-last 5
                            (concat (if (mx-bound? _cache) _cache [])
@@ -58,12 +56,7 @@
 (defn make-app []
   (material-app {}
     {:name      :app
-     :fts       (cF+ [:watch fts-init]
-                  (FlutterTts))
-     :lang-geos (cF+ [:async? true
-                      :async-then (fn [c locales]
-                                    (group-by lg-lang (sort locales)))]
-                  (.-getLanguages ^FlutterTts (mget me :fts)))}
+     :fts       (cF (util/make-flutter-tts))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column

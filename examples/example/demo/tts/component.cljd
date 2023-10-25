@@ -14,7 +14,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.util :refer [fts-speak fts-restart fts-pause fts-stop choice-header lg-lang]]))
+    [example.demo.tts.util :refer [app-tts app-lang-geos fts-speak fts-restart fts-pause fts-stop choice-header lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
 
@@ -48,11 +48,12 @@
        :lg-pref    "en-AU"                                  ;; faux stored preference
        :lg-current (cF+n [:watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
-                                     (fts-restart me)))]
+                                     (when (muv :auto-play)
+                                       (fts-restart me))))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
-          (sort (keys (mget (fasc :app) :lang-geos))))))))
+          (sort (keys (app-lang-geos))))))))
 
 (defn geo-chooser []
   (do                                                       ;; expanded
@@ -63,7 +64,7 @@
        :shrinkWrap      true}
       (map-indexed geo-button
         (when-let [lgc (lg-lang (mget (fmu :lang-chooser) :lg-current))]
-          (get (mget (fasc :app) :lang-geos) lgc))))))
+          (get (app-lang-geos) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -72,7 +73,7 @@
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
               (mset! (fasc :lang-chooser) :lg-current
-                (first (get (mav :lang-geos) lang))))}
+                (first (get (app-lang-geos) lang))))}
     (container
       {:decoration (fx/box-decoration
                      {:border (cF (when (= lang (lg-lang (mav :lg-current)))
@@ -160,13 +161,13 @@
 (def equalizer-sliders
   [["Volume" :volume m/Colors.blue 0.3 0 1 10
     (fn [_ me new _ _]
-      (.setVolume ^FlutterTts (mav :fts) new))]
+      (.setVolume ^FlutterTts (app-tts) new))]
    ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
     (fn [_ me new _ _]
-      (.setPitch ^FlutterTts (mav :fts) new))]
+      (.setPitch ^FlutterTts (app-tts) new))]
    ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
     (fn [_ me new _ _]
-      (.setSpeechRate ^FlutterTts (mav :fts) new))]])
+      (.setSpeechRate ^FlutterTts (app-tts) new))]])
 
 (defn equalizer []
   (container {:margin (m/EdgeInsets.only .bottom 24)}
