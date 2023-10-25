@@ -9,7 +9,7 @@
     [clojure.string :as str]
     [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
@@ -58,20 +58,17 @@
                fts))))
 
 (defmacro app-tts []
-  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fascinc :app) :fts) :tts))
+  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :tts))
 
 (defmacro app-fts-progress []
-  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fascinc :app) :fts) :progress))
+  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :progress))
 
 (defmacro app-fts-status []
-  `(let [fts# (tilton.mx.api/mget (tilton.mx.api/fascinc :app) :fts)]
+  `(let [fts# (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts)]
      (tilton.mx.api/mget fts# :fts-status)))
 
 (defmacro app-lang-geos []
-  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fascinc :app) :fts) :lang-geos))
-
-(defmacro app-fts-status-is? [value]
-  `(= ~value (app-fts-status)))
+  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :lang-geos))
 
 ;;; --- speech control actions -----------------------------------------------
 
@@ -81,7 +78,7 @@
   (fts-speak me))
 
 (defn fts-speak [me]
-  (let [app (mx/fascinc :app)
+  (let [app (mx/fasc-inclusive :app)
         fts ^FlutterTts (app-tts)
         speech (mget (fm* :text-in) :value)]
     (when-let [lg (mget (fm* :lang-chooser) :lg-current)]

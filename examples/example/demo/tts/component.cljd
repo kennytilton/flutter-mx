@@ -8,13 +8,13 @@
     [clojure.string :as str]
     [example.demo.tts.fts]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [app-tts app-fts-status-is? app-lang-geos fts-speak fts-restart fts-pause fts-stop lg-lang]]))
+    [example.demo.tts.fts :refer [app-tts app-fts-status app-lang-geos fts-speak fts-restart fts-pause fts-stop lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
 
@@ -39,6 +39,8 @@
        :lg-pref    "en-AU"                                  ;; faux stored preference
        :lg-current (cF+n [:watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
+                                     (when (not= :off (app-fts-status))
+                                       (fts-stop me))
                                      (fts-speak me)))]
                      (mget me :lg-pref))}
       (map-indexed lang-button

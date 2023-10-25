@@ -7,7 +7,7 @@
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
@@ -161,7 +161,7 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [app (mx/fascinc :app)                               ;; turns out 'me' _is_ the app
+  (let [app (mx/fasc-inclusive :app)                               ;; turns out 'me' _is_ the app
         fts ^FlutterTts (mget app :fts)
         speech (mget (mx/fm* :text-in) :value)]
     (when (and (mav :lg-current) (not (str/blank? speech)))
@@ -178,7 +178,7 @@
     (await (.pause fts))))
 
 (defn do-stop [me]
-  (let [fts ^FlutterTts (mget (fascinc :app) :fts)]
+  (let [fts ^FlutterTts (mget (fasc-inclusive :app) :fts)]
     (await (.stop fts))))
 
 ;;; --- equalizer property sliders -----------------------------------------------------------
