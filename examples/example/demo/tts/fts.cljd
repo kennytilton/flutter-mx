@@ -31,6 +31,14 @@
                  (.-getLanguages ^FlutterTts (mget me :tts)))
     :tts (cF (doto ^FlutterTts (FlutterTts)
                (.setSharedInstance true)
+               (.setProgressHandler
+                 (fn [text startOffset endOffset word]
+                   (wmx-iso ;; <===========
+                     (mset! me
+                       :progress {:full-text text
+                                  :word word
+                                  :word-offset startOffset
+                                  :word-end endOffset}))))
                (.setStartHandler
                  #(wmx-iso (mset! me :fts-status :on)))
                (.setCompletionHandler
@@ -58,6 +66,11 @@
   `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :lang-geos))
 
 ;;; --- speech control actions -----------------------------------------------
+
+(defn fts-restart [me]
+  (when (not= :off (app-fts-status))
+    (fts-stop me))
+  (fts-speak me))
 
 (defn fts-speak [me]
   (let [fts ^FlutterTts (app-tts)
