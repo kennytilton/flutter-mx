@@ -23,11 +23,7 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI true :watch (fn [_ me new prior _]
-                                          (when (mx-bound? prior)
-                                            (when (and new
-                                                    (= :off (app-fts-status)))
-                                              (fts-speak me)))))
+       :value           (cI true)
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
 
