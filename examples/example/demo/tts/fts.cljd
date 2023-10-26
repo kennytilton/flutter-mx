@@ -17,15 +17,11 @@
              checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
 ;;; --- start-up ----------------------------------------------
-(defmacro try-wmx-iso [& body]
-  `(try
-     (tilton.mx.api/wmx-iso ~@body)
-     (catch Exception e#
-       (dp :FLUTTERCATCH!! e#))))
-
+; tilton.mx.model.core/make
+;    :mx-type mx-type
 (defn make-flutter-tts []
-  (dp :mkfts-entry!!!!!!!!!)
-  (md/make ;; ::mx-flutter-tts
+  (md/make
+    ;; todo why does this stack overflow? :mx-type :mx-flutter-tts
     ;; todo implement :no-setState for next two
     :progress (cI nil)
     :fts-status (cI :off)                                  ;; :off, :on, or :paused
@@ -34,28 +30,26 @@
                      :async-then (fn [c locales]
                                    (group-by lg-lang (sort locales)))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
-    :tts (cF (let [fts ^FlutterTts (FlutterTts)]
-               (.setSharedInstance fts true)
-               (.setProgressHandler fts
+    :tts (cF (doto ^FlutterTts (FlutterTts)
+               (.setSharedInstance true)
+               (.setStartHandler
+                 #(wmx-iso (mset! me :fts-status :on)))
+               (.setCompletionHandler
+                 #(wmx-iso (mset! me :fts-status :off)))
+               (.setCancelHandler
+                 #(wmx-iso (mset! me :fts-status :off)))
+               (.setPauseHandler
+                 #(wmx-iso (mset! me :fts-status :paused)))
+               (.setContinueHandler
+                 #(wmx-iso (mset! me :fts-status :on)))
+               (.setErrorHandler
+                 (fn [e] (dp :flutter-error!!!!!!!! #_ e)))
+               (.setProgressHandler
                  (fn [text startOffset endOffset word]
                    (wmx-iso (mset! me :progress {:full-text   text
                                                  :word        word
                                                  :word-offset startOffset
-                                                 :word-end    endOffset}))))
-               (.setStartHandler fts
-                 #(try-wmx-iso (mset! me :fts-status :on)))
-               (.setCompletionHandler fts
-                 #(try-wmx-iso (mset! me :fts-status :off)))
-               (.setCancelHandler fts
-                 #(try-wmx-iso (mset! me :fts-status :off)))
-               (.setPauseHandler fts
-                 #(try-wmx-iso (mset! me :fts-status :paused)))
-               (.setContinueHandler fts
-                 #(try-wmx-iso (mset! me :fts-status :on)))
-               (.setErrorHandler fts
-                 (fn [e] (dp :flutter-error!!!!!!!! e)))
-               (dp :built-tts)
-               fts))))
+                                                 :word-end    endOffset}))))))))
 
 (defmacro app-tts []
   `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :tts))
