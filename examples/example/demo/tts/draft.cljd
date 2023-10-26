@@ -1,20 +1,14 @@
 (ns example.demo.tts.draft)
 
 (comment
-  :lg-current (cF+n [:watch (fn [_ me new prior c]
-                              (when (mx-bound? prior)
-                                (when (muv :auto-play)
-                                  (when (not= :off (app-fts-status))
-                                    (fts-stop me))
-                                  (fts-speak me))))]
-                (mget me :lg-pref))
-
-  :watch (fn [_ me new prior _]
-           (when (and (mx-bound? prior)
-                   new
-                   (= :off (app-fts-status)))
-             (fts-speak me)))
-
+  (.setProgressHandler
+    (fn [text startOffset endOffset word]
+      (wmx-iso ;; <===========
+        (mset! me
+          :progress {:full-text text
+                     :word word
+                     :word-offset startOffset
+                     :word-end endOffset}))))
 
   ;=== One word chyron ===========================
 
@@ -24,18 +18,8 @@
       (fx/text {:textAlign m/TextAlign.center
                 :style (p/TextStyle .color m/Colors.black
                          .fontSize 18.0)}
-        {:name     :chyron}
         (or (:word (app-fts-progress)
               "*waiting*")))))
-
-  (.setProgressHandler fts
-    (fn [text startOffset endOffset word]
-      (wmx-iso ;; <===========
-        (mset! me
-          :progress {:full-text text
-                     :word word
-                     :word-offset startOffset
-                     :word-end endOffset}))))
 
   ; === multi word chyron ----------------------------------------------------
 
@@ -43,8 +27,7 @@
     (container
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
       (fx/text {:textAlign m/TextAlign.center}
-        {:name   :chyron
-         :phrase (cF (when (not= :off (app-fts-status))
+        {:phrase (cF (when (not= :off (app-fts-status))
                        (let [{:keys [word]} (app-fts-progress)]
                          (if (nil? word) []
                            (take-last 5
@@ -53,14 +36,6 @@
         (str/join "..." (mget me :phrase)))))
 
   ;;; === rate limit speech skip =================================
-
-  (defn stop-button []
-    (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
-                                     (and (muv :rate-limit?)
-                                       (let [{:keys [full-text word-end]} (app-fts-progress)]
-                                         (< word-end (/ (count full-text) 4))))))}
-      (opacity {:opacity (cF (if (mav :ignoring) 0.15 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
 
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
     (auto-play)

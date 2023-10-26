@@ -14,7 +14,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop lg-lang]]))
+    [example.demo.tts.fts :refer [fts-restart app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
 
@@ -23,9 +23,22 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI true)
+       :value           (cI true :watch (fn [_ me new prior _]
+                                          (when (mx-bound? prior)
+                                            (when (and new
+                                                    (= :off (app-fts-status)))
+                                              (fts-speak me)))))
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
+
+(defn rate-limit? []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Limit")
+       :value           (cI false)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :rate-limit?})))
 
 ;;; --- lang/geo choosers -------------------------------------------------
 
@@ -39,7 +52,8 @@
        :lg-pref    "en-AU"                                  ;; faux stored preference
        :lg-current (cF+n [:watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
-                                     (fts-speak me)))]
+                                     (when (muv :auto-play)
+                                       (fts-restart me))))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
@@ -141,9 +155,11 @@
   (fx/slider
     {:value       (cI init-val :watch watch)
      :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)))
+                         (mset! me :value %)
+                         (when (= :on (app-fts-status))
+                           (fts-restart me))))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
-     :label       (cF (str label " " (mget me :value)))
+     :label       (cF (str (mget me :value)))
      :activeColor color}
     {:name prop}))
 
