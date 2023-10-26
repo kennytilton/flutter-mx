@@ -31,15 +31,6 @@
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
 
-(defn rate-limit? []
-  (fx/sized-box {:width 180}
-    (checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Limit")
-       :value           (cI false)
-       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
-      {:name :rate-limit?})))
-
 ;;; --- lang/geo choosers -------------------------------------------------
 
 (defn lang-chooser []
@@ -52,8 +43,7 @@
        :lg-pref    "en-AU"                                  ;; faux stored preference
        :lg-current (cF+n [:watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
-                                     (when (muv :auto-play)
-                                       (fts-restart me))))]
+                                     (fts-speak me)))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
@@ -154,10 +144,7 @@
 (defn property-slider [label prop color init-val min max divisions watch]
   (fx/slider
     {:value       (cI init-val :watch watch)
-     :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)
-                         (when (= :on (app-fts-status))
-                           (fts-restart me))))
+     :onChanged   (cF #(mx/wmx-iso (mset! me :value %)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}
