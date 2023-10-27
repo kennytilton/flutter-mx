@@ -3,7 +3,7 @@
   (:require
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [cF cF+ cFn cI dp minfo mget mset! mswap! mav fasc]]
+     :refer [cF cF+ cFn cI dp minfo mget mset! mswap! mav fasc wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              floating-action-button as-dart-callback]]
@@ -27,9 +27,10 @@
                                    (.listen (.-stream ^wsc/WebSocketChannel chan)
                                      (fn [message]
                                        (dp :listen-hears message)
-                                       (mset! me :socket-msg-in
-                                         {:msg message
-                                          :now (rand-int 99999)}))))]
+                                       (wmx-iso
+                                         (mset! me :socket-msg-in
+                                           {:msg message
+                                            :now (rand-int 99999)})))))]
                       (.connect wsc/WebSocketChannel
                         (Uri.parse +socket-server+ #_ "ws://localhost:10000/.ws")))
      :salute        (cI +hello+)

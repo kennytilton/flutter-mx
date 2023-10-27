@@ -47,7 +47,6 @@
   (x020/make-app))
 
 ; todo is sock working?
-; todo x020 setStates computing kids during build
 ; todo (same before Zone) to-do app ══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
 ;The following _TypeError was thrown building gen_genReifyirmorq$1-[GlobalObjectKey
 ;Atom#f98e1](dirty, state: gen_genReify2we0cb$2#8e6d8):
