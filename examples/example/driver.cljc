@@ -1,5 +1,6 @@
 (ns example.driver
   (:require
+    [tilton.mx.base :refer [dpk dpk!]]
     [tilton.mx.api :refer [dp] :as mx]
     [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]

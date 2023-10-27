@@ -8,7 +8,7 @@
     [tilton.mx.cell.base :as cty]
     [tilton.mx.model.core :as md]
     [tilton.mx.base
-     :refer [wtrx dp dpx trx]]
+     :refer [wtrx dp dpx trx dpk!]]
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
@@ -16,12 +16,13 @@
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     ))
 
-(defn main [] ;<id:1673573645>
+(defn main []                                               ;<id:1673573645>
   (cty/cells-reset)
   (md/md-quiesce-feature! true)
   (fx/widget-key-clear)
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;; (fxk/fmx-debugger-set! sample-debugger)
+  (dpk! [#_ :build :sstate])
 
   (f/run (fx/fx-render nil
            (if true
@@ -54,11 +55,37 @@
       (binding [cty/*dpc-enabled* true]
       (if true
         (counter/make-app)
-        (eg/select)))) )                                  ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
+        (eg/select))))
+  #_(fx/run-app
+      (hot-reload-detector
+        (binding [cty/*dpc-enabled* false]
+          ;;(testing/run-tests)
+          (fx/fx-render nil
+            (if nil
+              (counter/make-app)
+              (eg/select)))))))
 
-  (testing/run-tests)
+#_(defn main []
+    (dp :main-entry-dp2!!)
+    (cty/cells-reset)
+    (md/md-quiesce-feature! true)
 
-  (dp :main-exit))
+    (fx/widget-key-clear)
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    ;; (fxk/fmx-debugger-set! sample-debugger)
+
+    (wtrx [0 999 :run-app]
+      (fx/run-fx-app
+        ;; Change the  namespace below to one above and rebuild to see a different example.
+        ;; ------ VVVVV either/or next two--------------------------------------------
+        (binding [cty/*dpc-enabled* true]
+          (if true
+            (counter/make-app)
+            (eg/select)))))                                 ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
+
+    (testing/run-tests)
+
+    (dp :main-exit))
 
 
 
@@ -89,17 +116,13 @@
 ;; (set! r/debugPaintSizeEnabled true)
 ;; (w/debugDumpApp)
 
- (defn repl-ish []
-   (dp :REPL-ish-on-reload!!!!!!!!!!!))
+(defn repl-ish []
+  (dp :REPL-ish-on-reload!!!!!!!!!!!))
 
-
-
-
-
- ;(defn main [] ;<id:1673573645>
- ; (fx/run-app
- ;  (hot-reload-detector
- ;   (fx/fx-render nil (home/make)))))
+;(defn main [] ;<id:1673573645>
+; (fx/run-app
+;  (hot-reload-detector
+;   (fx/fx-render nil (home/make)))))
 
 (defn sample-debugger [opcode data]
   (case opcode

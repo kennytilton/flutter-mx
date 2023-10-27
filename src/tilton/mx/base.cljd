@@ -89,6 +89,31 @@
                                        bits)))))
 (defn dprnx [& bits])
 
+;;; --- dpk ---------------------------------------------------------
+
+;;; yet another debug hack
+
+(def *dpk* "vector of keys to match" (atom nil #_ [:build :sstate]))
+
+(defn dpk! [val]
+  (dp :new-dpk val)
+  (reset! *dpk* val))
+
+(defn dpk-match [keys]
+  ;(dp :dpkmatch keys @*dpk*)
+  (if (keyword? keys)
+    (some #{keys} @*dpk*)
+    (some (fn [k] (some #{k} @*dpk*)) keys)))
+
+(defmacro dpkx [& r]
+  `(do))
+
+(defn dpk [keys & dp-bits]
+  (when-let [m (dpk-match keys)]
+    (apply dp m dp-bits)))
+
+;;; --- detritus --------------------------------------------------------
+
 (def wtrx-id (atom 0))
 
 (defn bail-hi [hi]
