@@ -44,7 +44,7 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (x035/make-app))
+  (x020/make-app))
 
 ; todo is sock working?
 ; todo x020 setStates computing kids during build
@@ -62,24 +62,3 @@
 ;#1      gen_gen (package:matrix/cljd-out/tilton/fmx/factory.dart:1091:39)
 ;#2      delete_button.<anonymous closure>.<anonymous closure>.fgen$2 (package:matrix/cljd-out/example/demo/todoMVC/items.dart:368:22)
 ;#3      fx_render.<anonymous closure> (package:matrix/cljd-out/tilton/fmx/factory.dart:895:27)
-; todo x035
-; Performing hot reload...
-;Reloaded 5 of 1471 libraries in 417ms (compile: 125 ms, reload: 121 ms, reassemble: 162 ms).
-;flutter: . - :c-reset-rejecting-undeferred! - :value
-;[VERBOSE-2:dart_vm_initializer.cc(41)] Unhandled Exception: Stack Overflow
-;#0      $_async_error_handler_zone_spec.<anonymous closure> (package:matrix/cljd-out/cljd/core.dart:3465:1)
-;#1      _Zone._processUncaughtError (dart:async/zone.dart:1081:14)
-;#2      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
-;#3      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
-;#4      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
-;#5      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
-;#6      _CustomZone.handleUncaughtError (dart:async/zone.dart:1285:5)
-;#7      _CustomZone.runUnaryGuarded (dart:async/zone.dart:1219:7)
-;#8      _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1254:26)
-;#9      _rootRunUnary (dart:async/zone.dart:1415:13)
-;#10     _CustomZone.runUnary (dart:async/zone.dart:1308:19)
-;#11     _CustomZone.bindUnaryCallback.<anonymous closure> (dart:async/zone.dart:1238:26)
-;#12     _Timer._runTimers (dart:isolate-patch/timer_impl.dart:3<…>
-
-
-
