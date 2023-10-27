@@ -12,7 +12,7 @@
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
-    ;[example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     ))
 
@@ -22,40 +22,12 @@
   (fx/widget-key-clear)
   (.ensureInitialized w/WidgetsFlutterBinding)
   ;; (fxk/fmx-debugger-set! sample-debugger)
-  (dpk! [#_ :build :sstate])
+  (dpk! [#_:build :sstate])
 
   (f/run (fx/fx-render nil
-           (if true
+           (if false
              (counter/make-app)
-             #_ (eg/select))))
-  #_
-          (fx/run-app
-            (hot-reload-detector
-              (binding [cty/*dpc-enabled* false]
-                ;;(testing/run-tests)
-                (fx/fx-render nil
-                  (if nil
-                    (counter/make-app)
-                    (eg/select)))))))
-
-#_
-(defn main []
-  (dp :main-entry-dp2!!)
-  (cty/cells-reset)
-  (md/md-quiesce-feature! true)
-
-  (fx/widget-key-clear)
-  (.ensureInitialized w/WidgetsFlutterBinding)
-  ;; (fxk/fmx-debugger-set! sample-debugger)
-
-  (wtrx [0 999 :run-app]
-    (fx/run-fx-app
-      ;; Change the  namespace below to one above and rebuild to see a different example.
-      ;; ------ VVVVV either/or next two--------------------------------------------
-      (binding [cty/*dpc-enabled* true]
-      (if true
-        (counter/make-app)
-        (eg/select))))
+             (eg/select))))
   #_(fx/run-app
       (hot-reload-detector
         (binding [cty/*dpc-enabled* false]
@@ -86,8 +58,6 @@
     (testing/run-tests)
 
     (dp :main-exit))
-
-
 
 
 (defmacro hot-reload-detector
