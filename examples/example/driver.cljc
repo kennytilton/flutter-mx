@@ -44,20 +44,4 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (x020/make-app))
-
-; todo is sock working?
-; todo (same before Zone) to-do app ══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
-;The following _TypeError was thrown building gen_genReifyirmorq$1-[GlobalObjectKey
-;Atom#f98e1](dirty, state: gen_genReify2we0cb$2#8e6d8):
-;type 'todo_delete_callbackReify18695hm$1' is not a subtype of type '() => void' in type cast
-;
-;The relevant error-causing widget was:
-;  gen_genReifyirmorq$1-[GlobalObjectKey Atom#f98e1]
-;  gen_genReifyirmorq$1:file:///Users/kennethtilton/dev/dart/flutter-mx/lib/cljd-out/tilton/fmx/factory.dart:1073:22
-;
-;When the exception was thrown, this was the stack:
-;#0      delete_button.<anonymous closure>.<anonymous closure>.fgen$2.<anonymous closure> (package:matrix/cljd-out/example/demo/todoMVC/items.dart:380:16)
-;#1      gen_gen (package:matrix/cljd-out/tilton/fmx/factory.dart:1091:39)
-;#2      delete_button.<anonymous closure>.<anonymous closure>.fgen$2 (package:matrix/cljd-out/example/demo/todoMVC/items.dart:368:22)
-;#3      fx_render.<anonymous closure> (package:matrix/cljd-out/tilton/fmx/factory.dart:895:27)
+  (todo/make-app))

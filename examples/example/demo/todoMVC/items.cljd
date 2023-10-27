@@ -24,7 +24,12 @@
                       (mset! todo :completed value)))}))
 
 (defn todo-delete-callback [todo tag]
-  (as-dart-callback [& [direction]]
+  (as-dart-callback []
+    (todo/ToDoList-delete! (my-todo-list)
+      (todo/td-stg-id todo))))
+
+(defn todo-swipe-callback [todo tag]
+  (as-dart-callback [direction]
     (todo/ToDoList-delete! (my-todo-list)
       (todo/td-stg-id todo))))
 
@@ -36,7 +41,7 @@
     {:name :del-button}
     (fx/text-button
       ;; our "delete" icon on each to-do
-      {:onPressed (todo-delete-callback todo :item-del-button)}
+       {:onPressed (todo-delete-callback todo :item-del-button)}
       (fx/text {:style (p/TextStyle
                          .fontFamily "Helvetica Neue"
                          .color (cmm/title-red)
@@ -134,7 +139,7 @@
   (fx/dismissible
     {:key         (m/ValueKey. (td-stg-id todo))
      :direction   w/DismissDirection.horizontal
-     :onDismissed (todo-delete-callback todo :swipe-dismissed)}
+     :onDismissed (todo-swipe-callback todo :swipe-dismissed)}
     {:name       :todo-LI
      :fx$quiesce :never}
     (fx/visibility
