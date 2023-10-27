@@ -1,7 +1,7 @@
 (ns tilton.counter-app
   (:require
     ["package:flutter/material.dart" :as m]
-    [tilton.mx.api :refer [dp cI cF cF+ mget mswap! fm* fasc fmav maprop] :as mx]
+    [tilton.mx.api :refer [dp cI cF cF+ mget mswap! fm* fasc fmav mav] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
@@ -25,7 +25,7 @@
     (scaffold
       {:appBar               (app-bar {:title           (m/Text "Flutter/MX Counter Classico")
                                        :backgroundColor (cF (.-inversePrimary
-                                                              (.-colorScheme ^m/ThemeData (maprop :theme))))})
+                                                              (.-colorScheme ^m/ThemeData (mav :theme))))})
        :floatingActionButton (floating-action-button
                                {:onPressed (as-dart-callback []
                                              (mswap! (fm* :the-counter) :counter inc))
@@ -35,10 +35,10 @@
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
           (text "We have pushed the button this many times:")
           (text {:style (cF (.-headlineMedium
-                              (.-textTheme ^m/ThemeData (maprop :theme))))}
+                              (.-textTheme ^m/ThemeData (mav :theme))))}
             {:name    :the-counter
              :counter (cI 0)}
-            (str (maprop :counter))))))))
+            (str (mav :counter))))))))
 
 
 

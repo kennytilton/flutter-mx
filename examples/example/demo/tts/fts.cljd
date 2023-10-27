@@ -1,0 +1,103 @@
+(ns example.demo.tts.fts
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :as fts
+     :refer [FlutterTts]]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.model.core :as md]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv muiv m*v fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback]]))
+
+;;; --- start-up ----------------------------------------------
+
+(defn make-flutter-tts []
+  (md/make
+    ;; todo why does this stack overflow? :mx-type :mx-flutter-tts
+    ;; todo implement :no-setState for next two
+    :progress (cI nil)
+    :fts-status (cI :off)                                  ;; :off, :on, or :paused
+    ;; todo make sure next two optimized away
+    :lang-geos (cF+ [:async? true
+                     :async-then (fn [c locales]
+                                   (group-by lg-lang (sort locales)))]
+                 (.-getLanguages ^FlutterTts (mget me :tts)))
+    :tts (cF (doto ^FlutterTts (FlutterTts)
+               (.setSharedInstance true)
+               (.setProgressHandler
+                 (fn [text startOffset endOffset word]
+                   (wmx-iso ;; <===========
+                     (mset! me
+                       :progress {:full-text text
+                                  :word word
+                                  :word-offset startOffset
+                                  :word-end endOffset}))))
+               (.setStartHandler
+                 #(wmx-iso (mset! me :fts-status :on)))
+               (.setCompletionHandler
+                 #(wmx-iso (mset! me :fts-status :off)))
+               (.setCancelHandler
+                 #(wmx-iso (mset! me :fts-status :off)))
+               (.setPauseHandler
+                 #(wmx-iso (mset! me :fts-status :paused)))
+               (.setContinueHandler
+                 #(wmx-iso (mset! me :fts-status :on)))
+               (.setErrorHandler
+                 (fn [e] (dp :flutter-error!!!!!!!! #_ e)))))))
+
+(defmacro app-tts []
+  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :tts))
+
+(defmacro app-fts-progress []
+  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :progress))
+
+(defmacro app-fts-status []
+  `(let [fts# (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts)]
+     (tilton.mx.api/mget fts# :fts-status)))
+
+(defmacro app-lang-geos []
+  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :lang-geos))
+
+;;; --- speech control actions -----------------------------------------------
+
+(defn fts-restart [me]
+  (when (not= :off (app-fts-status))
+    (fts-stop me))
+  (fts-speak me))
+
+(defn fts-speak [me]
+  (let [fts ^FlutterTts (app-tts)
+        speech (muv :text-in)]
+    (dp :fts-speak-me (minfo me))
+    (when-let [lg (m*v :lang-chooser :lg-current)]
+      (when (not (str/blank? speech))
+        (dp :speaking!!!!!!!! lg :pitch (muiv :pitch)) ;  :params (mav :speech-rate) (mav :pitch) (mav :volume))
+        (.setPitch fts (muiv :pitch))
+        (.setVolume fts (muiv :volume))
+        (.setLanguage fts lg)
+        (.setSpeechRate fts (muiv :speech-rate))
+        (.speak fts speech)))))
+
+(defn fts-pause [me]
+  (dp :pausing!!!!!!! (minfo me))
+  (let [fts ^FlutterTts (app-tts)]
+    (await (.pause fts))))
+
+(defn fts-stop [me]
+  (dp :stopping!!!!!!! (minfo me))
+  (let [fts ^FlutterTts (app-tts)]
+    (await (.stop fts))))
+
+(defn lg-lang
+  "Return the leading two-char language designator of a five char language-region pair."
+  [lg]
+  ;; eg "fr-FR" -> "fr"
+  ;; used to group FTS languages by languages
+  (subs lg 0 2))

@@ -256,9 +256,11 @@
       (unlink-from-used c :pre-rule-clear)
       (chk (c-rule c) (str "No rule in %s type %s" (:prop @c) (c-type c)))
 
-      ;(dp c :CNL-trying-formula (cinfo c))
-      ;(dp c :CNL-trying-formula-code (c-code$ c))
-      (let [raw-value ((c-rule c) c)
+      (dpx c :CNL-trying-formula (cinfo c))
+      (dpx c :CNL-trying-formula-code (c-code$ c))
+      (let [raw-value (try ((c-rule c) c)
+                        (catch Exception e
+                          (dp :rule-exception (cinfo c) (c-code$ c) e)))
             #_ (try
               ((c-rule c) c)
               (catch Exception e

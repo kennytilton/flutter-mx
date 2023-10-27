@@ -8,7 +8,7 @@
     ["package:http/http.dart" :as dht]
     [tilton.mx.cell.base :as cb]
     ;[tilton.mx.model.core :refer [with-par]]
-    [tilton.mx.api :refer [with-par dp dpx cF cF+ cI mget mswap! mset! maprop fasc fm* fmuval fmu minfo] :as mx]
+    [tilton.mx.api :refer [wmx-iso with-par dp dpx cF cF+ cI mget mswap! mset! mav fasc fm* muv fmu minfo] :as mx]
     [tilton.fmx.api :refer [as-dart-callback] :as fx]))
 
 ;;; This is a half-baked example that shows a widget dispatching
@@ -35,7 +35,7 @@
                                      (m/Icon m/Icons.stop_rounded
                                        .color m/Colors.white)
                                      (m/Icon m/Icons.download_rounded
-                                       .color  m/Colors.black))))}
+                                       .color m/Colors.black))))}
       {:name       :scaffo
        :show-time? (cI true)}
       (fx/center
@@ -51,13 +51,13 @@
             (when (mget (fasc :scaffo) :show-time?)
               (fx/text {:style (p/TextStyle .color m/Colors.black
                                  .fontSize 18.0)}
-                {:name :shotime
-                 :clock (cF+ [:on-quiesce (fn [c]
-                                            (when-let [tmr ^async/Timer (cb/c-value c)]
-                                              (.cancel tmr)))]
+                {:name  :shotime
+                 :clock (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
+                                                    (.cancel tmr)))]
                           (async/Timer.periodic (Duration .seconds 3)
                             (fn [^async/Timer tmr]
-                              (mset! (fmu :counter) :value (.-tick tmr)))))}
+                              (wmx-iso
+                                (mset! (fmu :counter) :value (.-tick tmr))))))}
                 "Making fetch #")))
           (fx/text
             {:style (fx/in-my-context [me ctx]
@@ -66,14 +66,14 @@
              :value (cI 0)}
             (str (mx/my-value)))
           (fx/text {}
-            {:name :ae-says
+            {:name      :ae-says
              :ae-lookup (cF+ [:async? true
                               :async-then (fn [c lookup]
-                                           (= 200 (.-statusCode ^dht/Response lookup)))]
-                          (when-not (zero? (fmuval :counter))
+                                            (= 200 (.-statusCode ^dht/Response lookup)))]
+                          (when-not (zero? (muv :counter))
                             (dht/get (.https Uri "api.fda.gov" "drug/event.json"
                                        {"limit"  "1"
                                         "search" (str "patient.drug.openfda.brand_name:"
-                                                   (if (odd? (fmuval :counter))
+                                                   (if (odd? (muv :counter))
                                                      "dogs" "cats"))}))))}
             (str "NIH AE search says " (mget me :ae-lookup))))))))

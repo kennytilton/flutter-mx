@@ -3,126 +3,75 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:flutter_tts/flutter_tts.dart" :as fts
+     :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fmu fm* maprop mx-bound? wmx-iso]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.util :refer [fts-init do-speak do-pause do-stop lg-lang choice-header watch-dbg]]
-    [example.demo.tts.component
-     :refer [lang-chooser geo-chooser text-input speaking-control]]))
+    [example.demo.tts.fts :as fts
+     :refer [app-fts-status app-fts-progress fts-speak fts-pause fts-stop lg-lang]]
+    [example.demo.tts.component :as comp
+     :refer [lang-chooser geo-chooser speech-input speaking-control auto-play rate-limit?
+             equalizer choice-header]]
+    [example.demo.tts.poetry :as poetry]))
+
+;;; --- play, stop, pause -------------------------------------------------------
+
+(defn stop-button []
+  (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
+                                   (and (muv :rate-limit?)
+                                     (let [{:keys [full-text word-end]}
+                                           (app-fts-progress)]
+                                       (< word-end (* 0.25 (count full-text)))))))}
+    (opacity {:opacity (cF (if (mav :ignoring) 0.15 1.0))}
+      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop))))
+
+(defn dashboard []
+  (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
+    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      {:name :dash}
+      (if (some #{(app-fts-status)} [:off :paused])
+        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" fts-speak)
+        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" fts-pause))
+      (stop-button))))
+
+(defn chyron []
+  (container
+    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+    (fx/text {:textAlign m/TextAlign.center}
+      {:phrase (cF (when (not= :off (app-fts-status))
+                     (let [{:keys [word]} (app-fts-progress)]
+                       (if (nil? word) []
+                         (take-last 5
+                           (concat (if (mx-bound? _cache) _cache [])
+                             [word]))))))}
+      (str/join "..." (mget me :phrase)))))
+
+;;; ---  make app --------------------------------------------
 
 (defn make-app []
   (material-app {}
-    {:name          :app
-     :fts           (cF+ [:watch fts-init]
-                      (FlutterTts))
-     :lang-geo-tree (cF+ [:async? true
-                          :async-then (fn [c lg-flat]
-                                        (group-by lg-lang (sort lg-flat)))]
-                      (.-getLanguages ^FlutterTts (mget me :fts)))
-     ; ----------------------------------------------------------------------------
-     }
+    {:name :app
+     :fts  (cF (fts/make-flutter-tts))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
       (column
         {:crossAxisAlignment m/CrossAxisAlignment.stretch}
         (choice-header "Languages")
         (lang-chooser)
+        (choice-header "Geography")
         (geo-chooser)
-        (text-input)
+        (speech-input poetry/graves-jealousy)
         (chyron)
+        (dashboard)
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (speaking-controls)
-          (auto-play))
+          (auto-play)
+          (rate-limit?))
         (equalizer)))))
 
-(defn auto-play []
-  (fx/sized-box {:width 180}
-    (checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Auto-play")
-       :value           (cI false)
-       :onChanged       (cF (fn [new]
-                              (wmx-iso (mswap! me :value not))
-                              (when new
-                                (do-speak me))))}
-      {:name :auto-play})))
-
-(defn chyron []
-  (container
-    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-    (fx/text {:textAlign m/TextAlign.center}
-      {:name     :chyron
-       :progress (cI nil)
-       :phrase   (cF (when (not= :off (mget (fm* :dash) :play-status))
-                       (let [[text startOffset endOffset word] (mget me :progress)]
-                         (if (nil? word) []
-                           (take-last 8 (concat (if (mx-bound? _cache) _cache []) [word]))))))}
-      (str/join "..." (mget me :phrase)))))
-
-;;; --- play, stop, pause -------------------------------------------------------
-
-(defn speaking-controls []
-  (container
-    {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
-    (row
-      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      {:name        :dash
-       :play-status (cI :off :watch watch-dbg)}
-      (if (some #{(maprop :play-status)} [:off :paused])
-        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
-        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
-      (stop-button))))
-
-(defn stop-button []
-  (ignore-pointer {:ignoring (cF (mget me :disabled?))}
-    {:disabled? (cF (= :off (maprop :play-status)))}
-    (opacity {:opacity (cF (if (maprop :disabled?)
-                             0.2 1.0))}
-      (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop))))
-
-;;; --- equalizer property sliders -----------------------------------------------------------
-
-(defn equalizer []
-  (column
-    (doall (for [[label & opnds]
-                 [["Volume" :volume m/Colors.blue 0.3 0 1 10
-                   (fn [_ me new _ _]
-                     (.setVolume ^FlutterTts (maprop :fts) new))]
-                  ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
-                   (fn [_ me new _ _]
-                     (.setPitch ^FlutterTts (maprop :fts) new))]
-                  ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
-                   (fn [_ me new _ _]
-                     (.setSpeechRate ^FlutterTts (maprop :fts) new))]]]
-             (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
-               (fx/row
-                 {:mainAxisAlignment m/MainAxisAlignment.end
-                  :mainAxisSize      m/MainAxisSize.min}
-                 (container {:width     64
-                             :alignment m/Alignment.topRight}
-                   (m/Text label))
-                 (apply property-slider label opnds)))))))
-
-(defn property-slider [label prop color init-val min max divisions value-watch]
-  (fx/slider
-    {:value       (cI init-val :watch value-watch)
-     :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)
-                         (when (mget (fm* :auto-play) :value)
-                           (do-stop me)
-                           (do-speak me))))
-     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
-     :label       (cF (str label " " (mget me :value)))
-     :activeColor color}
-    {:name prop}))
-
-
-
-;; todo if user changes volume et al while paused, warn that it will not take effect until fresh play

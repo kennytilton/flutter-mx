@@ -1,0 +1,49 @@
+(ns example.demo.tts.draft)
+
+(comment
+  (.setProgressHandler
+    (fn [text startOffset endOffset word]
+      (wmx-iso ;; <===========
+        (mset! me
+          :progress {:full-text text
+                     :word word
+                     :word-offset startOffset
+                     :word-end endOffset}))))
+
+  ;=== One word chyron ===========================
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center
+                :style (p/TextStyle .color m/Colors.black
+                         .fontSize 18.0)}
+        (or (:word (app-fts-progress)
+              "*waiting*")))))
+
+  ; === multi word chyron ----------------------------------------------------
+
+  (defn chyron []
+    (container
+      {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+      (fx/text {:textAlign m/TextAlign.center}
+        {:phrase (cF (when (not= :off (app-fts-status))
+                       (let [{:keys [word]} (app-fts-progress)]
+                         (if (nil? word) []
+                           (take-last 5
+                             (concat (if (mx-bound? _cache) _cache [])
+                               [word]))))))}
+        (str/join "..." (mget me :phrase)))))
+
+  ;;; === rate limit speech skip =================================
+
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (auto-play)
+    (rate-limit?))
+
+  ;; fin
+  )
+
+
+
+

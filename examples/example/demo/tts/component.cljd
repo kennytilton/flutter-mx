@@ -6,14 +6,39 @@
     ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
+    [example.demo.tts.fts]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fascinc
-             fmu fm* maprop mx-bound? wmx-iso]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv muiv m*v mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.util :refer [do-speak do-pause do-stop choice-header lg-lang]]))
+    [example.demo.tts.fts :refer [fts-restart app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop lg-lang]]))
+
+;;; --- auto play --------------------------------------------------------
+
+(defn auto-play []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-play")
+       :value           (cI true :watch (fn [_ me new prior _]
+                                          (when (and (mx-bound? prior)
+                                                  new
+                                                  (= :off (app-fts-status)))
+                                            (fts-speak me))))
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :auto-play})))
+
+(defn rate-limit? []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Limit")
+       :value           (cI true)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :rate-limit?})))
 
 ;;; --- lang/geo choosers -------------------------------------------------
 
@@ -23,34 +48,27 @@
       {:crossAxisCount  8 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
-      {:name :lang-chooser
-       :lg-pref    "en-AU"                                  ;; imagine this is being loaded async from local storage
-       ; ---
-       ; lg-current = "current lang-geo"
-       ; as a convenience, we "auto-play" when the user selects a new one, using
-       ; a "watch" on the value and triggering FTS to speak.
+      {:name       :lang-chooser
+       :lg-pref    "en-AU"                                  ;; faux stored preference
        :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                   (when (mget (fm* :auto-play) :value) ;; (mx-bound? prior)
-                                     (do-stop me)
-                                     (do-speak me)))]
+                                   (when (mx-bound? prior)
+                                     (when (muv :auto-play)
+                                       (fts-restart me))))]
                      (mget me :lg-pref))}
       (map-indexed lang-button
-        (sort (keys (mget (fasc :app) :lang-geo-tree)))))))
+        (take 99                                            ;; hack widget layout issue
+          (sort (keys (app-lang-geos))))))))
 
 (defn geo-chooser []
-  (expanded
-    (column
-      (choice-header "Geography")
-      (fx/grid-view+count
-        {:crossAxisCount  8 :crossAxisSpacing 4
-         :mainAxisSpacing 4 :childAspectRatio 1.8
-         :padding         (m/EdgeInsets.all 8)
-         :shrinkWrap      true}
-        (map-indexed geo-button
-          (when-let [lgc (lg-lang (mget (fmu :lang-chooser) :lg-current))]
-            (get (mget (fasc :app) :lang-geo-tree) lgc)))))))
-
-
+  (do                                                       ;; expanded
+    (fx/grid-view+count
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.8
+       :padding         (m/EdgeInsets.all 8)
+       :shrinkWrap      true}
+      (map-indexed geo-button
+        (when-let [lgc (lg-lang (muv :lang-chooser :lg-current))]
+          (get (app-lang-geos) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -59,10 +77,10 @@
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
               (mset! (fasc :lang-chooser) :lg-current
-                (first (get (maprop :lang-geo-tree) lang))))}
+                (first (get (app-lang-geos) lang))))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang (lg-lang (maprop :lg-current)))
+                     {:border (cF (when (= lang (lg-lang (mav :lg-current)))
                                     (.all m/Border .color m/Colors.blue .width 2)))
                       :color  (.-shade50 (cond
                                            (even? i) m/Colors.blue
@@ -83,7 +101,7 @@
               (mset! (fmu :lang-chooser) :lg-current lang-geo))}
     (container
       {:decoration (fx/box-decoration
-                     {:border (cF (when (= lang-geo (mget (fmu :lang-chooser) :lg-current))
+                     {:border (cF (when (= lang-geo (muv :lang-chooser :lg-current))
                                     (.all m/Border .color m/Colors.blue .width 2)))
                       :color  (.-shade50 (cond
                                            (even? i) m/Colors.blue
@@ -97,7 +115,7 @@
                       .fontSize 16.0)}
             (subs lang-geo 3)))))))
 
-;;; --- soeaking controls ------------------------------------
+;;; --- speaking controls ------------------------------------
 
 (defn speaking-control [color splash-color icon label func]
   (column
@@ -113,22 +131,7 @@
 
 ;;; --- text input --------------------------------------------------------------
 
-
-(def speech-initial
-  #_(str
-      "Turning and turning in the widening gyre\n"
-      "The falcon cannot hear the falconer;\n"
-      "Things fall apart; the centre cannot hold;\n"
-      "Mere anarchy is loosed upon the world,")
-  (str
-    "\"Jealousy\"\nby Robert Graves\n\n"
-    "I'd die for you, or you for me, \n"
-    "So furious is our jealousy-- \n"
-    "And if you doubt this to be true, \n"
-    "Kill me outright, lest I kill you."
-    ))
-
-(defn text-input []
+(defn speech-input [speech-initial]
   (container
     {:alignment m/Alignment.topCenter
      :padding   (m/EdgeInsets.only
@@ -138,7 +141,6 @@
                      .fontFamily "Helvetica Neue"
                      .fontSize 20.0)
        :controller (cFonce
-                     ;(fx/text-editing-controller)
                      (m/TextEditingController .text (mget me :value)))
        :onChanged  (as-dart-callback [text]
                      (mset! me :value text))
@@ -146,3 +148,47 @@
       {:name  :text-in
        :value (cI speech-initial)})))
 
+
+;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
+
+(defn property-slider [label prop color init-val min max divisions watch]
+  (fx/slider
+    {:value       (cI init-val :watch watch)
+     :onChanged   (cF #(mx/wmx-iso
+                         (mset! me :value %)
+                         (fts-restart me)))
+     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+     :label       (cF (str (mget me :value)))
+     :activeColor color}
+    {:name prop}))
+
+(def equalizer-sliders
+  [["Volume" :volume m/Colors.blue 0.3 0 1 10
+    (fn [_ me new _ _]
+      (.setVolume ^FlutterTts (app-tts) new))]
+   ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
+    (fn [_ me new _ _]
+      (.setPitch ^FlutterTts (app-tts) new))]
+   ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
+    (fn [_ me new _ _]
+      (.setSpeechRate ^FlutterTts (app-tts) new))]])
+
+(defn equalizer []
+  (container {:margin (m/EdgeInsets.only .bottom 24)}
+    (column
+      (mapv (fn [[label & opnds]]
+              (container {:margin (m/EdgeInsets.only .right 24 .bottom 0)}
+                (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
+                         :mainAxisSize      m/MainAxisSize.min}
+                  (container {:width     64
+                              :alignment m/Alignment.topRight}
+                    (m/Text label))
+                  (apply property-slider label opnds))))
+        equalizer-sliders))))
+
+(defn choice-header [content]
+  (padding {:padding (m/EdgeInsets.all 12)}
+    (text
+      {:style (p/TextStyle .color m/Colors.black
+                .fontSize 20.0)}
+      content)))

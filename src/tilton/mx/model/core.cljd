@@ -465,19 +465,12 @@
        (chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
-(defmacro fmuv [name prop & [me]]
-  (let [me-ref (or me 'me)]
-    `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
-                    ~me-ref :me? false :up? true :inside? false)]
-       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
-       (mget other# ~prop))))
-
-(defmacro fmuval [name & [prop me]]
+(defmacro muv [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (fm-navig (fn [node#] (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       (chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (chk other# (str "muv> did not find other named " ~name " seeking property " ~prop))
        (mget other# ~prop))))
 
 (defn mxu-find-id

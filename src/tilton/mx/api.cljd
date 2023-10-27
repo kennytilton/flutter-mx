@@ -192,19 +192,19 @@
        (fm-navig #(= name# (mget? % :name))
          ~me-ref :me? true :up? true :inside? false))))
 
-(defmacro fascinc "Search strictly up"
+(defmacro fasc-inclusive "Search strictly up inclusive of start"
   [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (tilton.mx.model.core/fm-ascendant name# ~me-ref :me? true))))
 
-(defmacro fasc "Search strictly up"
+(defmacro fasc "Search strictly up exclusive of start"
   [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (tilton.mx.model.core/fm-ascendant name# ~me-ref))))
 
-(defmacro maprop [prop-name]
+(defmacro mav [prop-name]
   `(tilton.mx.api/faprop ~prop-name ~'me))
 
 (defn faprop "Search strictly up and mget value of first asc w that property"
@@ -272,25 +272,39 @@
                                                     options# (vector options#))]
        (do ~@body))))
 
-(defmacro fmuv [name prop & [me]]
+(defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
-    `(let [other# (tilton.mx.model.core/fm-navig (fn [node#] (= ~name (mget? node# :name)))
-                    ~me-ref :me? false :up? true :inside? false)]
-       (tilton.mx.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
-       (tilton.mx.model.core/mget other# ~prop))))
+    `(let [name# ~name]
+       (fm-navig #(= name# (mget? % :name))
+         ~me-ref :me? false :up? true :inside? false))))
 
-(defmacro fmuval [name & [prop me]]
+(defmacro muv [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.model.core/fm-navig (fn [node#]
-                                                   #_ (when (mget? node# :name)
-                                                     (dp :fmuval-sees (mget? node# :name)
-                                                       (mget? node# :selection)))
                                                    (= ~name (mget? node# :name)))
                     ~me-ref :me? false :up? true :inside? false)]
-       ;; (tilton.mx.model.peek/chk other# (str "fmuv> did not find other named " ~name " seeking property " ~prop))
+       (tilton.mx.model.peek/chk other# (str "muv> did not find other named " ~name " seeking property " ~prop))
        (dpx :BAM!-other!!!!!!! (tilton.mx.api/minfo other#))
        (dpx :BAM! ~prop (tilton.mx.model.core/mget other# ~prop))
+       (tilton.mx.model.core/mget other# ~prop))))
+
+(defmacro muiv [name & [prop me]]
+  (let [prop (or prop ':value)
+        me-ref (or me 'me)]
+    `(let [other# (tilton.mx.model.core/fm-navig (fn [node#]
+                                                   (= ~name (mget? node# :name)))
+                    ~me-ref :me? true :up? true :inside? false)]
+       (tilton.mx.model.peek/chk other# (str "muv> did not find other named " ~name " seeking property " ~prop))
+       (dpx :BAM!-other!!!!!!! (tilton.mx.api/minfo other#))
+       (dpx :BAM! ~prop (tilton.mx.model.core/mget other# ~prop))
+       (tilton.mx.model.core/mget other# ~prop))))
+
+(defmacro m*v [name & [prop me]]
+  (let [prop (or prop ':value)
+        me-ref (or me 'me)]
+    `(let [other# (tilton.mx.api/fm* ~name)]
+       (tilton.mx.model.peek/chk other# (str "m*v> did not find other named " ~name " seeking property " ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
 (defn mxu-find-id

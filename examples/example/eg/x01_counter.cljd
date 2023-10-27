@@ -3,7 +3,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]
-    [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc maprop] :as mx]
+    [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
      :refer [as-dart-callback in-my-context
              material-app scaffold app-bar floating-action-button
@@ -19,7 +19,7 @@
       {:appBar (app-bar
                  {:title           (m/Text "Flutter/MX Counter")
                   :backgroundColor (cF (.-inversePrimary
-                                         (.-colorScheme ^m/ThemeData (maprop :theme))))})
+                                         (.-colorScheme ^m/ThemeData (mav :theme))))})
        :floatingActionButton
        (floating-action-button
          {:onPressed (as-dart-callback []
@@ -41,7 +41,7 @@
           (text
             {:style (cF (fx/in-my-context [me ctx]
                           (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
-                      #_(.-displayLarge (.-textTheme ^m/ThemeData (maprop :theme))))}
+                      #_(.-displayLarge (.-textTheme ^m/ThemeData (mav :theme))))}
             {:name  :counter
              :value (cI 0)}
             (str (mget me :value))))))))
