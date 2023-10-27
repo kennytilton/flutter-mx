@@ -36,7 +36,7 @@
     [example.eg.x040-named-routes :as x040]
     [example.eg.x029a-layout-kid-builder :as x029]
     [example.eg.flutter-layout-tutorial :as dlayout]
-    ;[example.eg.flutter-tts :as tts]
+    [example.eg.flutter-tts :as tts-basic]
     [example.demo.tts.core :as tts]
     [example.eg.x045-websocket :as sock]
     [example.eg.x050-just-audio :as just] ;; has make-app and make-app-two
@@ -44,7 +44,42 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (tts/make-app))
+  (x035/make-app))
+
+; todo is sock working?
+; todo x020 setStates computing kids during build
+; todo (same before Zone) to-do app ══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+;The following _TypeError was thrown building gen_genReifyirmorq$1-[GlobalObjectKey
+;Atom#f98e1](dirty, state: gen_genReify2we0cb$2#8e6d8):
+;type 'todo_delete_callbackReify18695hm$1' is not a subtype of type '() => void' in type cast
+;
+;The relevant error-causing widget was:
+;  gen_genReifyirmorq$1-[GlobalObjectKey Atom#f98e1]
+;  gen_genReifyirmorq$1:file:///Users/kennethtilton/dev/dart/flutter-mx/lib/cljd-out/tilton/fmx/factory.dart:1073:22
+;
+;When the exception was thrown, this was the stack:
+;#0      delete_button.<anonymous closure>.<anonymous closure>.fgen$2.<anonymous closure> (package:matrix/cljd-out/example/demo/todoMVC/items.dart:380:16)
+;#1      gen_gen (package:matrix/cljd-out/tilton/fmx/factory.dart:1091:39)
+;#2      delete_button.<anonymous closure>.<anonymous closure>.fgen$2 (package:matrix/cljd-out/example/demo/todoMVC/items.dart:368:22)
+;#3      fx_render.<anonymous closure> (package:matrix/cljd-out/tilton/fmx/factory.dart:895:27)
+; todo x035
+; Performing hot reload...
+;Reloaded 5 of 1471 libraries in 417ms (compile: 125 ms, reload: 121 ms, reassemble: 162 ms).
+;flutter: . - :c-reset-rejecting-undeferred! - :value
+;[VERBOSE-2:dart_vm_initializer.cc(41)] Unhandled Exception: Stack Overflow
+;#0      $_async_error_handler_zone_spec.<anonymous closure> (package:matrix/cljd-out/cljd/core.dart:3465:1)
+;#1      _Zone._processUncaughtError (dart:async/zone.dart:1081:14)
+;#2      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
+;#3      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
+;#4      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
+;#5      _Zone._processUncaughtError (dart:async/zone.dart:1085:18)
+;#6      _CustomZone.handleUncaughtError (dart:async/zone.dart:1285:5)
+;#7      _CustomZone.runUnaryGuarded (dart:async/zone.dart:1219:7)
+;#8      _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1254:26)
+;#9      _rootRunUnary (dart:async/zone.dart:1415:13)
+;#10     _CustomZone.runUnary (dart:async/zone.dart:1308:19)
+;#11     _CustomZone.bindUnaryCallback.<anonymous closure> (dart:async/zone.dart:1238:26)
+;#12     _Timer._runTimers (dart:isolate-patch/timer_impl.dart:3<…>
 
 
 
