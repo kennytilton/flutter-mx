@@ -82,7 +82,7 @@
 (deftype FXState []
   :extends w/State
   (build [_ ctx]
-    (dp  :FXState-build-not-suplied!!!!!!!!! ctx)))
+    (dp :FXState-build-not-suplied!!!!!!!!! ctx)))
 
 ;(reify :extends w/State
 ;  ^:mixin m/SingleTickerProviderStateMixin
@@ -183,10 +183,10 @@
             (when-not *fx-building?*                        ;; todo vestigial?
               (dpk :sstate :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
                 :mhost (minfo (mhost me)))
-              (dpk :sstate :TRG-ancestor (when-let [ctx (:fx$ctx (meta me))]
-                                           (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
-              (if-let [state (when-let [ctx nil #_(:fx$ctx (meta me))]
-                               (#/(.findAncestorStateOfType State) ^m/BuildContext ctx))]
+
+              (if-let [state (when-let [ctx (:fx$ctx (meta me))]
+                               (when-not (.-debugIsDefunct ^m/Element ctx)
+                                 (#/(.findAncestorStateOfType FXState) ^m/BuildContext ctx)))]
                 (do (dpk :sstate :TRG-sst-ancestor!!!!! state)
                   (.setState state (fn [] (do))))
                 (if-let [^State? state (:fx$state (meta me))]
@@ -202,42 +202,46 @@
                           (trigger-state-above (mabove)))
                         (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
                           (state-setter (fn [] (do))))))
-                    (let [ctx (:fx$ctx (meta me))]
-                      (dpk :sstate :TRG-nostate-ctx ctx)
-                      (when ctx
-                        (dpk :sstate :TRG-build-NOSTATE-but-ancestor (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
-                      (dpk :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
+                    (do
+                      (dpk :sstate :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
                       (trigger-state-above (mabove))))))))))
 
 (defn trigger-state-above [me]
-  ;; todo DRY with trigger-statecc
+  ;; todo DRY with trigger-build
   (when-not me
     (dpk :sstate :TRG-ABOVE-WARNING!!!!!!-setstate-above-topped-out))
   (when me
-    ;; todo why is :fx$state in me but fx$state-setter in meta
-    (if-let [^State? state (:fx$state (meta me))]
-      (if (.-mounted state)
-        (do (dpk :sstate :TRG-ABOVE-bingo (minfo me))
-          (trigger-state state me))
-        (dpk :sstate :TRG-ABOVE-UNMOUNTED!! (minfo me)))
-      (if-let [state-setter (:fx$state-setter (meta me))]
-        (let [ctx (:fx$ctx (meta me))]
-          (dpx :TRG-ABOVE-statesetter-ctx!!!!! ctx (minfo me))
+    (if-let [state (when-let [ctx (:fx$ctx (meta me))]
+                     (when-not (.-debugIsDefunct ^m/Element ctx)
+                       (#/(.findAncestorStateOfType FXState) ^m/BuildContext ctx)))]
+      (do (dpk :sstate :TRG-ABOVE-sst-ancestor!!!!! state)
+        (.setState state (fn [] (do))))
+      ;; todo why is :fx$state in me but fx$state-setter in meta (ans: it was formulaic at first)
+      (if-let [^State? state (:fx$state (meta me))]
+        (if (.-mounted state)
+          (do (dpk :sstate :TRG-ABOVE-bingo (minfo me))
+            (trigger-state state me))
+          (dpk :sstate :TRG-ABOVE-UNMOUNTED!! (minfo me)))
+        (if-let [state-setter (:fx$state-setter (meta me))]
+          (let [ctx (:fx$ctx (meta me))]
+            (dpx :TRG-ABOVE-statesetter-ctx!!!!! ctx (minfo me))
 
-          ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
-          ;(dp :TRG-stateful-ctx!!!!!  (minfo me) ctx :state (.-state ctx) (.-mounted (.-state ctx)))
-          ;(dp :TRG-build-sees-ancestor-st (#/(.findAncestorStateOfType State) ^m/Widget widget))
+            ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
+            ;(dp :TRG-stateful-ctx!!!!!  (minfo me) ctx :state (.-state ctx) (.-mounted (.-state ctx)))
+            ;(dp :TRG-build-sees-ancestor-st (#/(.findAncestorStateOfType State) ^m/Widget widget))
 
-          (if (and ctx (.-debugIsDefunct ^m/Element ctx))
-            (do
-              (dpk :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
-              (trigger-state-above (mabove)))
-            (do (dpk :sstate :TRG-build-using-state-setter!!!!!!!!! (minfo me))
-              (state-setter (fn [] (do))))))
-        (do
-          ;; todo expand on this message
-          (dpk :sstate :TRG-no-state/setter-so-trying-above!!! (minfo me))
-          (trigger-state-above (mabove)))))))
+            (if (and ctx (.-debugIsDefunct ^m/Element ctx))
+              (do
+                (dpk :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
+                (trigger-state-above (mabove)))
+              (do (dpk :sstate :TRG-build-using-state-setter!!!!!!!!! (minfo me))
+                (state-setter (fn [] (do))))))
+
+
+          (do
+            ;; todo expand on this message
+            (dpk :sstate :TRG-no-state/setter-so-trying-above!!! (minfo me))
+            (trigger-state-above (mabove))))))))
 
 (defn trigger-state
   ([^State state]
@@ -438,7 +442,7 @@
           (createState [_]
             (dpx :crestate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
             (if (tilton.mx.api/mget? me :ticker-mixin)
-              (reify :extends w/State
+              (reify :extends FXState
                 ^:mixin m/SingleTickerProviderStateMixin
                 (^void initState [this]
                   (tilton.fmx.factory/fx-state-init me this))
@@ -446,7 +450,7 @@
                   (dpk :build :GENGEN-stateful-mixin (minfo me))
                   (ctx-check me ctx)
                   (widget-maker me ctx)))
-              (reify :extends w/State
+              (reify :extends FXState
                 (^void initState [this]
                   (dpx :initstate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
                   (tilton.fmx.factory/fx-state-init me this))
@@ -674,7 +678,7 @@
                                             (tilton.mx.api/mget? ~'me :key)))
                      (~'createState [_#]
                        (if (tilton.mx.api/mget? ~'me :ticker-mixin) ;; todo replicate in other factories and gen-gen
-                         (reify :extends w/State
+                         (reify :extends FXState
                            ^:mixin m/SingleTickerProviderStateMixin
                            (^void ~'initState [this]
                              (tilton.fmx.factory/fx-state-init ~'me this))
@@ -687,7 +691,7 @@
                                         (tilton.mx.api/mget? ~'me :key))
                                  .child k1#
                                  ~@(fx-props>mx (dissoc fx-props :key))))))
-                         (reify :extends w/State
+                         (reify :extends FXState
                            (^void ~'initState [this]
                              (tilton.fmx.factory/fx-state-init ~'me this))
                            (~'build [_# ~'ctx]
