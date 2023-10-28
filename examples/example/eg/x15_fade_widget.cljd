@@ -4,6 +4,7 @@
             ;["package:localstore/localstore.dart" :as ls]
             [tilton.mx.model.core :refer [mget mset! mswap!] :as md]
             [tilton.mx.cell.core :refer [cF cF+ cF_ cI c_F]]
+            [tilton.mx.api :refer [wmx-iso]]
             [tilton.fmx.api :as fx]))
 
 (defn make-app []
@@ -18,7 +19,7 @@
                                      {:tooltip   "Toggle Opacity"
                                       :onPressed (fx/cb-as-is
                                                    (fn ^void []
-                                                     (md/mswap! me :visible not)
+                                                     (wmx-iso (md/mswap! me :visible not))
                                                      nil))}
                                      (fx/icon {:icon m/Icons.flip})))}
         {:visible (cI true)

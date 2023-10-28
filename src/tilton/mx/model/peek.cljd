@@ -13,13 +13,14 @@
     (throw (Exception. (str/join " - " bits)))))
 
 (defmacro chk [test & bits]
-  #_ `(do)
-  `(when-not (tilton.mx.model.peek/flutter-release-mode)
+  `(do)
+  #_ `(when-not (tilton.mx.model.peek/flutter-release-mode)
      ;(dp :chk-of '~test)
      (tilton.mx.model.peek/call-chk ~test '~test ~@bits)))
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))
+    (dart:core/print [:DP (first bits)])
     (dart:core/print (str/join " - " (list* :DP
                                        (map #(cond (nil? %) :NIL
                                                (mref? %) (minfo %)
@@ -117,8 +118,14 @@
    (cond
      (nil? md) :null-md
      (not (atom? md)) :not-atom-md
-     (not (mref? md)) (do (dp :atom-not-md-c @md)
-                          :atom-not-md-c)
+     (cref? md) (do
+                  (dp :minfo-passed-cell (cinfo md))
+                  :md-is-cell)
+     (not (mref? md)) (do
+                        (dp :atom-not-md-keys (keys @md))
+
+                        (dp :atom-not-md-c @md)
+                        :atom-not-md-c)
      :else (if verbose
              [(:name @md) (meta md)]
              [:MI (or (:name @md) :anon)
