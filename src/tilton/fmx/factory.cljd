@@ -191,10 +191,10 @@
 (defn trigger-build [me cell]
   (cond
     *fx-building?* (do)
-    (not (:sst @cell)) (dpk :sstate :TRG-SST-NOT! (cinfo cell))
+    (not (:sst @cell)) (dpk :sstate+ :TRG-SST-NOT! (cinfo cell))
     :else (binding [*trg-cell* cell]
             (when-not *fx-building?*                        ;; todo vestigial?
-              (dpk :sstate :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
+              (dpk :sstate+ :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
                 :mhost (minfo (mhost me)))
 
               (if-let [state (fx-ctx-state me)]
