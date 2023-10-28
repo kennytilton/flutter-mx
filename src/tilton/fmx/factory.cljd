@@ -157,31 +157,34 @@
 (def ^:dynamic *trg-cell* nil)
 
 (defn trigger-build [me cell]
-  (binding [*trg-cell* cell]
-    (when-not *fx-building?*                                ;; todo vestigial?
-      (dpk :sstate :TRG-build!!!!!!!!!!!!! #_#_ :pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
-        :mhost (minfo (mhost me)))
-      (dpk :sstate :TRG-ancestor (when-let [ctx (:fx$ctx (meta me))]
-                                   (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
-      (if-let [^State? state (:fx$state (meta me))]
-        (if (.-mounted state)
-          (do (dpk :sstate :TRG-build-settingimmediatestate (cinfo cell) (minfo me))
-            (trigger-state state me))
-          (dpx :TRG-build-settingimmediatestate-UNMOUNTED (minfo me) (.-mounted state) (cinfo cell)))
-        (if-let [state-setter (:fx$state-setter (meta me))]
-          (let [ctx (:fx$ctx (meta me))]
-            (dpx :TRG-stateful-ctx ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
-            (if (.-debugIsDefunct ^m/Element ctx)
-              (do (dpk :TRG-not-using-unmounted-state-setter (minfo me))
-                (trigger-state-above (mabove)))
-              (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
-                (state-setter (fn [] (do))))))
-          (let [ctx (:fx$ctx (meta me))]
-            (dpk :sstate :TRG-nostate-ctx ctx)
-            (when ctx
-              (dpk :sstate :TRG-build-NOSTATE-but-ancestor (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
-            (dpk :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
-            (trigger-state-above (mabove))))))))
+  (cond
+    *fx-building?* (do)
+    (not (:sst @cell)) (dpk :sstate :TRG-SST-NOT! (cinfo cell))
+    :else (binding [*trg-cell* cell]
+            (when-not *fx-building?*                        ;; todo vestigial?
+              (dpk :sstate :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
+                :mhost (minfo (mhost me)))
+              (dpk :sstate :TRG-ancestor (when-let [ctx (:fx$ctx (meta me))]
+                                           (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
+              (if-let [^State? state (:fx$state (meta me))]
+                (if (.-mounted state)
+                  (do (dpk :sstate :TRG-build-settingimmediatestate (cinfo cell) (minfo me))
+                    (trigger-state state me))
+                  (dpx :TRG-build-settingimmediatestate-UNMOUNTED (minfo me) (.-mounted state) (cinfo cell)))
+                (if-let [state-setter (:fx$state-setter (meta me))]
+                  (let [ctx (:fx$ctx (meta me))]
+                    (dpx :TRG-stateful-ctx ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
+                    (if (.-debugIsDefunct ^m/Element ctx)
+                      (do (dpk :TRG-not-using-unmounted-state-setter (minfo me))
+                        (trigger-state-above (mabove)))
+                      (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
+                        (state-setter (fn [] (do))))))
+                  (let [ctx (:fx$ctx (meta me))]
+                    (dpk :sstate :TRG-nostate-ctx ctx)
+                    (when ctx
+                      (dpk :sstate :TRG-build-NOSTATE-but-ancestor (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
+                    (dpk :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
+                    (trigger-state-above (mabove)))))))))
 
 (defn trigger-state-above [me]
   ;; todo DRY with trigger-statecc
