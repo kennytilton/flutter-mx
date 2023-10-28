@@ -45,12 +45,13 @@
   (container
     {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
     (fx/text {:textAlign m/TextAlign.center}
-      {:phrase (cF (when (not= :off (app-fts-status))
-                     (let [{:keys [word]} (app-fts-progress)]
-                       (if (nil? word) []
-                         (take-last 5
-                           (concat (if (mx-bound? _cache) _cache [])
-                             [word]))))))}
+      {:phrase (cF+ [:sst nil]
+                 (when (not= :off (app-fts-status))
+                   (let [{:keys [word]} (app-fts-progress)]
+                     (if (nil? word) []
+                       (take-last 5
+                         (concat (if (mx-bound? _cache) _cache [])
+                           [word]))))))}
       (str/join "..." (mget me :phrase)))))
 
 ;;; ---  make app --------------------------------------------

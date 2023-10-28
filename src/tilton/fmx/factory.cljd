@@ -17,7 +17,7 @@
             [tilton.mx.model.peek :refer [chk minfo cinfo cref? Model]]
             [tilton.mx.cell.base :refer [dpc c-model] :as cz]
             [tilton.mx.api
-             :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set!
+             :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set! cref?
                      mpar mhost mabove mref? make mget mget? mkids mswap! cI cFkids]
              :as mx]
             [clojure.string :as str]))
@@ -79,6 +79,20 @@
 
 ;;; --- state tracking -----------------
 
+(deftype FXState []
+  :extends w/State
+  (build [_ ctx]
+    (dp  :FXState-build-not-suplied!!!!!!!!! ctx)))
+
+;(reify :extends w/State
+;  ^:mixin m/SingleTickerProviderStateMixin
+;  (^void initState [this]
+;    (tilton.fmx.factory/fx-state-init me this))
+;  (build [_ ctx]
+;    (dpk :build :GENGEN-stateful-mixin (minfo me))
+;    (ctx-check me ctx)
+;    (widget-maker me ctx)))
+
 (defn fx-state-init [me state]
   (record-fx$state me state)
   (when-let [init (tilton.mx.api/mget? me :initState)]
@@ -105,20 +119,25 @@
         ;; (mx/mset! me :fx$state st)                            ;; for next time
         st))))
 
-;      ; (let [depth (atom 0)]
-;     ;  (dp :visA-TOP! @depth (.-hashCode ctx) (dart/is? ctx m/BuildContext) ctx)
-;     ;  (.visitAncestorElements ^m/BuildContext ctx
-;     ;    (fn [elt]
-;     ;      (cond
-;     ;        elt (do
-;     ;              (dp :visA! @depth (.-hashCode elt) (dart/is? elt m/BuildContext) elt)
-;     ;              (swap! depth inc)
-;     ;              (< @depth 32))
-;     ;        :else false))))
-
+(defn ctc-state-nearest [ctx]
+  (let [depth (atom 0)]
+    (dp :visA-TOP! @depth (.-hashCode ctx) (dart/is? ctx m/BuildContext) ctx)
+    (.visitAncestorElements ^m/BuildContext ctx
+      (fn [elt]
+        (cond
+          elt (do
+                (dp :visA! @depth (.-hashCode elt) (dart/is? elt m/BuildContext) elt)
+                (swap! depth inc)
+                (< @depth 32))
+          :else false))))
+  )
 ;;; --- make fx ------------------------------------------
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]
+  (doseq [[k v] fx-props]
+    (when (cref? v)
+      (when (not (contains? @v :sst))
+        (rmap-set! [:sst v] true))))
   (apply tilton.mx.model.core/make
     :mx-type mx-type
     :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
@@ -166,25 +185,29 @@
                 :mhost (minfo (mhost me)))
               (dpk :sstate :TRG-ancestor (when-let [ctx (:fx$ctx (meta me))]
                                            (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
-              (if-let [^State? state (:fx$state (meta me))]
-                (if (.-mounted state)
-                  (do (dpk :sstate :TRG-build-settingimmediatestate (cinfo cell) (minfo me))
-                    (trigger-state state me))
-                  (dpx :TRG-build-settingimmediatestate-UNMOUNTED (minfo me) (.-mounted state) (cinfo cell)))
-                (if-let [state-setter (:fx$state-setter (meta me))]
-                  (let [ctx (:fx$ctx (meta me))]
-                    (dpx :TRG-stateful-ctx ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
-                    (if (.-debugIsDefunct ^m/Element ctx)
-                      (do (dpk :TRG-not-using-unmounted-state-setter (minfo me))
-                        (trigger-state-above (mabove)))
-                      (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
-                        (state-setter (fn [] (do))))))
-                  (let [ctx (:fx$ctx (meta me))]
-                    (dpk :sstate :TRG-nostate-ctx ctx)
-                    (when ctx
-                      (dpk :sstate :TRG-build-NOSTATE-but-ancestor (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
-                    (dpk :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
-                    (trigger-state-above (mabove)))))))))
+              (if-let [state (when-let [ctx nil #_(:fx$ctx (meta me))]
+                               (#/(.findAncestorStateOfType State) ^m/BuildContext ctx))]
+                (do (dpk :sstate :TRG-sst-ancestor!!!!! state)
+                  (.setState state (fn [] (do))))
+                (if-let [^State? state (:fx$state (meta me))]
+                  (if (.-mounted state)
+                    (do (dpk :sstate :TRG-build-settingimmediatestate (cinfo cell) (minfo me))
+                      (trigger-state state me))
+                    (dpx :TRG-build-settingimmediatestate-UNMOUNTED (minfo me) (.-mounted state) (cinfo cell)))
+                  (if-let [state-setter (:fx$state-setter (meta me))]
+                    (let [ctx (:fx$ctx (meta me))]
+                      (dpx :TRG-stateful-ctx ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
+                      (if (.-debugIsDefunct ^m/Element ctx)
+                        (do (dpk :TRG-not-using-unmounted-state-setter (minfo me))
+                          (trigger-state-above (mabove)))
+                        (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
+                          (state-setter (fn [] (do))))))
+                    (let [ctx (:fx$ctx (meta me))]
+                      (dpk :sstate :TRG-nostate-ctx ctx)
+                      (when ctx
+                        (dpk :sstate :TRG-build-NOSTATE-but-ancestor (#/(.findAncestorStateOfType State) ^m/BuildContext ctx)))
+                      (dpk :TRG-state-trying-above!!! (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
+                      (trigger-state-above (mabove))))))))))
 
 (defn trigger-state-above [me]
   ;; todo DRY with trigger-statecc
