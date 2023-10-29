@@ -14,7 +14,8 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [fts-restart app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop lg-lang]]))
+    [example.demo.tts.fts :refer [fts-restart app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop
+                                  lg-geo lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
 
@@ -57,6 +58,7 @@
                                        (fts-restart me))))]
                      (mget me :lg-pref))
        :lg-lang    (cF (lg-lang (mget me :lg-current)))     ;; avoid excess work by geo-chooser
+       :lg-geo     (cF (lg-geo (mget me :lg-current)))
        }
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
@@ -70,16 +72,16 @@
        :padding         (m/EdgeInsets.all 8)
        :shrinkWrap      true}
       {:name :geo-chooser
-       :geos (cF (when-let [lgc (lg-lang (muv :lang-chooser :lg-current))]
+       :geos (cF (when-let [lgc (muv :lang-chooser :lg-lang)]
                    (dp :geo-sees-lang lgc)
                    (get (app-lang-geos) lgc)))}
       (map-indexed geo-button
         (mget me :geos))
-      #_ ;; despite ValueKey, this version rebuilds all geo-buttons
-      (map-indexed geo-button
-        (when-let [lgc (lg-lang (muv :lang-chooser :lg-current))]
-          (dp :geo-sees-lang lgc)
-          (get (app-lang-geos) lgc))))))
+      #_;; despite ValueKey, this version rebuilds all geo-buttons
+              (map-indexed geo-button
+                (when-let [lgc (lg-lang (muv :lang-chooser :lg-current))]
+                  (dp :geo-sees-lang lgc)
+                  (get (app-lang-geos) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -114,7 +116,7 @@
     {:name :geo-gd}
     (container
       {:decoration (cF (fx/box-decoration
-                         {:border (cF (when (= lang-geo (muv :lang-chooser :lg-current))
+                         {:border (cF (when (= (lg-geo lang-geo) (muv :lang-chooser :lg-geo))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
@@ -127,7 +129,7 @@
           (fx/text
             {:style (p/TextStyle .color m/Colors.black
                       .fontSize 16.0)}
-            (subs lang-geo 3)))))))
+            (lg-geo lang-geo)))))))
 
 ;;; --- speaking controls ------------------------------------
 

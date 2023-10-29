@@ -158,10 +158,12 @@
             state)
           (do (dpk :sstate :FX-CTX-ME-STATE-UNMOUNTED!! (minfo me))
             nil)))
-    (when-let [ctx (:fx$ctx (meta me))]
+    #_ (when-let [ctx (:fx$ctx (meta me))]
       (if (.-debugIsDefunct ^m/Element ctx)
         (dp :DEFUNCT-CTX!!!!!!!!! (minfo me))
-        (#/(.findAncestorStateOfType FXState) ^m/BuildContext ctx)))))
+        (when-let [anc-st (#/(.findAncestorStateOfType FXState) ^m/BuildContext ctx)]
+          (dp :USING-ANCESTOR-ST!!!! (minfo me) anc-st (.-widget anc-st))
+          anc-st)))))
 
 (defn trigger-build [me cell]
   (cond
@@ -173,7 +175,7 @@
                 :mhost (minfo (mhost me)))
 
               (if-let [state (fx-ctx-state me)]
-                (do (dpk :sstate :TRG-ctx-state-1!!!!! (cinfo cell) #_ state)
+                (do (dpk :sstate :TRG-ctx-state-1!!!!! (cinfo cell) (meta state) state)
                   (.setState state (fn [] (do))))
                 (if-let [state-setter (:fx$state-setter (meta me))]
                   (let [ctx (:fx$ctx (meta me))]
@@ -396,6 +398,7 @@
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
     (do
       (dpk :build :GENGEN-unwrapping-by-request/match (minfo me))
+      (ctx-check me ctx)
       (widget-maker me ctx))
 
     (tilton.mx.model.core/md-reactive? me)

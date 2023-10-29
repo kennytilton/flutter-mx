@@ -31,7 +31,8 @@
     :fts-status (cI :off)                                  ;; :off, :on, or :paused
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
-                                   (group-by lg-lang (sort locales)))]
+                                   (group-by lg-lang
+                                     (take 10 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
     :tts (cF (doto ^FlutterTts (FlutterTts)
                (.setSharedInstance true)
@@ -107,3 +108,6 @@
   ;; eg "fr-FR" -> "fr"
   ;; used to group FTS languages by languages
   (subs lg 0 2))
+
+(defn lg-geo [lg]
+  (subs lg 3))
