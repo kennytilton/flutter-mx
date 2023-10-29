@@ -98,8 +98,21 @@
   (when-let [init (tilton.mx.api/mget? me :initState)]
     (init state me)))
 
+(def state-fx (atom nil))
+
+(defn state-fx-clear []
+  (reset! state-fx nil))
+
+(defn state-fx-record [me s]
+  (assert (mref? me))
+  (swap! state-fx assoc s me))
+
+(defn state-fx-get [state]
+  (get @state-fx state :UNREGISTERED))
+
 (defn record-fx$state [me state]
   (dpx :recording-state (minfo me) (fn? state) #_#_cz/*defer-changes* cz/*within-integrity*)
+  ; (state-fx-record me state)
   (rmap-meta-set! [:fx$state me] state))
 
 (defn record-fx$state-setter [me state-setter]
@@ -158,11 +171,12 @@
             state)
           (do (dpk :sstate :FX-CTX-ME-STATE-UNMOUNTED!! (minfo me))
             nil)))
+    ;; state-above does better than...
     #_ (when-let [ctx (:fx$ctx (meta me))]
       (if (.-debugIsDefunct ^m/Element ctx)
-        (dp :DEFUNCT-CTX!!!!!!!!! (minfo me))
+        (dp :IGNORING-DEFUNCT-CTX!!!!!!!!! (minfo me))
         (when-let [anc-st (#/(.findAncestorStateOfType FXState) ^m/BuildContext ctx)]
-          (dp :USING-ANCESTOR-ST!!!! (minfo me) anc-st (.-widget anc-st))
+          (dp :USING-ANCESTOR-ST!!!! (minfo me) anc-st (minfo (state-fx-get anc-st)))
           anc-st)))))
 
 (defn trigger-build [me cell]

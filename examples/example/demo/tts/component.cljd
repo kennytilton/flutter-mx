@@ -71,17 +71,11 @@
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)
        :shrinkWrap      true}
-      {:name :geo-chooser
-       :geos (cF (when-let [lgc (muv :lang-chooser :lg-lang)]
-                   (dp :geo-sees-lang lgc)
-                   (get (app-lang-geos) lgc)))}
+      {:name :geo-chooser}
       (map-indexed geo-button
-        (mget me :geos))
-      #_;; despite ValueKey, this version rebuilds all geo-buttons
-              (map-indexed geo-button
-                (when-let [lgc (lg-lang (muv :lang-chooser :lg-current))]
-                  (dp :geo-sees-lang lgc)
-                  (get (app-lang-geos) lgc))))))
+        (when-let [lgc (muv :lang-chooser :lg-lang)]
+          (dp :geo-sees-lang lgc)
+          (get (app-lang-geos) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -94,12 +88,12 @@
     {:name :lang-gd}
     (container
       {:decoration (cF (fx/box-decoration
-                         {:border (cF (when (= lang (lg-lang (mav :lg-current)))
+                         {:border (cF (when (= lang (mav :lg-lang))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}
-                         {:unwrapped? true}))}
+                         #_ {:unwrapped? true}))}
       {:name :lang-cont}
       (center
         (padding {:padding (m/EdgeInsets.all 4.0)}
@@ -121,7 +115,7 @@
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}
-                         {:unwrapped? true}))}
+                         #_ {:unwrapped? true}))}
       {:name  :geo-cont
        :dummy (cI nil)}
       (center
