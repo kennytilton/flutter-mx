@@ -106,31 +106,6 @@
   (dpx :recording-builder-state-setter (minfo me) (fn? state-setter) state-setter)
   (rmap-meta-set! [:fx$state-setter me] state-setter))
 
-(defn fx-state-nearest [me]
-  (dp :state-nearest-entry (mx/minfo me))
-  (when me
-    (if-let [st ^State? (:fx$state (meta me))]
-      (do (dpx :nearest-st-bingo-from (minfo me))
-        st)
-      ;; todo try state-setter
-      (when-let [st (fx-state-nearest (mx/mpar))]
-        (dpx :got-nearest-st-JIT st (tilton.mx.cell.base/minfo me))
-        ;; todo memoize instead
-        ;; (mx/mset! me :fx$state st)                            ;; for next time
-        st))))
-
-(defn ctc-state-nearest [ctx]
-  (let [depth (atom 0)]
-    (dp :visA-TOP! @depth (.-hashCode ctx) (dart/is? ctx m/BuildContext) ctx)
-    (.visitAncestorElements ^m/BuildContext ctx
-      (fn [elt]
-        (cond
-          elt (do
-                (dp :visA! @depth (.-hashCode elt) (dart/is? elt m/BuildContext) elt)
-                (swap! depth inc)
-                (< @depth 32))
-          :else false))))
-  )
 ;;; --- make fx ------------------------------------------
 
 (defn make-fx [mx-type fx-props custom-props cFkids-form]

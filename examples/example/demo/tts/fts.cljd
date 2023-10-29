@@ -7,6 +7,8 @@
      :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
+    [tilton.mx.foundation :refer [PObserver]]
+    [tilton.mx.model.peek :refer [Model]]
     [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
@@ -17,10 +19,14 @@
              checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
 ;;; --- start-up ----------------------------------------------
+(deftype MXFlutterTTS []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]))
 
 (defn make-flutter-tts []
   (md/make
-    ;; todo why does this stack overflow? :mx-type :mx-flutter-tts
+    :mx-type (MXFlutterTTS.)
     :progress (cI nil)
     :fts-status (cI :off)                                  ;; :off, :on, or :paused
     :lang-geos (cF+ [:async? true
