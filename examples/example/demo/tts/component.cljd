@@ -75,14 +75,9 @@
                    (get (app-lang-geos) lgc)))}
       (map-indexed geo-button
         (mget me :geos))
-      #_
+      #_ ;; despite ValueKey, this version rebuilds all geo-buttons
       (map-indexed geo-button
-        ;; todo - if we depend on :lg-current, a change from en-AU to en-IE
-        ;; causes all geo-buttons to be rebuilt. How do we handle this?
-        ;; -- offer quick metrics to identify excess work
-        ;; -- recommend chopping up properties as here with a separate :lg-lang?
-        ;; -- or have a
-        (when-let [lgc (lg-lang (muv :lang-chooser :lg-lang))]
+        (when-let [lgc (lg-lang (muv :lang-chooser :lg-current))]
           (dp :geo-sees-lang lgc)
           (get (app-lang-geos) lgc))))))
 

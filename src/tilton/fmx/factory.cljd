@@ -218,13 +218,11 @@
     (dpk :sstate :TRG-ABOVE-WARNING!!!!!!-setstate-above-topped-out))
   (when me
     (if-let [state (fx-ctx-state me)]
-      (do (dpk :sstate :TRG-ctx-state-2!!!!! state)
+      (do (dpk :sstate :TRG-ctx-state-2!!!!!  (minfo me) :trg (cinfo *trg-cell*))
         (.setState state (fn [] (do))))
       ;; todo why is :fx$state in me but fx$state-setter in meta (ans: it was formulaic at first)
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
-          (dpx :TRG-ABOVE-statesetter-ctx!!!!! ctx (minfo me))
-
           ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
           ;(dp :TRG-stateful-ctx!!!!!  (minfo me) ctx :state (.-state ctx) (.-mounted (.-state ctx)))
 
@@ -232,12 +230,11 @@
             (do
               (dpk :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
               (trigger-state-above (mabove)))
-            (do (dpk :sstate :TRG-build-using-state-setter!!!!!!!!! (minfo me))
+            (do (dpk :sstate :TRG-build-using-state-setter!!!!!!!!! (minfo me) :trg (cinfo *trg-cell*))
               (state-setter (fn [] (do))))))
-
         (do
           ;; todo expand on this message
-          (dpk :sstate :TRG-no-state/setter-so-trying-above!!! (minfo me))
+          (dpk :sstate+ :TRG-no-state/setter-so-trying-above!!! (minfo me))
           (trigger-state-above (mabove)))))))
 
 (defn trigger-state

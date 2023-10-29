@@ -21,10 +21,8 @@
 (defn make-flutter-tts []
   (md/make
     ;; todo why does this stack overflow? :mx-type :mx-flutter-tts
-    ;; todo implement :no-setState for next two
     :progress (cI nil)
     :fts-status (cI :off)                                  ;; :off, :on, or :paused
-    ;; todo make sure next two optimized away
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
                                    (group-by lg-lang (sort locales)))]

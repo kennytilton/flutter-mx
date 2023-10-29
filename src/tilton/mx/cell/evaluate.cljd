@@ -3,7 +3,7 @@
     [clojure.string :as str]
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
-    [tilton.mx.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
+    [tilton.mx.base :refer [wtrx dprn dp dpx trx prog1 mx-throw dpk]]
     [tilton.mx.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tilton.mx.cell.base
@@ -460,6 +460,7 @@ then clear our record of them."
           (not (c-synaptic? c))                             ;; no prop to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
     (dpc c :opti :============optimizing-away!!!!========================= (c-prop c) (c-async? c) (:then? @c))
+    (dpk :c-opti :============optimizing-away!!!!========================= (c-prop c) (c-async? c) (:then? @c))
 
     (when (= :freeze (c-optimize c))
       ;; we could just blindly call unlink-from-unused since normally
