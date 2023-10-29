@@ -195,7 +195,6 @@
     (if-let [state (fx-ctx-state me)]
       (do (dpk :sstate :TRG-ctx-state-2!!!!!  (minfo me) :trg (cinfo *trg-cell*))
         (.setState state (fn [] (do))))
-      ;; todo why is :fx$state in me but fx$state-setter in meta (ans: it was formulaic at first)
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
           ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
@@ -208,7 +207,6 @@
             (do (dpk :sstate :TRG-build-using-state-setter!!!!!!!!! (minfo me) :trg (cinfo *trg-cell*))
               (state-setter (fn [] (do))))))
         (do
-          ;; todo expand on this message
           (dpk :sstate+ :TRG-no-state/setter-so-trying-above!!! (minfo me))
           (trigger-state-above (mabove)))))))
 
@@ -255,7 +253,6 @@
         (when true                                          ;; (= prop :kids)
           (dpc cell :quiesce :FXDartWidget-observing-cell-change!!! prop))
         (when-let [noter (mget? me :fx$notifier)]
-          ;; todo lose this? use more places
           (.notifyListeners ^m/ChangeNotifier noter))
         (md-quiesce-lost! cell new-value prior-value)
 
@@ -298,7 +295,6 @@
   :extends mxf/MXImplementer)
 
 (defn fx-resolve-mget? [me prop ctx]
-  ;; todo where can we use this helper
   (fx-resolve prop me ctx
     (mget? me prop)))
 
@@ -563,7 +559,7 @@
                          ~@(fx-props>mx (dissoc fx-props :key))))))))))
 
 (defmacro non-widget [fx-class fx-props mx-props]
-  ;; todo does this exist just to avoid trying to supply .key?
+  ;; does this exist just to avoid trying to supply .key?
   (let []
     `(tilton.fmx.factory/make-fx-dart-widget
        ~fx-props
