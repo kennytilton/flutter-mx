@@ -1,0 +1,356 @@
+(ns example.eg.flutter-tts
+  "Originally, a straight port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:hive_flutter/hive_flutter.dart" :as hv]
+    ["dart:convert" :as convert]
+
+    [clojure.string :as str]
+    [clojure.walk :as walk]
+    [tilton.mx.cell.base :as cbase]
+    [tilton.mx.util :as util]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fm* mav mx-bound? wmx-iso cinfo]]
+    [tilton.fmx.factory :refer [deftag deftags deftags-plus] :as fxf]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity
+             icon-button fx-render as-dart-callback]]))
+
+(def flutter-tts (atom nil))
+(defn get-fts []
+  ^FlutterTts @flutter-tts)
+
+(declare fts-init lang-chooser geo-chooser speaking-controls
+  equalizer property-slider text-input do-speak do-stop
+  lang-button geo-button lg-lang choice-header auto-play)
+
+(def speech-initial
+  (str
+    "Turning and turning in the widening gyre\n"
+    "The falcon cannot hear the falconer;\n"
+    "Things fall apart; the centre cannot hold;\n"
+    "Mere anarchy is loosed upon the world,")
+  #_(str
+      "\"Jealousy\"\nby Robert Graves\n\n"
+      "I'd die for you, or you for me, \n"
+      "So furious is our jealousy-- \n"
+      "And if you doubt this to be true, \n"
+      "Kill me outright, lest I kill you."
+      ))
+
+
+(defn make-app []
+  (material-app {}
+    {:name          :app
+     :fts           (cFonce (fts-init me))
+     :lang-geo-tree (cF+ [:async? true
+                          :async-then (fn [c lg-flat]
+                                        (group-by lg-lang (sort (take 30 lg-flat))))]
+                      (.-getLanguages ^FlutterTts (mget me :fts)))
+
+     :db            (cF+ [:async? true]
+                      (-> hv/Hive hv/HiveX .initFlutter await)
+                      (-> hv/Hive (.openBox "tts-demo-prefs")))
+     :prefs         (cF (when-let [db (mget me :db)]
+                          (into {}
+                            (for [k (.-keys ^hv/Box db)]
+                              [(keyword k) (.get ^hv/Box db k)]))))
+
+     ; ---
+     ; lg-current => "current lang-geo"
+     :lg-current    (cF+ [:input? true
+                          :watch (fn [_ me new prior _]
+                                   (when (and (mx-bound? prior) prior)
+                                     (when-let [db (mget me :db)]
+                                       (.put ^hv/Box db "lg-current" new)
+                                       (when (mget (fm* :auto-play) :value)
+                                         (do-stop me)       ;; <-- new since livecode #1
+                                         (do-speak me)))))]
+                      (when-let [prefs (mget me :prefs)]
+                        (:lg-current prefs)))
+     }
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
+      (column {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+        (choice-header "Languages")
+        (lang-chooser)
+        (geo-chooser)
+        (text-input)
+        (container
+          {;:color m/Colors.yellow
+           :padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+          (fx/text {:textAlign m/TextAlign.right}
+            {:name     :chiron
+             :progress (cI nil)
+             :phrase #_["four" "score" "and" "seven"]
+             (cF (when (not= :off (mget (fm* :dash) :play-status))
+                   (let [[text startOffset endOffset word] (mget me :progress)]
+                     (if (nil? word) []
+                       (take 8 (conj (if (mx-bound? _cache) _cache []) word))))))}
+            (str/join "..." (mget me :phrase))))
+
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (speaking-controls)
+          (auto-play))
+        (equalizer)))))
+
+;;; --- init FTS ----------------------------------------------------------------
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
+
+(defn fts-init [me]
+
+  (let [fts ^FlutterTts (FlutterTts)]
+    (.setSharedInstance fts true)
+    (.setStartHandler fts
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :on)))
+    (.setCompletionHandler fts
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :off)))
+    (.setCancelHandler fts
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :off)))
+    (.setPauseHandler fts
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :paused)))
+    (.setContinueHandler fts
+      #(try-wmx-iso (mset! (fm* :dash) :play-status :on)))
+    (.setProgressHandler fts
+      (fn [text startOffset endOffset word]
+        (try-wmx-iso
+          (dp :progress!!!!!! word startOffset endOffset)
+          (mset! (fm* :chiron) :progress
+            [text startOffset endOffset word]))))
+    (.setErrorHandler fts
+      #(throw (Exception. (str "FlutterTts error: " %))))
+    (reset! flutter-tts fts)))
+
+;;; --- play, stop, pause -------------------------------------------------------
+
+
+;; todo if user changes volume et al while paused, warn that it will not take effect until fresh play
+
+(defn speaking-control [color splash-color icon label func]
+  (column
+    {:mainAxisSize      m/MainAxisSize.min
+     :mainAxisAlignment m/MainAxisAlignment.center}
+    (icon-button
+      {:key         (m/ValueKey label)
+       :icon        (fx/icon {:icon icon})
+       :iconSize    48
+       :color       color
+       :splashColor splash-color
+       :onPressed   (fn [] (func me))}
+      {:name (keyword label)})))
+
+(deftag tilton.fmx.factory/kidless-childless checkbox-list-tile m/CheckboxListTile)
+(deftag tilton.fmx.factory/konly-prop sized-box w/SizedBox [:child])
+
+(defn speaking-controls []
+  (container
+    {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
+    (row
+      {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      {:name        :dash
+       :play-status (cI :off)}
+      (if (some #{(mav :play-status)} [:off :paused])
+        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" do-speak)
+        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" do-pause))
+      (opacity {:opacity (cF (if (= :off (mav :play-status))
+                               0.0 1.0))}
+        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" do-stop)))))
+
+(defn auto-play []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:key             (m/ValueKey "auto-play")
+       :controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-play")
+       :value           (cF+ [:input? true
+                              :watch (fn [_ me new prior _]
+                                       (when (mx-bound? prior)
+                                         (when-let [db (mav :db)]
+                                           (.put ^hv/Box db "auto-play" new)
+                                           (when (mget (fm* :auto-play) :value)
+                                             (do-stop me)   ;; <-- new since livecode #1
+                                             (do-speak me)))))]
+                          (if-let [prefs (mav :prefs)]
+                            (:auto-play prefs)
+                            false))
+       :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
+      {:name :auto-play})))
+
+;;; --- speech control actions -----------------------------------------------
+
+(defn do-speak [me]
+  (let [; app (mx/fasc-inclusive :app)                               ;; turns out 'me' _is_ the app
+        fts ^FlutterTts (get-fts)
+        pitch (mget (fm* :pitch) :value)
+        volume (mget (fm* :volume) :value)
+        speech-rate (mget (fm* :speech-rate) :value)
+        speech (mget (mx/fm* :text-in) :value)]
+    (when (and (mav :lg-current) (not (str/blank? speech)))
+      (dp :speaking!!!!!!!! (mav :lg-current)
+        :params speech-rate pitch volume)
+      (.setPitch fts pitch)
+      (.setVolume fts volume)
+      (.setLanguage fts (mav :lg-current))
+      (.setSpeechRate fts speech-rate)
+      (.speak fts speech))))
+
+(defn do-pause [me]
+  (let [fts ^FlutterTts (get-fts)]
+    (await (.pause fts))))
+
+(defn do-stop [me]
+  (let [fts ^FlutterTts (get-fts)]
+    (await (.stop fts))))
+
+;;; --- equalizer property sliders -----------------------------------------------------------
+
+(defn equalizer []
+  (column
+    (doall (for [[label & opnds]
+                 [["Volume" :volume m/Colors.blue 0.3 0 1 10]
+                  ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15]
+                  ["Rate" :speech-rate m/Colors.green 0.5 0 1 20]]]
+             (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+               (fx/row
+                 {:mainAxisAlignment m/MainAxisAlignment.end
+                  :mainAxisSize      m/MainAxisSize.min}
+                 (container {:width     64
+                             :alignment m/Alignment.topRight}
+                   (m/Text label))
+                 (apply property-slider label opnds)))))))
+
+(defn property-slider [label prop color value min max divisions]
+  (fx/slider
+    {:value       (cI value)
+     :onChanged   (cF #(mx/wmx-iso
+                         (case prop
+                           :volume (.setVolume ^FlutterTts (get-fts) %)
+                           :pitch (.setPitch ^FlutterTts (get-fts) %)
+                           :speech-rate (.setSpeechRate ^FlutterTts (get-fts) %))
+                         (mset! me :value %)))
+     :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
+     :label       (cF (str label " " (mget me :value)))
+     :activeColor color}
+    {:name prop}))
+
+;;; --- lang/geo choosers -------------------------------------------------
+
+(defn lang-chooser []
+  (expanded
+    (fx/grid-view+count
+      {:crossAxisCount  8 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.8
+       :padding         (m/EdgeInsets.all 8)}
+      (map-indexed lang-button
+        (sort (keys (mav :lang-geo-tree)))))))
+
+(defn geo-chooser []
+  (expanded
+    (column
+      (choice-header "Geography")
+      (fx/grid-view+count
+        {:crossAxisCount  8 :crossAxisSpacing 4
+         :mainAxisSpacing 4 :childAspectRatio 1.8
+         :padding         (m/EdgeInsets.all 8)
+         :shrinkWrap      true}
+        (map-indexed geo-button
+          (when-let [lgc (lg-lang (mav :lg-current))]
+            (get (mav :lang-geo-tree) lgc)))))))
+
+;;; --- lang and geo buttons ----------------------------------------------------
+
+(defn lang-button [i lang]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang)
+     :onTap (as-dart-callback []
+              (mset! (fasc :app) :lg-current
+                (first (get (mav :lang-geo-tree) lang))))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang (lg-lang (mav :lg-current)))
+                                    (.all m/Border .color m/Colors.blue .width 2)))
+                      :color  (.-shade50 (cond
+                                           (even? i) m/Colors.blue
+                                           :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :lang-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            lang))))))
+
+(defn geo-button [i lang-geo]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang-geo)
+     :onTap (as-dart-callback []
+              (mset! (fasc :app) :lg-current lang-geo))}
+    (container
+      {:decoration (fx/box-decoration
+                     {:border (cF (when (= lang-geo (mav :lg-current))
+                                    (.all m/Border .color m/Colors.blue .width 2)))
+                      :color  (.-shade50 (cond
+                                           (even? i) m/Colors.blue
+                                           :else m/Colors.yellow))}
+                     {:unwrapped? true})}
+      {:name :geo-cont}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            (subs lang-geo 3)))))))
+
+;;; --- text input --------------------------------------------------------------
+
+(defn text-input []
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 20.0)
+       :controller (cFonce
+                     ;(fx/text-editing-controller)
+                     ;(m/TextEditingController .text (mget me :value))
+
+                     (m/TextEditingController.fromValue
+                       (m/TextEditingValue
+                         .text (mget me :value)
+                         #_#_.selection (m/TextSelection
+                                          .baseOffset 5
+                                          .extentOffset 10))))
+       :onChanged  (as-dart-callback [text]
+                     (mset! me :value text))
+       :minLines   6 :maxLines 11}
+      {:name  :text-in
+       #_#_:prog (cI nil :watch (fn [_ me new prior cell]
+                                  (dp :setting-sel!!!!! (mget me :controller))
+                                  (set! (.-selection (mget me :controller))
+                                    (m/TextSelection
+                                      .baseOffset 5
+                                      .extentOffset 15))
+                                  (fxf/trigger-build me cell)
+                                  (dp :set-sel!!!!! (mget me :controller))))
+       :value (cI speech-initial)})))
+
+;;; --- utils -----------------------------
+
+(defn lg-lang [lg]
+  (when lg
+    (subs lg 0 2)))
+
+(defn choice-header [text]
+  (padding {:padding (m/EdgeInsets.all 4)}
+    (m/Text text)))
