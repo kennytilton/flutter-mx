@@ -124,8 +124,20 @@
 (deftag tilton.fmx.factory/kidless-childless checkbox-list-tile m/CheckboxListTile)
 (deftag tilton.fmx.factory/konly-prop sized-box w/SizedBox [:child])
 
-(deftags-plus tilton.fmx.factory/konly-prop [:child]
+#_
+(defmacro sized-box+expand [fx-props mx-props & children]
+  `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
+; ;;; --- next two not yet confirmed in practice
+;(defmacro positioned [fx-props mx-props & children]
+;  `(tilton.fmx.factory/k1-child-stateful m/Positioned ~fx-props ~mx-props ~@children))
+;(defmacro transorm+rotate-ful [fx-props mx-props & children]
+;  `(tilton.fmx.factory/k1-child-stateful m/Transform.rotate ~fx-props ~mx-props ~@children))
 
+(deftags-plus tilton.fmx.factory/konly-prop [:child]
+  ;;; --- next two not yet confirmed in practice
+  (positioned m/Positioned)
+  (transorm+rotate-ful m/Transform.rotate)
+  (sized-box+expand m/SizedBox.expand) ;; OK in x05-fab
   (dropdown-menu-item m/DropdownMenuItem)
   (theme m/Theme)
   (icon-theme m/IconTheme)
@@ -210,9 +222,6 @@
   (elevated-button m/ElevatedButton)
   (gesture-detector m/GestureDetector))
 
-(defmacro sized-box+expand [fx-props mx-props & children]
-  `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
-
 (deftags-plus tilton.fmx.factory/kids-prop [:children]
   (stack m/Stack)
   (column m/Column)
@@ -256,8 +265,8 @@
   `(tilton.fmx.api/with-ctx+as-is [~'me ~'ctx]
      (fn [~@cb-params]
        (tilton.mx.cell.base/wmx-iso
-         (tilton.mx.api/counts-dump :as-dart-cb)
-         (tilton.mx.api/counts-reset)
+         ;(tilton.mx.api/counts-dump :as-dart-cb)
+         ;(tilton.mx.api/counts-reset)
          ~@body))))
 
 (defmacro my-app []
