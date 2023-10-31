@@ -1,7 +1,7 @@
 (ns tilton.mx.cell.base
   (:require
     [tilton.mx.model.peek :refer [chk mref? minfo cref? cinfo c-type CellFormula]]
-    [tilton.mx.base :as utb
+    [tilton.mx.base :as mxb
      :refer [mx-throw def-rmap-props dp]]
 
     [tilton.mx.util
@@ -48,10 +48,10 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defmacro with-mx-isolation [& body]
   `(binding [tilton.mx.cell.base/*within-integrity* nil
-               tilton.mx.cell.base/*depender* nil
-               tilton.mx.cell.base/*defer-changes* false
-               tilton.mx.cell.base/*call-stack* nil]
-       ~@body))
+             tilton.mx.cell.base/*depender* nil
+             tilton.mx.cell.base/*defer-changes* false
+             tilton.mx.cell.base/*call-stack* nil]
+     ~@body))
 
 (defmacro wmx-iso [& body]
   `(binding [tilton.mx.cell.base/*within-integrity* nil
@@ -72,14 +72,14 @@ rule to get once behavior or just when fm-traversing to find someone"
 (def ^:dynamic *finbiz-id* 0)
 (def ^:dynamic *c-prop-depth* 0)
 
-(def +c-debug+ (atom false))
+(def +c-dbg+ (atom false))
 
 ;; --- procedure division ----------------------
 
 (defn cells-reset
   ([] (cells-reset {}))
   ([options]
-   (reset! +c-debug+ (:debug options false))
+   (reset! +c-dbg+ (:dbg options false))
    (reset! +pulse+ 0)
    (reset! +client-q-handler+ (:client-queue-handler options))))
 
@@ -114,7 +114,7 @@ rule to get once behavior or just when fm-traversing to find someone"
   (and c (atom? c) (c-type c)
     (dart/is? (c-type c) CellFormula)))
 
-(utb/def-rmap-props c-
+(mxb/def-rmap-props c-
   me prop state input? rule pulse pulse-last-changed pulse-observed
   useds users callers optimize ephemeral? sink on-quiesce
   lazy synapses synaptic? code async? then? debug)
@@ -169,10 +169,24 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn dpc [c category & bits]
   (when *dpc-enabled*
-    (chk (cref? c) :dpc-ngc category )
-    (when-let [dbg (c-debug c)]
+    (chk (cref? c) :dpc-ngc category)
+    (when-let [dbg (c-dbg c)]
       (when (or (true? dbg) (= category dbg) (when (vector? dbg) (some #{category} dbg)))
         (apply dp :DPC category (first bits) (cinfo c) (rest bits))))))
+
+;;; --- dpm -------------------------------------------------------------
+
+(defn dpm [mx category & bits]
+  (chk (or (mref? mx) (cref? mx)) :dpm-sees-non-mx category)
+
+  (when-let [dbg (cond
+                   (cref? mx) (c-dbg mx)
+                   (mref? mx) (:dbg @mx))]
+    (when (or (true? dbg) (= category dbg) (when (vector? dbg) (some #{category} dbg)))
+      (apply dp :DPM category (first bits)
+        (case
+          (cref? mx) (cinfo mx)
+          (mref? mx) (minfo mx)) (rest bits)))))
 
 ;; --- dependency maintenance --------------------------------
 
@@ -211,7 +225,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;;---
 
-(defn c-debug [c]
+(defn c-dbg [c]
   (chk (cref? c))
-  (:debug @c))
+  (:dbg @c))
 

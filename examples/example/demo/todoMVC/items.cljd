@@ -41,7 +41,7 @@
     {:name :del-button}
     (fx/text-button
       ;; our "delete" icon on each to-do
-       {:onPressed (todo-delete-callback todo :item-del-button)}
+      {:onPressed (todo-delete-callback todo :item-del-button)}
       (fx/text {:style (p/TextStyle
                          .fontFamily "Helvetica Neue"
                          .color (cmm/title-red)
@@ -162,6 +162,7 @@
                        (m/BoxDecoration .border
                          (m/Border .top (m/BorderSide .width 0.5
                                           .color (.-dividerColor (.of m/Theme context))))))}
+        {:name :todo-cont}
         (fx/gesture-detector
           {:onDoubleTap (as-dart-callback []
                           (when (not (mget me :editing?))
@@ -185,23 +186,29 @@
   (fx/expanded
     ;; ^^^ sizer is required to join column, which demands children know their size
     {}
-    {:unwrapped? true}                                      ; needed
-    (fx/list-view+builder
-      {:padding     (m/EdgeInsets.all 0.0)
-       :itemCount   (cF (count (mkids me)))
-       :itemBuilder (cF (fx/as-is
-                          (fn [ctx i]
-                            ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
-                            (fx/fx-render ctx
-                              (nth (mkids me) i)))))}
-      {:name :lv-builder}
-      (map (fn [todo]
-             (let [stg-id (td-stg-id todo)
-                   exg (some (fn [li]
-                               (when (= stg-id (.-value ^m/ValueKey (mget li :key)))
-                                 li))
-                         (when (not= mx/unbound _cache) _cache))
-                   ]
-               (or exg (todo-list-item todo))))
-        (sort-by todo/td-created-at
-          (todo/app-todos (my-app)))))))
+    {:name       :todo-items
+     :unwrapped? true
+     :dbg        [:sstate]
+     :fake       (cI 42)}
+    (fx/container {} {:name :SSTCONTAINER!!!
+                      :dummy (cI nil)}
+      (fx/list-view+builder
+        {:padding     (m/EdgeInsets.all 0.0)
+         :itemCount   (cF (count (mkids me)))
+         :itemBuilder (cF (fx/as-is
+                            (fn [ctx i]
+                              ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
+                              (fx/fx-render ctx
+                                (nth (mkids me) i)))))}
+        {:name  :lv-builder
+         :dbg   [:sstate]
+         :dummy (cI 42)}
+        (mapv (fn [todo]
+                (let [stg-id (td-stg-id todo)
+                      exg (some (fn [li]
+                                  (when (= stg-id (.-value ^m/ValueKey (mget li :key)))
+                                    li))
+                            (when (not= mx/unbound _cache) _cache))]
+                  (or exg (todo-list-item todo))))
+          (sort-by todo/td-created-at
+            (todo/app-todos (my-app))))))))

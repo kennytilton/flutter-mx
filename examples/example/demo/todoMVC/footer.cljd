@@ -13,7 +13,7 @@
     [example.demo.todoMVC.todo :refer [td-completed] :as todo]))
 
 (defn items-remaining-display []
-  (fx/text
+  (fx/text {}{:name :remaining}
     (if-let [td-lst (my-todo-list)]
       (let [remaining (remove td-completed (mkids td-lst))]
         (str (count remaining)
@@ -45,6 +45,7 @@
                                (mset! selector
                                  ;; ^^^ lexical scope is a big Lisp win
                                  :selection completion-enum))}
+                     {:name :choice}
                      (fx/container
                        {:decoration (cF                     ;; we can compute "Flutter" properties as well as app semantic properties
                                       (when (mget me :selected?)
@@ -52,7 +53,8 @@
                                         (m/BoxDecoration
                                           .border (.all m/Border .color (cmm/title-red) .width 0.5)
                                           .borderRadius (m/BorderRadius.all (m.Radius/circular 4.0)))))}
-                       {:selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
+                       {:name :completion-cont
+                        :selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
                                      ;; so it can be used directly by the decoration rule ^^^.
                                      (= completion-enum
                                        (mget selector :selection)))}

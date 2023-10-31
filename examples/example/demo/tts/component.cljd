@@ -7,6 +7,7 @@
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
     [example.demo.tts.fts]
+    [tilton.mx.util :as mxu]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv muiv m*v mav mx-bound? wmx-iso]]
@@ -83,6 +84,8 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
+              (mxu/counts-dump :pre-lang)
+              (mxu/counts-reset)
               (mset! (fasc :lang-chooser) :lg-current
                 (first (get (app-lang-geos) lang))))}
     {:name :lang-gd}
@@ -106,6 +109,8 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang-geo)
      :onTap (as-dart-callback []
+              (mxu/counts-dump :pre-geo)
+              (mxu/counts-reset)
               (mset! (fmu :lang-chooser) :lg-current lang-geo))}
     {:name :geo-gd}
     (container

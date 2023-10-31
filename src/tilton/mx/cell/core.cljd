@@ -31,9 +31,9 @@
 ; todo: stand-alone cells with observers should be observed when they are made
 
 (def +valid-input-options+ #{:obs :watch :prop :ephemeral? :unchanged-if
-                             :value :input? :debug :on-quiesce :sink :sst})
+                             :value :input? :dbg :on-quiesce :sink :sst})
 (def +valid-formula-options+ #{:obs :watch :prop :input? :lazy :optimize :ephemeral? :unchanged-if
-                               :code :value :rule :async? :async-then :sink :debug
+                               :code :value :rule :async? :async-then :sink :dbg
                                :on-quiesce :sst})
 
 (defn c-options-canonicalize [options allowed]
@@ -182,7 +182,7 @@
   `(make-c-formula
      :code '(without-c-dependency ~@body)
      :input? true
-     :debug true
+     :dbg true
      :value tilton.mx.cell.base/unbound
      :rule (c-fn (without-c-dependency ~@body))))
 
@@ -218,7 +218,7 @@
   `(make-c-formula
      :code '~body
      :value tilton.mx.cell.base/unbound
-     :debug true
+     :dbg true
      :rule (c-fn ~@body)))
 
 (defmacro cF_ [[& options] & body]
@@ -245,7 +245,7 @@
      :value tilton.mx.cell.base/unbound
      :lazy :until-asked
      :rule (c-fn ~@body)
-     :debug true))
+     :dbg true))
 
 (defmacro c-formula [[& kvs] & body]
   `(make-c-formula

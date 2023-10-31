@@ -39,33 +39,33 @@
   ([mut prop new-value tag]
    (chk (atom? mut)
      "util.core/mut-set!> prop:" prop :tag tag
-       "new-value:" new-value
-       "failed assertion any-ref? on ref:" )
+     "new-value:" new-value
+     "failed assertion any-ref? on ref:")
    (when-not (map? @mut)
      (pln "util.core/mut-set!> prop:" prop :tag tag
        "new-value:" (or new-value :NIL)
-       "failed assertion map? on ref:" )
+       "failed assertion map? on ref:")
      (chk false))
    (swap! mut assoc prop new-value)
    new-value))
 
 (defn rmap-set! [[prop ref] new-value]
   (chk (atom? ref)
-     "model.util.core/rmap-set!> prop:" prop
-      "new-value:" ;; new-value
-      "failed assertion atom? on ref:" )
+    "model.util.core/rmap-set!> prop:" prop
+    "new-value:"                                            ;; new-value
+    "failed assertion atom? on ref:")
   (chk (map? (deref ref))
     "model.util.core/rmap-set!> prop " prop
-      " new-value " ;; new-value
-      " failed assertion map? on ref: "  " <<<")
+    " new-value "                                           ;; new-value
+    " failed assertion map? on ref: " " <<<")
   (swap! ref assoc prop new-value)
   new-value)
 
 (defn rmap-meta-set! [[prop ref] new-value]
   (chk (atom? ref)
     "rmap-meta-set!> prop:" prop
-    "new-value:" #_ new-value
-    "failed assertion atom? on ref:" )
+    "new-value:" #_new-value
+    "failed assertion atom? on ref:")
   (alter-meta! ref assoc prop new-value)
   new-value)
 
@@ -117,7 +117,7 @@
   (if (coll? x) (vec x) [x]))
 
 (defn pln [& args]
-  (do ;; locking *out*
+  (do                                                       ;; locking *out*
     (dp (join " " args))))
 
 (defn xpln [& args])
@@ -132,7 +132,7 @@
   (if (string? (first r))
     (dp (pr-str r))
     (when (or (= k :force)
-            (some #{k} [*plnk-keys*]))                        ;; [:qxme :addk])
+            (some #{k} [*plnk-keys*]))                      ;; [:qxme :addk])
       (dp (pr-str r)))))
 
 (defn now []
@@ -148,6 +148,9 @@
 
 (def counts (atom nil))
 
+(defn counts-dump [tag ]
+  (dp :COUNTS-DUMP> tag @counts))
+
 (defn counts-reset []
   (reset! counts nil))
 
@@ -155,10 +158,13 @@
   ([path]
    (countit path 1))
   ([path n]
+   ; (dp :countit-sees path n)
    (if (sequential? path)
-     (if (counted? n)
+     (if false                                              ; (counted? n)
        (countit path (count n))
-       (swap! counts update-in path (fnil + 0) n))
+       (do
+         ; (dp :countit!! n path)
+         (swap! counts update-in path (fnil + 0) n)))
      (countit [path] n))))
 
 (defn difference [s so]

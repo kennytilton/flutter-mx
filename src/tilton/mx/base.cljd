@@ -95,6 +95,9 @@
 
 (def *dpk* "vector of keys to match" (atom nil #_ [:build :sstate]))
 
+(defn dpk-keys []
+  @*dpk*)
+
 (defn dpk! [val]
   (when val
     (assert (vector? val) (str "Error: dpk! passed non-vector?: " val)))
@@ -104,8 +107,8 @@
 (defn dpk-match [kw-or-kws]
   ;(dp :dpkmatch keys @*dpk*)
   (if (keyword? kw-or-kws)
-    (some #{kw-or-kws} @*dpk*)
-    (some (fn [k] (some #{k} @*dpk*)) kw-or-kws)))
+    (some #{kw-or-kws} (dpk-keys))
+    (some (fn [k] (some #{k} (dpk-keys))) kw-or-kws)))
 
 (defmacro dpkx [& r]
   `(do))
