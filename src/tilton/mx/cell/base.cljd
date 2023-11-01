@@ -176,17 +176,40 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;;; --- dpm -------------------------------------------------------------
 
-(defn dpm [mx category & bits]
-  (chk (or (mref? mx) (cref? mx)) :dpm-sees-non-mx category)
+(defn dpm-mx-dbg
+  "Decide which dpm keys (or boolean) an mx wants traced, defaulting to *dpk*"
+  [mx]
+  (chk (or (nil? mx) (mref? mx) (cref? mx)) :dpm-sees-non-nil-non-mx mx)
+  (if (nil? mx)
+    tilton.mx.base/*dpk*
+    (or (cond
+          (cref? mx) (c-dbg mx)
+          (mref? mx) (:fx$dpk (meta mx)))
+      tilton.mx.base/*dpk*)))
 
-  (when-let [dbg (cond
-                   (cref? mx) (c-dbg mx)
-                   (mref? mx) (:dbg @mx))]
-    (when (or (true? dbg) (= category dbg) (when (vector? dbg) (some #{category} dbg)))
-      (apply dp :DPM category (first bits)
-        (case
-          (cref? mx) (cinfo mx)
-          (mref? mx) (minfo mx)) (rest bits)))))
+(defn dpm-match [mx-dbg category]
+  (cond
+    (boolean? mx-dbg) mx-dbg
+    (keyword? mx-dbg) (recur [mx-dbg] category)
+    (keyword? category) (recur mx-dbg [category])
+    :else (some (set category) mx-dbg)))
+
+(defmacro dpm [mx category label & bits]
+  ;; sprinkle these as desired, usage:
+  ;;    (dpm nil-cell-or-model keyword-or-keywords-coll label [& more-info])
+  ;; eg
+  ;;    (dpm cell :evic :entering-evic!!! 42)
+  ;;
+  (assert (keyword? label))
+  `(tilton.mx.cell.base/without-c-dependency
+     (let [mx# ~mx]
+       (when-let [mx-dbg# (tilton.mx.cell.base/dpm-mx-dbg mx#)]
+         (when (tilton.mx.cell.base/dpm-match mx-dbg# ~category)
+           (tilton.mx.base/dp :DPM ~@bits
+             ~category
+             (case
+               (tilton.mx.model.peek/cref? mx#) (tilton.mx.model.peek/cinfo mx#)
+               (tilton.mx.model.peek/mref? mx#) (tilton.mx.model.peek/minfo mx#))))))))
 
 ;; --- dependency maintenance --------------------------------
 
@@ -226,6 +249,5 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;;---
 
 (defn c-dbg [c]
-  (chk (cref? c))
-  (:dbg @c))
+  (:fx$dpk @c))
 

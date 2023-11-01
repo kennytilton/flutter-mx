@@ -142,7 +142,7 @@
                                (->> arg-list
                                  (partition 2)
                                  (filter (fn [[prop v]]
-                                           (not (some #{prop} [:fx$quiesce :mx-type]))
+                                           (not (some #{prop} [:fx$quiesce :mx-type :fx$dpk]))
                                            #_(not (= :mx-type prop))))
                                  (map (fn [[k v]]
                                         (vector k (if (cref? v)
@@ -155,6 +155,7 @@
                         ;; todo pull more fx$s into meta
                         :mx-type    (:mx-type iargs (Model.))
                         :fx$quiesce (:fx$quiesce iargs)
+                        :fx$dpk (:fx$dpk iargs)
                         :sid        (swap! +md-sid+ inc)})]
         ;(dp :make-post-me (meta me))
         (rmap-meta-set!

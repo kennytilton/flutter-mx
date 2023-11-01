@@ -1,6 +1,6 @@
 (ns example.driver
   (:require
-    [tilton.mx.base :refer [dpk dpk!]]
+    [tilton.mx.base :refer [dpk ]]
     [tilton.mx.api :refer [dp] :as mx]
     [example.eg.x00-hello-world :as hello]
     [example.eg.x01-counter :as counter]
@@ -45,4 +45,4 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (tts/make-app))
+  (counter/make-app))

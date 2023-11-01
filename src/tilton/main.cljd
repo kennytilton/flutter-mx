@@ -9,7 +9,7 @@
     [tilton.mx.model.core :as md]
     [tilton.mx.util :as mxu]
     [tilton.mx.base
-     :refer [wtrx dp dpx trx dpk!]]
+     :refer [wtrx dp dpx trx  *dpk*]]
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.factory :refer [state-fx-clear]]
     [tilton.fmx.api :as fx]
@@ -25,23 +25,24 @@
   (fx/widget-key-clear)
 
   ;; (fxk/fmx-debugger-set! sample-debugger)
-  (dpk! [#_ :buildx :sstate])
+  ;(dpk! [#_ :buildx :sstate])
 
-  (binding [cty/*dpc-enabled* true]
+  (binding [cty/*dpc-enabled* true
+            *dpk* [:bbuild :sstate]]
     (.ensureInitialized w/WidgetsFlutterBinding)
     (f/run (fx/fx-render nil
              (if true
                (eg/select)
-               (counter/make-app))))
+               (counter/make-app))))))
 
-    #_(fx/run-app
-        (hot-reload-detector
-          (binding [cty/*dpc-enabled* false]
-            ;;(testing/run-tests)
-            (fx/fx-render nil
-              (if nil
-                (counter/make-app)
-                (eg/select))))))))
+#_(fx/run-app
+    (hot-reload-detector
+      (binding [cty/*dpc-enabled* false]
+        ;;(testing/run-tests)
+        (fx/fx-render nil
+          (if nil
+            (counter/make-app)
+            (eg/select))))))
 
 #_(defn main []
     (dp :main-entry-dp2!!)

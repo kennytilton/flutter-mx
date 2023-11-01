@@ -186,7 +186,7 @@
                   (let [ctx (:fx$ctx (meta me))]
                     (dpx :TRG-stateful-ctx ctx (.-debugIsDefunct ^m/Element ctx) (minfo me) (cinfo cell))
                     (if (.-debugIsDefunct ^m/Element ctx)
-                      (do (dpk :TRG-not-using-unmounted-state-setter (minfo me))
+                      (do (dp :TRG-not-using-unmounted-state-setter (minfo me))
                         (trigger-state-above (mabove)))
                       (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
                         (state-setter (fn [] (do))))))
@@ -396,7 +396,7 @@
          k)))))
 
 (defn gen-gen [me ctx widget-maker]
-  (dpm me :bbuild :gen-gen-entry (minfo me) :react? (tilton.mx.model.core/md-reactive? me))
+  (dpm me :bbuild :gen-gen-entry :reactive? (tilton.mx.model.core/md-reactive? me))
   (cond
     (or (tilton.mx.api/mget? me :unwrapped?)
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
@@ -643,11 +643,12 @@
        (assoc ~fx-props
          :builder (tilton.mx.api/cF
                     (fn [ctx box-constraints]
+                      ;; Convert box argument to reactive input
+                      (binding [tilton.fmx.factory/*fx-building?* true]
+                        (tilton.mx.model.core/mset! ~'me :box-constraints box-constraints))
                       ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
                       ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
                       ;; with iso?
-                      (binding [tilton.fmx.factory/*fx-building?* true]
-                        (tilton.mx.model.core/mset! ~'me :box-constraints box-constraints)) ;; ...and convert box argument to reactive input
                       (fx/fx-render ctx (first (tilton.mx.api/mkids ~'me))))))
        (assoc ~mx-props
          :box-constraints (tilton.mx.cell.core/cI nil)
