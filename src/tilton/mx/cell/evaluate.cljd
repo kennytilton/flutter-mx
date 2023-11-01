@@ -153,7 +153,7 @@
             (when (and (nil? (c-model c))
                     (= (c-state c) :nascent)
                     (> @+pulse+ (c-pulse-observed c)))
-              (dpc c :cget :observe-awake!!!!!!!!!!! (c-prop c) (c-state c))
+              (dpm c :cget :observe-awake!!!!!!!!!!! (c-prop c) (c-state c))
               (rmap-set! [:state c] :awake)
               (c-observe c prior-value :cget)
               (ephemeral-reset c)))))
@@ -172,7 +172,7 @@
     ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
     (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata (cinfo c))
     (let [[raw-value propagation-code] (calculate-and-link c dbgid)]
-      (dpc c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
+      (dpm c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
         #_#_:meta-mw (meta (c-me c)))
 
       (cond
@@ -276,7 +276,7 @@
             prop-code? (and (c-synaptic? c)
                          (vector? raw-value)
                          (contains? (meta raw-value) :propagate))]
-        (dpc c :cnset :cn-link-got raw-value prop-code?)
+        (dpm c :cnset :cn-link-got raw-value prop-code?)
         (if prop-code?
           [(first raw-value) (:propagate (meta raw-value))]
           [raw-value nil])))))
@@ -361,7 +361,7 @@
           ;; --- cell maintenance ---
           ;; even if no news at least honor the reset!
           ;;
-          (dpc c :cnset :CVASS_SETS!!!!============================================= new-value)
+          (dpm c :cnset :CVASS_SETS!!!!============================================= new-value)
           (rmap-set! [:value c] new-value)
           (rmap-set! [:state c] :awake)
 
@@ -379,21 +379,21 @@
           ; Note that the :async? option likewise introduces late optimize
 
           (when (c-value-changed? c new-value prior-value)
-            (dpc c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
+            (dpm c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
             (rmap-set! [:pulse-last-changed c] @+pulse+))
 
           (when-let [optimize (and (c-formula? c)
                                 (c-optimize c))]
             (optimize-away?! c prior-value))
 
-          (dpc c :propagate :PROP-maybe-caller-ct (count callers))
+          (dpm c :propagate :PROP-maybe-caller-ct (count callers))
 
           (let [known-changed? (atom nil)]
             (if (or
                   (not (some #{prior-state} [:valid :uncurrent]))
                   (= propagation-code true)                 ;; forcing
                   (when-not (= propagation-code false)
-                    (dpc c :evic :evic-checking-changed!! (c-value-changed? c new-value prior-value)
+                    (dpm c :evic :evic-checking-changed!! (c-value-changed? c new-value prior-value)
                       (cinfo c))
                     (reset! known-changed?
                       (c-value-changed? c new-value prior-value))))
@@ -406,15 +406,15 @@
                       ; next happens if changed test in conditional not reached
                       (and (nil? @known-changed?)
                         (c-value-changed? c new-value prior-value)))
-                (dpc c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
+                (dpm c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
                 (rmap-set! [:pulse-last-changed c] @+pulse+))
 
               (when-not (or (= propagation-code :no-propagate)
                           #_(c-optimized-away? c))
                 ;;(chk (map? @c))
-                (dpc c :propagate :PROP-YES-caller-ct (count callers))
+                (dpm c :propagate :PROP-YES-caller-ct (count callers))
                 (propagate c prior-value callers)))
-            (dpc c :propagate :NOT-PROPAGATING))))))))
+            (dpm c :propagate :NOT-PROPAGATING))))))))
 
 ;; --- unlinking ----------------------------------------------
 (defn unlink-from-used [c why]
@@ -422,9 +422,9 @@
 then clear our record of them."
   (doseq [used (c-useds c)]
     (do
-      (dpc c :link :caller-removes-self-from-used-callers (cinfo used))
+      (dpm c :link :caller-removes-self-from-used-callers (cinfo used))
       (rmap-set! [:callers used] (disj (c-callers used) c))))
-  (dpc c :link :clearing-all-useds)
+  (dpm c :link+ :clearing-all-useds)
   (rmap-set! [:useds c] #{}))
 
 (defn md-cell-flush [c]
@@ -532,7 +532,7 @@ then clear our record of them."
 
   [c prior-value callers]
 
-  (dpc c :propagate :top-prop-call)
+  (dpm c :propagate :top-prop-call)
   ;; (trx :propagate (:prop @c))
 
   (cond
@@ -590,13 +590,13 @@ then clear our record of them."
   ;;         but B is busy eagerly propagating. "This time" is important because it means
   ;;         there is no way one can reliably be sure H will not ask for A
   ;;
-  (dpc c :propagate-ENTRY (count callers))
+  (dpm c :propagate :propagate-ENTRY (count callers))
   (when-not (empty? callers)
     (let [causation (cons c *causation*)]                   ;; closed over below
       (with-integrity (:tell-dependents c)
         (binding [*causation* causation]
           (doseq [caller (seq callers)]
-            (dpc caller :propagate :PROP-maybe!!)
+            (dpm caller :propagate :PROP-maybe!!)
             (cond
               (or                                           ;; lotsa reasons NOT to proceed
                 (c-quiesced? caller)
@@ -608,10 +608,10 @@ then clear our record of them."
               ; even if I have been optimized away cuz they need to know."
               ; Note this is why callers must be supplied, having been copied
               ; before the optimization step.
-              (do (dpc caller :propagate :NOT-PROPPING!
+              (do (dpm caller :propagate :NOT-PROPPING!
                     (c-quiesced? caller)
                     (c-current? caller)))
 
               :else
-              (do (dpc caller :propagate :PROP-YES-to-cnset!!)
+              (do (dpm caller :propagate :PROP-YES-to-cnset!!)
                   (calculate-and-set caller :propagate c)))))))))

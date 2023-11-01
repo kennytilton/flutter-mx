@@ -102,7 +102,7 @@ rule to get once behavior or just when fm-traversing to find someone"
     (chk (not (c-quiesced? c))
       (str "c-quiess!> already quiesced " (cinfo c)))
     (when-let [onq (:on-quiesce @c)]
-      (dpc c :quiesce :calling-onq!!!!!! onq)
+      (dpm c :quiesce :calling-onq!!!!!! onq)
       (onq c))
     (unlink-from-callers c)
     (unlink-from-used c :quiesce)
@@ -222,7 +222,8 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;; --- dependency maintenance --------------------------------
 
 (defn dependency-record [used]
-  (dpm *depender* :link :record-usage-of/if (not (c-optimized-away? used)) (cinfo used))
+  (dpm *depender* :link :record-usage-of/if (not (c-optimized-away? used)) :used (cinfo used))
+  (dpm used :link :record-sees-used (not (c-optimized-away? used)))
   (when-not (c-optimized-away? used)
     (mut-set! *depender* :useds
       (conj (c-useds *depender*) used))
@@ -230,20 +231,20 @@ rule to get once behavior or just when fm-traversing to find someone"
       (conj (c-callers used) *depender*))))
 
 (defn dependency-drop [used caller]
-  (dpc caller :link :caller-DROPS (cinfo caller) :USED (cinfo used))
+  (dpm caller :link :caller-DROPS (cinfo caller) :USED (cinfo used))
   (mut-set! caller :useds (disj (c-useds caller) used))
-  (dpc used :link :used-DROPPING (cinfo used) :caller (cinfo caller))
+  (dpm used :link :used-DROPPING (cinfo used) :caller (cinfo caller))
   (mut-set! used :callers (disj (c-callers used) caller)))
 
 (defn unlink-from-callers [used]
-  (dpc used :link :UNLINK-callers (count (c-callers used)))
+  (dpm used :link :UNLINK-callers (count (c-callers used)))
   (doseq [caller (c-callers used)]
-    (dpc caller :link :dropped-by-used!!!! (cinfo used))
+    (dpm caller :link :dropped-by-used!!!! (cinfo used))
     (dependency-drop used caller)))
 
 (defn unlink-from-used [caller why]
   "Tell dependencies they need not notify us when they change, then clear our record of them."
-  (dpc caller :link :unlink-from-used!!! (count (c-useds caller)))
+  (dpm caller :link :unlink-from-used!!! (count (c-useds caller)))
   (doseq [used (c-useds caller)]
     (dependency-drop used caller)))
 
