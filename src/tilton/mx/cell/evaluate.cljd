@@ -8,7 +8,7 @@
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tilton.mx.cell.base
      :refer [without-c-dependency wmx-iso c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? c-code$
+             c-unbound? c-input? c-code$ dpm
              c-model c-valid? c-useds  c-quiesced? c-on-quiesce
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* dependency-drop
@@ -62,7 +62,7 @@
 
   [c debug-id ensurer]
   (wtrx [0 1000 nil :EVIC-ENTRY debug-id (cinfo c)]
-    (dpc c :evic :evic-entry debug-id)
+    (dpm c :evic :evic-entry debug-id)
     (cond
       ; --------------------------------------------------
       *md-quiescing*                                        ; we got kicked off during md-quiesce! processing
@@ -101,7 +101,7 @@
           (when used
             (ensure-value-is-current used :nested c)
             ;; now see if it actually changed
-            (dpc c :evic :pulse-checks-------------- :used (c-prop used) :last (c-pulse-last-changed used) :c (c-prop c)(c-pulse c))
+            (dpm c :evic :pulse-checks-------------- :used (c-prop used) :last (c-pulse-last-changed used) :c (c-prop c)(c-pulse c))
             (or (> (c-pulse-last-changed used) (c-pulse c))
               (recur urest)))))
       (do
@@ -459,8 +459,7 @@ then clear our record of them."
           (c-valid? c)                                      ;; /// when would this not be the case? and who cares?
           (not (c-synaptic? c))                             ;; no prop to cache invariant result, so they have to stay around)
           (not (c-input? c)))                               ;; yes, dependent cells can be inputp
-    (dpc c :opti :============optimizing-away!!!!========================= (c-prop c) (c-async? c) (:then? @c))
-    (dpk :c-opti :============optimizing-away!!!!========================= (c-prop c) (c-async? c) (:then? @c))
+    (dpm c :opti :============optimizing-away!!!!========================= (c-prop c) (c-async? c) (:then? @c))
 
     (when (= :freeze (c-optimize c))
       ;; we could just blindly call unlink-from-unused since normally

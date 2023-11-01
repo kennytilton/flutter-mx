@@ -54,7 +54,7 @@
 ;;; --- ctx tracking ----------------------
 
 (defn record-fx$ctx [me ctx]
-  (dpk :ctx :record-CTX! (minfo me) ctx)
+  (dpm me :ctx :record-CTX! (minfo me) ctx)
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
 
 (defn ctx-check
@@ -63,15 +63,15 @@
    (cond
      (nil? (fx-ctx me))
      (do
-       (dpk :ctx :CTX-CHECK-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
-       (dpx :CTX-CHECK-NIL-element (dart/is? ctx w/Element))
+       (dpm me :ctx :CTX-CHECK-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
+       (dpm me :CTX-CHECK-NIL-element (dart/is? ctx w/Element))
        (record-fx$ctx me ctx))
 
      (= ctx (fx-ctx me))
-     (dpk :ctx :CTX-CHECK-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
+     (dpm me :ctx :CTX-CHECK-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
 
      :else (do
-             (dpk :ctx :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
+             (dpm me :ctx :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
              (record-fx$ctx me ctx)))))
 
 (defn fx-ctx [me]
@@ -173,14 +173,14 @@
 (defn trigger-build [me cell]
   (cond
     *fx-building?* (do)
-    (not (:sst @cell)) (dpk :sstate+ :TRG-SST-NOT! (cinfo cell))
+    (not (:sst @cell)) (dpm me :sstate+ :TRG-SST-NOT! (cinfo cell))
     :else (binding [*trg-cell* cell]
             (when-not *fx-building?*                        ;; todo vestigial?
-              (dpk :sstate+ :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
+              (dpm me :sstate+ :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
                 :mhost (minfo (mhost me)))
 
               (if-let [state (fx-ctx-state me)]
-                (do (dpk :sstate :TRG-ctx-setstate-1!!!!! (cinfo cell) (meta state) state)
+                (do (dpm me :sstate :TRG-ctx-setstate-1!!!!! (cinfo cell) (meta state) state)
                   (.setState state (fn [] (do))))
                 (if-let [state-setter (:fx$state-setter (meta me))]
                   (let [ctx (:fx$ctx (meta me))]
@@ -188,10 +188,10 @@
                     (if (.-debugIsDefunct ^m/Element ctx)
                       (do (dp :TRG-not-using-unmounted-state-setter (minfo me))
                         (trigger-state-above (mabove)))
-                      (do (dpk :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
+                      (do (dpm me :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
                         (state-setter (fn [] (do))))))
                   (do
-                    (dpk :sstate+ :TRG-state-trying-above (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
+                    (dpm me :sstate+ :TRG-state-trying-above (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
                     (trigger-state-above (mabove)))))))))
 
 (defn trigger-state-above [me]
@@ -396,7 +396,7 @@
          k)))))
 
 (defn gen-gen [me ctx widget-maker]
-  (dpm me :bbuild :gen-gen-entry :reactive? (tilton.mx.model.core/md-reactive? me))
+  (dpm me :bbuild :gen-gen-entry :reactive? (cinfo (tilton.mx.model.core/md-reactive? me)))
   (cond
     (or (tilton.mx.api/mget? me :unwrapped?)
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
@@ -420,7 +420,7 @@
                   (tilton.fmx.factory/fx-state-init me this))
                 (build [_ ctx]
                   (countit [:build (:fx-class @me)])
-                  (dpk :build :GENGEN-stateful-mixin (minfo me))
+                  (dpm me :bbuild :GENGEN-stateful-mixin (minfo me))
                   (ctx-check me ctx)
                   (widget-maker me ctx)))
               (reify :extends FXState
@@ -440,12 +440,12 @@
       (with-flutter-ref
         (w/Builder
           .builder (fn [ctx]
-                     (dpk :build :GENGEN-w-builder (minfo me))
+                     (dpm me :build :GENGEN-w-builder (minfo me))
                      (countit [:build (:fx-class @me)])
                      (ctx-check me ctx)
                      (widget-maker me ctx)))))
     :else (do
-            (dpk :build :GENGEN-nobuilder (minfo me))
+            (dpm me :build :GENGEN-nobuilder (minfo me))
             (countit [:build (:fx-class @me)])
             (ctx-check me ctx)
             (widget-maker me ctx))))

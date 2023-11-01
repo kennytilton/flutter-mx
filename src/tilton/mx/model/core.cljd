@@ -151,12 +151,14 @@
                                  (into {})))]
                    ;; (prn :mdmap-keys (keys mdmap))
                    mdmap)
-                 :meta {:state      :nascent
-                        ;; todo pull more fx$s into meta
-                        :mx-type    (:mx-type iargs (Model.))
-                        :fx$quiesce (:fx$quiesce iargs)
-                        :fx$dpk (:fx$dpk iargs)
-                        :sid        (swap! +md-sid+ inc)})]
+                 :meta (merge
+                         {:state      :nascent
+                          ;; todo pull more fx$s into meta
+                          :mx-type    (:mx-type iargs (Model.))
+                          :fx$quiesce (:fx$quiesce iargs)
+                          :sid        (swap! +md-sid+ inc)}
+                         (when (contains? iargs :fx$dpk)
+                           {:fx$dpk (:fx$dpk iargs)})))]
         ;(dp :make-post-me (meta me))
         (rmap-meta-set!
           [:cz me]

@@ -74,6 +74,9 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (def +c-dbg+ (atom false))
 
+(defn c-dbg [c]
+  (:fx$dpk @c))
+
 ;; --- procedure division ----------------------
 
 (defn cells-reset
@@ -94,7 +97,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 (defn c-quiesce! [c]
   (chk (cref? c))
-  (dpc c :quiesce :entry)
+  (dpm c :quiesce :entry)
   (when-not false
     (chk (not (c-quiesced? c))
       (str "c-quiess!> already quiesced " (cinfo c)))
@@ -180,12 +183,16 @@ rule to get once behavior or just when fm-traversing to find someone"
   "Decide which dpm keys (or boolean) an mx wants traced, defaulting to *dpk*"
   [mx]
   (chk (or (nil? mx) (mref? mx) (cref? mx)) :dpm-sees-non-nil-non-mx mx)
+  ;(when mx (dp :fxdpk?  (contains? (meta mx) :fx$dpk)))
   (if (nil? mx)
     tilton.mx.base/*dpk*
-    (or (cond
-          (cref? mx) (c-dbg mx)
-          (mref? mx) (:fx$dpk (meta mx)))
-      tilton.mx.base/*dpk*)))
+    (cond
+      (cref? mx) (if (contains? @mx :fx$dpk)
+                   (c-dbg mx)
+                   tilton.mx.base/*dpk*)
+      (mref? mx) (if (contains? (meta mx) :fx$dpk)
+                   (:fx$dpk (meta mx))
+                   tilton.mx.base/*dpk*))))
 
 (defn dpm-match [mx-dbg category]
   (cond
@@ -200,21 +207,22 @@ rule to get once behavior or just when fm-traversing to find someone"
   ;; eg
   ;;    (dpm cell :evic :entering-evic!!! 42)
   ;;
-  (assert (keyword? label))
+  #_ (when-not (keyword? label)
+    (dart:core/print [:dpmmac-sees-non-keyword-label ]))
   `(tilton.mx.cell.base/without-c-dependency
      (let [mx# ~mx]
        (when-let [mx-dbg# (tilton.mx.cell.base/dpm-mx-dbg mx#)]
          (when (tilton.mx.cell.base/dpm-match mx-dbg# ~category)
-           (tilton.mx.base/dp :DPM ~@bits
+           (tilton.mx.base/dp :DPM ~label ~@bits
              ~category
-             (case
+             (cond
                (tilton.mx.model.peek/cref? mx#) (tilton.mx.model.peek/cinfo mx#)
                (tilton.mx.model.peek/mref? mx#) (tilton.mx.model.peek/minfo mx#))))))))
 
 ;; --- dependency maintenance --------------------------------
 
 (defn dependency-record [used]
-  (dpc *depender* :link :record-usage-of/if (not (c-optimized-away? used)) (cinfo used))
+  (dpm *depender* :link :record-usage-of/if (not (c-optimized-away? used)) (cinfo used))
   (when-not (c-optimized-away? used)
     (mut-set! *depender* :useds
       (conj (c-useds *depender*) used))
@@ -248,6 +256,5 @@ rule to get once behavior or just when fm-traversing to find someone"
 
 ;;---
 
-(defn c-dbg [c]
-  (:fx$dpk @c))
+
 

@@ -5,8 +5,8 @@
      :refer [prog1 wtrx dprn dp dpx trx mx-throw]]
     [tilton.mx.util
      :refer [ensure-vec  pln plnk fifo-add fifo-peek fifo-pop cl-find]]
-    [tilton.mx.cell.base :as cty
-     :refer [dpc +pulse+ c-pulse c-optimized-away?
+    [tilton.mx.cell.base :as mxcb
+     :refer [dpc dpm +pulse+ c-pulse c-optimized-away?
              +client-q-handler+ pulse-now
              *within-integrity* *defer-changes*
              *depender* ]]))
@@ -24,12 +24,12 @@
      (swap! +pulse+ inc))))            ;; try as commute?
 
 (defn c-current? [c]
-  (cty/dpc c :c-current?-SEES-C-pulse (c-pulse c) :+PULSE+ (cty/pulse-now))
-  (= (c-pulse c) (cty/pulse-now)))
+  (dpm c :pulse :c-current?-SEES-C-pulse (c-pulse c) :+PULSE+ (mxcb/pulse-now))
+  (= (c-pulse c) (mxcb/pulse-now)))
 
 (defn c-pulse-update [c key]
   (when-not (c-optimized-away? c)
-    (dpc c :pulse :c-pulse-upd!!! key :c-pulse (c-pulse c) :now-pulse (pulse-now))
+    (dpm c :pulse :c-pulse-upd!!! key :c-pulse (c-pulse c) :now-pulse (pulse-now))
     (chk (>= (pulse-now) (c-pulse c)) :c-pulse-update (cinfo c))
     (swap! c assoc :pulse (pulse-now))))
 
@@ -78,7 +78,7 @@
      (recur q opcode))))
 
 (defn finish-business []
-  (dpx :fin-biz-entry @cty/+stop+)
+  (dpx :fin-biz-entry @mxcb/+stop+)
   (loop [tag "tell-dependents"]
     (case tag
       "tell-dependents"
@@ -153,7 +153,7 @@
           ;; (pln :cwi-defers opcode (first (ensure-vec defer-info)))
           (when (and opcode (not (some #{opcode} [:awaken])))
             (dpx :cwi-deferred!!!! opcode @wi-depth))
-          (dpx :cwi-deferred!!! opcode (cty/cinfo defer-info)(cty/minfo defer-info) defer-info)
+          (dpx :cwi-deferred!!! opcode (mxcb/cinfo defer-info)(mxcb/minfo defer-info) defer-info)
           (ufb-add opcode [defer-info action]))
 
         ;; thus by not supplying an opcode one can get something

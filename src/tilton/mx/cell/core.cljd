@@ -7,7 +7,7 @@
     [tilton.mx.cell.base
      :refer [without-c-dependency *within-integrity*
              c-optimized-away? c-formula? c-value c-optimize
-             c-unbound? c-input? unbound dpc
+             c-unbound? c-input? unbound dpc dpm
              c-model c-valid? c-useds c-prop-name c-code$ c-code
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes*
@@ -272,7 +272,7 @@
   "The moral equivalent of a Common Lisp SETF, and indeed
 in the CL version of Cells SETF itself is the change API dunction."
   (chk (cref? c))
-  (dpc c :cset new-value (cinfo c) :fut? (c-async? c)
+  (dpm c :cset new-value :fut? (c-async? c)
     :defer? *defer-changes*
     :winteg? cty/*within-integrity*
     (cinfo c))
@@ -311,9 +311,9 @@ in the CL version of Cells SETF itself is the change API dunction."
     (c-value-assume c new-value nil)
     ;-------------------------------------------
     :else
-    (do (dpc c :cset :cset!!!-pre-w-integrity!!!!!!!!! new-value (cinfo c))
+    (do (dpm c :cset :cset!!!-pre-w-integrity!!!!!!!!! new-value (cinfo c))
         (with-integrity (:change (c-prop c))
-          (dpc c :cset :cset!-pre-cvass-fires!!! (cinfo c) new-value)
+          (dpm c :cset :cset!-pre-cvass-fires!!! (cinfo c) new-value)
           (c-value-assume c new-value nil)))))
 
 (defn cswap! [c swap-fn & swap-fn-args]
