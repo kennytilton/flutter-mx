@@ -3,7 +3,7 @@
     [clojure.string :as str]
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
-    [tilton.mx.base :refer [wtrx dprn dp dpx trx prog1 mx-throw dpk]]
+    [tilton.mx.base :refer [wtrx dprn dp dpx trx prog1 mx-throw]]
     [tilton.mx.util
      :refer [atom? rmap-set! rmap-meta-set! set-ify difference]]
     [tilton.mx.cell.base
@@ -172,7 +172,7 @@
     ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
     (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata (cinfo c))
     (let [[raw-value propagation-code] (calculate-and-link c dbgid)]
-      (dpm c :cnset :calcnset-raw!!! raw-value :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
+      (dpm c :cnset :calcnset-raw!!! (minfo raw-value) :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
         #_#_:meta-mw (meta (c-me c)))
 
       (cond
@@ -276,7 +276,7 @@
             prop-code? (and (c-synaptic? c)
                          (vector? raw-value)
                          (contains? (meta raw-value) :propagate))]
-        (dpm c :cnset :cn-link-got raw-value prop-code?)
+        (dpm c :cnset :cn-link-got (c-code$ c) (minfo raw-value) prop-code?)
         (if prop-code?
           [(first raw-value) (:propagate (meta raw-value))]
           [raw-value nil])))))
@@ -361,7 +361,7 @@
           ;; --- cell maintenance ---
           ;; even if no news at least honor the reset!
           ;;
-          (dpm c :cnset :CVASS_SETS!!!!============================================= new-value)
+          (dpm c :cnset :CVASS_SETS!!!!============================================= (minfo new-value))
           (rmap-set! [:value c] new-value)
           (rmap-set! [:state c] :awake)
 

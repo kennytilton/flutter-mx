@@ -93,10 +93,10 @@
 
 ;;; yet another debug hack
 
-(def ^:dynamic *dpk* "vector of keys to match" [])
+(def ^:dynamic *dpm* "vector of keys to match" [])
 
 (defn dpk-keys []
-  *dpk*)
+  *dpm*)
 
 (defn dpk-match [kw-or-kws]
   ;(dp :dpkmatch keys *dpk* (dpk-keys))
@@ -104,12 +104,14 @@
     (dpk-match [kw-or-kws])
     (some (fn [k] (some #{k} (dpk-keys))) kw-or-kws)))
 
+#_#_
 (defmacro dpkx [& r]
   `(do))
 
 (defmacro dpk [kw-or-kws & dp-bits]
   ;(dp :dpk-sees kw-or-kws dp-bits)
   `(tilton.mx.cell.base/without-c-dependency
+     (dp :dpk-sees ~kw-or-kws)
      (when-let [m# (tilton.mx.base/dpk-match ~kw-or-kws)]
        (tilton.mx.base/dp m# ~@dp-bits))))
 

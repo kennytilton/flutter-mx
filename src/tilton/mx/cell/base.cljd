@@ -180,19 +180,19 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;;; --- dpm -------------------------------------------------------------
 
 (defn dpm-mx-dbg
-  "Decide which dpm keys (or boolean) an mx wants traced, defaulting to *dpk*"
+  "Decide which dpm keys (or boolean) an mx wants traced, defaulting to *dpm*"
   [mx]
   (chk (or (nil? mx) (mref? mx) (cref? mx)) :dpm-sees-non-nil-non-mx mx)
   ;(when mx (dp :fxdpk?  (contains? (meta mx) :fx$dpk)))
   (if (nil? mx)
-    tilton.mx.base/*dpk*
+    tilton.mx.base/*dpm*
     (cond
       (cref? mx) (if (contains? @mx :fx$dpk)
                    (c-dbg mx)
-                   tilton.mx.base/*dpk*)
+                   tilton.mx.base/*dpm*)
       (mref? mx) (if (contains? (meta mx) :fx$dpk)
                    (:fx$dpk (meta mx))
-                   tilton.mx.base/*dpk*))))
+                   tilton.mx.base/*dpm*))))
 
 (defn dpm-match [mx-dbg category]
   (cond
@@ -213,6 +213,7 @@ rule to get once behavior or just when fm-traversing to find someone"
      (let [mx# ~mx]
        (when-let [mx-dbg# (tilton.mx.cell.base/dpm-mx-dbg mx#)]
          (when (tilton.mx.cell.base/dpm-match mx-dbg# ~category)
+           (tilton.mx.base/dp :DPM ~label)
            (tilton.mx.base/dp :DPM ~label ~@bits
              ~category
              (cond

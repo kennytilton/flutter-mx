@@ -9,7 +9,7 @@
              :refer [TextStyle]]
             ["package:flutter/foundation.dart" :as foundation]
 
-            [tilton.mx.base :refer [wtrx dprn dp dpx dpk mx-throw]]
+            [tilton.mx.base :refer [wtrx dprn dp dpx mx-throw]]
             [tilton.mx.util
              :refer [atom? rmap-set! rmap-meta-set! set-ify difference countit]]
             [tilton.mx.foundation :as mxf :refer [mx-type PObserver observe]]
@@ -158,9 +158,9 @@
 (defn ^FXState? fx-ctx-state [me]
   (or (when-let [^FXState? state (:fx$state (meta me))]
         (if (.-mounted state)
-          (do (dpk :sstate+ :FX_CTX-finds-fx$st (minfo me))
+          (do (dpm me :sstate+ :FX_CTX-finds-fx$st)
             state)
-          (do (dpk :sstate :FX-CTX-ME-STATE-UNMOUNTED!! (minfo me))
+          (do (dpm me :sstate :FX-CTX-ME-STATE-UNMOUNTED!!)
             nil)))
     ;; state-above does better than...
     #_(when-let [ctx (:fx$ctx (meta me))]
@@ -176,7 +176,7 @@
     (not (:sst @cell)) (dpm me :sstate+ :TRG-SST-NOT! (cinfo cell))
     :else (binding [*trg-cell* cell]
             (when-not *fx-building?*                        ;; todo vestigial?
-              (dpm me :sstate+ :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :me (minfo me) :mpar (minfo (mpar))
+              (dpm me :sstate+ :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :mpar (minfo (mpar))
                 :mhost (minfo (mhost me)))
 
               (if-let [state (fx-ctx-state me)]
@@ -191,16 +191,16 @@
                       (do (dpm me :sstate :TRG-build-using-state-setter (minfo me) (cinfo cell))
                         (state-setter (fn [] (do))))))
                   (do
-                    (dpm me :sstate+ :TRG-state-trying-above (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) (minfo me))
+                    (dpm me :sstate+ :TRG-state-trying-above (minfo (mabove)) :from-me (minfo me) :cause (cinfo cell) )
                     (trigger-state-above (mabove)))))))))
 
 (defn trigger-state-above [me]
   ;; todo DRY with trigger-build
   (when-not me
-    (dpk :sstate :TRG-ABOVE-TOPOUT!!))
+    (dpm nil :sstate :TRG-ABOVE-TOPOUT!!))
   (when me
     (if-let [state (fx-ctx-state me)]
-      (do (dpk :sstate :TRG-ctx-setstate-2 (minfo me) :trg (cinfo *trg-cell*))
+      (do (dpm me :sstate :TRG-ctx-setstate-2 :trg (cinfo *trg-cell*))
         (.setState state (fn [] (do))))
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
@@ -209,12 +209,12 @@
 
           (if (and ctx (.-debugIsDefunct ^m/Element ctx))
             (do
-              (dpk :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!! (minfo me))
+              (dpm me :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!! )
               (trigger-state-above (mabove)))
-            (do (dpk :sstate :TRG-build-using-state-setter!! (minfo me) :trg (cinfo *trg-cell*))
+            (do (dpm me :sstate :TRG-build-using-state-setter!! :trg (cinfo *trg-cell*))
               (state-setter (fn [] (do))))))
         (do
-          (dpk :sstate+ :TRG-no-state/setter-so-trying-above!!! (minfo me))
+          (dpm me :sstate+ :TRG-no-state/setter-so-trying-above)
           (trigger-state-above (mabove)))))))
 
 (defn trigger-state
@@ -222,9 +222,9 @@
    (trigger-state state nil))
   ([^State state me]
    (if (.-mounted state)
-     (do (dpk :sstate :TRG-actual-setstate!! (cinfo *trg-cell*) (minfo me) state)
+     (do (dpm me :sstate :TRG-actual-setstate!! (cinfo *trg-cell*)  state)
        (.setState state (fn [] (do))))
-     (dpx :TRG-STATE_STATE_IGNORING_UNMOUNTED state (minfo me)))))
+     (dpm me :TRG-STATE_STATE_IGNORING_UNMOUNTED state ))))
 
 (defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
