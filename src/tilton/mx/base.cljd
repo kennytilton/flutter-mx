@@ -54,22 +54,9 @@
                 (str label))
      ~@vals))
 
-;(defn call-wtrx [fn lo hi trxargs]
-;  (binding [*trdeep* (inc *trdeep*)]
-;    (cond
-;      (<= lo *trdeep* hi)
-;      (apply call-trc trxargs)
-;      (> *trdeep* hi)
-;      (mx-throw
-;               (str "wtrx exceeded max depth " hi ":"
-;                 (apply call-trc$ (first trxargs)
-;                   (rest trxargs))))))
-;    (fn)))
-;
-;(defmacro wtrx [[lo hi & trxargs] & body]
-;  `(call-wtrx (fn [] ~@body) ~lo ~hi (list ~@trxargs)))
-
 ;;;----------------------------------------
+
+
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))
@@ -93,10 +80,10 @@
 
 ;;; yet another debug hack
 
-(def ^:dynamic *dpm* "vector of keys to match" [])
+(def ^:dynamic *fx$dpk* "vector of keys to match" [])
 
 (defn dpk-keys []
-  *dpm*)
+  *fx$dpk*)
 
 (defn dpk-match [kw-or-kws]
   ;(dp :dpkmatch keys *dpk* (dpk-keys))

@@ -30,8 +30,8 @@
     [example.eg.x26-latex-sandbox :as tekbox]
     [example.eg.x27-popup-menu :as x27]
     [example.eg.x028-bottom-navbar :as x028]
-    ;[example.eg.x029_layout_builder :as x029]
-    [example.eg.x030_codelab_namer :as x030]
+    ;[example.eg.x029-layout-builder :as x029]
+    [example.eg.x030-codelab-namer :as x030]
     [example.eg.x035-timer-poll :as x035]
     [example.eg.x040-named-routes :as x040]
     [example.eg.x029a-layout-kid-builder :as x029]
@@ -44,4 +44,4 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (x030/make-app))
+  (counter/make-app))

@@ -180,19 +180,19 @@ rule to get once behavior or just when fm-traversing to find someone"
 ;;; --- dpm -------------------------------------------------------------
 
 (defn dpm-mx-dbg
-  "Decide which dpm keys (or boolean) an mx wants traced, defaulting to *dpm*"
+  "Decide which dpm keys (or boolean) an mx wants traced, defaulting to *fx$dpk*"
   [mx]
   (chk (or (nil? mx) (mref? mx) (cref? mx)) :dpm-sees-non-nil-non-mx mx)
   ;(when mx (dp :fxdpk?  (contains? (meta mx) :fx$dpk)))
   (if (nil? mx)
-    tilton.mx.base/*dpm*
+    tilton.mx.base/*fx$dpk*
     (cond
       (cref? mx) (if (contains? @mx :fx$dpk)
                    (c-dbg mx)
-                   tilton.mx.base/*dpm*)
+                   tilton.mx.base/*fx$dpk*)
       (mref? mx) (if (contains? (meta mx) :fx$dpk)
                    (:fx$dpk (meta mx))
-                   tilton.mx.base/*dpm*))))
+                   tilton.mx.base/*fx$dpk*))))
 
 (defn dpm-match [mx-dbg category]
   (cond
@@ -200,6 +200,15 @@ rule to get once behavior or just when fm-traversing to find someone"
     (keyword? mx-dbg) (recur [mx-dbg] category)
     (keyword? category) (recur mx-dbg [category])
     :else (some (set category) mx-dbg)))
+
+(defn dp-fix [bits]
+  (cond
+    (sequential? bits) (mapv dp-fix bits)
+    :else (cond
+            (mref? bits) (minfo bits)
+            (cref? bits) (cinfo bits)
+            (sequential? bits) (mapv dp-fix bits)
+            :else bits)))
 
 (defmacro dpm [mx category label & bits]
   ;; sprinkle these as desired, usage:
@@ -213,8 +222,8 @@ rule to get once behavior or just when fm-traversing to find someone"
      (let [mx# ~mx]
        (when-let [mx-dbg# (tilton.mx.cell.base/dpm-mx-dbg mx#)]
          (when (tilton.mx.cell.base/dpm-match mx-dbg# ~category)
-           (tilton.mx.base/dp :DPM ~label)
-           (tilton.mx.base/dp :DPM ~label ~@bits
+           ;; (tilton.mx.base/dp :DPM ~label)
+           (tilton.mx.base/dp :DPM ~label (tilton.mx.cell.base/dp-fix (vector ~@bits))
              ~category
              (cond
                (tilton.mx.model.peek/cref? mx#) (tilton.mx.model.peek/cinfo mx#)

@@ -11,7 +11,7 @@
 
             [tilton.mx.base :refer [wtrx dprn dp dpx mx-throw]]
             [tilton.mx.util
-             :refer [atom? rmap-set! rmap-meta-set! set-ify difference countit]]
+             :refer [atom? rmap-set!  set-ify difference countit]]
             [tilton.mx.foundation :as mxf :refer [mx-type PObserver observe]]
 
             [tilton.mx.model.peek :refer [chk minfo cinfo cref? Model]]
@@ -53,7 +53,7 @@
 
 ;;; --- ctx tracking ----------------------
 
-(defn record-fx$ctx [me ctx]
+(defn fx$ctx-record [me ctx]
   (dpm me :ctx :record-CTX! (minfo me) ctx)
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
 
@@ -64,51 +64,61 @@
      (nil? (fx-ctx me))
      (do
        (dpm me :ctx :CTX-CHECK-NIL (str "<<" fx-class ">> NIL so adopting build ctx: <" ctx))
-       (dpm me :CTX-CHECK-NIL-element (dart/is? ctx w/Element))
-       (record-fx$ctx me ctx))
+       (dpm me :ctx :CTX-CHECK-NIL-element (dart/is? ctx w/Element))
+       (fx$ctx-record me ctx))
 
      (= ctx (fx-ctx me))
      (dpm me :ctx :CTX-CHECK-OK! (str "<<" fx-class ">>  both ctx: <" ctx ">"))
 
      :else (do
              (dpm me :ctx :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
-             (record-fx$ctx me ctx)))))
+             (fx$ctx-record me ctx)))))
 
 (defn fx-ctx [me]
   (:fx$ctx (meta me)))
 
-;;; --- state tracking -----------------
+(defn fx$state-setter-record [me state-setter]
+  (when @fx$sst-tracking?
+    (dpx :recording-builder-state-setter (minfo me) (fn? state-setter) state-setter)
+    (rmap-meta-set! [:fx$state-setter me] state-setter)))
+
+(defn fx$state-initState [me state]
+  (fx$sst-registry-record me state)
+  (rmap-meta-set! [:fx$state me] state)
+  (when-let [init (tilton.mx.api/mget? me :initState)]
+    (init state me)))
+
+;;; --- fx$sst registry ------------------------------------
 
 (deftype FXState []
   :extends w/State
   (build [_ ctx]
-    (dp :FXState-build-not-supplied!!!!!!!!!!!!!!!!!!!!!!! ctx)))
+    (dp :FXState-build-not-supplied!!!!!!!!! ctx)))
 
-(defn fx-state-init [me state]
-  (record-fx$state me state)
-  (when-let [init (tilton.mx.api/mget? me :initState)]
-    (init state me)))
+(def fx$sst-tracking?
+  "Debugging tool for associating state with FX proxies"
+  (atom false))
 
-(def state-fx (atom nil))
+(defn fx$sst-registry-initialize [tracking?]
+  (reset! fx$sst-tracking? tracking?)
+  (fx$sst-registry-clear))
 
-(defn state-fx-clear []
-  (reset! state-fx nil))
+(def fx$sst-registry
+  "Debugging tool for associating state with FX proxies"
+  ;; state objects alone are inscrutable reifies
+  (atom nil))
 
-(defn state-fx-record [me s]
-  (assert (mref? me))
-  (swap! state-fx assoc s me))
+(defn fx$sst-registry-clear []
+  (reset! fx$sst-registry nil))
 
-(defn state-fx-get [state]
-  (get @state-fx state :UNREGISTERED))
+(defn fx$sst-registry-record [me s]
+  (when @fx$sst-tracking?
+    (assert (mref? me))
+    (dpm me :sstate+ :registering-state s)
+    (swap! fx$sst-registry assoc s me)))
 
-(defn record-fx$state [me state]
-  (dpx :recording-state (minfo me) (fn? state) #_#_cz/*defer-changes* cz/*within-integrity*)
-  ; (state-fx-record me state)
-  (rmap-meta-set! [:fx$state me] state))
-
-(defn record-fx$state-setter [me state-setter]
-  (dpx :recording-builder-state-setter (minfo me) (fn? state-setter) state-setter)
-  (rmap-meta-set! [:fx$state-setter me] state-setter))
+(defn fx$sst-registry-lookup [state]
+  (get @fx$sst-registry state :NOT-IN-REGISTRY))
 
 ;;; --- make fx ------------------------------------------
 
@@ -157,6 +167,7 @@
 
 (defn ^FXState? fx-ctx-state [me]
   (or (when-let [^FXState? state (:fx$state (meta me))]
+        (dpm me :sstate+ :fx-ctx-state-sees-state!! state)
         (if (.-mounted state)
           (do (dpm me :sstate+ :FX_CTX-finds-fx$st)
             state)
@@ -167,16 +178,16 @@
         (if (.-debugIsDefunct ^m/Element ctx)
           (dp :IGNORING-DEFUNCT-CTX!!!!!!!!! (minfo me))
           (when-let [anc-st (#/(.findAncestorStateOfType FXState) ^m/BuildContext ctx)]
-            (dp :USING-ANCESTOR-ST!!!! (minfo me) anc-st (minfo (state-fx-get anc-st)))
+            (dp :USING-ANCESTOR-ST!!!! (minfo me) anc-st (minfo (fx$sst-registry-lookup anc-st)))
             anc-st)))))
 
 (defn trigger-build [me cell]
   (cond
     *fx-building?* (do)
-    (not (:sst @cell)) (dpm me :sstate+ :TRG-SST-NOT! (cinfo cell))
+    (not (:sst @cell)) (dpm me :sstate+ :TRG-C-SST-NOT!  (cinfo cell))
     :else (binding [*trg-cell* cell]
             (when-not *fx-building?*                        ;; todo vestigial?
-              (dpm me :sstate+ :TRG-build!!!!!!!!!!!!! #_#_:pulse (cz/pulse-now) :c (cinfo cell) :mpar (minfo (mpar))
+              (dpm me :sstate+ :TRG-build  :c (cinfo cell) :mpar (minfo (mpar))
                 :mhost (minfo (mhost me)))
 
               (if-let [state (fx-ctx-state me)]
@@ -206,7 +217,6 @@
         (let [ctx (:fx$ctx (meta me))]
           ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
           ;(dp :TRG-stateful-ctx!!!!!  (minfo me) ctx :state (.-state ctx) (.-mounted (.-state ctx)))
-
           (if (and ctx (.-debugIsDefunct ^m/Element ctx))
             (do
               (dpm me :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!! )
@@ -282,7 +292,7 @@
               (dpx :fx-render-sees-gen!! (minfo fx))
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
-              ;; nope (fxf/record-fx$ctx fx ctx)
+              ;; nope (fxf/fx$ctx-record fx ctx)
               (let [g (gen fx ctx)]
                 (dpx :render-genned!!! g)
                 (rmap-meta-set! [:fx-dom fx] g)
@@ -401,13 +411,13 @@
     (or (tilton.mx.api/mget? me :unwrapped?)
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
     (do
-      (dpm me :bbuild :GENGEN-unwrapping-by-request/match (minfo me))
+      (dpm me :bbuild :GG-unwrapping-by-request/match (minfo me))
       (countit [:build (:fx-class @me)])
       (ctx-check me ctx)
       (widget-maker me ctx))
 
     (tilton.mx.model.core/md-reactive? me)
-    (do (dpm me :bbuild :GS-wrap-w-Stateful (minfo me)
+    (do (dpm me :bbuild :GG-wrap-w-Stateful (minfo me)
           (cinfo (tilton.mx.model.core/md-reactive? me)))
       (with-flutter-ref
         (reify :extends (m/StatefulWidget .key (widget-key me ctx :auto-stateful))
@@ -417,35 +427,35 @@
               (reify :extends FXState
                 ^:mixin m/SingleTickerProviderStateMixin
                 (^void initState [this]
-                  (tilton.fmx.factory/fx-state-init me this))
+                  (tilton.fmx.factory/fx$state-initState me this))
                 (build [_ ctx]
                   (countit [:build (:fx-class @me)])
-                  (dpm me :bbuild :GENGEN-stateful-mixin (minfo me))
+                  (dpm me :bbuild :GG-stateful-mixin (minfo me))
                   (ctx-check me ctx)
                   (widget-maker me ctx)))
               (reify :extends FXState
                 (^void initState [this]
                   (dpx :initstate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
-                  (tilton.fmx.factory/fx-state-init me this))
+                  (tilton.fmx.factory/fx$state-initState me this))
                 (build [_ ctx]
                   (countit [:build (:fx-class @me)])
-                  (dpm me :bbuild :GENGEN-stateful (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
+                  (dpm me :bbuild :GG-stateful (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
                   (ctx-check me ctx)
                   (widget-maker me ctx))))))))
 
     (tilton.mx.api/mget? me :with-builder?)
     ;; we can request a Builder to get closer context. The alternative
     ;; is coding an explicit builder. See x04-drawer example where both get used.
-    (do (dpx :GENGEN-builder-by-request (minfo me))
+    (do (dpx :GG-builder-by-request (minfo me))
       (with-flutter-ref
         (w/Builder
           .builder (fn [ctx]
-                     (dpm me :build :GENGEN-w-builder (minfo me))
+                     (dpm me :build :GG-w-builder (minfo me))
                      (countit [:build (:fx-class @me)])
                      (ctx-check me ctx)
                      (widget-maker me ctx)))))
     :else (do
-            (dpm me :build :GENGEN-nobuilder (minfo me))
+            (dpm me :build :GG-nobuilder (minfo me))
             (countit [:build (:fx-class @me)])
             (ctx-check me ctx)
             (widget-maker me ctx))))
@@ -490,7 +500,7 @@
          :fx-gen (fn fgen [me# ctxtop#]
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
-                       (dp :kids-kids-GENGEN!!!!! (tilton.mx.api/minfo ~'me))
+                       (dp :kids-kids-GG!!!!! (tilton.mx.api/minfo ~'me))
                        (~fx-class
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                 (tilton.mx.api/mget? ~'me :key))
@@ -561,7 +571,7 @@
                        (~fx-class
                          ~@(fx-props>mx fx-props)))))))))
 
-;;; === BEGIN NON-GENGEN =========================================================
+;;; === BEGIN NON-GG =========================================================
 
 (defmacro konly-builder [fx-class fx-props mx-props only-kid]
   (let []
@@ -598,7 +608,7 @@
                        .key (tilton.fmx.factory/fx-resolve me# ctx3#
                               (tilton.mx.api/mget? me# :key))
                        .builder (fn [ctx2# setStateCallback#]
-                                  (tilton.fmx.factory/record-fx$state-setter me# setStateCallback#)
+                                  (tilton.fmx.factory/fx$state-setter-record me# setStateCallback#)
                                   ;; the layout builder wants back a native Flutter widget, so we have to render here
                                   (fx/fx-render ctx2# (first (tilton.mx.api/mkids me#))))
                        ~@(let [kvs (for [k# (keys (dissoc fx-props :key))]
@@ -629,7 +639,7 @@
                            .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                   (tilton.mx.api/mget? ~'me :key))
                            .builder (fn [~'ctx setStateCallback#]
-                                      (tilton.fmx.factory/record-fx$state-setter ~'me setStateCallback#)
+                                      (tilton.fmx.factory/fx$state-setter-record ~'me setStateCallback#)
                                       (make-widget))))
                        :else (do
                                (dpx :STATELESS-builder!!! (quote ~fx-class) (minfo ~'me))

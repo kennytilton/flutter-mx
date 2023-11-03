@@ -36,6 +36,7 @@
           (text "We have pushed the button this many times:")
           (text {:style (cF (.-headlineMedium
                               (.-textTheme ^m/ThemeData (mav :theme))))}
+
             {:name    :the-counter
              :counter (cI 0)}
             (str (mav :counter))))))))

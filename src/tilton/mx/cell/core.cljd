@@ -272,10 +272,8 @@
   "The moral equivalent of a Common Lisp SETF, and indeed
 in the CL version of Cells SETF itself is the change API dunction."
   (chk (cref? c))
-  (dpm c :cset :cset!-entrynew-value :fut? (c-async? c)
-    :defer? *defer-changes*
-    :winteg? cty/*within-integrity*
-    (cinfo c))
+  (dpm c :cset :cset!-entry-new-value new-value
+    :winteg? cty/*within-integrity*  :defer? *defer-changes* :fut? (c-async? c))
   (chk (not (c-async? c)) "attempt to cset! cfuture " (cinfo c))
 
   (when-not (c-input? c)
@@ -311,9 +309,9 @@ in the CL version of Cells SETF itself is the change API dunction."
     (c-value-assume c new-value nil)
     ;-------------------------------------------
     :else
-    (do (dpm c :cset :cset!!!-pre-w-integrity!!!!!!!!! new-value (cinfo c))
+    (do (dpm c :cset+ :cset-pre-w-integrity-new-value new-value)
         (with-integrity (:change (c-prop c))
-          (dpm c :cset :cset!-pre-cvass-fires!!! (cinfo c) new-value)
+          (dpm c :cset :cset!-pre-cvass-new-value new-value)
           (c-value-assume c new-value nil)))))
 
 (defn cswap! [c swap-fn & swap-fn-args]

@@ -9,9 +9,9 @@
     [tilton.mx.model.core :as md]
     [tilton.mx.util :as mxu]
     [tilton.mx.base
-     :refer [wtrx dp dpx trx  *dpm*]]
+     :refer [wtrx dp dpx trx  *fx$dpk*]]
     [tilton.mx.api :refer [minfo cinfo] :as mx]
-    [tilton.fmx.factory :refer [state-fx-clear]]
+    [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
     ;[example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
@@ -21,18 +21,18 @@
 (defn main []                                               ;<id:1673573645>
   (cty/cells-reset)
   (md/md-quiesce-feature! true)
-  (state-fx-clear)
+  (fx/fx$sst-registry-initialize true)
   (fx/widget-key-clear)
 
   ;; (fxk/fmx-debugger-set! sample-debugger)
 
   (binding [cty/*dpc-enabled* true
-            ;;*dpm* true ; [:bbuild :sstate]
-            ]
+            *fx$dpk* [; :propagate :pulse :cset :cnset
+                      :sstate :sstate+]]
     (.ensureInitialized w/WidgetsFlutterBinding)
     (f/run (fx/fx-render nil
              (if true
-               ; (eg/select)
+               ;(eg/select)
                (counter/make-app))))))
 
 #_(fx/run-app

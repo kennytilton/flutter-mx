@@ -14,22 +14,30 @@
 
 (defmacro chk [test & bits]
   `(do)
-  #_ `(when-not (tilton.mx.model.peek/flutter-release-mode)
-     ;(dp :chk-of '~test)
-     (tilton.mx.model.peek/call-chk ~test '~test ~@bits)))
+  #_`(when-not (tilton.mx.model.peek/flutter-release-mode)
+       ;(dp :chk-of '~test)
+       (tilton.mx.model.peek/call-chk ~test '~test ~@bits)))
 
 (defn dp [& bits]
   (when-not false                                           ;; (nil? (first bits))
     (dart:core/print [:DP (first bits)])
     (dart:core/print (str/join " - " (list* :DP
-                                       (map #(cond (nil? %) :NIL
-                                               (mref? %) (minfo %)
-                                               (cref? %) (cinfo %)
-                                               :else %)
-                                         bits))))))
+                                            (map #(cond (nil? %) :NIL
+                                                        (mref? %) (minfo %)
+                                                        (cref? %) (cinfo %)
+                                                        :else %)
+                                                 bits))))))
 
 (defn atom? [x]
   (dart/is? x cljd.core/Atom))
+
+(defn dbgval [x]
+  (cond
+    (sequential? x) (mapv dbgval x)
+    (mref? x) (minfo x)
+    (cref? x) (cinfo x)
+    (atom? x) :atom
+    :else x))
 
 ;;; --- core MX ------------------------------
 ;;;
@@ -46,12 +54,12 @@
 
 (defn cref? [c]
   (and c (atom? c) (c-type c)
-    (dart/is? (c-type c) Cell)))
+       (dart/is? (c-type c) Cell)))
 
 (defn c-mname [c]
   (if-let [md (:me @c)]
     (or (:name @md)
-      "anon")
+        "anon")
     "no-md"))
 
 (defn cinfo
@@ -60,18 +68,20 @@
    (cond
      (nil? c) :null-c
      (not (atom? c)) (if verbose? [:not-atom-c c]
-                       :not-atom-c)
+                                  :not-atom-c)
 
-     (not (cref? c)) (if verbose? [:not-cell-c #_  @c :meta (meta c)]
-                        :not-cell-c)
-     (:quiesced? @c) [:QUIESCED #_ @c]
+     (not (cref? c)) (if verbose? [:not-cell-c #_@c :meta (meta c)]
+                                  :not-cell-c)
+     (:quiesced? @c) [:QUIESCED #_@c]
      :else (if verbose?
-             [:cinfo-all ]
+             [:cinfo-all]
 
-             (conj ((juxt :prop :pulse :pulse-last-changed #_c-async? #_c-value) (deref c))
-               :mname (c-mname c)
-               :used/users (count (:useds @c))
-               (count (:callers @c)))))))
+             (conj ((juxt :prop #_c-async? #_c-value) (deref c))
+                   :val (dbgval (:value (deref c)))
+                   :mname (c-mname c)
+                   :pulse/lastchg ((juxt :pulse :pulse-last-changed) @c)
+                   :used/users [(count (:useds @c))
+                                (count (:callers @c))])))))
 
 (deftype Model []
   :extends MXImplementer
@@ -83,11 +93,11 @@
   ([md] (md-type md :anon))
   ([md tag]
    (chk md
-     (str "md-type> argument null: " tag))
+        (str "md-type> argument null: " tag))
    (chk (atom? md)
-     (str "md-type> argument not atom "  tag))
+        (str "md-type> argument not atom " tag))
    (chk (map? @md)
-     (str "md-type> argument atom not map deref: "  "<<<<deref: " tag))
+        (str "md-type> argument atom not map deref: " "<<<<deref: " tag))
    (mx-type md)))
 
 (defn mname [me]
@@ -102,7 +112,7 @@
       (dp :mref-sees (md-type x) (meta x)))
   ([x tag]
    (and x (atom? x)
-     (dart/is? (md-type x tag) Model))))
+        (dart/is? (md-type x tag) Model))))
 
 ;; --- md-quiesced? ---
 
