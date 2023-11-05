@@ -28,7 +28,7 @@
   (md/make
     :mx-type (MXFlutterTTS.)
     :progress (cI nil)
-    :fts-status (cI :off)                                  ;; :off, :on, or :paused
+    :play-status (cI :off)                                  ;; :off, :on, or :paused
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
                                    (group-by lg-lang
@@ -45,17 +45,17 @@
                                   :word-offset startOffset
                                   :word-end endOffset}))))
                (.setStartHandler
-                 #(wmx-iso (mset! me :fts-status :on)))
+                 #(wmx-iso (mset! me :play-status :on)))
                (.setCompletionHandler
-                 #(wmx-iso (mset! me :fts-status :off)))
+                 #(wmx-iso (mset! me :play-status :off)))
                (.setCancelHandler
                  #(wmx-iso
                     (dp :FTS-CANCEL!!!!!!! (minfo me))
-                    (mset! me :fts-status :off)))
+                    (mset! me :play-status :off)))
                (.setPauseHandler
-                 #(wmx-iso (mset! me :fts-status :paused)))
+                 #(wmx-iso (mset! me :play-status :paused)))
                (.setContinueHandler
-                 #(wmx-iso (mset! me :fts-status :on)))
+                 #(wmx-iso (mset! me :play-status :on)))
                (.setErrorHandler
                  (fn [e] (dp :flutter-error!!!!!!!! #_ e)))))))
 
@@ -67,7 +67,7 @@
 
 (defmacro app-fts-status []
   `(let [fts# (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts)]
-     (tilton.mx.api/mget fts# :fts-status)))
+     (tilton.mx.api/mget fts# :play-status)))
 
 (defmacro app-lang-geos []
   `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :lang-geos))
@@ -80,27 +80,27 @@
   (fts-speak me))
 
 (defn fts-speak [me]
-  (let [fts ^FlutterTts (app-tts)
+  (let [tts ^FlutterTts (app-tts)
         speech (muv :text-in)]
     (dp :fts-speak-me (minfo me))
     (when-let [lg (m*v :lang-chooser :lg-current)]
       (when (not (str/blank? speech))
         (dp :speaking!!!!!!!! lg :pitch (muiv :pitch)) ;  :params (mav :speech-rate) (mav :pitch) (mav :volume))
-        (.setPitch fts (muiv :pitch))
-        (.setVolume fts (muiv :volume))
-        (.setLanguage fts lg)
-        (.setSpeechRate fts (muiv :speech-rate))
-        (.speak fts speech)))))
+        (.setPitch tts (muiv :pitch))
+        (.setVolume tts (muiv :volume))
+        (.setLanguage tts lg)
+        (.setSpeechRate tts (muiv :speech-rate))
+        (.speak tts speech)))))
 
 (defn fts-pause [me]
   (dp :pausing!!!!!!! (minfo me))
-  (let [fts ^FlutterTts (app-tts)]
-    (await (.pause fts))))
+  (let [tts ^FlutterTts (app-tts)]
+    (await (.pause tts))))
 
 (defn fts-stop [me]
   (dp :stopping!!!!!!! (minfo me))
-  (let [fts ^FlutterTts (app-tts)]
-    (await (.stop fts))))
+  (let [tts ^FlutterTts (app-tts)]
+    (await (.stop tts))))
 
 (defn lg-lang
   "Return the leading two-char language designator of a five char language-region pair."

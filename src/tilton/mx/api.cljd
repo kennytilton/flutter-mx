@@ -289,7 +289,7 @@
        (dpx :BAM! ~prop (tilton.mx.model.core/mget other# ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
-(defmacro muiv [name & [prop me]]
+(defmacro muiv "MUV inclusive of the starting point"[name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.model.core/fm-navig (fn [node#]
@@ -300,7 +300,7 @@
        (dpx :BAM! ~prop (tilton.mx.model.core/mget other# ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
-(defmacro m*v [name & [prop me]]
+(defmacro m*v "fm* NAME and return PROP, defaulting to :value, starting from ME, default 'me"[name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.api/fm* ~name)]
