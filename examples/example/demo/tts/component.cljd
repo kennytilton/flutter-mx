@@ -15,7 +15,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [fts-restart app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop
+    [example.demo.tts.fts :refer [ app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop
                                   lg-geo lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
@@ -52,11 +52,10 @@
        :padding         (m/EdgeInsets.all 8)}
       {:name       :lang-chooser
        :lg-pref    "en-AU"                                  ;; faux stored preference
-       :lg-current (cF+n [:sst nil
+       :lg-current (cF+n [:fx$dpk [:sstate :sstatev]
                           :watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
-                                     (when (muv :auto-play)
-                                       (fts-restart me))))]
+                                     (fts-speak me)))]
                      (mget me :lg-pref))
        :lg-lang    (cF (lg-lang (mget me :lg-current)))     ;; avoid excess work by geo-chooser
        :lg-geo     (cF (lg-geo (mget me :lg-current)))
@@ -166,10 +165,7 @@
 (defn property-slider [label prop color init-val min max divisions watch]
   (fx/slider
     {:value       (cI init-val :watch watch)
-     :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)
-                         (when (muv :auto-play)
-                           (fts-restart me))))
+     :onChanged   (cF #(mx/wmx-iso (mset! me :value %)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}
