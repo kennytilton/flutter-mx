@@ -168,7 +168,8 @@
     {:value       (cI init-val :watch watch)
      :onChanged   (cF #(mx/wmx-iso
                          (mset! me :value %)
-                         (fts-restart me)))
+                         (when (muv :auto-play)
+                           (fts-restart me))))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}

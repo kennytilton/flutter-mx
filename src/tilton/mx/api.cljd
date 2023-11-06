@@ -15,7 +15,7 @@
 (defmacro dp [& bits]
   `(tilton.mx.cell.base/without-c-dependency
      (dart:core/print (clojure.string/join " " (list* :DPR>
-                                                 (map #(if (nil? %) :NIL %) (vector ~@bits)))))
+                                                      (map #(if (nil? %) :NIL %) (vector ~@bits)))))
      nil))
 
 (defmacro dpx [& bits]
@@ -78,11 +78,11 @@
 
 (defmacro mabove [& [me]]
   (let [me (or me 'me)]
-    `(or (:parent @~me)(:host @~me))))
+    `(or (:parent @~me) (:host @~me))))
 
 (defmacro with-par [meform & body]
   `(tilton.mx.model.core/with-par ~meform
-     ~@body))
+                                  ~@body))
 
 (defn fm-navig [what where & options]
   (apply md/fm-navig what where options))
@@ -126,9 +126,9 @@
 
 (defn cI [value & option-kvs]
   (apply tilton.mx.cell.core/make-cell
-    :value value
-    :input? true
-    option-kvs))
+         :value value
+         :input? true
+         option-kvs))
 
 (defmacro cF [& body]
   `(tilton.mx.cell.core/make-c-formula
@@ -173,7 +173,7 @@
   "Search up the matrix from node 'where' looking for element with given name"
   [where name]
   (fm-navig #(= name (mget? % :name))
-    where :me? false :up? true :inside? false))
+            where :me? false :up? true :inside? false))
 
 (defmacro my-value []
   `(tilton.mx.model.core/mget ~'me :value))
@@ -183,28 +183,29 @@
     `(let [name# ~name]
        (tilton.mx.model.core/fmdp :fmu :seeking name#)
        (fm-navig #(= name# (mget? % :name))
-         ~me-ref :me? false :up? true :inside? false))))
+                 ~me-ref :me? false :up? true :inside? false))))
 
 (defmacro fmuinc [name & [me]]
   ;; fmu "inclusive" of the starting node "me"
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (fm-navig #(= name# (mget? % :name))
-         ~me-ref :me? true :up? true :inside? false))))
+                 ~me-ref :me? true :up? true :inside? false))))
 
 (defmacro fasc-inclusive "Search strictly up inclusive of start"
   [name & [me]]
-  (let [me-ref (or me 'me)]
-    `(let [name# ~name]
-       (tilton.mx.model.core/fm-ascendant name# ~me-ref :me? true))))
+  `(let [name# ~name
+         me# ~(or me 'me)]
+     (tilton.mx.model.core/fm-ascendant name# me# :me? true)))
 
 (defmacro fasc "Search strictly up exclusive of start"
   [name & [me]]
-  (let [me-ref (or me 'me)]
-    `(let [name# ~name]
-       (tilton.mx.model.core/fm-ascendant name# ~me-ref))))
+  `(let [name# ~name
+         me# ~(or me 'me)]
+     (tilton.mx.model.core/fm-ascendant name# me# :me? false)))
 
-(defmacro mav [prop-name]
+(defmacro mav "Search strictly up for the first appearance of PROP-NAME and return its value."
+  [prop-name]
   `(tilton.mx.api/faprop ~prop-name ~'me))
 
 (defn faprop "Search strictly up and mget value of first asc w that property"
@@ -220,8 +221,8 @@
              (if-let [host (mhost md)]
                (recur prop-name host start)
                (mx-throw (str "faprop> did not find model with property " prop-name
-                           " searching up from " (mname md)
-                           " seeking property " prop-name " value.")))))))
+                              " searching up from " (mname md)
+                              " seeking property " prop-name " value.")))))))
 
 (defmacro fmav "Search strictly up and mget value"
   [name prop-name & [me]]
@@ -230,8 +231,8 @@
            md# (tilton.mx.model.core/fm-ascendant name# ~me-ref)]
        (if (nil? md#)
          (mx-throw (str "fascv> did not find model " name#
-                     " searching up from " (tilton.mx.model.peek/mname md#)
-                     " seeking property " ~prop-name " value."))
+                        " searching up from " (tilton.mx.model.peek/mname md#)
+                        " seeking property " ~prop-name " value."))
          (if (contains? @md# ~prop-name)
            (tilton.mx.model.core/mget md# ~prop-name)
            (mx-throw (str "fascv> " ~name " lacks " ~prop-name " property")))
@@ -239,8 +240,8 @@
 
 (defn fmo [me id-name]
   (or (mxu-find-name me id-name)
-    (mxu-find-id me id-name)
-    (mx-throw (str "fmo> not id or name " id-name))))
+      (mxu-find-id me id-name)
+      (mx-throw (str "fmo> not id or name " id-name))))
 
 (defn fmov
   ([me id-name]
@@ -262,7 +263,7 @@
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.model.core/fm-navig (fn [node#] (= ~name (tilton.mx.model.core/mget? node# :name)))
-                    ~me-ref :me? true :up? true :inside? true)]
+                                                 ~me-ref :me? true :up? true :inside? true)]
        (tilton.mx.model.peek/chk other# (str "fm*val did not find other named " ~name " seeking property " ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
@@ -276,31 +277,31 @@
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
        (fm-navig #(= name# (mget? % :name))
-         ~me-ref :me? false :up? true :inside? false))))
+                 ~me-ref :me? false :up? true :inside? false))))
 
 (defmacro muv [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.model.core/fm-navig (fn [node#]
                                                    (= ~name (mget? node# :name)))
-                    ~me-ref :me? false :up? true :inside? false)]
+                                                 ~me-ref :me? false :up? true :inside? false)]
        (tilton.mx.model.peek/chk other# (str "muv> did not find other named " ~name " seeking property " ~prop))
        (dpx :BAM!-other!!!!!!! (tilton.mx.api/minfo other#))
        (dpx :BAM! ~prop (tilton.mx.model.core/mget other# ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
-(defmacro muiv "MUV inclusive of the starting point"[name & [prop me]]
+(defmacro muiv "MUV inclusive of the starting point" [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.model.core/fm-navig (fn [node#]
                                                    (= ~name (mget? node# :name)))
-                    ~me-ref :me? true :up? true :inside? false)]
+                                                 ~me-ref :me? true :up? true :inside? false)]
        (tilton.mx.model.peek/chk other# (str "muv> did not find other named " ~name " seeking property " ~prop))
        (dpx :BAM!-other!!!!!!! (tilton.mx.api/minfo other#))
        (dpx :BAM! ~prop (tilton.mx.model.core/mget other# ~prop))
        (tilton.mx.model.core/mget other# ~prop))))
 
-(defmacro m*v "fm* NAME and return PROP, defaulting to :value, starting from ME, default 'me"[name & [prop me]]
+(defmacro m*v "fm* NAME and return PROP, defaulting to :value, starting from ME, default 'me" [name & [prop me]]
   (let [prop (or prop ':value)
         me-ref (or me 'me)]
     `(let [other# (tilton.mx.api/fm* ~name)]
@@ -311,7 +312,7 @@
   "Search up the matrix from node 'where' looking for element with given id"
   [where id]
   (fm-navig #(= id (mget % :id))
-    where :me? false :up? true :inside? false))
+            where :me? false :up? true :inside? false))
 
 ;;; --- f/mx issues ----------------------------------------------
 (defn cref? [c]
@@ -350,7 +351,7 @@
   `(do
      ~@(map (fn [prop#]
               `(defn ~(symbol (str (or reader-prefix "")
-                                prop#))
+                                   prop#))
                  [~'ref]
                  (tilton.mx.model.core/mget ~'ref ~(keyword prop#)))) slots)))
 
@@ -359,11 +360,11 @@
 
 (defmacro with-integrity [[opcode info] & body]
   `(tilton.mx.cell.integrity/with-integrity [~opcode ~info]
-     ~@body))
+                                            ~@body))
 
 (defmacro with-cc [id & body]
   `(tilton.mx.cell.integrity/with-cc ~id
-     ~@body))
+                                     ~@body))
 
 (defmacro without-integrity [& body]
   `(tilton.mx.cell.integrity/without-integrity
@@ -380,7 +381,7 @@
   ([md verbose]
    (mpeek/minfo md verbose)))
 
-(defn counts-dump [tag ]
+(defn counts-dump [tag]
   (util/counts-dump tag))
 
 (defn counts-reset []

@@ -62,12 +62,19 @@
 (defmacro app-tts []
   `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :tts))
 
-(defmacro app-fts-progress []
-  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :progress))
-
 (defmacro app-fts-status []
-  `(let [fts# (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts)]
-     (tilton.mx.api/mget fts# :play-status)))
+  `(tilton.mx.api/mget
+     (tilton.mx.api/mget
+       (tilton.mx.api/fasc-inclusive :app)
+       :fts)
+     :play-status))
+
+(defmacro app-fts-progress []
+  `(tilton.mx.api/mget
+     (tilton.mx.api/mget
+       (tilton.mx.api/fasc-inclusive :app)
+       :fts)
+     :progress))
 
 (defmacro app-lang-geos []
   `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :lang-geos))
