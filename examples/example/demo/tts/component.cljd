@@ -15,7 +15,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [ app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop
+    [example.demo.tts.fts :refer [app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop
                                   lg-geo lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
@@ -25,22 +25,9 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI false :watch (fn [_ me new prior _]
-                                           (when (and (mx-bound? prior)
-                                                   new
-                                                   (= :off (app-fts-status)))
-                                             (fts-speak me))))
-       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
-      {:name :auto-play})))
-
-(defn rate-limit? []
-  (fx/sized-box {:width 180}
-    (checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Limit")
        :value           (cI false)
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
-      {:name :rate-limit?})))
+      {:name :auto-play})))
 
 ;;; --- lang/geo choosers -------------------------------------------------
 
@@ -52,14 +39,12 @@
        :padding         (m/EdgeInsets.all 8)}
       {:name       :lang-chooser
        :lg-pref    "en-AU"                                  ;; faux stored preference
-       :lg-current (cF+n [:fx$dpk [:sstate :sstatev]
-                          :watch (fn [_ me new prior c]
+       :lg-current (cF+n [:watch (fn [_ me new prior c]
                                    (when (mx-bound? prior)
                                      (fts-speak me)))]
                      (mget me :lg-pref))
        :lg-lang    (cF (lg-lang (mget me :lg-current)))     ;; avoid excess work by geo-chooser
-       :lg-geo     (cF (lg-geo (mget me :lg-current)))
-       }
+       :lg-geo     (cF (lg-geo (mget me :lg-current)))}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
           (sort (keys (app-lang-geos))))))))
@@ -82,20 +67,15 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
-              (mxu/counts-dump :pre-lang)
-              (mxu/counts-reset)
               (mset! (fasc :lang-chooser) :lg-current
                 (first (get (app-lang-geos) lang))))}
-    {:name :lang-gd}
     (container
       {:decoration (cF (fx/box-decoration
                          {:border (cF (when (= lang (mav :lg-lang))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
-                                               :else m/Colors.yellow))}
-                         #_ {:unwrapped? true}))}
-      {:name :lang-cont}
+                                               :else m/Colors.yellow))}))}
       (center
         (padding {:padding (m/EdgeInsets.all 4.0)}
           (fx/text
@@ -107,18 +87,14 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang-geo)
      :onTap (as-dart-callback []
-              (mxu/counts-dump :pre-geo)
-              (mxu/counts-reset)
               (mset! (fmu :lang-chooser) :lg-current lang-geo))}
-    {:name :geo-gd}
     (container
       {:decoration (cF (fx/box-decoration
                          {:border (cF (when (= (lg-geo lang-geo) (muv :lang-chooser :lg-geo))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
-                                               :else m/Colors.yellow))}  ))}
-      {:name  :geo-cont}
+                                               :else m/Colors.yellow))}))}
       (center
         (padding {:padding (m/EdgeInsets.all 4.0)}
           (fx/text
@@ -159,13 +135,13 @@
       {:name  :text-in
        :value (cI speech-initial)})))
 
-
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
 (defn property-slider [label prop color init-val min max divisions watch]
   (fx/slider
     {:value       (cI init-val :watch watch)
-     :onChanged   (cF #(mx/wmx-iso (mset! me :value %)))
+     :onChanged   (cF #(mx/wmx-iso
+                         (mset! me :value %)))
      :min         (+ 0.0 min) :max (+ 0.0 max) :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}
@@ -197,7 +173,6 @@
 
 (defn choice-header [content]
   (padding {:padding (m/EdgeInsets.all 12)}
-    (text
-      {:style (p/TextStyle .color m/Colors.black
-                .fontSize 20.0)}
+    (text {:style (p/TextStyle .color m/Colors.black
+                    .fontSize 20.0)}
       content)))

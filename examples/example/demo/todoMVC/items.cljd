@@ -187,11 +187,8 @@
     ;; ^^^ sizer is required to join column, which demands children know their size
     {}
     {:name       :todo-items
-     :unwrapped? true
-     :dbg        [:sstate]
-     :fake       (cI 42)}
-    (fx/container {} {:name :SSTCONTAINER!!!
-                      :dummy (cI nil)}
+     :unwrapped? true}
+    (fx/container
       (fx/list-view+builder
         {:padding     (m/EdgeInsets.all 0.0)
          :itemCount   (cF (count (mkids me)))
@@ -200,9 +197,7 @@
                               ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                               (fx/fx-render ctx
                                 (nth (mkids me) i)))))}
-        {:name  :lv-builder
-         :dbg   [:sstate]
-         :dummy (cI 42)}
+        {:name  :lv-builder}
         (mapv (fn [todo]
                 (let [stg-id (td-stg-id todo)
                       exg (some (fn [li]

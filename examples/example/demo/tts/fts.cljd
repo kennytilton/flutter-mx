@@ -19,6 +19,7 @@
              checkbox-list-tile icon-button fx-render as-dart-callback]]))
 
 ;;; --- start-up ----------------------------------------------
+
 (deftype MXFlutterTTS []
   :extends Model
   PObserver
@@ -27,30 +28,35 @@
 (defn make-flutter-tts []
   (md/make
     :mx-type (MXFlutterTTS.)
-    :tts (cF (doto ^FlutterTts (FlutterTts)
-               (.setSharedInstance true)
-               (.setStartHandler
-                 #(wmx-iso (mset! me :play-status :on)))
-               (.setCompletionHandler
-                 #(wmx-iso (mset! me :play-status :off)))
-               (.setCancelHandler
-                 #(wmx-iso (mset! me :play-status :off)))
-               (.setPauseHandler
-                 #(wmx-iso (mset! me :play-status :paused)))
-               (.setContinueHandler
-                 #(wmx-iso (mset! me :play-status :on)))
-               (.setErrorHandler
-                 (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
+    :tts (cFonce
+           (doto ^FlutterTts (FlutterTts)
+             (.setSharedInstance true)
+             (.setStartHandler
+               #(wmx-iso (mset! me :play-status :on)))
+             (.setCompletionHandler
+               #(wmx-iso (mset! me :play-status :off)))
+             (.setCancelHandler
+               #(wmx-iso (mset! me :play-status :off)))
+             (.setPauseHandler
+               #(wmx-iso (mset! me :play-status :paused)))
+             (.setContinueHandler
+               #(wmx-iso (mset! me :play-status :on)))
+             (.setErrorHandler
+               (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
-    :play-status (cI :off)                                  ;; :off, :on, or :paused
-    ))
+    ;; play-status = [:off | :on | :paused}
+    :play-status (cI :off)))
 
 (defmacro app-tts []
-  `(tilton.mx.api/mget (tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts) :tts))
+  `(tilton.mx.api/mget
+     (tilton.mx.api/mget
+       (tilton.mx.api/fasc-inclusive :app)
+       :fts)
+     :tts))
 
 (defmacro app-fts-status []
   `(tilton.mx.api/mget
@@ -78,10 +84,8 @@
 (defn fts-speak [me]
   (let [tts ^FlutterTts (app-tts)
         speech (muv :text-in)]
-    (dp :fts-speak-me (minfo me))
     (when-let [lg (m*v :lang-chooser :lg-current)]
       (when (not (str/blank? speech))
-        (dp :speaking!!!!!!!! lg :pitch (muiv :pitch))      ;  :params (mav :speech-rate) (mav :pitch) (mav :volume))
         (.setPitch tts (muiv :pitch))
         (.setVolume tts (muiv :volume))
         (.setLanguage tts lg)
@@ -89,12 +93,10 @@
         (.speak tts speech)))))
 
 (defn fts-pause [me]
-  (dp :pausing!!!!!!! (minfo me))
   (let [tts ^FlutterTts (app-tts)]
     (await (.pause tts))))
 
 (defn fts-stop [me]
-  (dp :stopping!!!!!!! (minfo me))
   (let [tts ^FlutterTts (app-tts)]
     (await (.stop tts))))
 
