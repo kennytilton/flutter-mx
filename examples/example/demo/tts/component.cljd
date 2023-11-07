@@ -15,7 +15,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [app-tts app-fts-status app-lang-geos fts-speak fts-pause fts-stop
+    [example.demo.tts.fts :refer [app-tts app-fts app-fts-lang app-fts-status app-lang-geos fts-speak fts-pause fts-stop
                                   lg-geo lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
@@ -37,14 +37,7 @@
       {:crossAxisCount  8 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
-      {:name       :lang-chooser
-       :lg-pref    "en-AU"                                  ;; faux stored preference
-       :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                   (when (mx-bound? prior)
-                                     (fts-speak me)))]
-                     (mget me :lg-pref))
-       :lg-lang    (cF (lg-lang (mget me :lg-current)))     ;; avoid excess work by geo-chooser
-       :lg-geo     (cF (lg-geo (mget me :lg-current)))}
+      {:name       :lang-chooser}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
           (sort (keys (app-lang-geos))))))))
@@ -58,7 +51,7 @@
        :shrinkWrap      true}
       {:name :geo-chooser}
       (map-indexed geo-button
-        (when-let [lgc (muv :lang-chooser :lg-lang)]
+        (when-let [lgc (app-fts-lang)]
           (get (app-lang-geos) lgc))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
@@ -67,11 +60,11 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang)
      :onTap (as-dart-callback []
-              (mset! (fasc :lang-chooser) :lg-current
+              (mset! (app-fts) :lg-current
                 (first (get (app-lang-geos) lang))))}
     (container
       {:decoration (cF (fx/box-decoration
-                         {:border (cF (when (= lang (mav :lg-lang))
+                         {:border (cF (when (= lang (app-fts-lang))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
@@ -87,10 +80,10 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. lang-geo)
      :onTap (as-dart-callback []
-              (mset! (fmu :lang-chooser) :lg-current lang-geo))}
+              (mset! (app-fts) :lg-current lang-geo))}
     (container
       {:decoration (cF (fx/box-decoration
-                         {:border (cF (when (= (lg-geo lang-geo) (muv :lang-chooser :lg-geo))
+                         {:border (cF (when (= (lg-geo lang-geo) (mget (app-fts) :lg-geo))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue

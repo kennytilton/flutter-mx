@@ -7,7 +7,7 @@
      :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
-    [tilton.mx.foundation :refer [PObserver]]
+    [tilton.mx.foundation :refer [mx-type PObserver]]
     [tilton.mx.model.peek :refer [Model]]
     [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
@@ -28,6 +28,7 @@
 (defn make-flutter-tts []
   (md/make
     :mx-type (MXFlutterTTS.)
+    :name :mx-fts
     :tts (cFonce
            (doto ^FlutterTts (FlutterTts)
              (.setSharedInstance true)
@@ -48,43 +49,43 @@
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
+    :lg-pref "en-AU"                                        ;; faux stored preference
+    :lg-current (cF+n [:watch (fn [_ me new prior c]
+                                (when (mx-bound? prior)
+                                  (fts-speak me)))]
+                  (mget me :lg-pref))
+    :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
+    :lg-geo (cF (lg-geo (mget me :lg-current)))
     ;; play-status = [:off | :on | :paused}
     :play-status (cI :off)))
 
+(defmacro app-fts []
+  `(tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts))
+
 (defmacro app-tts []
-  `(tilton.mx.api/mget
-     (tilton.mx.api/mget
-       (tilton.mx.api/fasc-inclusive :app)
-       :fts)
-     :tts))
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :tts))
 
 (defmacro app-fts-status []
-  `(tilton.mx.api/mget
-     (tilton.mx.api/mget
-       (tilton.mx.api/fasc-inclusive :app)
-       :fts)
-     :play-status))
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :play-status))
 
 (defmacro app-fts-progress []
-  `(tilton.mx.api/mget
-     (tilton.mx.api/mget
-       (tilton.mx.api/fasc-inclusive :app)
-       :fts)
-     :progress))
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :progress))
+
+(defmacro app-fts-lang []
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lg-lang))
+
+(defmacro app-fts-geo []
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lg-geo))
 
 (defmacro app-lang-geos []
-  `(tilton.mx.api/mget
-     (tilton.mx.api/mget
-       (tilton.mx.api/fasc-inclusive :app)
-       :fts)
-     :lang-geos))
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lang-geos))
 
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-speak [me]
-  (let [tts ^FlutterTts (app-tts)
+  (let [tts ^FlutterTts (mget (app-fts) :tts)
         speech (muv :text-in)]
-    (when-let [lg (m*v :lang-chooser :lg-current)]
+    (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
         (.setPitch tts (muiv :pitch))
         (.setVolume tts (muiv :volume))
@@ -105,7 +106,7 @@
   [lg]
   ;; eg "fr-FR" -> "fr"
   ;; used to group FTS languages by languages
-  (subs lg 0 2))
+  (when lg (subs lg 0 2)))
 
 (defn lg-geo [lg]
-  (subs lg 3))
+  (when lg (subs lg 3)))
