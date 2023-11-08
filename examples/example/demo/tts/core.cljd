@@ -17,21 +17,30 @@
     [example.demo.tts.fts :as fts
      :refer [app-fts-status app-fts-progress fts-speak fts-pause fts-stop lg-lang]]
     [example.demo.tts.component :as comp
-     :refer [lang-chooser geo-chooser speech-input speaking-control auto-play
+     :refer [lang-chooser geo-chooser speech-input play-pause-button stop-button auto-play
              equalizer choice-header]]
     [example.demo.tts.poetry :as poetry]))
+
+(defn chyron []
+  (container
+    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+    (fx/text {:textAlign m/TextAlign.center}
+      {:phrase (cF+ [:sst nil]
+                 (when (not= :off (app-fts-status))
+                   (let [{:keys [word]} (app-fts-progress)]
+                     (if (nil? word) []
+                       (take-last 5
+                         (concat (if (mx-bound? _cache) _cache [])
+                           [word]))))))}
+      (str/join "..." (mget me :phrase)))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
 (defn dashboard []
   (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      {:name :dash}
-      (if (some #{(app-fts-status)} [:off :paused])
-        (speaking-control m/Colors.green m/Colors.greenAccent m/Icons.play_arrow "PLAY" fts-speak)
-        (speaking-control m/Colors.blue m/Colors.blueAccent m/Icons.pause "PAUSE" fts-pause))
-      (opacity {:opacity (cF (if (= :off (app-fts-status)) 0.0 1.0))}
-        (speaking-control m/Colors.red m/Colors.redAccent m/Icons.stop "STOP" fts-stop)))))
+      (play-pause-button)
+      (stop-button))))
 
 ;;; ---  make app --------------------------------------------
 
@@ -48,6 +57,8 @@
         (choice-header "Geography")
         (geo-chooser)
         (speech-input poetry/graves-jealousy)
+        ;(chyron)
         (dashboard)
+        (auto-play)
         (equalizer)))))
 

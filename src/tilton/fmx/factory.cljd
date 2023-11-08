@@ -191,7 +191,8 @@
                 :mhost (minfo (mhost me)))
 
               (if-let [state (fx-ctx-state me)]
-                (do (dpm me :sstate :TRG-ctx-setstate-1!!!!! (cinfo cell) (meta state) state)
+                (do (dpm me :sstate :TRG-ctx-setstate-1 :trgcell (cinfo cell)
+                      :metas (meta state) :st state)
                   (.setState state (fn [] (do))))
                 (if-let [state-setter (:fx$state-setter (meta me))]
                   (let [ctx (:fx$ctx (meta me))]

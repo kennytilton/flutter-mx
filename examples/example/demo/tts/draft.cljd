@@ -4,6 +4,22 @@
   (mxu/counts-dump :pre-geo)
   (mxu/counts-reset)
 
+  (defn stop-button []
+    (ignore-pointer {:ignoring (cF (= :off (app-fts-status)))}
+      (opacity {:opacity (cF (if (= :off (app-fts-status))
+                               0.15 1.0))}
+        (column {:mainAxisSize      m/MainAxisSize.min
+                 :mainAxisAlignment m/MainAxisAlignment.center}
+          (icon-button
+            {:key         (m/ValueKey "FTS-STOP")
+             :icon        (fx/icon {:icon m/Icons.stop})
+             :iconSize    48
+             :color       m/Colors.red #_ (cF (if (mav :ignoring)
+                                                (.-shade50 m/Colors.pink)
+                                                m/Colors.red))
+             :splashColor m/Colors.redAccent
+             :onPressed   (fn [] (fts-stop me))})))))
+
   (.setProgressHandler
     (fn [text startOffset endOffset word]
       (wmx-iso ;; <===========

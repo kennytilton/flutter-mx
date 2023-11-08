@@ -32,6 +32,14 @@
     :tts (cFonce
            (doto ^FlutterTts (FlutterTts)
              (.setSharedInstance true)
+             (.setProgressHandler
+               (fn [text startOffset endOffset word]
+                 (wmx-iso                                   ;; <===========
+                   (mset! me
+                     :progress {:full-text   text
+                                :word        word
+                                :word-offset startOffset
+                                :word-end    endOffset}))))
              (.setStartHandler
                #(wmx-iso (mset! me :play-status :on)))
              (.setCompletionHandler
@@ -52,12 +60,19 @@
     :lg-pref "en-AU"                                        ;; faux stored preference
     :lg-current (cF+n [:watch (fn [_ me new prior c]
                                 (when (mx-bound? prior)
-                                  (fts-speak me)))]
+                                  (when (muv :auto-play)
+                                    (fts-restart me))))]
                   (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
     :lg-geo (cF (lg-geo (mget me :lg-current)))
     ;; play-status = [:off | :on | :paused}
-    :play-status (cI :off)))
+    :play-status (cI :off)
+    :progress (cI nil)))
+
+(defn fts-restart [me]
+  (when (not= :off (app-fts-status))
+    (fts-stop me))
+  (fts-speak me))
 
 (defmacro app-fts []
   `(tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts))
