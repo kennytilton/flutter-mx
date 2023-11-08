@@ -3,10 +3,9 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts] :as fts]
+    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
-    [example.demo.tts.fts]
     [tilton.mx.util :as mxu]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
@@ -15,9 +14,10 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :refer [app-tts app-fts app-fts-lang app-fts-status app-lang-geos fts-restart
-                                  fts-speak fts-pause fts-stop
-                                  lg-geo lg-lang]]))
+    [example.demo.tts.fts :as fts
+     :refer [app-tts app-fts app-fts-lang app-fts-status app-fts-progress
+             app-lang-geos fts-speak fts-pause fts-stop
+             lg-geo lg-lang]]))
 
 ;;; --- auto play --------------------------------------------------------
 
@@ -26,7 +26,7 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI false)
+       :value           (cI true)
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
 
@@ -136,7 +136,8 @@
   ;; Parameters just provide initial values, often permanent.
   (fx/slider
     {:value       (cI init-val :watch watch)
-     :onChanged   (cF #(mx/wmx-iso (mset! me :value %)))
+     :onChanged   (cF #(mx/wmx-iso
+                         (mset! me :value %)))
      :min         min :max max :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}

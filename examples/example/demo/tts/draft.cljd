@@ -14,9 +14,9 @@
             {:key         (m/ValueKey "FTS-STOP")
              :icon        (fx/icon {:icon m/Icons.stop})
              :iconSize    48
-             :color       m/Colors.red #_ (cF (if (mav :ignoring)
-                                                (.-shade50 m/Colors.pink)
-                                                m/Colors.red))
+             :color       m/Colors.red #_(cF (if (mav :ignoring)
+                                               (.-shade50 m/Colors.pink)
+                                               m/Colors.red))
              :splashColor m/Colors.redAccent
              :onPressed   (fn [] (fts-stop me))})))))
 
@@ -35,12 +35,12 @@
 
   (.setProgressHandler
     (fn [text startOffset endOffset word]
-      (wmx-iso ;; <===========
+      (wmx-iso
         (mset! me
-          :progress {:full-text text
-                     :word word
+          :progress {:full-text   text
+                     :word        word
                      :word-offset startOffset
-                     :word-end endOffset}))))
+                     :word-end    endOffset}))))
 
   ;=== One word chyron ===========================
 
@@ -48,8 +48,8 @@
     (container
       {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
       (fx/text {:textAlign m/TextAlign.center
-                :style (p/TextStyle .color m/Colors.black
-                         .fontSize 18.0)}
+                :style     (p/TextStyle .color m/Colors.black
+                             .fontSize 18.0)}
         (or (:word (app-fts-progress)
               "*waiting*")))))
 
