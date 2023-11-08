@@ -14,9 +14,15 @@
     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
-    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+   ; [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     ))
+
+;;; The main branch as-is excludes all but one example. To pull those in:
+;;; * modify deps.edn to include "examples" in :paths;
+;;; * uncomment [example.driver..] above;
+;;; * uncomment (eg/select) below; and
+;;; * restart the app to pick up the deps.edn.
 
 (defn main []                                               ;<id:1673573645>
   (cty/cells-reset)
@@ -29,11 +35,11 @@
   (binding [cty/*dpc-enabled* true
             *fx$dpk* [; :propagate :pulse :cset :cnset
                       ;:build
-                      :sstate #_ :sstate+]]
+                      #_ :sstate #_ :sstate+]]
     (.ensureInitialized w/WidgetsFlutterBinding)
     (f/run (fx/fx-render nil
              (if true
-               (eg/select)
+               ; (eg/select)
                (counter/make-app))))))
 
 #_(fx/run-app

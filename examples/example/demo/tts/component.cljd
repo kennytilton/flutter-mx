@@ -26,11 +26,7 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI false :watch (fn [_ me new prior _]
-                                           (when (mx-bound? prior)
-                                             (when (and new
-                                                     (= :off (app-fts-status)))
-                                               (fts-speak me)))))
+       :value           (cI false)
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
 
@@ -100,7 +96,22 @@
                       .fontSize 16.0)}
             (lg-geo lang-geo)))))))
 
-;;; --- speaking controls ------------------------------------
+;;; --- play, stop, pause -------------------------------------------------------
+
+(defn play-pause-button []
+  (column {:mainAxisSize      m/MainAxisSize.min
+           :mainAxisAlignment m/MainAxisAlignment.center}
+    (let [playing? (= :on (app-fts-status))]
+      (icon-button
+        {:key         (m/ValueKey (if playing? "FTS_PAUSE" "FTS-SPEAK"))
+         :iconSize    48
+         :icon        (fx/icon {:icon (if playing? m/Icons.pause
+                                        m/Icons.play_arrow)})
+         :color       (if playing? m/Colors.blue
+                        m/Colors.green)
+         :splashColor (if playing? m/Colors.blueAccent
+                        m/Colors.greenAccent)
+         :onPressed   (fn [] ((if playing? fts-pause fts-speak) me))}))))
 
 (defn stop-button []
   (opacity {:opacity (cF (if (= :off (app-fts-status))
@@ -115,38 +126,6 @@
          :splashColor m/Colors.redAccent
          :onPressed   (fn [] (fts-stop me))}))))
 
-(defn play-pause-button []
-  (column {:mainAxisSize      m/MainAxisSize.min
-           :mainAxisAlignment m/MainAxisAlignment.center}
-    (let [playing? (= :on (app-fts-status))]
-      (icon-button
-        {:key         (m/ValueKey (if playing? "FTS_PAUSE" "FTS-SPEAK"))
-         :icon        (fx/icon {:icon (if playing?
-                                        m/Icons.pause m/Icons.play_arrow)})
-         :iconSize    48
-         :color       (if playing? m/Colors.blue m/Colors.green)
-         :splashColor (if playing? m/Colors.blueAccent m/Colors.greenAccent)
-         :onPressed   (fn [] ((if playing? fts-pause fts-speak) me))}))))
-
-;;; --- text input --------------------------------------------------------------
-
-(defn speech-input [speech-initial]
-  (container
-    {:alignment m/Alignment.topCenter
-     :padding   (m/EdgeInsets.only
-                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
-    (fx/text-field
-      {:style      (p/TextStyle
-                     .fontFamily "Helvetica Neue"
-                     .fontSize 20.0)
-       :controller (cFonce
-                     (m/TextEditingController .text (mget me :value)))
-       :onChanged  (as-dart-callback [text]
-                     (mset! me :value text))
-       :minLines   6 :maxLines 11}
-      {:name  :text-in
-       :value (cI speech-initial)})))
-
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
 (defn property-slider [label prop color init-val min max divisions watch]
@@ -157,10 +136,7 @@
   ;; Parameters just provide initial values, often permanent.
   (fx/slider
     {:value       (cI init-val :watch watch)
-     :onChanged   (cF #(mx/wmx-iso
-                         (mset! me :value %)
-                         (when (not= :off (app-fts-status))
-                           (fts-restart me))))
+     :onChanged   (cF #(mx/wmx-iso (mset! me :value %)))
      :min         min :max max :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}

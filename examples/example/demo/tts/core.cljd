@@ -14,35 +14,13 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    [example.demo.tts.fts :as fts
-     :refer [app-fts-status app-fts-progress fts-speak fts-pause fts-stop lg-lang]]
-    [example.demo.tts.component :as comp
-     :refer [lang-chooser geo-chooser speech-input play-pause-button stop-button auto-play
+    [example.demo.tts.fts :as fts]
+    [example.demo.tts.component
+     :refer [lang-chooser geo-chooser play-pause-button stop-button auto-play
              equalizer choice-header]]
     [example.demo.tts.poetry :as poetry]))
 
-(defn chyron []
-  (container
-    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-    (fx/text {:textAlign m/TextAlign.center}
-      {:phrase (cF+ [:sst nil]
-                 (when (not= :off (app-fts-status))
-                   (let [{:keys [word]} (app-fts-progress)]
-                     (if (nil? word) []
-                       (take-last 5
-                         (concat (if (mx-bound? _cache) _cache [])
-                           [word]))))))}
-      (str/join "..." (mget me :phrase)))))
-
-;;; --- play, stop, pause -------------------------------------------------------
-
-(defn dashboard []
-  (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
-    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-      (play-pause-button)
-      (stop-button))))
-
-;;; ---  make app --------------------------------------------
+;;; === app ======================================================
 
 (defn make-app []
   (material-app {}
@@ -57,8 +35,33 @@
         (choice-header "Geography")
         (geo-chooser)
         (speech-input poetry/graves-jealousy)
-        ;(chyron)
         (dashboard)
-        (auto-play)
         (equalizer)))))
+
+;;; --- dashboard ---------------------------------------------------------------
+
+(defn dashboard []
+  (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
+    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (play-pause-button)
+      (stop-button))))
+
+;;; --- text input --------------------------------------------------------------
+
+(defn speech-input [speech-initial]
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 20.0)
+       :controller (cFonce
+                     (m/TextEditingController .text (mget me :value)))
+       :onChanged  (as-dart-callback [text]
+                     (mset! me :value text))
+       :minLines   6 :maxLines 11}
+      {:name  :text-in
+       :value (cI speech-initial)})))
 
