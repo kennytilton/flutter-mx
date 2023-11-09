@@ -33,12 +33,11 @@
                                  (stg/DB! hv-box))]
                     (-> hv/Hive hv/HiveX .initFlutter await)
                     (-> hv/Hive (.openBox "todo")))
-       :todo-list (cF+ []                                   ;; todo make this a cFonce
-                    (when-let [db (mget me :db)]
-                      (assert (stg/DB) (str "DB not populated but cell :db is: " db))
-                      ;; Now we can load any existing todos from storage...
-                      (todo/make-ToDoList "todo"
-                        (stg/collection-docs "todo"))))}
+       :todo-list (cF (when-let [db (mget me :db)]
+                        (assert (stg/DB) (str "DB not populated but cell :db is: " db))
+                        ;; Now we can load any existing todos from storage...
+                        (todo/make-ToDoList "todo"
+                          (stg/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(todos-dashboard)]}
