@@ -22,7 +22,7 @@
     [example.eg.x15-fade-widget :as fade]
     [example.eg.x020-reactive-stream :as x020]
     ;[example.eg.layout-explorer :as layo]
-    ;[example.demo.localStorage-todoMVC.core :as todo-ls]
+    ;[example.demo.localStorage-todoMVC.core :as todols]
     [example.demo.todoMVC.core :as todo]
     [example.demo.boiler.core :as boiler]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
@@ -44,4 +44,4 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (tts/make-app))
+  (x020/make-app))

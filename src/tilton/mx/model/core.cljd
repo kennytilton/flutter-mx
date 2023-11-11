@@ -257,6 +257,8 @@
   (some #{key :all} *navig-trace*))
 
 (defn fmdp [key & mas]
+  #_ (when *navig-trace*
+    (dp :fmdp-sees-key key :tracing *navig-trace*))
   (when (fm-tracing? key)
     (apply dp mas)))
 
@@ -290,6 +292,7 @@
 (defn fm-ascendant [what where & options]
   ;; todo validate options
   (when (and where what)
+    (fmdp :asc :entry-where (minfo where) :opts options)
     (let [options (merge {:me? false :wocd? true}
                     (apply hash-map options))]
       (binding [*depender* (if (:wocd? options) nil *depender*)]

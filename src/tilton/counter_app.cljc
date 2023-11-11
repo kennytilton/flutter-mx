@@ -13,8 +13,6 @@
 ;;; nested under the MaterialApp. Each different widget below has its own build method and responds
 ;;; to a different setState.
 
-;; todo: an mprop getter that just looks for a property
-
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Counter Demo"
@@ -36,14 +34,11 @@
           (text "We have pushed the button this many times:")
           (text {:style (cF (.-headlineMedium
                               (.-textTheme ^m/ThemeData (mav :theme))))}
-
             {:name    :the-counter
              :counter (cI 0)}
             (str (mav :counter))))))))
 
-
-
-;;;
+;;; ---------------------------------------------------------------------------------------------
 ;;; --- The Dart original from Flutter themselves, with closing punctuation removed. ------------
 ;;;
 ;class MyApp extends StatelessWidget {
