@@ -15,8 +15,7 @@
   (text-field
     {:autofocus  true
      :focusNode  (m/FocusNode)
-     :controller (cFonce (m/TextEditingController
-                           .text (mget me :value)))
+     :controller (cFonce (fx/text-field-controller-basic me))
      :decoration (m/InputDecoration
                    .border (m/OutlineInputBorder
                              .borderRadius (m/BorderRadius.circular 0.0))
@@ -26,8 +25,7 @@
 
 (defn type-entry []
   (text-field
-    {:controller (cFonce (m/TextEditingController
-                           .text (mget me :value)))
+    {:controller (cFonce (fx/text-field-controller-basic me))
      :decoration (m/InputDecoration
                    .border (m/OutlineInputBorder
                              .borderRadius (m/BorderRadius.circular 0.0))
@@ -54,8 +52,7 @@
 (defn isolate-trigger!
   [receive-port
    response-receive-port
-   {::keys [message-box
-            type]}]
+   {::keys [message-box type]}]
   (let [my-send-port (await (.-first ^di/ReceivePort receive-port))]
     (.send ^di/SendPort
       my-send-port
@@ -114,63 +111,4 @@
               (sized-box {:height 15})
               (message-entry)
               (sized-box {:height 5})
-              (type-entry)
-              )))))))
-
-#_(def isolate-test-ui
-    (f/widget
-      :watch [my-response (atom nil) :as *my-response]
-      :managed [text-controller0 (m/TextEditingController)
-                text-controller1 (m/TextEditingController)]
-      m/Center
-      m/IntrinsicWidth
-      (f/widget
-        (m/Column
-          .crossAxisAlignment m/CrossAxisAlignment.stretch
-          .mainAxisAlignment m/MainAxisAlignment.center
-          .children [(f/widget
-                       (m/Card .shape (m/RoundedRectangleBorder
-                                        .borderRadius (m/BorderRadius.circular 0.0))
-                         .color (m/Colors.lightGreenAccent.-shade700))
-                       (if my-response
-                         (m/Text my-response)
-                         (m/Text "Waiting for Isolate response!")))
-                     (f/widget
-                       (m/Card
-                         .shape (m/RoundedRectangleBorder
-                                  .borderRadius (m/BorderRadius.circular 0.0)))
-                       (m/InkWell
-                         .onTap (fn []
-                                  (let [text0 (.-text text-controller0)
-                                        text1 (.-text text-controller1)
-                                        my-response-receive-port (di/ReceivePort)]
-                                    (isolate-trigger! (await (let [my-receive-port (di/ReceivePort)]
-                                                               (di/Isolate.spawn heavy-computation-task
-                                                                 (.-sendPort my-receive-port))
-                                                               my-receive-port))
-                                      my-response-receive-port
-                                      {::type        text0
-                                       ::message-box text1})
-                                    (when-let [response-from-port (await (.-first my-response-receive-port))]
-                                      (reset! *my-response response-from-port)))))
-                       (m/Container .width 150
-                         .height 80
-                         .color (m/Colors.blue.-shade200))
-                       (m/Center)
-                       (m/Text "Test Isolates!"))
-                     (m/SizedBox
-                       .height 15)
-                     (m/TextField
-                       .controller text-controller1
-                       .decoration (m/InputDecoration
-                                     .border (m/OutlineInputBorder
-                                               .borderRadius (m/BorderRadius.circular 0.0))
-                                     .labelText "Enter a message"))
-                     (m/SizedBox
-                       .height 5)
-                     (m/TextField
-                       .controller text-controller0
-                       .decoration (m/InputDecoration
-                                     .border (m/OutlineInputBorder
-                                               .borderRadius (m/BorderRadius.circular 0.0))
-                                     .labelText "Enter a type"))]))))
+              (type-entry))))))))

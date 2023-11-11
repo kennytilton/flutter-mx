@@ -91,17 +91,6 @@
 (defn text-field-controller-basic
   ([me] (text-field-controller-basic me :value))
   ([me prop]
-   #_ (let [prefill (mx/mget me prop)]
-     (doto (m/TextEditingController.fromValue
-             (m/TextEditingValue
-               .text prefill
-               .selection (m/TextSelection
-                            .baseOffset 0
-                            .extentOffset (count prefill))))
-       (.addListener
-         (fn []
-           (wmx-iso
-             (mx/mset! me prop (.-text c)))))))
    (let [txt (mx/mget me prop)
            c (m/TextEditingController.fromValue
                (m/TextEditingValue
