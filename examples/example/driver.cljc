@@ -40,8 +40,12 @@
     [example.demo.tts.core :as tts]
     [example.eg.x045-websocket :as sock]
     [example.eg.x050-just-audio :as just] ;; has make-app and make-app-two
-    ))
+    [example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
+    [example.non-fmx.ifernandez-isolates :as iiso]
+    [example.eg.x055_isolates :as x055]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
-  (x020/make-app))
+  (x055/make-app)
+  ;; (iiso/main)msg
+  )
