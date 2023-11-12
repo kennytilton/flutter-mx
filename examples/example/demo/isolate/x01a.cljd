@@ -57,7 +57,17 @@
                                           (string? message)
                                           (dp :rcv!! message))))))]
                      (Isolate.spawn
-                       entry-point (.-sendPort ^ReceivePort (mget me :rcvPort))
+                       (fn entry-point [^SendPort send2main]
+                         (let [rcvPort (ReceivePort)]
+                           (.send send2main (.-sendPort rcvPort))
+                           (.listen rcvPort (fn [message]
+                                              (when (int? message)
+                                                (let [r (atom 1)]
+                                                  (doseq [i (range 1 (inc message))]
+                                                    (swap! r * i)
+                                                    (dp :sending2main i :factorialwow= @r)
+                                                    (.send send2main (str i "! = " @r)))))))))
+                       (.-sendPort ^ReceivePort (mget me :rcvPort))
                        .errorsAreFatal true
                        .debugName "MyIsolate"))
      :send2Isolate (cF+ [:async? true

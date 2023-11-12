@@ -56,7 +56,8 @@
                                           (string? message)
                                           (dp :rcv!! message))))))]
                      (Isolate.spawn
-                       entry-point (.-sendPort ^ReceivePort (mget me :rcvPort))
+                       entry-point
+                       (.-sendPort ^ReceivePort (mget me :rcvPort))
                        .errorsAreFatal true
                        .debugName "MyIsolate"))
      :send2Isolate (cF+ [:async? true
