@@ -1,0 +1,32 @@
+(ns tilton.test.isolate
+  (:require
+    [tilton.mx.foundation :refer [ mx-type]]
+    [tilton.mx.base :refer [trx dp dpx prog1 *trx?*]]
+    [tilton.mx.cell.base
+     :refer [without-c-dependency
+             cells-init c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input?
+             c-model  c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes* unbound
+             c-rule c-me c-value-state c-callers
+             unlink-from-callers *causation*
+             c-prop-name c-synaptic?
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
+             c-lazy] :as cty]
+    [tilton.mx.cell.integrity :refer [with-integrity]]
+    [tilton.mx.cell.observer :refer [fn-obs]]
+
+    [tilton.mx.cell.core
+     :refer [cF cF+ c-reset-next! cFonce cFn cf-freeze!
+             cI cset! make-cell make-c-formula]]
+
+    [tilton.mx.cell.evaluate :refer [cget c-awaken]]
+    [tilton.mx.model.peek :refer [mname mref? cref?]]
+    [tilton.mx.model.base :refer [ md-cz md-cell]]
+    [tilton.mx.model.core
+     :refer [make cFkids the-kids mdv! mget fm-navig fm! make mset! mswap!]
+     :as md]))
+
+(defn hello []
+  (dp :boomer))

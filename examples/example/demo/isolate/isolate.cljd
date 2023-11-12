@@ -1,0 +1,64 @@
+(ns example.demo.isolate.isolate
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]))
+
+; /// First of all, let's spawn an isolate and send a message to it.
+;
+;import 'dart:isolate';
+;
+;void main() => Future<void>(() async {
+;      final isolate = await Isolate.spawn<int>(
+;        entryPoint,
+;        7,
+;        errorsAreFatal: true, // uncaught errors will terminate the isolate
+;        debugName: 'MyIsolate', // name in debuggers and logging
+;      );
+;      await Future<void>.delayed(const Duration(seconds: 1));
+;      isolate.kill(); // Kill the isolate.
+;    });
+;
+;/// The entry point of the our isolate.
+;void entryPoint(int payload) {
+;  for (var i = 1, r = 1; i <= payload; i++, r *= i) {
+;    // Send a message to the main isolate.
+;    print('$i! = $r');
+;  }
+;}
+(defn entry-point [payload]
+  (let [r (atom 1)]
+    (doseq [i (range 1 (inc payload))]
+      (dp :fct i := (swap! r * i)))))
+
+(defn make-app []
+  (let []
+    (dp :hunh)
+    #_ (let [iso (await (Isolate.spawn
+                       entry-point
+                       7
+                       .errorsAreFatal true
+                       .debugName "MyIsolate"))]
+      (await (Future.delayed (Duration .seconds 1)))
+      (.kill iso))
+
+    (fx/material-app {}
+      {:iso-1 (cF+ [:async? true
+                    :watch (fn [_ _ new _ _]
+                             (dp :iso-1-now new))]
+                (Isolate.spawn
+                  entry-point 7
+                  .errorsAreFatal true
+                  .debugName "MyIsolate"))}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text "Main Screen 2")})}))))

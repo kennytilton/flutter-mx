@@ -39,13 +39,15 @@
     [example.eg.flutter-tts :as ttso]
     [example.demo.tts.core :as tts]
     [example.eg.x045-websocket :as sock]
-    [example.eg.x050-just-audio :as just] ;; has make-app and make-app-two
-    [example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
+    [example.eg.x050-just-audio :as just]                   ;; has make-app and make-app-two
+    ;[example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
     [example.non-fmx.ifernandez-isolates :as iiso]
-    [example.eg.x055_isolates :as x055]))
+    [example.eg.x055_isolates :as x055]
+    ;[example.eg.x056_isolate :as x056]
+    [example.demo.isolate.isolate :as iso]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (x055/make-app)
+    (iso/make-app)
     (iiso/main)))
