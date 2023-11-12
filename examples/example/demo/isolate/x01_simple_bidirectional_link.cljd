@@ -1,0 +1,123 @@
+(ns example.demo.isolate.x01-simple-bidirectional-link
+  "Flutter/MX port of example 2 of https://plugfox.dev/mastering-isolates/"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback]]
+    ["dart:async" :as async
+     :refer [Completer]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]))
+
+(defn entry-point [^SendPort send2main]
+  (let [rcvPort (ReceivePort)]
+    (.send send2main (.-sendPort rcvPort))
+    (.listen rcvPort (fn [message]
+                       (when (int? message)
+                         (let [r (atom 1)]
+                           (doseq [i (range 1 (inc message))]
+                             (swap! r * i)
+                             (dp :sending2main i :facto= @r)
+                             (.send send2main (str i "! = " @r)))))))))
+
+(defn make-app []
+  (fx/material-app
+    {:title "Mastering Isolates #2"}
+    {;; this second map is for custom state
+     ;; these first parameters are plain CLJD values we will need different places
+     :rcvPort      (ReceivePort)
+     :completer    (Completer)
+     ;; new for CLJD MX, a formula cell can be specified as async?
+     ;; MX internally pretends the value starts as nil, executes a .then on the true value, a future,
+     ;; and in the .then handler reactively mutates the iso property to take on the deferred result.
+     ;; Here, though, the watch function handles everything. We could break it out into a separate cell
+     ;; which would begin: (cF (when-let [iso (mget me :iso)}...
+     :iso          (cF+ [:async? true
+                         :watch (fn [_ me new _ _]
+                                  (dp :iso-now new)
+                                  (when new
+                                    ;; nb: watch functions are free to MGET other properties and are guaranteed
+                                    ;; those properties will be consistent reactively.
+                                    (.listen ^ReceivePort (mget me :rcvPort)
+                                      (fn [message]
+                                        (cond
+                                          ;; this use of a Completer and this handshake overall is wild
+                                          (dart/is? message SendPort)
+                                          (.complete ^Completer (mget me :completer) message)
+
+                                          (string? message)
+                                          (dp :rcv!! message))))))]
+                     (Isolate.spawn
+                       entry-point (.-sendPort ^ReceivePort (mget me :rcvPort))
+                       .errorsAreFatal true
+                       .debugName "MyIsolate"))
+     :send2Isolate (cF+ [:async? true
+                         :watch (fn [_ _ new _ _]
+                                  (dp :send2Isolate-port new))]
+                     (.-future ^Completer (mget me :completer)))
+     :factorial    (cF+ [:async? true]
+                     ;; super important: the when-let effectively waits on the send2Isolate
+                     ;; value being delivered by the isolate, because :send2Isolate is :async?,
+                     ;; and those start as nil, then get their values when the future completes.
+                     (when-let [s2i (mget me :send2Isolate)]
+                       (dp :got-s2i!!!! s2i)
+                       (.send ^SendPort s2i 7)))            ;; <======== BINGO!
+     :clean-up     (cF+ [:async? true
+                         :watch (fn [_ me new prior _]
+                                  (dp :clean-up-new=pri new prior)
+                                  (when (mx-bound? prior)
+                                    (.close ^ReceivePort (mget me :rcvPort))
+                                    (.kill ^Isolate (mget me :iso))))]
+                     ;; this is a completely hacky way of knowing when to wrap-up.
+                     ;; good enough for now.
+                     (Future.delayed (Duration .seconds 1) (fn [] :fini)))
+     }
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Simple BidirectionalLink")})})))
+
+; /// Let's upgrade the previous example to use an isolate with
+;/// bidirectional communication using a [ReceivePort] and a [SendPort] pairs.
+;
+;import 'dart:async';
+;import 'dart:isolate';
+;void entryPoint(SendPort send2main) {
+;  final rcvPort = ReceivePort(); // ReceivePort for the spawned isolate.
+;  send2main.send(rcvPort.sendPort); // Send the SendPort to the main isolate.
+;  // Listen to the ReceivePort and calculate the factorial.
+;  rcvPort.listen((message) {
+;    if (message is! int) return; // Ignore messages of other types.
+;    for (var i = 1, r = 1; i <= message; i++, r *= i) {
+;      // Send a message to the main isolate.
+;      send2main.send('$i! = $r');
+;    }
+;  });
+;}
+;
+;void main() => Future<void>(() async {
+;      final rcvPort = ReceivePort(); // ReceivePort for the main isolate.
+;      final isolate = await Isolate.spawn<SendPort>(
+;        entryPoint,
+;        rcvPort.sendPort,
+;        errorsAreFatal: true,
+;        debugName: 'MyIsolate',
+;      );
+;      final completer = Completer<SendPort>(); // For awaiting the SendPort.
+;      rcvPort.listen((message) {
+;        if (message is SendPort) completer.complete(message);
+;        if (message is String) print(message);
+;      });
+;      final send2Isolate = await completer.future; // Get the SendPort.
+;      send2Isolate.send(7); // Send a message to the spawned isolate.
+;      await Future<void>.delayed(const Duration(seconds: 1));
+;      rcvPort.close(); // Close the ReceivePort.
+;      isolate.kill(); // Kill the isolate.
+;    });
+;

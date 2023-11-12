@@ -1,4 +1,4 @@
-(ns example.demo.isolate.isolate
+(ns example.demo.isolate.x00-spawn
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -42,23 +42,17 @@
       (dp :fct i := (swap! r * i)))))
 
 (defn make-app []
-  (let []
-    (dp :hunh)
-    #_ (let [iso (await (Isolate.spawn
-                       entry-point
-                       7
-                       .errorsAreFatal true
-                       .debugName "MyIsolate"))]
-      (await (Future.delayed (Duration .seconds 1)))
-      (.kill iso))
-
-    (fx/material-app {}
-      {:iso-1 (cF+ [:async? true
-                    :watch (fn [_ _ new _ _]
-                             (dp :iso-1-now new))]
-                (Isolate.spawn
-                  entry-point 7
-                  .errorsAreFatal true
-                  .debugName "MyIsolate"))}
-      (fx/scaffold
-        {:appBar (fx/app-bar {:title (fx/text "Main Screen 2")})}))))
+  (fx/material-app {}
+    {:iso (cF+ [:async? true
+                  :watch (fn [_ _ new _ _]
+                           (dp :iso-now new)
+                           (when new
+                             (await (Future.delayed (Duration .seconds 1)))
+                             (.kill new)
+                             (dp :iso-killed! new)))]
+              (Isolate.spawn
+                entry-point 7
+                .errorsAreFatal true
+                .debugName "MyIsolate"))}
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Main Screen 2")})})))
