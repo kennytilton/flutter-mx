@@ -1,4 +1,4 @@
-(ns example.demo.isolate.x01-simple-bidirectional-link
+(ns example.demo.isolate.x01a
   "Flutter/MX port of example 2 of https://plugfox.dev/mastering-isolates/"
   (:require
     ["package:flutter/material.dart" :as m]
@@ -13,7 +13,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     ["dart:async" :as async
-     :refer [Completer StreamSubscription]]
+     :refer [Completer]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
@@ -27,6 +27,7 @@
                              (swap! r * i)
                              (dp :sending2main i :facto= @r)
                              (.send send2main (str i "! = " @r)))))))))
+
 
 (defn make-app []
   (fx/material-app
