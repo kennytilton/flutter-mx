@@ -47,15 +47,16 @@
                               (.send result-port {:msg-type  :config
                                                   :task-port (.-sendPort task-port)})
                               (.listen task-port
-                                (fn [{:keys [msg-type of] :as task}]
+                                (fn [{:keys [msg-type of-integer] :as task}]
                                   (case msg-type
                                     :compute-factorial (let [r (atom 1)]
-                                                         (doseq [i (range 1 (inc of))]
+                                                         (doseq [i (range 1 (inc of-integer))]
                                                            (swap! r * i)
                                                            (dp :worker-sending-result :task i :factorial= @r)
-                                                           (.send result-port {:msg-type :factorial
-                                                                               :of       i
-                                                                               :value    @r})))
+                                                           (.send result-port {:msg-type   :factorial
+                                                                               :of-integer i
+                                                                               :value      @r}))
+                                                         (.send result-port {:msg-type :eoj}))
                                     (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))))))
                           ; next is a positional arg that will be supplied to the provided entry-point.
                           ; main iso offers the sendPort of its results ReceivePort as param-0
@@ -77,25 +78,18 @@
                                           (wmx-iso
                                             (dp :main-msets-task-out-port message)
                                             (mset! me :task-out-port (:task-port message))))
-                                :factorial (dp :factorial-of (:of message) :is (:value message)))))))
+                                :factorial (dp :factorial-of (:of-integer message) :is (:value message))
+                                :eoj (do (dp :eoj!!!!)
+                                       (.close ^ReceivePort (mget me :result-port))
+                                       (.kill ^Isolate (mget me :worker-iso))))))))
      :task-out-port   (cI nil :watch (fn [_ me new _ _]
                                        (dp :task-out-port-now new)))
      :dispatcher      (cF (when-let [task2w (mget me :task-out-port)]
                             ; now we have a pipe to the worker, and can send it our one task: 7
                             (dp :dispatcher-sending-7-to-task-out task2w)
                             (.send ^SendPort task2w
-                              {:msg-type :compute-factorial
-                               :of       7})))              ; <======== BINGO! task dispatch
-     :clean-up        (cF+ [:async? true
-                            :watch (fn [_ me new prior _]
-                                     (when (= new :fini)
-                                       ; or we could test (mx-bound? prior), then eliminate the delayed computation
-                                       (dp :cleaning-up!!)
-                                       (.close ^ReceivePort (mget me :result-port))
-                                       (.kill ^Isolate (mget me :worker-iso))))]
-                        ; this is a completely hacky way of knowing when to wrap-up.
-                        ; good enough for now.
-                        (Future.delayed (Duration .seconds 3) (fn [] :fini)))
+                              {:msg-type   :compute-factorial
+                               :of-integer 7})))            ; <======== BINGO! task dispatch
      }
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Simple BidirectionalLink")})})))
