@@ -45,10 +45,10 @@
     [example.eg.x055_isolates :as x055]
     [example.demo.isolate.x00-spawn :as ispawn]
     [example.demo.isolate.x01-simple-bidirectional-link :as isimple]
-    [example.demo.isolate.x01a :as x01a]))
+    [example.demo.isolate.x01-without-completer :as x01a]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (isimple/make-app)
+    (x01a/make-app)
     (iiso/main)))

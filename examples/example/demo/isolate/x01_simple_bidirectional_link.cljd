@@ -87,8 +87,8 @@
                                    :watch (fn [_ _ new _ _] (dp :got-sendPort-to-worker! new))]
                                (.-future ^Completer (mget me :await-worker-task-port)))
      :dispatcher             (cF
-                               ; super important: the when-let effectively waits on the send2Isolate
-                               ; value being delivered by the isolate, because :send2Isolate is :async?,
+                               ; super important: the when-let effectively waits on the :task-to-worker-port
+                               ; value being delivered by the isolate, because ::task-to-worker-port is :async?,
                                ; and those start as nil, then get their values when the future completes.
                                (when-let [task-send-port (mget me :task-to-worker-port)]
                                  ; now we have a pipe to the isolate, and can send it the task 7
