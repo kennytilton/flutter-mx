@@ -17,74 +17,100 @@
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
-(defn entry-point [^SendPort send2main]
-  (let [rcvPort (ReceivePort)]
-    (.send send2main (.-sendPort rcvPort))
-    (.listen rcvPort (fn [message]
-                       (when (int? message)
-                         (let [r (atom 1)]
-                           (doseq [i (range 1 (inc message))]
-                             (swap! r * i)
-                             (dp :sending2main i :facto= @r)
-                             (.send send2main (str i "! = " @r)))))))))
+#_(defn entry-point [^SendPort send2main]
+    (let [rcvPort (ReceivePort)]
+      (.send send2main (.-sendPort rcvPort))
+      (.listen rcvPort (fn [message]
+                         (when (int? message)
+                           (let [r (atom 1)]
+                             (doseq [i (range 1 (inc message))]
+                               (swap! r * i)
+                               (dp :sending2main i :facto= @r)
+                               (.send send2main (str i "! = " @r)))))))))
 
 (defn make-app []
   (fx/material-app
     {:title "Mastering Isolates #2"}
-    {;; this second map is for custom state
-     ;; these first parameters are plain CLJD values we will need different places
-     :rcvPort      (ReceivePort)
-     :completer    (Completer)
-     ;; new for CLJD MX, a formula cell can be specified as async?
-     ;; MX internally pretends the value starts as nil, executes a .then on the true value, a future,
-     ;; and in the .then handler reactively mutates the iso property to take on the deferred result.
-     ;; Here, though, the watch function handles everything. We could break it out into a separate cell
-     ;; which would begin: (cF (when-let [iso (mget me :iso)}...
-     :iso          (cF+ [:async? true
-                         :watch (fn [_ me new _ _]
-                                  (dp :iso-now new)
-                                  (when new
-                                    ;; nb: watch functions are free to MGET other properties and are guaranteed
-                                    ;; those properties will be consistent reactively.
-                                    (.listen ^ReceivePort (mget me :rcvPort)
-                                      (fn [message]
-                                        (cond
-                                          ;; this use of a Completer and this handshake overall is wild
-                                          (dart/is? message SendPort)
-                                          (.complete ^Completer (mget me :completer) message)
+    {; this second map is for custom state
+     ; these first parameters are plain CLJD values we will need different places
+     :result-port                (ReceivePort)
+     ; new for CLJD MX, a formula cell can be specified as async?
+     ; MX internally pretends the value starts as nil, executes a .then on the true value, a future,
+     ; and in the .then handler reactively mutates the iso property to take on the deferred result.
+     ; Here, though, the watch function handles everything. We could break it out into a separate cell
+     ; which would begin: (cF (when-let [iso (mget me :worker-iso)}...
+     :worker-iso                    (cF+ [:async? true
+                                   :watch (fn [_ me worker _ _]
+                                            (when worker
+                                              (dp :got-worker-isolate! worker)
+                                              ; nb: watch functions are free to MGET other properties and are guaranteed
+                                              ; those properties will be consistent reactively.
+                                              (.listen ^ReceivePort (mget me :result-port)
+                                                (fn [message]
+                                                  ; Hmmm. Instead of insisting that the first message back from the
+                                                  ; isolate be the .-sendPort of its ReceivePort, we assume the isolate does that
+                                                  ; first, as it should.
+                                                  (cond
+                                                    ; main property send2Isolate is waiting on its Completer to
+                                                    ; resolve with the isolate's SendPort, aka the first message back. So when
+                                                    ; we see a SendPort, we complete with that.
+                                                    (dart/is? message SendPort)
+                                                    (.complete ^Completer (mget me :await-worker-task-port) message)
 
-                                          (string? message)
-                                          (dp :rcv!! message))))))]
-                     (Isolate.spawn
-                       entry-point
-                       (.-sendPort ^ReceivePort (mget me :rcvPort))
-                       .errorsAreFatal true
-                       .debugName "MyIsolate"))
-     :send2Isolate (cF+ [:async? true
-                         :watch (fn [_ _ new _ _]
-                                  (dp :send2Isolate-port new))]
-                     (.-future ^Completer (mget me :completer)))
-     :factorial    (cF+ [:async? true]
-                     ;; super important: the when-let effectively waits on the send2Isolate
-                     ;; value being delivered by the isolate, because :send2Isolate is :async?,
-                     ;; and those start as nil, then get their values when the future completes.
-                     (when-let [s2i (mget me :send2Isolate)]
-                       (dp :got-s2i!!!! s2i)
-                       (.send ^SendPort s2i 7)))            ;; <======== BINGO!
-     :clean-up     (cF+ [:async? true
-                         :watch (fn [_ me new prior _]
-                                  (dp :clean-up-new=pri new prior)
-                                  (when (mx-bound? prior)
-                                    (.close ^ReceivePort (mget me :rcvPort))
-                                    (.kill ^Isolate (mget me :iso))))]
-                     ;; this is a completely hacky way of knowing when to wrap-up.
-                     ;; good enough for now.
-                     (Future.delayed (Duration .seconds 1) (fn [] :fini)))
+                                                    (string? message)
+                                                    (dp :x01-simple-rcv!! message))))))]
+                               (Isolate.spawn
+                                 ; (we could also use here the entry-point defn above)
+                                 ; This is our worker. It:
+                                 ; 1. makes a ReceivePort on which to receive tasks
+                                 ; 2. sends its RP to the main isolate so it can send us tasks
+                                 ; 3. starts listening on its RP for tasks
+                                 ; 4. when it gets an N, it iterates from 1 to N inclusive sending factorials to main
+                                 (fn entry-point [^SendPort send2main]
+                                   (let [rcvPort (ReceivePort)]
+                                     (.send send2main (.-sendPort rcvPort))
+                                     (.listen rcvPort (fn [message]
+                                                        (when (int? message)
+                                                          (let [r (atom 1)]
+                                                            (doseq [i (range 1 (inc message))]
+                                                              (swap! r * i)
+                                                              (dp :worker-result :task i :factorial= @r)
+                                                              (.send send2main (str i "! = " @r)))))))))
+                                 ; next is a positional arg that will be supplied to the provided entry-point.
+                                 ; main iso offers the sendPort of its ReceivePort as param-0
+                                 (.-sendPort ^ReceivePort (mget me :result-port))
+                                 .errorsAreFatal true
+                                 .debugName "MyIsolate"))
+     :await-worker-task-port (Completer)
+     :task-to-worker-port    (cF+ [:async? true
+                                   ; this watch is purely for tracing
+                                   :watch (fn [_ _ new _ _] (dp :got-sendPort-to-worker! new))]
+                               (.-future ^Completer (mget me :await-worker-task-port)))
+     :dispatcher             (cF
+                               ; super important: the when-let effectively waits on the send2Isolate
+                               ; value being delivered by the isolate, because :send2Isolate is :async?,
+                               ; and those start as nil, then get their values when the future completes.
+                               (when-let [task-send-port (mget me :task-to-worker-port)]
+                                 ; now we have a pipe to the isolate, and can send it the task 7
+                                 (dp :dispatcher-sees-task-port-to-worker task-send-port)
+                                 (.send ^SendPort task-send-port 7))) ; <======== BINGO! task dispatch
+     :clean-up               (cF+ [:async? true
+                                   :watch (fn [_ me new prior _]
+                                            (when (= new :fini)
+                                              ; or we could test (mx-bound? prior), then skip the delayed computation
+                                              (dp :cleaning-up!!)
+                                              (.close ^ReceivePort (mget me :result-port))
+                                              (.kill ^Isolate (mget me :worker-iso))))]
+                               ; this is a completely hacky way of knowing when to wrap-up.
+                               ; good enough for now.
+                               (Future.delayed (Duration .seconds 1) (fn [] :fini)))
      }
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Simple BidirectionalLink")})})))
 
-; /// Let's upgrade the previous example to use an isolate with
+;/// --- The original -------------------------------------------------
+;
+;/// Let's upgrade the previous example to use an isolate with
 ;/// bidirectional communication using a [ReceivePort] and a [SendPort] pairs.
 ;
 ;import 'dart:async';

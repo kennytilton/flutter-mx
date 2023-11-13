@@ -43,7 +43,6 @@
     ;[example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
     [example.non-fmx.ifernandez-isolates :as iiso]
     [example.eg.x055_isolates :as x055]
-    ;[example.eg.x056_isolate :as x056]
     [example.demo.isolate.x00-spawn :as ispawn]
     [example.demo.isolate.x01-simple-bidirectional-link :as isimple]
     [example.demo.isolate.x01a :as x01a]))
@@ -51,5 +50,5 @@
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (x01a/make-app)
+    (isimple/make-app)
     (iiso/main)))
