@@ -46,10 +46,11 @@
     [example.demo.isolate.x00-spawn :as ispawn]
     [example.demo.isolate.x01-simple-bidirectional-link :as isimple]
     [example.demo.isolate.x01-without-completer :as x01a]
-    [example.demo.isolate.x01-factorial-refactored :as hack]))
+    [example.demo.isolate.x01-factorial-refactored :as iso-x01]
+    [example.demo.isolate.x02-smooth-clock :as iso-x02]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (hack/make-app)
+    (iso-x02/make-app)
     (iiso/main)))

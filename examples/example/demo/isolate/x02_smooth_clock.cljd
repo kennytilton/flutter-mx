@@ -1,0 +1,202 @@
+(ns example.demo.isolate.x02-smooth-clock
+  (:require
+    ["package:flutter/gestures.dart" :as g]
+    ["package:flutter/material.dart" :as m
+     :refer [Canvas Size]]
+    ["package:vector_math/vector_math_64.dart" :as vm]
+    [cljd.flutter.alpha :as f]
+
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.mx.cell.core :as cell :refer [cF cI]]
+    [tilton.mx.model.core :refer [mget muv] :as md]
+    [tilton.fmx.api :as fx]))
+
+(defn make-app []
+  (let [title "Smooth Clock"]
+    (fx/material-app
+      {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})}
+        (clock-face)))))
+
+(def radius 125)
+
+; void paint(Canvas canvas, Size size) {
+;    final center = size.center;
+;    final radius = size.width / 2;
+;
+;    // Draw the watch face background
+;    canvas.drawCircle(center, radius, Paint()..color = Colors.white);
+;
+;    // Draw the second hand
+;    final handLength = radius * 0.8;
+;    final handAngle = rotationTween.value * 360;
+;    final handStart = Offset(center.dx, center.dy);
+;    final handEnd = Offset(
+;      center.dx + handLength * cos(handAngle * pi / 180),
+;      center.dy + handLength * sin(handAngle * pi / 180),
+;    );
+;
+;    canvas.drawLine(handStart, handEnd, Paint()..color = Colors.red..strokeWidth = 5);
+;  }
+(defn clock-face []
+  (m/CustomPaint
+    .size (m/Size double/infinity double/infinity)
+    .painter (reify :extends (m/CustomPainter)
+               (paint [this ^Canvas canvas ^Size size]
+                 (dp :size!!!! size)
+                 (let [center #_ (m/Offset 200 350) (.center size (m/Offset 0 0))
+                       radius (- (/ (.-width size) 2) 24)
+                       dial-p (doto (m/Paint)
+                                (-> .-color (set! m/Colors.grey))
+                                (-> .-style (set! m/PaintingStyle.stroke)))]
+                   (dp :center center)
+                   (.drawCircle ^Canvas canvas center radius dial-p))
+                 #_
+                 (let [[^m/Offset o ^m/Offset a ^m/Offset b]
+                       [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 200 350)]
+                       c (.- (.+ b a) o)
+                       paint (doto (m/Paint)
+                               (-> .-color (set! m/Colors.grey))
+                               (-> .-style (set! m/PaintingStyle.stroke)))]
+                   (doto canvas
+                     ;(.drawLine o a paint)
+                     ;(.drawLine o b paint)
+                     ;(.drawLine b c paint)
+                     ;(.drawLine a c paint)
+                     ;(.drawCircle o radius paint)
+                     ;(.drawCircle a radius paint)
+                     (.drawCircle b radius paint))
+                   nil))
+               (shouldRepaint [this _] true))))
+
+(defn inside-parallelogram
+  [[^m/Offset o ^m/Offset a ^m/Offset b] ^m/Offset mouse-pos]
+  (let [oa (.- a o)
+        ob (.- b o)
+        m (doto
+            (vm/Matrix3 (.-dx oa) (.-dy oa) 0
+              (.-dx ob) (.-dy ob) 0
+              (.-dx o) (.-dy o) 1)
+            .invert)
+        p-1 (.transform m (vm/Vector3 (.-dx mouse-pos) (.-dy mouse-pos) 1))]
+    (when (and (<= 0 (.-x p-1) 1) (<= 0 (.-y p-1) 1))
+      (.- mouse-pos o))))
+
+(defn move-to
+  [[^m/Offset o ^m/Offset a ^m/Offset b] ^m/Offset o']
+  (let [oo' (.- o' o)]
+    [o' (.+ a oo') (.+ b oo')]))
+
+(defn gesture-parallelogram []
+  (fx/gesture-detector
+    {:onPanStart  (cF (fx/cb-as-is
+                        (fn [^g/DragStartDetails details]
+                          (let [vertices (mget me :vertices)
+                                pointer (.-localPosition details)
+                                [id delta] (or
+                                             ;; see if a dot has been clicked, perhaps within the parallelogram
+                                             ;; _and_ on the dot, since they overlap a bit. Our spec gives
+                                             ;; the dot precedence.
+                                             (some (fn [[i vertex]]
+                                                     (let [delta (.- pointer vertex)]
+                                                       (when (< (.-distance delta) radius)
+                                                         [i delta])))
+                                               (map-indexed vector vertices))
+                                             ;; ... not on a dot, now see if in parallelogram
+                                             (when-some [delta (inside-parallelogram vertices pointer)]
+                                               [:parallelogram delta])
+                                             ;; fall thru binding id and delta to nil. The id being nil is key
+                                             )]
+                            (md/mset! me :drag-op {:dragee id :delta delta})))))
+     :onPanUpdate (cF (fx/cb-as-is
+                        (fn [^g/DragUpdateDetails details]
+                          (let [{:keys [dragee delta]} (md/mget me :drag-op)
+                                new-pos (when delta
+                                          (.- (.-localPosition details) delta))]
+                            (cond
+                              (= dragee :parallelogram)
+                              (md/mswap! me :vertices move-to new-pos)
+                              (int? dragee)
+                              (md/mswap! me :vertices assoc dragee new-pos))))))}
+    {:fx$notifier (m/ChangeNotifier)
+     :vertices    (cI [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)])
+     :drag-op     (cI {:delta  nil
+                       :dragee nil})}
+    (m/CustomPaint
+      .size (m/Size double/infinity double/infinity)
+      .painter (reify :extends (m/CustomPainter .repaint (mget me :fx$notifier))
+                 (paint [this canvas size]
+                   (let [[^m/Offset o ^m/Offset a ^m/Offset b] (md/mget me :vertices)
+                         c (.- (.+ b a) o)
+                         paint (doto (m/Paint)
+                                 (-> .-color (set! m/Colors.grey))
+                                 (-> .-style (set! m/PaintingStyle.fill)))]
+                     (doto canvas
+                       (.drawLine o a paint)
+                       (.drawLine o b paint)
+                       (.drawLine b c paint)
+                       (.drawLine a c paint)
+                       (.drawCircle o radius paint)
+                       (.drawCircle a radius paint)
+                       (.drawCircle b radius paint))
+                     nil))
+                 (shouldRepaint [this _] true)))))
+
+
+
+; import 'package:flutter/material.dart';
+;
+;/// Flutter code sample for [TweenAnimationBuilder].
+;
+;void main() => runApp(const TweenAnimationBuilderExampleApp());
+;
+;class TweenAnimationBuilderExampleApp extends StatelessWidget {
+;  const TweenAnimationBuilderExampleApp({super.key});
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return MaterialApp(
+;      home: Scaffold(
+;        appBar: AppBar(title: const Text('TweenAnimationBuilder Sample')),
+;        body: const Center(
+;          child: TweenAnimationBuilderExample(),
+;        ),
+;      ),
+;    );
+;  }
+;}
+;
+;class TweenAnimationBuilderExample extends StatefulWidget {
+;  const TweenAnimationBuilderExample({super.key});
+;
+;  @override
+;  State<TweenAnimationBuilderExample> createState() =>
+;      _TweenAnimationBuilderExampleState();
+;}
+;
+;class _TweenAnimationBuilderExampleState
+;    extends State<TweenAnimationBuilderExample> {
+;  double targetValue = 24.0;
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return TweenAnimationBuilder<double>(
+;      tween: Tween<double>(begin: 0, end: targetValue),
+;      duration: const Duration(seconds: 1),
+;      builder: (BuildContext context, double size, Widget? child) {
+;        return IconButton(
+;          iconSize: size,
+;          color: Colors.blue,
+;          icon: child!,
+;          onPressed: () {
+;            setState(() {
+;              targetValue = targetValue == 24.0 ? 48.0 : 24.0;
+;            });
+;          },
+;        );
+;      },
+;      child: const Icon(Icons.aspect_ratio),
+;    );
+;  }
+;}
