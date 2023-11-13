@@ -1,4 +1,4 @@
-(ns example.demo.isolate.x01-simple-bidirectional-link
+(ns example.demo.isolate.x01-hacking
   "Flutter/MX port of example 2 of https://plugfox.dev/mastering-isolates/"
   (:require
     ["package:flutter/material.dart" :as m]
@@ -39,20 +39,21 @@
                               ; 2. sends its wRP back to the main iso on its mRP so main can send us tasks;
                               ; 3. starts listening on wRP for tasks; and
                               ; 4. when it gets an N, iterates from 1 to N inclusive sending their factorials to main
-                              (fn entry-point [^SendPort send2main]
+                              (fn entry-point [config]
                                 (let [rcvPort (ReceivePort)]
+                                  (dp :worker-config!!!! config)
                                   (dp :worker-sends-its-receiver (.-sendPort rcvPort))
-                                  (.send send2main (.-sendPort rcvPort))
+                                  (.send (:result-port config) (.-sendPort rcvPort))
                                   (.listen rcvPort (fn [message]
                                                      (when (int? message)
                                                        (let [r (atom 1)]
                                                          (doseq [i (range 1 (inc message))]
                                                            (swap! r * i)
                                                            (dp :worker-sending-result :task i :factorial= @r)
-                                                           (.send send2main (str i "! = " @r)))))))))
-                              ; next is a positional arg that will be supplied to the provided entry-point.
+                                                           (.send (:result-port config) (str i "! = " @r)))))))))
+                              ; next is a positional arg that will be supplied as param-0 to the provided entry-point.
                               ; main iso offers the sendPort of its ReceivePort as param-0
-                              (.-sendPort ^ReceivePort (mget me :result-port))
+                              {:type :config :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
                               .errorsAreFatal true
                               .debugName "MyIsolate"))
      :worker-listener     (cF+ []
@@ -65,6 +66,7 @@
                                   ; first, as it should.
                                   (dp :main-hears message)
                                   (cond
+                                    #_ (= (:type message) :config)
                                     (dart/is? message SendPort)
                                     (do (dp :wmx-iso-task-port!! message)
                                       (wmx-iso
@@ -77,7 +79,7 @@
      :dispatcher          (cF (when-let [task2w (mget me :task-to-worker-port)]
                                 ; now we have a pipe to the worker, and can send it the task 7
                                 (dp :dispatcher-sees-task-port-to-worker task2w)
-                                (.send ^SendPort task2w 7))) ; <======== BINGO! task dispatch
+                                (.send ^SendPort task2w 3))) ; <======== BINGO! task dispatch
      :clean-up            (cF+ [:async? true
                                 :watch (fn [_ me new prior _]
                                          (when (= new :fini)
@@ -90,7 +92,7 @@
                             (Future.delayed (Duration .seconds 3) (fn [] :fini)))
      }
     (fx/scaffold
-      {:appBar (fx/app-bar {:title (fx/text "Simple BidirectionalLink")})})))
+      {:appBar (fx/app-bar {:title (fx/text "Hacking")})})))
 
 ;/// --- The original -------------------------------------------------
 ;

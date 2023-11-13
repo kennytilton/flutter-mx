@@ -5,21 +5,34 @@
             ["dart:core" :as dc]
             [cljd.flutter :as f]))
 
+(defmacro dp [& bits]
+  `(do
+     (dart:core/print (clojure.string/join " " (list* :DPR>
+                                                 (map #(if (nil? %) :NIL %) (vector ~@bits)))))
+     nil))
+
 (defn heavy-computation-task
   [my-send-port]
   (let [my-receive-port (di/ReceivePort)]
     (->> my-receive-port
       .-sendPort
       (.send ^di/SendPort my-send-port))
+    (dp :worker-starting-tasks)
     (-> my-receive-port
       (.forEach
         (fn [[my-message
               my-message-type
               my-response-send-port]]
+          (dp :worker-handling my-message my-message-type)
           (.send ^di/SendPort
             my-response-send-port
-            (str [my-message
-                  my-message-type])))))))
+            (str my-message "/"
+                  my-message-type)))))
+    (dp :worker-tasks-exhausted (di/Isolate.current))
+    #_ ;; nope. runs before worker sends
+            (let [iso (di/Isolate.current)]
+              (dp :iso iso)
+              (di/Isolate.exit))))
 
 (defn isolate-trigger!
   [receive-port
@@ -68,6 +81,7 @@
                                     {::type        text0
                                      ::message-box text1})
                                   (when-let [response-from-port  (await (.-first my-response-receive-port))]
+                                    (dp :response!!!!! response-from-port)
                                     (reset! *my-response response-from-port)))))
                      (m/Container .width 150
                        .height 80
