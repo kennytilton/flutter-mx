@@ -22,115 +22,80 @@
     {:title "Mastering Isolates #2"}
     {; this second map is for custom state
      ; these first parameters are plain CLJD values we will need different places
-     :result-port         (ReceivePort)
+     :result-port     (ReceivePort)
      ; new for CLJD MX, a formula cell can be specified as async?
      ; MX internally pretends the value starts as nil, executes a .then on the true value, a future,
      ; and in the .then handler reactively mutates the iso property to take on the deferred result.
      ; Here, though, the watch function handles everything. We could break it out into a separate cell
      ; which would begin: (cF (when-let [iso (mget me :worker-iso)}...
-     :worker-iso          (cF+ [:async? true
-                                :watch (fn [_ me worker _ _]
-                                         (when worker
-                                           (dp :got-worker-isolate! worker)))]
-                            (Isolate.spawn
-                              ; (we could also use here the entry-point defn above)
-                              ; This is our worker. The worker:
-                              ; 1. makes a ReceivePort (wRP) on which to receive tasks;
-                              ; 2. sends its wRP back to the main iso on its mRP so main can send us tasks;
-                              ; 3. starts listening on wRP for tasks; and
-                              ; 4. when it gets an N, iterates from 1 to N inclusive sending their factorials to main
-                              (fn entry-point [config]
-                                (let [rcvPort (ReceivePort)]
-                                  (dp :worker-config!!!! config)
-                                  (dp :worker-sends-its-receiver (.-sendPort rcvPort))
-                                  (.send (:result-port config) (.-sendPort rcvPort))
-                                  (.listen rcvPort (fn [message]
-                                                     (when (int? message)
-                                                       (let [r (atom 1)]
-                                                         (doseq [i (range 1 (inc message))]
+     :worker-iso      (cF+ [:async? true
+                            :watch (fn [_ me worker _ _]
+                                     (when worker
+                                       (dp :got-worker-isolate! worker)))]
+                        (Isolate.spawn
+                          ; (we could also use here the entry-point defn above)
+                          ; This is our worker. The worker:
+                          ; 1. makes a ReceivePort (wRP) on which to receive tasks;
+                          ; 2. sends its wRP back to the main iso on its mRP so main can send us tasks;
+                          ; 3. starts listening on wRP for tasks; and
+                          ; 4. when it gets an N, iterates from 1 to N inclusive sending their factorials to main
+                          (fn factorial-worker [{:keys [msg-type result-port]}]
+                            ; ReceivePorts cannot be sent, so main cannot provide that, so
+                            ; worker makes one and immediately sends back on the result-port, a misnomer
+                            (let [task-port (ReceivePort)]
+                              (dp :worker-sends-its-receiver (.-sendPort task-port))
+                              (.send result-port {:msg-type  :config
+                                                  :task-port (.-sendPort task-port)})
+                              (.listen task-port
+                                (fn [{:keys [msg-type of] :as task}]
+                                  (case msg-type
+                                    :compute-factorial (let [r (atom 1)]
+                                                         (doseq [i (range 1 (inc of))]
                                                            (swap! r * i)
                                                            (dp :worker-sending-result :task i :factorial= @r)
-                                                           (.send (:result-port config) (str i "! = " @r)))))))))
-                              ; next is a positional arg that will be supplied as param-0 to the provided entry-point.
-                              ; main iso offers the sendPort of its ReceivePort as param-0
-                              {:type :config :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                              .errorsAreFatal true
-                              .debugName "MyIsolate"))
-     :worker-listener     (cF+ []
-                            (when (mget me :worker-iso)
-                              (dp :main-starts-listening)
-                              (.listen ^ReceivePort (mget me :result-port)
-                                (fn [message]
-                                  ; Hmmm. Instead of insisting that the first message back from the
-                                  ; isolate be the .-sendPort of its ReceivePort, we assume the isolate does that
-                                  ; first, as it should.
-                                  (dp :main-hears message)
-                                  (cond
-                                    #_ (= (:type message) :config)
-                                    (dart/is? message SendPort)
-                                    (do (dp :wmx-iso-task-port!! message)
-                                      (wmx-iso
-                                        (dp :main-msets-task-out-port message)
-                                        (mset! me :task-to-worker-port message)))
-                                    (string? message)
-                                    (dp :x01-simple-rcv!! message))))))
-     :task-to-worker-port (cI nil :watch (fn [_ me new _ _]
-                                           (dp :task-to-worker-port-now new)))
-     :dispatcher          (cF (when-let [task2w (mget me :task-to-worker-port)]
-                                ; now we have a pipe to the worker, and can send it the task 7
-                                (dp :dispatcher-sees-task-port-to-worker task2w)
-                                (.send ^SendPort task2w 3))) ; <======== BINGO! task dispatch
-     :clean-up            (cF+ [:async? true
-                                :watch (fn [_ me new prior _]
-                                         (when (= new :fini)
-                                           ; or we could test (mx-bound? prior), then skip the delayed computation
-                                           (dp :cleaning-up!!)
-                                           (.close ^ReceivePort (mget me :result-port))
-                                           (.kill ^Isolate (mget me :worker-iso))))]
-                            ; this is a completely hacky way of knowing when to wrap-up.
-                            ; good enough for now.
-                            (Future.delayed (Duration .seconds 3) (fn [] :fini)))
+                                                           (.send result-port {:msg-type :factorial
+                                                                               :of       i
+                                                                               :value    @r})))
+                                    (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))))))
+                          ; next is a positional arg that will be supplied to the provided entry-point.
+                          ; main iso offers the sendPort of its results ReceivePort as param-0
+                          {:msg-type    :config
+                           :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                          .errorsAreFatal true
+                          .debugName "MyIsolate"))
+     :result-listener (cF+ []
+                        (when (mget me :worker-iso)
+                          (dp :main-starts-listening)
+                          (.listen ^ReceivePort (mget me :result-port)
+                            (fn [message]
+                              ; Hmmm. Instead of insisting that the first message back from the
+                              ; isolate be the .-sendPort of its ReceivePort, we assume the isolate does that
+                              ; first, as it should.
+                              (dp :main-hears message)
+                              (case (:msg-type message)
+                                :config (do (dp :result-config!! message)
+                                          (wmx-iso
+                                            (dp :main-msets-task-out-port message)
+                                            (mset! me :task-out-port (:task-port message))))
+                                :factorial (dp :factorial-of (:of message) :is (:value message)))))))
+     :task-out-port   (cI nil :watch (fn [_ me new _ _]
+                                       (dp :task-out-port-now new)))
+     :dispatcher      (cF (when-let [task2w (mget me :task-out-port)]
+                            ; now we have a pipe to the worker, and can send it our one task: 7
+                            (dp :dispatcher-sending-7-to-task-out task2w)
+                            (.send ^SendPort task2w
+                              {:msg-type :compute-factorial
+                               :of       7})))              ; <======== BINGO! task dispatch
+     :clean-up        (cF+ [:async? true
+                            :watch (fn [_ me new prior _]
+                                     (when (= new :fini)
+                                       ; or we could test (mx-bound? prior), then eliminate the delayed computation
+                                       (dp :cleaning-up!!)
+                                       (.close ^ReceivePort (mget me :result-port))
+                                       (.kill ^Isolate (mget me :worker-iso))))]
+                        ; this is a completely hacky way of knowing when to wrap-up.
+                        ; good enough for now.
+                        (Future.delayed (Duration .seconds 3) (fn [] :fini)))
      }
     (fx/scaffold
-      {:appBar (fx/app-bar {:title (fx/text "Hacking")})})))
-
-;/// --- The original -------------------------------------------------
-;
-;/// Let's upgrade the previous example to use an isolate with
-;/// bidirectional communication using a [ReceivePort] and a [SendPort] pairs.
-;
-;import 'dart:async';
-;import 'dart:isolate';
-;void entryPoint(SendPort send2main) {
-;  final rcvPort = ReceivePort(); // ReceivePort for the spawned isolate.
-;  send2main.send(rcvPort.sendPort); // Send the SendPort to the main isolate.
-;  // Listen to the ReceivePort and calculate the factorial.
-;  rcvPort.listen((message) {
-;    if (message is! int) return; // Ignore messages of other types.
-;    for (var i = 1, r = 1; i <= message; i++, r *= i) {
-;      // Send a message to the main isolate.
-;      send2main.send('$i! = $r');
-;    }
-;  });
-;}
-;
-;void main() => Future<void>(() async {
-;      final rcvPort = ReceivePort(); // ReceivePort for the main isolate.
-;      final isolate = await Isolate.spawn<SendPort>(
-;        entryPoint,
-;        rcvPort.sendPort,
-;        errorsAreFatal: true,
-;        debugName: 'MyIsolate',
-;      );
-;      final completer = Completer<SendPort>(); // For awaiting the SendPort.
-;      rcvPort.listen((message) {
-;        if (message is SendPort) completer.complete(message);
-;        if (message is String) print(message);
-;      });
-;      final send2Isolate = await completer.future; // Get the SendPort.
-;      send2Isolate.send(7); // Send a message to the spawned isolate.
-;      await Future<void>.delayed(const Duration(seconds: 1));
-;      rcvPort.close(); // Close the ReceivePort.
-;      isolate.kill(); // Kill the isolate.
-;    });
-;
+      {:appBar (fx/app-bar {:title (fx/text "Simple BidirectionalLink")})})))
