@@ -46,7 +46,7 @@
     [example.demo.isolate.x00-spawn :as ispawn]
     [example.demo.isolate.x01-simple-bidirectional-link :as isimple]
     [example.demo.isolate.x01-without-completer :as x01a]
-    [example.demo.isolate.x01-hacking :as hack]))
+    [example.demo.isolate.x01-factorial-refactored :as hack]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
