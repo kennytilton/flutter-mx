@@ -34,14 +34,15 @@
          (fx/floating-action-button
            {:onPressed (fx/as-dart-callback []
                          (wmx-iso
-                           (let [fo (fmu :facto)]
-                           (dp :sending-task!!!! fo)
-                           (mswap! fo :of + 2))))
+                           (let [fo (fmu :facto-display)]
+                             (dp :sending-task!!!! fo)
+                             (mswap! fo :of + 2))))
             :tooltip   "Send msg"})}
         (fx/column
           (clock-face)
           (fx/text {}
-            {:name            :facto
+            {:name            :iso-home
+             :target          :facto-display
              :result-port     (ReceivePort)
              :worker-iso      (cF+ [:async? true
                                     :watch (fn [_ me worker _ _]
@@ -82,21 +83,35 @@
                                                     (dpx :main-msets-task-out-port message)
                                                     (mset! me :task-out-port (:task-port message))))
                                         :factorial (dpx :factorial-of (:of-integer message) :is (:value message))
-                                        :eoj (do (dp :eoj!!!! message)
-                                               (wmx-iso (mset! me :factorial (:value message)))
-                                               #_#_ (.close ^ReceivePort (mget me :result-port))
-                                               (.kill ^Isolate (mget me :worker-iso))))))))
+                                        :eoj (do (dpx :eoj!!!! message)
+                                               (wmx-iso
+                                                 (mset! (fmu (mget me :target))
+                                                   :factorial (:value message)))
+                                               #_#_(.close ^ReceivePort (mget me :result-port))
+                                                       (.kill ^Isolate (mget me :worker-iso))))))))
              :task-out-port   (cI nil :watch (fn [_ me new _ _]
                                                (dpx :task-out-port-now new)))
-             :of (cI 1)
-             :factorial (cI 1)
+
              :dispatcher      (cF (when-let [task-out (mget me :task-out-port)]
-                                    (when-let [task-n (mget me :of)]
-                                      ; now we have a pipe to the worker, and can send it our one task: 7
+                                    (fn disp-task [task-n]
                                       (dp :dispatcher-sending-N-to-task-out task-n)
-                                      (.send ^SendPort (mget me :task-out-port)
+                                      (.send ^SendPort task-out
                                         {:msg-type   :compute-factorial
                                          :of-integer task-n}))))}
+            "ISO")
+          (fx/text {}
+            {:name      :facto-display
+             :of        (cI 1 :watch (fn [_ me new _ _]
+                                       (when new
+                                         (dpx :display-sees-new new)
+                                         (when-let [d (mget me :dispo)]
+                                           (dpx :display-sees-dispo d :sending new)
+                                           (d new)))))
+             :dispo     (cF+ [:watch (fn [_ me dsp-fn _ _]
+                                       (when dsp-fn
+                                         (dpx :got-disp-fn dsp-fn)))]
+                          (mget (fmu :iso-home) :dispatcher))
+             :factorial (cI :RSN)}
             (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))
 
 
