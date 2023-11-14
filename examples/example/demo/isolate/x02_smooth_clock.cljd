@@ -6,12 +6,20 @@
     ["package:vector_math/vector_math_64.dart" :as vm]
     ["dart:math" :as math
      :refer [pi cos sin]]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
     [cljd.flutter.alpha :as f]
+    [tilton.mx.cell.base :as cb]
 
     [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.cell.core :as cell :refer [cF cI]]
-    [tilton.mx.model.core :refer [mget muv] :as md]
+
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+
     [tilton.fmx.api :as fx]))
+
+(declare clock-face)
 
 (defn make-app []
   (let [title "Smooth Clock"]
@@ -21,7 +29,7 @@
         {:appBar (fx/app-bar {:title (fx/text title)})}
         (clock-face)))))
 
-(def radius 125)
+
 
 ; void paint(Canvas canvas, Size size) {
 ;    final center = size.center;
@@ -42,59 +50,84 @@
 ;    canvas.drawLine(handStart, handEnd, Paint()..color = Colors.red..strokeWidth = 5);
 ;  }
 (defn clock-face []
-  (m/CustomPaint
-    .size (m/Size double/infinity double/infinity)
-    .painter (reify :extends (m/CustomPainter)
-               (paint [this ^Canvas canvas ^Size size]
-                 (dp :size!!!! size)
-                 (let [center (.center size (m/Offset 0 0))
-                       radius (- (/ (.-width size) 2) 24)
-                       pin-p (doto (m/Paint)
-                               (-> .-color (set! m/Colors.grey.shade400))
-                               (-> .-style (set! m/PaintingStyle.fill)))
-                       dial-p (doto (m/Paint)
-                                (-> .-color (set! m/Colors.grey))
-                                (-> .-style (set! m/PaintingStyle.stroke)))
-                       hand-p (doto (m/Paint)
-                                (-> .-color (set! m/Colors.red))
-                                (-> .-strokeWidth (set! 5.0))
-                                (-> .-style (set! m/PaintingStyle.stroke)))
-                       hand-len (* radius 0.9)
-                       hand-angle 42
-                       hand-start center
-                       hand-end (m/Offset (+ (.-dx center) (* hand-len
-                                                             (math/cos (/ (* hand-angle pi) 180))))
-                                  (+ (.-dy center) (* hand-len
-                                                     (sin (/ (* hand-angle pi) 180)))))
-                       ;    final handAngle = rotationTween.value * 360;
-                       ;    final handStart = Offset(center.dx, center.dy);
-                       ;    final handEnd = Offset(
-                       ;      center.dx + handLength * cos(handAngle * pi / 180),
-                       ;      center.dy + handLength * sin(handAngle * pi / 180),
-                       ;    );
-                       ]
-                   (dp :center center)
-                   (.drawCircle ^Canvas canvas center radius dial-p)
-                   (.drawLine ^Canvas canvas hand-start hand-end hand-p)
-                   (.drawCircle ^Canvas canvas center 10 pin-p)
-                   ))
-               (shouldRepaint [this _] true))))
+  (fx/custom-paint
+    {:size    (m/Size double/infinity double/infinity)
+     :painter (cF (let [tick (mget me :tick)]
+                    (reify :extends (m/CustomPainter)
+                    (paint [this ^Canvas canvas ^Size size]
+                      ;(dp :size!!!! size)
+                      (let [center (.center size (m/Offset 0 -200))
+                            radius (- (/ (.-width size) 2) 24)
+                            pin-p (doto (m/Paint)
+                                    (-> .-color (set! m/Colors.grey.shade400))
+                                    (-> .-style (set! m/PaintingStyle.fill)))
+                            dial-p (doto (m/Paint)
+                                     (-> .-color (set! m/Colors.grey))
+                                     (-> .-style (set! m/PaintingStyle.stroke)))
+                            hand-p (doto (m/Paint)
+                                     (-> .-color (set! m/Colors.red))
+                                     (-> .-strokeWidth (set! 1.0))
+                                     (-> .-style (set! m/PaintingStyle.stroke)))
+                            hand-len (* radius 0.9)
+                            hand-angle (/ tick 10.0)
+                            hand-start center
+                            hand-end (m/Offset
+                                       (+ (.-dx center) (* hand-len
+                                                          (cos (/ (* hand-angle pi) 180))))
+                                       (+ (.-dy center) (* hand-len
+                                                          (sin (/ (* hand-angle pi) 180)))))
+                            ]
+                        ;
+                        ; (dp :center center)
+                        (.drawCircle ^Canvas canvas center radius dial-p)
+                        (.drawLine ^Canvas canvas hand-start hand-end hand-p)
+                        (.drawCircle ^Canvas canvas center 10 pin-p)
+                        ))
+                    (shouldRepaint [this _] true))))}
+    {:second (cI 0.6)
+     :tick (cI 0 #_#_:watch (fn [_ me tick _ _]
+                          (dp :tick tick)))
+     :clock (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
+                                        (.cancel tmr)))]
+              (async/Timer.periodic (Duration .milliseconds 10)
+                (fn [^async/Timer tmr]
+                  (wmx-iso
+                    (mset! me :tick (.-tick tmr))))))}))
 
-#_    (let [[^m/Offset o ^m/Offset a ^m/Offset b]
-              [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 200 350)]
-              c (.- (.+ b a) o)
-              paint (doto (m/Paint)
-                      (-> .-color (set! m/Colors.grey))
-                      (-> .-style (set! m/PaintingStyle.stroke)))]
-          (doto canvas
-            ;(.drawLine o a paint)
-            ;(.drawLine o b paint)
-            ;(.drawLine b c paint)
-            ;(.drawLine a c paint)
-            ;(.drawCircle o radius paint)
-            ;(.drawCircle a radius paint)
-            (.drawCircle b radius paint))
-          nil)
+#_(defn clock-face []
+    (m/CustomPaint
+      .size (m/Size double/infinity double/infinity)
+      .painter (reify :extends (m/CustomPainter)
+                 (paint [this ^Canvas canvas ^Size size]
+                   (dp :size!!!! size)
+                   (let [center (.center size (m/Offset 0 -200))
+                         radius (- (/ (.-width size) 4) 24)
+                         pin-p (doto (m/Paint)
+                                 (-> .-color (set! m/Colors.grey.shade400))
+                                 (-> .-style (set! m/PaintingStyle.fill)))
+                         dial-p (doto (m/Paint)
+                                  (-> .-color (set! m/Colors.grey))
+                                  (-> .-style (set! m/PaintingStyle.stroke)))
+                         hand-p (doto (m/Paint)
+                                  (-> .-color (set! m/Colors.red))
+                                  (-> .-strokeWidth (set! 5.0))
+                                  (-> .-style (set! m/PaintingStyle.stroke)))
+                         hand-len (* radius 0.9)
+                         hand-angle 42
+                         hand-start center
+                         hand-end (m/Offset
+                                    (+ (.-dx center) (* hand-len
+                                                       (math/cos (/ (* hand-angle pi) 180))))
+                                    (+ (.-dy center) (* hand-len
+                                                       (sin (/ (* hand-angle pi) 180)))))
+                         ]
+                     (dp :center center)
+                     (.drawCircle ^Canvas canvas center radius dial-p)
+                     (.drawLine ^Canvas canvas hand-start hand-end hand-p)
+                     (.drawCircle ^Canvas canvas center 10 pin-p)
+                     ))
+                 (shouldRepaint [this _] true))))
+
 (defn inside-parallelogram
   [[^m/Offset o ^m/Offset a ^m/Offset b] ^m/Offset mouse-pos]
   (let [oa (.- a o)
@@ -113,60 +146,60 @@
   (let [oo' (.- o' o)]
     [o' (.+ a oo') (.+ b oo')]))
 
-(defn gesture-parallelogram []
-  (fx/gesture-detector
-    {:onPanStart  (cF (fx/cb-as-is
-                        (fn [^g/DragStartDetails details]
-                          (let [vertices (mget me :vertices)
-                                pointer (.-localPosition details)
-                                [id delta] (or
-                                             ;; see if a dot has been clicked, perhaps within the parallelogram
-                                             ;; _and_ on the dot, since they overlap a bit. Our spec gives
-                                             ;; the dot precedence.
-                                             (some (fn [[i vertex]]
-                                                     (let [delta (.- pointer vertex)]
-                                                       (when (< (.-distance delta) radius)
-                                                         [i delta])))
-                                               (map-indexed vector vertices))
-                                             ;; ... not on a dot, now see if in parallelogram
-                                             (when-some [delta (inside-parallelogram vertices pointer)]
-                                               [:parallelogram delta])
-                                             ;; fall thru binding id and delta to nil. The id being nil is key
-                                             )]
-                            (md/mset! me :drag-op {:dragee id :delta delta})))))
-     :onPanUpdate (cF (fx/cb-as-is
-                        (fn [^g/DragUpdateDetails details]
-                          (let [{:keys [dragee delta]} (md/mget me :drag-op)
-                                new-pos (when delta
-                                          (.- (.-localPosition details) delta))]
-                            (cond
-                              (= dragee :parallelogram)
-                              (md/mswap! me :vertices move-to new-pos)
-                              (int? dragee)
-                              (md/mswap! me :vertices assoc dragee new-pos))))))}
-    {:fx$notifier (m/ChangeNotifier)
-     :vertices    (cI [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)])
-     :drag-op     (cI {:delta  nil
-                       :dragee nil})}
-    (m/CustomPaint
-      .size (m/Size double/infinity double/infinity)
-      .painter (reify :extends (m/CustomPainter .repaint (mget me :fx$notifier))
-                 (paint [this canvas size]
-                   (let [[^m/Offset o ^m/Offset a ^m/Offset b] (md/mget me :vertices)
-                         c (.- (.+ b a) o)
-                         paint (doto (m/Paint)
-                                 (-> .-color (set! m/Colors.grey))
-                                 (-> .-style (set! m/PaintingStyle.fill)))]
-                     (doto canvas
-                       (.drawLine o a paint)
-                       (.drawLine o b paint)
-                       (.drawLine b c paint)
-                       (.drawLine a c paint)
-                       (.drawCircle o radius paint)
-                       (.drawCircle a radius paint)
-                       (.drawCircle b radius paint))
-                     nil))
-                 (shouldRepaint [this _] true)))))
+#_(defn gesture-parallelogram []
+    (fx/gesture-detector
+      {:onPanStart  (cF (fx/cb-as-is
+                          (fn [^g/DragStartDetails details]
+                            (let [vertices (mget me :vertices)
+                                  pointer (.-localPosition details)
+                                  [id delta] (or
+                                               ;; see if a dot has been clicked, perhaps within the parallelogram
+                                               ;; _and_ on the dot, since they overlap a bit. Our spec gives
+                                               ;; the dot precedence.
+                                               (some (fn [[i vertex]]
+                                                       (let [delta (.- pointer vertex)]
+                                                         (when (< (.-distance delta) radius)
+                                                           [i delta])))
+                                                 (map-indexed vector vertices))
+                                               ;; ... not on a dot, now see if in parallelogram
+                                               (when-some [delta (inside-parallelogram vertices pointer)]
+                                                 [:parallelogram delta])
+                                               ;; fall thru binding id and delta to nil. The id being nil is key
+                                               )]
+                              (md/mset! me :drag-op {:dragee id :delta delta})))))
+       :onPanUpdate (cF (fx/cb-as-is
+                          (fn [^g/DragUpdateDetails details]
+                            (let [{:keys [dragee delta]} (md/mget me :drag-op)
+                                  new-pos (when delta
+                                            (.- (.-localPosition details) delta))]
+                              (cond
+                                (= dragee :parallelogram)
+                                (md/mswap! me :vertices move-to new-pos)
+                                (int? dragee)
+                                (md/mswap! me :vertices assoc dragee new-pos))))))}
+      {:fx$notifier (m/ChangeNotifier)
+       :vertices    (cI [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)])
+       :drag-op     (cI {:delta  nil
+                         :dragee nil})}
+      (m/CustomPaint
+        .size (m/Size double/infinity double/infinity)
+        .painter (reify :extends (m/CustomPainter .repaint (mget me :fx$notifier))
+                   (paint [this canvas size]
+                     (let [[^m/Offset o ^m/Offset a ^m/Offset b] (md/mget me :vertices)
+                           c (.- (.+ b a) o)
+                           paint (doto (m/Paint)
+                                   (-> .-color (set! m/Colors.grey))
+                                   (-> .-style (set! m/PaintingStyle.fill)))]
+                       (doto canvas
+                         (.drawLine o a paint)
+                         (.drawLine o b paint)
+                         (.drawLine b c paint)
+                         (.drawLine a c paint)
+                         (.drawCircle o radius paint)
+                         (.drawCircle a radius paint)
+                         (.drawCircle b radius paint))
+                       nil))
+                   (shouldRepaint [this _] true)))))
 
 
 
