@@ -19,25 +19,7 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face]]))
-
-(defn slow-is-prime? [n]
-  (cond
-    (= n 1) false
-    :else (not (some (fn [divisor]
-                       (zero? (mod n divisor)))
-                 (range 2 n)))))
-
-(defn use-compute? []
-  (fx/sized-box {:width 300}
-    (fx/checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Use Foundation/compute?")
-       :value           (cI true)
-       :onChanged       (cF #(wmx-iso
-                               (mset! me :value %)
-                               (mset! (fmu :primer) :of 9000039)))}
-      {:name :use-compute?})))
+     :refer [clock-face slow-is-prime? use-compute?]]))
 
 (defn make-app []
   (let [title "Smooth Clock"]
