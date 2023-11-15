@@ -3,6 +3,7 @@
     ["package:flutter/gestures.dart" :as g]
     ["package:flutter/material.dart" :as m
      :refer [Canvas Size]]
+    ["package:flutter/painting.dart" :as p]
     ["package:vector_math/vector_math_64.dart" :as vm]
     ["dart:math" :as math
      :refer [pi cos sin]]
@@ -16,27 +17,11 @@
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
-    [tilton.fmx.api :as fx]))
+    [tilton.fmx.api :as fx]
+    [example.demo.isolate.common :as cmn
+     :refer [clock-face]]))
 
-(declare clock-face)
-
-;Future<bool> isPrime(int value) {
-;  return compute(_calculate, value);
-;}
-;
-;bool _calculate(int value) {
-;  if (value == 1) {
-;    return false;
-;  }
-;  for (int i = 2; i < value; ++i) {
-;    if (value % i == 0) {
-;      return false;
-;    }
-;  }
-;  return true;
-;}
-
-(defn is-prime? [n]
+(defn slow-is-prime? [n]
   (cond
     (= n 1) false
     :else (not (some (fn [divisor]
@@ -44,12 +29,14 @@
                  (range 2 n)))))
 
 (defn use-compute? []
-  (fx/sized-box {:width 180}
+  (fx/sized-box {:width 300}
     (fx/checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Use compute?")
+       :title           (m/Text "Use Foundation/compute?")
        :value           (cI true)
-       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+       :onChanged       (cF #(wmx-iso
+                               (mset! me :value %)
+                               (mset! (fmu :primer) :of 9000039)))}
       {:name :use-compute?})))
 
 (defn make-app []
@@ -62,64 +49,35 @@
          (fx/floating-action-button
            {:onPressed (fx/as-dart-callback []
                          (wmx-iso
-                           (let [fo (fmu :facto-display)]
-                             (dp :sending-task!!!! fo :prm (is-prime? 17))
-                             (mswap! fo :of + 2))))
-            :tooltip   "Send msg"})}
+                           (let [fo (fmu :primer)]
+                             (mswap! fo :of + 2))))})}
         (fx/column
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (clock-face)
           (use-compute?)
-
           (fx/text {}
-            {:name   :facto-display
-             ; 9000011,41,49,59,67,119,127,143,163,193,203,209,217,223,253,269,283,289,317,331
+            {:name   :primer
              :of     (cI 9000039)
-             :prime? (cF+ [:async? true
-                           :watch (fn [_ _ new _ _]
-                                    (dp :prime-watch new))]
+             :prime? (cF+ [:async? true]
                        (if (mx/muv :use-compute?)
-                         (fnd/compute is-prime? (mget me :of))
-                         (future (is-prime? (mget me :of)))))}
-            (str "The number of " (mget me :of) " is prime? " (mget me :prime?))))))))
+                         (fnd/compute slow-is-prime? (mget me :of))
+                         ;; todo teach MX that async? rules may not yield futures, so
+                         ;; there will be no need to wrap this in a future
+                         (future (slow-is-prime? (mget me :of)))))}
+            (str "Is " (mget me :of) " prime? "))
 
-(defn clock-face []
-  (fx/custom-paint
-    {:size    (m/Size 400 400)
-     :painter (cF (let [tick (mget me :tick)]
-                    (reify :extends (m/CustomPainter)
-                      (paint [this ^Canvas canvas ^Size size]
-                        (let [center (.center size (m/Offset 0 0))
-                              radius (- (/ (.-width size) 2) 24)
-                              pin-p (doto (m/Paint)
-                                      (-> .-color (set! m/Colors.grey.shade400))
-                                      (-> .-style (set! m/PaintingStyle.fill)))
-                              dial-p (doto (m/Paint)
-                                       (-> .-color (set! m/Colors.grey))
-                                       (-> .-style (set! m/PaintingStyle.stroke)))
-                              hand-p (doto (m/Paint)
-                                       (-> .-color (set! m/Colors.red))
-                                       (-> .-strokeWidth (set! 1.0))
-                                       (-> .-style (set! m/PaintingStyle.stroke)))
-                              hand-len (* radius 0.9)
-                              hand-angle (/ tick 10.0)
-                              hand-end (m/Offset
-                                         (+ (.-dx center) (* hand-len
-                                                            (cos (/ (* hand-angle pi) 180))))
-                                         (+ (.-dy center) (* hand-len
-                                                            (sin (/ (* hand-angle pi) 180)))))]
-                          ;
-                          ; (dp :center center)
-                          (.drawCircle ^Canvas canvas center radius dial-p)
-                          (.drawLine ^Canvas canvas center hand-end hand-p)
-                          (.drawCircle ^Canvas canvas center 10 pin-p)
-                          ))
-                      (shouldRepaint [this _] true))))}
-    {:tick  (cI 0 #_#_:watch (fn [_ me tick _ _]
-                               (dp :tick tick)))
-     :clock (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
-                                        (.cancel tmr)))]
-              (async/Timer.periodic (Duration .milliseconds 10)
-                (fn [^async/Timer tmr]
-                  (wmx-iso
-                    (mset! me :tick (.-tick tmr))))))}))
+          (fx/sized-box {:height 32}
+            (fx/text
+              {:style (cF (let [p? (mget (fmu :primer) :prime?)]
+                            (fx/text-style {:fontSize   (if p? 24 18)
+                                            :fontWeight m/FontWeight.w400
+                                            :color      (if p? m/Colors.green m/Colors.red)})))}
+              (let [p (mget (fmu :primer) :prime?)]
+                (cond
+                  (nil? p) "..."
+                  (true? p) "Yep!!"
+                  (false? p) "Nope"
+                  :else "#@!%"))))
+
+          (fx/text "Tap for next in 9000011,41,49,59,67,..."))))))
 

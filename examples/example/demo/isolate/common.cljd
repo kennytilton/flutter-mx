@@ -1,0 +1,61 @@
+(ns example.demo.isolate.common
+  (:require
+    ["package:flutter/gestures.dart" :as g]
+    ["package:flutter/material.dart" :as m
+     :refer [Canvas Size]]
+    ["package:vector_math/vector_math_64.dart" :as vm]
+    ["dart:math" :as math
+     :refer [pi cos sin]]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
+    ["package:flutter/foundation.dart" :as fnd]
+
+    [tilton.mx.cell.base :as cb]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx]))
+
+
+(defn clock-face []
+  (fx/custom-paint
+    {:size    (m/Size 400 400)
+     :painter (cF (let [tick (mget me :tick)]
+                    (reify :extends (m/CustomPainter)
+                      (paint [this ^Canvas canvas ^Size size]
+                        (let [center (.center size (m/Offset 0 0))
+                              radius (- (/ (.-width size) 2) 24)
+                              pin-p (doto (m/Paint)
+                                      (-> .-color (set! m/Colors.grey.shade400))
+                                      (-> .-style (set! m/PaintingStyle.fill)))
+                              dial-p (doto (m/Paint)
+                                       (-> .-color (set! m/Colors.grey))
+                                       (-> .-style (set! m/PaintingStyle.stroke)))
+                              hand-p (doto (m/Paint)
+                                       (-> .-color (set! m/Colors.red))
+                                       (-> .-strokeWidth (set! 1.0))
+                                       (-> .-style (set! m/PaintingStyle.stroke)))
+                              hand-len (* radius 0.9)
+                              hand-angle (/ tick 10.0)
+                              hand-end (m/Offset
+                                         (+ (.-dx center) (* hand-len
+                                                            (cos (/ (* hand-angle pi) 180))))
+                                         (+ (.-dy center) (* hand-len
+                                                            (sin (/ (* hand-angle pi) 180)))))]
+                          ;
+                          ; (dp :center center)
+                          (.drawCircle ^Canvas canvas center radius dial-p)
+                          (.drawLine ^Canvas canvas center hand-end hand-p)
+                          (.drawCircle ^Canvas canvas center 10 pin-p)
+                          ))
+                      (shouldRepaint [this _] true))))}
+    {:tick  (cI 0)
+     :clock (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
+                                        (.cancel tmr)))]
+              (async/Timer.periodic (Duration .milliseconds 10)
+                (fn [^async/Timer tmr]
+                  (wmx-iso
+                    (mset! me :tick (.-tick tmr))))))}))
+
