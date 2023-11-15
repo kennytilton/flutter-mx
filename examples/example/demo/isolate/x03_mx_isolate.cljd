@@ -70,7 +70,7 @@
     ;; worker
     (fn [{:keys [iso msg-type of-integer] :as task}]
       (dp :worker-entry msg-type)
-      ;(dp :worker-entry-app (nil? the-app)) ;; <=== NOT OK HERE!!!!!!!!!!!!!!
+      (dp :worker-entry-app (nil? the-app)) ;; <=== NOT OK HERE!!!!!!!!!!!!!!
       (case msg-type
         :compute-factorial (let [r (atom 1)]
                              (doseq [i (range 1 (inc of-integer))] (swap! r * i))
