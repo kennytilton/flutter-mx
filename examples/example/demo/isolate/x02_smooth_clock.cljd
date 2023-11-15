@@ -8,18 +8,13 @@
      :refer [pi cos sin]]
     ["dart:async" :as async
      :refer [Completer StreamSubscription]]
-
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
-    [cljd.flutter.alpha :as f]
+
     [tilton.mx.cell.base :as cb]
-
-    [tilton.mx.base :refer [dprn dp dpx]]
-
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
-
     [tilton.fmx.api :as fx]))
 
 (declare clock-face)
@@ -42,6 +37,7 @@
           (clock-face)
           (fx/text {}
             {:name            :iso-home
+             :fx$dpk          [:sstate :build]
              :target          :facto-display
              :result-port     (ReceivePort)
              :worker-iso      (cF+ [:async? true
@@ -58,6 +54,9 @@
                                         (fn [{:keys [msg-type of-integer] :as task}]
                                           (case msg-type
                                             :compute-factorial (let [r (atom 1)]
+                                                                 (do (dp :startingbillyuns)
+                                                                   (dotimes [_ (* 1000 300 1000 10)])
+                                                                   (dp :fini-billions))
                                                                  (doseq [i (range 1 (inc of-integer))]
                                                                    (swap! r * i)
                                                                    (dpx :worker-sending-result :task i :factorial= @r)
@@ -83,7 +82,7 @@
                                                     (dpx :main-msets-task-out-port message)
                                                     (mset! me :task-out-port (:task-port message))))
                                         :factorial (dpx :factorial-of (:of-integer message) :is (:value message))
-                                        :eoj (do (dpx :eoj!!!! message)
+                                        :eoj (do (dp :eoj!!!! message)
                                                (wmx-iso
                                                  (mset! (fmu (mget me :target))
                                                    :factorial (:value message)))
@@ -94,19 +93,18 @@
 
              :dispatcher      (cF (when-let [task-out (mget me :task-out-port)]
                                     (fn disp-task [task-n]
-                                      (dp :dispatcher-sending-N-to-task-out task-n)
+                                      (dpx :dispatcher-sending-N-to-task-out task-n)
                                       (.send ^SendPort task-out
                                         {:msg-type   :compute-factorial
                                          :of-integer task-n}))))}
-            "ISO")
+            "ISO HOME")
           (fx/text {}
             {:name      :facto-display
              :of        (cI 1 :watch (fn [_ me new _ _]
                                        (when new
-                                         (dpx :display-sees-new new)
-                                         (when-let [d (mget me :dispo)]
-                                           (dpx :display-sees-dispo d :sending new)
-                                           (d new)))))
+                                         (when-let [dispo (mget me :dispo)]
+                                           (dp :display :sending new)
+                                           (dispo new)))))
              :dispo     (cF+ [:watch (fn [_ me dsp-fn _ _]
                                        (when dsp-fn
                                          (dpx :got-disp-fn dsp-fn)))]
@@ -114,32 +112,12 @@
              :factorial (cI :RSN)}
             (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))
 
-
-; void paint(Canvas canvas, Size size) {
-;    final center = size.center;
-;    final radius = size.width / 2;
-;
-;    // Draw the watch face background
-;    canvas.drawCircle(center, radius, Paint()..color = Colors.white);
-;
-;    // Draw the second hand
-;    final handLength = radius * 0.8;
-;    final handAngle = rotationTween.value * 360;
-;    final handStart = Offset(center.dx, center.dy);
-;    final handEnd = Offset(
-;      center.dx + handLength * cos(handAngle * pi / 180),
-;      center.dy + handLength * sin(handAngle * pi / 180),
-;    );
-;
-;    canvas.drawLine(handStart, handEnd, Paint()..color = Colors.red..strokeWidth = 5);
-;  }
 (defn clock-face []
   (fx/custom-paint
-    {:size    (m/Size 400 400)                              ;double/infinity double/infinity)
+    {:size    (m/Size 400 400)
      :painter (cF (let [tick (mget me :tick)]
                     (reify :extends (m/CustomPainter)
                       (paint [this ^Canvas canvas ^Size size]
-                        ;(dp :size!!!! size)
                         (let [center (.center size (m/Offset 0 0))
                               radius (- (/ (.-width size) 2) 24)
                               pin-p (doto (m/Paint)
@@ -154,17 +132,15 @@
                                        (-> .-style (set! m/PaintingStyle.stroke)))
                               hand-len (* radius 0.9)
                               hand-angle (/ tick 10.0)
-                              hand-start center
                               hand-end (m/Offset
                                          (+ (.-dx center) (* hand-len
                                                             (cos (/ (* hand-angle pi) 180))))
                                          (+ (.-dy center) (* hand-len
-                                                            (sin (/ (* hand-angle pi) 180)))))
-                              ]
+                                                            (sin (/ (* hand-angle pi) 180)))))]
                           ;
                           ; (dp :center center)
                           (.drawCircle ^Canvas canvas center radius dial-p)
-                          (.drawLine ^Canvas canvas hand-start hand-end hand-p)
+                          (.drawLine ^Canvas canvas center hand-end hand-p)
                           (.drawCircle ^Canvas canvas center 10 pin-p)
                           ))
                       (shouldRepaint [this _] true))))}
@@ -178,39 +154,7 @@
                    (wmx-iso
                      (mset! me :tick (.-tick tmr))))))}))
 
-#_(defn clock-face []
-    (m/CustomPaint
-      .size (m/Size double/infinity double/infinity)
-      .painter (reify :extends (m/CustomPainter)
-                 (paint [this ^Canvas canvas ^Size size]
-                   (dp :size!!!! size)
-                   (let [center (.center size (m/Offset 0 -200))
-                         radius (- (/ (.-width size) 4) 24)
-                         pin-p (doto (m/Paint)
-                                 (-> .-color (set! m/Colors.grey.shade400))
-                                 (-> .-style (set! m/PaintingStyle.fill)))
-                         dial-p (doto (m/Paint)
-                                  (-> .-color (set! m/Colors.grey))
-                                  (-> .-style (set! m/PaintingStyle.stroke)))
-                         hand-p (doto (m/Paint)
-                                  (-> .-color (set! m/Colors.red))
-                                  (-> .-strokeWidth (set! 5.0))
-                                  (-> .-style (set! m/PaintingStyle.stroke)))
-                         hand-len (* radius 0.9)
-                         hand-angle 42
-                         hand-start center
-                         hand-end (m/Offset
-                                    (+ (.-dx center) (* hand-len
-                                                       (math/cos (/ (* hand-angle pi) 180))))
-                                    (+ (.-dy center) (* hand-len
-                                                       (sin (/ (* hand-angle pi) 180)))))
-                         ]
-                     (dp :center center)
-                     (.drawCircle ^Canvas canvas center radius dial-p)
-                     (.drawLine ^Canvas canvas hand-start hand-end hand-p)
-                     (.drawCircle ^Canvas canvas center 10 pin-p)
-                     ))
-                 (shouldRepaint [this _] true))))
+
 
 
 ; import 'package:flutter/material.dart';

@@ -1,0 +1,174 @@
+(ns example.demo.isolate.x03-mx-isolate
+  (:require
+    ["package:flutter/gestures.dart" :as g]
+    ["package:flutter/material.dart" :as m
+     :refer [Canvas Size]]
+    ["package:vector_math/vector_math_64.dart" :as vm]
+    ["dart:math" :as math
+     :refer [pi cos sin]]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
+
+    [tilton.mx.api :as md]
+    [tilton.mx.cell.base :as cb]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx]))
+
+(declare clock-face)
+
+(defn make-iso [worker-fn result-handler]
+  (md/make                                                  ;; :mx-type ::mx-isolate
+    :result-port (ReceivePort)
+    :worker-iso (cF+ [:async? true
+                      :watch (fn [_ me worker _ _]
+                               (when worker
+                                 (dp :got-worker-isolate! worker)))]
+                  (Isolate.spawn
+                    (fn [msg]
+                      (dp :stock-worker-sees msg)
+                      (let [{:keys [msg-type ^SendPort result-port]} msg
+                            task-port (ReceivePort)]
+                        (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
+                        (.send result-port {:msg-type  :config
+                                            :task-port (.-sendPort task-port)})
+                        (dp :stock-worker-starts-listening task-port)
+                        (.listen task-port (fn [task]
+                                             (dp :stock-worker-sees-task task)
+                                             (let [result (worker-fn task)]
+                                               (dp :worker-fn-returns-result result)
+                                               (.send result-port {:msg-type :result
+                                                                   :value    result}))
+                                             nil))
+                        nil))
+                    {:msg-type    :config
+                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                    .errorsAreFatal true
+                    .debugName "make-iso-isolate"))
+    :result-listener (cF+ []
+                       (when (mget me :worker-iso)
+                         (dp :main-starts-listening (mget me :result-port))
+                         (.listen ^ReceivePort (mget me :result-port)
+                           (fn [message]
+                             (dp :main-hears message)
+                             (case (:msg-type message)
+                               :config (do (dp :main-gets-result-config!! message)
+                                         (wmx-iso
+                                           (dp :main-msets-task-out-port message)
+                                           (mset! me :task-out-port (:task-port message))))
+                               (result-handler message))))))
+    :task-out-port (cI nil :watch (fn [_ me new _ _]
+                                    (dp :task-out-port-now new)))))
+
+(defn make-app []
+  (let [title "MX Iso Clock"]
+    (fx/material-app
+      {:title title}
+      {:name     :app
+       :fact-iso (cF (let [the-app me]
+                       (dp :the-app (minfo the-app))
+                       (make-iso
+                         ;; worker
+                         (fn [{:keys [iso msg-type of-integer] :as task}]
+                           (dp :worker-entry msg-type)
+                           (case msg-type
+                             :compute-factorial (let [r (atom 1)]
+                                                  (doseq [i (range 1 (inc of-integer))] (swap! r * i))
+                                                  {:of-integer of-integer
+                                                   :value      @r})
+                             (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
+                         ;; result handler
+                         (fn [message]
+                           (dp :result-handler-entry message)
+                           (case (:msg-type message)
+                             :config (throw "result-handler got config")
+                             :result (let [v (:value message)]
+                                       (dp :factorial-of (:of-integer v) :is (:value v))
+
+                                       #_(wmx-iso
+                                           (mset! (fmu :facto-display)
+                                             :factorial (:value result)))
+                                       #_#_(.close ^ReceivePort (mget me :result-port))
+                                               (.kill ^Isolate (mget me :worker-iso))))))))}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton
+         (fx/floating-action-button
+           {:onPressed (fx/as-dart-callback []
+                         (dp :PRESSED-sees (minfo (fmu :facto-display)))
+                         (wmx-iso
+                           (let [fo (fmu :facto-display)]
+                             (dp :bumping-of!!!! (minfo fo))
+                             (mswap! fo :of + 2))))
+            :tooltip   "Send msg"})}
+        (fx/column
+          (clock-face)
+
+          (fx/text {}
+            {:name      :facto-display
+
+             ;; splice this in
+
+
+             #_(cF (when-let [task2w (mget me :task-out-port)]
+                     ; now we have a pipe to the worker, and can send it our one task: 7
+                     (dp :dispatcher-sending-7-to-task-out task2w)
+                     (.send ^SendPort task2w
+                       {:msg-type   :compute-factorial
+                        :of-integer 7})))
+             :of        (cI 1 :watch (fn [_ me new _ _]
+                                       (when-let [iso (mav :fact-iso)]
+                                         (when-let [task2w (mget iso :task-out-port)]
+                                           ; now we have a pipe to the worker, and can send it our one task: 7
+                                           (dp :dispatcher-sending-7-to-task-out task2w)
+                                           (.send ^SendPort task2w
+                                             {:msg-type   :compute-factorial
+                                              :of-integer new})))))
+             :factorial (cI :RSN)}
+            (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))
+
+(defn clock-face []
+  (fx/custom-paint
+    {:size    (m/Size 400 400)
+     :painter (cF (let [tick (mget me :tick)]
+                    (reify :extends (m/CustomPainter)
+                      (paint [this ^Canvas canvas ^Size size]
+                        (let [center (.center size (m/Offset 0 0))
+                              radius (- (/ (.-width size) 2) 24)
+                              pin-p (doto (m/Paint)
+                                      (-> .-color (set! m/Colors.grey.shade400))
+                                      (-> .-style (set! m/PaintingStyle.fill)))
+                              dial-p (doto (m/Paint)
+                                       (-> .-color (set! m/Colors.grey))
+                                       (-> .-style (set! m/PaintingStyle.stroke)))
+                              hand-p (doto (m/Paint)
+                                       (-> .-color (set! m/Colors.red))
+                                       (-> .-strokeWidth (set! 1.0))
+                                       (-> .-style (set! m/PaintingStyle.stroke)))
+                              hand-len (* radius 0.9)
+                              hand-angle (/ tick 10.0)
+                              hand-end (m/Offset
+                                         (+ (.-dx center) (* hand-len
+                                                            (cos (/ (* hand-angle pi) 180))))
+                                         (+ (.-dy center) (* hand-len
+                                                            (sin (/ (* hand-angle pi) 180)))))]
+                          ;
+                          ; (dp :center center)
+                          (.drawCircle ^Canvas canvas center radius dial-p)
+                          (.drawLine ^Canvas canvas center hand-end hand-p)
+                          (.drawCircle ^Canvas canvas center 10 pin-p)
+                          ))
+                      (shouldRepaint [this _] true))))}
+    {:second (cI 0.6)
+     :tick   (cI 0)
+     :clock  (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
+                                         (.cancel tmr)))]
+               (async/Timer.periodic (Duration .milliseconds 10)
+                 (fn [^async/Timer tmr]
+                   (wmx-iso
+                     (mset! me :tick (.-tick tmr))))))}))
+
+

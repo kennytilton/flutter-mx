@@ -39,7 +39,7 @@
                           ; 2. sends its wRP back to the main iso on its mRP so main can send us tasks;
                           ; 3. starts listening on wRP for tasks; and
                           ; 4. when it gets an N, iterates from 1 to N inclusive sending their factorials to main
-                          (fn factorial-worker [{:keys [msg-type result-port]}]
+                          (fn factorial-worker [{:keys [msg-type ^SendPort result-port]}]
                             ; ReceivePorts cannot be sent, so main cannot provide that, so
                             ; worker makes one and immediately sends back on the result-port, a misnomer
                             (let [task-port (ReceivePort)]
