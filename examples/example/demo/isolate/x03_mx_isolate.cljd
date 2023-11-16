@@ -21,7 +21,7 @@
      :refer [clock-face slow-is-prime? use-compute?]]))
 
 (defn make-iso [worker-fn result-handler]
-  (dp :making-iso!!!!!!-worker worker-fn)
+  (dpx :making-iso!!!!!!-worker worker-fn)
   (md/make                                                  ;; :mx-type ::mx-isolate
     :result-port (ReceivePort)
     :worker-iso (cF+ [:async? true
@@ -29,33 +29,33 @@
                                (when worker
                                  (dpx :got-worker-isolate! worker)))]
                   (dpx :the-formula-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-                  (dp :the-formula-sees-lex!!!! worker-fn)
+                  (dpx :the-formula-sees-lex!!!! worker-fn)
                   (let [result-port (mget me :result-port)]
                     (dpx :spawn-rport!!!!!!!!! result-port)
-                    (dp :spawn-sendport!!!!!!!!! (.-sendPort ^ReceivePort result-port))
+                    (dpx :spawn-sendport!!!!!!!!! (.-sendPort ^ReceivePort result-port))
                     (Isolate.spawn
                       (fn [msg]
-                        (dp :stock-worker-sees (keys msg))
+                        (dpx :stock-worker-sees (keys msg))
                         (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
                               task-port (ReceivePort)]
                           (dpx :stock-worker-sends-its-receiver-rsn)
-                          (dp :stock-worker-sees-msg-worker msg-worker)
+                          (dpx :stock-worker-sees-msg-worker msg-worker)
                           (dpx :stock-worker-sends-its-receiver (.-sendPort task-port))
                           (.send result-port {:msg-type  :config
                                               :task-port (.-sendPort task-port)})
                           (dpx :stock-worker-starts-listening task-port)
                           (.listen task-port (fn [task]
-                                               (dp :stock-worker-sees-task task msg-worker)
+                                               (dpx :stock-worker-sees-task task msg-worker)
                                                ; (dp :stock-worker-sees-worker-fn worker-fn)
 
                                                (let [result (msg-worker task)]
-                                                 (dp :worker-fn-returns-result result)
+                                                 (dpx :worker-fn-returns-result result)
                                                  (.send result-port {:msg-type :result
                                                                      :value    result}))
                                                nil))
                           nil))
                       {:msg-type    :config
-                       :msg-worker worker-fn ;; (fn [] nil) ;; worker-fn
+                       :msg-worker  worker-fn               ;; (fn [] nil) ;; worker-fn
                        :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
                       .errorsAreFatal true
                       .debugName "make-iso-isolate")))
@@ -77,29 +77,6 @@
     :task-out-port (cI nil :watch (fn [_ me new-val _ _]
                                     (dpx :task-out-port-now new-val)))))
 
-(defn try-this [the-app]
-  (dp :trythis-app (minfo the-app))
-  (make-iso
-    ;; worker
-    (fn [{:keys [msg-type of-integer] :as task}]
-      (case msg-type
-        :compute-factorial (let [r (atom 1)]
-                             (doseq [i (range 1 (inc of-integer))] (swap! r * i))
-                             {:of-integer of-integer
-                              :factorial      @r})
-        (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
-    ;; result handler
-    (fn [result]
-      (case (:msg-type result)
-        :config (throw "result-handler got config")
-        :result (let [{:keys [of-integer factorial]} (:value result)]
-                  (dp :result result :factorial-of of-integer :is factorial)
-                  (wmx-iso
-                      (mset! (fm* :facto-display the-app)
-                        :factorial factorial))
-                  #_#_(.close ^ReceivePort (mget me :result-port))
-                          (.kill ^Isolate (mget me :worker-iso))))
-      nil)))
 
 (defn make-app []
   (let [title "MX Iso Clock"]
@@ -108,7 +85,28 @@
       {:name     :app
        :fact-iso (cF (let [the-app me]
                        ;(dp :the-app (minfo the-app)) ;; OK HERE!!!!!!!!!!!!!!!!
-                       (try-this the-app)))}
+                       #_ (try-this the-app)
+                       (make-iso
+                         ;; worker
+                         (fn [{:keys [msg-type of-integer] :as task}]
+                           (case msg-type
+                             :compute-factorial (let [r (atom 1)]
+                                                  (doseq [i (range 1 (inc of-integer))] (swap! r * i))
+                                                  {:of-integer of-integer
+                                                   :factorial  @r})
+                             (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
+                         ;; result handler
+                         (fn [result]
+                           (case (:msg-type result)
+                             :config (throw "result-handler got config")
+                             :result (let [{:keys [of-integer factorial]} (:value result)]
+                                       (dp :result result :factorial-of of-integer :is factorial)
+                                       (wmx-iso
+                                         (mset! (fm* :facto-display the-app)
+                                           :factorial factorial))
+                                       #_#_(.close ^ReceivePort (mget me :result-port))
+                                               (.kill ^Isolate (mget me :worker-iso))))
+                           nil))))}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})
          :floatingActionButton
