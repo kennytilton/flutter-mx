@@ -58,29 +58,6 @@
                       {:msg-type    :config
                        :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
                       .errorsAreFatal true
-                      .debugName "make-iso-isolate")
-                    #_
-                    (Isolate.spawn
-                      (fn [msg]
-                        (dp :stock-worker-sees msg)
-                        (let [{:keys [msg-type ^SendPort result-port]} msg
-                              task-port (ReceivePort)]
-                          (dp :stock-worker-sends-its-receiver-rsn)
-                          (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
-                          (.send result-port {:msg-type  :config
-                                              :task-port (.-sendPort task-port)})
-                          (dp :stock-worker-starts-listening task-port)
-                          (.listen task-port (fn [task]
-                                               (dp :stock-worker-sees-task task)
-                                               (let [result 42 #_ (worker-fn task)]
-                                                 (dp :worker-fn-returns-result result)
-                                                 #_ (.send result-port {:msg-type :result
-                                                                     :value    result}))
-                                               nil))
-                          nil))
-                      {:msg-type    :config
-                       :result-port (.-sendPort ^ReceivePort result-port)}
-                      .errorsAreFatal true
                       .debugName "make-iso-isolate")))
     :result-listener (cF+ []
                        (dp :result-listener-cf-runs)
@@ -104,8 +81,6 @@
   (make-iso
     ;; worker
     (fn [{:keys [iso msg-type of-integer] :as task}]
-      (dp :worker-entry msg-type)
-      ;; (dp :worker-entry-app (nil? the-app)) ;; <=== NOT OK HERE!!!!!!!!!!!!!!
       (nil? the-app)
       (case msg-type
         :compute-factorial (let [r (atom 1)]
@@ -115,16 +90,10 @@
         (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
     ;; result handler
     (fn [result]
-      (dp :result-handler-entry result)
       (case (:msg-type result)
         :config (throw "result-handler got config")
         :result (let [v (:value result)]
                   (dp :factorial-of (:of-integer v) :is (:value v))
-                  (dp :works  (keys result))
-                  ;; unable to even reference a lexical in next line..
-                  (dp :fails  (nil? the-app)) ;; <=== FIX-ISH comment this out
-                  #_ (dp :fails-on-invalid-send
-                       (:name (deref the-app)))
                   (wmx-iso
                       (mset! (fm* :facto-display the-app)
                         :factorial (:value result)))
@@ -138,9 +107,8 @@
       {:title title}
       {:name     :app
        :fact-iso (cF (let [the-app me]
-                       (dp :the-app (minfo the-app)) ;; OK HERE!!!!!!!!!!!!!!!!
-                       (try-this the-app)
-                       ))}
+                       ;(dp :the-app (minfo the-app)) ;; OK HERE!!!!!!!!!!!!!!!!
+                       (try-this the-app)))}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})
          :floatingActionButton
@@ -154,18 +122,18 @@
             :tooltip   "Send msg"})}
         (fx/column
           {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          ;;(clock-face)
+          (clock-face)
 
           (fx/text {}
             {:name      :facto-display
              :of        (cI 1 :watch (fn [_ me new-val _ _]
-                                       (dp :of-is-now new-val)
+                                       (dpx :of-is-now new-val)
                                        (when-let [iso (mav :fact-iso)]
-                                         (dp :iso-ok iso)
+                                         (dpx :iso-ok iso)
                                          (when-let [task2w (mget iso :task-out-port)]
-                                           (dp :got-task-o task2w)
+                                           (dpx :got-task-o task2w)
                                            ; now we have a pipe to the worker, and can send it our one task: 7
-                                           (dp :dispatcher-sending-to-task-out new-val)
+                                           (dpx :dispatcher-sending-to-task-out new-val)
                                            (.send ^SendPort task2w
                                              {:msg-type   :compute-factorial
                                               :of-integer new-val})))))
