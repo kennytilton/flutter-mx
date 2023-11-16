@@ -19,6 +19,19 @@
 
 (declare clock-face)
 
+(defn facto-worker [{:keys [msg-type of-integer] :as task} result-port]
+  (dp :stock-worker-sees-task task)
+  (case msg-type
+    :compute-factorial (let [r (atom 1)]
+                         (doseq [i (range 1 (inc of-integer))]
+                           (swap! r * i))
+                         (dp :worker-sending-eoj :factorial= @r
+                           :on-result-port result-port)
+                         (.send result-port {:msg-type :eoj
+                                             :value    @r}))
+    (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
+  nil)
+
 (defn make-app []
   (let [title "Smooth Clock"]
     (fx/material-app
@@ -40,66 +53,83 @@
              :fx$dpk          [:sstate :build]
              :target          :facto-display
              :result-port     (ReceivePort)
+             :also-facto-worker (fn also-facto-worker [{:keys [msg-type of-integer] :as task} result-port]
+                                  (dp :stock-worker-sees-task task)
+                                  (case msg-type
+                                    :compute-factorial (let [r (atom 1)]
+                                                         (doseq [i (range 1 (inc of-integer))]
+                                                           (swap! r * i))
+                                                         (dp :worker-sending-eoj :factorial= @r
+                                                           :on-result-port result-port)
+                                                         (.send result-port {:msg-type :eoj
+                                                                             :value    @r}))
+                                    (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
+                                  nil)
              :worker-iso      (cF+ [:async? true
                                     :watch (fn [_ me worker _ _]
                                              (when worker
                                                (dp :got-worker-isolate! worker)))]
-                                (Isolate.spawn
-                                  (fn [msg]
-                                    (dp :stock-worker-sees msg)
-                                    (let [{:keys [msg-type ^SendPort result-port]} msg
-                                          task-port (ReceivePort)]
-                                      (dp :stock-worker-sends-its-receiver-rsn)
-                                      (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
-                                      (.send result-port {:msg-type  :config
-                                                          :task-port (.-sendPort task-port)})
-                                      (dp :stock-worker-starts-listening task-port)
-                                      (.listen task-port (fn [{:keys [msg-type of-integer] :as task}]
-                                                           (dp :stock-worker-sees-task task)
-                                                           (case msg-type
-                                                             :compute-factorial (let [r (atom 1)]
-                                                                                  (doseq [i (range 1 (inc of-integer))]
-                                                                                    (swap! r * i))
-                                                                                  (dp :worker-sending-eoj :factorial= @r
-                                                                                    :on-result-port result-port)
-                                                                                  (.send result-port {:msg-type :eoj
-                                                                                                      :value    @r}))
-                                                             (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
-                                                           nil))
-                                      nil))
-                                  {:msg-type    :config
-                                   :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                                  .errorsAreFatal true
-                                  .debugName "make-iso-isolate")
-                                #_
-                                (Isolate.spawn
-                                  (fn factorial-worker [{:keys [msg-type ^SendPort result-port]}]
-                                    (dp :worker-fn-sees msg-type :resport result-port)
-                                    (let [task-port (ReceivePort)]
-                                      (dp :worker-sends-its-receiver (.-sendPort task-port))
-                                      (.send result-port {:msg-type  :config
-                                                          :task-port (.-sendPort task-port)})
-                                      (.listen task-port
-                                        (fn [{:keys [msg-type of-integer] :as task}]
-                                          (case msg-type
-                                            :compute-factorial (let [r (atom 1)]
-                                                                 (do (dpx :startingbillyuns)
-                                                                   (dotimes [_ (* #_#_ 1000 300 1000 10)])
-                                                                   (dpx :fini-billions))
-                                                                 (doseq [i (range 1 (inc of-integer))]
-                                                                   (swap! r * i)
-                                                                   (dpx :worker-sending-result :task i :factorial= @r)
-                                                                   #_ (.send result-port {:msg-type   :factorial
-                                                                                       :of-integer i
-                                                                                       :value      @r}))
-                                                                 (dp :worker-sending-res :factorial= @r)
-                                                                 (.send result-port {:msg-type :eoj
-                                                                                     :value    @r}))
-                                            (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))))))
-                                  {:msg-type    :config
-                                   :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                                  .errorsAreFatal true
-                                  .debugName "MyIsolate"))
+                                (let [afw (mget me :also-facto-worker)]
+                                  (dp :afw!!!!!! afw)
+                                  (Isolate.spawn
+                                    (fn [msg]
+                                      (dp :stock-worker-sees msg)
+                                      (let [{:keys [msg-type ^SendPort result-port]} msg
+                                            task-port (ReceivePort)]
+                                        (dp :stock-worker-sends-its-receiver-rsn)
+                                        (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
+                                        (.send result-port {:msg-type  :config
+                                                            :task-port (.-sendPort task-port)})
+                                        (dp :stock-worker-starts-listening task-port)
+                                        (.listen task-port (fn [{:keys [msg-type of-integer] :as task}]
+                                                             (dp :stock-afworker-sees-task task)
+                                                             ;; (afw task result-port)
+                                                             ((:sub-worker msg) task result-port)
+                                                             #_(case msg-type
+                                                                 :compute-factorial (let [r (atom 1)]
+                                                                                      (doseq [i (range 1 (inc of-integer))]
+                                                                                        (swap! r * i))
+                                                                                      (dp :worker-sending-eoj :factorial= @r
+                                                                                        :on-result-port result-port)
+                                                                                      (.send result-port {:msg-type :eoj
+                                                                                                          :value    @r}))
+                                                                 (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
+                                                             nil))
+                                        nil))
+                                    {:msg-type    :config
+                                     :sub-worker  afw #_ (fn [task result-port]
+                                                    (facto-worker task result-port))
+                                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                                    .errorsAreFatal true
+                                    .debugName "make-iso-isolate"))
+                                #_(Isolate.spawn
+                                    (fn factorial-worker [{:keys [msg-type ^SendPort result-port]}]
+                                      (dp :worker-fn-sees msg-type :resport result-port)
+                                      (let [task-port (ReceivePort)]
+                                        (dp :worker-sends-its-receiver (.-sendPort task-port))
+                                        (.send result-port {:msg-type  :config
+                                                            :task-port (.-sendPort task-port)})
+                                        (.listen task-port
+                                          (fn [{:keys [msg-type of-integer] :as task}]
+                                            (case msg-type
+                                              :compute-factorial (let [r (atom 1)]
+                                                                   (do (dpx :startingbillyuns)
+                                                                     (dotimes [_ (* #_#_1000 300 1000 10)])
+                                                                     (dpx :fini-billions))
+                                                                   (doseq [i (range 1 (inc of-integer))]
+                                                                     (swap! r * i)
+                                                                     (dpx :worker-sending-result :task i :factorial= @r)
+                                                                     #_(.send result-port {:msg-type   :factorial
+                                                                                           :of-integer i
+                                                                                           :value      @r}))
+                                                                   (dp :worker-sending-res :factorial= @r)
+                                                                   (.send result-port {:msg-type :eoj
+                                                                                       :value    @r}))
+                                              (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))))))
+                                    {:msg-type    :config
+                                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                                    .errorsAreFatal true
+                                    .debugName "MyIsolate"))
              :result-listener (cF+ []
                                 (when (mget me :worker-iso)
                                   (dp :main-starts-listening)
@@ -118,15 +148,15 @@
                                                    :factorial (:value message)))
                                                #_#_(.close ^ReceivePort (mget me :result-port))
                                                        (.kill ^Isolate (mget me :worker-iso))))))))
-             :task-out-port   (cI nil :watch (fn [_ me new _ _]
-                                               (dp :task-out-port-now new)))
+             :task-out-port (cI nil :watch (fn [_ me new _ _]
+                                             (dp :task-out-port-now new)))
 
-             :dispatcher      (cF (when-let [task-out (mget me :task-out-port)]
-                                    (fn disp-task [task-n]
-                                      (dp :dispatcher-sending-N-to-task-out task-n)
-                                      (.send ^SendPort task-out
-                                        {:msg-type   :compute-factorial
-                                         :of-integer task-n}))))}
+             :dispatcher (cF (when-let [task-out (mget me :task-out-port)]
+                               (fn disp-task [task-n]
+                                 (dp :dispatcher-sending-N-to-task-out task-n)
+                                 (.send ^SendPort task-out
+                                   {:msg-type   :compute-factorial
+                                    :of-integer task-n}))))}
             "ISO HOME")
           (fx/text {}
             {:name      :facto-display

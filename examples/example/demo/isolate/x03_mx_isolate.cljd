@@ -21,67 +21,81 @@
      :refer [clock-face slow-is-prime? use-compute?]]))
 
 (defn make-iso [worker-fn result-handler]
-  (dp :making-iso!!!!!!)
+  (dp :making-iso!!!!!!-worker worker-fn)
   (md/make                                                  ;; :mx-type ::mx-isolate
     :result-port (ReceivePort)
     :worker-iso (cF+ [:async? true
                       :watch (fn [_ me worker _ _]
                                (when worker
-                                 (dp :got-worker-isolate! worker)))]
-                  (dp :the-formula-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+                                 (dpx :got-worker-isolate! worker)))]
+                  (dpx :the-formula-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+                  (dp :the-formula-sees-lex!!!! worker-fn)
                   (let [result-port (mget me :result-port)]
-                    (dp :spawn-rport!!!!!!!!! result-port)
+                    (dpx :spawn-rport!!!!!!!!! result-port)
                     (dp :spawn-sendport!!!!!!!!! (.-sendPort ^ReceivePort result-port))
                     (Isolate.spawn
                       (fn [msg]
-                        (dp :stock-worker-sees msg)
-                        (let [{:keys [msg-type ^SendPort result-port]} msg
+                        (dp :stock-worker-sees (keys msg))
+                        (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
                               task-port (ReceivePort)]
-                          (dp :stock-worker-sends-its-receiver-rsn)
-                          (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
+                          (dpx :stock-worker-sends-its-receiver-rsn)
+                          (dp :stock-worker-sees-msg-worker msg-worker)
+                          (dpx :stock-worker-sends-its-receiver (.-sendPort task-port))
                           (.send result-port {:msg-type  :config
                                               :task-port (.-sendPort task-port)})
-                          (dp :stock-worker-starts-listening task-port)
-                          (.listen task-port (fn [{:keys [msg-type of-integer] :as task}]
-                                               (dp :stock-worker-sees-task task)
+                          (dpx :stock-worker-starts-listening task-port)
+                          (.listen task-port (fn [task]
+                                               (dp :stock-worker-sees-task task msg-worker)
+                                               ; (dp :stock-worker-sees-worker-fn worker-fn)
+
+                                               (let [result (msg-worker task)]
+                                                 (dp :worker-fn-returns-result result)
+                                                 (.send result-port {:msg-type :result
+                                                                     :value    result}))
+                                               nil)
+                            #_ (fn [{:keys [msg-type of-integer] :as task}]
+                                               (dpx :stock-worker-sees-task task)
                                                (case msg-type
                                                  :compute-factorial (let [r (atom 1)]
                                                                       (doseq [i (range 1 (inc of-integer))]
                                                                         (swap! r * i))
-                                                                      (dp :worker-sending-eoj :factorial= @r
+                                                                      (dpx :worker-sending-eoj :factorial= @r
                                                                         :on-result-port result-port)
                                                                       (.send result-port {:msg-type :result
+                                                                                          :of-integer of-integer
                                                                                           :value    @r}))
                                                  (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
                                                nil))
                           nil))
                       {:msg-type    :config
+                       :msg-worker worker-fn ;; (fn [] nil) ;; worker-fn
                        :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
                       .errorsAreFatal true
                       .debugName "make-iso-isolate")))
     :result-listener (cF+ []
-                       (dp :result-listener-cf-runs)
+                       (dpx :result-listener-cf-runs)
                        (when (mget me :worker-iso)
-                         (dp :main-starts-listening (mget me :result-port))
+                         (dpx :main-starts-listening (mget me :result-port))
                          (.listen ^ReceivePort (mget me :result-port)
                            (fn [res]
-                             (dp :main-hears res)
+                             (dpx :main-hears res)
                              (case (:msg-type res)
-                               :config (do (dp :main-gets-res-config!! res)
+                               :config (do (dpx :main-gets-res-config!! res)
                                          (wmx-iso
-                                           (dp :main-msets-task-out-port res)
+                                           (dpx :main-msets-task-out-port res)
                                            (mset! me :task-out-port (:task-port res))))
                                (do
-                                 (dp :yes-handling res)
+                                 (dpx :yes-handling res)
                                  (result-handler res)))))))
     :task-out-port (cI nil :watch (fn [_ me new-val _ _]
-                                    (dp :task-out-port-now new-val)))))
+                                    (dpx :task-out-port-now new-val)))))
 
 (defn try-this [the-app]
+  (dp :trythis-app (minfo the-app))
   (make-iso
     ;; worker
-    (fn [{:keys [iso msg-type of-integer] :as task}]
-      (nil? the-app)
+    (fn [{:keys [msg-type of-integer] :as task}]
+      (dp :outer-worker-sees task)
       (case msg-type
         :compute-factorial (let [r (atom 1)]
                              (doseq [i (range 1 (inc of-integer))] (swap! r * i))
@@ -93,7 +107,7 @@
       (case (:msg-type result)
         :config (throw "result-handler got config")
         :result (let [v (:value result)]
-                  (dp :factorial-of (:of-integer v) :is (:value v))
+                  (dp :result result :factorial-of (:of-integer v) :is (:value v))
                   (wmx-iso
                       (mset! (fm* :facto-display the-app)
                         :factorial (:value result)))
@@ -114,7 +128,7 @@
          :floatingActionButton
          (fx/floating-action-button
            {:onPressed (fx/as-dart-callback []
-                         (dp :PRESSED-sees (minfo (fmu :facto-display)))
+                         (dpx :PRESSED-sees (minfo (fmu :facto-display)))
                          (wmx-iso
                            (let [fo (fmu :facto-display)]
                              (dp :bumping-of!!!! (minfo fo))
@@ -138,7 +152,7 @@
                                              {:msg-type   :compute-factorial
                                               :of-integer new-val})))))
              :factorial (cI :RSN :watch (fn [_ me new-val _ _]
-                                          (dp :facto!!!!!!!!!!!!! new-val)))}
+                                          (dpx :facto!!!!!!!!!!!!! new-val)))}
             (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))
 
 
