@@ -21,61 +21,38 @@
      :refer [clock-face slow-is-prime? use-compute?]]))
 
 (defn make-iso [worker-fn result-handler]
-  (dpx :making-iso!!!!!!-worker worker-fn)
-  (md/make                                                  ;; :mx-type ::mx-isolate
+  (md/make ;; ::mx-isolate
     :result-port (ReceivePort)
     :worker-iso (cF+ [:async? true
                       :watch (fn [_ me worker _ _]
                                (when worker
                                  (dpx :got-worker-isolate! worker)))]
-                  (dpx :the-formula-runs!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-                  (dpx :the-formula-sees-lex!!!! worker-fn)
-                  (let [result-port (mget me :result-port)]
-                    (dpx :spawn-rport!!!!!!!!! result-port)
-                    (dpx :spawn-sendport!!!!!!!!! (.-sendPort ^ReceivePort result-port))
-                    (Isolate.spawn
-                      (fn [msg]
-                        (dpx :stock-worker-sees (keys msg))
-                        (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
-                              task-port (ReceivePort)]
-                          (dpx :stock-worker-sends-its-receiver-rsn)
-                          (dpx :stock-worker-sees-msg-worker msg-worker)
-                          (dpx :stock-worker-sends-its-receiver (.-sendPort task-port))
-                          (.send result-port {:msg-type  :config
-                                              :task-port (.-sendPort task-port)})
-                          (dpx :stock-worker-starts-listening task-port)
-                          (.listen task-port (fn [task]
-                                               (dpx :stock-worker-sees-task task msg-worker)
-                                               ; (dp :stock-worker-sees-worker-fn worker-fn)
-
-                                               (let [result (msg-worker task)]
-                                                 (dpx :worker-fn-returns-result result)
-                                                 (.send result-port {:msg-type :result
-                                                                     :value    result}))
-                                               nil))
-                          nil))
-                      {:msg-type    :config
-                       :msg-worker  worker-fn               ;; (fn [] nil) ;; worker-fn
-                       :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                      .errorsAreFatal true
-                      .debugName "make-iso-isolate")))
+                  (Isolate.spawn
+                    (fn [msg]
+                      (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
+                            task-port (ReceivePort)]
+                        (.send result-port {:msg-type  :config
+                                            :task-port (.-sendPort task-port)})
+                        (.listen task-port
+                          (fn [task]
+                            (let [result (msg-worker task)]
+                              (.send result-port {:msg-type :result
+                                                  :value    result}))))
+                        nil))
+                    {:msg-type    :config
+                     :msg-worker  worker-fn
+                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                    .errorsAreFatal true
+                    .debugName "make-iso-isolate"))
     :result-listener (cF+ []
-                       (dpx :result-listener-cf-runs)
                        (when (mget me :worker-iso)
-                         (dpx :main-starts-listening (mget me :result-port))
                          (.listen ^ReceivePort (mget me :result-port)
                            (fn [res]
-                             (dpx :main-hears res)
                              (case (:msg-type res)
-                               :config (do (dpx :main-gets-res-config!! res)
-                                         (wmx-iso
-                                           (dpx :main-msets-task-out-port res)
-                                           (mset! me :task-out-port (:task-port res))))
-                               (do
-                                 (dpx :yes-handling res)
-                                 (result-handler res)))))))
-    :task-out-port (cI nil :watch (fn [_ me new-val _ _]
-                                    (dpx :task-out-port-now new-val)))))
+                               :config (wmx-iso
+                                         (mset! me :task-out-port (:task-port res)))
+                               (result-handler res))))))
+    :task-out-port (cI nil)))
 
 
 (defn make-app []
@@ -112,7 +89,6 @@
          :floatingActionButton
          (fx/floating-action-button
            {:onPressed (fx/as-dart-callback []
-                         (dpx :PRESSED-sees (minfo (fmu :facto-display)))
                          (wmx-iso
                            (let [fo (fmu :facto-display)]
                              (dp :bumping-of!!!! (minfo fo))
@@ -125,7 +101,6 @@
           (fx/text {}
             {:name      :facto-display
              :of        (cI 1 :watch (fn [_ me new-val _ _]
-                                       (dpx :of-is-now new-val)
                                        (when-let [iso (mav :fact-iso)]
                                          (dpx :iso-ok iso)
                                          (when-let [task2w (mget iso :task-out-port)]
