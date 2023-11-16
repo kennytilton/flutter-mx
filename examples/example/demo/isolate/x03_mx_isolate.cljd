@@ -52,19 +52,6 @@
                                                  (dp :worker-fn-returns-result result)
                                                  (.send result-port {:msg-type :result
                                                                      :value    result}))
-                                               nil)
-                            #_ (fn [{:keys [msg-type of-integer] :as task}]
-                                               (dpx :stock-worker-sees-task task)
-                                               (case msg-type
-                                                 :compute-factorial (let [r (atom 1)]
-                                                                      (doseq [i (range 1 (inc of-integer))]
-                                                                        (swap! r * i))
-                                                                      (dpx :worker-sending-eoj :factorial= @r
-                                                                        :on-result-port result-port)
-                                                                      (.send result-port {:msg-type :result
-                                                                                          :of-integer of-integer
-                                                                                          :value    @r}))
-                                                 (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
                                                nil))
                           nil))
                       {:msg-type    :config
@@ -95,22 +82,21 @@
   (make-iso
     ;; worker
     (fn [{:keys [msg-type of-integer] :as task}]
-      (dp :outer-worker-sees task)
       (case msg-type
         :compute-factorial (let [r (atom 1)]
                              (doseq [i (range 1 (inc of-integer))] (swap! r * i))
                              {:of-integer of-integer
-                              :value      @r})
+                              :factorial      @r})
         (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
     ;; result handler
     (fn [result]
       (case (:msg-type result)
         :config (throw "result-handler got config")
-        :result (let [v (:value result)]
-                  (dp :result result :factorial-of (:of-integer v) :is (:value v))
+        :result (let [{:keys [of-integer factorial]} (:value result)]
+                  (dp :result result :factorial-of of-integer :is factorial)
                   (wmx-iso
                       (mset! (fm* :facto-display the-app)
-                        :factorial (:value result)))
+                        :factorial factorial))
                   #_#_(.close ^ReceivePort (mget me :result-port))
                           (.kill ^Isolate (mget me :worker-iso))))
       nil)))
