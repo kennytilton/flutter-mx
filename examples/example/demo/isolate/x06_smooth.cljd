@@ -1,4 +1,4 @@
-(ns example.demo.isolate.x02-smooth-clock
+(ns example.demo.isolate.x06-smooth
   (:require
     ["package:flutter/gestures.dart" :as g]
     ["package:flutter/material.dart" :as m
@@ -10,7 +10,6 @@
      :refer [Completer StreamSubscription]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
-
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
@@ -37,46 +36,16 @@
           (clock-face)
           (fx/text {}
             {:name            :iso-home
-             :fx$dpk          [:sstate :build]
              :target          :facto-display
              :result-port     (ReceivePort)
              :worker-iso      (cF+ [:async? true
                                     :watch (fn [_ me worker _ _]
                                              (when worker
-                                               (dp :got-worker-isolate! worker)))]
-                                (Isolate.spawn
-                                  (fn [msg]
-                                    (dp :stock-worker-sees msg)
-                                    (let [{:keys [msg-type ^SendPort result-port]} msg
-                                          task-port (ReceivePort)]
-                                      (dp :stock-worker-sends-its-receiver-rsn)
-                                      (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
-                                      (.send result-port {:msg-type  :config
-                                                          :task-port (.-sendPort task-port)})
-                                      (dp :stock-worker-starts-listening task-port)
-                                      (.listen task-port (fn [{:keys [msg-type of-integer] :as task}]
-                                                           (dp :stock-worker-sees-task task)
-                                                           (case msg-type
-                                                             :compute-factorial (let [r (atom 1)]
-                                                                                  (doseq [i (range 1 (inc of-integer))]
-                                                                                    (swap! r * i))
-                                                                                  (dp :worker-sending-eoj :factorial= @r
-                                                                                    :on-result-port result-port)
-                                                                                  (.send result-port {:msg-type :eoj
-                                                                                                      :value    @r}))
-                                                             (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
-                                                           nil))
-                                      nil))
-                                  {:msg-type    :config
-                                   :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                                  .errorsAreFatal true
-                                  .debugName "make-iso-isolate")
-                                #_
+                                               (dpx :got-worker-isolate! worker)))]
                                 (Isolate.spawn
                                   (fn factorial-worker [{:keys [msg-type ^SendPort result-port]}]
-                                    (dp :worker-fn-sees msg-type :resport result-port)
                                     (let [task-port (ReceivePort)]
-                                      (dp :worker-sends-its-receiver (.-sendPort task-port))
+                                      (dpx :worker-sends-its-receiver (.-sendPort task-port))
                                       (.send result-port {:msg-type  :config
                                                           :task-port (.-sendPort task-port)})
                                       (.listen task-port
@@ -90,9 +59,8 @@
                                                                    (swap! r * i)
                                                                    (dpx :worker-sending-result :task i :factorial= @r)
                                                                    #_ (.send result-port {:msg-type   :factorial
-                                                                                       :of-integer i
-                                                                                       :value      @r}))
-                                                                 (dp :worker-sending-res :factorial= @r)
+                                                                                          :of-integer i
+                                                                                          :value      @r}))
                                                                  (.send result-port {:msg-type :eoj
                                                                                      :value    @r}))
                                             (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))))))
@@ -184,61 +152,3 @@
                    (wmx-iso
                      (mset! me :tick (.-tick tmr))))))}))
 
-
-
-
-; import 'package:flutter/material.dart';
-;
-;/// Flutter code sample for [TweenAnimationBuilder].
-;
-;void main() => runApp(const TweenAnimationBuilderExampleApp());
-;
-;class TweenAnimationBuilderExampleApp extends StatelessWidget {
-;  const TweenAnimationBuilderExampleApp({super.key});
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    return MaterialApp(
-;      home: Scaffold(
-;        appBar: AppBar(title: const Text('TweenAnimationBuilder Sample')),
-;        body: const Center(
-;          child: TweenAnimationBuilderExample(),
-;        ),
-;      ),
-;    );
-;  }
-;}
-;
-;class TweenAnimationBuilderExample extends StatefulWidget {
-;  const TweenAnimationBuilderExample({super.key});
-;
-;  @override
-;  State<TweenAnimationBuilderExample> createState() =>
-;      _TweenAnimationBuilderExampleState();
-;}
-;
-;class _TweenAnimationBuilderExampleState
-;    extends State<TweenAnimationBuilderExample> {
-;  double targetValue = 24.0;
-;
-;  @override
-;  Widget build(BuildContext context) {
-;    return TweenAnimationBuilder<double>(
-;      tween: Tween<double>(begin: 0, end: targetValue),
-;      duration: const Duration(seconds: 1),
-;      builder: (BuildContext context, double size, Widget? child) {
-;        return IconButton(
-;          iconSize: size,
-;          color: Colors.blue,
-;          icon: child!,
-;          onPressed: () {
-;            setState(() {
-;              targetValue = targetValue == 24.0 ? 48.0 : 24.0;
-;            });
-;          },
-;        );
-;      },
-;      child: const Icon(Icons.aspect_ratio),
-;    );
-;  }
-;}

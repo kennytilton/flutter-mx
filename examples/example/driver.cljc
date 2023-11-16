@@ -47,12 +47,13 @@
     [example.demo.isolate.x01-simple-bidirectional-link :as isimple]
     [example.demo.isolate.x01-without-completer :as x01a]
     [example.demo.isolate.x01-factorial-refactored :as iso-x01]
-    [example.demo.isolate.x02-smooth-clock :as iso-x02]
-    [example.demo.isolate.x03-mx-isolate :as mxiso]
-    [example.demo.isolate.x05-compute :as x5comp]))
+    [example.demo.isolate.x02-smooth-clock :as iso2]
+    [example.demo.isolate.x03-mx-isolate :as iso3]
+    [example.demo.isolate.x05-compute :as x5comp]
+    [example.demo.isolate.x06-smooth :as iso6]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (mxiso/make-app)
+    (iso3/make-app)
     (iiso/main)))
