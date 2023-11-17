@@ -38,18 +38,8 @@
                                                   {:of-integer of-integer
                                                    :factorial  @r})
                              (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
-                         ;; result handler
-                         (fn [result]
-                           (case (:msg-type result)
-                             :config (throw "result-handler got config")
-                             :result (let [{:keys [of-integer factorial]} (:value result)]
-                                       (dp :result result :factorial-of of-integer :is factorial)
-                                       (wmx-iso
-                                         (mset! (fm* :facto-display the-app)
-                                           :factorial factorial))
-                                       #_#_(.close ^ReceivePort (mget me :result-port))
-                                               (.kill ^Isolate (mget me :worker-iso))))
-                           nil))))}
+                         ;; result handler omitted mx-iso value gets resukt
+                         )))}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})
          :floatingActionButton
@@ -75,18 +65,12 @@
                                            (dpx :dispatcher-sending-to-task-out new-val)
                                            (.send ^SendPort task2w
                                              {:msg-type   :compute-factorial
-                                              :of-integer new-val})))))
-             :factorial (cI :RSN :watch (fn [_ me new-val _ _]
-                                          (dpx :facto!!!!!!!!!!!!! new-val)))}
-            (str "The factorial of " (mget me :of) " is " (mget me :factorial)))
+                                              :of-integer new-val})))))}
+            (str "The factorial of " (mget me :of) " is ... "))
           (fx/text {}
             {:name      :mx-iso-display}
             (let [mxi (muv :app :fact-iso)]
-              (when mxi
-                (dp :mxiso (minfo mxi))
-                (dp :mxiso-keys (keys @mxi))
-                (dp :mxisov (mget mxi :value)))
-              (str "The factorial is "
+              (str "... is "
                 (:factorial (mget mxi :value))))))))))
 
 

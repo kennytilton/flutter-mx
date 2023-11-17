@@ -94,17 +94,17 @@
   ([me] (text-field-controller-basic me :value))
   ([me prop]
    (let [txt (mx/mget me prop)
-           c (m/TextEditingController.fromValue
-               (m/TextEditingValue
-                 .text txt
-                 .selection (m/TextSelection
-                              .baseOffset 0
-                              .extentOffset (count txt))))]
-       (.addListener c
-         (fn []
-           (wmx-iso
-             (mx/mset! me prop (.-text c)))))
-       c)))
+         c (m/TextEditingController.fromValue
+             (m/TextEditingValue
+               .text txt
+               .selection (m/TextSelection
+                            .baseOffset 0
+                            .extentOffset (count txt))))]
+     (.addListener c
+       (fn []
+         (wmx-iso
+           (mx/mset! me prop (.-text c)))))
+     c)))
 
 (defmacro my-animation []
   ;; uncast since type will vary
@@ -118,9 +118,8 @@
 (deftag tilton.fmx.factory/kidless-childless checkbox-list-tile m/CheckboxListTile)
 (deftag tilton.fmx.factory/konly-prop sized-box w/SizedBox [:child])
 
-#_
-(defmacro sized-box+expand [fx-props mx-props & children]
-  `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
+#_(defmacro sized-box+expand [fx-props mx-props & children]
+    `(tilton.fmx.factory/k1-child-stateful m/SizedBox.expand ~fx-props ~mx-props ~@children))
 ; ;;; --- next two not yet confirmed in practice
 ;(defmacro positioned [fx-props mx-props & children]
 ;  `(tilton.fmx.factory/k1-child-stateful m/Positioned ~fx-props ~mx-props ~@children))
@@ -131,7 +130,7 @@
   ;;; --- next two not yet confirmed in practice
   (positioned m/Positioned)
   (transorm+rotate-ful m/Transform.rotate)
-  (sized-box+expand m/SizedBox.expand) ;; OK in x05-fab
+  (sized-box+expand m/SizedBox.expand)                      ;; OK in x05-fab
   (dropdown-menu-item m/DropdownMenuItem)
   (theme m/Theme)
   (icon-theme m/IconTheme)
@@ -323,43 +322,48 @@
 
 ;;; --- isolates ---------------------------------------------
 
-(defn make-isolate [worker-fn result-handler]
-  (mx/make ;; ::mx-isolate
-    :name :mx-iso
-    :result-port (ReceivePort)
-    :worker-iso (cF+ [:async? true
-                      :watch (fn [_ me worker _ _]
-                               (when worker
-                                 (dpx :got-worker-isolate! worker)))]
-                  (Isolate.spawn
-                    (fn [msg]
-                      (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
-                            task-port (ReceivePort)]
-                        (dp :msg-worker msg-worker)
-                        (.send result-port {:msg-type  :config
-                                            :task-port (.-sendPort task-port)})
-                        (.listen task-port
-                          (fn [task]
-                            (dp :listener-task task)
-                            (let [result (msg-worker task)]
-                              (.send result-port {:msg-type :result
-                                                  :value    result}))))
-                        nil))
-                    {:msg-type    :config
-                     :msg-worker  worker-fn
-                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                    .errorsAreFatal true
-                    .debugName "make-iso-isolate"))
-    :result-listener (cF+ []
-                       (when (mget me :worker-iso)
-                         (.listen ^ReceivePort (mget me :result-port)
-                           (fn [res]
-                             (case (:msg-type res)
-                               :config (wmx-iso
-                                         (mset! me :task-out-port (:task-port res)))
-                               (do (wmx-iso (mset! me :value (:value res)))
-                                 (result-handler res)))))))
-    ;; todo allow initting of cI to unbound
-    :value (cI nil #_ mx/unbound :watch (fn [_ _ new _ _]
+(defn make-isolate
+  ([worker-fn]
+   (make-isolate worker-fn
+     (fn [result]
+       (dp :ignoring result))))
+  ([worker-fn result-handler]
+   (mx/make                                                 ;; ::mx-isolate
+     :name :mx-iso
+     :result-port (ReceivePort)
+     :worker-iso (cF+ [:async? true
+                       :watch (fn [_ me worker _ _]
+                                (when worker
+                                  (dpx :got-worker-isolate! worker)))]
+                   (Isolate.spawn
+                     (fn [msg]
+                       (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
+                             task-port (ReceivePort)]
+                         (dp :msg-worker msg-worker)
+                         (.send result-port {:msg-type  :config
+                                             :task-port (.-sendPort task-port)})
+                         (.listen task-port
+                           (fn [task]
+                             (dp :listener-task task)
+                             (let [result (msg-worker task)]
+                               (.send result-port {:msg-type :result
+                                                   :value    result}))))
+                         nil))
+                     {:msg-type    :config
+                      :msg-worker  worker-fn
+                      :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                     .errorsAreFatal true
+                     .debugName "make-iso-isolate"))
+     :result-listener (cF+ []
+                        (when (mget me :worker-iso)
+                          (.listen ^ReceivePort (mget me :result-port)
+                            (fn [res]
+                              (case (:msg-type res)
+                                :config (wmx-iso
+                                          (mset! me :task-out-port (:task-port res)))
+                                (do (wmx-iso (mset! me :value (:value res)))
+                                  (result-handler res)))))))
+     ;; todo allow initting of cI to unbound
+     :value (cI nil #_mx/unbound :watch (fn [_ _ new _ _]
                                           (dp :mx-iso-value!! new)))
-    :task-out-port (cI nil)))
+     :task-out-port (cI nil))))
