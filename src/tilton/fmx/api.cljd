@@ -326,7 +326,7 @@
   ([worker-fn]
    (make-isolate worker-fn
      (fn [result]
-       (dp :ignoring result))))
+       (dpx :ignoring result))))
   ([worker-fn result-handler]
    (mx/make                                                 ;; ::mx-isolate
      :name :mx-iso
@@ -339,12 +339,12 @@
                      (fn [msg]
                        (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
                              task-port (ReceivePort)]
-                         (dp :msg-worker msg-worker)
+                         (dpx :msg-worker msg-worker)
                          (.send result-port {:msg-type  :config
                                              :task-port (.-sendPort task-port)})
                          (.listen task-port
                            (fn [task]
-                             (dp :listener-task task)
+                             (dpx :listener-task task)
                              (let [result (msg-worker task)]
                                (.send result-port {:msg-type :result
                                                    :value    result}))))
@@ -365,5 +365,5 @@
                                   (result-handler res)))))))
      ;; todo allow initting of cI to unbound
      :value (cI nil #_mx/unbound :watch (fn [_ _ new _ _]
-                                          (dp :mx-iso-value!! new)))
+                                          (dpx :mx-iso-value!! new)))
      :task-out-port (cI nil))))

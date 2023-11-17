@@ -27,8 +27,6 @@
       {:title title}
       {:name     :app
        :fact-iso (cF (let [the-app me]
-                       ;(dp :the-app (minfo the-app)) ;; OK HERE!!!!!!!!!!!!!!!!
-                       #_ (try-this the-app)
                        (fx/make-isolate
                          ;; worker
                          (fn [{:keys [msg-type of-integer] :as task}]
@@ -38,7 +36,7 @@
                                                   {:of-integer of-integer
                                                    :factorial  @r})
                              (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
-                         ;; result handler omitted mx-iso value gets resukt
+                         ;; result handler omitted; mx-iso value gets resukt
                          )))}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})
@@ -58,11 +56,8 @@
             {:name      :facto-display
              :of        (cI 1 :watch (fn [_ me new-val _ _]
                                        (when-let [iso (mav :fact-iso)]
-                                         (dpx :iso-ok iso)
                                          (when-let [task2w (mget iso :task-out-port)]
-                                           (dpx :got-task-o task2w)
                                            ; now we have a pipe to the worker, and can send it our one task: 7
-                                           (dpx :dispatcher-sending-to-task-out new-val)
                                            (.send ^SendPort task2w
                                              {:msg-type   :compute-factorial
                                               :of-integer new-val})))))}
