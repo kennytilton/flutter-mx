@@ -22,6 +22,7 @@
 
 (defn make-iso [worker-fn result-handler]
   (md/make ;; ::mx-isolate
+    :name :mx-iso
     :result-port (ReceivePort)
     :worker-iso (cF+ [:async? true
                       :watch (fn [_ me worker _ _]
@@ -31,10 +32,12 @@
                     (fn [msg]
                       (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
                             task-port (ReceivePort)]
+                        (dp :msg-worker msg-worker)
                         (.send result-port {:msg-type  :config
                                             :task-port (.-sendPort task-port)})
                         (.listen task-port
                           (fn [task]
+                            (dp :listener-task task)
                             (let [result (msg-worker task)]
                               (.send result-port {:msg-type :result
                                                   :value    result}))))
@@ -51,7 +54,11 @@
                              (case (:msg-type res)
                                :config (wmx-iso
                                          (mset! me :task-out-port (:task-port res)))
-                               (result-handler res))))))
+                               (do (wmx-iso (mset! me :value (:value res)))
+                                 (result-handler res)))))))
+    ;; todo allow initting of cI to unbound
+    :value (cI nil #_ mx/unbound :watch (fn [_ _ new _ _]
+                                   (dp :mx-iso-value!! new)))
     :task-out-port (cI nil)))
 
 
@@ -112,7 +119,16 @@
                                               :of-integer new-val})))))
              :factorial (cI :RSN :watch (fn [_ me new-val _ _]
                                           (dpx :facto!!!!!!!!!!!!! new-val)))}
-            (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))
+            (str "The factorial of " (mget me :of) " is " (mget me :factorial)))
+          (fx/text {}
+            {:name      :mx-iso-display}
+            (let [mxi (muv :app :fact-iso)]
+              (when mxi
+                (dp :mxiso (minfo mxi))
+                (dp :mxiso-keys (keys @mxi))
+                (dp :mxisov (mget mxi :value)))
+              (str "The factorial is "
+                (:factorial (mget mxi :value))))))))))
 
 
 
