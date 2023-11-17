@@ -8,13 +8,15 @@
     ["package:flutter/widgets.dart" :as w
      :refer [Text Center Expanded Column State StatefulWidget StatelessWidget]]
     ["package:flutter/painting.dart" :as p]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
     [tilton.mx.foundation :as mxf]
     [tilton.mx.cell.base :as cty]
     [tilton.mx.base :refer [wtrx dp dpx mx-throw]]
     [tilton.mx.util :refer [atom?]]
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
     [tilton.mx.api :as mx
-     :refer [rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
+     :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
     [tilton.fmx.factory :refer [deftag deftags deftags-plus] :as fxf]))
 
 (defn cb-as-is
@@ -318,3 +320,46 @@
     (is-mobile?) :mobile
     io/Platform.isFuchsia :fuchsia
     :else :unknown))
+
+;;; --- isolates ---------------------------------------------
+
+(defn make-isolate [worker-fn result-handler]
+  (mx/make ;; ::mx-isolate
+    :name :mx-iso
+    :result-port (ReceivePort)
+    :worker-iso (cF+ [:async? true
+                      :watch (fn [_ me worker _ _]
+                               (when worker
+                                 (dpx :got-worker-isolate! worker)))]
+                  (Isolate.spawn
+                    (fn [msg]
+                      (let [{:keys [msg-type ^SendPort result-port msg-worker]} msg
+                            task-port (ReceivePort)]
+                        (dp :msg-worker msg-worker)
+                        (.send result-port {:msg-type  :config
+                                            :task-port (.-sendPort task-port)})
+                        (.listen task-port
+                          (fn [task]
+                            (dp :listener-task task)
+                            (let [result (msg-worker task)]
+                              (.send result-port {:msg-type :result
+                                                  :value    result}))))
+                        nil))
+                    {:msg-type    :config
+                     :msg-worker  worker-fn
+                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
+                    .errorsAreFatal true
+                    .debugName "make-iso-isolate"))
+    :result-listener (cF+ []
+                       (when (mget me :worker-iso)
+                         (.listen ^ReceivePort (mget me :result-port)
+                           (fn [res]
+                             (case (:msg-type res)
+                               :config (wmx-iso
+                                         (mset! me :task-out-port (:task-port res)))
+                               (do (wmx-iso (mset! me :value (:value res)))
+                                 (result-handler res)))))))
+    ;; todo allow initting of cI to unbound
+    :value (cI nil #_ mx/unbound :watch (fn [_ _ new _ _]
+                                          (dp :mx-iso-value!! new)))
+    :task-out-port (cI nil)))

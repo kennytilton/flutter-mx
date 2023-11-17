@@ -1,0 +1,94 @@
+(ns example.demo.isolate.x04-api-mx-iso
+  (:require
+    ["package:flutter/gestures.dart" :as g]
+    ["package:flutter/material.dart" :as m
+     :refer [Canvas Size]]
+    ["package:vector_math/vector_math_64.dart" :as vm]
+    ["dart:math" :as math
+     :refer [pi cos sin]]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
+
+    [tilton.mx.api :as md]
+    [tilton.mx.cell.base :as cb]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx]
+    [example.demo.isolate.common :as cmn
+     :refer [clock-face slow-is-prime? use-compute?]]))
+
+
+(defn make-app []
+  (let [title "MX Iso 4 Clock"]
+    (fx/material-app
+      {:title title}
+      {:name     :app
+       :fact-iso (cF (let [the-app me]
+                       ;(dp :the-app (minfo the-app)) ;; OK HERE!!!!!!!!!!!!!!!!
+                       #_ (try-this the-app)
+                       (fx/make-isolate
+                         ;; worker
+                         (fn [{:keys [msg-type of-integer] :as task}]
+                           (case msg-type
+                             :compute-factorial (let [r (atom 1)]
+                                                  (doseq [i (range 1 (inc of-integer))] (swap! r * i))
+                                                  {:of-integer of-integer
+                                                   :factorial  @r})
+                             (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
+                         ;; result handler
+                         (fn [result]
+                           (case (:msg-type result)
+                             :config (throw "result-handler got config")
+                             :result (let [{:keys [of-integer factorial]} (:value result)]
+                                       (dp :result result :factorial-of of-integer :is factorial)
+                                       (wmx-iso
+                                         (mset! (fm* :facto-display the-app)
+                                           :factorial factorial))
+                                       #_#_(.close ^ReceivePort (mget me :result-port))
+                                               (.kill ^Isolate (mget me :worker-iso))))
+                           nil))))}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton
+         (fx/floating-action-button
+           {:onPressed (fx/as-dart-callback []
+                         (wmx-iso
+                           (let [fo (fmu :facto-display)]
+                             (dp :bumping-of!!!! (minfo fo))
+                             (mswap! fo :of + 2))))
+            :tooltip   "Send msg"})}
+        (fx/column
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (clock-face)
+
+          (fx/text {}
+            {:name      :facto-display
+             :of        (cI 1 :watch (fn [_ me new-val _ _]
+                                       (when-let [iso (mav :fact-iso)]
+                                         (dpx :iso-ok iso)
+                                         (when-let [task2w (mget iso :task-out-port)]
+                                           (dpx :got-task-o task2w)
+                                           ; now we have a pipe to the worker, and can send it our one task: 7
+                                           (dpx :dispatcher-sending-to-task-out new-val)
+                                           (.send ^SendPort task2w
+                                             {:msg-type   :compute-factorial
+                                              :of-integer new-val})))))
+             :factorial (cI :RSN :watch (fn [_ me new-val _ _]
+                                          (dpx :facto!!!!!!!!!!!!! new-val)))}
+            (str "The factorial of " (mget me :of) " is " (mget me :factorial)))
+          (fx/text {}
+            {:name      :mx-iso-display}
+            (let [mxi (muv :app :fact-iso)]
+              (when mxi
+                (dp :mxiso (minfo mxi))
+                (dp :mxiso-keys (keys @mxi))
+                (dp :mxisov (mget mxi :value)))
+              (str "The factorial is "
+                (:factorial (mget mxi :value))))))))))
+
+
+
+
