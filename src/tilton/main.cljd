@@ -9,7 +9,7 @@
     [tilton.mx.model.core :as md]
     [tilton.mx.util :as mxu]
     [tilton.mx.base
-     :refer [wtrx dp dpx trx  *fx$dpk*]]
+     :refer [wtrx dp dpx trx *fx$dpk*]]
     [tilton.mx.api :refer [minfo cinfo] :as mx]
     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
@@ -24,24 +24,26 @@
 ;;; * uncomment (eg/select) below; and
 ;;; * restart the app to pick up the deps.edn.
 
-(defn main []                                               ;<id:1673573645>
-  (dp :main-entry--------------------------------------------)
-  (cty/cells-reset)
-  (md/md-quiesce-feature! true)
-  (fx/fx$sst-registry-initialize true)
-  (fx/widget-key-clear)
+(defn main []
+  (binding [*async-error-handler* (fn [exc stack-trace]
+                                    (dp :ASYNC-ERROR!! exc))]
+    (dp :main-entry--------------------------------------------)
+    (cty/cells-reset)
+    (md/md-quiesce-feature! true)
+    (fx/fx$sst-registry-initialize true)
+    (fx/widget-key-clear)
 
-  ;; (fxk/fmx-debugger-set! sample-debugger)
+    ;; (fxk/fmx-debugger-set! sample-debugger)
 
-  (binding [cty/*dpc-enabled* true
-            *fx$dpk* [; :propagate :pulse :cset :cnset
-                      ;:build
-                      #_ :sstate #_  :sstate+]]
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    (f/run (fx/fx-render nil
-             (if true
-               (eg/select)
-               (counter/make-app))))))
+    (binding [cty/*dpc-enabled* true
+              *fx$dpk* [; :propagate :pulse :cset :cnset
+                        ;:build
+                        #_:sstate #_:sstate+]]
+      (.ensureInitialized w/WidgetsFlutterBinding)
+      (f/run (fx/fx-render nil
+               (if true
+                 (eg/select)
+                 (counter/make-app)))))))
 
 #_(fx/run-app
     (hot-reload-detector
