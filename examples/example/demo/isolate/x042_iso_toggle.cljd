@@ -1,0 +1,100 @@
+(ns example.demo.isolate.x042-iso-toggle
+  (:require
+    ["package:flutter/gestures.dart" :as g]
+    ["package:flutter/material.dart" :as m
+     :refer [Canvas Size]]
+    ["package:flutter/painting.dart" :as p]
+    ["package:vector_math/vector_math_64.dart" :as vm]
+    ["dart:math" :as math
+     :refer [pi cos sin]]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
+
+    [tilton.mx.api :as md]
+    [tilton.mx.cell.base :as cb]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx]
+    [example.demo.isolate.common :as cmn
+     :refer [clock-face slow-is-prime? slow-next-prime-after use-compute?]]))
+
+(defn factorial [n]
+  (reduce * (range 1 (inc n))))
+
+(defn use-isolate? [start]
+  (fx/sized-box {:width 300}
+    (fx/checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Use Isolate?")
+       :value           (cI start)
+       :onChanged       (cF #(wmx-iso
+                               (mset! me :value %)))}
+      {:name :use-isolate?})))
+
+(defn make-app []
+  (let [title "MX Iso 4 Clock"]
+    (fx/material-app
+      {:title title}
+      {:name     :app
+       :fact-iso (cF (let [the-app me]
+                       (fx/make-isolate
+                         ;; worker
+                         (fn [{:keys [msg-type of-integer] :as task}]
+                           (dp :worker-task task)
+                           (case msg-type
+                             :decide-prime {:of-integer of-integer
+                                            :is-prime?  (slow-is-prime? of-integer)}
+                             :find-next-prime {:of-integer of-integer
+                                               :next-prime  (slow-next-prime-after (or of-integer 1))}
+                             (dp :WORKER-UNEXPECTED-TASK!!!!!!! msg-type)))
+                         ;; result handler omitted; mx-iso value gets resukt
+                         )))}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton
+         (fx/floating-action-button
+           {:onPressed (fx/as-dart-callback []
+                         (wmx-iso
+                           (let [fo (fmu :primo-display)
+                                 mxi (mav :fact-iso)]
+                             (mset! fo :of (:next-prime (mget mxi :value))))))}
+           (m/Icon m/Icons.play_arrow
+             .color m/Colors.white))}
+        (fx/column
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (clock-face)
+          (use-isolate? true)
+
+          (fx/text {:style (p/TextStyle
+                             .fontSize 24)}
+            {:name :primo-display
+             :of   (cI 8000000
+                     :watch (fn [_ me new-val _ _]
+                              (when (muv :use-isolate?)
+                                (when-let [iso (mav :fact-iso)]
+                                  (when-let [tasko (mget iso :task-out-port)]
+                                    ; now we have a pipe to the worker, and can send it our one task: 7
+                                    (.send ^SendPort tasko
+                                      {:msg-type   :find-next-prime
+                                       :of-integer new-val}))))))}
+            (str "The next prime after " (mget me :of) " is ... "))
+          (fx/text {:style (p/TextStyle
+                             .fontSize 24)}
+            {:name :mx-iso-display}
+            (str "...after "
+              (mget (fmu :primo-display) :of) ": "
+              (if (muv :use-isolate?)
+                (let [mxi (muv :app :fact-iso)]
+                  (if (nil? mxi) "???"
+                    (:next-prime (mget mxi :value))))
+                (slow-next-prime-after (mget (fmu :primo-display) :of)))))
+          (fx/sized-box {:height 32}))))))
+
+
+
+
+
+

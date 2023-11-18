@@ -21,6 +21,8 @@
     [example.demo.isolate.common :as cmn
      :refer [clock-face slow-is-prime? use-compute?]]))
 
+(declare prime-decision)
+
 (defn make-app []
   (let [title "Smooth Clock"]
     (fx/material-app
@@ -31,35 +33,47 @@
          (fx/floating-action-button
            {:onPressed (fx/as-dart-callback []
                          (wmx-iso
-                           (let [fo (fmu :primer)]
-                             (mswap! fo :of + 2))))})}
+                           (dp :bump!------------------)
+                           (mswap! (fmu :primer) :of + 2)))}
+           (m/Icon m/Icons.play_arrow
+             .color m/Colors.black))}
         (fx/column
           {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (clock-face)
-          (use-compute?)
-          (fx/text {}
-            {:name   :primer
-             :of     (cI 9000039)
-             :prime? (cF+ [:async? true]
-                       (if (mx/muv :use-compute?)
-                         (fnd/compute slow-is-prime? (mget me :of))
-                         ;; todo teach MX that async? rules may not yield futures, so
-                         ;; there will be no need to wrap this in a future
-                         (future (slow-is-prime? (mget me :of)))))}
-            (str "Is " (mget me :of) " prime? "))
+          (use-compute? false)
+          (fx/row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            (fx/text {:style (p/TextStyle .fontSize 24)}
+              {:name      :primer
+               :of        (cI 9000039)
+               :prime? (cF+ [:async? true
+                                #_#_ :watch (fn [_ me new old _]
+                                         (dp :prime-of? new))]
+                            (let [n (mget me :of)
+                                  use? (mx/muv :use-compute?)]
+                              (dp :prime?-computing!!!! n :in-iso? use?)
+                              (if use?
+                                (fnd/compute slow-is-prime? n)
+                                (future (slow-is-prime? n)))))}
+              "" #_ (str "Is " (mget me :of) " prime? "))
+            ; ... results:
+            (prime-decision))
 
-          (fx/sized-box {:height 32}
-            (fx/text
-              {:style (cF (let [p? (mget (fmu :primer) :prime?)]
-                            (fx/text-style {:fontSize   (if p? 24 18)
-                                            :fontWeight m/FontWeight.w400
-                                            :color      (if p? m/Colors.green m/Colors.red)})))}
-              (let [p (mget (fmu :primer) :prime?)]
-                (cond
-                  (nil? p) "..."
-                  (true? p) "Yep!!"
-                  (false? p) "Nope"
-                  :else "#@!%"))))
+          (fx/text {:style (p/TextStyle .fontSize 16)}
+            "Tap for next in 9000041,.49,.59,.67,.."))))))
 
-          (fx/text "Tap for next in 9000011,41,49,59,67,..."))))))
+(defn prime-decision []
+  (fx/sized-box {:height 32}
+    (fx/text
+      {:style (cF (let [prime? (mget (fmu :primer) :prime?)]
+                    (fx/text-style
+                      {:fontSize   24
+                       :fontWeight m/FontWeight.w400
+                       :color      (if prime? m/Colors.green m/Colors.red)})))}
+      (let [prime? (mget (fmu :primer) :prime?)]
+        (str "Is " (mget (fmu :primer) :of) " prime? "
+          (cond
+            (nil? prime?) "..."
+            (true? prime?) "Yep!!"
+            (false? prime?) "Nope"
+            :else "#@!%"))))))
 

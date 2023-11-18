@@ -10,6 +10,7 @@
      :refer [Completer StreamSubscription]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
+    ["package:flutter/painting.dart" :as p]
     ["package:flutter/foundation.dart" :as fnd]
 
     [tilton.mx.cell.base :as cb]
@@ -18,23 +19,33 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
 
-(defn use-compute? []
+(defn use-compute? [starting]
   (fx/sized-box {:width 300}
     (fx/checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Use Foundation/compute?")
-       :value           (cI true)
+       :title           (m/Text "Use Foundation/compute?"
+                          .style (p/TextStyle
+                                   .fontSize 24))
+       :value           (cI starting)
        :onChanged       (cF #(wmx-iso
+                               (dp :go!--------------------------------)
                                (mset! me :value %)
                                (mset! (fmu :primer) :of 9000039)))}
       {:name :use-compute?})))
 
 (defn slow-is-prime? [n]
+  (dp :slow-is-prime-entry!!!!!! n)
   (cond
     (= n 1) false
     :else (not (some (fn [divisor]
                        (zero? (mod n divisor)))
                  (range 2 n)))))
+
+(defn slow-next-prime-after [n]
+  (some (fn [nn]
+          (when (slow-is-prime? nn)
+            nn))
+    (drop (inc (or n 1)) (range))))
 
 (defn clock-face []
   (fx/custom-paint
