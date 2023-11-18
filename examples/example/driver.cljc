@@ -55,5 +55,5 @@
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (iso4/make-app)
+    (icompute/make-app)
     (iiso/main)))

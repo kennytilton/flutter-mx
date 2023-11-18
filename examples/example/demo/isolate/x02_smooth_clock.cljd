@@ -3,6 +3,7 @@
     ["package:flutter/gestures.dart" :as g]
     ["package:flutter/material.dart" :as m
      :refer [Canvas Size]]
+    ["package:flutter/painting.dart" :as p]
     ["package:vector_math/vector_math_64.dart" :as vm]
     ["dart:math" :as math
      :refer [pi cos sin]]
@@ -48,7 +49,9 @@
             :tooltip   "Send msg"})}
         (fx/column
           (clock-face)
-          (fx/text {}
+          (fx/text  {:style (p/TextStyle
+                              .fontSize 24)}
+
             {:name            :iso-home
              :fx$dpk          [:sstate :build]
              :target          :facto-display
@@ -101,35 +104,7 @@
                                                     (facto-worker task result-port))
                                      :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
                                     .errorsAreFatal true
-                                    .debugName "make-iso-isolate"))
-                                #_(Isolate.spawn
-                                    (fn factorial-worker [{:keys [msg-type ^SendPort result-port]}]
-                                      (dp :worker-fn-sees msg-type :resport result-port)
-                                      (let [task-port (ReceivePort)]
-                                        (dp :worker-sends-its-receiver (.-sendPort task-port))
-                                        (.send result-port {:msg-type  :config
-                                                            :task-port (.-sendPort task-port)})
-                                        (.listen task-port
-                                          (fn [{:keys [msg-type of-integer] :as task}]
-                                            (case msg-type
-                                              :compute-factorial (let [r (atom 1)]
-                                                                   (do (dpx :startingbillyuns)
-                                                                     (dotimes [_ (* #_#_1000 300 1000 10)])
-                                                                     (dpx :fini-billions))
-                                                                   (doseq [i (range 1 (inc of-integer))]
-                                                                     (swap! r * i)
-                                                                     (dpx :worker-sending-result :task i :factorial= @r)
-                                                                     #_(.send result-port {:msg-type   :factorial
-                                                                                           :of-integer i
-                                                                                           :value      @r}))
-                                                                   (dp :worker-sending-res :factorial= @r)
-                                                                   (.send result-port {:msg-type :eoj
-                                                                                       :value    @r}))
-                                              (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))))))
-                                    {:msg-type    :config
-                                     :result-port (.-sendPort ^ReceivePort (mget me :result-port))}
-                                    .errorsAreFatal true
-                                    .debugName "MyIsolate"))
+                                    .debugName "make-iso-isolate")))
              :result-listener (cF+ []
                                 (when (mget me :worker-iso)
                                   (dp :main-starts-listening)
@@ -158,7 +133,8 @@
                                    {:msg-type   :compute-factorial
                                     :of-integer task-n}))))}
             "ISO HOME")
-          (fx/text {}
+          (fx/text  {:style (p/TextStyle
+                              .fontSize 24)}
             {:name      :facto-display
              :of        (cI 1 :watch (fn [_ me new _ _]
                                        (when new
