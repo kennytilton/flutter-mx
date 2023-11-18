@@ -64,17 +64,16 @@
 (defn prime-decision []
   (fx/sized-box {:height 32}
     (fx/text
-      {:style (cF (let [prime? (mget (fmu :primer) :prime?)]
+      {:style (cF (let [{:keys [prime?]} (mget (fmu :primer) :prime?)]
                     (fx/text-style
                       {:fontSize   24
                        :fontWeight m/FontWeight.w400
                        :color      (if prime? m/Colors.green m/Colors.red)})))}
-      (let [prime? (mget (fmu :primer) :prime?)]
-        (dp :decision-sees (mget (fmu :primer) :of) :prime? prime? )
-        (str "Is " (mget (fmu :primer) :of) " prime? "
+      (let [{:keys [of prime?]} (mget (fmu :primer) :prime?)]
+        (dp :decision-sees of :prime? prime? )
+        (str "Is " of " prime? "
           (cond
             (nil? prime?) "..."
             (true? prime?) "Yep!!"
             (false? prime?) "Nope"
             :else "#@!%"))))))
-

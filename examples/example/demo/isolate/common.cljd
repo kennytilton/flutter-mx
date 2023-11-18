@@ -35,11 +35,12 @@
 
 (defn slow-is-prime? [n]
   (dp :slow-is-prime-entry!!!!!! n)
-  (cond
-    (= n 1) false
-    :else (not (some (fn [divisor]
-                       (zero? (mod n divisor)))
-                 (range 2 n)))))
+  {:of     n
+   :prime? (cond
+             (= n 1) false
+             :else (not (some (fn [divisor]
+                                (zero? (mod n divisor)))
+                          (range 2 n))))})
 
 (defn slow-next-prime-after [n]
   (some (fn [nn]
