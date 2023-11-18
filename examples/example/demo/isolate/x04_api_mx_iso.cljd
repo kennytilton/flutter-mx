@@ -36,34 +36,33 @@
                                                   {:of-integer of-integer
                                                    :factorial  @r})
                              (dp :WORKER-UNEXPECTED-TASK!!!!!!!)))
-                         ;; result handler omitted; mx-iso value gets resukt
+                         ;; result handler omitted; mx-iso value gets result
                          )))}
       (fx/scaffold
-        {:appBar (fx/app-bar {:title (fx/text title)})
-         :floatingActionButton
-         (fx/floating-action-button
-           {:onPressed (fx/as-dart-callback []
-                         (wmx-iso
-                           (let [fo (fmu :facto-display)]
-                             (dp :bumping-of!!!! (minfo fo))
-                             (mswap! fo :of + 2))))
-            :tooltip   "Send msg"})}
+        {:appBar               (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton (fx/floating-action-button
+                                 {:onPressed (fx/as-dart-callback []
+                                               (wmx-iso
+                                                 (let [fo (fmu :facto-display)]
+                                                   (dp :bumping-of!!!! (minfo fo))
+                                                   (mswap! fo :of + 2))))
+                                  :tooltip   "Send msg"})}
         (fx/column
           {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (clock-face)
 
           (fx/text {}
-            {:name      :facto-display
-             :of        (cI 1 :watch (fn [_ me new-val _ _]
-                                       (when-let [iso (mav :fact-iso)]
-                                         (when-let [task2w (mget iso :task-out-port)]
-                                           ; now we have a pipe to the worker, and can send it our one task: 7
-                                           (.send ^SendPort task2w
-                                             {:msg-type   :compute-factorial
-                                              :of-integer new-val})))))}
-            (str "The factorial of " (mget me :of) " is ... "))
+            {:name :facto-display
+             :of   (cI 1 :watch (fn [_ me new-val _ _]
+                                  (when-let [iso (mav :fact-iso)]
+                                    (when-let [tasko (mget iso :task-out-port)]
+                                      ; now we have a pipe to the worker, and can send it our one task: 7
+                                      (.send ^SendPort tasko
+                                        {:msg-type   :compute-factorial
+                                         :of-integer new-val})))))}
+            (str "The factorial of " (mget me :of) " ... "))
           (fx/text {}
-            {:name      :mx-iso-display}
+            {:name :mx-iso-display}
             (let [mxi (muv :app :fact-iso)]
               (str "... is "
                 (:factorial (mget mxi :value))))))))))

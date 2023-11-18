@@ -50,8 +50,7 @@
     [example.demo.isolate.x02-smooth-clock :as iso2]
     [example.demo.isolate.x03-mx-isolate :as iso3]
     [example.demo.isolate.x04-api-mx-iso :as iso4]
-    [example.demo.isolate.x05-compute :as x5comp]
-    [example.demo.isolate.x06-smooth :as iso6]))
+    [example.demo.isolate.x00-compute :as icompute]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)

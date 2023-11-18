@@ -364,6 +364,8 @@
                                 (do (wmx-iso (mset! me :value (:value res)))
                                   (result-handler res)))))))
      ;; todo allow initting of cI to unbound
-     :value (cI nil #_mx/unbound :watch (fn [_ _ new _ _]
-                                          (dpx :mx-iso-value!! new)))
+     :value (cI nil #_mx/unbound
+              :ephemeral? true
+              #_#_ :watch (fn [_ _ new _ _]
+                       (dp :mx-iso-value!! new)))
      :task-out-port (cI nil))))
