@@ -23,6 +23,7 @@
 ;;; --- the original, paraphrased ----------------------------------------------
 
 (defn factorial-worker [n]
+  (dbgiso :worker-sees)
   (reduce (fn [a b]
             (let [f (* a b)]
               (dp :factorial-of b :is f)
@@ -33,15 +34,12 @@
   (fx/material-app {}
     {:iso (cF+ [:async? true
                 :watch (fn [_ me new-iso _ _]
-                         (dp :watch-sees-new-iso new-iso)
-                         (when new-iso
-                           (await (Future.delayed (Duration .seconds 1)))
-                           (.kill ^Isolate new-iso .priority Isolate.beforeNextEvent)
-                           (dp :watch-just-killed-iso new-iso)))]
+                         (dbgiso :watch-sees-new-iso new-iso))]
             (Isolate.spawn
-              factorial-worker 5
+              (fn anon-name [n]
+                (dbgiso :worker-sees)) 5
               .errorsAreFatal true
-              .debugName "MyIsolate"))}
+               ))}
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Intentionally Left Blank")})})))
 
