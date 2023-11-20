@@ -4,6 +4,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as f]
+    ["dart:io" :as io]
     [cljd.flutter :as f]
     [tilton.mx.cell.base :as cty]
     [tilton.mx.model.core :as md]
@@ -25,9 +26,12 @@
 ;;; * restart the app to pick up the deps.edn.
 
 (defn main []
-  (binding [*async-error-handler* (fn [exc stack-trace]
-                                    (dp :ASYNC-ERROR!! exc))]
+  (binding [#_#_ *async-error-handler* (fn [exc stack-trace]
+                                    (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
+                                    (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
     (dp :main-entry--------------------------------------------)
+    (when (not (fx/is-web?))
+      (dp :platform-processors io/Platform.numberOfProcessors))
     (cty/cells-reset)
     (md/md-quiesce-feature! true)
     (fx/fx$sst-registry-initialize true)

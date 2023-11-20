@@ -1,6 +1,7 @@
 (ns example.demo.isolate.common
   (:require
     ["package:flutter/gestures.dart" :as g]
+    ["dart:io" :as io]
     ["package:flutter/material.dart" :as m
      :refer [Canvas Size]]
     ["package:vector_math/vector_math_64.dart" :as vm]
@@ -34,7 +35,8 @@
       {:name :use-compute?})))
 
 (defn slow-is-prime? [n]
-  (dp :slow-is-prime-entry!!!!!! n)
+  (dpx :slow-is-prime-entry n
+    :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
   {:of     n
    :prime? (cond
              (= n 1) false

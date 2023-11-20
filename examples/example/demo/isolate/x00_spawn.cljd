@@ -14,45 +14,85 @@
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
-; /// First of all, let's spawn an isolate and send a message to it.
-;
-;import 'dart:isolate';
-;
-;void main() => Future<void>(() async {
-;      final isolate = await Isolate.spawn<int>(
-;        entryPoint,
-;        7,
-;        errorsAreFatal: true, // uncaught errors will terminate the isolate
-;        debugName: 'MyIsolate', // name in debuggers and logging
-;      );
-;      await Future<void>.delayed(const Duration(seconds: 1));
-;      isolate.kill(); // Kill the isolate.
-;    });
-;
-;/// The entry point of the our isolate.
-;void entryPoint(int payload) {
-;  for (var i = 1, r = 1; i <= payload; i++, r *= i) {
-;    // Send a message to the main isolate.
-;    print('$i! = $r');
-;  }
-;}
-(defn entry-point [payload]
-  (let [r (atom 1)]
-    (doseq [i (range 1 (inc payload))]
-      (dp :fct i := (swap! r * i)))))
+;;; we do nothing but spawn an isolate and play with debugName,
+;;; kill (immediate or beforeNextEvent), and exit.
+;;;
+;;; have fun commenting/uncommmenting different variations below.
+;;;
+;;; Credit: example 1 at https://plugfox.dev/mastering-isolates/
+;;;
+
+(defn worker-main [payload]
+  (let [iso-self ^Isolate (Isolate.current)]
+    (dp :worker-iso-current iso-self)
+    ; (dp :worker-iso-current iso-self (.-debugName iso-self))
+
+    (reduce (fn [a b]
+              (let [f (* a b)]
+                (dp :factorial-of b :is  f)
+                f)) 1 (range 1 (inc payload)))
+
+    #_ (do                                                   ; --- worker pauses to let main kill it, maybe ----
+        (dp :worker-starts-waiting (.-debugName iso-self))
+        (await (Future.delayed (Duration .seconds 2)))
+        (dp :worker-done-waiting (.-debugName iso-self)))
+
+    #_ (do                                                   ; --- worker kill selfs ---------------------------
+        (dp :spawned-iso-killing-self (.-debugName iso-self))
+        (.kill ^Isolate iso-self .priority Isolate.immediate))
+
+    #_ (do                                                   ; --- worker exits Isolate ----------------------
+        (dp :spawned-exiting (.-debugName iso-self))
+        (Isolate.exit)
+        ;; we will not get here, because we just exited....
+        (dp :SHOULD-NOT-OCCUR-spawned-iso-post-exit iso-self))
+
+    (dp :worker-fn-returning)))
 
 (defn make-app []
   (fx/material-app {}
     {:iso (cF+ [:async? true
-                  :watch (fn [_ _ new _ _]
-                           (dp :iso-now new)
-                           (when new
-                             (await (Future.delayed (Duration .seconds 1)))
-                             (.kill ^Isolate new)
-                             (dp :iso-killed! new)))]
-              (Isolate.spawn
-                entry-point 7
-                .errorsAreFatal true
-                .debugName "MyIsolate"))}
+                :watch (fn [_ _ ^Isolate? new _ _]
+                         (when new
+                           ;(dp :iso-watch-new new)
+                           ;(dp :iso-watch-new-name (.-debugName new))
+                           (await (Future.delayed (Duration .seconds 1)))
+                           (do
+                             (dp :main-waited-1-now-killing new)
+                             ;(dp :main-killing-name (.-debugName new))
+                             ;(.kill ^Isolate new .priority Isolate.immediate)
+                             (.kill ^Isolate new .priority Isolate.beforeNextEvent)
+                             (dp :main-just-killed-iso new))))]
+            (Isolate.spawn
+             #_  (fn [n]                                     ;; name will be make-app.lambda or sth
+                  (dp :iso-lambda-current!!! (.-debugName Isolate.current)))
+             worker-main 5
+              .errorsAreFatal true
+              .debugName "MyIsolate"
+              ))}
+    (fx/scaffold
+      {:appBar (fx/app-bar {:title (fx/text "Main Screen 2")})})))
+
+;;; --- the original, in effect ----------------------------------------------
+
+(defn worker-fn-original [payload]
+  (reduce (fn [a b]
+            (let [f (* a b)]
+              (dp :factorial-of b :is  f)
+              f))
+    (range 1 (inc payload))))
+
+(defn make-app-original []
+  (fx/material-app {}
+    {:iso (cF+ [:async? true
+                :watch (fn [_ _ ^Isolate? new _ _]
+                         (when new
+                           (await (Future.delayed (Duration .seconds 1)))
+                           (.kill ^Isolate new .priority Isolate.beforeNextEvent)))]
+            (Isolate.spawn
+              worker-fn-original 5
+              .errorsAreFatal true
+              ; .debugName "custom-worker"
+              ))}
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Main Screen 2")})})))
