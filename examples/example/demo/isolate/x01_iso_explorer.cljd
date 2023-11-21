@@ -4,7 +4,9 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
+    ["dart:convert" :as convert]
     [clojure.string :as str]
+    [clojure.walk :as walk]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
@@ -12,8 +14,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
-    ["dart:async" :as async
-     :refer [Completer StreamSubscription]]
+
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
     [example.demo.isolate.common
@@ -103,11 +104,16 @@
           (fx/text (if (mget (fmu :on-off) :value) "Kill" "Spawn")))
         (fx/elevated-button
           {:onPressed (cF (when-let [iso ^Isolate? (mav :worker-iso)]
+                            ; a null onPressed serves also to disable the button, inc. visually
                             (as-dart-callback []
                               (wmx-iso
                                 (dbgiso :pinging iso)
+
                                 (.ping iso (mav :task-out-port)
-                                  .response (str {:msg "pong"})
+                                  .response (convert/jsonEncode
+                                              (walk/stringify-keys
+                                                {:msg-type "ACK"
+                                                 :data "ping"}))
                                   .priority Isolate.immediate)))))}
           {:name :pinger}
           (fx/text "Ping"))))))
