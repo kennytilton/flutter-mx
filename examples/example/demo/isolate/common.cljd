@@ -20,19 +20,19 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
 
-(defn use-compute? [starting]
-  (fx/sized-box {:width 300}
-    (fx/checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Use Foundation/compute?"
-                          .style (p/TextStyle
-                                   .fontSize 24))
-       :value           (cI starting)
-       :onChanged       (cF #(wmx-iso
-                               (dp :go!--------------------------------)
-                               (mset! me :value %)
-                               (mset! (fmu :primer) :of 9000039)))}
-      {:name :use-compute?})))
+
+(defn dbgiso
+  "A handy Iso debugger that gracefully handles dead Isos"
+  ([tag] (dbgiso tag Isolate.current))
+  ([tag iso] (dp :iso! tag (when iso
+                             (try (.-debugName ^io/Isolate iso)
+                               (catch Error e
+                                 ;;(dp :caught!!!! e)
+                                 "dead-iso"))))))
+
+(defn say-delay [n tag]
+  (dp :delaying n :tag tag)
+  (await (Future.delayed (Duration .seconds 1))))
 
 (defn slow-is-prime? [n]
   (dpx :slow-is-prime-entry n

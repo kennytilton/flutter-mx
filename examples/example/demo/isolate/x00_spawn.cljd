@@ -11,6 +11,8 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
+    [example.demo.isolate.common :as cmn
+     :refer [clock-face slow-is-prime? dbgiso]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
@@ -28,18 +30,19 @@
             (let [f (* a b)]
               (dp :factorial-of b :is f)
               f))
-    (range 1 (inc n))))
+    (range 1 (inc n)))
+  ; if we do not trust dart:io to kill an iso on return...
+  (Isolate.exit))
 
 (defn make-app []
   (fx/material-app {}
     {:iso (cF+ [:async? true
                 :watch (fn [_ me new-iso _ _]
+                         ; dead already...
                          (dbgiso :watch-sees-new-iso new-iso))]
             (Isolate.spawn
               (fn anon-name [n]
-                (dbgiso :worker-sees)) 5
-              .errorsAreFatal true
-               ))}
+                (dbgiso :worker-sees)) 5))}
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Intentionally Left Blank")})})))
 
@@ -71,16 +74,4 @@
 ;}
 
 
-(defn dbgiso
-  "A handy Iso debugger that gracefully handles dead Isos"
-  ([tag] (dbgiso tag Isolate.current))
-  ([tag iso] (dp :iso! tag (when iso
-                             (try (.-debugName ^io/Isolate iso)
-                               (catch Error e
-                                 ;;(dp :caught!!!! e)
-                                 "dead-iso"))))))
-
-(defn say-delay [n tag]
-  (dp :delaying n :tag tag)
-  (await (Future.delayed (Duration .seconds 1))))
 

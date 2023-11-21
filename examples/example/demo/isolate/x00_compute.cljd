@@ -19,7 +19,21 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face slow-is-prime? use-compute?]]))
+     :refer [clock-face slow-is-prime? dbgiso]]))
+
+(defn use-compute? [starting]
+  (fx/sized-box {:width 300}
+    (fx/checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Use Foundation/compute?"
+                          .style (p/TextStyle
+                                   .fontSize 24))
+       :value           (cI starting)
+       :onChanged       (cF #(wmx-iso
+                               (dp :go!--------------------------------)
+                               (mset! me :value %)
+                               (mset! (fmu :primer) :of 9000039)))}
+      {:name :use-compute?})))
 
 (declare prime-decision)
 
