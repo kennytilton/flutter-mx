@@ -12,25 +12,27 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face slow-is-prime? dbgiso]]
+     :refer [clock-face slow-is-prime? dbgiso say-delay]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
-;;; we do nothing but spawn an isolate and play with debugName,
-;;; kill (immediate or beforeNextEvent), and exit.
+;;; Inspired by Plague Fox, Example 1: https://plugfox.dev/mastering-isolates/
 ;;;
-
-(declare say-delay dbgiso)
-
-;;; --- the original, paraphrased ----------------------------------------------
+;;; we do nothing but spawn an isolate, watch it run, and watch it exit
+;;;
+;;; but play around with commenting/uncommenting below the delays and kills, etc, to get
+;;; a feel for async and isolates.
 
 (defn factorial-worker [n]
-  (dbgiso :worker-sees)
+  (dbgiso :worker-entry)
   (reduce (fn [a b]
             (let [f (* a b)]
               (dp :factorial-of b :is f)
               f))
     (range 1 (inc n)))
+  ; (await (say-delay 2 :worker-pre-return))
+  ; (await (Future.delayed (Duration .seconds 2)))
+  (dbgiso :worker-pre-exit)
   ; if we do not trust dart:io to kill an iso on return...
   (Isolate.exit))
 
@@ -38,40 +40,14 @@
   (fx/material-app {}
     {:iso (cF+ [:async? true
                 :watch (fn [_ me new-iso _ _]
-                         ; dead already...
-                         (dbgiso :watch-sees-new-iso new-iso))]
+                         (dbgiso :watch-sees-new-iso new-iso)
+                         #_ (when new-iso
+                           (say-delay 0 :main-watch-pre-kill)
+                           (.kill ^Isolate new-iso .priority Isolate.immediate)
+                           ;(.kill ^Isolate new-iso .priority Isolate.beforeNextEvent)
+                           ;; nb: iso debugname still retrievable with either kill priority
+                           (dbgiso :watch-just-killed-iso new-iso)))]
             (Isolate.spawn
-              (fn anon-name [n]
-                (dbgiso :worker-sees)) 5))}
+              factorial-worker 5))}
     (fx/scaffold
       {:appBar (fx/app-bar {:title (fx/text "Intentionally Left Blank")})})))
-
-; From Plague Fox, Example 1: https://plugfox.dev/mastering-isolates/
-;
-; "Here's an example of how to spawn an isolate, send a message to it, and then kill it after a delay "
-;
-; /// First of all, let's spawn an isolate and send a message to it.
-;
-;import 'dart:isolate';
-;
-;void main() => Future<void>(() async {
-;      final isolate = await Isolate.spawn<int>(
-;        entryPoint,
-;        7,
-;        errorsAreFatal: true, // uncaught errors will terminate the isolate
-;        debugName: 'MyIsolate', // name in debuggers and logging
-;      );
-;      await Future<void>.delayed(const Duration(seconds: 1));
-;      isolate.kill(); // Kill the isolate.
-;    });
-;
-;/// The entry point of the our isolate.
-;void entryPoint(int payload) {
-;  for (var i = 1, r = 1; i <= payload; i++, r *= i) {
-;    // Send a message to the main isolate.
-;    print('$i! = $r');
-;  }
-;}
-
-
-

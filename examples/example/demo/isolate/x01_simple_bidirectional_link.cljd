@@ -12,11 +12,20 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
+    [example.demo.isolate.common :as cmn
+     :refer [clock-face slow-is-prime? dbgiso]]
     ["dart:async" :as async
      :refer [Completer StreamSubscription]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
+; 0. make a ReceivePort main-rp;
+; 1. spawn a worker, passing it just main-rp's SendPort, over which the worker can send to main
+; 2. now main listens on main-rp
+; 3. worker makes its own ReceivePort, and sends it back to main on main-rp's sendport
+; 4. main records the worker's sendport;
+; 5. main sends a "job" to the worker, 5;
+; 6.
 (defn make-app []
   (fx/material-app
     {:title "Mastering Isolates #2"}
@@ -31,53 +40,50 @@
      :worker-iso          (cF+ [:async? true
                                 :watch (fn [_ me worker _ _]
                                          (when worker
-                                           (dp :got-worker-isolate! worker)))]
+                                           (dbgiso :got-worker-isolate! worker)))]
                             (Isolate.spawn
                               ; (we could also use here the entry-point defn above)
                               ; This is our worker. The worker:
-                              ; 1. makes a ReceivePort (wRP) on which to receive tasks;
-                              ; 2. sends its wRP back to the main iso on its mRP so main can send us tasks;
-                              ; 3. starts listening on wRP for tasks; and
+                              ; 0. receives as its sole launch param a SendPort (mSP) back to main;
+                              ; 1. makes its own worker ReceivePort (wRP) on which to receive tasks;
+                              ; 2. sends its sendPort (wSP) back to the main iso on mSP so main can send us tasks;
+                              ; 3. starts listening on wSP for tasks; and
                               ; 4. when it gets an N, iterates from 1 to N inclusive sending their factorials to main
-                              (fn entry-point [^SendPort send2main]
-                                (let [rcvPort (ReceivePort)]
-                                  (dp :worker-sends-its-receiver (.-sendPort rcvPort))
-                                  (.send send2main (.-sendPort rcvPort))
-                                  (.listen rcvPort (fn [message]
-                                                     (when (int? message)
-                                                       (let [r (atom 1)]
-                                                         (doseq [i (range 1 (inc message))]
-                                                           (swap! r * i)
-                                                           (dp :worker-sending-result :task i :factorial= @r)
-                                                           (.send send2main (str i "! = " @r)))))))))
+                              (fn entry-point [^SendPort sp-to-main]
+                                (let [task-port (ReceivePort)]
+                                  (dp :worker-sends-its-receiver (.-sendPort task-port))
+                                  (.send sp-to-main (.-sendPort task-port))
+                                  (.listen task-port (fn [message]
+                                                       (when (int? message)
+                                                         (let [r (atom 1)]
+                                                           (doseq [i (range 1 (inc message))]
+                                                             (swap! r * i)
+                                                             (dp :worker-sending-result :task i :factorial= @r)
+                                                             (.send sp-to-main (str i "! = " @r)))))))))
                               ; next is a positional arg that will be supplied to the provided entry-point.
                               ; main iso offers the sendPort of its ReceivePort as param-0
-                              (.-sendPort ^ReceivePort (mget me :result-port))
-                              .errorsAreFatal true
-                              .debugName "MyIsolate"))
-     :worker-listener     (cF+ []
+                              (.-sendPort ^ReceivePort (mget me :result-port))))
+     :main-listener       (cF+ []
+                            ; wait for worker to exist before listening. (Necessary?)
                             (when (mget me :worker-iso)
                               (dp :main-starts-listening)
                               (.listen ^ReceivePort (mget me :result-port)
                                 (fn [message]
-                                  ; Hmmm. Instead of insisting that the first message back from the
-                                  ; isolate be the .-sendPort of its ReceivePort, we assume the isolate does that
-                                  ; first, as it should.
-                                  (dp :main-hears message)
                                   (cond
                                     (dart/is? message SendPort)
-                                    (do (dp :wmx-iso-task-port!! message)
-                                      (wmx-iso
-                                        (dp :main-msets-task-out-port message)
-                                        (mset! me :task-to-worker-port message)))
+                                    (wmx-iso
+                                      (dp :main-records-worker-task-port message)
+                                      (mset! me :task-to-worker-port message))
                                     (string? message)
-                                    (dp :x01-simple-rcv!! message))))))
+                                    (dp :main-hears-string!! message)
+                                    :else (throw (Exception. (str "main got unexpected!!!! " message))))))))
      :task-to-worker-port (cI nil :watch (fn [_ me new _ _]
-                                           (dp :task-to-worker-port-now new)))
-     :dispatcher          (cF (when-let [task2w (mget me :task-to-worker-port)]
+                                           (when new
+                                             (dp :task-to-worker-port-watch new))))
+     :dispatcher          (cF (when-let [t2w (mget me :task-to-worker-port)]
                                 ; now we have a pipe to the worker, and can send it the task 7
-                                (dp :dispatcher-sees-task-port-to-worker task2w)
-                                (.send ^SendPort task2w 7))) ; <======== BINGO! task dispatch
+                                (dp :dispatcher-sees-task-port-to-worker t2w)
+                                (.send ^SendPort t2w 5))) ; <======== BINGO! task dispatch
      :clean-up            (cF+ [:async? true
                                 :watch (fn [_ me new prior _]
                                          (when (= new :fini)
@@ -87,6 +93,7 @@
                                            (.kill ^Isolate (mget me :worker-iso))))]
                             ; this is a completely hacky way of knowing when to wrap-up.
                             ; good enough for now.
+                            (dp :clean-up-waiting-3)
                             (Future.delayed (Duration .seconds 3) (fn [] :fini)))
      }
     (fx/scaffold
@@ -99,36 +106,36 @@
 ;
 ;import 'dart:async';
 ;import 'dart:isolate';
-;void entryPoint(SendPort send2main) {
-;  final rcvPort = ReceivePort(); // ReceivePort for the spawned isolate.
-;  send2main.send(rcvPort.sendPort); // Send the SendPort to the main isolate.
+;void entryPoint(SendPort send-to-main) {
+;  final task-port = ReceivePort(); // ReceivePort for the spawned isolate.
+;  send-to-main.send(task-port.sendPort); // Send the SendPort to the main isolate.
 ;  // Listen to the ReceivePort and calculate the factorial.
-;  rcvPort.listen((message) {
+;  task-port.listen((message) {
 ;    if (message is! int) return; // Ignore messages of other types.
 ;    for (var i = 1, r = 1; i <= message; i++, r *= i) {
 ;      // Send a message to the main isolate.
-;      send2main.send('$i! = $r');
+;      send-to-main.send('$i! = $r');
 ;    }
 ;  });
 ;}
 ;
 ;void main() => Future<void>(() async {
-;      final rcvPort = ReceivePort(); // ReceivePort for the main isolate.
+;      final task-port = ReceivePort(); // ReceivePort for the main isolate.
 ;      final isolate = await Isolate.spawn<SendPort>(
 ;        entryPoint,
-;        rcvPort.sendPort,
+;        task-port.sendPort,
 ;        errorsAreFatal: true,
 ;        debugName: 'MyIsolate',
 ;      );
 ;      final completer = Completer<SendPort>(); // For awaiting the SendPort.
-;      rcvPort.listen((message) {
+;      task-port.listen((message) {
 ;        if (message is SendPort) completer.complete(message);
 ;        if (message is String) print(message);
 ;      });
 ;      final send2Isolate = await completer.future; // Get the SendPort.
 ;      send2Isolate.send(7); // Send a message to the spawned isolate.
 ;      await Future<void>.delayed(const Duration(seconds: 1));
-;      rcvPort.close(); // Close the ReceivePort.
+;      task-port.close(); // Close the ReceivePort.
 ;      isolate.kill(); // Kill the isolate.
 ;    });
 ;

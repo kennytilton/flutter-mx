@@ -20,19 +20,22 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
 
-
+(defn iso-name
+  ([] (iso-name (Isolate.current)))
+  ([iso] (when iso
+           (try (.-debugName ^io/Isolate iso)
+             (catch Error e
+               "dead-iso")))))
 (defn dbgiso
   "A handy Iso debugger that gracefully handles dead Isos"
   ([tag] (dbgiso tag Isolate.current))
-  ([tag iso] (dp :iso! tag (when iso
-                             (try (.-debugName ^io/Isolate iso)
-                               (catch Error e
-                                 ;;(dp :caught!!!! e)
-                                 "dead-iso"))))))
+  ([tag iso] (dp :iso! tag (iso-name iso))))
 
-(defn say-delay [n tag]
-  (dp :delaying n :tag tag)
-  (await (Future.delayed (Duration .seconds 1))))
+(defn ^:async say-delay [n tag]
+  (when-not (zero? n)
+    (dp :iso (iso-name) :delaying n :tag tag)
+    (await (Future.delayed (Duration .seconds n)))
+    (dp :iso (iso-name) :delayed :tag tag)))
 
 (defn slow-is-prime? [n]
   (dpx :slow-is-prime-entry n
