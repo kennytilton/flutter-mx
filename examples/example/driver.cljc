@@ -44,10 +44,8 @@
     [example.non-fmx.ifernandez-isolates :as iiso]
     [example.eg.x055_isolates :as x055]
     [example.demo.isolate.x00-spawn :as ispawn]
-    [example.demo.isolate.x01-simple-bidirectional-link :as isimple]
-    [example.demo.isolate.x01-without-completer :as x01a]
-    [example.demo.isolate.x01-factorial-refactored :as iso-x01]
-    [example.demo.isolate.x02-smooth-clock :as iso2]
+    [example.demo.isolate.x01-iso-explorer :as ixp]
+    [example.demo.isolate.x02-poc-mx-iso :as iso2]
     [example.demo.isolate.x03-mx-isolate :as iso3]
     [example.demo.isolate.x04-api-mx-iso :as iso4]
     [example.demo.isolate.x00-compute :as icompute]))
@@ -55,5 +53,5 @@
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if true
-    (ispawn/make-app)
+    (ixp/make-app)
     (iiso/main)))
