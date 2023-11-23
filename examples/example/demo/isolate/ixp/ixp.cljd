@@ -4,7 +4,10 @@
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
     ["dart:io" :as io]
+    ["dart:convert" :as convert]
     [clojure.string :as str]
+    [clojure.walk :as walk]
+    [tilton.mx.util :as util]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv muiv fm* mav mx-bound? wmx-iso]]
@@ -35,17 +38,18 @@
      :label     (m/Text "Kill")
      :icon      (m/Icon m/Icons.cancel)}))
 
-(defn ping []
+(defn ping [ping-text]
   (fx/elevated-button+icon
     {:onPressed (cF (when-let [iso (mav :iso)]
-                      (as-dart-callback []
-                        (dbgiso :onpress-NOT-pinging-iso (mav :iso))
-                        #_(.ping (mav :iso) (mav :task-out-port)
+                      (when-let [to-iso (mav :to-iso)]
+                        (as-dart-callback []
+                          (dbgiso :onpresspinging-iso iso)
+                          (.ping ^Isolate iso to-iso
                             .response (convert/jsonEncode
                                         (walk/stringify-keys
-                                          {:msg-type "ACK"
-                                           :data     "ping"}))
-                            .priority Isolate.immediate))))
+                                          {:msg-type "ping"
+                                           :response ping-text}))
+                            .priority Isolate.immediate)))))
      :label     (m/Text "Ping")
      :icon      (m/Icon m/Icons.network_ping)}))
 
@@ -58,24 +62,7 @@
                        (zero? (mod n divisor)))
                  (range 2 n)))))
 
-(defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
-  (dp :worker-start start)
-  (let [from-main (ReceivePort)]
-    (dp :worker-sends-its-receiver (.-sendPort from-main))
-    (.send to-main {:msg-type :config
-                    :to-iso   (.-sendPort from-main)})
-    (dp :worker-starts-listening from-main)
-    (.listen from-main
-      (fn [{:keys [msg-type n] :as task}]
-        (case msg-type
-          :decide-prime?
-          (.send ^SendPort to-main
-            {:msg-type :prime-decision
-             :n        n
-             :value    (just-slow-is-prime? n)})
-          (dp :worker-IGNORES-task task))
-        nil))
-    nil))
+
 
 (defn ele-icon [label icon on-pressed]
   (fx/elevated-button+icon
@@ -103,6 +90,38 @@
                              :n        n})))))
      :label     (m/Text (str "Prime? " n))
      :icon      (m/Icon m/Icons.directions_run)}))
+
+(defn slo-prime-worker-listener [to-main {:keys [msg-type n] :as task}]
+  (dp :slo-prime-w-sees task)
+  (if (string? task)
+    (slo-prime-worker-listener to-main (util/dart-map->cljd-map
+                                         (convert/jsonDecode task)))
+    (case msg-type
+      :decide-prime?
+      (.send ^SendPort to-main
+        {:msg-type :prime-decision
+         :n        n
+         :value    (just-slow-is-prime? n)})
+      "ping"
+      (.send ^SendPort to-main
+        {:msg-type :ack
+         :response (:response task)})
+
+      (dp :worker-IGNORES-task task)))
+  nil)
+
+(defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
+  (dp :worker-start start)
+  (let [from-main (ReceivePort)]
+    (dp :worker-sends-its-receiver (.-sendPort from-main))
+    (.send to-main {:msg-type :config
+                    :to-iso   (.-sendPort from-main)})
+    (dp :worker-starts-listening from-main)
+    (.listen from-main (fn [msg]
+                         (slo-prime-worker-listener to-main msg)))
+    nil))
+
+;;; --- make app ----------------------------------------
 
 (defn make-app []
   (fx/material-app {}
@@ -135,17 +154,19 @@
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer 23")
                          :backgroundColor m/Colors.pink.shade50})}
-      (column
+      (column ;{:crossAxisAlignment m/CrossAxisAlignment.stretch}
         (clock-face)
-        (on-off)
-        (killer)
-        (ping)
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (on-off)
+          (killer)
+          (ping "Pong"))
         (decide-prime-slowly? 9000041)
         (decide-prime? 9000039)
         (decide-prime? 9000041)
         (text {}
-          (let [{:keys [msg-type n value]} (mav :worker-result)]
+          (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
             (case msg-type
               :prime-decision (str "N " n " is " (when-not value "NOT ") "prime.")
+              :ack (:response result)
               "")))))))
 
