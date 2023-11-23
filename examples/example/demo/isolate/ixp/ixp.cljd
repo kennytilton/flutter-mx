@@ -3,6 +3,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
+    ["dart:io" :as io]
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
@@ -48,49 +49,89 @@
      :label     (m/Text "Ping")
      :icon      (m/Icon m/Icons.network_ping)}))
 
-(defn slo-prime [{:keys [msg-type n] :as msg}]
-  (case msg-type
-    :decide-prime (let [p (slow-is-prime? n)]
-                    (dp :slop-says p)
-                    (say-delay 180 :sloprime-180))
-    :config))
+(defn just-slow-is-prime? [n]
+  (dp :slow-is-prime-entry n
+    :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
+  (cond
+    (= n 1) false
+    :else (not (some (fn [divisor]
+                       (zero? (mod n divisor)))
+                 (range 2 n)))))
 
 (defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
   (dp :worker-start start)
   (let [from-main (ReceivePort)]
     (dp :worker-sends-its-receiver (.-sendPort from-main))
-    (.send to-main {:msg-type  :config
-                    :to-iso (.-sendPort from-main)})
+    (.send to-main {:msg-type :config
+                    :to-iso   (.-sendPort from-main)})
     (dp :worker-starts-listening from-main)
-    (.listen from-main (fn [{:keys [msg-type of-integer] :as task}]
-                         (dp :worker-sees-task task)
-                         nil))
+    (.listen from-main
+      (fn [{:keys [msg-type n] :as task}]
+        (case msg-type
+          :decide-prime?
+          (.send ^SendPort to-main
+            {:msg-type :prime-decision
+             :n        n
+             :value    (just-slow-is-prime? n)})
+          (dp :worker-IGNORES-task task))
+        nil))
     nil))
+
+(defn ele-icon [label icon on-pressed]
+  (fx/elevated-button+icon
+    {:onPressed (cF (as-dart-callback []
+                      (on-pressed me)))
+     :label     (m/Text label)
+     :icon      (m/Icon icon)}))
+
+(defn decide-prime-slowly? [n]
+  (ele-icon (str "Main Prime? " n) m/Icons.directions_run
+    (fn [me]
+      (mset! (fasc :app) :worker-result
+        {:msg-type :prime-decision
+         :n        n
+         :value    (just-slow-is-prime? n)}))))
+
+(defn decide-prime? [n]
+  (fx/elevated-button+icon
+    {:onPressed (cF (when-let [iso (mav :iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (as-dart-callback []
+                          (dbgiso :onpress-prime-tasking-iso (mav :iso))
+                          (.send ^SendPort to-iso
+                            {:msg-type :decide-prime?
+                             :n        n})))))
+     :label     (m/Text (str "Prime? " n))
+     :icon      (m/Icon m/Icons.directions_run)}))
 
 (defn make-app []
   (fx/material-app {}
-    {:name     :app
-     :iso      (cF+ [:async? true
-                     :watch (fn [_ me new-iso prior _]
-                              (when (dart/is? prior Isolate)
-                                (dbgiso :watch-killing-prior-iso! prior)
-                                (.kill ^Isolate prior))
-                              (dbgiso :watch-sees-new-iso! new-iso))]
-                 (when (mget (fm* :on-off) :value)
-                   (Isolate.spawn slo-prime-worker
-                     {:msg-type :config
-                      :to-main  (.-sendPort (mget me :from-iso))})))
-     :worker-listener (cF+ []
-                        (when (mget me :from-iso)
-                          (.listen ^ReceivePort (mget me :from-iso)
-                            (fn [{:keys [to-iso] :as result}]
-                              (case (:msg-type result)
-                                :config (wmx-iso
-                                          (dp :main-sees-config result)
-                                          (mset! me :to-iso (:to-iso result)))
-                                (dp :UNK-WORKER-RES result))))))
-     :from-iso (ReceivePort)
-     :to-iso (cI nil)}
+    {:name          :app
+     :iso           (cF+ [:async? true
+                          :watch (fn [_ me new-iso prior _]
+                                   (when (dart/is? prior Isolate)
+                                     (dbgiso :watch-killing-prior-iso! prior)
+                                     (.kill ^Isolate prior))
+                                   (dbgiso :watch-sees-new-iso! new-iso))]
+                      (when (mget (fm* :on-off) :value)
+                        (Isolate.spawn slo-prime-worker
+                          {:msg-type :config
+                           :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))})))
+     :main-listener (cF+ []
+                      (when (mget me :from-iso)
+                        (.listen ^ReceivePort (mget me :from-iso)
+                          (fn [{:keys [to-iso] :as result}]
+                            (case (:msg-type result)
+                              :config (wmx-iso
+                                        (dp :main-sees-config result)
+                                        (mset! me :to-iso (:to-iso result)))
+                              (wmx-iso
+                                (dp :UNK-WORKER-RES result)
+                                (mset! me :worker-result result)))))))
+     :worker-result (cI nil :watch (fn [_ _ new _ _]
+                                     (dp :worker-res new)))
+     :from-iso      (ReceivePort)
+     :to-iso        (cI nil)}
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer 23")
                          :backgroundColor m/Colors.pink.shade50})}
@@ -98,5 +139,13 @@
         (clock-face)
         (on-off)
         (killer)
-        (ping)))))
+        (ping)
+        (decide-prime-slowly? 9000041)
+        (decide-prime? 9000039)
+        (decide-prime? 9000041)
+        (text {}
+          (let [{:keys [msg-type n value]} (mav :worker-result)]
+            (case msg-type
+              :prime-decision (str "N " n " is " (when-not value "NOT ") "prime.")
+              "")))))))
 
