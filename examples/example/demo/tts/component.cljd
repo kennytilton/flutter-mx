@@ -119,20 +119,20 @@
 
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
-                                   (let [{:keys [full-text word-end]}
-                                         (app-fts-progress)]
-                                     (< word-end (* 0.2 (count full-text))))))}
-    (opacity {:opacity (cF (if (mav :ignoring)
-                             0.15 1.0))}
-      (column {:mainAxisSize      m/MainAxisSize.min
-               :mainAxisAlignment m/MainAxisAlignment.center}
-        (icon-button
-          {:key         (m/ValueKey "FTS-STOP")
-           :icon        (fx/icon {:icon m/Icons.stop})
-           :iconSize    48
-           :color       m/Colors.red
-           :splashColor m/Colors.redAccent
-           :onPressed   (fn [] (fts-stop me))})))))
+                                     (let [{:keys [full-text word-end]}
+                                           (app-fts-progress)]
+                                       (< word-end (* 0.2 (count full-text))))))}
+      (opacity {:opacity (cF (if (mav :ignoring)
+                               0.15 1.0))}
+        (column {:mainAxisSize      m/MainAxisSize.min
+                 :mainAxisAlignment m/MainAxisAlignment.center}
+          (icon-button
+            {:key         (m/ValueKey "FTS-STOP")
+             :icon        (fx/icon {:icon m/Icons.stop})
+             :iconSize    48
+             :color       m/Colors.red
+             :splashColor m/Colors.redAccent
+             :onPressed   (fn [] (fts-stop me))})))))
 
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
@@ -151,6 +151,21 @@
      :label       (cF (str (mget me :value)))
      :activeColor color}
     {:name prop}))
+
+#_ (column {:mainAxisSize      m/MainAxisSize.min
+            :mainAxisAlignment m/MainAxisAlignment.center}
+     (icon-button
+       {:key         (m/ValueKey "FTS-STOP")
+        :icon        (fx/icon {:icon m/Icons.stop})
+        :iconSize    48
+        :color       m/Colors.red
+        :splashColor m/Colors.redAccent
+        :onPressed   (cF (when-not
+                           (or (= :off (app-fts-status))
+                             (let [{:keys [full-text word-end]}
+                                   (app-fts-progress)]
+                               (< word-end (* 0.2 (count full-text)))))
+                           (fn [] (fts-stop me))))}))
 
 (def equalizer-sliders
   [["Volume" :volume m/Colors.blue 0.3 0 1 10

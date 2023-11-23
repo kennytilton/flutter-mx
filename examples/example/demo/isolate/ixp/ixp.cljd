@@ -1,4 +1,4 @@
-(ns example.demo.isolate.x00-spawn
+(ns example.demo.isolate.ixp.ixp
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -16,13 +16,6 @@
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
-;;; Inspired by Plague Fox, Example 1: https://plugfox.dev/mastering-isolates/
-;;;
-;;; we do nothing but spawn an isolate, watch it run, and watch it exit
-;;;
-;;; but play around with commenting/uncommenting below the delays and kills, etc, to get
-;;; a feel for async and isolates.
-
 (defn factorial-worker [n]
   (dbgiso :worker-entry)
   (reduce (fn [a b]
@@ -30,26 +23,22 @@
               (dp :factorial-of b :is f)
               f))
     (range 1 (inc n)))
-  ; (await (say-delay 2 :worker-pre-return))
-  ; (await (Future.delayed (Duration .seconds 2)))
 
-  ; if we do not trust dart:io to kill an iso on return...
-  (do
-    (dbgiso :worker-pre-exit)
-    (Isolate.exit)
-    (dp :YOU_SHOULD_NOT_SEE_THIS_WE_EXITED!!!!!!!!!!!!))
-  )
+  ; let us not trust dart:io to kill an iso on return...
+  #_(do
+      (dbgiso :worker-about-to-iso.exit)
+      (Isolate.exit)
+      (dp :YOU_SHOULD_NOT_SEE_THIS_BECAUSE_WE_EXITED!!!!!!!!!!!!)))
 
 (defn make-app []
   (fx/material-app {}
     {:iso (cF+ [:async? true
                 :watch (fn [_ me new-iso _ _]
-                         (dbgiso :watch-sees-new-iso new-iso)
-                         #_ (when new-iso
+                         (dbgiso :watch-sees-new-iso! new-iso)
+                         (when new-iso
                            (say-delay 1 :main-watch-pre-kill)
                            (.kill ^Isolate new-iso .priority Isolate.immediate)
-                           ;(.kill ^Isolate new-iso .priority Isolate.beforeNextEvent)
-                           ;; nb: iso debugname still retrievable with either kill priority
+                           ; ...or Isolate.beforeNextEvent
                            (dbgiso :watch-just-killed-iso new-iso)))]
             (Isolate.spawn
               factorial-worker 5))}
