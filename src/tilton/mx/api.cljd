@@ -15,7 +15,12 @@
 (defmacro dp [& bits]
   `(tilton.mx.cell.base/without-c-dependency
      (dart:core/print (clojure.string/join " " (list* :DPR>
-                                                      (map #(if (nil? %) :NIL %) (vector ~@bits)))))
+                                                      (map #(let [bit# %]
+                                                              (cond
+                                                                (nil? bit#) :NIL
+                                                                (tilton.mx.api/mref? bit#) (tilton.mx.api/minfo bit#)
+                                                                :else bit#))
+                                                        (vector ~@bits)))))
      nil))
 
 (defmacro dpx [& bits]

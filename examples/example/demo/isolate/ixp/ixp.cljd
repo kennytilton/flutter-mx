@@ -6,7 +6,7 @@
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv fm* mav mx-bound? wmx-iso]]
+             fmu muv muiv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -16,31 +16,87 @@
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]))
 
-(defn factorial-worker [n]
-  (dbgiso :worker-entry)
-  (reduce (fn [a b]
-            (let [f (* a b)]
-              (dp :factorial-of b :is f)
-              f))
-    (range 1 (inc n)))
+(defn on-off []
+  (fx/elevated-button+icon
+    {:onPressed (as-dart-callback []
+                  (mswap! me :value not))
+     :label     (cF (m/Text (if (mget me :value) "Clear" "Spawn")))
+     :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))}
+    {:name  :on-off
+     :value (cI true)}))
 
-  ; let us not trust dart:io to kill an iso on return...
-  #_(do
-      (dbgiso :worker-about-to-iso.exit)
-      (Isolate.exit)
-      (dp :YOU_SHOULD_NOT_SEE_THIS_BECAUSE_WE_EXITED!!!!!!!!!!!!)))
+(defn killer []
+  (fx/elevated-button+icon
+    {:onPressed (cF (when-let [iso (mav :iso)]
+                      (as-dart-callback []
+                        (dbgiso :onpress-killing-iso iso)
+                        (.kill ^Isolate iso))))
+     :label     (m/Text "Kill")
+     :icon      (m/Icon m/Icons.cancel)}))
+
+(defn ping []
+  (fx/elevated-button+icon
+    {:onPressed (cF (when-let [iso (mav :iso)]
+                      (as-dart-callback []
+                        (dbgiso :onpress-NOT-pinging-iso (mav :iso))
+                        #_(.ping (mav :iso) (mav :task-out-port)
+                            .response (convert/jsonEncode
+                                        (walk/stringify-keys
+                                          {:msg-type "ACK"
+                                           :data     "ping"}))
+                            .priority Isolate.immediate))))
+     :label     (m/Text "Ping")
+     :icon      (m/Icon m/Icons.network_ping)}))
+
+(defn slo-prime [{:keys [msg-type n] :as msg}]
+  (case msg-type
+    :decide-prime (let [p (slow-is-prime? n)]
+                    (dp :slop-says p)
+                    (say-delay 180 :sloprime-180))
+    :config))
+
+(defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
+  (dp :worker-start start)
+  (let [from-main (ReceivePort)]
+    (dp :worker-sends-its-receiver (.-sendPort from-main))
+    (.send to-main {:msg-type  :config
+                    :to-iso (.-sendPort from-main)})
+    (dp :worker-starts-listening from-main)
+    (.listen from-main (fn [{:keys [msg-type of-integer] :as task}]
+                         (dp :worker-sees-task task)
+                         nil))
+    nil))
 
 (defn make-app []
   (fx/material-app {}
-    {:iso (cF+ [:async? true
-                :watch (fn [_ me new-iso _ _]
-                         (dbgiso :watch-sees-new-iso! new-iso)
-                         (when new-iso
-                           (say-delay 1 :main-watch-pre-kill)
-                           (.kill ^Isolate new-iso .priority Isolate.immediate)
-                           ; ...or Isolate.beforeNextEvent
-                           (dbgiso :watch-just-killed-iso new-iso)))]
-            (Isolate.spawn
-              factorial-worker 5))}
-    (fx/scaffold
-      {:appBar (fx/app-bar {:title (fx/text "Intentionally Left Blank")})})))
+    {:name     :app
+     :iso      (cF+ [:async? true
+                     :watch (fn [_ me new-iso prior _]
+                              (when (dart/is? prior Isolate)
+                                (dbgiso :watch-killing-prior-iso! prior)
+                                (.kill ^Isolate prior))
+                              (dbgiso :watch-sees-new-iso! new-iso))]
+                 (when (mget (fm* :on-off) :value)
+                   (Isolate.spawn slo-prime-worker
+                     {:msg-type :config
+                      :to-main  (.-sendPort (mget me :from-iso))})))
+     :worker-listener (cF+ []
+                        (when (mget me :from-iso)
+                          (.listen ^ReceivePort (mget me :from-iso)
+                            (fn [{:keys [to-iso] :as result}]
+                              (case (:msg-type result)
+                                :config (wmx-iso
+                                          (dp :main-sees-config result)
+                                          (mset! me :to-iso (:to-iso result)))
+                                (dp :UNK-WORKER-RES result))))))
+     :from-iso (ReceivePort)
+     :to-iso (cI nil)}
+    (scaffold
+      {:appBar (app-bar {:title           (fx/text "Isolate Explorer 23")
+                         :backgroundColor m/Colors.pink.shade50})}
+      (column
+        (clock-face)
+        (on-off)
+        (killer)
+        (ping)))))
+
