@@ -16,42 +16,11 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback]]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face slow-is-prime? dbgiso say-delay]]
+     :refer [clock-face slow-is-prime? dbgiso dbgisox say-delay]]
+    [example.demo.isolate.ixp.iso-control
+     :refer [on-off pause-resume kill ping]]
     ["dart:isolate" :as di
-     :refer [Isolate SendPort ReceivePort]]))
-
-(defn on-off []
-  (fx/elevated-button+icon
-    {:onPressed (as-dart-callback []
-                  (mswap! me :value not))
-     :label     (cF (m/Text (if (mget me :value) "Clear" "Spawn")))
-     :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))}
-    {:name  :on-off
-     :value (cI true)}))
-
-(defn killer []
-  (fx/elevated-button+icon
-    {:onPressed (cF (when-let [iso (mav :iso)]
-                      (as-dart-callback []
-                        (dbgiso :onpress-killing-iso iso)
-                        (.kill ^Isolate iso))))
-     :label     (m/Text "Kill")
-     :icon      (m/Icon m/Icons.cancel)}))
-
-(defn ping [ping-text]
-  (fx/elevated-button+icon
-    {:onPressed (cF (when-let [iso (mav :iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (as-dart-callback []
-                          (dbgiso :onpresspinging-iso iso)
-                          (.ping ^Isolate iso to-iso
-                            .response (convert/jsonEncode
-                                        (walk/stringify-keys
-                                          {:msg-type "ping"
-                                           :response ping-text}))
-                            .priority Isolate.immediate)))))
-     :label     (m/Text "Ping")
-     :icon      (m/Icon m/Icons.network_ping)}))
+     :refer [Isolate SendPort Capability ReceivePort]]))
 
 (defn just-slow-is-prime? [n]
   (dp :slow-is-prime-entry n
@@ -62,22 +31,15 @@
                        (zero? (mod n divisor)))
                  (range 2 n)))))
 
-
-
-(defn ele-icon [label icon on-pressed]
+(defn decide-prime-in-main [n]
   (fx/elevated-button+icon
     {:onPressed (cF (as-dart-callback []
-                      (on-pressed me)))
-     :label     (m/Text label)
-     :icon      (m/Icon icon)}))
-
-(defn decide-prime-slowly? [n]
-  (ele-icon (str "Main Prime? " n) m/Icons.directions_run
-    (fn [me]
-      (mset! (fasc :app) :worker-result
-        {:msg-type :prime-decision
-         :n        n
-         :value    (just-slow-is-prime? n)}))))
+                      (mset! (fasc :app) :worker-result
+                        {:msg-type :prime-decision
+                         :n        n
+                         :value    (just-slow-is-prime? n)})))
+     :label     (m/Text (str "Main Prime!? " n))
+     :icon      (m/Icon m/Icons.directions_run)}))
 
 (defn decide-prime? [n]
   (fx/elevated-button+icon
@@ -111,12 +73,11 @@
   nil)
 
 (defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
-  (dp :worker-start start)
   (let [from-main (ReceivePort)]
-    (dp :worker-sends-its-receiver (.-sendPort from-main))
+    (dpx :worker-sends-its-receiver (.-sendPort from-main))
     (.send to-main {:msg-type :config
                     :to-iso   (.-sendPort from-main)})
-    (dp :worker-starts-listening from-main)
+    (dpx :worker-starts-listening from-main)
     (.listen from-main (fn [msg]
                          (slo-prime-worker-listener to-main msg)))
     nil))
@@ -127,28 +88,40 @@
   (fx/material-app {}
     {:name          :app
      :iso           (cF+ [:async? true
+                          ; scavenge discarded iso
                           :watch (fn [_ me new-iso prior _]
                                    (when (dart/is? prior Isolate)
-                                     (dbgiso :watch-killing-prior-iso! prior)
+                                     (dbgisox :watch-killing-prior-iso! prior)
                                      (.kill ^Isolate prior))
-                                   (dbgiso :watch-sees-new-iso! new-iso))]
+                                   (dbgiso :watch-sees-new-iso! new-iso)
+                                   (when (mget me :iso-paused?)
+                                     ))]
                       (when (mget (fm* :on-off) :value)
                         (Isolate.spawn slo-prime-worker
                           {:msg-type :config
                            :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))})))
+     :resume-capacity (cF (when-let [iso (mget me :iso)]
+                            (cond
+                              (mget me :iso-paused?) (let [resumer (.pause ^Isolate iso)]
+                                                       (dp :paused!!!!! resumer)
+                                                       resumer)
+                              :else (when (dart/is? _cache Capability)
+                                      (.resume iso _cache)
+                                      nil))))
+     :iso-paused? (cI true)
      :main-listener (cF+ []
                       (when (mget me :from-iso)
                         (.listen ^ReceivePort (mget me :from-iso)
                           (fn [{:keys [to-iso] :as result}]
                             (case (:msg-type result)
                               :config (wmx-iso
-                                        (dp :main-sees-config result)
+                                        (dpx :main-sees-config result)
                                         (mset! me :to-iso (:to-iso result)))
                               (wmx-iso
-                                (dp :UNK-WORKER-RES result)
+                                (dpx :forwarding-result result)
                                 (mset! me :worker-result result)))))))
      :worker-result (cI nil :watch (fn [_ _ new _ _]
-                                     (dp :worker-res new)))
+                                     (when new (dp :worker-res new))))
      :from-iso      (ReceivePort)
      :to-iso        (cI nil)}
     (scaffold
@@ -158,9 +131,10 @@
         (clock-face)
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (on-off)
-          (killer)
+          (pause-resume)
+          (kill)
           (ping "Pong"))
-        (decide-prime-slowly? 9000041)
+        (decide-prime-in-main 9000041)
         (decide-prime? 9000039)
         (decide-prime? 9000041)
         (text {}
@@ -168,5 +142,5 @@
             (case msg-type
               :prime-decision (str "N " n " is " (when-not value "NOT ") "prime.")
               :ack (:response result)
-              "")))))))
+              "...")))))))
 

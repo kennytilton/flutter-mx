@@ -303,7 +303,7 @@ in the CL version of Cells SETF itself is the change API dunction."
                       (c-prop c))))
     (do (dp :c-reset-rejecting-undeferred! (c-prop c))
         (mx-throw (str "cset!> change  must be deferred by wrapping it in WITH-INTEGRITY. prop: "
-                    (c-prop c) " :me " @(c-model c))))
+                    (c-prop c) " :me " (minfo (c-model c)))))
     ;-----------------------------------
     (some #{(c-lazy c)} [:once-asked :always true])
     (c-value-assume c new-value nil)
