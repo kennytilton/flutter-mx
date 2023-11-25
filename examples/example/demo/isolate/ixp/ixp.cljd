@@ -93,22 +93,18 @@
                                    (when (dart/is? prior Isolate)
                                      (dbgisox :watch-killing-prior-iso! prior)
                                      (.kill ^Isolate prior))
-                                   (dbgiso :watch-sees-new-iso! new-iso)
-                                   (when (mget me :iso-paused?)
-                                     ))]
+                                   (dbgiso :watch-sees-new-iso! new-iso))]
                       (when (mget (fm* :on-off) :value)
                         (Isolate.spawn slo-prime-worker
                           {:msg-type :config
                            :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))})))
-     :resume-capacity (cF (when-let [iso (mget me :iso)]
+     :resume-capability (cF (when-let [iso (mget me :iso)]
                             (cond
-                              (mget me :iso-paused?) (let [resumer (.pause ^Isolate iso)]
-                                                       (dp :paused!!!!! resumer)
-                                                       resumer)
+                              (mget me :iso-paused?) (.pause ^Isolate iso)
                               :else (when (dart/is? _cache Capability)
                                       (.resume iso _cache)
                                       nil))))
-     :iso-paused? (cI true)
+     :iso-paused? (cI false)
      :main-listener (cF+ []
                       (when (mget me :from-iso)
                         (.listen ^ReceivePort (mget me :from-iso)
