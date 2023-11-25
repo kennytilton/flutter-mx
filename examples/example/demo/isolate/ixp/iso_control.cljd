@@ -28,6 +28,17 @@
     {:name  :on-off
      :value (cI true)}))
 
+(defn start-paused []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:key             (m/ValueKey "start-paused")
+       :controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Start Paused")
+       :value           (cFn (mav :start-paused?))
+       :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
+      {:name :auto-play})))
+
+
 (defn pause-resume []
   (fx/elevated-button+icon
     {:onPressed (cF (when-let [iso ^Isolate? (mav :iso)]

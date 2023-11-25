@@ -88,66 +88,66 @@
 
 (defn make-app []
   (fx/material-app {}
-    {:name              :app
-     :on-exit           (cF+ [:watch (fn [_ me new _ _]
-                                       (.listen ^ReceivePort new
-                                         (fn [msg] (dp :on-exit!!!! msg))))]
-                          (ReceivePort))
-     :on-error          (cF+ [:watch (fn [_ me new _ _]
-                                       (.listen ^ReceivePort new
-                                         (fn [msg] (dp :on-error!!!! msg))))]
-                          (ReceivePort))
-     :start-paused? false
-     :iso               (cF+ [:async? true
-                              ; scavenge discarded iso
-                              :watch (fn [_ me new-iso prior _]
-                                       (when (dart/is? prior Isolate)
-                                         (dbgisox :watch-killing-prior-iso! prior)
-                                         (.kill ^Isolate prior))
-                                       (when new-iso
-                                         (wmx-iso
-                                           (mset! me :resume-cap (.-pauseCapability ^Isolate new-iso))))
-                                       (dbgiso :watch-sees-new-iso! new-iso))]
-                          (when (mget (fm* :on-off) :value)
-                            (Isolate.spawn slo-prime-worker
-                              {:msg-type :config
-                               :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
-                              .paused (mget me :start-paused?)
-                              .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
-                              .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
-     :resume-cap (cI nil)
+    {:name          :app
+     :on-exit       (cF+ [:watch (fn [_ me new _ _]
+                                   (.listen ^ReceivePort new
+                                     (fn [msg] (dp :on-exit!!!! msg))))]
+                      (ReceivePort))
+     :on-error      (cF+ [:watch (fn [_ me new _ _]
+                                   (.listen ^ReceivePort new
+                                     (fn [msg] (dp :on-error!!!! msg))))]
+                      (ReceivePort))
+     :start-paused? true
+     :iso           (cF+ [:async? true
+                          :watch (fn [_ me new-iso prior _]
+                                   (when (dart/is? prior Isolate)
+                                     (dbgisox :watch-killing-prior-iso! prior)
+                                     (.kill ^Isolate prior))
+                                   (when new-iso
+                                     (wmx-iso
+                                       (mset! me :resume-cap (.-pauseCapability ^Isolate new-iso))))
+                                   (dbgiso :watch-sees-new-iso! new-iso))]
+                      (when (mget (fm* :on-off) :value)
+                        (Isolate.spawn slo-prime-worker
+                          {:msg-type :config
+                           :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
+                          .paused (mget me :start-paused?)
+                          .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
+                          .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
+     :resume-cap    (cI nil :watch (fn [_ _ new prior _]
+                                     (dp :resume-cap! new)))
 
-     :iso-paused?       (cF+n [:watch (fn [_ me paused? prior _]
-                                        (when-let [iso ^Isolate? (mget me :iso)]
-                                          (when (mx-bound? prior)
-                                            (cond
-                                              paused? (let [resumer (.pause iso)]
-                                                        (dp :watch-paused-resumer!! iso resumer)
-                                                        (wmx-iso
-                                                          (mset! me :resume-cap resumer)))
-                                              :else (let [resumer (mget me :resume-cap)]
-                                                      (dp :watch-paused-resuming!! resumer)
-                                                      (.resume iso resumer))))))]
-                          (mget me :start-paused?))
-     :main-listener     (cF+ []
-                          (when-let [iso (mget me :iso)]
-                            (when-let [from-iso (mget me :from-iso)]
-                              (dp :main-listenng!!)
-                              (.listen ^ReceivePort from-iso
-                                (fn [{:keys [to-iso] :as result}]
-                                  (dp :main-hears!!! result)
-                                  (case (:msg-type result)
-                                    :config (wmx-iso
-                                              (dp :main-sees-config!!!! result)
-                                              (mset! me :to-iso (:to-iso result)))
-                                    (wmx-iso
-                                      (dpx :forwarding-result result)
-                                      (mset! me :worker-result result))))))))
-     :worker-result     (cI nil :watch (fn [_ _ new _ _]
-                                         (when new (dp :worker-res new))))
-     :from-iso          (cF  (when (mget (fm* :on-off) :value)
-                               (ReceivePort)))
-     :to-iso            (cI nil)}
+     :iso-paused?   (cF+n [:watch (fn [_ me paused? prior _]
+                                    (when-let [iso ^Isolate? (mget me :iso)]
+                                      (when (mx-bound? prior)
+                                        (cond
+                                          paused? (let [resumer (.pause iso)]
+                                                    (dp :watch-paused-resumer!! iso resumer)
+                                                    (wmx-iso
+                                                      (mset! me :resume-cap resumer)))
+                                          :else (let [resumer (mget me :resume-cap)]
+                                                  (dp :watch-paused-resuming!! resumer)
+                                                  (.resume iso resumer))))))]
+                      (mget me :start-paused?))
+     :main-listener (cF+ []
+                      (when-let [iso (mget me :iso)]
+                        (when-let [from-iso (mget me :from-iso)]
+                          (dp :main-listenng!!)
+                          (.listen ^ReceivePort from-iso
+                            (fn [{:keys [to-iso] :as result}]
+                              (dp :main-hears!!! result)
+                              (case (:msg-type result)
+                                :config (wmx-iso
+                                          (dp :main-sees-config!!!! result)
+                                          (mset! me :to-iso (:to-iso result)))
+                                (wmx-iso
+                                  (dpx :forwarding-result result)
+                                  (mset! me :worker-result result))))))))
+     :worker-result (cI nil :watch (fn [_ _ new _ _]
+                                     (when new (dp :worker-res new))))
+     :from-iso      (cF (when (mget (fm* :on-off) :value)
+                          (ReceivePort)))
+     :to-iso        (cI nil)}
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer 23")
                          :backgroundColor m/Colors.pink.shade50})}
