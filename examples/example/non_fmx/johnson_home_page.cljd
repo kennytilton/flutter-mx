@@ -1,0 +1,136 @@
+(ns example.non-fmx.johnson-home-page
+  (:require
+    ["package:flutter/cupertino.dart" :as cupertinoIcons]
+    ["package:flutter/material.dart" :as m]
+    [cljd.flutter :as f]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    ))
+
+;; this function is not used at the moment, but demonstrates how to use context within the MediaQuery class to get the width of the objects
+;; TODO use this for dynamic layouts of the screen
+(defn get-width [ctx] (let [media-query-size (.-width (.-size (m/MediaQuery.of ctx)))]
+                        (dp :mqsize #_media-query-size)))
+
+
+(def controller (m/TextEditingController))
+
+(defn chat-room-page []
+  (f/widget
+    :context ctx
+    (m/Column
+      .children
+      [
+       (m/Expanded .child
+         (m/Container .decoration
+           (m/BoxDecoration .color
+             (.-white m/Colors)
+             .borderRadius
+             (.circular m/BorderRadius 10))
+           .margin
+           ^:const (.symmetric m/EdgeInsets .horizontal 15 .vertical 2)))
+       (m/Padding .padding ^:const (.symmetric m/EdgeInsets .horizontal 20)
+         .child
+         (m/Row .mainAxisSize
+           (.-max m/MainAxisSize)
+           .mainAxisAlignment
+           (.-spaceEvenly m/MainAxisAlignment)
+           .crossAxisAlignment
+           (.-center m/CrossAxisAlignment)
+           .children
+           [
+            (m/IconButton
+              .icon ^:const (m/Icon (.-attach_file m/Icons))
+              .onPressed (fn []))
+            (m/Expanded .child
+              (m/Padding .padding
+                ^:const (.all m/EdgeInsets 8)
+                .child
+                (m/TextField
+                  .controller controller
+                  .focusNode (m/FocusNode)
+                  .keyboardType
+                  (.-text m/TextInputType)
+                  .minLines
+                  1
+                  .maxLines
+                  5
+                  .cursorColor
+                  (.-black38 m/Colors)
+                  .style
+                  ^:const
+                  (m/TextStyle .color (.-black87 m/Colors))
+                  .decoration
+                  ^:const
+                  (m/InputDecoration
+                    .contentPadding
+                    (.all m/EdgeInsets 5)
+                    .border
+                    (.-none m/InputBorder)
+                    .focusedBorder
+                    (.-none m/InputBorder)
+                    .hintText
+                    "Message..."
+                    .hintStyle
+                    (m/TextStyle .color (.-black38 m/Colors)))
+                  .autocorrect
+                  true
+                  .onSubmitted (fn [val] (dart:core/print val)))))
+            (m/IconButton
+              .icon ^:const (m/Icon (.-send m/Icons))
+              .onPressed (fn []                             ;; let [media-query-size (.-width media-query-size)]
+                           (dart:core/print (.-text controller))))]))])))
+
+(defn my-home-page [title]
+  (f/widget
+    (m/SelectionArea .child
+      (m/Scaffold
+        .appBar (m/AppBar .title (m/Text title))
+        .body
+        (m/SafeArea .child
+          (m/Center .child (m/Row .children
+                             [(m/Container
+                                .constraints (m/BoxConstraints .maxWidth 280)
+                                ;; .color (m/Colors.deepPurple)
+                                .child
+                                (m/Column
+                                  .children [(m/Row .children
+                                               [(m/Icon (.-arrow_drop_down m/Icons)) (m/SizedBox .width 12)
+                                                (m/Icon (.-slider_horizontal_3 cupertinoIcons/CupertinoIcons))
+                                                (m/SizedBox .width 8) (m/Text "Parameters")])
+                                             (m/Padding .padding
+                                               (.only m/EdgeInsets .left 24 .top 4 .bottom 4)
+                                               .child
+                                               (m/Column .children
+                                                 [(m/Row .mainAxisAlignment
+                                                    (.-start m/MainAxisAlignment)
+                                                    .children
+                                                    [(m/Text "Temperature")])
+                                                  (m/Row .mainAxisAlignment
+                                                    (.-start m/MainAxisAlignment)
+                                                    .children
+                                                    [(m/Text "Top K")])
+                                                  (m/Row .mainAxisAlignment
+                                                    (.-start m/MainAxisAlignment)
+                                                    .children
+                                                    [(m/Text "Maximum Length")])]))
+
+                                             (m/Row .children
+                                               [(m/Icon (.-arrow_drop_down m/Icons)) (m/SizedBox .width 12)
+                                                (m/Icon (.-lightbulb_circle_outlined m/Icons)) (m/SizedBox .width 8)
+                                                (m/Text "Models")])
+                                             (m/ElevatedButton .onPressed
+                                               (fn [] (dart:core/print "Load Model"))
+                                               .child
+                                               (m/Text "Load Model"))
+                                             ]))
+                              (m/Container .width 1 .color (.-grey m/Colors))
+                              (m/Expanded .child (m/Column .children [(m/Expanded .child (chat-room-page))]))])))))))
+
+(defn main []
+  (f/run
+    (m/MaterialApp
+      .title "Chat Arena"
+      .theme (m/ThemeData .useMaterial3 true)
+      .home (my-home-page "Chat Arena"))))

@@ -4,7 +4,7 @@
     [cljd.flutter.alpha :as f]
 
     [tilton.mx.model.peek :refer [Model minfo mref?]]
-    [tilton.mx.api :refer [cF cF+ cI mget muv] :as mx]
+    [tilton.mx.api :refer [dp cF cF+ cI mget muv] :as mx]
     [tilton.fmx.api :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
@@ -75,6 +75,8 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (fx/in-my-context [me ctx]
+                  (dp :ani ctx)
+                  (dp :mqwidth (.-width (.-size (m/MediaQuery.of ctx))))
                   (fx/state-prop-get (mx/fasc :fab) :expand-animation))
      :builder   (as-dart-callback [ctx child]
                   (let [progress ^m/CurvedAnimation (fx/state-prop-get (mx/fasc :fab) :expand-animation)
@@ -91,6 +93,8 @@
                           .angle (* (- 1.0 (.-value progress))
                                    math/pi 0.5))
                         child))))}
+    {:name :x05-hider
+     :fx$dpk [:ctx :bbuild]}
     (fx/fade-transition
       {:opacity (fx/in-my-context [me ctx]
                   (fx/state-prop-get (mx/fasc :fab) :expand-animation))}

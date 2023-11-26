@@ -50,10 +50,12 @@
     [example.demo.isolate.x03-mx-isolate :as iso3]
     [example.demo.isolate.x04-api-mx-iso :as iso4]
     [example.demo.isolate.x00-compute :as icompute]
-    [example.non-fmx.johnson-home-page :as jhp]))
+    [example.non-fmx.johnson-home-page :as jhp]
+    [example.non-fmx.jhp-fmx :as jhpfx]
+    [example.non-fmx.ctx-kids :as ctxk]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if false
-    (ixp/make-app)
-    (jhp/main)))
+    (x05/make-app)
+    (ctxk/make-app)))

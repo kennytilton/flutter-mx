@@ -54,7 +54,7 @@
 ;;; --- ctx tracking ----------------------
 
 (defn fx$ctx-record [me ctx]
-  (dpm me :ctx :record-CTX! (minfo me) ctx)
+  (dpm me :ctx :record-CTX! (minfo me) :ctx!! ctx)
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
 
 (defn ctx-check
@@ -265,7 +265,7 @@
                        (dp :render-sees-not-mref?-passing-thru fx))
                    fx))
       :else (let [gen (mget fx :fx-gen)]
-              (dpx :fx-render-sees-gen!! (minfo fx))
+              (dpm fx :ctx :fx-render-sees-gen!! ctx)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
               ;; nope (fxf/fx$ctx-record fx ctx)
@@ -296,6 +296,8 @@
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
    ;(dp :resolving prop (minfo me) widget-value)
+   (when (nil? ctx)
+     (dpm me :ctx :nil-ctx!!!!!! (minfo me) widget-value))
    (wtrx [0 1000 nil :RESO prop (minfo me)]
      (let [resolved
            (cond
@@ -319,7 +321,7 @@
              (let [val ^CBToResolve widget-value]
                (dpx :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
                (let [cb-val (.-value val)]                  ;; ^CBToResolve widget-value)]
-                 (dpx :CBToResolveyields cb-val)
+                 (dpx :CBToResolveyields cb-val ctx)
                  (let [v (cb-val me ctx)]
                    (dpx :recuring-unwrapped-fn?-return-val v)
                    (fx-resolve prop me ctx v))
@@ -383,6 +385,7 @@
 
 (defn gen-gen [me ctx widget-maker]
   (dpm me :bbuild :gen-gen-entry :reactive? (cinfo (tilton.mx.model.core/md-reactive? me)))
+  (dpm me :ctx :gen-gen-entry ctx)
   (cond
     (or (tilton.mx.api/mget? me :unwrapped?)
       (some #{(name (:fx-class @me))} ["PreferredSize"]))
@@ -431,7 +434,7 @@
                      (ctx-check me ctx)
                      (widget-maker me ctx)))))
     :else (do
-            (dpm me :build :GG-nobuilder (minfo me))
+            (dpm me :bbuild :GG-nobuilder :ctx ctx (minfo me))
             (countit [:build (:fx-class @me)])
             (ctx-check me ctx)
             (widget-maker me ctx))))
@@ -450,6 +453,29 @@
                    (tilton.fmx.factory/gen-gen me# ctxtop#
                      (fn [~'me ~'ctx]
                        (dpx :konly-prop-gen ~target-prop-name (tilton.mx.api/minfo ~'me))
+                       (~fx-class
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ; the prop...
+                         ~(symbol (str "." (name target-prop-name)))
+                         (tilton.fmx.factory/fx-resolve :kid1 ~'me ~'ctx
+                           (first (tilton.mx.api/mkids ~'me)))
+                         ; other props
+                         ~@(fx-props>mx (dissoc fx-props :key)))))))
+       (tilton.mx.api/cFkids ~only-kid))))
+
+(defmacro konly-prop-dbg [target-prop-name fx-class fx-props mx-props & [only-kid]]
+  ;; only-kid optional for, eg, AnimatedContainer, AlertDialog
+  (let []
+    `(tilton.fmx.factory/make-fx-dart-widget
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn fgen [me# ctxtop#]
+                   (dp :konlprop-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
+                   (tilton.fmx.factory/gen-gen me# ctxtop#
+                     (fn [~'me ~'ctx]
+                       (dp :konly-prop-gen ~target-prop-name ~'ctx  (tilton.mx.api/minfo ~'me))
                        (~fx-class
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                 (tilton.mx.api/mget? ~'me :key))

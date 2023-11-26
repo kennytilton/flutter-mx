@@ -1,0 +1,104 @@
+(ns example.non-fmx.jhp-fmx
+  (:require
+    ["package:flutter/cupertino.dart" :as cupertinoIcons]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    [cljd.flutter :as f]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback
+             text-field selection-area safe-area sized-box elevated-button]]))
+
+(defn get-width [ctx] (let [media-query-size (.-width (.-size (m/MediaQuery.of ctx)))]
+                        (dp :mqsize #_media-query-size)))
+
+
+(def controller (m/TextEditingController))
+
+(defn chat-room-page []
+  (column
+    (expanded
+      (container {:decoration (m/BoxDecoration .color
+                                (.-white m/Colors)
+                                .borderRadius
+                                (.circular m/BorderRadius 10))
+                  :margin     (.symmetric m/EdgeInsets .horizontal 15 .vertical 2)}))
+    (padding {:padding (.symmetric m/EdgeInsets .horizontal 20)}
+      (row {:mainAxisSize       (.-max m/MainAxisSize)
+            :mainAxisAlignment  (.-spaceEvenly m/MainAxisAlignment)
+            :crossAxisAlignment (.-center m/CrossAxisAlignment)}
+        (icon-button
+          {:icon      (icon {:icon (.-attach_file m/Icons)})
+           :onPressed (fn [])})
+        (expanded
+          (padding {:padding (.all m/EdgeInsets 8)}
+            (text-field
+              {:controller   controller
+               :focusNode    (m/FocusNode)
+               :keyboardType (.-text m/TextInputType)
+               :minLines     1
+               :maxLines     5
+               :cursorColor  (.-black38 m/Colors)
+               :style        (m/TextStyle .color (.-black87 m/Colors))
+               :decoration   (m/InputDecoration
+                               .contentPadding (.all m/EdgeInsets 5)
+                               .border (.-none m/InputBorder)
+                               .focusedBorder (.-none m/InputBorder)
+                               .hintText "Message..."
+                               .hintStyle (m/TextStyle .color (.-black38 m/Colors)))
+               :autocorrect  true
+               :onSubmitted  (fn [val] (dart:core/print val))})))
+        (icon-button
+          {:icon      (icon {:icon (.-send m/Icons)})
+           :onPressed (fn []                                ;; let [media-query-size (.-width media-query-size)]
+                        (dart:core/print (.-text controller)))})))))
+
+(defn my-home-page [title]
+  (fx/selection-area
+    (scaffold
+      {:appBar (app-bar {:title (text title)})}
+      (safe-area
+        (center
+          (row
+            (container
+              {:constraints (m/BoxConstraints .maxWidth 280)}
+              (column
+                (row
+                  (icon {:icon (.-arrow_drop_down m/Icons)})
+                  (sized-box {:width 12})
+                  (icon {:icon (.-slider_horizontal_3 cupertinoIcons/CupertinoIcons)})
+                  (sized-box {:width 8})
+                  (text "Parameters"))
+                (padding {:padding
+                          (.only m/EdgeInsets .left 24 .top 4 .bottom 4)}
+                  (column
+                    (row {:mainAxisAlignment m/MainAxisAlignment.start}
+                      (text "Temperature"))
+                    (row {:mainAxisAlignment m/MainAxisAlignment.start}
+                      (text "Top K"))
+                    (row {:mainAxisAlignment m/MainAxisAlignment.start}
+                      (text "Maximum Length"))))
+                (row
+                  (icon {:icon (.-arrow_drop_down m/Icons)}) (sized-box {:width 12})
+                  (icon {:icon (.-lightbulb_circle_outlined m/Icons)}) (sized-box {:width 8})
+                  (text "Models"))
+                (elevated-button
+                  {:onPressed (fn [] (dart:core/print "Load Model"))}
+                  (text "Load Model"))))
+            (container {:width 1 :color (.-grey m/Colors)})
+            (expanded
+              (column
+                (expanded
+                  (chat-room-page))))))))))
+
+(defn main []
+  (do                                                       ;; f/run
+    (material-app
+      {:title "F/MX Chat Arena"
+       :theme (m/ThemeData .useMaterial3 true)}
+      ;; .home is expected as the only child
+      (my-home-page "F/MX Chat Arena"))))

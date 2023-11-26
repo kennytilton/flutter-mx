@@ -1,0 +1,43 @@
+(ns example.non-fmx.ctx-kids
+  (:require
+    ["package:flutter/cupertino.dart" :as cupertinoIcons]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    [cljd.flutter :as f]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc cFkids]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback
+             text-field selection-area safe-area sized-box elevated-button]]))
+
+(defn get-width [ctx] (.-width (.-size (m/MediaQuery.of ctx))))
+
+
+(defn make-app []
+  (material-app
+    {:title "F/MX Chat Arena"
+     :theme (m/ThemeData .useMaterial3 true)}
+    (scaffold
+      {:appBar (app-bar {:title (text "F/MX Chat Arena")})}
+      (center
+        (row
+          (container
+            {:constraints (m/BoxConstraints .maxWidth 280)
+             :color       (fx/in-my-context [me ctx]
+                            ;(dp :color-meta!!!!! (keys (meta me)))
+                            ;(dp :color-ctx!!!!!!!! ctx (minfo me))
+                            ;(dp :mqwidth!!!!!!!!!! (.-width (.-size (m/MediaQuery.of ctx))))
+                            m/Colors.yellow)}
+            {:name :hider
+             :whoa (cI 42)
+             ;:fx$dpk [:ctx :bbuild]
+             :kids (cFkids
+                     (fx/in-my-context [me ctx]
+                       (dp :kids-mqwidth!!!!!!!!!! (.-width (.-size (m/MediaQuery.of ctx))))
+                       (when (> (.-width (.-size (m/MediaQuery.of ctx))) 600)
+                         (text "Hide If Not Wide"))))})
+          (container {:width 5 :color (.-grey m/Colors)})
+          (text "Chat Room Here"))))))
