@@ -1,0 +1,35 @@
+(ns example.non-fmx.ctx-row
+  (:require
+    ["package:flutter/cupertino.dart" :as cupertinoIcons]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    [cljd.flutter :as f]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc cFkids]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback
+             text-field selection-area safe-area sized-box elevated-button]]))
+
+(defn get-width [ctx] (.-width (.-size (m/MediaQuery.of ctx))))
+
+(defn make-app []
+  (material-app
+    {:title "F/MX Chat Arena"
+     :theme (m/ThemeData .useMaterial3 true)}
+    (scaffold
+      {:appBar (app-bar {:title (text "F/MX Chat Arena")})}
+      (center
+        (row {:mainAxisAlignment m/MainAxisAlignment.start}
+          {:dummy (cI 42)
+           :kids  (cFkids
+                    (let [netk (fx/in-my-context [me ctx]
+                                 (dp :kids-mqwidth!!!! (.-width (.-size (m/MediaQuery.of ctx))))
+                                 [(when (> (get-width ctx) 600)
+                                    (text (str "Hide If Not Wide " (get-width ctx))))
+                                  (text "Always 1")
+                                  (text "Always 2")])]
+                      (dp :netkids!!!!! netk)
+                      netk))})))))

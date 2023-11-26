@@ -291,6 +291,75 @@
   (fx-resolve prop me ctx
     (mget? me prop)))
 
+(defn fx-resolve-dbg
+  ([me ctx widget-value]
+   (fx-resolve :anon me ctx widget-value))
+  ([prop me ctx widget-value]
+   ;(dp :resolving prop (minfo me) widget-value)
+   (when (nil? ctx)
+     (dpm me :ctx :nil-ctx!!!!!! (minfo me) widget-value))
+   (wtrx [0 1000 :RESO prop (minfo me)]
+     (let [resolved
+           (cond
+             (nil? widget-value)
+             (do
+               (dp :fx-res-nil!! prop)
+               nil)
+
+             (dart/is? widget-value CBAsIs)
+             (do
+               (dp :fx-resolve-as-ising!!!!!!!!! prop (minfo me) widget-value)
+               (.-value ^CBAsIs widget-value))
+
+             (dart/is? widget-value CBToResolve)
+             ;; in the past, a naked function given, say, to onPress would be
+             ;; called like (naked-fn me ctx), but with v2 it simply gets passed
+             ;; as the onPress, so we have to do call a CBToResolve value here and
+             ;; then give that recursively to fx-resolve. So if the (cb-val me ctx) below
+             ;; returns a function, /that/ will be passed on to Flutter as is. ie CBToResolve
+             ;; exists so we can use params me and ctx to decide the handler to be given to Flutter.
+             (let [val ^CBToResolve widget-value]
+               (dp :fx-reso-calling-back!!!!!!! prop (minfo me) widget-value)
+               (let [cb-val (.-value val)]                  ;; ^CBToResolve widget-value)]
+                 (dp :CBToResolveyields cb-val ctx)
+                 (let [v (cb-val me ctx)]
+                   (dp :recuring-unwrapped-fn?-return-val v)
+                   (fx-resolve-dbg prop me ctx v))
+                 #_(fx-resolve-dbg prop me ctx cb-val)))
+
+             (dart/is? widget-value m/Widget)
+             (do
+               (dp :widget-value-is-widget widget-value)
+               widget-value)
+
+             (fn? widget-value)
+             (do
+               (dp :fxreso-allowing-naked-fn? widget-value prop (mx/minfo me))
+               widget-value)
+
+             (cref? widget-value)
+             (mx-throw (str "fx-resolve-dbg sees Cell! " (cinfo widget-value)))
+
+             (mref? widget-value)
+             (do
+               (dp :fxres-sees-mref (minfo widget-value))
+               (let [fx (fx-render ctx widget-value)]
+                 (dp :rfx-mdref-yielded-flutter fx)
+                 fx))
+
+             (vector? widget-value)
+             (do (dp :fxres-seq!!!! prop (count widget-value))
+               (let [rzd (mapv (partial fx-resolve-dbg me ctx) widget-value)]
+                 (dp :vec-rez rzd )
+                 rzd))
+
+             :default (do (dp :fxres-fall-thru-passthru prop (minfo me) widget-value
+                            (when (atom? widget-value)
+                              (deref widget-value)))
+                        widget-value))]
+       (dp :resolved!!!!!!!! prop resolved)
+       resolved))))
+
 (defn fx-resolve
   ([me ctx widget-value]
    (fx-resolve :anon me ctx widget-value))
@@ -464,28 +533,7 @@
                          ~@(fx-props>mx (dissoc fx-props :key)))))))
        (tilton.mx.api/cFkids ~only-kid))))
 
-(defmacro konly-prop-dbg [target-prop-name fx-class fx-props mx-props & [only-kid]]
-  ;; only-kid optional for, eg, AnimatedContainer, AlertDialog
-  (let []
-    `(tilton.fmx.factory/make-fx-dart-widget
-       ~fx-props
-       (assoc ~mx-props
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn fgen [me# ctxtop#]
-                   (dp :konlprop-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
-                   (tilton.fmx.factory/gen-gen me# ctxtop#
-                     (fn [~'me ~'ctx]
-                       (dp :konly-prop-gen ~target-prop-name ~'ctx  (tilton.mx.api/minfo ~'me))
-                       (~fx-class
-                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
-                                (tilton.mx.api/mget? ~'me :key))
-                         ; the prop...
-                         ~(symbol (str "." (name target-prop-name)))
-                         (tilton.fmx.factory/fx-resolve :kid1 ~'me ~'ctx
-                           (first (tilton.mx.api/mkids ~'me)))
-                         ; other props
-                         ~@(fx-props>mx (dissoc fx-props :key)))))))
-       (tilton.mx.api/cFkids ~only-kid))))
+
 
 (defmacro kids-kids [fx-class fx-props mx-props & children]
   ;; mostly builder support.
@@ -537,6 +585,50 @@
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                 (tilton.mx.api/mget? ~'me :key))
                          ~@(fx-props>mx (dissoc fx-props :key))))))))))
+
+(defmacro konly-prop-dbg [target-prop-name fx-class fx-props mx-props & [only-kid]]
+  ;; only-kid optional for, eg, AnimatedContainer, AlertDialog
+  (let []
+    `(tilton.fmx.factory/make-fx-dart-widget
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn fgen [me# ctxtop#]
+                   (dp :konlprop-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
+                   (tilton.fmx.factory/gen-gen me# ctxtop#
+                     (fn [~'me ~'ctx]
+                       (dp :konly-prop-gen ~target-prop-name ~'ctx  (tilton.mx.api/minfo ~'me))
+                       (~fx-class
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ; the prop...
+                         ~(symbol (str "." (name target-prop-name)))
+                         (tilton.fmx.factory/fx-resolve :kid1 ~'me ~'ctx
+                           (first (tilton.mx.api/mkids ~'me)))
+                         ; other props
+                         ~@(fx-props>mx (dissoc fx-props :key)))))))
+       (tilton.mx.api/cFkids ~only-kid))))
+
+(defmacro kids-prop-dbg [target-prop-name fx-class fx-props mx-props & kids]
+  (let []
+    `(tilton.fmx.factory/make-fx-dart-widget
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn fgen [me# ctxtop#]
+                   (tilton.fmx.factory/gen-gen me# ctxtop#
+                     (fn [~'me ~'ctx]
+                       (dp :kids-prop-gen!!!!!!!!!! ~target-prop-name (tilton.mx.api/minfo ~'me))
+                       (~fx-class
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ~(symbol (str "." (name target-prop-name))) ;; the desgignated prop
+                         (let [kz# (mapv (partial tilton.fmx.factory/fx-resolve-dbg :kids ~'me ~'ctx)
+                                     (tilton.mx.api/mkids ~'me))]
+                           (dp :prop-dbg kz#)
+                           (remove nil? (first kz#)))
+                         ~@(fx-props>mx (dissoc fx-props :key)))))))
+       (tilton.mx.api/cFkids ~@kids))))
 
 (defmacro kids-prop [target-prop-name fx-class fx-props mx-props & kids]
   (let []

@@ -52,10 +52,11 @@
     [example.demo.isolate.x00-compute :as icompute]
     [example.non-fmx.johnson-home-page :as jhp]
     [example.non-fmx.jhp-fmx :as jhpfx]
-    [example.non-fmx.ctx-kids :as ctxk]))
+    [example.non-fmx.ctx-kids :as ctxk]
+    [example.non-fmx.ctx-row :as ctxrow]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if false
     (x05/make-app)
-    (ctxk/make-app)))
+    (ctxrow/make-app)))

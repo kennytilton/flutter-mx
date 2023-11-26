@@ -10,7 +10,11 @@
     ["package:flutter/material.dart" :as m]))
 
 (defn make-app []
-  (fx/material-app {:title "Expandable Fab"}
+  (fx/material-app
+    {:title "Expandable Fab"
+     :theme (m/ThemeData .useMaterial3 false
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
     (fx/scaffold
       {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
        :floatingActionButton (expandable-fab

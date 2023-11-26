@@ -15,7 +15,6 @@
 
 (defn get-width [ctx] (.-width (.-size (m/MediaQuery.of ctx))))
 
-
 (defn make-app []
   (material-app
     {:title "F/MX Chat Arena"
@@ -25,19 +24,27 @@
       (center
         (row
           (container
-            {:constraints (m/BoxConstraints .maxWidth 280)
-             :color       (fx/in-my-context [me ctx]
-                            ;(dp :color-meta!!!!! (keys (meta me)))
-                            ;(dp :color-ctx!!!!!!!! ctx (minfo me))
-                            ;(dp :mqwidth!!!!!!!!!! (.-width (.-size (m/MediaQuery.of ctx))))
-                            m/Colors.yellow)}
-            {:name :hider
-             :whoa (cI 42)
-             ;:fx$dpk [:ctx :bbuild]
-             :kids (cFkids
-                     (fx/in-my-context [me ctx]
-                       (dp :kids-mqwidth!!!!!!!!!! (.-width (.-size (m/MediaQuery.of ctx))))
-                       (when (> (.-width (.-size (m/MediaQuery.of ctx))) 600)
-                         (text "Hide If Not Wide"))))})
+            {:constraints (m/BoxConstraints .maxWidth 280)}
+            {:dummy (cI 42)} ;; <============= necessary to get wrapped stateful to get context
+            (fx/in-my-context [me ctx]
+              (dp :kids-mqwidth!!!!!!!!!! (get-width ctx))
+              (when (> (get-width ctx) 600)
+                (text (str "Hide If Not Wide " (get-width ctx))))))
           (container {:width 5 :color (.-grey m/Colors)})
-          (text "Chat Room Here"))))))
+          (text "Chat Room"))))))
+
+(defn make-app-row []
+  (material-app
+    {:title "F/MX Chat Arena"
+     :theme (m/ThemeData .useMaterial3 true)}
+    (scaffold
+      {:appBar (app-bar {:title (text "F/MX Chat Arena")})}
+      (center
+        (row {:mainAxisAlignment m/MainAxisAlignment.start}
+          {:dummy (cI 42)}
+          (fx/in-my-context [me ctx]
+            (dp :kids-mqwidth!!!!!!!!!! (.-width (.-size (m/MediaQuery.of ctx))))
+            [(when (> (get-width ctx) 600)
+               (text (str "Hide If Not Wide " (get-width ctx))))
+             (text "Always 1")
+             (text "Always 2")]))))))
