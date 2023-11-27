@@ -8,7 +8,7 @@
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso with-cc cFkids]]
     [tilton.fmx.api :as fx
-     :refer [scaffold app-bar text center column hero material-app
+     :refer [scaffold app-bar text center column hero material-app visibility
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render as-dart-callback
              text-field selection-area safe-area sized-box elevated-button]]))
@@ -23,13 +23,28 @@
       {:appBar (app-bar {:title (text "F/MX Chat Arena")})}
       (center
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          {:dummy (cI 42)
-           :kids  (cFkids
-                    (let [netk (fx/in-my-context [me ctx]
-                                 (dp :kids-mqwidth!!!! (.-width (.-size (m/MediaQuery.of ctx))))
-                                 [(when (> (get-width ctx) 600)
-                                    (text (str "Hide If Not Wide " (get-width ctx))))
-                                  (text "Always 1")
-                                  (text "Always 2")])]
-                      (dp :netkids!!!!! netk)
-                      netk))})))))
+          {:dummy (cI 42)}
+          (text
+            {:excluded? (fx/in-my-context [me ctx]
+                          (dp :width!! (get-width ctx))
+                          (< (get-width ctx) 600))}
+            (str "Hide If Not Wide"))
+          (text "Always 1")
+          (text "Always 2"))))))
+
+#_(defn make-app []
+    (material-app
+      {:title "F/MX Chat Arena"
+       :theme (m/ThemeData .useMaterial3 true)}
+      (scaffold
+        {:appBar (app-bar {:title (text "F/MX Chat Arena")})}
+        (center
+          (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            {:dummy (cI 42)
+             :kids  (cFkids
+                      (fx/in-my-context [me ctx]
+                        [(when (> (get-width ctx) 600)
+                           (text (str "Hide If Not Wide " (get-width ctx))))
+                         (text "Always 1")
+                         (text "Always 2")]))})))))
+
