@@ -15,6 +15,7 @@
      :theme (m/ThemeData .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
+    {:dummy (cI 42)}
     (scaffold
       {:appBar (app-bar
                  {:title           (m/Text "Flutter/MX Counter")
@@ -39,12 +40,12 @@
           (sized-box
             {:height 28.0})
           (text
-            {#_#_ :style (cF (fx/in-my-context [me ctx]
+            {:style (cF (fx/in-my-context [me ctx]
                           (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
                       #_(.-displayLarge (.-textTheme ^m/ThemeData (mav :theme))))}
             {:name  :counter
              ;; :fx$dpk false
-             :value (cI 0)}
+             :value 42 #_ (cI 0)}
             (str "The value is " (mget me :value))))))))
 
 
