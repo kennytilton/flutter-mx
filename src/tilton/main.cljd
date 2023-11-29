@@ -5,7 +5,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as f]
     ["dart:io" :as io]
-    [cljd.flutter :as f]
+    ;[cljd.flutter :as f]
     [tilton.mx.cell.base :as cty]
     [tilton.mx.model.core :as md]
     [tilton.mx.util :as mxu]
@@ -27,8 +27,8 @@
 
 (defn main []
   (binding [#_#_*async-error-handler* (fn [exc stack-trace]
-                                    (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
-                                    (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
+                                        (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
+                                        (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
     (dp :main-entry--------------------------------------------)
     (when (not (fx/is-web?))
       (dp :platform-processors io/Platform.numberOfProcessors))
@@ -42,12 +42,19 @@
     (binding [cty/*dpc-enabled* true
               *fx$dpk* [; :propagate :pulse :cset :cnset
                         ;:build
+                        ;; :gg
                         #_:sstate #_:sstate+]]
       (.ensureInitialized w/WidgetsFlutterBinding)
-      (f/run (fx/fx-render nil
-               (if true
-                 (eg/select)
-                 (counter/make-app)))))))
+
+      (fx/run-fx-app
+        (if false
+          (counter/make-app)
+          (eg/select))))))
+
+#_(f/run (fx/fx-render nil
+           (if true
+             (eg/select)
+             (counter/make-app))))
 
 #_(fx/run-app
     (hot-reload-detector

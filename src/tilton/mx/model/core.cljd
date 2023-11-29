@@ -181,6 +181,7 @@
 (defn md-reactive? "Are any properties bound to input or formulaic values?"
   ;; todo should this be memoized?
   [me]
+  (dpx :MDR? (:style (md-cz me)) (:cells-flushed @me) (minfo me) )
   (some (fn [[ky c]]
           (dpx :MDR?-sees-key ky :c? (not (nil? c)) :me (minfo me))
           (or
