@@ -16,11 +16,17 @@
 
             [tilton.mx.model.peek :refer [chk minfo cinfo cref? Model]]
             [tilton.mx.cell.base :refer [dpc dpm c-model] :as cz]
-            [tilton.mx.api
+            [tilton.mx.api :as mx
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set! cref?
-                     mpar mhost mabove mref? make mget mget? mkids mswap! cI cFkids]
-             :as mx]
+                     mpar mhost mabove mref? make mget mget? mkids mswap! cI cFkids]]
             [clojure.string :as str]))
+
+(def ^:dynamic *ctx* mx/unbound)
+
+(defmacro with-ctx [tag ctx & body]
+  `(binding [tilton.fmx.factory/*ctx* ~ctx]
+     (tilton.mx.base/dp :WCTX ~tag tilton.fmx.factory/*ctx*)
+     ~@body))
 
 ;;; --- developer debugging ---------------------------------
 (def *fmx-debugger*
@@ -54,7 +60,7 @@
 ;;; --- ctx tracking ----------------------
 
 (defn fx$ctx-record [me ctx]
-  (dpm me :ctx :record-CTX! (minfo me) ctx)
+  (dpm me :ctx :record-CTX! (minfo me) :ctx!! ctx)
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
 
 (defn ctx-check
@@ -170,9 +176,9 @@
         (dpm me :sstate+ :fx-ctx-state-sees-state!! state)
         (if (.-mounted state)
           (do (dpm me :sstate+ :FX_CTX-finds-fx$st)
-              state)
+            state)
           (do (dpm me :sstate :FX-CTX-ME-STATE-UNMOUNTED!!)
-              nil)))
+            nil)))
     ;; state-above does better than...
     #_(when-let [ctx (:fx$ctx (meta me))]
         (if (.-debugIsDefunct ^m/Element ctx)
@@ -197,7 +203,7 @@
   (when me
     (if-let [state (fx-ctx-state me)]
       (do (dpm me :sstate :TRG-ctx-setstate-2 :trg (cinfo *trg-cell*))
-          (.setState state (fn [] (do))))
+        (.setState state (fn [] (do))))
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
           ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
@@ -207,7 +213,7 @@
               (dpm me :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!!)
               (trigger-state (mabove)))
             (do (dpm me :sstate :TRG-build-using-state-setter!! :trg (cinfo *trg-cell*))
-                (state-setter (fn [] (do))))))
+              (state-setter (fn [] (do))))))
         (do
           (dpm me :sstate+ :TRG-no-state/setter-so-trying-above)
           (trigger-state (mabove)))))))
@@ -265,7 +271,7 @@
                        (dp :render-sees-not-mref?-passing-thru fx))
                    fx))
       :else (let [gen (mget fx :fx-gen)]
-              (dpx :fx-render-sees-gen!! (minfo fx))
+              (dpm fx :ctx :fx-render-sees-gen!! ctx)
               (chk gen "OBAD: fx-render of model finds no fx-gen: ")
               ;;(dp :fx-render-records (minfo fx) ctx)
               ;; nope (fxf/fx$ctx-record fx ctx)
@@ -296,6 +302,8 @@
    (fx-resolve :anon me ctx widget-value))
   ([prop me ctx widget-value]
    ;(dp :resolving prop (minfo me) widget-value)
+   (when (nil? ctx)
+     (dpm me :ctx :nil-ctx!!!!!! (minfo me) widget-value))
    (wtrx [0 1000 nil :RESO prop (minfo me)]
      (let [resolved
            (cond
@@ -347,14 +355,14 @@
 
              (vector? widget-value)
              (do (dpx :fxres-seq!!!! prop (count widget-value))
-                 (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
-                   (dpx :vec-rez rzd)
-                   rzd))
+               (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
+                 (dpx :vec-rez rzd)
+                 rzd))
 
              :default (do (dpx :fxres-fall-thru-passthru prop (minfo me) widget-value
                             (when (atom? widget-value)
                               (deref widget-value)))
-                          widget-value))]
+                        widget-value))]
        ;;(dp :resolved prop resolved)
        resolved))))
 
@@ -382,71 +390,66 @@
          k)))))
 
 (defn gen-gen [me ctx widget-maker]
-  (dpm me [:gg :bbuild] :gg-entry :reactive? (cinfo (tilton.mx.model.core/md-reactive? me)))
-  (cond
-    (or (tilton.mx.api/mget? me :unwrapped?)
-      (some #{(name (:fx-class @me))} ["PreferredSize"]))
-    (do
-      (dpm me [:gg :bbuild] :GG-unwrapping-by-request/match (minfo me))
-      (countit [:build (:fx-class @me)])
-      (ctx-check me ctx)
-      (widget-maker me ctx))
+  (dpm me :bbuild :gen-gen-entry :reactive? (cinfo (tilton.mx.model.core/md-reactive? me)))
+  (dpm me :ctx :gen-gen-entry ctx)
+  ;(dp :gg-entry (mget? me :statefully?) (minfo me))
+  (with-ctx :gg-entry ctx
+    (cond
+      (or (tilton.mx.api/mget? me :unwrapped?)
+        (some #{(name (:fx-class @me))} ["PreferredSize"]))
+      (do
+        (dpm me :bbuild :GG-unwrapping-by-request/match (minfo me))
+        (countit [:build (:fx-class @me)])
+        (ctx-check me ctx)
+        (widget-maker me ctx))
 
-    (tilton.mx.model.core/md-reactive? me)
-    (do (dpm me [:gg :bbuild] :GG-wrap-w-Stateful (minfo me)
-          (cinfo (tilton.mx.model.core/md-reactive? me)))
-        (with-flutter-ref
-          (reify :extends (m/StatefulWidget .key (widget-key me ctx :auto-stateful))
-            (createState [_]
-              (dpx :crestate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
-              (if (tilton.mx.api/mget? me :ticker-mixin)
-                (reify :extends FXState
-                  ^:mixin m/SingleTickerProviderStateMixin
-                  (^void initState [this]
-                    (tilton.fmx.factory/fx$state-initState me this))
-                  (build [_ ctx]
-                    (countit [:build (:fx-class @me)])
-                    (dpm me :bbuild :GG-stateful-mixin (minfo me))
-                    (ctx-check me ctx)
-                    (widget-maker me ctx)))
-                (reify :extends FXState
-                  (^void initState [this]
-                    (dpx :initstate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
-                    (tilton.fmx.factory/fx$state-initState me this))
-                  (build [_ ctx]
-                    (countit [:build (:fx-class @me)])
-                    (dpm me :bbuild :GG-stateful (tilton.mx.api/mget? me :ticker-mixin))
-                    (ctx-check me ctx)
-                    (widget-maker me ctx))))))))
+      (or (tilton.mx.model.core/md-reactive? me)
+        (mget? me :statefully?))
+      (do (dpm me :bbuild :GG-wrap-w-Stateful (minfo me)
+            (cinfo (tilton.mx.model.core/md-reactive? me)))
+          (with-flutter-ref
+            (reify :extends (m/StatefulWidget .key (widget-key me ctx :auto-stateful))
+              (createState [_]
+                (dpx :crestate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
+                (if (tilton.mx.api/mget? me :ticker-mixin)
+                  (reify :extends FXState
+                    ^:mixin m/SingleTickerProviderStateMixin
+                    (^void initState [this]
+                      (tilton.fmx.factory/fx$state-initState me this))
+                    (build [_ ctx]
+                      (with-ctx :gg-stfull ctx
+                        (countit [:build (:fx-class @me)])
+                        (dpm me :bbuild :GG-stateful-mixin (minfo me))
+                        (ctx-check me ctx)
+                        (widget-maker me ctx))))
+                  (reify :extends FXState
+                    (^void initState [this]
+                      (dpx :initstate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
+                      (tilton.fmx.factory/fx$state-initState me this))
+                    (build [_ ctx]
+                      (with-ctx :gg-stless ctx
+                        (countit [:build (:fx-class @me)])
+                        (dpm me :bbuild :GG-stateful (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
+                        (ctx-check me ctx)
+                        (widget-maker me ctx)))))))))
 
-    (tilton.mx.api/mget? me :with-builder?)
-    ;; we can request a Builder to get closer context. The alternative
-    ;; is coding an explicit builder. See x04-drawer example where both get used.
-    (do (dpm me [:gg :bbuild] :GG-builder-by-request)
-        (with-flutter-ref
-          (w/Builder
-            .builder (fn [ctx]
-                       (dpm me :build :GG-w-builder (minfo me))
-                       (countit [:build (:fx-class @me)])
-                       (ctx-check me ctx)
-                       (widget-maker me ctx)))))
-
-    (tilton.mx.api/mget? me :stateless?)
-    (do (dpm me [:gg :bbuild] :GG-stateless-by-request)
-        (reify :extends (w/StatelessWidget)
-          :no-meta true
-          (build [_ ctx]
-            (dp :GG-less me ctx)
-            (dpm me [:gg :bbuild] :GG-stateless-in-build (minfo me))
-            ;(countit [:build (:fx-class @me)])
-            (ctx-check me ctx)
-            (widget-maker me ctx))))
-
-    :else (do
-            (dpm me :build :GG-nobuilder (minfo me))
-            (countit [:build (:fx-class @me)])
-            (ctx-check me ctx)
-            (widget-maker me ctx))))
+      (tilton.mx.api/mget? me :with-builder?)
+      ;; we can request a Builder to get closer context. The alternative
+      ;; is coding an explicit builder. See x04-drawer example where both get used.
+      (do (dpx :GG-builder-by-request (minfo me))
+          (with-flutter-ref
+            (w/Builder
+              .builder (fn [ctx]
+                         (with-ctx :ggblder ctx
+                           (dpm me :build :GG-w-builder (minfo me))
+                           (countit [:build (:fx-class @me)])
+                           (ctx-check me ctx)
+                           (widget-maker me ctx))))))
+      :else (do
+              (dpm me :bbuild :GG-nobuilder :ctx ctx (minfo me))
+              (countit [:build (:fx-class @me)])
+              (ctx-check me ctx)
+              (widget-maker me ctx)))))
 
 ;;; --- makers ------------------------------------------------
 
@@ -523,6 +526,29 @@
                          .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
                                 (tilton.mx.api/mget? ~'me :key))
                          ~@(fx-props>mx (dissoc fx-props :key))))))))))
+
+(defmacro konly-prop-dbg [target-prop-name fx-class fx-props mx-props & [only-kid]]
+  ;; only-kid optional for, eg, AnimatedContainer, AlertDialog
+  (let []
+    `(tilton.fmx.factory/make-fx-dart-widget
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn fgen [me# ctxtop#]
+                   (tilton.mx.cell.base/dpm me# :ggen :konlprop-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
+                   (tilton.fmx.factory/gen-gen me# ctxtop#
+                     (fn [~'me ~'ctx]
+                       (tilton.mx.cell.base/dpm ~'me :ggen :konly-prop-gen ~target-prop-name ~'ctx (tilton.mx.api/minfo ~'me))
+                       (~fx-class
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ; the prop...
+                         ~(symbol (str "." (name target-prop-name)))
+                         (tilton.fmx.factory/fx-resolve :kid1 ~'me ~'ctx
+                           (first (tilton.mx.api/mkids ~'me)))
+                         ; other props
+                         ~@(fx-props>mx (dissoc fx-props :key)))))))
+       (tilton.mx.api/cFkids ~only-kid))))
 
 (defmacro kids-prop [target-prop-name fx-class fx-props mx-props & kids]
   (let []

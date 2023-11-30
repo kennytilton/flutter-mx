@@ -17,7 +17,10 @@
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
     [tilton.mx.api :as mx
      :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
-    [tilton.fmx.factory :refer [deftag deftags deftags-plus] :as fxf]))
+    [tilton.fmx.factory :refer [deftag deftags deftags-plus with-ctx] :as fxf]))
+
+(defn fxctx []
+  fxf/*ctx*)
 
 (defn cb-as-is
   "Identifies FN as callback to be given to Flutter 'as is'"
@@ -58,8 +61,13 @@
 
 (defmacro in-my-context [[me-var ctx-var] & body]
   `(tilton.fmx.factory/->CBToResolve
-     (fn [~me-var ~ctx-var]
-       ~@body)))
+     (fn inmycontext [~me-var ~ctx-var]
+       (when-not (tilton.mx.api/mx-bound? ~ctx-var)
+         (throw (Exception. (str "in-my-context> context is unbound for body: " '~body))))
+       (when-not ~ctx-var
+         (throw (Exception. (str "in-my-context> context is null for body: " '~body))))
+       (tilton.fmx.factory/with-ctx :in-my-context ~ctx-var
+         ~@body))))
 
 (defmacro when-my-state [[state-var] & body]
   `(when-let [~state-var (tilton.fmx.api/my-state)]
@@ -135,6 +143,7 @@
   (theme m/Theme)
   (icon-theme m/IconTheme)
   (material m/Material)
+  (animated-builder m/AnimatedBuilder)
   (fade-transition m/FadeTransition)
   (listener w/Listener)
   (mouse-region w/MouseRegion)
@@ -205,6 +214,7 @@
   (opacity! m/Opacity)
   (focus m/Focus)
   (safe-area w/SafeArea)
+  (selection-area m/SelectionArea)
   (ticker-mode w/TickerMode)
   (dismissible w/Dismissible)
   (default-tab-controller m/DefaultTabController)
@@ -223,10 +233,13 @@
   (intrinsic-width m/IntrinsicWidth)
   (gesture-detector m/GestureDetector))
 
+(deftags-plus tilton.fmx.factory/kids-prop-dbg [:children]
+  (row m/Row))
+
 (deftags-plus tilton.fmx.factory/kids-prop [:children]
   (stack m/Stack)
   (column m/Column)
-  (row m/Row)
+  ; (row m/Row)
   (list-view m/ListView)
   (grid-view+count m/GridView.count)
   (wrap w/Wrap))
@@ -279,14 +292,17 @@
 
 (defmacro wrap-stateless [widget-expression]
   `(reify :extends (w/StatelessWidget)
-     (~'build [self# ctx#] ~widget-expression)))
+     (~'build [self# ctx#]
+       (tilton.fmx.factory/with-ctx :wrapstless ctx#
+         ~widget-expression))))
 
 (defmacro wrap-unique-key [widget-expression]
   `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
      (~'createState [_#]
        (reify :extends w/State
          (~'build [_# ~'ctx]
-           ~widget-expression)))))
+           (tilton.fmx.factory/with-ctx :wuq-key ~'ctx
+             ~widget-expression))))))
 
 (defmacro run-app [widget-expression]
   `(m/runApp

@@ -26,9 +26,9 @@
 ;;; * restart the app to pick up the deps.edn.
 
 (defn main []
-  (binding [#_#_*async-error-handler* (fn [exc stack-trace]
-                                        (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
-                                        (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
+  (binding [*async-error-handler* (fn [exc stack-trace]
+                                    (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
+                                    (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
     (dp :main-entry--------------------------------------------)
     (when (not (fx/is-web?))
       (dp :platform-processors io/Platform.numberOfProcessors))
@@ -108,7 +108,8 @@
                (~'dispose [~state-sym]
                  (.dispose ~(vary-meta state-sym assoc :tag 'super)))
                (~'build [~state-sym ~flutter-build-ctx]
-                 ~@body))))]
+                 (tilton.fmx.factory/with-ctx :hotrelo ~flutter-build-ctx
+                   ~@body)))))]
     user-widget))
 
 ;; (set! r/debugPaintSizeEnabled true)
