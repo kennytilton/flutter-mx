@@ -1,0 +1,33 @@
+(ns example.non-fmx.ctx-row
+  (:require
+    ["package:flutter/cupertino.dart" :as cupertinoIcons]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    [cljd.flutter :as f]
+    [tilton.fmx.factory :as fxf]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc mpar cFkids]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app visibility
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render as-dart-callback
+             text-field selection-area safe-area sized-box elevated-button]]))
+
+;;; Demonstrating conditional structure decided off context
+
+(defn get-width [ctx] (.-width (.-size (m/MediaQuery.of ctx))))
+
+(defn make-app []
+  (material-app
+    {:title "F/MX Chat Arena"
+     :theme (m/ThemeData .useMaterial3 true)}
+    (scaffold
+      {:appBar (app-bar {:title (text "F/MX Chat Arena")})}
+      (center                                               ;;  {} {:dummy (cI 42)}
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (when (> (get-width fxf/*ctx*) 600)
+            (text "Hide If Not Wide"))
+          (text "Always 1")
+          (text "Always 2"))))))
+
