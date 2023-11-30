@@ -644,7 +644,27 @@
                            (apply concat kvs))))))
        (tilton.mx.api/cFkids ~only-kid))))
 
-
+(defmacro kids-prop-dbg [target-prop-name fx-class fx-props mx-props & kids]
+  (let []
+    `(tilton.fmx.factory/make-fx-dart-widget
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn fgen [me# ctxtop#]
+                   (tilton.fmx.factory/gen-gen me# ctxtop#
+                     (fn [~'me ~'ctx]
+                       (dpx :kids-prop-gen!!!! ~target-prop-name (tilton.mx.api/minfo ~'me))
+                       (dpx :kids-prop-gen!!!!!! ~target-prop-name ~fx-props)
+                       (~fx-class
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ~(symbol (str "." (name target-prop-name))) ;; the desgignated prop
+                         (let [kz# (mapv (partial tilton.fmx.api/fx-render ~'ctx)
+                                     (tilton.mx.api/mkids ~'me))]
+                           (remove nil? kz#)
+                           #_ kz#)
+                         ~@(fx-props>mx (dissoc fx-props :key :excluded?)))))))
+       (tilton.mx.api/cFkids ~@kids))))
 
 
 (defmacro konly-layout-builder [fx-class fx-props mx-props only-kid]

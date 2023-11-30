@@ -28,24 +28,18 @@
          (m/Icon m/Icons.add .color m/Colors.black))}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (text {:style (fx/in-my-context [me ctx]
-                          (-> (m/Theme.of ctx) .-textTheme .-displaySmall))
+          (text {:style (-> (m/Theme.of (fx/fxctx)) .-textTheme .-displaySmall)
                  ;;; this silliness is a test to see if the engine can propagate to setState
                  ;; when the reactivity is embedded in a delegate model, the text-style. So far so good.
                  ;; If it fails, try just wrapping the non-updating widget in `(fx/stateful-builder....)`
-
-                 #_ (cF (fx/in-my-context [me ctx]
-                       (-> (m/Theme.of ctx) .-textTheme .-displaySmall))
-                   #_(fx/text-style
-                       {:color    m/Colors.black
-                        :fontSize (cF (+ 24.0 (* 1.0 (mget (fm* :counter) :value))))}))}
+                 #_ (cF (fx/text-style
+                          {:color    m/Colors.black
+                           :fontSize (cF (+ 24.0 (* 1.0 (mget (fm* :counter) :value))))}))}
             "Button push count now:")
           (sized-box
             {:height 28.0})
           (text
-            {:style (cF (fx/in-my-context [me ctx]
-                          (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
-                      #_(.-displayLarge (.-textTheme ^m/ThemeData (mav :theme))))}
+            {:style (-> (m/Theme.of (fx/fxctx)) .-textTheme .-displayMedium)}
             {:name  :counter
              :value (cI 0)}
             (str (mget me :value))))))))
