@@ -20,19 +20,17 @@
                        (fx/drawer-header
                          {:decoration (m/BoxDecoration .color m/Colors.blue)}
                          (m/Text "Drawer Header 2"))
-                       ;; below we see two ways to handle insufficient context for ".of"
+                       ;; below, two diff ways of getting a builder wrapper, for the right context
                        (fx/list-tile
                          {:title (m/Text "Item 1")
                           :onTap (fx/in-my-context [me ctx]
-                                   (fx/cb-as-is
-                                     #(.pop (m/Navigator.of ctx))))}
+                                   #(.pop (m/Navigator.of ctx)))}
                          {:with-builder? true})
                        (fx/builder
                          (fx/list-tile
                            {:title (m/Text "Item 2")
                             :onTap (fx/in-my-context [me ctx]
-                                     (fx/cb-as-is
-                                       #(.pop (m/Navigator.of ctx))))})))))}
+                                     #(.pop (m/Navigator.of ctx)))})))))}
       (fx/center
         (fx/text "My Ported Page!!")))))
 
