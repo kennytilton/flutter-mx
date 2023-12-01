@@ -156,7 +156,7 @@
                           :done (td-completed todo)
                           (dp :unexpected-completion!!!! completion))))}
       (fx/container
-        {:decoration (fx/in-my-context [me context]
+        {:decoration (fx/within-ctx [me context]
                        ;; list with separator cannot hide separator when item hidden, so
                        ;; we fake a separator with a top border on the container
                        (m/BoxDecoration .border
@@ -192,7 +192,7 @@
       (fx/list-view+builder
         {:padding     (m/EdgeInsets.all 0.0)
          :itemCount   (cF (count (mkids me)))
-         :itemBuilder (fx/in-my-context [me ctx]
+         :itemBuilder (fx/within-ctx [me ctx]
                         (fn [ctx i]
                           ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
                           (fx/fx-render ctx

@@ -8,7 +8,7 @@
     [tilton.mx.api :refer [with-par dp dpx cF cF+ cI mget mswap! mset! mav fasc fm* muv fmu minfo] :as mx]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
-             container row expanded icon padding in-my-context]]))
+             container row expanded icon padding within-ctx]]))
 
 (defn make-app []
   (let [title "Flutter layout demo (cljd-ified!)"]
@@ -28,7 +28,7 @@
               (into [] (for [[ico label] [[m/Icons.call "CALL"]
                                           [m/Icons.near_me "ROUTE"]
                                           [m/Icons.share "SHARE"]]]
-                         (button-column (in-my-context [me ctx]
+                         (button-column (within-ctx [me ctx]
                                           (.-primaryColor (m/Theme.of ctx)))
                            ico label)))))
 

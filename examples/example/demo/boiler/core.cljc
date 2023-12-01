@@ -6,7 +6,7 @@
     [tilton.mx.model.core :refer [make]]
     [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
-     :refer [as-dart-callback in-my-context
+     :refer [as-dart-callback within-ctx
              material-app scaffold app-bar floating-action-button
              center column text sized-box]]))
 
@@ -58,7 +58,7 @@
             (sized-box
               {:height 28.0})
             (text
-              {:style (cF (fx/in-my-context [me ctx]
+              {:style (cF (fx/within-ctx [me ctx]
                             (-> (m/Theme.of ctx) .-textTheme .-displayMedium))
                         #_(.-displayLarge (.-textTheme ^m/ThemeData (mav :theme))))}
               {:name  :counter

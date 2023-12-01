@@ -59,14 +59,18 @@
 (defn fx-render [ctx fx]
   (fxf/fx-render ctx fx))
 
-(defmacro in-my-context [[me-var ctx-var] & body]
+(defmacro within-ctx
+  "Create a CBResolve instance with a 'value' that is a function
+   with 'body' as its body and that will be called with 'me' and its context at build time."
+  [[me-var ctx-var] & body]
   `(tilton.fmx.factory/->CBToResolve
-     (fn inmycontext [~me-var ~ctx-var]
+     (fn call-within-ctx [~me-var ~ctx-var]
        (when-not (tilton.mx.api/mx-bound? ~ctx-var)
-         (throw (Exception. (str "in-my-context> context is unbound for body: " '~body))))
+         (throw (Exception. (str "within-ctx> context is unbound for body: " '~body))))
        (when-not ~ctx-var
-         (throw (Exception. (str "in-my-context> context is null for body: " '~body))))
-       (tilton.fmx.factory/with-ctx :in-my-context ~ctx-var
+         (throw (Exception. (str "within-ctx> context is null for body: " '~body))))
+       (tilton.mx.base/dp :winctx-sees-ctx ~ctx-var :dynctx tilton.fmx.factory/*ctx*)
+       (tilton.fmx.factory/with-ctx :within-ctx ~ctx-var
          ~@body))))
 
 (defmacro when-my-state [[state-var] & body]
@@ -272,9 +276,8 @@
      ~callback-fn))
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tilton.fmx.api/in-my-context [~me ~ctx]
-     (tilton.fmx.factory/->CBAsIs
-       ~callback-fn)))
+  `(tilton.fmx.api/within-ctx [~me ~ctx]
+     ~callback-fn ))
 
 (defmacro as-dart-callback [[& cb-params] & body]
   `(tilton.fmx.api/with-ctx+as-is [~'me ~'ctx]

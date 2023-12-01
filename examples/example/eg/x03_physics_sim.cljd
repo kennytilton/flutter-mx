@@ -30,7 +30,7 @@
                               (assert c (str "Draggable-card pandown no controler in "
                                           (minfo me)))
                               (.stop c)))))
-       :onPanUpdate (fx/in-my-context [me ctx]
+       :onPanUpdate (fx/within-ctx [me ctx]
                       (fx/cb-as-is
                         (fn [^m/DragUpdateDetails details]
                           (let [size (.-size (MediaQuery/of ctx))]
@@ -40,7 +40,7 @@
                                    (m/Alignment
                                      (/ (-> details .-delta .-dx) (/ (.-width size) 2))
                                      (/ (-> details .-delta .-dy) (/ (.-height size) 2))))))))))
-       :onPanEnd    (cF (fx/in-my-context [me ctx]
+       :onPanEnd    (cF (fx/within-ctx [me ctx]
                           (fx/cb-as-is
                             (fn [^m/DragEndDetails details]
                               (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond))))))}

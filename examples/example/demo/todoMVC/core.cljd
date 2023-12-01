@@ -5,7 +5,7 @@
     [tilton.mx.api :as mx]
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
-    [tilton.fmx.api :refer [in-my-context as-dart-callback] :as fx]
+    [tilton.fmx.api :refer [within-ctx as-dart-callback] :as fx]
     [tilton.fmx.factory :as fxf]
     [example.demo.todoMVC.common :as cmm]
     [example.demo.todoMVC.todo :as todo]
@@ -94,7 +94,7 @@
                         ;(mx/counts-dump :banner)
                         ;(mx/counts-reset)
                         (mswap! (fasc :credits-toggle) :show-credits? not))
-           :icon      (in-my-context [me ctx]
+           :icon      (within-ctx [me ctx]
                         (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
                                   m.Icons/info_outline m.Icons/info)
                           .color m/Colors.grey))})))))

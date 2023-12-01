@@ -74,7 +74,7 @@
 
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
-    {:animation (fx/in-my-context [me ctx]
+    {:animation (fx/within-ctx [me ctx]
                   (fx/state-prop-get (mx/fasc :fab) :expand-animation))
      :builder   (as-dart-callback [ctx child]
                   (let [progress ^m/CurvedAnimation (fx/state-prop-get (mx/fasc :fab) :expand-animation)
@@ -92,11 +92,11 @@
                                    math/pi 0.5))
                         child))))}
     (fx/fade-transition
-      {:opacity (fx/in-my-context [me ctx]
+      {:opacity (fx/within-ctx [me ctx]
                   (fx/state-prop-get (mx/fasc :fab) :expand-animation))}
       (action-button
         :icon (:icon action)
-        :onPressed (fx/in-my-context [me ctx]
+        :onPressed (fx/within-ctx [me ctx]
                      (fx/cb-as-is
                        #(show-action ctx action)))))))
 
@@ -119,13 +119,13 @@
 (defn action-button [& {:keys [onPressed icon]}]
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (fx/in-my-context [me ctx]
+                :color        (fx/within-ctx [me ctx]
                                 (-> (m/Theme.of ctx) .-colorScheme .-secondary))
                 :elevation    4.0}
     (fx/icon-button
       {:onPressed onPressed
        :icon      icon
-       :color     (fx/in-my-context [me ctx]
+       :color     (fx/within-ctx [me ctx]
                     (-> (m/Theme.of ctx) .-colorScheme .-onSecondary))})))
 
 (defn- tap-to-close-fab [par]
@@ -140,7 +140,7 @@
                                  (mx/mswap! fb :open? not)))}
           (fx/padding {:padding (m/EdgeInsets.all 8.0)}
             (fx/icon {:icon  m/Icons.close
-                      :color (fx/in-my-context [me ctx]
+                      :color (fx/within-ctx [me ctx]
                                (.-primaryColor (m/Theme.of ctx)))}
               {:name :fabicon-close})))))))
 

@@ -2,36 +2,36 @@
   "Port of CLJD port of https://docs.flutter.dev/cookbook/navigation/navigation-basics"
   (:require
     ["package:flutter/material.dart" :as m]
-    [tilton.fmx.api :as fx]))
+    [tilton.mx.api :as mx :refer [dp]]
+    [tilton.fmx.api :as fx
+     :refer [within-ctx ctx-page-pop fx-render app-bar center scaffold
+             elevated-button text builder material-app]]))
 
 (defn second-route []
-  (fx/scaffold
-    {:appBar (fx/app-bar {:title (fx/text "Second Route")})}
-    (fx/center
-      (fx/elevated-button
-        {:onPressed (fx/in-my-context [me ctx]
-                      (fx/cb-as-is
-                        (fn ^void []
-                          (fx/ctx-page-pop ctx)
-                          nil)))}
+  (scaffold
+    {:appBar (app-bar {:title (text "Second Route")})}
+    (center
+      (elevated-button
+        {:onPressed (within-ctx [me ctx]
+                      #(ctx-page-pop ctx))}
         (m/Text "Go back!")))))
 
 (defn my-ctx-page-push [ctx fx-page-def]
   (.push (-> ctx m/Navigator.of)
     (#/(m/MaterialPageRoute Object)
       .settings (m/RouteSettings .name "/second")
-      .builder (fn [_]
-                 (fx/fx-render ctx fx-page-def)))))
+      .builder (fn [builder-ctx]
+                 (fx-render builder-ctx fx-page-def)))))
 
 (defn make-app []
-  (fx/material-app
+  (material-app
     {:title "Navigation Basics"}
-    (fx/scaffold
-      {:appBar (fx/app-bar {:title (fx/text "First Route")})}
-      (fx/center
-        (fx/builder ;; makes Navigator visible to .of
-          (fx/elevated-button
-            {:onPressed (fx/in-my-context [me ctx]
+    (scaffold
+      {:appBar (app-bar {:title (text "First Route")})}
+      (center
+        (builder ;; makes Navigator visible to .of
+          (elevated-button
+            {:onPressed (within-ctx [me ctx]
                           #(my-ctx-page-push ctx (second-route)))}
             ;;{:with-builder? true} ;; alternate way of wrapping with fresh ctx
-            (fx/text "Open route")))))))
+            (text "Open route")))))))

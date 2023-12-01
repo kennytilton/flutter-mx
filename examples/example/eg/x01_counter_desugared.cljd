@@ -4,7 +4,7 @@
     [tilton.mx.api :refer [dp dpx minfo mpar cI cF mget mswap! fm* fasc] :as mx]
     [tilton.fmx.factory :refer [deftag deftags] :as fxf]
     [tilton.fmx.api :as fx
-     :refer [as-dart-callback in-my-context
+     :refer [as-dart-callback within-ctx
              app-bar floating-action-button
              theme icon-theme center column text sized-box]]))
 
@@ -31,14 +31,14 @@
                              .seedColor m/Colors.deepPurple)
               .useMaterial3 true)
      :home  (cF (scaffold
-                  {:appBar               (app-bar {:backgroundColor (fx/in-my-context [me ctx]
+                  {:appBar               (app-bar {:backgroundColor (fx/within-ctx [me ctx]
                                                                       (.-inversePrimary (.-colorScheme (m/Theme.of ctx))))
                                                    :title           (m/Text "Flutter/MX Counter Classic")})
                    :body                 (cF (center
                                                (column {:mainAxisAlignment m/MainAxisAlignment.center}
                                                  (text "You have pushed the button this many times:")
                                                  (text
-                                                   {:style (in-my-context [me ctx]
+                                                   {:style (within-ctx [me ctx]
                                                              (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}
                                                    (str (mget (fm* :scaffo) :counter))))))
                    :floatingActionButton (floating-action-button

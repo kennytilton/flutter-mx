@@ -21,13 +21,12 @@
        ;; We find it useful to give every widget a "value" property for holding the primary value of a widget
        :value (cI 0)}
       (fx/text (str/capitalize (name counter-key)))
-      (fx/text {:style (fx/in-my-context [me ctx]
+      (fx/text {:style (fx/within-ctx [me ctx]
                          (-> (Theme/of ctx) .-textTheme .-displayLarge))}
         (str (mx/muv :ctr-col)))
       (fx/elevated-button
-        {:onPressed (fx/cb-as-is
-                      (fn ^void []
-                        (mx/mswap! (mx/fm* :ctr-col) :value inc)))}
+        {:onPressed (fn ^void []
+                      (mx/mswap! (mx/fm* :ctr-col) :value inc))}
         (fx/text "+")))))
 
 (defn make-app []

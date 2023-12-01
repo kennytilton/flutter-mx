@@ -5,7 +5,7 @@
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
-    [tilton.fmx.api :refer [in-my-context as-dart-callback] :as fx]
+    [tilton.fmx.api :refer [within-ctx as-dart-callback] :as fx]
     [example.demo.localStorage-todoMVC.common :as cmm]
     [example.demo.localStorage-todoMVC.todo :as todo]
     [example.demo.localStorage-todoMVC.input :as input]
@@ -59,10 +59,10 @@
         (fx/icon-button
           {:onPressed (as-dart-callback []
                         (mswap! (fasc :credits-toggle) :show-credits? not))
-           :icon      (cF (in-my-context [me ctx]
-                            (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
-                                      m.Icons/info_outline m.Icons/info)
-                              .color m/Colors.grey)))})))))
+           :icon      (within-ctx [me ctx]
+                        (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
+                                  m.Icons/info_outline m.Icons/info)
+                          .color m/Colors.grey))})))))
 
 (def app-theme (m/ThemeData
                  .fontFamily "Helvetica Neue"
