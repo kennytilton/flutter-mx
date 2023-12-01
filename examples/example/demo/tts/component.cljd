@@ -13,7 +13,7 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
-             checkbox-list-tile icon-button fx-render as-dart-callback]]
+             checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.tts.fts :as fts
      :refer [app-tts app-fts app-fts-lang app-fts-status app-fts-progress
              app-lang-geos fts-speak fts-pause fts-stop fts-restart
@@ -64,7 +64,7 @@
 (defn lang-button [i lang]
   (fx/gesture-detector
     {:key   (m/ValueKey. lang)
-     :onTap (as-dart-callback []
+     :onTap (dart-cb []
               (mset! (app-fts) :lg-current
                 (first (get (app-lang-geos) lang))))}
     (container
@@ -84,7 +84,7 @@
 (defn geo-button [i lang-geo]
   (fx/gesture-detector
     {:key   (m/ValueKey. lang-geo)
-     :onTap (as-dart-callback []
+     :onTap (dart-cb []
               (mset! (app-fts) :lg-current lang-geo))}
     (container
       {:decoration (cF (fx/box-decoration

@@ -18,7 +18,7 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity
-             icon-button fx-render as-dart-callback]]))
+             icon-button fx-render dart-cb]]))
 
 (def flutter-tts (atom nil))
 (defn get-fts []
@@ -266,7 +266,7 @@
 (defn lang-button [i lang]
   (fx/gesture-detector
     {:key   (m/ValueKey. lang)
-     :onTap (as-dart-callback []
+     :onTap (dart-cb []
               (mset! (fasc :app) :lg-current
                 (first (get (mav :lang-geo-tree) lang))))}
     (container
@@ -288,7 +288,7 @@
 (defn geo-button [i lang-geo]
   (fx/gesture-detector
     {:key   (m/ValueKey. lang-geo)
-     :onTap (as-dart-callback []
+     :onTap (dart-cb []
               (mset! (fasc :app) :lg-current lang-geo))}
     (container
       {:decoration (fx/box-decoration
@@ -327,7 +327,7 @@
                          #_#_.selection (m/TextSelection
                                           .baseOffset 5
                                           .extentOffset 10))))
-       :onChanged  (as-dart-callback [text]
+       :onChanged  (dart-cb [text]
                      (mset! me :value text))
        :minLines   6 :maxLines 11}
       {:name  :text-in

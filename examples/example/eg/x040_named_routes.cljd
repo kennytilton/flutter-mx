@@ -3,7 +3,7 @@
       Port of https://docs.flutter.dev/cookbook/navigation/named-routes.html"
   (:require
     [tilton.fmx.api :as fx
-     :refer [as-dart-callback scaffold app-bar elevated-button text center material-app]]
+     :refer [dart-cb scaffold app-bar elevated-button text center material-app]]
     ["package:flutter/material.dart" :as m]))
 
 (defn first-screen [ctx]
@@ -12,7 +12,7 @@
                {:title (m/Text "First Screen")})}
     (center
       (elevated-button
-        {:onPressed (as-dart-callback []
+        {:onPressed (dart-cb []
                       (.pushNamed (-> ctx m/Navigator.of) "/second"))}
         (text "Launch Screen")))))
 
@@ -22,7 +22,7 @@
                {:title (m/Text "Second Screen")})}
     (center
       (elevated-button
-        {:onPressed (as-dart-callback []
+        {:onPressed (dart-cb []
                       (-> ctx m/Navigator.of .pop))}
         (fx/text "Go Back!")))))
 

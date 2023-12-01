@@ -6,7 +6,7 @@
      :refer [cF cF+ cFn cI dp minfo mget mset! mswap! mav fasc wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
-             floating-action-button as-dart-callback]]
+             floating-action-button dart-cb]]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -47,7 +47,7 @@
       {:appBar (app-bar {:title (m/Text "WebSockets Demo")})
        :floatingActionButton
        (floating-action-button
-         {:onPressed (as-dart-callback []
+         {:onPressed (dart-cb []
                        (when-let [c ^wsc/WebSocketChannel (mav :channel)]
                          (dp :sending-World!!!! )
                          (.add (.-sink c) (str "World"))))
@@ -61,7 +61,7 @@
                              .fontSize 32.0)}
             "hello, web socket.\\n")
           (fx/text-button
-            {:onPressed (as-dart-callback []
+            {:onPressed (dart-cb []
                           (let [s (mav :salute)]
                             (mset! (fasc :app) :salute
                               (if (= s +hello+)

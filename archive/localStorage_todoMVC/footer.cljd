@@ -5,7 +5,7 @@
     ["package:flutter/painting.dart" :as p]
 
     [tilton.mx.api :refer [mget mset! mswap! mkids cI cF]]
-    [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
+    [tilton.fmx.api :refer [dart-cb my-app] :as fx]
 
     [example.demo.localStorage-todoMVC.common :as cmm
      :refer [my-todo-list]]
@@ -42,7 +42,7 @@
           ;; This trick rarely gets used.
           choice (fn [completion-enum label]
                    (fx/ink-well
-                     {:onTap (as-dart-callback []
+                     {:onTap (dart-cb []
                                (mset! selector
                                  ;; ^^^ lexical scope is a big Lisp win
                                  :selection completion-enum))}
@@ -78,7 +78,7 @@
      :maintainAnimation true
      :maintainState     true}
     (fx/text-button
-      {:onPressed (as-dart-callback []
+      {:onPressed (dart-cb []
                     (mswap! (my-todo-list) :kids
                       (partial remove td-completed)))}
       (fx/text "Clear done"))))

@@ -3,7 +3,7 @@
     ["package:flutter/material.dart" :as m]
     [tilton.mx.api :refer [dp cI cF cF+ mget mswap! fm* fasc fmav mav] :as mx]
     [tilton.fmx.api :as fx
-     :refer [as-dart-callback within-ctx
+     :refer [dart-cb within-ctx
              material-app scaffold app-bar floating-action-button
              theme icon-theme center column text sized-box]]))
 
@@ -25,7 +25,7 @@
                                        :backgroundColor (cF (.-inversePrimary
                                                               (.-colorScheme ^m/ThemeData (mav :theme))))})
        :floatingActionButton (floating-action-button
-                               {:onPressed (as-dart-callback []
+                               {:onPressed (dart-cb []
                                              (mswap! (fm* :the-counter) :counter inc))
                                 :tooltip   "Increment"}
                                (m/Icon m/Icons.add))}

@@ -5,7 +5,7 @@
     ["package:english_words/english_words.dart" :as en]
     [tilton.mx.api :refer [dp cF cFn cI mget mset! mswap! fasc fmu muv] :as mx]
     [tilton.mx.model.peek :refer [mname]]
-    [tilton.fmx.api :refer [as-dart-callback] :as fx]))
+    [tilton.fmx.api :refer [dart-cb] :as fx]))
 
 (defn big-card []
   (fx/card {:color (fx/within-ctx [me ctx]
@@ -32,7 +32,7 @@
                                (mx/fmav :app :word-pair))
                             (m/Icon m/Icons.favorite)
                             (m/Icon m/Icons.favorite_border)))
-           :onPressed (as-dart-callback []
+           :onPressed (dart-cb []
                         (let [word-pair (mx/fmav :app :word-pair)
                               favs (mx/fmav :app :favorites)]
                           (mswap! (fasc :app) :favorites
@@ -40,7 +40,7 @@
                               disj conj) word-pair)))})
         (m/SizedBox .width 10)
         (fx/elevated-button
-          {:onPressed (as-dart-callback []
+          {:onPressed (dart-cb []
                         (mset! (fasc :app) :word-pair (en/WordPair.random)))}
           (fx/text "Next"))))))
 
@@ -77,7 +77,7 @@
               {:extended              false
                :selectedIndex         (cI 0 :watch (fn [_ _ new p c]
                                                      (dp :newseli new)))
-               :onDestinationSelected (as-dart-callback [value]
+               :onDestinationSelected (dart-cb [value]
                                         (mset! me :selectedIndex value))}
               {:name :nav}
               (doall (for [[icon label] [[m/Icons.home "Home"]

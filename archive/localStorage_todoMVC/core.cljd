@@ -5,7 +5,7 @@
     ["package:shared_preferences/shared_preferences.dart" :as prefs]
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
-    [tilton.fmx.api :refer [within-ctx as-dart-callback] :as fx]
+    [tilton.fmx.api :refer [within-ctx dart-cb] :as fx]
     [example.demo.localStorage-todoMVC.common :as cmm]
     [example.demo.localStorage-todoMVC.todo :as todo]
     [example.demo.localStorage-todoMVC.input :as input]
@@ -57,7 +57,7 @@
           (fx/column
             (mapv #(fx/text {:style faint} %) credits)))
         (fx/icon-button
-          {:onPressed (as-dart-callback []
+          {:onPressed (dart-cb []
                         (mswap! (fasc :credits-toggle) :show-credits? not))
            :icon      (within-ctx [me ctx]
                         (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)

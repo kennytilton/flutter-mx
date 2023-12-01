@@ -6,7 +6,7 @@
     [tilton.mx.model.core :refer [make]]
     [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
-     :refer [as-dart-callback within-ctx
+     :refer [dart-cb within-ctx
              material-app scaffold app-bar floating-action-button
              center column text sized-box]]))
 
@@ -46,7 +46,7 @@
 
          :floatingActionButton
          (floating-action-button
-           {:onPressed (as-dart-callback []
+           {:onPressed (dart-cb []
                          (mswap! (fm* :counter) :value inc))
             :tooltip   "Increment"}
            (m/Icon m/Icons.add .color m/Colors.black))}

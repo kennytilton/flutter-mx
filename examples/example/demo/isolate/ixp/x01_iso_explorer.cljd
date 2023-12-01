@@ -13,7 +13,7 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
-             checkbox-list-tile icon-button fx-render as-dart-callback]]
+             checkbox-list-tile icon-button fx-render dart-cb]]
 
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
@@ -52,7 +52,7 @@
 (defn pause-resume []
   (fx/elevated-button+icon
     {:onPressed (cF (when (mget (fmu :on-off) :value)
-                      (as-dart-callback []
+                      (dart-cb []
                         (mswap! me :value not))))
      :label     (cF (m/Text (if (mget me :value) "Resume" "Pause")))
      :icon      (cF (m/Icon (if (mget me :value) m/Icons.play_arrow m/Icons.pause)))}
@@ -72,7 +72,7 @@
      :icon      (m/Icon m/Icons.network_ping)
      :onPressed (cF (when-let [iso ^Isolate? (mav :worker-iso)]
                       ; a null onPressed serves also to disable the button, inc. visually
-                      (as-dart-callback []
+                      (dart-cb []
                         (dbgiso :pinging iso)
                         (.ping iso (mav :task-out-port)
                           .response (convert/jsonEncode
@@ -109,7 +109,7 @@
 
 (defn on-off []
   (fx/elevated-button+icon
-    {:onPressed (as-dart-callback []
+    {:onPressed (dart-cb []
                   (mswap! me :value not))
      :label     (cF (m/Text (if (mget me :value) "Kill" "Spawn")))
      :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))}

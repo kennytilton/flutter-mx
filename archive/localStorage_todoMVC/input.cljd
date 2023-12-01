@@ -5,12 +5,12 @@
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
     [tilton.mx.api :refer [cF cI cFonce mget  mswap! mset!]]
-    [tilton.fmx.api :refer [as-dart-callback my-app] :as fx]
+    [tilton.fmx.api :refer [dart-cb my-app] :as fx]
     [example.demo.localStorage-todoMVC.common :refer [ my-todo-list ] :as cmm]
     [example.demo.localStorage-todoMVC.todo :refer [td-completed] :as todo]))
 
 (defn todo-input-onSubmitted-formula []
-  (cF (as-dart-callback [value]
+  (cF (dart-cb [value]
         ;; blank or not we need to restore focus to the input per the spec
         (.requestFocus ^m/FocusNode (mget me :focusNode))
         ;; spec says to trim, and to silently ignore blank entry
@@ -52,7 +52,7 @@
      :maintainAnimation     true
      :maintainState         true}
     (fx/icon-button
-      {:onPressed (as-dart-callback []
+      {:onPressed (dart-cb []
                     (let [todos (todo/app-todos (my-app))
                           all-done? (every? td-completed todos)]
                       (doseq [td todos]

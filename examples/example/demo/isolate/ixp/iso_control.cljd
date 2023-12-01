@@ -12,7 +12,7 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
-             checkbox-list-tile icon-button fx-render as-dart-callback]]
+             checkbox-list-tile icon-button fx-render dart-cb]]
 
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
@@ -21,7 +21,7 @@
 
 (defn on-off []
   (fx/elevated-button+icon
-    {:onPressed (as-dart-callback []
+    {:onPressed (dart-cb []
                   (mswap! me :value not))
      :label     (cF (m/Text (if (mget me :value) "Clear" "Spawn")))
      :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))}
@@ -42,7 +42,7 @@
 (defn pause-resume []
   (fx/elevated-button+icon
     {:onPressed (cF (when-let [iso ^Isolate? (mav :iso)]
-                      (as-dart-callback []
+                      (dart-cb []
                         (mswap! (fasc :app) :iso-paused? not))))
      :label     (cF (m/Text (if (mget me :value) "Resume" "Pause")))
      :icon      (cF (m/Icon (if (mget me :value) m/Icons.play_arrow m/Icons.pause)))}
@@ -52,7 +52,7 @@
 (defn kill []
   (fx/elevated-button+icon
     {:onPressed (cF (when-let [iso (mav :iso)]
-                      (as-dart-callback []
+                      (dart-cb []
                         (dbgiso :onpress-killing-iso iso)
                         (.kill ^Isolate iso))))
      :label     (m/Text "Kill")
@@ -63,7 +63,7 @@
     (fx/elevated-button+icon
       {:onPressed (cF (when-let [iso (mav :iso)]
                         (when-let [to-iso (mav :to-iso)]
-                          (as-dart-callback []
+                          (dart-cb []
                             (dbgiso :onpresspinging-iso iso)
                             (.ping ^Isolate iso to-iso
                               .response (convert/jsonEncode

@@ -3,7 +3,7 @@
     ["dart:async" :as async]
     [clojure.string :as str]
     [tilton.mx.cell.base :as cty]
-    [tilton.fmx.api :refer [as-dart-callback ] :as fx]
+    [tilton.fmx.api :refer [dart-cb ] :as fx]
     [tilton.mx.api :as mx
      :refer [wmx-iso mget mset! mswap! fm* fmu cF cF+ cI]]
     ["package:flutter/widgets.dart" :as w]
@@ -31,8 +31,8 @@
        :floatingActionButton
        (cF (fx/floating-action-button
              {;; flutter attributes, reactive where useful
-              :onPressed (as-dart-callback []
-                           ;; as-dart-callback jumps thru the technical hoops needed
+              :onPressed (dart-cb []
+                           ;; dart-cb jumps thru the technical hoops needed
                            ;; to get this code to run when the user presses this widget.
                            (mswap! me :offset #(if % (inc %) 0)))
               :tooltip   "Send next word of message, looping at end"

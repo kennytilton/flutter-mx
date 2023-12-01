@@ -5,7 +5,7 @@
 
     [tilton.mx.model.peek :refer [Model minfo mref?]]
     [tilton.mx.api :refer [cF cF+ cI mget muv] :as mx]
-    [tilton.fmx.api :refer [as-dart-callback] :as fx]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
 
@@ -76,7 +76,7 @@
   (fx/animated-builder
     {:animation (fx/within-ctx [me ctx]
                   (fx/state-prop-get (mx/fasc :fab) :expand-animation))
-     :builder   (as-dart-callback [ctx child]
+     :builder   (dart-cb [ctx child]
                   (let [progress ^m/CurvedAnimation (fx/state-prop-get (mx/fasc :fab) :expand-animation)
                         offset (m/Offset.fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
@@ -134,7 +134,7 @@
       (fx/material {:shape        (m/CircleBorder)
                     :clipBehavior m/Clip.antiAlias
                     :elevation    4.0}
-        (fx/ink-well {:onTap (as-dart-callback []
+        (fx/ink-well {:onTap (dart-cb []
                                (let [fb (mx/fasc :fab par)]
                                  (mx/mswap! fb :open? not)))}
           (fx/padding {:padding (m/EdgeInsets.all 8.0)}
@@ -159,7 +159,7 @@
          :curve    (m/Interval 0.25 1.0 .curve m/Curves.easeInOut)
          :duration (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
-          {:onPressed (as-dart-callback []
+          {:onPressed (dart-cb []
                         (mx/mswap! (mx/fasc :fab par) :open? not))}
           (fx/icon {:icon m/Icons.create}
             {:name :fabicon-open}))))))

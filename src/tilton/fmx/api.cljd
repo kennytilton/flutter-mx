@@ -63,7 +63,8 @@
          (throw (Exception. (str "within-ctx> context is unbound for body: " '~body))))
        (when-not ~ctx-var
          (throw (Exception. (str "within-ctx> context is null for body: " '~body))))
-       (tilton.mx.base/dp :winctx-sees-ctx ~ctx-var :dynctx tilton.fmx.factory/*ctx*)
+       (when (not= ~ctx-var tilton.fmx.factory/*ctx*)
+         (tilton.mx.base/dp :winctx-sees-ctx-diff ~ctx-var :dynctx tilton.fmx.factory/*ctx*))
        (tilton.fmx.factory/with-ctx :within-ctx ~ctx-var
          ~@body))))
 
@@ -265,12 +266,8 @@
 ;;; the dance between Flutter and MX is a bit intricate
 ;;; these macros try to hide the plumbing without being obscure.
 
-(defmacro with-ctx+as-is [[me ctx] callback-fn]
-  `(tilton.fmx.api/within-ctx [~me ~ctx]
-     ~callback-fn ))
-
-(defmacro as-dart-callback [[& cb-params] & body]
-  `(tilton.fmx.api/with-ctx+as-is [~'me ~'ctx]
+(defmacro dart-cb [[& cb-params] & body]
+  `(tilton.fmx.api/within-ctx [~'me ~'ctx]
      (fn [~@cb-params]
        (tilton.mx.cell.base/wmx-iso
          ;(tilton.mx.api/counts-dump :as-dart-cb)
