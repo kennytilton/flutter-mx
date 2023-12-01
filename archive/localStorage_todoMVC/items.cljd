@@ -192,11 +192,11 @@
     (fx/list-view+builder
       {:padding     (m/EdgeInsets.all 0.0)
        :itemCount   (cF (count (mkids me)))
-       :itemBuilder (cF (fx/as-is
-                          (fn [ctx i]
-                            ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
-                            (fx/fx-render ctx
-                              (nth (mkids me) i)))))}
+       :itemBuilder (fx/within-ctx [me ctx]
+                      (fn [ctx i]
+                        ;; we must yield a native Flutter widget ready for Flutter, so we must "render" here,
+                        (fx/fx-render ctx
+                          (nth (mkids me) i))))}
       {:name :lv-builder}
       (map (fn [todo]
              (let [stg-id (td-stg-id todo)

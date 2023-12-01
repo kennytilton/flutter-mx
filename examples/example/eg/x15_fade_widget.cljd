@@ -1,10 +1,10 @@
 (ns example.eg.x15-fade-widget
   "FlutterMX port of CLJD Faithful port of https://docs.flutter.dev/cookbook/animation/opacity-animation"
   (:require ["package:flutter/material.dart" :as m]
-            ;["package:localstore/localstore.dart" :as ls]
+    ;["package:localstore/localstore.dart" :as ls]
             [tilton.mx.model.core :refer [mget mset! mswap!] :as md]
             [tilton.mx.cell.core :refer [cF cF+ cF_ cI c_F]]
-            [tilton.mx.api :refer [wmx-iso]]
+            [tilton.mx.api :refer [dp wmx-iso minfo]]
             [tilton.fmx.api :as fx]))
 
 (defn make-app []
@@ -15,13 +15,11 @@
       {:name :zapp}
       (fx/scaffold
         {:appBar               (fx/app-bar {:title (fx/text title)})
-         :floatingActionButton (cF (fx/floating-action-button
-                                     {:tooltip   "Toggle Opacity"
-                                      :onPressed (fx/cb-as-is
-                                                   (fn ^void []
-                                                     (wmx-iso (md/mswap! me :visible not))
-                                                     nil))}
-                                     (fx/icon {:icon m/Icons.flip})))}
+         :floatingActionButton (fx/within-ctx [me ctx]
+                                 (fx/floating-action-button
+                                   {:tooltip   "Toggle Opacity"
+                                    :onPressed #(wmx-iso (md/mswap! me :visible not))}
+                                   (fx/icon {:icon m/Icons.flip})))}
         {:visible (cI true)
          :name    :my-home}
         (fx/center {}
@@ -29,6 +27,6 @@
           (fx/animated-opacity
             {:opacity  (cF (cond (true? (md/mget (md/fm* :my-home) :visible)) 1.0
                                  :else 0.0))
-             :duration  (Duration .milliseconds 500)}
+             :duration (Duration .milliseconds 500)}
             {:name :ani-opa}
             (m/Container .width 200.0 .height 200.0 .color m/Colors.teal)))))))

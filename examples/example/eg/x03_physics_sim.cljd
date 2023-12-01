@@ -10,7 +10,7 @@
     [tilton.mx.base :refer [dprn dp dpx]]
 
     [tilton.mx.api :refer [minfo cF cI make mget mpar cFkids fmu muv wmx-iso] :as mx]
-    [tilton.fmx.api :as fx]))
+    [tilton.fmx.api :as fx :refer [within-ctx]]))
 
 (defn make-app []
   (let [title (str "Physics Animation")]
@@ -24,26 +24,24 @@
   (fx/ticker-mode
     {:enabled true}
     (fx/gesture-detector
-      {:onPanDown   (cF (fx/cb-as-is
-                          (fn [^m/DragDownDetails details]
-                            (let [c (fx/my-controller :panDown)]
-                              (assert c (str "Draggable-card pandown no controler in "
-                                          (minfo me)))
-                              (.stop c)))))
+      {:onPanDown   (within-ctx [me ctx]
+                      (fn [^m/DragDownDetails details]
+                        (let [c (fx/my-controller :panDown)]
+                          (assert c (str "Draggable-card pandown no controler in "
+                                      (minfo me)))
+                          (.stop c))))
        :onPanUpdate (fx/within-ctx [me ctx]
-                      (fx/cb-as-is
-                        (fn [^m/DragUpdateDetails details]
-                          (let [size (.-size (MediaQuery/of ctx))]
-                            (wmx-iso
-                              (mx/mswap! me :dragAlignment
-                                #(.+ ^m/Alignment %
-                                   (m/Alignment
-                                     (/ (-> details .-delta .-dx) (/ (.-width size) 2))
-                                     (/ (-> details .-delta .-dy) (/ (.-height size) 2))))))))))
-       :onPanEnd    (cF (fx/within-ctx [me ctx]
-                          (fx/cb-as-is
-                            (fn [^m/DragEndDetails details]
-                              (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond))))))}
+                      (fn [^m/DragUpdateDetails details]
+                        (let [size (.-size (MediaQuery/of ctx))]
+                          (wmx-iso
+                            (mx/mswap! me :dragAlignment
+                              #(.+ ^m/Alignment %
+                                 (m/Alignment
+                                   (/ (-> details .-delta .-dx) (/ (.-width size) 2))
+                                   (/ (-> details .-delta .-dy) (/ (.-height size) 2)))))))))
+       :onPanEnd    (fx/within-ctx [me ctx]
+                      (fn [^m/DragEndDetails details]
+                        (logo-recoil me ctx (-> details .-velocity .-pixelsPerSecond))))}
       {:name          :draggo
        :ticker-mixin  true
        :initState     (fn [state me]

@@ -7,7 +7,7 @@
     ["dart:async" :as async]
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :refer [dp dpx cF cF+ cI mget mpar fasc faprop muv minfo mset! fmu] :as mx]
-    [tilton.fmx.api :refer [as-dart-callback] :as fx]))
+    [tilton.fmx.api :refer [as-dart-callback within-ctx] :as fx]))
 
 (defn make-app []
   (let [title "Seamless Layout Builder/Built"]
@@ -34,21 +34,22 @@
               (fx/padding {:padding (m/EdgeInsets.all 20)}
                 (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
                   (fx/text
-                    {:style (cF (p/TextStyle
-                                  .color m/Colors.blue
-                                  .fontSize 24))}
+                    {:style (p/TextStyle
+                              .color m/Colors.blue
+                              .fontSize 24)}
                     {:name :test}
                     "Rotate the device or sim to see layout effect.")
                   (fx/text
-                    {:style (cF (p/TextStyle
-                                  .color m/Colors.blue
-                                  .fontSize 16))}
+                    {:style (p/TextStyle
+                              .color m/Colors.blue
+                              .fontSize 16)}
                     {:name :test}
                     "Use ⌘-arrows to rotate sim.")
                   (fx/text
-                    {:style (cF (p/TextStyle
-                                  .color (mget me :font-color)
-                                  .fontSize (mget me :font-size)))}
+                    {:style (within-ctx [me ctx]
+                              (p/TextStyle
+                                .color (mget me :font-color)
+                                .fontSize (mget me :font-size)))}
                     {:font-size  (cF (if-let [box (faprop :box-constraints me)]
                                        (+ (* 0.03 (.-maxHeight ^m/BoxConstraints box))
                                          ;; just a random computation off a model outside the built-kid model:

@@ -2,11 +2,11 @@
   (:require
     [tilton.mx.foundation :refer [mx-type PObserver observe]]
     [tilton.mx.base
-     :refer [trx wtrx dprn dp dpx  prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props]]
-    [tilton.mx.cell.base :refer [ unbound *depender*] :as cty]
+     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props]]
+    [tilton.mx.cell.base :refer [unbound *depender*] :as cty]
     [tilton.mx.cell.core :as cell
      :refer [cF cFonce cI]]
-    [tilton.mx.model.core :refer [make mget  cFkids fasc muv] :as md]
+    [tilton.mx.model.core :refer [make mget cFkids fasc muv] :as md]
     [tilton.fmx.api :refer [as-dart-callback] :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
@@ -21,7 +21,7 @@
       (fx/scaffold
         {:appBar (fx/app-bar {:title (m/Text title)})}
         (fx/padding
-          {:padding  (m/EdgeInsets.all 16.0)}
+          {:padding (m/EdgeInsets.all 16.0)}
           (fx/column
             {:mainAxisAlignment MainAxisAlignment/center}
             (fx/text-field
@@ -29,9 +29,10 @@
                             (md/mset! me :value text))}
               {:name  :input-a
                :value (cI nil :watch (fn [prop me newv priorv c]
-                                     (dp (str "First text field: " newv))))})
-            (fx/text-field {:onChanged (as-dart-callback [text]
-                                         (md/mset! me :value text))}
+                                       (dp (str "First text field: " newv))))})
+            (fx/text-field
+              {:onChanged (as-dart-callback [text]
+                            (md/mset! me :value text))}
               {:name       :input-b
                :value      (cI "And then...?")
                :controller (cFonce (let [c (m/TextEditingController .text (mget me :value))]

@@ -20,16 +20,16 @@
                     {:code "ar", :name "Arabic", :translation "مرحباً بالعالم."}])
 
 (defn language-selector-item-builder []
-  (cF (fx/as-is
-        (fn ^#/(List m/PopupMenuEntry) [ctx]
-          (let [^#/(List m/PopupMenuEntry) result
-                (mapv (fn [{:keys [code name]}]
-                        (m/PopupMenuItem
-                          .value code
-                          .child (m/Text name
-                                   .style (m/TextStyle .fontSize 24))))
-                  (mget me :languages))]
-            result)))))
+  (fx/within-ctx [me ctx]
+    (fn ^#/(List m/PopupMenuEntry) [ctx]
+      (let [^#/(List m/PopupMenuEntry) result
+            (mapv (fn [{:keys [code name]}]
+                    (m/PopupMenuItem
+                      .value code
+                      .child (m/Text name
+                               .style (m/TextStyle .fontSize 24))))
+              (mget me :languages))]
+        result))))
 
 (defn popup-decoration-basic []
   (m/BoxDecoration .color

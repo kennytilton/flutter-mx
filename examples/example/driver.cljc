@@ -22,7 +22,6 @@
     [example.eg.x15-fade-widget :as fade]
     [example.eg.x020-reactive-stream :as x020]
     ;[example.eg.layout-explorer :as layo]
-    ;[example.demo.localStorage-todoMVC.core :as todols]
     [example.demo.todoMVC.core :as todo]
     ;[example.demo.boiler.core :as boiler]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
@@ -30,7 +29,7 @@
     [example.eg.x26-latex-sandbox :as tekbox]
     [example.eg.x27-popup-menu :as x27]
     [example.eg.x028-bottom-navbar :as x028]
-    ;[example.eg.x029-layout-builder :as x029]
+    [example.eg.x029-layout-builder :as x029i]
     [example.eg.x030-codelab-namer :as x030]
     [example.eg.x035-timer-poll :as x035]
     [example.eg.x040-named-routes :as x040]
@@ -56,4 +55,4 @@
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
   (if false
     (ixp/make-app)
-    (x08/make-app)))
+    (todols/make-app)))

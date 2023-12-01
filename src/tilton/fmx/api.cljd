@@ -22,12 +22,6 @@
 (defn fxctx []
   fxf/*ctx*)
 
-(defn cb-as-is
-  "Identifies FN as callback to be given to Flutter 'as is'"
-  ; some callbacks are used to defer thins until a build function context is in hand
-  [fn]
-  (fxf/->CBAsIs fn))
-
 (defn fx$sst-registry-initialize [tracking?]
   (fxf/fx$sst-registry-initialize tracking?))
 
@@ -270,10 +264,6 @@
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
 ;;; these macros try to hide the plumbing without being obscure.
-
-(defmacro as-is [callback-fn]
-  `(tilton.fmx.factory/->CBAsIs
-     ~callback-fn))
 
 (defmacro with-ctx+as-is [[me ctx] callback-fn]
   `(tilton.fmx.api/within-ctx [~me ~ctx]
