@@ -63,6 +63,10 @@
   (dpm me :ctx :record-CTX! (minfo me) :ctx!! ctx)
   (mx/rmap-meta-set! [:fx$ctx me] ctx))
 
+(defmacro my-ctx [& [me]]
+  (let [me (or me 'me)]
+    `(:fx$ctx (meta ~me))))
+
 (defn ctx-check
   ([me ctx] (ctx-check :anon me ctx))
   ([fx-class me ctx]

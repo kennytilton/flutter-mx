@@ -3,6 +3,7 @@
   (:require
     [tilton.mx.api :refer [dp mget mset! mswap!] :as md]
     [tilton.fmx.api :as fx]
+    [tilton.fmx.factory :as fxf]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]))
@@ -17,10 +18,11 @@
            {:onPressed (fx/within-ctx [me ctx]
                          #(m/showDialog
                             .context ctx
-                            .builder (fn [_]
-                                       (m/AlertDialog
-                                         .content (m/Text (.-text ^m/TextEditingController
-                                                            (md/mget (md/fm* :test-input) :controller)))))))
+                            .builder (fn [ctx]
+                                       (fxf/with-ctx :show-dlg ctx
+                                         (m/AlertDialog
+                                           .content (m/Text (.-text ^m/TextEditingController
+                                                              (md/mget (md/fm* :test-input) :controller))))))))
             :tooltip   "Show me the value!"}
            {:with-builder? true}
            (m/Icon m/Icons.text_fields))}

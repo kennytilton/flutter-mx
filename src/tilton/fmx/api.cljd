@@ -17,7 +17,7 @@
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
     [tilton.mx.api :as mx
      :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
-    [tilton.fmx.factory :refer [deftag deftags deftags-plus with-ctx] :as fxf]))
+    [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx with-ctx *ctx*] :as fxf]))
 
 (defn fxctx []
   fxf/*ctx*)
@@ -265,6 +265,12 @@
 ;;; ---------------------------------------------------
 ;;; the dance between Flutter and MX is a bit intricate
 ;;; these macros try to hide the plumbing without being obscure.
+
+(defn ctxd? [tag me ctx]
+  (when (not= ctx (my-ctx))
+    (dp :CTXD?-FX-DIFF!!!! tag ctx *ctx*))
+  (when (not= ctx *ctx*)
+    (dp :CTXD?-**-DIFF!!!! tag ctx *ctx*)))
 
 (defmacro dart-cb [[& cb-params] & body]
   `(tilton.fmx.api/within-ctx [~'me ~'ctx]
