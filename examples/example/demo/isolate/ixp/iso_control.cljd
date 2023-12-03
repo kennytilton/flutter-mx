@@ -17,7 +17,8 @@
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
     [example.demo.isolate.common
-     :refer [clock-face slow-is-prime? dbgiso iso-name say-delay]]))
+     :refer [clock-face slow-is-prime? just-slow-is-prime?
+             result-clear dbgiso iso-name say-delay]]))
 
 (defn on-off []
   (fx/elevated-button+icon
@@ -38,16 +39,13 @@
        :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
       {:name :auto-play})))
 
-
 (defn pause-resume []
   (fx/elevated-button+icon
     {:onPressed (cF (when-let [iso ^Isolate? (mav :iso)]
                       (dart-cb []
                         (mswap! (fasc :app) :iso-paused? not))))
-     :label     (cF (m/Text (if (mget me :value) "Resume" "Pause")))
-     :icon      (cF (m/Icon (if (mget me :value) m/Icons.play_arrow m/Icons.pause)))}
-    {:name  :paused?
-     :value (cF (mav :iso-paused?))}))
+     :label     (cF (m/Text (if (mav :iso-paused?) "Resume" "Pause")))
+     :icon      (cF (m/Icon (if (mav :iso-paused?) m/Icons.play_arrow m/Icons.pause)))}))
 
 (defn kill []
   (fx/elevated-button+icon
@@ -61,16 +59,59 @@
 (defn ping [ping-text]
   (let [ping-id (atom -1)]
     (fx/elevated-button+icon
-      {:onPressed (cF (when-let [iso (mav :iso)]
-                        (when-let [to-iso (mav :to-iso)]
-                          (dart-cb []
-                            (dbgiso :onpresspinging-iso iso)
-                            (.ping ^Isolate iso to-iso
-                              .response (convert/jsonEncode
-                                          (walk/stringify-keys
-                                            {:msg-type "ping"
-                                             :response (str (swap! ping-id inc) ": " ping-text)}))
-                              .priority Isolate.immediate)))))
+      {:onPressed (cF (dp :ping-sees (mav :iso) (mav :to-iso))
+                    (when-let [iso (mav :iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (dbgiso :onpresspinging-iso iso)
+                          (.ping ^Isolate iso to-iso
+                            .response (convert/jsonEncode
+                                        (walk/stringify-keys
+                                          {:msg-type "ping"
+                                           :response (str (swap! ping-id inc) ": " ping-text)}))
+                            .priority Isolate.immediate)))))
        :label     (m/Text "Ping")
        :icon      (m/Icon m/Icons.network_ping)})))
 
+;;; --- job starters -----------
+
+
+
+(defn decide-prime-in-main [n]
+  (fx/elevated-button+icon
+    {:onPressed (cF (dart-cb []
+                      (result-clear)
+                      (doto (.-instance m/WidgetsBinding)
+                        (.addPostFrameCallback
+                          (fn [^Duration d]
+                            (wmx-iso
+                              (let [r (just-slow-is-prime? n)]
+                                (mset! (fasc :app) :worker-result
+                                  {:msg-type :prime-decision
+                                   :n        n
+                                   :value    r}))))))))
+     :label     (m/Text (str "Main " n))
+     :icon      (m/Icon m/Icons.directions_run)}))
+
+(defn decide-prime? [n]
+  (fx/elevated-button+icon
+    {:onPressed (cF (when-let [iso (mav :iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (result-clear)
+                          (dbgiso :onpress-prime-tasking-iso (mav :iso))
+                          (.send ^SendPort to-iso
+                            {:msg-type :decide-prime?
+                             :n        n})))))
+     :label     (m/Text (str "Iso? " n))
+     :icon      (m/Icon m/Icons.directions_run)}))
+
+(defn run-prime? [n]
+  (fx/elevated-button+icon
+    {:onPressed (dart-cb []
+                  (result-clear)
+                  (mset! (fasc :app) :job nil)
+                  (with-cc :deferred-job
+                    (mset! (fasc :app) :job n)))
+     :label     (m/Text (str "Iso.run " n))
+     :icon      (m/Icon m/Icons.directions_run)}))

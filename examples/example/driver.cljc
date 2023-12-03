@@ -43,7 +43,7 @@
     ;[example.non-fmx.ifernandez-isolates :as iiso]
     [example.eg.x055_isolates :as x055]
     [example.demo.isolate.x00-spawn :as ispawn]
-    [example.demo.isolate.ixp.x01-iso-explorer :as ixpo]
+    [example.demo.isolate.x01-iso-explorer :as ixpo]
     [example.demo.isolate.ixp.ixp :as ixp]
     [example.demo.isolate.x02-poc-mx-iso :as iso2]
     [example.demo.isolate.x03-mx-isolate :as iso3]

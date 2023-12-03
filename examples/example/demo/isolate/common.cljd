@@ -42,15 +42,26 @@
     (await (Future.delayed (Duration .seconds n)))
     (dp :iso (iso-name) :delayed :tag tag)))
 
+;;; --- test jobs --------------------------------------------------
+
+(defmacro result-clear []
+  `(mset! (fasc-inclusive :app) :worker-result
+     {:msg-type :clear}))
+
+(defn just-slow-is-prime? [n]
+  (dpx :slow-is-prime-entry n
+    :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
+  (cond
+    (= n 1) false
+    :else (not (some (fn [divisor]
+                       (zero? (mod n divisor)))
+                 (range 2 n)))))
+
 (defn slow-is-prime? [n]
-  (dp :slow-is-prime-entry n
+  (dpx :slow-is-prime-entry n
     :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
   {:of     n
-   :prime? (cond
-             (= n 1) false
-             :else (not (some (fn [divisor]
-                                (zero? (mod n divisor)))
-                          (range 2 n))))})
+   :prime? (just-slow-is-prime? n)})
 
 (defn slow-next-prime-after [n]
   (some (fn [nn]

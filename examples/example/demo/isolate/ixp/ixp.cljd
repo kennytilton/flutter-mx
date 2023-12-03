@@ -16,62 +16,31 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face slow-is-prime? dbgiso dbgisox say-delay]]
+     :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay result-clear]]
     [example.demo.isolate.ixp.iso-control
-     :refer [on-off pause-resume kill ping]]
+     :refer [on-off pause-resume kill ping
+             run-prime? decide-prime? decide-prime-in-main ]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
-(defn just-slow-is-prime? [n]
-  (dp :slow-is-prime-entry n
-    :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
-  (cond
-    (= n 1) false
-    :else (not (some (fn [divisor]
-                       (zero? (mod n divisor)))
-                 (range 2 n)))))
-
-(defn decide-prime-in-main [n]
-  (fx/elevated-button+icon
-    {:onPressed (cF (dart-cb []
-                      (mset! (fasc :app) :worker-result
-                        {:msg-type :prime-decision
-                         :n        n
-                         :value    (just-slow-is-prime? n)})))
-     :label     (m/Text (str "Main Prime!? " n))
-     :icon      (m/Icon m/Icons.directions_run)}))
-
-(defn decide-prime? [n]
-  (fx/elevated-button+icon
-    {:onPressed (cF (when-let [iso (mav :iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (dart-cb []
-                          (dbgiso :onpress-prime-tasking-iso (mav :iso))
-                          (.send ^SendPort to-iso
-                            {:msg-type :decide-prime?
-                             :n        n})))))
-     :label     (m/Text (str "Prime? " n))
-     :icon      (m/Icon m/Icons.directions_run)}))
-
 (defn slo-prime-worker-listener [to-main {:keys [msg-type n] :as task}]
-
   (cond
     (string? task)
     (slo-prime-worker-listener to-main (util/dart-map->cljd-map
                                          (convert/jsonDecode task)))
     :else (do (dp :slo-prime-w-sees task)
-            (case msg-type
-              :decide-prime?
-              (.send ^SendPort to-main
-                {:msg-type :prime-decision
-                 :n        n
-                 :value    (just-slow-is-prime? n)})
-              "ping"
-              (.send ^SendPort to-main
-                {:msg-type :ack
-                 :response (:response task)})
+              (case msg-type
+                :decide-prime?
+                (.send ^SendPort to-main
+                  {:msg-type :prime-decision
+                   :n        n
+                   :value    (cmn/just-slow-is-prime? n)})
+                "ping"
+                (.send ^SendPort to-main
+                  {:msg-type :ack
+                   :response (:response task)})
 
-              (dp :worker-IGNORES-task task))))
+                (dp :worker-IGNORES-task task))))
   nil)
 
 (defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
@@ -89,15 +58,7 @@
 (defn make-app []
   (fx/material-app {}
     {:name          :app
-     :on-exit       (cF+ [:watch (fn [_ me new _ _]
-                                   (.listen ^ReceivePort new
-                                     (fn [msg] (dp :on-exit!!!! msg))))]
-                      (ReceivePort))
-     :on-error      (cF+ [:watch (fn [_ me new _ _]
-                                   (.listen ^ReceivePort new
-                                     (fn [msg] (dp :on-error!!!! msg))))]
-                      (ReceivePort))
-     :start-paused? true
+     :start-paused? false
      :iso           (cF+ [:async? true
                           :watch (fn [_ me new-iso prior _]
                                    (when (dart/is? prior Isolate)
@@ -105,28 +66,37 @@
                                      (.kill ^Isolate prior))
                                    (when new-iso
                                      (wmx-iso
-                                       (mset! me :resume-cap (.-pauseCapability ^Isolate new-iso))))
+                                       (let [cap (.-pauseCapability ^Isolate new-iso)]
+                                         (dp :new-iso-res-cap!!!!!!!!!!! (.-hashCode cap))
+                                         (mset! me :resume-cap cap))))
                                    (dbgiso :watch-sees-new-iso! new-iso))]
                       (when (mget (fm* :on-off) :value)
-                        (Isolate.spawn slo-prime-worker
-                          {:msg-type :config
-                           :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
+                        (Isolate.spawn slo-prime-worker {:msg-type :config
+                                                         :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
                           .paused (mget me :start-paused?)
                           .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
                           .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
      :resume-cap    (cI nil :watch (fn [_ _ new prior _]
-                                     (dp :resume-cap! new)))
+                                     (dp :resume-cap! new :prior prior)))
 
      :iso-paused?   (cF+n [:watch (fn [_ me paused? prior _]
                                     (when-let [iso ^Isolate? (mget me :iso)]
                                       (when (mx-bound? prior)
                                         (cond
-                                          paused? (let [resumer (.pause iso)]
-                                                    (dp :watch-paused-resumer!! iso resumer)
+                                          paused? (let [resumer (.pause iso)
+                                                        res2 (.-pauseCapability ^Isolate iso)]
+                                                    (dp :PAUSE :res= (= resumer res2)
+                                                      :rcap (.-hashCode resumer) resumer
+                                                      :direct (.-hashCode res2) res2)
                                                     (wmx-iso
                                                       (mset! me :resume-cap resumer)))
-                                          :else (let [resumer (mget me :resume-cap)]
-                                                  (dp :watch-paused-resuming!! resumer)
+                                          :else (let [resumer (mget me :resume-cap)
+                                                      res2 (.-pauseCapability ^Isolate iso) ;; bad idea
+                                                      ;; res2 would work only on iso started paused, only once
+                                                      ]
+                                                  (dp :RESUME :reso (= resumer res2)
+                                                    :rcap (.-hashCode resumer) resumer
+                                                    :direct (.-hashCode res2) res2)
                                                   (.resume iso resumer))))))]
                       (mget me :start-paused?))
      :main-listener (cF+ []
@@ -147,7 +117,34 @@
                                      (when new (dp :worker-res new))))
      :from-iso      (cF (when (mget (fm* :on-off) :value)
                           (ReceivePort)))
-     :to-iso        (cI nil)}
+     :to-iso        (cI nil)
+     ; run
+     :job           (cI nil) ; :ephemeral? true)
+     :runner        (cF+ [:async? true
+                          :watch (fn [_ me new prior _]
+                                   (dp :runwatch new prior (mget me :job))
+                                   (when (not (nil? new))
+                                     (let [job-n (mget me :job)]
+                                       (mx/with-cc :runner-up
+                                         (result-clear)
+                                         (dp :runnerw-decides!!!!! (mget me :job) :is-prime? new)
+                                         (mset! me :worker-result
+                                           {:msg-type :prime-decision
+                                            :n        job-n
+                                            :value    new})))))]
+                      (when-let [j (mget me :job)]
+                        (dp :iso.running j)
+                        (Isolate.run (fn [] (just-slow-is-prime? j)))))
+     ; detritus
+     :on-exit       (cF+ [:watch (fn [_ me new _ _]
+                                   (.listen ^ReceivePort new
+                                     (fn [msg] (dp :on-exit!!!! msg))))]
+                      (ReceivePort))
+     :on-error      (cF+ [:watch (fn [_ me new _ _]
+                                   (.listen ^ReceivePort new
+                                     (fn [msg] (dp :on-error!!!! msg))))]
+                      (ReceivePort))
+     }
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer 23")
                          :backgroundColor m/Colors.pink.shade50})}
@@ -155,16 +152,24 @@
         (clock-face)
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (on-off)
-          (pause-resume)
+          (pause-resume))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (kill)
           (ping "Pong"))
-        (decide-prime-in-main 9000041)
-        (decide-prime? 9000039)
-        (decide-prime? 9000041)
-        (text {}
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (decide-prime-in-main 9000039)
+          (decide-prime-in-main 9000041))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (decide-prime? 9000039)
+          (decide-prime? 9000041))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (run-prime? 9000039)
+          (run-prime? 9000041))
+
+        (text {:style (p/TextStyle .fontSize 20)}
           (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
             (case msg-type
-              :prime-decision (str "N " n " is " (when-not value "NOT ") "prime.")
+              :prime-decision (str "N " (or n "bug:unknown") " is " (when-not value "NOT ") "prime.")
               :ack (:response result)
               "...")))))))
 
