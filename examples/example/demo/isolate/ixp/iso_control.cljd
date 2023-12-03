@@ -110,8 +110,18 @@
   (fx/elevated-button+icon
     {:onPressed (dart-cb []
                   (result-clear)
-                  (mset! (fasc :app) :run-job {:msg-type :decide-prime?
-                                           ;;:run-id   (.now DateTime)
-                                           :n        n}))
+                  (mset! (fasc :app) :run-job
+                    {:msg-type :decide-prime?
+                     :run-id   (.-millisecondsSinceEpoch (.now DateTime))
+                     :n        n}))
      :label     (m/Text (str "Iso.run " n))
      :icon      (m/Icon m/Icons.directions_run)}))
+
+(defn run-enabled? []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-Run?")
+       :value           (cI true)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :auto-run})))
