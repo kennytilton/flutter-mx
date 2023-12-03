@@ -19,7 +19,7 @@
      :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay result-clear]]
     [example.demo.isolate.ixp.iso-control
      :refer [on-off pause-resume kill ping
-             run-prime? decide-prime? decide-prime-in-main ]]
+             run-prime? decide-prime? decide-prime-in-main]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
@@ -37,7 +37,7 @@
                    :value    (cmn/just-slow-is-prime? n)})
                 "ping"
                 (.send ^SendPort to-main
-                  {:msg-type :ack
+                  {:msg-type :ping-ack
                    :response (:response task)})
 
                 (dp :worker-IGNORES-task task))))
@@ -114,27 +114,28 @@
                                   (dpx :forwarding-result result)
                                   (mset! me :worker-result result))))))))
      :worker-result (cI nil :watch (fn [_ _ new _ _]
-                                     (when new (dp :worker-res new))))
+                                     (when new (dp :worker-result new))))
      :from-iso      (cF (when (mget (fm* :on-off) :value)
                           (ReceivePort)))
      :to-iso        (cI nil)
      ; run
-     :job           (cI nil) ; :ephemeral? true)
+     :run-job       (cI nil :ephemeral? true)
      :runner        (cF+ [:async? true
                           :watch (fn [_ me new prior _]
-                                   (dp :runwatch new prior (mget me :job))
                                    (when (not (nil? new))
-                                     (let [job-n (mget me :job)]
-                                       (mx/with-cc :runner-up
-                                         (result-clear)
-                                         (dp :runnerw-decides!!!!! (mget me :job) :is-prime? new)
-                                         (mset! me :worker-result
-                                           {:msg-type :prime-decision
-                                            :n        job-n
-                                            :value    new})))))]
-                      (when-let [j (mget me :job)]
-                        (dp :iso.running j)
-                        (Isolate.run (fn [] (just-slow-is-prime? j)))))
+                                     (mx/with-cc :runner-up
+                                       (result-clear)
+                                       (dp :runnerw-decides!!!!!
+                                         new :is-prime? (:value new))
+                                       (mset! me :worker-result
+                                         {:msg-type :prime-decision
+                                          :n        (:n new)
+                                          :run-id   (:run-id new)
+                                          :value    (:value new)}))))]
+                      (when-let [{:keys [n] :as job} (mget me :run-job)]
+                        (dp :iso.running job)
+                        (Isolate.run (fn [] (merge job {:msg-type :prime-decision
+                                                        :value    (just-slow-is-prime? n)})))))
      ; detritus
      :on-exit       (cF+ [:watch (fn [_ me new _ _]
                                    (.listen ^ReceivePort new
@@ -170,6 +171,6 @@
           (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
             (case msg-type
               :prime-decision (str "N " (or n "bug:unknown") " is " (when-not value "NOT ") "prime.")
-              :ack (:response result)
+              :ping-ack (:response result)
               "...")))))))
 
