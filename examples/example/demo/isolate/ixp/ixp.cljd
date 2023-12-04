@@ -119,12 +119,11 @@
                           (ReceivePort)))
      :to-iso        (cI nil)
      ; run
-     :run-job       (cI nil :ephemeral? true)
+     :run-job       (cI nil #_#_  :ephemeral? true)
      :runner        (cF+ [:async? true
                           :watch (fn [_ me new prior _]
                                    (when (not (nil? new))
                                      (mx/with-cc :runner-up
-                                       (result-clear)
                                        (dp :runnerw-decides!!!!!
                                          new :is-prime? (:value new))
                                        (mset! me :worker-result
@@ -133,9 +132,7 @@
                                           :run-id   (:run-id new)
                                           :value    (:value new)}))))]
                       (when (mx/fm*val :auto-run)
-                        (dp :runner-auto-run!!!)
                         (when-let [{:keys [n] :as job} (mget me :run-job)]
-                          (dp :runner-job!!! job)
                           (Isolate.run (fn [] (merge job {:msg-type :prime-decision
                                                           :value    (just-slow-is-prime? n)}))))))
      ; detritus
