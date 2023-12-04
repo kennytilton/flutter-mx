@@ -18,8 +18,8 @@
     [example.demo.isolate.common :as cmn
      :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay]]
     [example.demo.isolate.ixp.iso-control
-     :refer [on-off pause-resume kill ping run-enabled? start-paused
-             run-prime? decide-prime? decide-prime-in-main]]
+     :refer [on-off pause-resume kill ping iso-run-allowed start-paused
+             decide-in-iso-run decide-in-iso decide-in-main]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
@@ -29,7 +29,7 @@
     (slo-prime-worker-listener to-main (util/dart-map->cljd-map
                                          (convert/jsonDecode task)))
     :else (case msg-type
-            :decide-prime?
+            :decide-in-iso
             (.send ^SendPort to-main
               {:msg-type :prime-decision
                :n        n
@@ -106,14 +106,14 @@
      :runner        (cF+ [:async? true
                           :watch (fn [_ me new prior _]
                                    (when (not (nil? new))
-                                     (mx/with-cc :runner-up
+                                     (mx/with-cc :runner-res
                                        (mset! me :worker-result
                                          {:msg-type :prime-decision
                                           :n (mget me :run-job)
                                           :value new}))))]
                       (when-let [n (mget me :run-job)]
                         (Isolate.run (fn [] (just-slow-is-prime? n)))))
-     ; detritus
+     ; clean-up
      :on-exit       (cF+ [:watch (fn [_ me new _ _]
                                    (.listen ^ReceivePort new
                                      (fn [msg] (dp :on-exit!!!! msg))))]
@@ -139,14 +139,14 @@
           (kill)
           (ping "Pong"))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-prime-in-main 9000039)
-          (decide-prime-in-main 9000041))
+          (decide-in-main 9000039)
+          (decide-in-main 9000041))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-prime? 9000039)
-          (decide-prime? 9000041))
+          (decide-in-iso 9000039)
+          (decide-in-iso 9000041))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (run-prime? 9000039)
-          (run-prime? 9000041))
+          (decide-in-iso-run 9000039)
+          (decide-in-iso-run 9000041))
 
         (text {:style (p/TextStyle .fontSize 20)}
           (let [{:keys [msg-type n value] :as result} (mav :worker-result)]

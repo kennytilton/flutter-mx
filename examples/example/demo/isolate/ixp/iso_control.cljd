@@ -78,32 +78,28 @@
 (defn m99 [n]
   (str (quot n 1000000) "m" (mod n 1000000)))
 
-(defn decide-prime-in-main [n]
+(defn decide-in-main [n]
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
-                      (doto (.-instance m/WidgetsBinding)
-                        (.addPostFrameCallback
-                          (fn [^Duration d]
-                            (wmx-iso
-                              (let [r (just-slow-is-prime? n)]
-                                (mset! (fasc :app) :worker-result
-                                  {:msg-type :prime-decision
-                                   :run-id   (rand-int 9999)
-                                   :n        n
-                                   :value    r}))))))))}
+                      (wmx-iso
+                        (let [r (just-slow-is-prime? n)]
+                          (mset! (fasc :app) :worker-result
+                            {:msg-type :prime-decision
+                             :n        n
+                             :value    r})))))}
     (m/Text (str "Main " (m99 n)))))
 
-(defn decide-prime? [n]
+(defn decide-in-iso [n]
   (fx/elevated-button
     {:onPressed (cF (when-let [iso (mav :iso)]
                       (when-let [to-iso (mav :to-iso)]
                         (dart-cb []
                           (.send ^SendPort to-iso
-                            {:msg-type :decide-prime?
+                            {:msg-type :decide-in-iso
                              :n        n})))))}
     (m/Text (str "Iso " (m99 n)))))
 
-(defn run-prime? [n]
+(defn decide-in-iso-run [n]
   (fx/elevated-button
     {:onPressed (dart-cb []
                   (mset! (fasc :app) :run-job n))}
@@ -111,7 +107,7 @@
 
 ;;; --- run enabled? ------------------------------------------------
 
-(defn run-enabled? []
+(defn iso-run-allowed []
   ; this is a silly option just to demonstrate when ephemerals are indispensable
   (fx/sized-box {:width 180}
     (checkbox-list-tile
@@ -119,4 +115,4 @@
        :title           (m/Text "Run OK?")
        :value           (cI true)
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
-      {:name :run-ok?})))
+      {:name :iso-run-ok?})))
