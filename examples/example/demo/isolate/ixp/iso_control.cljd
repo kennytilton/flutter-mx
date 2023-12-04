@@ -38,22 +38,22 @@
        :controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Start Paused")
        :value           (cF (mav :start-paused?))
-       :onChanged       (cF (when-not (mav :iso)
+       :onChanged       (cF (when-not (mav :spawn-iso)
                               (fn [new] (wmx-iso (mswap! (fasc :app) :start-paused? not)))))})))
 
 (defn pause-resume []
   (fx/elevated-button+icon
-    {:label     (cF (m/Text (if (mav :iso-paused?) "Resume" "Pause")))
-     :icon      (cF (m/Icon (if (mav :iso-paused?) m/Icons.play_arrow m/Icons.pause)))
-     :onPressed (cF (when-let [iso ^Isolate? (mav :iso)]
+    {:label     (cF (m/Text (if (mav :spawn-iso-paused?) "Resume" "Pause")))
+     :icon      (cF (m/Icon (if (mav :spawn-iso-paused?) m/Icons.play_arrow m/Icons.pause)))
+     :onPressed (cF (when-let [iso ^Isolate? (mav :spawn-iso)]
                       (dart-cb []
-                        (mswap! (fasc :app) :iso-paused? not))))}))
+                        (mswap! (fasc :app) :spawn-iso-paused? not))))}))
 
 (defn kill []
   (fx/elevated-button+icon
     {:label     (m/Text "Kill")
      :icon      (m/Icon m/Icons.cancel)
-     :onPressed (cF (when-let [iso (mav :iso)]
+     :onPressed (cF (when-let [iso (mav :spawn-iso)]
                       (dart-cb []
                         (.kill ^Isolate iso))))}))
 
@@ -62,7 +62,7 @@
     (fx/elevated-button+icon
       {:label     (m/Text "Ping")
        :icon      (m/Icon m/Icons.network_ping)
-       :onPressed (cF (when-let [iso (mav :iso)]
+       :onPressed (cF (when-let [iso (mav :spawn-iso)]
                         (when-let [to-iso (mav :to-iso)]
                           (dart-cb []
                             (.ping ^Isolate iso to-iso
@@ -110,7 +110,7 @@
 
 (defn decide-in-iso [n]
   (fx/elevated-button
-    {:onPressed (cF (when-let [iso (mav :iso)]
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
                       (when-let [to-iso (mav :to-iso)]
                         (dart-cb []
                           (.send ^SendPort to-iso
