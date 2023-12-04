@@ -36,9 +36,9 @@
       {:key             (m/ValueKey "start-paused")
        :controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Start Paused")
-       :value           (cFn (mav :start-paused?))
-       :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
-      {:name :auto-play})))
+       :value           (cF (mav :start-paused?))
+       :onChanged       (cF (when-not (mav :iso)
+                              (fn [new] (wmx-iso (mswap! (fasc :app) :start-paused? not)))))})))
 
 (defn pause-resume []
   (fx/elevated-button+icon
@@ -46,6 +46,7 @@
      :icon      (cF (m/Icon (if (mav :iso-paused?) m/Icons.play_arrow m/Icons.pause)))
      :onPressed (cF (when-let [iso ^Isolate? (mav :iso)]
                       (dart-cb []
+                        (result-clear)
                         (mswap! (fasc :app) :iso-paused? not))))}))
 
 (defn kill []
@@ -54,7 +55,7 @@
      :icon      (m/Icon m/Icons.cancel)
      :onPressed (cF (when-let [iso (mav :iso)]
                       (dart-cb []
-                        (dbgiso :onpress-killing-iso iso)
+                        (result-clear)
                         (.kill ^Isolate iso))))}))
 
 (defn ping [ping-text]
@@ -62,19 +63,18 @@
     (fx/elevated-button+icon
       {:label     (m/Text "Ping")
        :icon      (m/Icon m/Icons.network_ping)
-       :onPressed (cF (dp :ping-sees (mav :iso) (mav :to-iso))
-                    (when-let [iso (mav :iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (dart-cb []
-                          (dbgiso :onpress-pinging-iso iso)
-                          (.ping ^Isolate iso to-iso
-                            ; ping is fussier about what it will allow in a response, so
-                            ; we convert the map to a string and decode on the other side
-                            .response (convert/jsonEncode
-                                        (walk/stringify-keys
-                                          {:msg-type "ping"
-                                           :response (str (swap! ping-id inc) ": " ping-text)}))
-                            .priority Isolate.immediate)))))})))
+       :onPressed (cF (when-let [iso (mav :iso)]
+                        (when-let [to-iso (mav :to-iso)]
+                          (dart-cb []
+                            (result-clear)
+                            (.ping ^Isolate iso to-iso
+                              ; ping is fussier about what it will allow in a response, so
+                              ; we convert the map to a string and decode on the other side
+                              .response (convert/jsonEncode
+                                          (walk/stringify-keys
+                                            {:msg-type "ping"
+                                             :response (str (swap! ping-id inc) ": " ping-text)}))
+                              .priority Isolate.immediate)))))})))
 
 ;;; --- job starters -----------
 
@@ -103,7 +103,6 @@
                       (when-let [to-iso (mav :to-iso)]
                         (dart-cb []
                           (result-clear)
-                          (dbgiso :onpress-prime-tasking-iso (mav :iso))
                           (.send ^SendPort to-iso
                             {:msg-type :decide-prime?
                              :n        n})))))}

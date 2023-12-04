@@ -24,8 +24,8 @@
   ([] (iso-name (Isolate.current)))
   ([iso] (when iso
            (try (.-debugName ^io/Isolate iso)
-             (catch Error e
-               "DEAD!!!")))))
+                (catch Error e
+                  "DEAD!!!")))))
 (defn dbgiso
   "A handy Iso debugger that gracefully handles dead Isos"
   ([tag] (dbgiso tag Isolate.current))
@@ -69,43 +69,45 @@
             nn))
     (drop (inc (or n 1)) (range))))
 
-(defn clock-face []
-  (fx/custom-paint
-    {:size    (m/Size 400 400)
-     :painter (cF (let [tick (mget me :tick)]
-                    (reify :extends (m/CustomPainter)
-                      (paint [this ^Canvas canvas ^Size size]
-                        (let [center (.center size (m/Offset 0 0))
-                              radius (- (/ (.-width size) 2) 24)
-                              pin-p (doto (m/Paint)
-                                      (-> .-color (set! m/Colors.grey.shade400))
-                                      (-> .-style (set! m/PaintingStyle.fill)))
-                              dial-p (doto (m/Paint)
-                                       (-> .-color (set! m/Colors.grey))
-                                       (-> .-style (set! m/PaintingStyle.stroke)))
-                              hand-p (doto (m/Paint)
-                                       (-> .-color (set! m/Colors.red))
-                                       (-> .-strokeWidth (set! 1.0))
-                                       (-> .-style (set! m/PaintingStyle.stroke)))
-                              hand-len (* radius 0.9)
-                              hand-angle (/ tick 10.0)
-                              hand-end (m/Offset
-                                         (+ (.-dx center) (* hand-len
-                                                            (cos (/ (* hand-angle pi) 180))))
-                                         (+ (.-dy center) (* hand-len
-                                                            (sin (/ (* hand-angle pi) 180)))))]
-                          ;
-                          ; (dp :center center)
-                          (.drawCircle ^Canvas canvas center radius dial-p)
-                          (.drawLine ^Canvas canvas center hand-end hand-p)
-                          (.drawCircle ^Canvas canvas center 10 pin-p)
-                          ))
-                      (shouldRepaint [this _] true))))}
-    {:tick  (cI 0)
-     :clock (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
-                                        (.cancel tmr)))]
-              (async/Timer.periodic (Duration .milliseconds 10)
-                (fn [^async/Timer tmr]
-                  (wmx-iso
-                    (mset! me :tick (.-tick tmr))))))}))
+(defn clock-face
+  ([] (clock-face 400))
+  ([size]
+   (fx/custom-paint
+     {:size    (m/Size size size)
+      :painter (cF (let [tick (mget me :tick)]
+                     (reify :extends (m/CustomPainter)
+                       (paint [this ^Canvas canvas ^Size size]
+                         (let [center (.center size (m/Offset 0 0))
+                               radius (- (/ (.-width size) 2) 24)
+                               pin-p (doto (m/Paint)
+                                       (-> .-color (set! m/Colors.grey.shade400))
+                                       (-> .-style (set! m/PaintingStyle.fill)))
+                               dial-p (doto (m/Paint)
+                                        (-> .-color (set! m/Colors.grey))
+                                        (-> .-style (set! m/PaintingStyle.stroke)))
+                               hand-p (doto (m/Paint)
+                                        (-> .-color (set! m/Colors.red))
+                                        (-> .-strokeWidth (set! 1.0))
+                                        (-> .-style (set! m/PaintingStyle.stroke)))
+                               hand-len (* radius 0.9)
+                               hand-angle (/ tick 10.0)
+                               hand-end (m/Offset
+                                          (+ (.-dx center) (* hand-len
+                                                             (cos (/ (* hand-angle pi) 180))))
+                                          (+ (.-dy center) (* hand-len
+                                                             (sin (/ (* hand-angle pi) 180)))))]
+                           ;
+                           ; (dp :center center)
+                           (.drawCircle ^Canvas canvas center radius dial-p)
+                           (.drawLine ^Canvas canvas center hand-end hand-p)
+                           (.drawCircle ^Canvas canvas center 10 pin-p)
+                           ))
+                       (shouldRepaint [this _] true))))}
+     {:tick  (cI 0)
+      :clock (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (cb/c-value c)]
+                                         (.cancel tmr)))]
+               (async/Timer.periodic (Duration .milliseconds 10)
+                 (fn [^async/Timer tmr]
+                   (wmx-iso
+                     (mset! me :tick (.-tick tmr))))))})))
 

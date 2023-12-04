@@ -335,6 +335,10 @@
 (defn make [& arg-list]
   (apply tilton.mx.model.core/make arg-list))
 
+(defmacro without-c-dependency [& body]
+  `(binding [tilton.mx.cell.base/*depender* nil]
+     ~@body))
+
 (defmacro with-mx-isolation [& body]
   `(binding [tilton.mx.cell.base/*within-integrity* nil
              tilton.mx.cell.base/*depender* nil
