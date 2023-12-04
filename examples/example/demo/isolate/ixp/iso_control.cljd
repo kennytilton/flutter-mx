@@ -85,6 +85,14 @@
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
                       (result-clear)
+                      (wmx-iso
+                        (let [r (just-slow-is-prime? n)]
+                          (mset! (fasc :app) :worker-result
+                            {:msg-type :prime-decision
+                             :run-id   (rand-int 9999)
+                             :n        n
+                             :value    r})))
+                      #_
                       (doto (.-instance m/WidgetsBinding)
                         (.addPostFrameCallback
                           (fn [^Duration d]
@@ -107,15 +115,16 @@
                           (.send ^SendPort to-iso
                             {:msg-type :decide-prime?
                              :n        n})))))}
-    (m/Text (str "Iso? " (m99 n)))))
+    (m/Text (str "Iso " (m99 n)))))
 
 (defn run-prime? [n]
   (fx/elevated-button
     {:onPressed (dart-cb []
                   (result-clear)
                   (mset! (fasc :app) :run-job
+                    n #_
                     {:msg-type :decide-prime?
-                     :run-id   (.-millisecondsSinceEpoch (.now DateTime))
+                     ;:run-id   (.-millisecondsSinceEpoch (.now DateTime))
                      :n        n}))}
     (m/Text (str "Iso.run " (m99 n)))))
 

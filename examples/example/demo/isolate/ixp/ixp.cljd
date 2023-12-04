@@ -119,7 +119,7 @@
                           (ReceivePort)))
      :to-iso        (cI nil)
      ; run
-     :run-job       (cI nil #_#_  :ephemeral? true)
+     :run-job       (cI nil :ephemeral? true)
      :runner        (cF+ [:async? true
                           :watch (fn [_ me new prior _]
                                    (when (not (nil? new))
@@ -127,14 +127,14 @@
                                        (dp :runnerw-decides!!!!!
                                          new :is-prime? (:value new))
                                        (mset! me :worker-result
-                                         {:msg-type :prime-decision
-                                          :n        (:n new)
-                                          :run-id   (:run-id new)
-                                          :value    (:value new)}))))]
+                                         (merge {:value new :n (mget me :run-job)} #_  new
+                                           {:msg-type :prime-decision})))))]
                       (when (mx/fm*val :auto-run)
-                        (when-let [{:keys [n] :as job} (mget me :run-job)]
-                          (Isolate.run (fn [] (merge job {:msg-type :prime-decision
-                                                          :value    (just-slow-is-prime? n)}))))))
+                        (when-let [n #_ {:keys [n] :as job} (mget me :run-job)]
+                          (Isolate.run (fn []
+                                         (just-slow-is-prime? n)
+                                         #_ (merge job {:msg-type :prime-decision
+                                                     :value    (just-slow-is-prime? n)}))))))
      ; detritus
      :on-exit       (cF+ [:watch (fn [_ me new _ _]
                                    (.listen ^ReceivePort new
@@ -170,7 +170,7 @@
         (text {:style (p/TextStyle .fontSize 20)}
           (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
             (case msg-type
-              :prime-decision (str "N " (or n "bug:unknown") " is " (when-not value "NOT ") "prime.")
+              :prime-decision (str "N " (or n "NIL") " is " (when-not value "NOT ") "prime.")
               :ping-ack (:response result)
               "...")))))))
 
