@@ -16,7 +16,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay result-clear]]
+     :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay]]
     [example.demo.isolate.ixp.iso-control
      :refer [on-off pause-resume kill ping run-enabled? start-paused
              run-prime? decide-prime? decide-prime-in-main]]
@@ -70,16 +70,13 @@
                                     (mget me :start-paused?))
                           .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
                           .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
-     :resume-cap    (cI nil :watch (fn [_ _ new prior _]
-                                     (dpx :resume-cap! new :prior prior)))
+     :resume-cap    (cI nil)
 
      :iso-paused?   (cF+n [:watch (fn [_ me paused? prior _]
-                                    (dp :iso-paused-watch-runs!!!!!!!!)
                                     (when-let [iso ^Isolate? (mget me :iso)]
                                       (when (mx-bound? prior)
                                         (cond
-                                          paused? (let [resumer (.pause iso)
-                                                        res2 (.-pauseCapability ^Isolate iso)]
+                                          paused? (let [resumer (.pause iso)]
                                                     (wmx-iso
                                                       (mset! me :resume-cap resumer)))
                                           :else (let [resumer (mget me :resume-cap)
@@ -105,19 +102,17 @@
                           (ReceivePort)))
      :to-iso        (cI nil)
      ; run
-     :run-job       (cI nil :ephemeral? true)
+     :run-job       (cI nil)
      :runner        (cF+ [:async? true
                           :watch (fn [_ me new prior _]
                                    (when (not (nil? new))
                                      (mx/with-cc :runner-up
                                        (mset! me :worker-result
-                                         (merge #_{:value (:value new) :n (:n new)} new
-                                           {:msg-type :prime-decision})))))]
-                      (when (mx/fm*v :auto-run)
-                        (when-let [job (mget me :run-job)]
-                          (Isolate.run (fn []
-                                         (merge job {:msg-type :prime-decision
-                                                     :value    (just-slow-is-prime? (:n job))}))))))
+                                         {:msg-type :prime-decision
+                                          :n (mget me :run-job)
+                                          :value new}))))]
+                      (when-let [n (mget me :run-job)]
+                        (Isolate.run (fn [] (just-slow-is-prime? n)))))
      ; detritus
      :on-exit       (cF+ [:watch (fn [_ me new _ _]
                                    (.listen ^ReceivePort new
@@ -152,12 +147,11 @@
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (run-prime? 9000039)
           (run-prime? 9000041))
-        (run-enabled?)
 
         (text {:style (p/TextStyle .fontSize 20)}
           (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
             (case msg-type
               :prime-decision (str "N " (or n "NIL") " is " (when-not value "NOT ") "prime.")
               :ping-ack (:response result)
-              "...")))))))
+              "<rsn>")))))))
 
