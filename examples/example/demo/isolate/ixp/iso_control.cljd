@@ -3,6 +3,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/foundation.dart" :as fnd]
     ["dart:convert" :as convert]
     ["dart:math" :as math]
     [clojure.string :as str]
@@ -19,7 +20,7 @@
      :refer [Isolate SendPort ReceivePort]]
     [example.demo.isolate.common
      :refer [clock-face slow-is-prime? just-slow-is-prime?
-              dbgiso iso-name say-delay]]))
+             dbgiso iso-name say-delay]]))
 
 (defn on-off []
   (fx/elevated-button+icon
@@ -88,6 +89,24 @@
                              :n        n
                              :value    r})))))}
     (m/Text (str "Main " (m99 n)))))
+
+(defn decide-in-compute [n]
+  (fx/elevated-button
+    {:onPressed (cF (dart-cb []
+                      (wmx-iso
+                        (mset! me :compute? true))))}
+    {:compute? (cI false :ephemeral? true)
+     :result   (cF+ [:async? true
+                     :watch (fn [_ me new _ _]
+                              (when (not (nil? new))
+                                (with-cc :worker-result
+                                  (mset! (fasc :app) :worker-result
+                                    {:msg-type :prime-decision
+                                     :n        n
+                                     :value    new}))))]
+                 (when (mget me :compute?)
+                   (await (fnd/compute just-slow-is-prime? n))))}
+    (m/Text (str "Compute " (m99 n)))))
 
 (defn decide-in-iso [n]
   (fx/elevated-button

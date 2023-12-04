@@ -19,7 +19,7 @@
      :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay]]
     [example.demo.isolate.ixp.iso-control
      :refer [on-off pause-resume kill ping iso-run-allowed start-paused
-             decide-in-iso-run decide-in-iso decide-in-main]]
+             decide-in-iso-run decide-in-iso decide-in-main decide-in-compute]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
@@ -141,6 +141,9 @@
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-main 9000039)
           (decide-in-main 9000041))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (decide-in-compute 9000039)
+          (decide-in-compute 9000041))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-iso 9000039)
           (decide-in-iso 9000041))
