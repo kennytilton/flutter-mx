@@ -85,14 +85,6 @@
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
                       (result-clear)
-                      (wmx-iso
-                        (let [r (just-slow-is-prime? n)]
-                          (mset! (fasc :app) :worker-result
-                            {:msg-type :prime-decision
-                             :run-id   (rand-int 9999)
-                             :n        n
-                             :value    r})))
-                      #_
                       (doto (.-instance m/WidgetsBinding)
                         (.addPostFrameCallback
                           (fn [^Duration d]
@@ -122,13 +114,15 @@
     {:onPressed (dart-cb []
                   (result-clear)
                   (mset! (fasc :app) :run-job
-                    n #_
                     {:msg-type :decide-prime?
                      ;:run-id   (.-millisecondsSinceEpoch (.now DateTime))
                      :n        n}))}
     (m/Text (str "Iso.run " (m99 n)))))
 
+;;; --- run enabled? ------------------------------------------------
+
 (defn run-enabled? []
+  ; this is a silly option just to demonstrate when ephemerals are indispensable
   (fx/sized-box {:width 180}
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading

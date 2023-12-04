@@ -59,6 +59,9 @@
   (fx/material-app {}
     {:name          :app
      :start-paused? false
+     :worker-result (cI nil :watch (fn [_ _ new _ _]
+                                     (when new (dp :worker-result new))))
+     ; spawned, long-lived iso calculation
      :iso           (cF+ [:async? true
                           :watch (fn [_ me new-iso prior _]
                                    (when (dart/is? prior Isolate)
@@ -99,6 +102,7 @@
                                                     :direct (.-hashCode res2) res2)
                                                   (.resume iso resumer))))))]
                       (mget me :start-paused?))
+     ;  in-main calculation
      :main-listener (cF+ []
                       (when-let [iso (mget me :iso)]
                         (when-let [from-iso (mget me :from-iso)]
@@ -113,8 +117,8 @@
                                 (wmx-iso
                                   (dpx :forwarding-result result)
                                   (mset! me :worker-result result))))))))
-     :worker-result (cI nil :watch (fn [_ _ new _ _]
-                                     (when new (dp :worker-result new))))
+
+     ; iso
      :from-iso      (cF (when (mget (fm* :on-off) :value)
                           (ReceivePort)))
      :to-iso        (cI nil)
@@ -127,14 +131,13 @@
                                        (dp :runnerw-decides!!!!!
                                          new :is-prime? (:value new))
                                        (mset! me :worker-result
-                                         (merge {:value new :n (mget me :run-job)} #_  new
+                                         (merge #_ {:value (:value new) :n (:n new)} new
                                            {:msg-type :prime-decision})))))]
                       (when (mx/fm*val :auto-run)
-                        (when-let [n #_ {:keys [n] :as job} (mget me :run-job)]
+                        (when-let [job (mget me :run-job)]
                           (Isolate.run (fn []
-                                         (just-slow-is-prime? n)
-                                         #_ (merge job {:msg-type :prime-decision
-                                                     :value    (just-slow-is-prime? n)}))))))
+                                         (merge job {:msg-type :prime-decision
+                                                     :value    (just-slow-is-prime? (:n job))}))))))
      ; detritus
      :on-exit       (cF+ [:watch (fn [_ me new _ _]
                                    (.listen ^ReceivePort new
@@ -169,6 +172,7 @@
 
         (text {:style (p/TextStyle .fontSize 20)}
           (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
+            (dp :result-sees result)
             (case msg-type
               :prime-decision (str "N " (or n "NIL") " is " (when-not value "NOT ") "prime.")
               :ping-ack (:response result)
