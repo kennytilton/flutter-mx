@@ -10,7 +10,7 @@
     [tilton.mx.util :as util]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv muiv fm* mav mx-bound? wmx-iso]]
+             fmu muv muiv fm* fm*v mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -120,8 +120,9 @@
                                               :method   "Iso.run"
                                               :n        (mget me :run-job)
                                               :value    new}))))]
-                          (when-let [n (mget me :run-job)]
-                            (Isolate.run (fn [] (just-slow-is-prime? n)))))
+                          (when (fm*v :iso-run-ok?)
+                            (when-let [n (mget me :run-job)]
+                              (Isolate.run (fn [] (just-slow-is-prime? n))))))
 
      ; clean-up
      :on-exit           (cF+ [:watch (fn [_ me new _ _]
@@ -141,9 +142,10 @@
                          :backgroundColor m/Colors.pink.shade50})}
       (column
         (clock-face 196)
-        (m/Text "Clock freezes only if main is busy.")
+        (m/Text "n.b. Clock freezes only if main is busy.")
 
         (m/Divider .thickness 1 .color m/Colors.grey)
+
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (start-paused)
           (text {:style (p/TextStyle .fontSize 16)}
@@ -165,6 +167,7 @@
           (decide-in-main 9000039) (decide-in-main 9000041))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-compute 9000039) (decide-in-compute 9000041))
+        (iso-run-allowed)
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-run 9000039) (decide-in-run 9000041))
 

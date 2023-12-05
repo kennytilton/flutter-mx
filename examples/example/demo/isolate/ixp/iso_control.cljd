@@ -110,7 +110,7 @@
     {:onPressed (cF (dart-cb []
                       (mset! (fasc :app) :worker-result
                         {:msg-type :prime-decision
-                         :method "Main.iso"
+                         :method   "Main.iso"
                          :n        n
                          :value    (just-slow-is-prime? n)})))}
     (m/Text (str "Main " (m99 n)))))
@@ -144,6 +144,7 @@
 (defn worker-result-display []
   (text {:style (p/TextStyle .fontSize 16)}
     (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
+      (dp :result msg-type n value method)
       (case msg-type
         :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
         :ping-ack (:response result)
