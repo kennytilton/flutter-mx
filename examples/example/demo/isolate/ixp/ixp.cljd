@@ -29,23 +29,18 @@
     (slo-prime-worker-listener to-main (util/dart-map->cljd-map
                                          (convert/jsonDecode task)))
     :else (case msg-type
-            :decide-prime
-            (.send ^SendPort to-main
-              {:msg-type :prime-decision
-               :method "Iso.spawn"
-               :n        n
-               :value    (cmn/just-slow-is-prime? n)})
-            "ping"
-            (.send ^SendPort to-main
-              {:msg-type :ping-ack
-               :response (:response task)})
-            :exit
-            (Isolate.exit)
-            :throw
-            (throw (Exception (str "Threw " (:value task) " on request.")))
-
+            :decide-prime (.send ^SendPort to-main
+                            {:msg-type :prime-decision
+                             :method   "Iso.spawn"
+                             :n        n
+                             :value    (cmn/just-slow-is-prime? n)})
+            "ping" (.send ^SendPort to-main
+                     {:msg-type :ping-ack
+                      :response (:response task)})
+            :exit (Isolate.exit)
+            :throw (throw (Exception (str "Threw " (:value task) " on request.")))
             ; else
-            (dp :worker-IGNORES-task task))))
+            (dp :worker-IGNORES-unrecognized-task task))))
 
 (defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
   (let [from-main (ReceivePort)]
@@ -58,12 +53,10 @@
 (defn worker-result-display []
   (text {:style (p/TextStyle .fontSize 16)}
     (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
-      (dp :bannner-sees msg-type)
       (case msg-type
         :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
         :ping-ack (:response result)
         :alert (:msg result)
-        :clear ""
         "<rsn>"))))
 
 ;;; --- make app ----------------------------------------
@@ -133,7 +126,7 @@
                                          (mx/with-cc :runner-res
                                            (mset! me :worker-result
                                              {:msg-type :prime-decision
-                                              :method "Iso.run"
+                                              :method   "Iso.run"
                                               :n        (mget me :run-job)
                                               :value    new}))))]
                           (when-let [n (mget me :run-job)]
@@ -143,16 +136,14 @@
      :on-exit           (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
                                          (fn [msg]
-                                           (wmx-iso
-                                             (mset! (fm* :on-off) :value false)))))]
+                                           (wmx-iso (mset! (fm* :on-off) :value false)))))]
                           (ReceivePort))
      :on-error          (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
                                          (fn [^List msg]
-                                           (wmx-iso
-                                             (mset! me :worker-result
-                                               {:msg-type :alert
-                                                :msg      (subs (nth (.take msg 1) 0) 10)})))))]
+                                           (wmx-iso (mset! me :worker-result
+                                                      {:msg-type :alert
+                                                       :msg      (subs (nth (.take msg 1) 0) 10)})))))]
                           (ReceivePort))}
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer")
@@ -168,10 +159,10 @@
             (str "Resumer: " (if-let [cap (mav :resume-cap)]
                                (.-hashCode cap) "none"))))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (on-off)
-          (pause-resume))
+          (on-off) (pause-resume) (kill))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (ping "Pong") (kill))
+          (ping Isolate.immediate "Ponged immediate")
+          (ping Isolate.beforeNextEvent "Ponged beforeNextEvent"))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (request-spawn-exit) (request-spawn-throw))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}

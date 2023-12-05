@@ -39,8 +39,7 @@
        :title           (m/Text "Start Paused")
        :value           (cF (mav :start-paused?))
        :onChanged       (dart-cb [on-off]
-                          (wmx-iso
-                            (mswap! (fasc :app) :start-paused? not)))})))
+                          (mswap! (fasc :app) :start-paused? not))})))
 
 (defn pause-resume []
   (fx/elevated-button+icon
@@ -58,10 +57,10 @@
                       (dart-cb []
                         (.kill ^Isolate iso))))}))
 
-(defn ping [ping-text]
+(defn ping [when ping-text]
   (let [ping-id (atom -1)]
     (fx/elevated-button+icon
-      {:label     (m/Text "Ping")
+      {:label     (m/Text (if (= when Isolate.immediate) "Ping Now" "Ping Next"))
        :icon      (m/Icon m/Icons.network_ping)
        :onPressed (cF (when-let [iso (mav :spawn-iso)]
                         (when-let [to-iso (mav :to-iso)]
@@ -73,7 +72,7 @@
                                           (walk/stringify-keys
                                             {:msg-type "ping"
                                              :response (str (swap! ping-id inc) ": " ping-text)}))
-                              .priority Isolate.immediate)))))})))
+                              .priority when)))))})))
 
 (defn request-spawn-exit []
   (fx/elevated-button
