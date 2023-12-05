@@ -42,7 +42,7 @@
             :exit
             (Isolate.exit)
             :throw
-            (throw (Exception (str "Threw " (:value task) "on request.")))
+            (throw (Exception (str "Threw " (:value task) " on request.")))
 
             ; else
             (dp :worker-IGNORES-task task))))
@@ -54,6 +54,17 @@
     (.listen from-main
       (fn [msg]
         (slo-prime-worker-listener to-main msg)))))
+
+(defn worker-result-display []
+  (text {:style (p/TextStyle .fontSize 16)}
+    (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
+      (dp :bannner-sees msg-type)
+      (case msg-type
+        :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
+        :ping-ack (:response result)
+        :alert (:msg result)
+        :clear ""
+        "<rsn>"))))
 
 ;;; --- make app ----------------------------------------
 
@@ -132,15 +143,17 @@
      :on-exit           (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
                                          (fn [msg]
-                                           (dp :on-exit!!!! msg)
                                            (wmx-iso
                                              (mset! (fm* :on-off) :value false)))))]
                           (ReceivePort))
      :on-error          (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
-                                         (fn [msg] (dp :on-error!!!! msg))))]
-                          (ReceivePort))
-     }
+                                         (fn [msg]
+                                           (wmx-iso
+                                             (mset! me :worker-result
+                                               {:msg-type :alert
+                                                :msg      (subs (nth (.take msg 1) 0) 10)})))))]
+                          (ReceivePort))}
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer")
                          :backgroundColor m/Colors.pink.shade50})}
@@ -160,7 +173,7 @@
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (ping "Pong") (kill))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (request-spawn-exit)(request-spawn-throw))
+          (request-spawn-exit) (request-spawn-throw))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-spawn 9000039) (decide-in-spawn 9000041))
 
@@ -170,18 +183,10 @@
           (decide-in-main 9000039) (decide-in-main 9000041))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-compute 9000039) (decide-in-compute 9000041))
-        (iso-run-allowed)
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (decide-in-run 9000039) (decide-in-run 9000041))
 
         (m/Divider .thickness 0.5 .color m/Colors.grey)
 
-        (text {:style (p/TextStyle .fontSize 20)}
-          (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
-            (dp :bannner-sees msg-type)
-            (case msg-type
-              :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
-              :ping-ack (:response result)
-              :clear "CLEAR"
-              "<rsn>")))))))
+        (worker-result-display)))))
 
