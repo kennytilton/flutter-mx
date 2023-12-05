@@ -19,7 +19,7 @@
      :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay]]
     [example.demo.isolate.ixp.iso-control
      :refer [on-off pause-resume kill ping iso-run-allowed start-paused request-spawn-exit request-spawn-throw
-             decide-in-run decide-in-spawn decide-in-main decide-in-compute start-paused]]
+             decide-in-run decide-in-spawn decide-in-main decide-in-compute start-paused worker-result-display]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
@@ -49,15 +49,6 @@
     (.listen from-main
       (fn [msg]
         (slo-prime-worker-listener to-main msg)))))
-
-(defn worker-result-display []
-  (text {:style (p/TextStyle .fontSize 16)}
-    (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
-      (case msg-type
-        :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
-        :ping-ack (:response result)
-        :alert (:msg result)
-        "<rsn>"))))
 
 ;;; --- make app ----------------------------------------
 

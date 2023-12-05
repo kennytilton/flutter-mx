@@ -95,6 +95,16 @@
 
 ;;; --- job starters -----------
 
+(defn decide-in-spawn [n]
+  (fx/elevated-button
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (.send ^SendPort to-iso
+                            {:msg-type :decide-prime
+                             :n        n})))))}
+    (m/Text (str "Iso " (m99 n)))))
+
 (defn decide-in-main [n]
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
@@ -123,21 +133,22 @@
                    (fnd/compute just-slow-is-prime? n)))}
     (m/Text (str "Compute " (m99 n)))))
 
-(defn decide-in-spawn [n]
-  (fx/elevated-button
-    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (dart-cb []
-                          (.send ^SendPort to-iso
-                            {:msg-type :decide-prime
-                             :n        n})))))}
-    (m/Text (str "Iso " (m99 n)))))
-
 (defn decide-in-run [n]
   (fx/elevated-button
     {:onPressed (dart-cb []
                   (mset! (fasc :app) :run-job n))}
     (m/Text (str "Iso.run " (m99 n)))))
+
+;;; --- worker result -----------------------------------------------
+
+(defn worker-result-display []
+  (text {:style (p/TextStyle .fontSize 16)}
+    (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
+      (case msg-type
+        :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
+        :ping-ack (:response result)
+        :alert (:msg result)
+        "<rsn>"))))
 
 ;;; --- run enabled? ------------------------------------------------
 
