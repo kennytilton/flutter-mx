@@ -38,8 +38,9 @@
        :controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Start Paused")
        :value           (cF (mav :start-paused?))
-       :onChanged       (cF (when-not (mav :spawn-iso)
-                              (fn [new] (wmx-iso (mswap! (fasc :app) :start-paused? not)))))})))
+       :onChanged       (dart-cb [on-off]
+                          (wmx-iso
+                            (mswap! (fasc :app) :start-paused? not)))})))
 
 (defn pause-resume []
   (fx/elevated-button+icon
@@ -74,16 +75,35 @@
                                              :response (str (swap! ping-id inc) ": " ping-text)}))
                               .priority Isolate.immediate)))))})))
 
+(defn request-spawn-exit []
+  (fx/elevated-button
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (.send ^SendPort to-iso
+                            {:msg-type :exit})))))}
+    (m/Text "Request Exit")))
+
+(defn request-spawn-throw []
+  (fx/elevated-button
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (.send ^SendPort to-iso
+                            {:msg-type :throw
+                             :value (.-millisecondsSinceEpoch (.now DateTime))})))))}
+    (m/Text "Request Throe")))
+
 ;;; --- job starters -----------
 
 (defn decide-in-main [n]
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
-                      (let [r (just-slow-is-prime? n)]
-                        (mset! (fasc :app) :worker-result
-                          {:msg-type :prime-decision
-                           :n        n
-                           :value    r}))))}
+                      (mset! (fasc :app) :worker-result
+                        {:msg-type :prime-decision
+                         :method "Main.iso"
+                         :n        n
+                         :value    (just-slow-is-prime? n)})))}
     (m/Text (str "Main " (m99 n)))))
 
 (defn decide-in-compute [n]
@@ -97,6 +117,7 @@
                                 (with-cc :worker-result
                                   (mset! (fasc :app) :worker-result
                                     {:msg-type :prime-decision
+                                     :method "fnf/compute"
                                      :n        n
                                      :value    new}))))]
                  (when (mget me :compute?)

@@ -18,8 +18,8 @@
     [example.demo.isolate.common :as cmn
      :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay]]
     [example.demo.isolate.ixp.iso-control
-     :refer [on-off pause-resume kill ping iso-run-allowed start-paused
-             decide-in-run decide-in-spawn decide-in-main decide-in-compute]]
+     :refer [on-off pause-resume kill ping iso-run-allowed start-paused request-spawn-exit request-spawn-throw
+             decide-in-run decide-in-spawn decide-in-main decide-in-compute start-paused]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
@@ -29,15 +29,22 @@
     (slo-prime-worker-listener to-main (util/dart-map->cljd-map
                                          (convert/jsonDecode task)))
     :else (case msg-type
-            decide-prime
+            :decide-prime
             (.send ^SendPort to-main
               {:msg-type :prime-decision
+               :method "Iso.spawn"
                :n        n
                :value    (cmn/just-slow-is-prime? n)})
             "ping"
             (.send ^SendPort to-main
               {:msg-type :ping-ack
                :response (:response task)})
+            :exit
+            (Isolate.exit)
+            :throw
+            (throw (Exception (str "Threw " (:value task) "on request.")))
+
+            ; else
             (dp :worker-IGNORES-task task))))
 
 (defn slo-prime-worker [{:keys [msg-type ^SendPort to-main] :as start}]
@@ -53,16 +60,18 @@
 (defn make-app []
   (fx/material-app {}
     {:name              :app
-     :start-paused?     (cI false)
      :worker-result     (cI nil)
-     ; spawned, long-lived iso calculation
+
+     ; Iso.spawn, for long-lived iso, performing multiple tasks, pausing
+     :start-paused?     (cI false)
      :spawn-iso         (cF+ [:async? true
                               :watch (fn [_ me new-iso prior _]
                                        (when (dart/is? prior Isolate)
                                          (.kill ^Isolate prior))
-                                       (when new-iso
-                                         (wmx-iso (mset! me :resume-cap
-                                                    (.-pauseCapability ^Isolate new-iso)))))]
+                                       (wmx-iso
+                                         (mset! me :resume-cap
+                                           (when new-iso
+                                             (.-pauseCapability ^Isolate new-iso)))))]
                           (when (mget (fm* :on-off) :value)
                             (Isolate.spawn slo-prime-worker {:msg-type :config
                                                              :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
@@ -83,7 +92,9 @@
                                                           res2 (.-pauseCapability ^Isolate iso) ;; bad idea
                                                           ;; res2 would work only on iso started paused, only once
                                                           ]
-                                                      (.resume iso resumer))))))]
+                                                      (.resume iso resumer)
+                                                      (wmx-iso
+                                                        (mset! me :resume-cap nil)))))))]
                           (mget me :start-paused?))
      ;  in-main calculation
      :main-listener     (cF+ []
@@ -99,9 +110,11 @@
 
      ; iso
      :from-iso          (cF (when (mget (fm* :on-off) :value)
+                              ; cannot use a receiver twice
                               (ReceivePort)))
      :to-iso            (cI nil)
-     ; run
+
+     ; Iso.run support
      :run-job           (cI nil)
      :runner            (cF+ [:async? true
                               :watch (fn [_ me new prior _]
@@ -109,14 +122,19 @@
                                          (mx/with-cc :runner-res
                                            (mset! me :worker-result
                                              {:msg-type :prime-decision
+                                              :method "Iso.run"
                                               :n        (mget me :run-job)
                                               :value    new}))))]
                           (when-let [n (mget me :run-job)]
                             (Isolate.run (fn [] (just-slow-is-prime? n)))))
+
      ; clean-up
      :on-exit           (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
-                                         (fn [msg] (dp :on-exit!!!! msg))))]
+                                         (fn [msg]
+                                           (dp :on-exit!!!! msg)
+                                           (wmx-iso
+                                             (mset! (fm* :on-off) :value false)))))]
                           (ReceivePort))
      :on-error          (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
@@ -127,40 +145,43 @@
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer")
                          :backgroundColor m/Colors.pink.shade50})}
       (column
-        (clock-face 300)
-        (m/Text "n.b: Clock does not reflect Iso state.")
-        (m/Text "It just freezes if main is busy.")
+        (clock-face 196)
+        (m/Text "Clock freezes only if main is busy.")
+
         (m/Divider .thickness 1 .color m/Colors.grey)
-        ;; (start-paused) ;; RSN
-        (fx/sized-box {:height 12})
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (start-paused)
+          (text {:style (p/TextStyle .fontSize 16)}
+            (str "Resumer: " (if-let [cap (mav :resume-cap)]
+                               (.-hashCode cap) "none"))))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
           (on-off)
           (pause-resume))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (kill)
-          (ping "Pong"))
+          (ping "Pong") (kill))
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-spawn 9000039)
-          (decide-in-spawn 9000041))
+          (request-spawn-exit)(request-spawn-throw))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (decide-in-spawn 9000039) (decide-in-spawn 9000041))
 
         (m/Divider .thickness 0.5 .color m/Colors.grey)
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-main 9000039)
-          (decide-in-main 9000041))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-compute 9000039)
-          (decide-in-compute 9000041))
 
         (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-run 9000039)
-          (decide-in-run 9000041))
+          (decide-in-main 9000039) (decide-in-main 9000041))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (decide-in-compute 9000039) (decide-in-compute 9000041))
+        (iso-run-allowed)
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (decide-in-run 9000039) (decide-in-run 9000041))
 
         (m/Divider .thickness 0.5 .color m/Colors.grey)
+
         (text {:style (p/TextStyle .fontSize 20)}
-          (let [{:keys [msg-type n value] :as result} (mav :worker-result)]
+          (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
             (dp :bannner-sees msg-type)
             (case msg-type
-              :prime-decision (str "N " (or n "NIL") " is " (when-not value "NOT ") "prime.")
+              :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
               :ping-ack (:response result)
+              :clear "CLEAR"
               "<rsn>")))))))
 

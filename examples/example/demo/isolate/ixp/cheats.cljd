@@ -1,8 +1,18 @@
 (ns example.demo.isolate.ixp.cheats)
 
 (comment
+  (defmacro result-clear []
+    `(mset! (fasc :app) :worker-result
+       {:msg-type :clear}))
+
   (doto (.-instance m/WidgetsBinding)
     (.addPostFrameCallback
       (fn [^Duration d])))
+
+  (defmacro post-frame [[duration-var] & body]
+    `(doto (.-instance m/WidgetsBinding)
+       (.addPostFrameCallback
+         (fn [^Duration ~duration-var]
+           ~@body))))
 
   (.-millisecondsSinceEpoch (.now DateTime)))
