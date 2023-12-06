@@ -52,6 +52,8 @@
 
 ;;; --- make app ----------------------------------------
 
+(def +prime-checks+ [9000039 9000041])
+
 (defn make-app []
   (fx/material-app {}
     {:name              :app
@@ -110,19 +112,19 @@
      :to-iso            (cI nil)
 
      ; Iso.run support
-     :run-job           (cI nil)
+     :run-job           (cI nil :ephemeral? true)
      :runner            (cF+ [:async? true
                               :watch (fn [_ me new prior _]
                                        (when (not (nil? new))
                                          (mx/with-cc :runner-res
-                                           (mset! me :worker-result
+                                           (mset! me :worker-result new))))]
+                          (when (fm*v :iso-run-ok?)
+                            (when-let [{:keys [n] :as job} (mget me :run-job)]
+                              (Isolate.run (fn []
                                              {:msg-type :prime-decision
                                               :method   "Iso.run"
-                                              :n        (mget me :run-job)
-                                              :value    new}))))]
-                          (when (fm*v :iso-run-ok?)
-                            (when-let [n (mget me :run-job)]
-                              (Isolate.run (fn [] (just-slow-is-prime? n))))))
+                                              :n        n
+                                              :value    (just-slow-is-prime? n)})))))
 
      ; clean-up
      :on-exit           (cF+ [:watch (fn [_ me new _ _]
@@ -144,34 +146,40 @@
         (clock-face 196)
         (m/Text "n.b. Clock freezes only if main is busy.")
 
-        (m/Divider .thickness 1 .color m/Colors.grey)
+        (app-section
+          (even-row
+            (start-paused)
+            (text {:style (p/TextStyle .fontSize 16)}
+              (str "Resumer: " (if-let [cap (mav :resume-cap)]
+                                 (.-hashCode cap) "none"))))
+          (even-row
+            (on-off) (pause-resume) (kill))
+          (even-row
+            (ping Isolate.immediate "Ponged immediate")
+            (ping Isolate.beforeNextEvent "Ponged beforeNextEvent"))
+          (even-row
+            (request-spawn-exit) (request-spawn-throw))
+          (even-row (for [n +prime-checks+]
+                      (decide-in-spawn n))))
 
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (start-paused)
-          (text {:style (p/TextStyle .fontSize 16)}
-            (str "Resumer: " (if-let [cap (mav :resume-cap)]
-                               (.-hashCode cap) "none"))))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (on-off) (pause-resume) (kill))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (ping Isolate.immediate "Ponged immediate")
-          (ping Isolate.beforeNextEvent "Ponged beforeNextEvent"))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (request-spawn-exit) (request-spawn-throw))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-spawn 9000039) (decide-in-spawn 9000041))
+        (app-section
+          (even-row (for [n +prime-checks+]
+                      (decide-in-main n)))
+          (even-row (for [n +prime-checks+]
+                      (decide-in-compute n)))
+          (iso-run-allowed)
+          (even-row (for [n +prime-checks+]
+                      (decide-in-run n))))
 
-        (m/Divider .thickness 0.5 .color m/Colors.grey)
+        (app-section
+          (worker-result-display))))))
 
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-main 9000039) (decide-in-main 9000041))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-compute 9000039) (decide-in-compute 9000041))
-        (iso-run-allowed)
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (decide-in-run 9000039) (decide-in-run 9000041))
+(defmacro even-row [& parts]
+  `(row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+     ~@parts))
 
-        (m/Divider .thickness 0.5 .color m/Colors.grey)
-
-        (worker-result-display)))))
+(defmacro app-section [& parts]
+  `(column
+     (m/Divider .thickness 0.5 .color m/Colors.grey)
+     ~@parts))
 

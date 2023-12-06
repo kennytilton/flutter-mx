@@ -100,6 +100,7 @@
     {:onPressed (cF (when-let [iso (mav :spawn-iso)]
                       (when-let [to-iso (mav :to-iso)]
                         (dart-cb []
+                          (result-clear)
                           (.send ^SendPort to-iso
                             {:msg-type :decide-prime
                              :n        n})))))}
@@ -108,16 +109,21 @@
 (defn decide-in-main [n]
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
-                      (mset! (fasc :app) :worker-result
-                        {:msg-type :prime-decision
-                         :method   "Main.iso"
-                         :n        n
-                         :value    (just-slow-is-prime? n)})))}
+                      (result-clear)
+                      (doto (.-instance m/WidgetsBinding)
+                        (.addPostFrameCallback
+                          (fn [^Duration d]
+                            (mset! (fasc :app) :worker-result
+                              {:msg-type :prime-decision
+                               :method   "Main.iso"
+                               :n        n
+                               :value    (just-slow-is-prime? n)}))))))}
     (m/Text (str "Main " (m99 n)))))
 
 (defn decide-in-compute [n]
   (fx/elevated-button
     {:onPressed (cF (dart-cb []
+                      (result-clear)
                       (mset! me :compute? true)))}
     {:compute? (cI false :ephemeral? true)
      :result   (cF+ [:async? true
@@ -136,10 +142,19 @@
 (defn decide-in-run [n]
   (fx/elevated-button
     {:onPressed (dart-cb []
-                  (mset! (fasc :app) :run-job n))}
+                  (result-clear)
+                  (mset! (fasc :app) :run-job
+                    {:msg-type :decide-prime
+                     :n n
+                     :id (.-millisecondsSinceEpoch (.now DateTime))
+                     :method "Iso.run"}))}
     (m/Text (str "Iso.run " (m99 n)))))
 
 ;;; --- worker result -----------------------------------------------
+
+(defmacro result-clear []
+  `(mset! (fasc :app) :worker-result
+     {:msg-type :clear}))
 
 (defn worker-result-display []
   (text {:style (p/TextStyle .fontSize 16)}
@@ -149,6 +164,7 @@
         :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
         :ping-ack (:response result)
         :alert (:msg result)
+        :clear "..."
         "<rsn>"))))
 
 ;;; --- run enabled? ------------------------------------------------
