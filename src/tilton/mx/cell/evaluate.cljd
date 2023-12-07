@@ -345,13 +345,13 @@
   cells."
 
   [c new-value propagation-code]
-
+  (dpx :c-val-ass)
   (chk (cref? c) "CVASS> c not cref? "
                     (cinfo c)
                     " assuming value " ;; new-value
                     " atom? " (atom? c)
                     " map? " (when (atom? c) (map? (deref c))))
-  ;; (println :cva-entry (c-prop c) new-value)
+  (dpx :cva-entry (c-prop c) )
   (do                                                       ;; (wtrx (0 100 :cv-ass (:prop @c) new-value)
     (prog1 new-value                                        ;; sans doubt
       (without-c-dependency
@@ -388,6 +388,7 @@
             (optimize-away?! c prior-value))
 
           (dpm c :propagate :prop-sees-caller-ct (count callers))
+          (dpx :cva-prop-x (c-prop c) )
 
           (let [known-changed? (atom nil)]
             (if (or
@@ -413,9 +414,11 @@
               (when-not (or (= propagation-code :no-propagate)
                           #_(c-optimized-away? c))
                 ;;(chk (map? @c))
+                (dpx :cva-prop-y (c-prop c) )
                 (dpm c :propagate :prop-to-callers! (count callers))
                 (propagate c prior-value callers)))
-            (dpm c :propagate :NOT-PROPAGATING))))))))
+            (dpm c :propagate :NOT-PROPAGATING)))))))
+  (dpx :cvass-exit))
 
 ;; --- unlinking ----------------------------------------------
 (defn unlink-from-used [c why]
@@ -558,12 +561,14 @@ then clear our record of them."
         (propagate-to-callers c callers)
         ;;(trx :watch-chkpulse!!!!!!!! @+pulse+ (c-pulse-observed c))
 
+        (dpx :prop-callers (c-prop c) )
+
         (when-not (c-optimized-away? c)                     ;; they get observed at the time
-          #_(dp :not-opti-decide-obs!!!! (c-prop-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
+          (dpx :not-opti-decide-obs!!!! (c-prop-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
           (when (or (> @+pulse+ (c-pulse-observed c))
                   (some #{(c-lazy c)}
                     [:once-asked :always true]))            ;; messy: these can get set!ed/propagated twice in one pulse+
-            ;; (dp :observing-unobserved-or-lazy!! (c-prop c) (c-value c))
+            (dpx :observing-unobserved-or-lazy!! (c-prop c) )
             (c-observe c prior-value :propagate)))
 
         ;;
@@ -577,6 +582,7 @@ then clear our record of them."
         ;; would this be bad for persistent CLOS, in which a DB would think there was still a link
         ;; between two records until the value actually got cleared?
         ;;
+        (dpx :ephemming (c-prop c) )
         (ephemeral-reset c)))))
 
 (defn propagate-to-callers [c callers]

@@ -82,7 +82,7 @@
   (chk (mref? me) (str "mset me not mref but: " (minfo me) "," prop))
   (if-let [c (md-cell me prop)]
     (do
-      ;; (dp :mset-gotc!!! (cinfo c) :newv new-value)
+      (dp :csetting)
       (cset! c new-value))
     (if (contains? (md-cz me) prop)
       ;; it was a formula optimized away
@@ -96,10 +96,12 @@
         )
 
       (do
+        (dp :mset-5)
         (if (contains? @me prop)
           (mx-throw
             "MXAPI_ILLEGAL_MUTATE_NONCELL> invalid mswap!/mset!/mset! to the property '" prop "', which is not mediated by any cell.\n"
-            "...> if such post-make mutation is in fact required, wrap the initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
+            "...> if such post-make mutation is in fact required, wrap the "
+            "initial argument to model.core/make in 'cI'. eg: (make... :answer (cI 42)).\n"
             "...> look for MXAPI_ILLEGAL_MUTATE_NONCELL in the Errors documentation for  more details.\n"
             "...> FYI: intended new value is [" new-value "]; initial value was [" (get @me prop :no-such-prop) "].\n"
             "...> FYI: instance is of type " (mx-type me) ".\n"
@@ -226,6 +228,7 @@
       (let [lostks (difference (set oldk) (set newk))]
         (when-not (empty? lostks)
           (doseq [k lostks]
+            (dp :quiescing)
             (md-quiesce! k)))))))
 
 ;; todo are we using Family?
@@ -235,7 +238,9 @@
   (observe [this prop me new-value prior-value cell]
     ;; todo call super observe
     (when (= prop :kids)
-      (fm-kids-observe prop me new-value prior-value cell))))
+      (dp :obsign-kids)
+      (fm-kids-observe prop me new-value prior-value cell)
+      (dp :obsign-kids-done))))
 
 (defmacro mpar [& [me]]
   (let [me (or me 'me)]
@@ -616,7 +621,7 @@
   ([me force?]
    (when force?
      (when (not= :never (:fx$quiesce (meta me)))
-       (when *md-quiesce-log?* (dp :md-quiescing (minfo me) :meta (meta me)))
+       (when *md-quiesce-log?* (dp :md-quiescing (minfo me) #_#_ :meta (meta me)))
        (wtrx [0 999 nil :mdq-entry (minfo me)]
          (binding [*md-quiescing* true
                    *md-quiesce-log?* false]
@@ -626,5 +631,6 @@
                (md-quiesce! elt true))
              :else
              (when (mref? me)
+               (dp :qing-self!!!!)
                (md-quiesce-self! me)))))))))
 

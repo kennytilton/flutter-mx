@@ -17,7 +17,7 @@
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
     [tilton.mx.api :as mx
      :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
-    [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx with-ctx *ctx*] :as fxf]))
+    [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx binding-ctx *ctx*] :as fxf]))
 
 (defn fxctx []
   fxf/*ctx*)
@@ -65,7 +65,7 @@
          (throw (Exception. (str "within-ctx> context is null for body: " '~body))))
        (when (not= ~ctx-var tilton.fmx.factory/*ctx*)
          (tilton.mx.base/dp :winctx-sees-ctx-diff ~ctx-var :dynctx tilton.fmx.factory/*ctx*))
-       (tilton.fmx.factory/with-ctx :within-ctx ~ctx-var
+       (tilton.fmx.factory/binding-ctx :within-ctx ~ctx-var
          ~@body))))
 
 (defmacro when-my-state [[state-var] & body]
@@ -289,7 +289,7 @@
 (defmacro wrap-stateless [widget-expression]
   `(reify :extends (w/StatelessWidget)
      (~'build [self# ctx#]
-       (tilton.fmx.factory/with-ctx :wrapstless ctx#
+       (tilton.fmx.factory/binding-ctx :wrapstless ctx#
          ~widget-expression))))
 
 (defmacro wrap-unique-key [widget-expression]
@@ -297,7 +297,7 @@
      (~'createState [_#]
        (reify :extends w/State
          (~'build [_# ~'ctx]
-           (tilton.fmx.factory/with-ctx :wuq-key ~'ctx
+           (tilton.fmx.factory/binding-ctx :wuq-key ~'ctx
              ~widget-expression))))))
 
 (defmacro run-app [widget-expression]

@@ -23,7 +23,7 @@
 
 (def ^:dynamic *ctx* mx/unbound)
 
-(defmacro with-ctx [tag ctx & body]
+(defmacro binding-ctx [tag ctx & body]
   `(binding [tilton.fmx.factory/*ctx* ~ctx]
      ;; (tilton.mx.base/dp :WCTX ~tag tilton.fmx.factory/*ctx*)
      ~@body))
@@ -67,9 +67,16 @@
   (let [me (or me 'me)]
     `(:fx$ctx (meta ~me))))
 
+(defn fx-ctx [me]
+  (:fx$ctx (meta me)))
+
 (defn ctx-check
   ([me ctx] (ctx-check :anon me ctx))
   ([fx-class me ctx]
+   ; WidgetsBinding.instance.context;
+   ;(dp :ctx-check :widget-binding-i (.-instance m/WidgetsBinding) )
+
+   ;(dp :ctx-check :widget-binding-ctx (.context (.-instance m/WidgetsBinding) ))
    (cond
      (nil? (fx-ctx me))
      (do
@@ -84,8 +91,7 @@
              (dpm me :ctx :CTX-CHECK-match-fail-being-corrected (str "<<" fx-class ">> adopting build ctx: <" ctx "> not= cache: <" (fx-ctx me) ">"))
              (fx$ctx-record me ctx)))))
 
-(defn fx-ctx [me]
-  (:fx$ctx (meta me)))
+
 
 (defn fx$state-setter-record [me state-setter]
   (when @fx$sst-tracking?
@@ -397,7 +403,7 @@
   (dpm me :bbuild :gen-gen-entry :reactive? (cinfo (tilton.mx.model.core/md-reactive? me)))
   (dpm me :ctx :gen-gen-entry ctx)
   ;(dp :gg-entry (mget? me :statefully?) (minfo me))
-  (with-ctx :gg-entry ctx
+  (binding-ctx :gg-entry ctx
     (cond
       (or (tilton.mx.api/mget? me :unwrapped?)
         (some #{(name (:fx-class @me))} ["PreferredSize"]))
@@ -421,7 +427,7 @@
                     (^void initState [this]
                       (tilton.fmx.factory/fx$state-initState me this))
                     (build [_ ctx]
-                      (with-ctx :gg-stfull ctx
+                      (binding-ctx :gg-stfull ctx
                         (countit [:build (:fx-class @me)])
                         (dpm me :bbuild :GG-stateful-mixin (minfo me))
                         (ctx-check me ctx)
@@ -431,7 +437,7 @@
                       (dpx :initstate-entry (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
                       (tilton.fmx.factory/fx$state-initState me this))
                     (build [_ ctx]
-                      (with-ctx :gg-stless ctx
+                      (binding-ctx :gg-stless ctx
                         (countit [:build (:fx-class @me)])
                         (dpm me :bbuild :GG-stateful (minfo me) (tilton.mx.api/mget? me :ticker-mixin))
                         (ctx-check me ctx)
@@ -444,7 +450,7 @@
           (with-flutter-ref
             (w/Builder
               .builder (fn [ctx]
-                         (with-ctx :ggblder ctx
+                         (binding-ctx :ggblder ctx
                            (dpm me :build :GG-w-builder (minfo me))
                            (countit [:build (:fx-class @me)])
                            (ctx-check me ctx)

@@ -2,7 +2,6 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as f]
     ["dart:io" :as io]
     ;[cljd.flutter :as f]
@@ -30,7 +29,7 @@
                                     (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
                                     (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
     (dp :main-entry--------------------------------------------)
-    (when (not (fx/is-web?))
+    #_ (when (not (fx/is-web?))
       (dp :platform-processors io/Platform.numberOfProcessors))
     (cty/cells-reset)
     (md/md-quiesce-feature! true)
@@ -39,7 +38,7 @@
 
     ;; (fxk/fmx-debugger-set! sample-debugger)
 
-    (binding [cty/*dpc-enabled* true
+   (binding [cty/*dpc-enabled* true
               *fx$dpk* [; :propagate :pulse :cset :cnset
                         ;:build
                         ;; :gg
@@ -47,9 +46,11 @@
       (.ensureInitialized w/WidgetsFlutterBinding)
 
       (fx/run-fx-app
-        (if false
+        (if true
           (counter/make-app)
-          (eg/select))))))
+          (eg/select))))
+
+    (testing/run-tests)))
 
 #_(f/run (fx/fx-render nil
            (if true
@@ -108,7 +109,7 @@
                (~'dispose [~state-sym]
                  (.dispose ~(vary-meta state-sym assoc :tag 'super)))
                (~'build [~state-sym ~flutter-build-ctx]
-                 (tilton.fmx.factory/with-ctx :hotrelo ~flutter-build-ctx
+                 (tilton.fmx.factory/binding-ctx :hotrelo ~flutter-build-ctx
                    ~@body)))))]
     user-widget))
 
