@@ -16,10 +16,9 @@
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Counter Demo"
-     :theme (m/ThemeData .useMaterial3 true
+     :theme (m/ThemeData
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
-    {:name :todo-app}
     (scaffold
       {:appBar               (app-bar {:title           (m/Text "Flutter/MX Counter Classico")
                                        :backgroundColor (cF (.-inversePrimary

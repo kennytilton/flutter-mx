@@ -15,24 +15,28 @@
     [tilton.mx.base :refer [wtrx dp dpx mx-throw]]
     [tilton.mx.util :refer [atom?]]
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
+    [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
      :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
     [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx binding-ctx *ctx*] :as fxf]))
 
-(defn fxctx []
+(defn *ctx []
   fxf/*ctx*)
-
-(defn fx$sst-registry-initialize [tracking?]
-  (fxf/fx$sst-registry-initialize tracking?))
-
-(defn widget-key-clear []
-  (fxf/widget-key-clear))
 
 (defn widget-key
   ([me ctx] (widget-key me ctx :untag))
   ([me ctx tag]
    (dp :API-widg-key! (minfo me))
    (fxf/widget-key me ctx tag)))
+
+(defn initialize [& options]
+  (cty/cells-reset)
+  (md/md-quiesce-feature! true)
+  (fxf/fx$sst-registry-initialize true)
+  (fxf/widget-key-clear)
+
+  ;; (fxk/fmx-debugger-set! sample-debugger)
+  )
 
 (defn ctx-page-push
   ([ctx fx-page-def]
@@ -299,6 +303,31 @@
          (~'build [_# ~'ctx]
            (tilton.fmx.factory/binding-ctx :wuq-key ~'ctx
              ~widget-expression))))))
+
+(defn repl-ish []
+  (dp :REPL-ish-on-reload!!!!!!!!!!!))
+
+(defmacro hot-reload-detector
+  [& body]
+  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
+        state-sym `^w/State state#
+        super-sym `super#]
+    `(reify :extends (w/StatefulWidget.)
+       :no-meta true
+       (~'createState [_#]
+         (reify :extends w/State
+           :no-meta true
+           (~'initState [~state-sym]
+             (.initState ~(vary-meta state-sym assoc :tag 'super))
+             nil)
+           (^void ~'reassemble [this#]
+             (.reassemble ^{:tag ~'super} this#)
+             (repl-ish))
+           (~'dispose [~state-sym]
+             (.dispose ~(vary-meta state-sym assoc :tag 'super)))
+           (~'build [~state-sym ~flutter-build-ctx]
+             (tilton.fmx.factory/binding-ctx :hotrelo ~flutter-build-ctx
+               ~@body)))))))
 
 (defmacro run-app [widget-expression]
   `(m/runApp

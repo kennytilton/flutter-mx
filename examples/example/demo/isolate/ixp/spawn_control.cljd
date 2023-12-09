@@ -1,0 +1,148 @@
+(ns example.demo.isolate.ixp.spawn-control
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/foundation.dart" :as fnd]
+    ["dart:convert" :as convert]
+    ["dart:math" :as math]
+    [clojure.string :as str]
+    [clojure.walk :as walk]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
+    [example.demo.isolate.common
+     :refer [m99 clock-face slow-is-prime? just-slow-is-prime?
+             dbgiso iso-name say-delay]]))
+
+(defn on-off []
+  (fx/elevated-button+icon
+    {:label     (cF (m/Text (if (mget me :value) "Clear" "Spawn")))
+     :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))
+     :onPressed (dart-cb []
+                  (mswap! (fx/my-app) :spawn-on-off not))}
+    {:name  :on-off
+     :value (cFn (mav :spawn-on-off))}))
+
+(defn start-paused []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:key             (m/ValueKey "start-paused")
+       :controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Start Paused")
+       :value           (cF (mav :start-paused?))
+       :onChanged       (dart-cb [on-off]
+                          (mswap! (fasc :app) :start-paused? not))})))
+
+(defn pause-resume []
+  (fx/elevated-button+icon
+    {:label     (cF (m/Text (if (mav :spawn-iso-paused?) "Resume" "Pause")))
+     :icon      (cF (m/Icon (if (mav :spawn-iso-paused?) m/Icons.play_arrow m/Icons.pause)))
+     :onPressed (cF (when-let [iso ^Isolate? (mav :spawn-iso)]
+                      (dart-cb []
+                        (mswap! (fasc :app) :spawn-iso-paused? not))))}))
+
+(defn kill []
+  (fx/elevated-button+icon
+    {:label     (m/Text "Kill")
+     :icon      (m/Icon m/Icons.cancel)
+     :onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (dart-cb []
+                        (.kill ^Isolate iso))))}))
+
+(defn iso-ping [iso ^SendPort port when response]
+  (dp :ping-port (.-hashCode port))
+  (.ping ^Isolate iso port
+    ; ping is fussier about what it will allow in a response, so
+    ; we convert the map to a string and decode on the other side
+    .response (convert/jsonEncode
+                (walk/stringify-keys response))
+    .priority when))
+
+(defn ping [when ping-text]
+  (let [ping-id (atom -1)]
+    (fx/elevated-button+icon
+      {:label     (m/Text (if (= when Isolate.immediate) "Ping Now" "Ping Next"))
+       :icon      (m/Icon m/Icons.network_ping)
+       :onPressed (cF (when-let [iso (mav :spawn-iso)]
+                        (when-let [to-iso (mav :to-iso)]
+                          (dart-cb []
+                            (iso-ping iso to-iso when
+                              {:msg-type "ping"
+                               :response (str (swap! ping-id inc) ": " ping-text)})))))})))
+
+(defn spawn-iso-status []
+  (fx/icon {:icon  (cF (if (mav :spawn-iso)
+                         (if (mav :spawn-iso-paused?)
+                           m/Icons.sync_disabled
+                           m/Icons.sync_rounded)
+                         m/Icons.sync_problem))
+            :color (cF (if (mav :spawn-iso)
+                         (if (mav :spawn-iso-paused?)
+                           m/Colors.grey
+                           m/Colors.green)
+                         m/Colors.red))}))
+
+(defn spawn-iso-status []
+  (container
+    (if (mav :spawn-iso)
+      (if (mav :spawn-iso-paused?)
+        (fx/icon {:icon  m/Icons.sync_disabled
+                  :color m/Colors.grey})
+        (fx/icon {:icon  m/Icons.sync_rounded
+                  :color m/Colors.green}))
+      (fx/icon {:icon  m/Icons.sync_problem
+                :color m/Colors.red}))))
+
+#_(defn spawn-iso-status []
+    (fx/icon {:icon  (cF (first (mget me :spec)))
+              :color (cF (second (mget me :spec)))}
+      {:spec (cF (if (mav :spawn-iso)
+                   (if (mav :spawn-iso-paused?)
+                     [m/Icons.sync_disabled m/Colors.grey]
+                     [m/Icons.sync_rounded m/Colors.green])
+                   [m/Icons.sync_problem m/Colors.red]))}))
+
+(defn request-spawn-exit []
+  (fx/elevated-button
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (.send ^SendPort to-iso
+                            {:msg-type :exit})))))}
+    (m/Text "Request Exit")))
+
+(defn request-spawn-throw []
+  (fx/elevated-button
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (.send ^SendPort to-iso
+                            {:msg-type :throw
+                             :value    (.toString (.now DateTime))})))))}
+    (m/Text "Request Throw")))
+
+;;; --- job starters -----------
+
+(defmacro result-clear []
+  ; todo move to common
+  `(mset! (fasc :app) :worker-result
+     {:msg-type :clear}))
+
+(defn decide-in-spawn [n]
+  (fx/elevated-button
+    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
+                      (when-let [to-iso (mav :to-iso)]
+                        (dart-cb []
+                          (result-clear)
+                          (.send ^SendPort to-iso
+                            {:msg-type :decide-prime
+                             :n        n})))))}
+    (m/Text (str "Iso " (m99 n)))))

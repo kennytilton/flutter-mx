@@ -20,6 +20,9 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
 
+(defn m99 [n]
+  (str (quot n 1000000) "m" (mod n 1000000)))
+
 (defn iso-name
   ([] (iso-name (Isolate.current)))
   ([iso] (when iso
@@ -45,7 +48,7 @@
 ;;; --- test jobs --------------------------------------------------
 
 (defn just-slow-is-prime? [n]
-  (dp :slow-is-prime-entry n
+  (dpx :slow-is-prime-entry n
     :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
   (cond
     (= n 1) false
