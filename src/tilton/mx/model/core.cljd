@@ -358,10 +358,11 @@
 
 (defn fm-navig [what where & options]
   ;; todo change so *navig-trace* unbound disables this, so lib users can enable/disable
-  (do                                                       ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (mref? where) (minfo where)))
+  (do
+    ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (mref? where) (minfo where)))
     (fmdp :all :navig-options options)
     (cond
-      (> *trdeep* 32)
+      (> *trdeep* 64) ; todo parameterize
       (do (dp :NAVIG-BAILING-at-depth *trdeep*)
         (when (:must? options)
           (mx-throw (str/join "-" [:fm-navig-must-failed what where options]))))
@@ -424,7 +425,10 @@
               (when (:must? options)
                 (mx-throw "fall out navig")
                 (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))
-              nil))))
+              nil))
+    #_ (catch Exception e
+      (dp :fm-navig-ignoring e)
+      nil)))
 
 (defn fm! [what where]
   (fm-navig what where :me? false :inside? true :must? true :up? true))
