@@ -62,14 +62,12 @@
   (fx/material-app {}
     {:name              :app
      :worker-result     (cI nil)
-
-     ; Iso.spawn, for long-lived iso, performing multiple tasks, pausing
+     ; --- Iso.spawn, for long-lived iso, performing multiple tasks, pausing
      :start-paused?     (cI false)
      :spawn-iso         (cF+ [:async? true
                               :watch (fn [_ me new-iso prior _]
                                        (when (dart/is? prior Isolate)
                                          (.kill ^Isolate prior))
-                                       (dp :iso!!!!!!!! new-iso)
                                        (wmx-iso
                                          (mset! me :resume-cap
                                            (when new-iso
@@ -82,7 +80,6 @@
                               .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
                               .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
      :resume-cap        (cI nil)
-
      :spawn-iso-paused? (cF+n [:watch (fn [_ me paused? prior _]
                                         (when-let [iso ^Isolate? (mget me :spawn-iso)]
                                           (when (mx-bound? prior)
