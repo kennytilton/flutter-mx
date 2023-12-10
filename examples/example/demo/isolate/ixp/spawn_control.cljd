@@ -24,12 +24,39 @@
 
 (defn on-off []
   (fx/elevated-button+icon
-    {:label     (cF (m/Text (if (mget me :value) "Clear" "Spawn")))
-     :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))
+    {:label     (cF (m/Text (if (mget me :value)
+                              "Clear" "Spawn")))
+     :icon      (cF (if (mget me :value)
+                      (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))
      :onPressed (dart-cb []
                   (mswap! me :value not))}
     {:name  :on-off
      :value (cI true)}))
+
+(defn spawn-iso-status []
+  (fx/icon {:size 48
+            :icon  (cF (if (mav :spawn-iso)
+                         (if (mav :spawn-iso-paused?)
+                           m/Icons.sync_disabled
+                           m/Icons.sync_rounded)
+                         m/Icons.sync_problem))
+            :color (cF (if (mav :spawn-iso)
+                         (if (mav :spawn-iso-paused?)
+                           m/Colors.grey
+                           m/Colors.green)
+                         m/Colors.red))}))
+
+#_ ;; triggers compute cycle
+(defn spawn-iso-status []
+  (container
+    (if (mav :spawn-iso)
+      (if (mav :spawn-iso-paused?)
+        (fx/icon {:icon  m/Icons.sync_disabled
+                  :color m/Colors.grey})
+        (fx/icon {:icon  m/Icons.sync_rounded
+                  :color m/Colors.green}))
+      (fx/icon {:icon  m/Icons.sync_problem
+                :color m/Colors.red}))))
 
 (defn start-paused []
   (fx/sized-box {:width 180}
@@ -77,38 +104,6 @@
                             (iso-ping iso to-iso when
                               {:msg-type "ping"
                                :response (str (swap! ping-id inc) ": " ping-text)})))))})))
-
-(defn spawn-iso-status []
-  (fx/icon {:icon  (cF (if (mav :spawn-iso)
-                         (if (mav :spawn-iso-paused?)
-                           m/Icons.sync_disabled
-                           m/Icons.sync_rounded)
-                         m/Icons.sync_problem))
-            :color (cF (if (mav :spawn-iso)
-                         (if (mav :spawn-iso-paused?)
-                           m/Colors.grey
-                           m/Colors.green)
-                         m/Colors.red))}))
-
-(defn spawn-iso-status []
-  (container
-    (if (mav :spawn-iso)
-      (if (mav :spawn-iso-paused?)
-        (fx/icon {:icon  m/Icons.sync_disabled
-                  :color m/Colors.grey})
-        (fx/icon {:icon  m/Icons.sync_rounded
-                  :color m/Colors.green}))
-      (fx/icon {:icon  m/Icons.sync_problem
-                :color m/Colors.red}))))
-
-#_(defn spawn-iso-status []
-    (fx/icon {:icon  (cF (first (mget me :spec)))
-              :color (cF (second (mget me :spec)))}
-      {:spec (cF (if (mav :spawn-iso)
-                   (if (mav :spawn-iso-paused?)
-                     [m/Icons.sync_disabled m/Colors.grey]
-                     [m/Icons.sync_rounded m/Colors.green])
-                   [m/Icons.sync_problem m/Colors.red]))}))
 
 (defn request-spawn-exit []
   (fx/elevated-button

@@ -237,18 +237,19 @@
   (when (some #{c} *call-stack*)
     (let [me (c-model c)
           prop (c-prop-name c)]
+      (dp "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> cyclic dependency detected while computing prop "
+        prop " of model " (c-mname c))
+      (dp "...> callstack brief, latest first:")
+      (doseq [cc *call-stack*]
+        (dp "....> mname:" (c-mname cc) " prop " (c-prop-name cc)))
+      (dp "...> callstack verbose, latest first:")
+      (doseq [cc *call-stack*]
+        (dp "....> mname:" (c-mname cc) " prop " (:prop @cc))
+        (dp "....code> " (c-code$ cc)))
+
       (mx-throw
-        "MXAPI_COMPUTE_CYCLE_DETECTED> cyclic dependency detected while computing prop '"
-        prop "' of model '" (c-mname c) "'.\n"
-        "...> formula for " prop ":\n"
-        (c-code$ c)
-        "\n...> full cell: \n"
-        (cinfo c)
-        "\n\n...> callstack, latest first: \n"
-        (str/join "\n" (mapv (fn [cd]
-                               (str "....> mname:" (c-mname cd) " prop: " (c-prop-name cd)
-                                 "\n....>    code:" (c-code$ cd)))
-                         *call-stack*)))))
+        "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> cyclic dependency detected while computing prop "
+        prop " of model " (c-mname c)";\n")))
 
   (do                                                       ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
     (binding [*depender* c
