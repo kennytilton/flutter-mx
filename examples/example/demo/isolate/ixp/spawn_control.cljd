@@ -27,12 +27,26 @@
     {:label     (cF (m/Text (if (mget me :value)
                               "Clear" "Spawn")))
      :icon      (cF (if (mget me :value)
-                      (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))
+                      (m/Icon m/Icons.cancel)
+                      (m/Icon m/Icons.play_arrow)))
      :onPressed (dart-cb []
-                  (mswap! me :value not))}
+                  (mswap! (fasc :app) :spawn-iso-status not))}
     {:name  :on-off
-     :value (cI true)}))
+     :value (cF (mav :spawn-iso-status))}))
 
+(defn spawn-iso-status []
+  (container {}
+    {:name :spawn-iso-status}
+    (if (mav :spawn-iso)
+      (if (mav :spawn-iso-paused?)
+        (fx/icon {:icon  m/Icons.sync_disabled
+                  :color m/Colors.grey})
+        (fx/icon {:icon  m/Icons.sync_rounded
+                  :color m/Colors.green}))
+      (fx/icon {:icon  m/Icons.sync_problem
+                :color m/Colors.red}))))
+
+#_
 (defn spawn-iso-status []
   (fx/icon {:size 48
             :icon  (cF (if (mav :spawn-iso)
@@ -45,18 +59,6 @@
                            m/Colors.grey
                            m/Colors.green)
                          m/Colors.red))}))
-
-#_
-(defn spawn-iso-status []
-  (container
-    (if (mav :spawn-iso)
-      (if (mav :spawn-iso-paused?)
-        (fx/icon {:icon  m/Icons.sync_disabled
-                  :color m/Colors.grey})
-        (fx/icon {:icon  m/Icons.sync_rounded
-                  :color m/Colors.green}))
-      (fx/icon {:icon  m/Icons.sync_problem
-                :color m/Colors.red}))))
 
 (defn start-paused []
   (fx/sized-box {:width 180}
