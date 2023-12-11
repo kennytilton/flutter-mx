@@ -64,6 +64,7 @@
      :worker-result     (cI nil)
      ; --- Iso.spawn, for long-lived iso, performing multiple tasks, pausing
      :start-paused?     (cI false)
+     :spawn-iso-status (cI true)
      :spawn-iso         (cF+ [:async? true
                               :watch (fn [_ me new-iso prior _]
                                        (when (dart/is? prior Isolate)
@@ -72,7 +73,7 @@
                                          (mset! me :resume-cap
                                            (when new-iso
                                              (.-pauseCapability ^Isolate new-iso)))))]
-                          (when (mget (fm* :on-off) :value)
+                          (when (mget me :spawn-iso-status)
                             (Isolate.spawn slo-prime-worker {:msg-type :config
                                                              :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
                               .paused (mx/without-c-dependency
@@ -108,7 +109,7 @@
 
 
      ; iso
-     :from-iso          (cF (when (mget (fm* :on-off) :value)
+     :from-iso          (cF (when (mget me :spawn-iso-status)
                               ; cannot use a receiver twice
                               (ReceivePort)))
      :to-iso            (cI nil)
@@ -132,7 +133,7 @@
      :on-exit           (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
                                          (fn [msg]
-                                           (wmx-iso (mset! (fm* :on-off) :value false)))))]
+                                           (wmx-iso (mset! me :spawn-iso-status false)))))]
                           (ReceivePort))
      :on-error          (cF+ [:watch (fn [_ me new _ _]
                                        (.listen ^ReceivePort new
