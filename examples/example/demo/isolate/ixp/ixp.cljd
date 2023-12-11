@@ -79,6 +79,16 @@
                                         (mget me :start-paused?))
                               .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
                               .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
+     :main-listener     (cF+ []
+                          (when-let [iso (mget me :spawn-iso)]
+                            (when-let [from-iso (mget me :from-iso)]
+                              (.listen ^ReceivePort from-iso
+                                (fn [{:keys [to-iso] :as result}]
+                                  (case (:msg-type result)
+                                    :config (wmx-iso
+                                              (mset! me :to-iso (:to-iso result)))
+                                    (wmx-iso
+                                      (mset! me :worker-result result))))))))
      :resume-cap        (cI nil)
      :spawn-iso-paused? (cF+n [:watch (fn [_ me paused? prior _]
                                         (when-let [iso ^Isolate? (mget me :spawn-iso)]
@@ -95,17 +105,7 @@
                                                       (wmx-iso
                                                         (mset! me :resume-cap nil)))))))]
                           (mget me :start-paused?))
-     ;  in-main calculation
-     :main-listener     (cF+ []
-                          (when-let [iso (mget me :spawn-iso)]
-                            (when-let [from-iso (mget me :from-iso)]
-                              (.listen ^ReceivePort from-iso
-                                (fn [{:keys [to-iso] :as result}]
-                                  (case (:msg-type result)
-                                    :config (wmx-iso
-                                              (mset! me :to-iso (:to-iso result)))
-                                    (wmx-iso
-                                      (mset! me :worker-result result))))))))
+
 
      ; iso
      :from-iso          (cF (when (mget (fm* :on-off) :value)
