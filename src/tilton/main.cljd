@@ -27,8 +27,12 @@
 (defn main []
   (binding [*async-error-handler* (fn [exc stack-trace]
                                     (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
-                                    (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
+                                    (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))
+            *print-level* 3
+            *print-length* 10
+            *print-readably* false]
     (dp :main-entry--------------------------------------------)
+
     #_(when (not (fx/is-web?))
         (dp :platform-processors io/Platform.numberOfProcessors))
 
