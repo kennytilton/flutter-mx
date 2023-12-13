@@ -130,9 +130,11 @@
                       (letfn [(acked [me]
                                 (when-let [chk (mget me :health-check)]
                                   (when-let [ack (mget me :health-ack)]
+                                    (let [now (.-millisecondsSinceEpoch (.now DateTime))]
                                       (dp :acked-sees-chk chk :ack ack)
+                                      (dp :acked-at-now now :delta (- now (:tick ack)))
                                       (dp :comparing-ticks (:tick ack) (:tick chk))
-                                      (= (:tick ack) (:tick chk)))))
+                                      (= ack chk)))))
                               (unchecked [me]
                                 (let [chk (mget me :health-check)]
                                   (nil? chk)))]
@@ -142,12 +144,13 @@
                               (fn [^async/Timer tmr]
                                 (wmx-iso
                                   (cond
-                                    (acked me) (do (dp :acked!!!!!!!!-cancelling!!!)
+                                    (acked me) (do (dp :acked!!!! (.-tick tmr))
                                                    (.cancel tmr))
                                     (unchecked me) (do (dp :checking!!!!!!!)
                                                        (mset! me :health-check
                                                          {:msg-type "health-check"
-                                                          :tick     "42" #_(str (.-tick tmr))}))))))))))
+                                                          :tick     (.-millisecondsSinceEpoch (.now DateTime))
+                                                          #_(do (.-tick tmr))}))))))))))
      :health-check  (cI nil :watch (fn [_ me new prior _]
                                      (when-let [iso (mav :spawn-iso)]
                                        (when-let [to-iso (mav :to-iso)]
