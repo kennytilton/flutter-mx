@@ -4,6 +4,7 @@
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
     ["dart:io" :as io]
+    ["dart:async" :as async]
     ["dart:convert" :as convert]
     [clojure.string :as str]
     [clojure.walk :as walk]
@@ -16,13 +17,13 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.isolate.common :as cmn
-     :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay]]
+     :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay iso-ping]]
     [example.demo.isolate.ixp.iso-control
      :refer [iso-run-allowed
              decide-in-run decide-in-spawn decide-in-main decide-in-compute worker-result-display]]
     [example.demo.isolate.ixp.spawn-control :as spawn
      :refer [on-off pause-resume kill ping start-paused request-spawn-exit request-spawn-throw
-             spawn-iso-status]]
+             iso-health]]
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
@@ -60,88 +61,129 @@
 
 (defn make-app []
   (fx/material-app {}
-    {:name              :app
-     :worker-result     (cI nil)
+    {:name          :app
+     :worker-result (cI nil)
      ; --- Iso.spawn, for long-lived iso, performing multiple tasks, pausing
-     :start-paused?     (cI false)
-     :spawn-iso-status (cI true)
-     :spawn-iso         (cF+ [:async? true
-                              :watch (fn [_ me new-iso prior _]
-                                       (when (dart/is? prior Isolate)
-                                         (.kill ^Isolate prior))
-                                       (wmx-iso
-                                         (mset! me :resume-cap
-                                           (when new-iso
-                                             (.-pauseCapability ^Isolate new-iso)))))]
-                          (when (mget me :spawn-iso-status)
-                            (Isolate.spawn slo-prime-worker {:msg-type :config
-                                                             :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
-                              .paused (mx/without-c-dependency
-                                        (mget me :start-paused?))
-                              .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
-                              .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
-     :main-listener     (cF+ []
-                          (when-let [iso (mget me :spawn-iso)]
-                            (when-let [from-iso (mget me :from-iso)]
-                              (.listen ^ReceivePort from-iso
-                                (fn [{:keys [to-iso] :as result}]
-                                  (case (:msg-type result)
-                                    :config (wmx-iso
-                                              (mset! me :to-iso (:to-iso result)))
-                                    (wmx-iso
-                                      (mset! me :worker-result result))))))))
-     :resume-cap        (cI nil)
-     :spawn-iso-paused? (cF+n [:watch (fn [_ me paused? prior _]
-                                        (when-let [iso ^Isolate? (mget me :spawn-iso)]
-                                          (when (mx-bound? prior)
-                                            (cond
-                                              paused? (let [resumer (.pause iso)]
-                                                        (wmx-iso
-                                                          (mset! me :resume-cap resumer)))
-                                              :else (let [resumer (mget me :resume-cap)
-                                                          res2 (.-pauseCapability ^Isolate iso) ;; bad idea
-                                                          ;; res2 would work only on iso started paused, only once
-                                                          ]
-                                                      (.resume iso resumer)
-                                                      (wmx-iso
-                                                        (mset! me :resume-cap nil)))))))]
-                          (mget me :start-paused?))
+     :start-paused? (cI false)
+     :iso-up?       (cI true)
+     :spawn-iso     (cF+ [:async? true
+                          :watch (fn [_ me new-iso prior _]
+                                   (when (dart/is? prior Isolate)
+                                     (.kill ^Isolate prior))
+                                   (wmx-iso
+                                     (mset! me :resume-cap
+                                       (when new-iso
+                                         (.-pauseCapability ^Isolate new-iso)))))]
+                      (when (mget me :iso-up?)
+                        (Isolate.spawn slo-prime-worker {:msg-type :config
+                                                         :to-main  (.-sendPort ^ReceivePort (mget me :from-iso))}
+                          .paused (mx/without-c-dependency
+                                    (mget me :start-paused?))
+                          .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
+                          .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
+
+     :resume-cap    (cI nil)
+     :iso-paused?   (cF+n [:watch (fn [_ me paused? prior _]
+                                    (when-let [iso ^Isolate? (mget me :spawn-iso)]
+                                      (when (mx-bound? prior)
+                                        (cond
+                                          paused? (let [resumer (.pause iso)]
+                                                    (wmx-iso
+                                                      (mset! me :resume-cap resumer)))
+                                          :else (let [resumer (mget me :resume-cap)
+                                                      res2 (.-pauseCapability ^Isolate iso) ;; bad idea
+                                                      ;; res2 would work only on iso started paused, only once
+                                                      ]
+                                                  (.resume iso resumer)
+                                                  (wmx-iso
+                                                    (mset! me :resume-cap nil)))))))]
+                      (mget me :start-paused?))
 
 
      ; iso
-     :from-iso          (cF (when (mget me :spawn-iso-status)
-                              ; cannot use a receiver twice
-                              (ReceivePort)))
-     :to-iso            (cI nil)
+     :from-iso      (cF (when (mget me :iso-up?)
+                          ; cannot use a receiver twice
+                          (ReceivePort)))
+     :to-iso        (cI nil)
+
+     :main-listener (cF+ []
+                      (when-let [iso (mget me :spawn-iso)]
+                        (when-let [from-iso (mget me :from-iso)]
+                          (.listen ^ReceivePort from-iso
+                            (fn [{:keys [to-iso] :as result}]
+                              (case (:msg-type result)
+                                :config (wmx-iso
+                                          (mset! me :to-iso (:to-iso result)))
+                                (wmx-iso
+                                  (mset! me :worker-result result))))))))
+     ;; health
+     :health-clock  (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
+                                                (.cancel tmr)))]
+                      (letfn [(unchecked-or-acked [me]
+                                (let [chk (mget me :health-check)]
+                                  (or (nil? chk)
+                                    (let [ack (mget me :health-ack)]
+                                      (dp :unchak-sees-chk chk :ack ack)
+                                      (when (and (mx-bound? ack) ack)
+                                        (dp :comparing-ticks (:tick ack) (:tick chk))
+                                        (>= (:tick ack) (:tick chk)))))))]
+                        (when (mget me :iso-up?)
+                          (when (not (mget me :iso-paused?))
+                            (async/Timer.periodic (Duration .seconds 3)
+                              (fn [^async/Timer tmr]
+                                (wmx-iso
+                                  (when (unchecked-or-acked me)
+                                    (dp :checking!!!!!!!)
+                                    (mset! me :health-check
+                                      {:msg-type "health-check"
+                                       :tick     "42" #_(str (.-tick tmr))})))))))))
+     :health-check  (cI nil :watch (fn [_ me new prior _]
+                                     (when-let [iso (mav :spawn-iso)]
+                                       (when-let [to-iso (mav :to-iso)]
+                                         (dp :healt-ping! new)
+                                         (iso-ping iso to-iso
+                                           Isolate.beforeNextEvent
+                                           new)))))
+     :health-ack    (cF (let [{:keys [msg-type] :as msg} (mget me :worker-result)]
+                          ;; hmm. acks may overwrite each other. Might need to keep checks in
+                          ;; a queue and clear them as acked.
+                          (when msg (dp :health-ack-sees msg))
+                          (cond
+                            (or (nil? msg)
+                              (not= "health-check" msg-type))
+                            (do (dp :hack-ignores msg-type msg)
+                                (when (mx-bound? _cache) _cache))
+                            :else (do (dp :ignoring-ACK!!! msg)
+                                      nil))))
 
      ; Iso.run support
-     :run-job           (cI nil :ephemeral? true)
-     :runner            (cF+ [:async? true
-                              :watch (fn [_ me new prior _]
-                                       (when (not (nil? new))
-                                         (mx/with-cc :runner-res
-                                           (mset! me :worker-result new))))]
-                          (when (fm*v :iso-run-ok?)
-                            (when-let [{:keys [n] :as job} (mget me :run-job)]
-                              (Isolate.run (fn []
-                                             {:msg-type :prime-decision
-                                              :method   "Iso.run"
-                                              :n        n
-                                              :value    (just-slow-is-prime? n)})))))
+     :run-job       (cI nil :ephemeral? true)
+     :runner        (cF+ [:async? true
+                          :watch (fn [_ me new prior _]
+                                   (when (not (nil? new))
+                                     (mx/with-cc :runner-res
+                                       (mset! me :worker-result new))))]
+                      (when (fm*v :iso-run-ok?)
+                        (when-let [{:keys [n] :as job} (mget me :run-job)]
+                          (Isolate.run (fn []
+                                         {:msg-type :prime-decision
+                                          :method   "Iso.run"
+                                          :n        n
+                                          :value    (just-slow-is-prime? n)})))))
 
      ; clean-up
-     :on-exit           (cF+ [:watch (fn [_ me new _ _]
-                                       (.listen ^ReceivePort new
-                                         (fn [msg]
-                                           (wmx-iso (mset! me :spawn-iso-status false)))))]
-                          (ReceivePort))
-     :on-error          (cF+ [:watch (fn [_ me new _ _]
-                                       (.listen ^ReceivePort new
-                                         (fn [^List msg]
-                                           (wmx-iso (mset! me :worker-result
-                                                      {:msg-type :alert
-                                                       :msg      (subs (nth (.take msg 1) 0) 10)})))))]
-                          (ReceivePort))}
+     :on-exit       (cF+ [:watch (fn [_ me new _ _]
+                                   (.listen ^ReceivePort new
+                                     (fn [msg]
+                                       (wmx-iso (mset! me :iso-up? false)))))]
+                      (ReceivePort))
+     :on-error      (cF+ [:watch (fn [_ me new _ _]
+                                   (.listen ^ReceivePort new
+                                     (fn [^List msg]
+                                       (wmx-iso (mset! me :worker-result
+                                                  {:msg-type :alert
+                                                   :msg      (subs (nth (.take msg 1) 0) 10)})))))]
+                      (ReceivePort))}
     (scaffold
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer")
                          :backgroundColor m/Colors.pink.shade50})}
@@ -152,7 +194,7 @@
         (app-section
           (even-row
             (start-paused)
-            (spawn-iso-status))
+            (iso-health))
           (even-row
             (on-off) (pause-resume) (kill))
           (even-row

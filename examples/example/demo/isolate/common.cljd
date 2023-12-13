@@ -13,12 +13,39 @@
      :refer [Isolate SendPort ReceivePort]]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/foundation.dart" :as fnd]
+    ["dart:convert" :as convert]
+    [clojure.walk :as walk]
 
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
+
+(defn resp-check [response]
+  (doseq [[k v] response]
+    (dp :rchek-sees-k k :v v :kw (keyword? v) :$ (string? v))
+    (when (keyword? v)
+      (dp :rchek-sees-kw!! k :v v :kw (keyword? v) :$ (string? v))
+      (dp :rchek-BAM (str "iso-ping> detects keyword val " (string? v) "/" v " key " k))
+      (throw (Exception. (str "ping-resp-check> detects keyword val " (string? v) "/" v " key " k))))))
+
+(defn iso-ping [iso ^SendPort port when response]
+  (dp :ping-port (.-hashCode port) :respo response :kys (keys response) :vals (vals response))
+  (resp-check response)
+  (dp :resp-check-ok!!!!!!)
+  (doseq [[k v] response]
+    (dp :isop-sees-k k :v v :kw (keyword? v) :$ (string? v))
+    (when (true? (keyword? v))
+      (dp :isop-sees-kw!! k :v v :kw (keyword? v) :$ (string? v))))
+  (dp :in-lineresp-check-ok!!!!!!)
+  (dp :converting!!! response )
+  (let [res (convert/jsonEncode
+                   (walk/stringify-keys response))]
+    (dp :iso-ping-encoded (string? res) res)
+    (.ping ^Isolate iso port
+      .response res
+      .priority when)))
 
 (defn m99 [n]
   (str (quot n 1000000) "m" (mod n 1000000)))

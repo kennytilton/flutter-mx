@@ -14,7 +14,7 @@
     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
-    #_ [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     ))
 
@@ -30,8 +30,16 @@
                                     (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))
             *print-level* 3
             *print-length* 10
-            *print-readably* false]
+            *print-readably* true]
     (dp :main-entry--------------------------------------------)
+
+    (let [r {:msg-type "health-check"
+             :tick     "42"}]
+      (doseq [[k v] r]
+        (dp :MAIN-isop-sees-k k :v v :kw (keyword? v) :$ (string? v))
+        (when (keyword? v)
+          (dp :MAIN-isop-sees-kw!! k :v v :kw (keyword? v) :$ (string? v))
+          (dp :MAIN-BAM (str "iso-ping> detects keyword val " (string? v) "/" v " key " k)))))
 
     #_(when (not (fx/is-web?))
         (dp :platform-processors io/Platform.numberOfProcessors))
@@ -46,9 +54,9 @@
       (.ensureInitialized w/WidgetsFlutterBinding)
 
       (fx/run-fx-app
-        (if true
+        (if false
           (counter/make-app)
-          #_ (eg/select))))
+          (eg/select))))
 
     #_(testing/run-tests)))
 

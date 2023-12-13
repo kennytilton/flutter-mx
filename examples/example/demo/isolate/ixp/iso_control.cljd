@@ -20,7 +20,7 @@
      :refer [Isolate SendPort ReceivePort]]
     [example.demo.isolate.common
      :refer [clock-face slow-is-prime? just-slow-is-prime?
-             dbgiso iso-name say-delay m99]]))
+             dbgiso iso-name say-delay m99 iso-ping]]))
 
 (defn start-paused []
   (fx/sized-box {:width 180}
@@ -34,11 +34,11 @@
 
 (defn pause-resume []
   (fx/elevated-button+icon
-    {:label     (cF (m/Text (if (mav :spawn-iso-paused?) "Resume" "Pause")))
-     :icon      (cF (m/Icon (if (mav :spawn-iso-paused?) m/Icons.play_arrow m/Icons.pause)))
+    {:label     (cF (m/Text (if (mav :iso-paused?) "Resume" "Pause")))
+     :icon      (cF (m/Icon (if (mav :iso-paused?) m/Icons.play_arrow m/Icons.pause)))
      :onPressed (cF (when-let [iso ^Isolate? (mav :spawn-iso)]
                       (dart-cb []
-                        (mswap! (fasc :app) :spawn-iso-paused? not))))}))
+                        (mswap! (fasc :app) :iso-paused? not))))}))
 
 (defn kill []
   (fx/elevated-button+icon
@@ -55,6 +55,11 @@
        :icon      (m/Icon m/Icons.network_ping)
        :onPressed (cF (when-let [iso (mav :spawn-iso)]
                         (when-let [to-iso (mav :to-iso)]
+                          (dart-cb []
+                            (iso-ping iso to-iso when
+                              {:msg-type "ping"
+                               :response (str (swap! ping-id inc) ": " ping-text)}))
+                          #_
                           (dart-cb []
                             (.ping ^Isolate iso to-iso
                               ; ping is fussier about what it will allow in a response, so
@@ -120,7 +125,7 @@
      :result   (cF+ [:async? true
                      :watch (fn [_ me new _ _]
                               (when (not (nil? new))
-                                (with-cc :worker-result
+                                (with-cc :worker-res
                                   (mset! (fasc :app) :worker-result
                                     {:msg-type :prime-decision
                                      :method "fnf/compute"

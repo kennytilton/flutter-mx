@@ -20,7 +20,7 @@
      :refer [Isolate SendPort ReceivePort]]
     [example.demo.isolate.common
      :refer [m99 clock-face slow-is-prime? just-slow-is-prime?
-             dbgiso iso-name say-delay]]))
+             dbgiso iso-name say-delay iso-ping]]))
 
 (defn on-off []
   (fx/elevated-button+icon
@@ -30,15 +30,15 @@
                       (m/Icon m/Icons.cancel)
                       (m/Icon m/Icons.play_arrow)))
      :onPressed (dart-cb []
-                  (mswap! (fasc :app) :spawn-iso-status not))}
+                  (mswap! (fasc :app) :iso-up? not))}
     {:name  :on-off
-     :value (cF (mav :spawn-iso-status))}))
+     :value (cF (mav :iso-up?))}))
 
-(defn spawn-iso-status []
+(defn iso-health []
   (container {}
-    {:name :spawn-iso-status}
+    {:name :iso-health}
     (if (mav :spawn-iso)
-      (if (mav :spawn-iso-paused?)
+      (if (mav :iso-paused?)
         (fx/icon {:icon  m/Icons.sync_disabled
                   :color m/Colors.grey})
         (fx/icon {:icon  m/Icons.sync_rounded
@@ -46,19 +46,7 @@
       (fx/icon {:icon  m/Icons.sync_problem
                 :color m/Colors.red}))))
 
-#_
-(defn spawn-iso-status []
-  (fx/icon {:size 48
-            :icon  (cF (if (mav :spawn-iso)
-                         (if (mav :spawn-iso-paused?)
-                           m/Icons.sync_disabled
-                           m/Icons.sync_rounded)
-                         m/Icons.sync_problem))
-            :color (cF (if (mav :spawn-iso)
-                         (if (mav :spawn-iso-paused?)
-                           m/Colors.grey
-                           m/Colors.green)
-                         m/Colors.red))}))
+
 
 (defn start-paused []
   (fx/sized-box {:width 180}
@@ -72,11 +60,11 @@
 
 (defn pause-resume []
   (fx/elevated-button+icon
-    {:label     (cF (m/Text (if (mav :spawn-iso-paused?) "Resume" "Pause")))
-     :icon      (cF (m/Icon (if (mav :spawn-iso-paused?) m/Icons.play_arrow m/Icons.pause)))
+    {:label     (cF (m/Text (if (mav :iso-paused?) "Resume" "Pause")))
+     :icon      (cF (m/Icon (if (mav :iso-paused?) m/Icons.play_arrow m/Icons.pause)))
      :onPressed (cF (when-let [iso ^Isolate? (mav :spawn-iso)]
                       (dart-cb []
-                        (mswap! (fasc :app) :spawn-iso-paused? not))))}))
+                        (mswap! (fasc :app) :iso-paused? not))))}))
 
 (defn kill []
   (fx/elevated-button+icon
@@ -85,15 +73,6 @@
      :onPressed (cF (when-let [iso (mav :spawn-iso)]
                       (dart-cb []
                         (.kill ^Isolate iso))))}))
-
-(defn iso-ping [iso ^SendPort port when response]
-  (dp :ping-port (.-hashCode port))
-  (.ping ^Isolate iso port
-    ; ping is fussier about what it will allow in a response, so
-    ; we convert the map to a string and decode on the other side
-    .response (convert/jsonEncode
-                (walk/stringify-keys response))
-    .priority when))
 
 (defn ping [when ping-text]
   (let [ping-id (atom -1)]
