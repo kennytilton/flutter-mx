@@ -22,7 +22,7 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
 
-(defn resp-check [response]
+(defn response-check [response]
   (doseq [[k v] response]
     (dp :rchek-sees-k k :v v :kw (keyword? v) :$ (string? v))
     (when (keyword? v)
@@ -32,13 +32,8 @@
 
 (defn iso-ping [iso ^SendPort port when response]
   (dp :ping-port (.-hashCode port) :respo response :kys (keys response) :vals (vals response))
-  (resp-check response)
+  (response-check response)
   (dp :resp-check-ok!!!!!!)
-  (doseq [[k v] response]
-    (dp :isop-sees-k k :v v :kw (keyword? v) :$ (string? v))
-    (when (true? (keyword? v))
-      (dp :isop-sees-kw!! k :v v :kw (keyword? v) :$ (string? v))))
-  (dp :in-lineresp-check-ok!!!!!!)
   (dp :converting!!! response )
   (let [res (convert/jsonEncode
                    (walk/stringify-keys response))]

@@ -42,6 +42,10 @@
                        (.send ^SendPort to-main
                          {:msg-type :ping-ack
                           :response (:response task)}))
+            "health-check" (do (dp :acking-health-check task)
+                               (.send ^SendPort to-main
+                                 {:msg-type :health-check-ack
+                                  :response task}))
             :exit (Isolate.exit)
             :throw (throw (Exception (str "Threw " (:value task) " on request.")))
             ; else
@@ -117,26 +121,33 @@
                                 (wmx-iso
                                   (mset! me :worker-result result))))))))
      ;; health
-     :health-clock  (cF+ [:on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
+     :health-clock  (cF+ [:watch (fn [_ _ _ prior _]
+                                   (when (dart/is? prior async/Timer)
+                                     (dp :cancelling-timer prior)
+                                     (.cancel ^async/Timer prior)))
+                          :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
                                                 (.cancel tmr)))]
-                      (letfn [(unchecked-or-acked [me]
+                      (letfn [(acked [me]
+                                (when-let [chk (mget me :health-check)]
+                                  (when-let [ack (mget me :health-ack)]
+                                      (dp :acked-sees-chk chk :ack ack)
+                                      (dp :comparing-ticks (:tick ack) (:tick chk))
+                                      (= (:tick ack) (:tick chk)))))
+                              (unchecked [me]
                                 (let [chk (mget me :health-check)]
-                                  (or (nil? chk)
-                                    (let [ack (mget me :health-ack)]
-                                      (dp :unchak-sees-chk chk :ack ack)
-                                      (when (and (mx-bound? ack) ack)
-                                        (dp :comparing-ticks (:tick ack) (:tick chk))
-                                        (>= (:tick ack) (:tick chk)))))))]
+                                  (nil? chk)))]
                         (when (mget me :iso-up?)
                           (when (not (mget me :iso-paused?))
                             (async/Timer.periodic (Duration .seconds 3)
                               (fn [^async/Timer tmr]
                                 (wmx-iso
-                                  (when (unchecked-or-acked me)
-                                    (dp :checking!!!!!!!)
-                                    (mset! me :health-check
-                                      {:msg-type "health-check"
-                                       :tick     "42" #_(str (.-tick tmr))})))))))))
+                                  (cond
+                                    (acked me) (do (dp :acked!!!!!!!!-cancelling!!!)
+                                                   (.cancel tmr))
+                                    (unchecked me) (do (dp :checking!!!!!!!)
+                                                       (mset! me :health-check
+                                                         {:msg-type "health-check"
+                                                          :tick     "42" #_(str (.-tick tmr))}))))))))))
      :health-check  (cI nil :watch (fn [_ me new prior _]
                                      (when-let [iso (mav :spawn-iso)]
                                        (when-let [to-iso (mav :to-iso)]
@@ -144,17 +155,20 @@
                                          (iso-ping iso to-iso
                                            Isolate.beforeNextEvent
                                            new)))))
-     :health-ack    (cF (let [{:keys [msg-type] :as msg} (mget me :worker-result)]
-                          ;; hmm. acks may overwrite each other. Might need to keep checks in
-                          ;; a queue and clear them as acked.
-                          (when msg (dp :health-ack-sees msg))
-                          (cond
-                            (or (nil? msg)
-                              (not= "health-check" msg-type))
-                            (do (dp :hack-ignores msg-type msg)
-                                (when (mx-bound? _cache) _cache))
-                            :else (do (dp :ignoring-ACK!!! msg)
-                                      nil))))
+     :health-ack    (cF+ [:watch (fn [_ _ new prior _]
+                                   (when new
+                                     (dp :health-ack-w!! new)))]
+                      (let [{:keys [msg-type] :as msg} (mget me :worker-result)]
+                        ;; hmm. acks may overwrite each other. Might need to keep checks in
+                        ;; a queue and clear them as acked.
+                        (when msg (dp :health-ack-sees msg))
+                        (cond
+                          (or (nil? msg)
+                            (not= :health-check-ack msg-type))
+                          (do (dp :ack-ignores msg-type msg)
+                              (when (mx-bound? _cache) _cache))
+                          :else (do (dp :got-ACK!!! msg)
+                                    (:response msg)))))
 
      ; Iso.run support
      :run-job       (cI nil :ephemeral? true)
