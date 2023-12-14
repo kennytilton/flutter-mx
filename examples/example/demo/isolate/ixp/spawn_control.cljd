@@ -41,10 +41,17 @@
       (if (mav :iso-paused?)
         (fx/icon {:icon  m/Icons.sync_disabled
                   :color m/Colors.grey})
-        (fx/icon {:icon  m/Icons.sync_rounded
-                  :color m/Colors.green}))
-      (fx/icon {:icon  m/Icons.sync_problem
-                :color m/Colors.red}))))
+        (let [health (mav :health)]
+          (dp :health!!!!!!!!!!! health)
+          (case health
+            :healthy (fx/icon {:icon  m/Icons.sync_rounded
+                               :color m/Colors.green})
+            :slow (fx/icon {:icon  m/Icons.sync_rounded
+                               :color m/Colors.yellow})
+            :dead (fx/icon {:icon  m/Icons.sync_problem
+                            :color m/Colors.red})
+            :unchecked (m/Text "???"))))
+      (m/Text "..."))))
 
 
 

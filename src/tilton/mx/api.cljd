@@ -12,6 +12,11 @@
 (defn mx-bound? [x]
   (not= x cb/unbound))
 
+(defn if-mx-bound
+  ([x] (if-mx-bound x ""))
+  ([x else]
+   (if (mx-bound? x) x else)))
+
 (defmacro dp [& bits]
   `(tilton.mx.cell.base/without-c-dependency
      (dart:core/print (clojure.string/join " " (list* :DPR>

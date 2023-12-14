@@ -127,37 +127,16 @@
                                      (.cancel ^async/Timer prior)))
                           :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
                                                 (.cancel tmr)))]
-                      (letfn [(acked [me]
-                                (when-let [chk (mget me :health-check)]
-                                  (when-let [ack (mget me :health-ack)]
-                                    (let [now (millis-now)]
-                                      (dpx :acked-at-now now :delta (- now (:epoch ack)))
-                                      (dpx :comparing-epochs (:epoch ack) (:epoch chk))
-                                      (= ack chk)))))
-                              (unchecked [me]
-                                (let [chk (mget me :health-check)]
-                                  (nil? chk)))
-                              (do-check [me ^async/Timer tmr]
+                      (when (mget me :iso-up?)
+                        (when (not (mget me :iso-paused?))
+                          (async/Timer.periodic (Duration .milliseconds 1000)
+                            (fn [^async/Timer tmr]
+                              (dpx :TICK (.-tick tmr))
+                              (wmx-iso
                                 (mset! me :health-check
                                   {:msg-type "health-check"
                                    :epoch    (millis-now)
-                                   :tick     (.-tick tmr)}))]
-                        (when (mget me :iso-up?)
-                          (when (not (mget me :iso-paused?))
-                            (async/Timer.periodic (Duration .milliseconds 1000)
-                              (fn [^async/Timer tmr]
-                                (dpx :TICK (.-tick tmr))
-                                (when (> (.-tick tmr) 5)
-                                  (dp :TICKMAX!!!!!!! (.-tick tmr))
-                                  (.cancel tmr))
-                                (wmx-iso
-                                  (do-check me tmr)
-                                  #_ 
-                                  (cond
-                                    (acked me) (do (dpx :health-acked-NEW-CHECK!!!! (.-tick tmr))
-                                                   (do-check me tmr))
-                                    (unchecked me) (do (dp :health-checking-original!!!!!!!)
-                                                       (do-check me tmr))))))))))
+                                   :tick     (.-tick tmr)})))))))
      :health-check  (cI nil :watch (fn [_ me new prior _]
                                      (when-let [iso (mav :spawn-iso)]
                                        (when-let [to-iso (mav :to-iso)]
@@ -167,7 +146,7 @@
                                            new)))))
      :health-ack    (cF+ [:watch (fn [_ _ new prior _]
                                    (when new
-                                     (dp :health-ack-NEW!! new)))]
+                                     (dpx :health-ack-NEW!! new)))]
                       (let [{:keys [msg-type] :as msg} (mget me :worker-result)]
                         ;; hmm. acks may overwrite each other. Might need to keep checks in
                         ;; a queue and clear them as acked.
@@ -176,12 +155,12 @@
                             (not= :health-check-ack msg-type))
                           (do (dpx :ack-ignores msg-type msg)
                               (when (mx-bound? _cache) _cache))
-                          :else (do (dp :got-ACK-after!!! (- (millis-now) (:epoch (:response msg)))
+                          :else (do (dpx :got-ACK-after!!! (- (millis-now) (:epoch (:response msg)))
                                       :ACK msg)
                                     (:response msg)))))
      :health        (cF+ [:watch (fn [_ _ new prior _]
                                    (when new
-                                     (dp :health!! new)))]
+                                     (dpx :health!! new)))]
                       (if-let [chk (mget me :health-check)]
                         (let [now (millis-now)
                               ack (mget me :health-ack)]
@@ -189,7 +168,7 @@
                                         (nil? ack) (- now (:epoch chk))
                                         (< (:epoch ack) (:epoch chk)) (- now (:epoch chk))
                                         :else (- now (:epoch ack)))]
-                            (dp :ack-delta delta)
+                            (dpx :ack-delta delta)
                             (cond
                               (>= delta 100) :dead
                               (>= delta 10) :slow
