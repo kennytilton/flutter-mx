@@ -22,25 +22,13 @@
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
 
-(defn response-check [response]
-  (doseq [[k v] response]
-    (dp :rchek-sees-k k :v v :kw (keyword? v) :$ (string? v))
-    (when (keyword? v)
-      (dp :rchek-sees-kw!! k :v v :kw (keyword? v) :$ (string? v))
-      (dp :rchek-BAM (str "iso-ping> detects keyword val " (string? v) "/" v " key " k))
-      (throw (Exception. (str "ping-resp-check> detects keyword val " (string? v) "/" v " key " k))))))
-
-(defn iso-ping [iso ^SendPort port when response]
-  (dp :ping-port (.-hashCode port) :respo response :kys (keys response) :vals (vals response))
-  (response-check response)
-  (dp :resp-check-ok!!!!!!)
-  (dp :converting!!! response )
+(defn iso-ping [iso ^SendPort port priority response]
+  (dp :pinging-port (.-hashCode port) :respo response)
   (let [res (convert/jsonEncode
                    (walk/stringify-keys response))]
-    (dp :iso-ping-encoded (string? res) res)
     (.ping ^Isolate iso port
       .response res
-      .priority when)))
+      .priority priority)))
 
 (defn m99 [n]
   (str (quot n 1000000) "m" (mod n 1000000)))

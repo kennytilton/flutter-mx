@@ -10,7 +10,7 @@
     [clojure.walk :as walk]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+             fmu muv fm* mav mx-bound? wmx-iso with-cc millis-now]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -48,27 +48,17 @@
                       (dart-cb []
                         (.kill ^Isolate iso))))}))
 
-(defn ping [when ping-text]
+(defn ping [priority ping-text]
   (let [ping-id (atom -1)]
     (fx/elevated-button+icon
-      {:label     (m/Text (if (= when Isolate.immediate) "Ping Now" "Ping Next"))
+      {:label     (m/Text (if (= priority Isolate.immediate) "Ping Now" "Ping Next"))
        :icon      (m/Icon m/Icons.network_ping)
        :onPressed (cF (when-let [iso (mav :spawn-iso)]
                         (when-let [to-iso (mav :to-iso)]
                           (dart-cb []
-                            (iso-ping iso to-iso when
+                            (iso-ping iso to-iso priority
                               {:msg-type "ping"
-                               :response (str (swap! ping-id inc) ": " ping-text)}))
-                          #_
-                          (dart-cb []
-                            (.ping ^Isolate iso to-iso
-                              ; ping is fussier about what it will allow in a response, so
-                              ; we convert the map to a string and decode on the other side
-                              .response (convert/jsonEncode
-                                          (walk/stringify-keys
-                                            {:msg-type "ping"
-                                             :response (str (swap! ping-id inc) ": " ping-text)}))
-                              .priority when)))))})))
+                               :response (str (swap! ping-id inc) ": " ping-text)})))))})))
 
 (defn request-spawn-exit []
   (fx/elevated-button
@@ -142,7 +132,7 @@
                   (mset! (fasc :app) :run-job
                     {:msg-type :decide-prime
                      :n n
-                     :id (.-millisecondsSinceEpoch (.now DateTime))
+                     :id (millis-now)
                      :method "Iso.run"}))}
     (m/Text (str "Iso.run " (m99 n)))))
 

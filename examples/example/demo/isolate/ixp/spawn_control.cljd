@@ -74,15 +74,15 @@
                       (dart-cb []
                         (.kill ^Isolate iso))))}))
 
-(defn ping [when ping-text]
+(defn ping [priority ping-text]
   (let [ping-id (atom -1)]
     (fx/elevated-button+icon
-      {:label     (m/Text (if (= when Isolate.immediate) "Ping Now" "Ping Next"))
+      {:label     (m/Text (if (= priority Isolate.immediate) "Ping Now" "Ping Next"))
        :icon      (m/Icon m/Icons.network_ping)
        :onPressed (cF (when-let [iso (mav :spawn-iso)]
                         (when-let [to-iso (mav :to-iso)]
                           (dart-cb []
-                            (iso-ping iso to-iso when
+                            (iso-ping iso to-iso priority
                               {:msg-type "ping"
                                :response (str (swap! ping-id inc) ": " ping-text)})))))})))
 

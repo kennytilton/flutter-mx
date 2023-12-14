@@ -11,7 +11,7 @@
     [tilton.mx.util :as util]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv muiv fm* fm*v mav mx-bound? wmx-iso]]
+             fmu muv muiv fm* fm*v mav mx-bound? wmx-iso millis-now]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -123,55 +123,96 @@
      ;; health
      :health-clock  (cF+ [:watch (fn [_ _ _ prior _]
                                    (when (dart/is? prior async/Timer)
-                                     (dp :cancelling-timer prior)
+                                     (dp :clock-watch-cancelling-timer prior)
                                      (.cancel ^async/Timer prior)))
                           :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
                                                 (.cancel tmr)))]
                       (letfn [(acked [me]
                                 (when-let [chk (mget me :health-check)]
                                   (when-let [ack (mget me :health-ack)]
-                                    (let [now (.-millisecondsSinceEpoch (.now DateTime))]
-                                      (dp :acked-sees-chk chk :ack ack)
-                                      (dp :acked-at-now now :delta (- now (:tick ack)))
-                                      (dp :comparing-ticks (:tick ack) (:tick chk))
+                                    (let [now (millis-now)]
+                                      (dp :acked-at-now now :delta (- now (:epoch ack)))
+                                      (dp :comparing-epochs (:epoch ack) (:epoch chk))
                                       (= ack chk)))))
                               (unchecked [me]
                                 (let [chk (mget me :health-check)]
-                                  (nil? chk)))]
+                                  (nil? chk)))
+                              (do-check [me ^async/Timer tmr]
+                                (mset! me :health-check
+                                  {:msg-type "health-check"
+                                   :epoch     (millis-now)
+                                   :tick (.-tick tmr)}))]
                         (when (mget me :iso-up?)
                           (when (not (mget me :iso-paused?))
                             (async/Timer.periodic (Duration .seconds 3)
                               (fn [^async/Timer tmr]
+                                (dpx :TICK (.-tick tmr))
+                                (when (> (.-tick tmr) 5)
+                                  (dp :TICKMAX!!!!!!! (.-tick tmr))
+                                  (.cancel tmr))
                                 (wmx-iso
                                   (cond
-                                    (acked me) (do (dp :acked!!!! (.-tick tmr))
-                                                   (.cancel tmr))
-                                    (unchecked me) (do (dp :checking!!!!!!!)
-                                                       (mset! me :health-check
-                                                         {:msg-type "health-check"
-                                                          :tick     (.-millisecondsSinceEpoch (.now DateTime))
-                                                          #_(do (.-tick tmr))}))))))))))
+                                    (acked me) (do (dpx :health-acked-NEW-CHECK!!!! (.-tick tmr))
+                                                   (do-check me tmr))
+                                    (unchecked me) (do (dp :health-checking-original!!!!!!!)
+                                                       (do-check me tmr))))))))))
      :health-check  (cI nil :watch (fn [_ me new prior _]
                                      (when-let [iso (mav :spawn-iso)]
                                        (when-let [to-iso (mav :to-iso)]
-                                         (dp :healt-ping! new)
+                                         (dpx :health-ping! new)
                                          (iso-ping iso to-iso
                                            Isolate.beforeNextEvent
                                            new)))))
      :health-ack    (cF+ [:watch (fn [_ _ new prior _]
                                    (when new
-                                     (dp :health-ack-w!! new)))]
+                                     (dpx :health-ack-w!! new)))]
                       (let [{:keys [msg-type] :as msg} (mget me :worker-result)]
                         ;; hmm. acks may overwrite each other. Might need to keep checks in
                         ;; a queue and clear them as acked.
-                        (when msg (dp :health-ack-sees msg))
                         (cond
                           (or (nil? msg)
                             (not= :health-check-ack msg-type))
-                          (do (dp :ack-ignores msg-type msg)
+                          (do (dpx :ack-ignores msg-type msg)
                               (when (mx-bound? _cache) _cache))
-                          :else (do (dp :got-ACK!!! msg)
+                          :else (do (dp :got-ACK-after!!! (- (millis-now) (:epoch (:response msg)))
+                                      :ACK msg)
                                     (:response msg)))))
+
+     #_#_ :health-checker (cF+ [:watch (fn [_ _ _ prior _]
+                                    (when (dart/is? prior async/Timer)
+                                      (dp :checker-watch-cancelling-timer prior)
+                                      (.cancel ^async/Timer prior)))
+                           :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
+                                                 (.cancel tmr)))]
+                       (letfn [(acked [me]
+                                 (when-let [chk (mget me :health-check)]
+                                   (when-let [ack (mget me :health-ack)]
+                                     (let [now (millis-now)]
+                                       (dp :acked-at-now now :delta (- now (:epoch ack)))
+                                       (dp :comparing-epochs (:epoch ack) (:epoch chk))
+                                       (= ack chk)))))
+                               (unchecked [me]
+                                 (let [chk (mget me :health-check)]
+                                   (nil? chk)))
+                               (do-check [me ^async/Timer tmr]
+                                 (mset! me :health-check
+                                   {:msg-type "health-check"
+                                    :epoch     (millis-now)
+                                    :tick (.-tick tmr)}))]
+                         (when (mget me :iso-up?)
+                           (when (not (mget me :iso-paused?))
+                             (async/Timer.periodic (Duration .milliseconds 3)
+                               (fn [^async/Timer tmr]
+                                 (dpx :TICK (.-tick tmr))
+                                 (when (> (.-tick tmr) 5000)
+                                   (dp :CHECKER_TICKMAX!!!!!!! (.-tick tmr))
+                                   (.cancel tmr))
+                                 (wmx-iso
+                                   (cond
+                                     (acked me) (do (dp :health=acked!!!! (.-tick tmr))
+                                                    (do-check me tmr))
+                                     (unchecked me) (do (dp :health-checking!!!!!!!)
+                                                        (do-check me tmr))))))))))
 
      ; Iso.run support
      :run-job       (cI nil :ephemeral? true)

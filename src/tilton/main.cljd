@@ -33,14 +33,6 @@
             *print-readably* true]
     (dp :main-entry--------------------------------------------)
 
-    (let [r {:msg-type "health-check"
-             :tick     "42"}]
-      (doseq [[k v] r]
-        (dp :MAIN-isop-sees-k k :v v :kw (keyword? v) :$ (string? v))
-        (when (keyword? v)
-          (dp :MAIN-isop-sees-kw!! k :v v :kw (keyword? v) :$ (string? v))
-          (dp :MAIN-BAM (str "iso-ping> detects keyword val " (string? v) "/" v " key " k)))))
-
     #_(when (not (fx/is-web?))
         (dp :platform-processors io/Platform.numberOfProcessors))
 
