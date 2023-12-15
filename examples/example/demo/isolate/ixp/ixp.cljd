@@ -63,6 +63,8 @@
 
 (def +prime-checks+ [9000039 9000041])
 
+(defonce HEALTH-CHK-INTERVAL 200)
+
 (defn make-app []
   (fx/material-app {}
     {:name          :app
@@ -129,7 +131,7 @@
                                                 (.cancel tmr)))]
                       (when (mget me :spawn-iso)
                         (when (not (mget me :iso-paused?))
-                          (async/Timer.periodic (Duration .milliseconds 200)
+                          (async/Timer.periodic (Duration .milliseconds HEALTH-CHK-INTERVAL)
                             (fn [^async/Timer tmr]
                               (wmx-iso
                                 (mset! me :health-check
@@ -169,8 +171,8 @@
                                         :else (- now (:epoch ack)))]
                             (dpx :ack-delta delta)
                             (cond
-                              (>= delta 100) :dead
-                              (>= delta 10) :slow
+                              (>= delta (* 5 HEALTH-CHK-INTERVAL)) :dead
+                              (>= delta (* 1.5 HEALTH-CHK-INTERVAL)) :slow
                               :else :healthy)))
                         :unchecked))
 
