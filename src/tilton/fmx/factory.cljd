@@ -15,7 +15,7 @@
             [tilton.mx.foundation :as mxf :refer [mx-type PObserver observe]]
 
             [tilton.mx.model.peek :refer [chk minfo cinfo cref? Model]]
-            [tilton.mx.cell.base :refer [dpc dpm c-model] :as cz]
+            [tilton.mx.cell.base :refer [dpc dpm c-model c-prop-name] :as cz]
             [tilton.mx.api :as mx
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set! cref?
                      mpar mhost mabove mref? make mget mget? mkids mswap! cI cFkids]]
@@ -258,7 +258,7 @@
                                :fx$state :fx$ikeys :fx$notifier :fx$observer])
         (dpx :FXDartWidget-observing!!! (cinfo cell))
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (minfo me) (cinfo cell))
-        (dpx :FXDartWidget-observing-md!!! prop (minfo me) #_#_:deref @me)
+        (dpx :FXDW-observing-md!!! prop (minfo me) #_#_:deref @me)
         (when true                                          ;; (= prop :kids)
           (dpc cell :quiesce :FXDartWidget-observing-cell-change!!! prop))
         (when-let [noter (mget? me :fx$notifier)]

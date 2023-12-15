@@ -123,7 +123,8 @@
      :health-monitor (cF (when-let [iso (mget me :spawn-iso)]
                            (when-let [to-iso (mget me :to-iso)]
                              (when (not (mav :iso-paused?))
-                               (mk-health-monitor me iso to-iso)))))
+                               (mx/with-host me
+                                 (mk-health-monitor me iso to-iso))))))
 
      ; Iso.run support
      :run-job        (cI nil :ephemeral? true)
@@ -156,7 +157,7 @@
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer")
                          :backgroundColor m/Colors.pink.shade50})}
       (column
-        (clock-face 196)
+        ;(clock-face 196)
         (m/Text "n.b. Clock freezes only if main is busy.")
 
         (app-section

@@ -29,6 +29,8 @@
     [tilton.mx.model.peek :refer [chk *md-quiescing* Model minfo cinfo mref? cref?]]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]))
 
+(declare md-quiesce!)
+
 (defmacro pme [& mas]
   `(when true                                               ;;  (= :login (:name (deref ~'me)))
      (dp (mx-type ~'me)
@@ -190,7 +192,7 @@
 (defn md-reactive? "Are any properties bound to input or formulaic values?"
   ;; todo should this be memoized?
   [me]
-  (dpx :MDR? (:style (md-cz me)) (:cells-flushed @me) (minfo me) )
+  (dpx :MDR? (:style (md-cz me)) (:cells-flushed @me) (minfo me))
   (some (fn [[ky c]]
           (dpx :MDR?-sees-key ky :c? (not (nil? c)) :me (minfo me))
           (or
@@ -270,8 +272,8 @@
   (some #{key :all} *navig-trace*))
 
 (defn fmdp [key & mas]
-  #_ (when *navig-trace*
-    (dp :fmdp-sees-key key :tracing *navig-trace*))
+  #_(when *navig-trace*
+      (dp :fmdp-sees-key key :tracing *navig-trace*))
   (when (fm-tracing? key)
     (apply dp mas)))
 
@@ -288,7 +290,7 @@
   (cond
     (not (atom? poss))                                      ;; string child of html label?
     (do (dp :fm-navig-eq?-bail-not-ref poss)
-      false)
+        false)
 
     (fn? seek) (when-let [found (seek poss)]
                  (fmdp :bingo found)
@@ -300,7 +302,7 @@
                         ;; with explicit types coded
                         #_(= (mx-type poss) seek)))
     :else (do (trx :fm-navig-eq?-else-pplain=! seek)
-            (= seek poss))))
+              (= seek poss))))
 
 (defn fm-ascendant [what where & options]
   ;; todo validate options
@@ -348,12 +350,12 @@
     (fmdp :host :navhosted-gotit prop what (minfo where))
     (cond
       (mref? it) (do (fmdp :host :checking-hosted!! prop (minfo it))
-                   (fm-navig what it
-                     :me? true :inside? true :up? false))
+                     (fm-navig what it
+                       :me? true :inside? true :up? false))
       (sequential? it) (do (fmdp :checking-hosted-seq!! (map minfo it))
-                         (some (fn [it]
-                                 (fm-navig what it
-                                   :me? true :inside? true :up? false)) it))
+                           (some (fn [it]
+                                   (fm-navig what it
+                                     :me? true :inside? true :up? false)) it))
       :else (when it (dp :ignoring-prop-val it)))))
 
 (defn fm-navig [what where & options]
@@ -362,10 +364,10 @@
     ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (mref? where) (minfo where)))
     (fmdp :all :navig-options options)
     (cond
-      (> *trdeep* 64) ; todo parameterize
+      (> *trdeep* 64)                                       ; todo parameterize
       (do (dp :NAVIG-BAILING-at-depth *trdeep*)
-        (when (:must? options)
-          (mx-throw (str/join "-" [:fm-navig-must-failed what where options]))))
+          (when (:must? options)
+            (mx-throw (str/join "-" [:fm-navig-must-failed what where options]))))
 
       (and where what (atom? where))
       (let [options (merge {:me?   false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
@@ -416,7 +418,7 @@
                         :skip where
                         :inside? true))
                     (do (dp :no-par-no-host-up-from (minfo where))
-                      false))))
+                        false))))
 
               (when (:must? options)
                 (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))))))
@@ -426,9 +428,9 @@
                 (mx-throw "fall out navig")
                 (mx-throw (str/join "-" [:fm-navig-must-failed what where options])))
               nil))
-    #_ (catch Exception e
-      (dp :fm-navig-ignoring e)
-      nil)))
+    #_(catch Exception e
+        (dp :fm-navig-ignoring e)
+        nil)))
 
 (defn fm! [what where]
   (fm-navig what where :me? false :inside? true :must? true :up? true))
@@ -579,6 +581,7 @@
       (= md (mhost other)))))
 
 (defn md-quiesce-if-owned! [owner md]
+  (dpx :mdqo? (minfo owner) (minfo md) (minfo (mpar md)) (mhost md))
   (when (or (= owner (mpar md)) (= owner (mhost md)))
     (md-quiesce! md)))
 
@@ -623,8 +626,10 @@
   ([me] (md-quiesce! me (md-quiesce-feature?)))
   ([me force?]
    (when force?
+     (dpx :mdq? (minfo me) (:fx$quiesce (meta me)))
      (when (not= :never (:fx$quiesce (meta me)))
-       (when *md-quiesce-log?* (dp :md-quiescing (minfo me) #_#_ :meta (meta me)))
+       (when *md-quiesce-log?*
+         (dp :md-quiescing (minfo me) #_#_:meta (meta me)))
        (wtrx [0 999 nil :mdq-entry (minfo me)]
          (binding [*md-quiescing* true
                    *md-quiesce-log?* false]
