@@ -18,12 +18,11 @@
     ["dart:isolate" :as di
      :refer [Isolate SendPort Capability ReceivePort]]))
 
-(defonce HCINTERVAL 3000)
+(defonce HCINTERVAL 200)
 
 (defn mk-health-monitor [app iso to-iso]
   (mx/make
     ;; health
-    :fx$dpk :quiesce
     :name :health-monitor
     :health-clock  (cF+ [:watch (fn [_ _ _ prior _]
                                   (when (dart/is? prior async/Timer)
@@ -37,7 +36,7 @@
                            (mset! me :health-check
                              {:msg-type "health-check"
                               :epoch    (millis-now)})))))
-    :health-ack    (cF (let [{:keys [msg-type response] :as msg} (mget app :worker-result)]
+    :health-ack    (cF (let [{:keys [msg-type response] :as msg} (mget app :worker-msg)]
                          (cond
                            (or (nil? msg)
                              (not= :health-check-ack msg-type))

@@ -19,7 +19,7 @@
     [example.demo.isolate.common :as cmn
      :refer [clock-face slow-is-prime? just-slow-is-prime? dbgiso dbgisox say-delay iso-ping]]
     [example.demo.isolate.ixp.iso-control
-     :refer [decide-in-run decide-in-spawn decide-in-main decide-in-compute worker-result-display]]
+     :refer [decide-in-run decide-in-spawn decide-in-main decide-in-compute worker-msg-display]]
     [example.demo.isolate.ixp.spawn-control :as spawn
      :refer [on-off pause-resume kill ping start-paused request-spawn-exit request-spawn-throw
              iso-health]]
@@ -44,10 +44,9 @@
                        (.send ^SendPort to-main
                          {:msg-type :ping-ack
                           :response (:response task)}))
-            "health-check" (do (dpx :acking-health-check task)
-                               (.send ^SendPort to-main
-                                 {:msg-type :health-check-ack
-                                  :response task}))
+            "health-check" (.send ^SendPort to-main
+                             {:msg-type :health-check-ack
+                              :response task})
             :exit (Isolate.exit)
             :throw (throw (Exception (str "Threw " (:value task) " on request.")))
             ; else
@@ -71,7 +70,7 @@
 (defn make-app []
   (fx/material-app {}
     {:name           :app
-     :worker-result  (cI nil)
+     :worker-msg     (cI nil)
      ; --- Iso.spawn, for long-lived iso, performing multiple tasks, pausing
      :start-paused?  (cI false)
      :iso-up?        (cI false)
@@ -90,6 +89,26 @@
                                      (mget me :start-paused?))
                            .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
                            .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
+     :from-iso       (cF (when (mget me :iso-up?)
+                           ; cannot use a receiver twice
+                           (ReceivePort)))
+     :to-iso         (cI nil)
+
+     :main-listener  (cF (when-let [iso (mget me :spawn-iso)]
+                           (.listen ^ReceivePort (mget me :from-iso)
+                             (fn [{:keys [to-iso] :as result}]
+                               (wmx-iso
+                                 (case (:msg-type result)
+                                   :config (mset! me :to-iso (:to-iso result))
+                                   (mset! me :worker-msg result)))))))
+
+     :health-monitor (cF (when-let [iso (mget me :spawn-iso)]
+                           (when-let [to-iso (mget me :to-iso)]
+                             (when (not (mav :iso-paused?))
+                               (mx/with-host me
+                                 (mk-health-monitor me iso to-iso))))))
+
+     ; --- pausing ---------------------------------------------------
      :resume-cap     (cI nil)
      :iso-paused?    (cF+n [:watch (fn [_ me paused? prior _]
                                      (when-let [iso ^Isolate? (mget me :spawn-iso)]
@@ -106,25 +125,6 @@
                                                    (wmx-iso
                                                      (mset! me :resume-cap nil)))))))]
                        (mget me :start-paused?))
-     :from-iso       (cF (when (mget me :iso-up?)
-                           ; cannot use a receiver twice
-                           (ReceivePort)))
-     :to-iso         (cI nil)
-
-     :main-listener  (cF+ []
-                       (when-let [iso (mget me :spawn-iso)]
-                         (.listen ^ReceivePort (mget me :from-iso)
-                           (fn [{:keys [to-iso] :as result}]
-                             (wmx-iso
-                               (case (:msg-type result)
-                                 :config (mset! me :to-iso (:to-iso result))
-                                 (mset! me :worker-result result)))))))
-
-     :health-monitor (cF (when-let [iso (mget me :spawn-iso)]
-                           (when-let [to-iso (mget me :to-iso)]
-                             (when (not (mav :iso-paused?))
-                               (mx/with-host me
-                                 (mk-health-monitor me iso to-iso))))))
 
      ; Iso.run support
      :run-job        (cI nil :ephemeral? true)
@@ -132,7 +132,7 @@
                            :watch (fn [_ me new prior _]
                                     (when (not (nil? new))
                                       (mx/with-cc :runner-res
-                                        (mset! me :worker-result new))))]
+                                        (mset! me :worker-msg new))))]
                        (when-let [{:keys [n] :as job} (mget me :run-job)]
                          (Isolate.run (fn []
                                         {:msg-type :prime-decision
@@ -144,12 +144,14 @@
      :on-exit        (cF+ [:watch (fn [_ me new _ _]
                                     (.listen ^ReceivePort new
                                       (fn [msg]
+                                        (dp :ON-exit!!!!!! msg)
                                         (wmx-iso (mset! me :iso-up? false)))))]
                        (ReceivePort))
      :on-error       (cF+ [:watch (fn [_ me new _ _]
                                     (.listen ^ReceivePort new
                                       (fn [^List msg]
-                                        (wmx-iso (mset! me :worker-result
+                                        (dp :ON-error!!!!!! msg)
+                                        (wmx-iso (mset! me :worker-msg
                                                    {:msg-type :alert
                                                     :msg      (subs (nth (.take msg 1) 0) 10)})))))]
                        (ReceivePort))}
@@ -157,7 +159,7 @@
       {:appBar (app-bar {:title           (fx/text "Isolate Explorer")
                          :backgroundColor m/Colors.pink.shade50})}
       (column
-        ;(clock-face 196)
+        (clock-face 196)
         (m/Text "n.b. Clock freezes only if main is busy.")
 
         (app-section
@@ -183,7 +185,7 @@
                       (decide-in-run n))))
 
         (app-section
-          (worker-result-display))))))
+          (worker-msg-display))))))
 
 (defmacro even-row [& parts]
   `(row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}

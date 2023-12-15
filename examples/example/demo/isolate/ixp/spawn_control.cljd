@@ -38,18 +38,19 @@
   (container {}
     {:name :iso-health}
     (or (when (mav :spawn-iso)
-          (when (mav :iso-paused?)
+          (cond
+            (mav :iso-paused?)
             (fx/icon {:icon  m/Icons.sync_disabled
                       :color m/Colors.grey})
-            (when-let [monitor (mav :health-monitor)]
-              (let [health (mget monitor :health)
-                    ico (fn [icon color]
-                          (fx/icon {:icon  icon :color color :size 48}))]
-                (case health
-                  :healthy (ico m/Icons.sync_rounded m/Colors.green)
-                  :slow (ico m/Icons.sync_rounded m/Colors.yellow)
-                  :dead (ico m/Icons.sync_problem m/Colors.red)
-                  nil)))))
+            :else (when-let [monitor (mav :health-monitor)]
+                    (let [health (mget monitor :health)
+                          ico (fn [icon color]
+                                (fx/icon {:icon icon :color color :size 48}))]
+                      (case health
+                        :healthy (ico m/Icons.sync_rounded m/Colors.green)
+                        :slow (ico m/Icons.sync_rounded m/Colors.yellow)
+                        :dead (ico m/Icons.sync_problem m/Colors.red)
+                        nil)))))
       (m/Text "..."))))
 
 (defn start-paused []
@@ -113,7 +114,7 @@
 
 (defmacro result-clear []
   ; todo move to common
-  `(mset! (fasc :app) :worker-result
+  `(mset! (fasc :app) :worker-msg
      {:msg-type :clear}))
 
 (defn decide-in-spawn [n]

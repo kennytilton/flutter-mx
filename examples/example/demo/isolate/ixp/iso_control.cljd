@@ -99,7 +99,7 @@
                       (doto (.-instance m/WidgetsBinding)
                         (.addPostFrameCallback
                           (fn [^Duration d]
-                            (mset! (fasc :app) :worker-result
+                            (mset! (fasc :app) :worker-msg
                               {:msg-type :prime-decision
                                :method   "Main.iso"
                                :n        n
@@ -116,7 +116,7 @@
                      :watch (fn [_ me new _ _]
                               (when (not (nil? new))
                                 (with-cc :worker-res
-                                  (mset! (fasc :app) :worker-result
+                                  (mset! (fasc :app) :worker-msg
                                     {:msg-type :prime-decision
                                      :method "fnf/compute"
                                      :n        n
@@ -138,9 +138,9 @@
 
 ;;; --- worker result -----------------------------------------------
 
-(defn worker-result-display []
+(defn worker-msg-display []
   (text {:style (p/TextStyle .fontSize 16)}
-    (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
+    (let [{:keys [method msg-type n value] :as result} (mav :worker-msg)]
       (dpx :result msg-type n value method)
       (case msg-type
         :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
@@ -150,6 +150,6 @@
         (or-mx-bound _cache "<rsn>")))))
 
 (defmacro result-clear []
-  `(mset! (fasc :app) :worker-result
+  `(mset! (fasc :app) :worker-msg
      {:msg-type :clear}))
 
