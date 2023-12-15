@@ -10,7 +10,7 @@
     [clojure.walk :as walk]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv fm* mav mx-bound? wmx-iso with-cc millis-now if-mx-bound]]
+             fmu muv fm* mav mx-bound? wmx-iso with-cc millis-now or-mx-bound]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -147,23 +147,9 @@
         :ping-ack (:response result)
         :alert (:msg result)
         :clear "..."
-        (if-mx-bound _cache "<rsn>")))))
+        (or-mx-bound _cache "<rsn>")))))
 
 (defmacro result-clear []
   `(mset! (fasc :app) :worker-result
      {:msg-type :clear}))
-
-;;; --- run enabled? ------------------------------------------------
-
-(defn iso-run-allowed []
-  ; this is a silly option just to demonstrate when ephemerals are indispensable
-  (fx/sized-box {:width 180}
-    (checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Run OK?")
-       :value           (cI true)
-       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
-      {:name :iso-run-ok?})))
-
-;;; --- util ----------------------------------------------
 

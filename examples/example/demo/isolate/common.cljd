@@ -23,7 +23,6 @@
     [tilton.fmx.api :as fx]))
 
 (defn iso-ping [iso ^SendPort port priority response]
-  (dpx :pinging-port (.-hashCode port) :respo response)
   (let [res (convert/jsonEncode
                    (walk/stringify-keys response))]
     (.ping ^Isolate iso port
