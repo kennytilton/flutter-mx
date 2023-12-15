@@ -37,19 +37,19 @@
 (defn iso-health []
   (container {}
     {:name :iso-health}
-    (if (mav :spawn-iso)
-      (if (mav :iso-paused?)
-        (fx/icon {:icon  m/Icons.sync_disabled
-                  :color m/Colors.grey})
-        (let [health (mget (mav :health-monitor) :health)
-              ico (fn [icon color]
-                    (fx/icon {:icon  icon :color color :size 48}))]
-
-          (case health
-            :healthy (ico m/Icons.sync_rounded m/Colors.green)
-            :slow (ico m/Icons.sync_rounded m/Colors.yellow)
-            :dead (ico m/Icons.sync_problem m/Colors.red)
-            :unchecked (m/Text "..."))))
+    (or (when (mav :spawn-iso)
+          (when (mav :iso-paused?)
+            (fx/icon {:icon  m/Icons.sync_disabled
+                      :color m/Colors.grey})
+            (when-let [monitor (mav :health-monitor)]
+              (let [health (mget monitor :health)
+                    ico (fn [icon color]
+                          (fx/icon {:icon  icon :color color :size 48}))]
+                (case health
+                  :healthy (ico m/Icons.sync_rounded m/Colors.green)
+                  :slow (ico m/Icons.sync_rounded m/Colors.yellow)
+                  :dead (ico m/Icons.sync_problem m/Colors.red)
+                  nil)))))
       (m/Text "..."))))
 
 (defn start-paused []
