@@ -69,7 +69,7 @@
      :worker-result (cI nil)
      ; --- Iso.spawn, for long-lived iso, performing multiple tasks, pausing
      :start-paused? (cI false)
-     :iso-up?       (cI true)
+     :iso-up?       (cI false)
      :spawn-iso     (cF+ [:async? true
                           :watch (fn [_ me new-iso prior _]
                                    (when (dart/is? prior Isolate)
@@ -127,11 +127,10 @@
                                      (.cancel ^async/Timer prior)))
                           :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
                                                 (.cancel tmr)))]
-                      (when (mget me :iso-up?)
+                      (when (mget me :spawn-iso)
                         (when (not (mget me :iso-paused?))
-                          (async/Timer.periodic (Duration .milliseconds 1000)
+                          (async/Timer.periodic (Duration .milliseconds 200)
                             (fn [^async/Timer tmr]
-                              (dpx :TICK (.-tick tmr))
                               (wmx-iso
                                 (mset! me :health-check
                                   {:msg-type "health-check"
