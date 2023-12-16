@@ -15,6 +15,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
+    [example.demo.isolate.ixp.common :refer [result-clear]]
 
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
@@ -37,17 +38,20 @@
 (defn iso-health []
   (container {}
     {:name :iso-health}
-    (or
-      (letfn [(ico [icon color]
-                (fx/icon {:icon  icon :color color :size 48}))]
-        (if (mav :spawn-iso)
-          (if (mav :iso-paused?)
-            (ico m/Icons.sync_disabled m/Colors.grey)
-            (case (mav :health)
-              :healthy (ico m/Icons.sync m/Colors.green)
-              :slow (ico m/Icons.sync m/Colors.yellow)
-              :dead (ico m/Icons.sync_problem m/Colors.red)
-              nil))))
+    (or (when (mav :spawn-iso)
+          (cond
+            (mav :iso-paused?)
+            (fx/icon {:icon  m/Icons.sync_disabled
+                      :color m/Colors.grey})
+            :else (when-let [monitor (mav :health-monitor)]
+                    (let [health (mget monitor :health)
+                          ico (fn [icon color]
+                                (fx/icon {:icon icon :color color :size 48}))]
+                      (case health
+                        :healthy (ico m/Icons.sync_rounded m/Colors.green)
+                        :slow (ico m/Icons.sync_rounded m/Colors.yellow)
+                        :dead (ico m/Icons.sync_problem m/Colors.red)
+                        nil)))))
       (m/Text "..."))))
 
 (defn start-paused []
@@ -109,10 +113,7 @@
 
 ;;; --- job starters -----------
 
-(defmacro result-clear []
-  ; todo move to common
-  `(mset! (fasc :app) :worker-result
-     {:msg-type :clear}))
+
 
 (defn decide-in-spawn [n]
   (fx/elevated-button

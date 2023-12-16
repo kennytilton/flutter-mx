@@ -1,2 +1,13 @@
+(ns example.demo.isolate.ixp.common
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+             fmu muv fm* mav mx-bound? wmx-iso with-cc millis-now or-mx-bound]]))
 
-
+(defmacro result-clear []
+  ; todo move to common
+  `(tilton.mx.api/mset! (tilton.mx.api/fasc :app) :worker-msg
+     {:msg-type :clear}))
