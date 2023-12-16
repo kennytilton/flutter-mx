@@ -4,7 +4,8 @@
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
     ["dart:io" :as io]
-    ["dart:async" :as async]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
     ["dart:convert" :as convert]
     [clojure.string :as str]
     [clojure.walk :as walk]
@@ -89,18 +90,30 @@
                                      (mget me :start-paused?))
                            .onExit (.-sendPort ^ReceivePort (mget me :on-exit))
                            .onError (.-sendPort ^ReceivePort (mget me :on-error)))))
-     :from-iso       (cF (when (mget me :iso-up?)
-                           ; cannot use a receiver twice
-                           (ReceivePort)))
+     :from-iso       (cF+ [:watch (fn [_ me new-iso prior _]
+                                    (when (dart/is? prior ReceivePort)
+                                      (dp :WATCH-port-close prior)
+                                      (.close ^ReceivePort prior)))]
+                       (when (mget me :iso-up?)
+                         ; cannot use a receiver twice
+                         (ReceivePort)))
      :to-iso         (cI nil)
 
-     :main-listener  (cF (when-let [iso (mget me :spawn-iso)]
-                           (.listen ^ReceivePort (mget me :from-iso)
-                             (fn [{:keys [to-iso] :as result}]
-                               (wmx-iso
-                                 (case (:msg-type result)
-                                   :config (mset! me :to-iso (:to-iso result))
-                                   (mset! me :worker-msg result)))))))
+     :main-listener  (cF+ [:watch (fn [_ _ _ prior _]
+                                    ;; TODO handle listeners automatically %w
+                                    (when (dart/is? prior StreamSubscription)
+                                      (dp :PRIOR-cancelling-main prior)
+                                      (.cancel ^StreamSubscription prior)))
+                           :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
+                                                 (dp :ONQ-main-cancel!!!!!!!!!!!!!!!)
+                                                 (.cancel tmr)))]
+                       (when-let [iso (mget me :spawn-iso)]
+                         (.listen ^ReceivePort (mget me :from-iso)
+                           (fn [{:keys [to-iso] :as result}]
+                             (wmx-iso
+                               (case (:msg-type result)
+                                 :config (mset! me :to-iso (:to-iso result))
+                                 (mset! me :worker-msg result)))))))
 
      :health-monitor (cF (when-let [iso (mget me :spawn-iso)]
                            (when-let [to-iso (mget me :to-iso)]
