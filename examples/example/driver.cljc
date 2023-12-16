@@ -23,7 +23,6 @@
     [example.eg.x020-reactive-stream :as x020]
     ;[example.eg.layout-explorer :as layo]
     [example.demo.todoMVC.core :as todo]
-    ;[example.demo.boiler.core :as boiler]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
     [example.eg.x25-flutter-tex :as tek]
     [example.eg.x26-latex-sandbox :as tekbox]
@@ -52,7 +51,7 @@
     [example.non-fmx.ctx-row :as ctxx]))
 
 (defn select []
-  (comment hello counter x03 x05 x13 dlayout tts tek sock todo boiler)
+  (comment hello counter x03 x05 x13 dlayout tts tek sock todo)
   (if true
     (ixp/make-app)
     (todo/make-app)))

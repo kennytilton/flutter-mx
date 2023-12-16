@@ -15,6 +15,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
+    [example.demo.isolate.ixp.common :refer [result-clear]]
 
     ["dart:isolate" :as di
      :refer [Isolate SendPort ReceivePort]]
@@ -112,10 +113,7 @@
 
 ;;; --- job starters -----------
 
-(defmacro result-clear []
-  ; todo move to common
-  `(mset! (fasc :app) :worker-msg
-     {:msg-type :clear}))
+
 
 (defn decide-in-spawn [n]
   (fx/elevated-button
