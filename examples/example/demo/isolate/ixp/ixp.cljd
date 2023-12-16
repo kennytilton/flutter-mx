@@ -125,6 +125,7 @@
      ; --- pausing ---------------------------------------------------
      :resume-cap     (cI nil)
      :iso-paused?    (cF+n [:watch (fn [_ me paused? prior _]
+                                     (dp :W-ipaused paused? prior)
                                      (when-let [iso ^Isolate? (mget me :spawn-iso)]
                                        (when (mx-bound? prior)
                                          (cond
