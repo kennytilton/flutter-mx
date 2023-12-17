@@ -20,12 +20,16 @@
                         ;; ourselves, sth normally midden by f/mx macrology.
                         (fx/fx-render ctx
                           ; now we can play in f/mx world....
-                          (fx/text
-                            {:style (cF (p/TextStyle
-                                          .color (mget me :font-color)
-                                          .fontSize (mget me :font-size)))}
-                            {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
-                             :font-color (cF (cond
-                                               (> (mget me :font-size) 50) m/Colors.red
-                                               :else m/Colors.cyan))}
-                            (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10)))))}))))))
+                          (fx/column
+                            (fx/text
+                              {:style (cF (p/TextStyle
+                                            .color (mget me :font-color)
+                                            .fontSize (mget me :font-size)))}
+                              {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                               :font-color (cF (cond
+                                                 (> (mget me :font-size) 50) m/Colors.red
+                                                 :else m/Colors.cyan))}
+                              (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10)))
+                            (fx/text-field {:controller (m/TextEditingController
+                                                          .text "Hi, Mom.")}
+                              {:name :test-input}))))}))))))
