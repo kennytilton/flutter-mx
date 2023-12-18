@@ -186,9 +186,9 @@
         (dpm me :sstate+ :fx-ctx-state-sees-state!! state)
         (if (.-mounted state)
           (do (dpm me :sstate+ :FX_CTX-finds-fx$st)
-            state)
+              state)
           (do (dpm me :sstate :FX-CTX-ME-STATE-UNMOUNTED!!)
-            nil)))
+              nil)))
     ;; state-above does better than...
     #_(when-let [ctx (:fx$ctx (meta me))]
         (if (.-debugIsDefunct ^m/Element ctx)
@@ -213,7 +213,7 @@
   (when me
     (if-let [state (fx-ctx-state me)]
       (do (dpm me :sstate :TRG-ctx-setstate-2 :trg (cinfo *trg-cell*))
-        (.setState state (fn [] (do))))
+          (.setState state (fn [] (do))))
       (if-let [state-setter (:fx$state-setter (meta me))]
         (let [ctx (:fx$ctx (meta me))]
           ;(dp :TRG-ctx=state!!!!!  (.-state ctx)  (.-mounted (.-state ctx)))
@@ -223,7 +223,7 @@
               (dpm me :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!!)
               (trigger-state (mabove)))
             (do (dpm me :sstate :TRG-build-using-state-setter!! :trg (cinfo *trg-cell*))
-              (state-setter (fn [] (do))))))
+                (state-setter (fn [] (do))))))
         (do
           (dpm me :sstate+ :TRG-no-state/setter-so-trying-above)
           (trigger-state (mabove)))))))
@@ -365,14 +365,14 @@
 
              (vector? widget-value)
              (do (dpx :fxres-seq!!!! prop (count widget-value))
-               (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
-                 (dpx :vec-rez rzd)
-                 rzd))
+                 (let [rzd (doall (map (partial fx-resolve me ctx) widget-value))]
+                   (dpx :vec-rez rzd)
+                   rzd))
 
              :default (do (dpx :fxres-fall-thru-passthru prop (minfo me) widget-value
                             (when (atom? widget-value)
                               (deref widget-value)))
-                        widget-value))]
+                          widget-value))]
        ;;(dp :resolved prop resolved)
        resolved))))
 
@@ -672,10 +672,20 @@
                          (let [kz# (mapv (partial tilton.fmx.api/fx-render ~'ctx)
                                      (tilton.mx.api/mkids ~'me))]
                            (remove nil? kz#)
-                           #_ kz#)
+                           #_kz#)
                          ~@(fx-props>mx (dissoc fx-props :key :excluded?)))))))
        (tilton.mx.api/cFkids ~@kids))))
 
+(defmacro wrap-unique-key [widget-expression]
+  `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
+     (~'createState [_#]
+       (reify :extends w/State
+         (~'build [_# ~'ctx]
+           (tilton.fmx.factory/binding-ctx :wuq-key ~'ctx
+             ~widget-expression))
+         (^void ~'reassemble [this#]
+           (.reassemble ^{:tag ~'super} this#)
+           (repl-ish))))))
 
 (defmacro konly-layout-builder [fx-class fx-props mx-props only-kid]
   (let []
@@ -683,26 +693,31 @@
        (new tilton.fmx.factory/FXDartWidget)
        (assoc ~fx-props
          :builder (tilton.mx.api/cF
-                    (fn [ctx box-constraints]
-                      ;; Convert box argument to reactive input
-                      (binding [tilton.fmx.factory/*fx-building?* true]
-                        (tilton.mx.model.core/mset! ~'me :box-constraints box-constraints))
-                      ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
-                      ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
-                      ;; with iso?
-                      (fx/fx-render ctx (first (tilton.mx.api/mkids ~'me))))))
+                    (fn [~'ctx box-constraints#]
+                      (tilton.fmx.factory/binding-ctx :konly-layout-kid ~'ctx
+                        (dp :konly-builder-CALLED-box-ctx box-constraints# #_#_ :ctx ~'ctx)
+                        ;; Convert box argument to reactive input
+                        (binding [tilton.fmx.factory/*fx-building?* true]
+                          (dp :mset!-ting-box-con!!! box-constraints# (tilton.mx.api/minfo ~'me))
+                          (tilton.mx.model.core/mset! ~'me :box-constraints box-constraints#))
+                        ;; the layout builder wants back a native Flutter widget, so we have to do the conversion
+                        ;; from f/mx proxy to Flutter ourselves, sth normally midden by f/mx macrology.
+                        ;; with iso?
+                        (dp :KONLY-layobldr-RENDERING!!!!!!)
+                        (fx/fx-render ~'ctx (first (tilton.mx.api/mkids ~'me)))))))
        (assoc ~mx-props
          :box-constraints (tilton.mx.cell.core/cI nil)
          :fx-class (quote ~fx-class)
          :fx-gen (fn ~(fx-class-sym fx-class) [~'me ~'ctx]
-                   (tilton.fmx.factory/with-flutter-ref
-                     (~fx-class
-                       .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
-                              (tilton.mx.api/mget? ~'me :key))
-                       ~@(let [kvs (for [k# (conj (keys (dissoc fx-props :key)) :builder)]
-                                     [(symbol (str "." (name k#)))
-                                      `(tilton.fmx.factory/fx-resolve-mget? ~'me ~k# ~'ctx)])]
-                           (apply concat kvs))))))
+                   (tilton.fmx.factory/binding-ctx :konly-layout-kid ~'ctx
+                     (tilton.fmx.factory/with-flutter-ref
+                       (~fx-class
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ~@(let [kvs (for [k# (conj (keys (dissoc fx-props :key)) :builder)]
+                                       [(symbol (str "." (name k#)))
+                                        `(tilton.fmx.factory/fx-resolve-mget? ~'me ~k# ~'ctx)])]
+                             (apply concat kvs)))))))
        (tilton.mx.api/cFkids ~only-kid))))
 
 ;;; ------- deftags ---------------------------------

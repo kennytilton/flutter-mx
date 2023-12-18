@@ -30,40 +30,51 @@
             ;; We could make this parameterizable, but builders are passed boxConstraints -- why
             ;; make that tailorable? Ah, because the builder mechanism is a general one. Well, layout-builder
             ;; takes Constraints....
-            (fx/center
-              (fx/padding {:padding (m/EdgeInsets.all 20)}
-                (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-                  (fx/text
-                    {:style (p/TextStyle
-                              .color m/Colors.blue
-                              .fontSize 24)}
-                    {:name :test}
-                    "Rotate the device or sim to see layout effect.")
-                  (fx/text
-                    {:style (p/TextStyle
-                              .color m/Colors.blue
-                              .fontSize 16)}
-                    {:name :test}
-                    "Use ⌘-arrows to rotate sim.")
-                  (fx/text-field {:controller (m/TextEditingController
-                                                .text "Hi, Mom.")}
-                    {:name :test-input})
-                  (fx/text
-                    {:style (within-ctx [me ctx]
-                              (p/TextStyle
-                                .color (mget me :font-color)
-                                .fontSize (mget me :font-size)))}
-                    {:font-size  (cF (if-let [box (faprop :box-constraints me)]
-                                       (+ (* 0.03 (.-maxHeight ^m/BoxConstraints box))
-                                         ;; just a random computation off a model outside the built-kid model:
-                                         (* 5 0 #_(mod (faprop :elapsed me) 3)))
-                                       24))
-                     :font-color (cF (cond
-                                       (> (mget me :font-size) 25) m/Colors.red
-                                       :else m/Colors.cyan))}
-                    (str (mget (fasc :the-app) :msg)
-                      "\nin font size "
-                      (/ (int (* 10 (mget me :font-size))) 10))))))))))))
+            (do (dp :layo-kid-builder-building-kid!! (.-size (m/MediaQuery.of (fx/*ctx))))
+                (fx/center
+                  (fx/padding {:padding (m/EdgeInsets.all 20)}
+                    (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+                      (let [box (faprop :box-constraints me) ; todo why is box nil
+                            height (.-height (.-size (m/MediaQuery.of (fx/*ctx))))]
+                        (dp :x029k-sees-BOX box :mq-height height :ctx (fx/*ctx))
+
+                        ;box arrives eventually and mset! cures, but do we
+                        ;want to have a bad iteration? We get early MX navig, but
+                        ;a boxless MX build before boxful pass.
+
+                        (when (> height 600)
+                          (fx/text
+                            {:style (p/TextStyle
+                                      .color m/Colors.blue
+                                      .fontSize 24)}
+                            {:name :test}
+                            "Rotate the device or sim to see layout effect.")))
+                      (fx/text
+                        {:style (p/TextStyle
+                                  .color m/Colors.blue
+                                  .fontSize 16)}
+                        {:name :test}
+                        "Use ⌘-arrows to rotate sim.")
+                      (fx/text-field {:controller (m/TextEditingController
+                                                    .text "Hi, Mom.")}
+                        {:name :test-input})
+                      (fx/text
+                        {:style (within-ctx [me ctx]
+                                  (p/TextStyle
+                                    .color (mget me :font-color)
+                                    .fontSize (mget me :font-size)))}
+                        {:font-size  (cF (if-let [box (faprop :box-constraints me)]
+                                           (do (dp :font-size-sees box)
+                                               (+ (* 0.03 (.-maxHeight ^m/BoxConstraints box))
+                                                 ;; just a random computation off a model outside the built-kid model:
+                                                 (* 5 0 #_(mod (faprop :elapsed me) 3))))
+                                           24))
+                         :font-color (cF (cond
+                                           (> (mget me :font-size) 25) m/Colors.red
+                                           :else m/Colors.cyan))}
+                        (str (mget (fasc :the-app) :msg)
+                          "\nin font size "
+                          (/ (int (* 10 (mget me :font-size))) 10)))))))))))))
 
 
 
