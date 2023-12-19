@@ -676,16 +676,7 @@
                          ~@(fx-props>mx (dissoc fx-props :key :excluded?)))))))
        (tilton.mx.api/cFkids ~@kids))))
 
-(defmacro wrap-unique-key [widget-expression]
-  `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
-     (~'createState [_#]
-       (reify :extends w/State
-         (~'build [_# ~'ctx]
-           (tilton.fmx.factory/binding-ctx :wuq-key ~'ctx
-             ~widget-expression))
-         (^void ~'reassemble [this#]
-           (.reassemble ^{:tag ~'super} this#)
-           (repl-ish))))))
+
 
 (defmacro konly-layout-builder [fx-class fx-props mx-props only-kid]
   (let []
