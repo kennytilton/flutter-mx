@@ -30,51 +30,38 @@
             ;; We could make this parameterizable, but builders are passed boxConstraints -- why
             ;; make that tailorable? Ah, because the builder mechanism is a general one. Well, layout-builder
             ;; takes Constraints....
-            (when (faprop :box-constraints me)
-              (dp :layo-kid-builder-building-kid!! (.-size (m/MediaQuery.of (fx/*ctx))))
-                (fx/center
-                  (fx/padding {:padding (m/EdgeInsets.all 20)}
-                    (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-                      (let [box (faprop :box-constraints me) ; todo why is box nil
-                            height (.-height (.-size (m/MediaQuery.of (fx/*ctx))))]
-                        (dp :x029k-sees-BOX box :mq-height height :ctx (fx/*ctx))
-                        (dp :x029k-sees-MQ-size (.-size (m/MediaQuery.of (fx/*ctx))))
-
-                        ;box arrives eventually and mset! cures, but do we
-                        ;want to have a bad iteration? We get early MX navig, but
-                        ;a boxless MX build before boxful pass.
-
-                        (when (> height 600)
-                          (fx/text
-                            {:style (p/TextStyle
-                                      .color m/Colors.blue
-                                      .fontSize 24)}
-                            {:name :test}
-                            "Rotate the device or sim to see layout effect.")))
+            (when-let [box ^m/BoxConstraints? (faprop :box-constraints me)]
+              (fx/center
+                (fx/padding {:padding (m/EdgeInsets.all 20)}
+                  (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+                    (when (> (.-maxHeight box) 600)
                       (fx/text
                         {:style (p/TextStyle
                                   .color m/Colors.blue
-                                  .fontSize 16)}
+                                  .fontSize 24)}
                         {:name :test}
-                        "Use ⌘-arrows to rotate sim.")
-                      (fx/text-field {:controller (m/TextEditingController
-                                                    .text "Hi, Mom.")}
-                        {:name :test-input})
-                      (fx/text
-                        {:style (within-ctx [me ctx]
-                                  (p/TextStyle
-                                    .color (mget me :font-color)
-                                    .fontSize (mget me :font-size)))}
-                        {:font-size  (cF (* 0.03 (if-let [box (faprop :box-constraints me)]
-                                                   (do (dp :font-size-sees box)
-                                                       (.-maxHeight ^m/BoxConstraints box))
-                                                   (.-height (.-size (m/MediaQuery.of (fx/*ctx)))))))
-                         :font-color (cF (cond
-                                           (> (mget me :font-size) 25) m/Colors.red
-                                           :else m/Colors.cyan))}
-                        (str (mget (fasc :the-app) :msg)
-                          "\nin font size "
-                          (/ (int (* 10 (mget me :font-size))) 10)))))))))))))
+                        "Rotate the device or sim to see layout effect."))
+                    (fx/text
+                      {:style (p/TextStyle
+                                .color m/Colors.blue
+                                .fontSize 16)}
+                      {:name :test}
+                      "Use ⌘-arrows to rotate sim.")
+                    (fx/text-field {:controller (m/TextEditingController
+                                                  .text "Hi, Mom.")}
+                      {:name :test-input})
+                    (fx/text
+                      {:style (within-ctx [me ctx]
+                                (p/TextStyle
+                                  .color (mget me :font-color)
+                                  .fontSize (mget me :font-size)))}
+                      {:font-size  (cF (* 0.03 (.-maxHeight box)))
+                       :font-color (cF (cond
+                                         (> (mget me :font-size) 25) m/Colors.red
+                                         :else m/Colors.cyan))}
+                      (str (mget (fasc :the-app) :msg)
+                        "\nin font size "
+                        (/ (int (* 10 (mget me :font-size))) 10)))))))))))))
 
 
 
