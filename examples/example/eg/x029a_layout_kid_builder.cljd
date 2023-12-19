@@ -26,11 +26,21 @@
         {:appBar (fx/app-bar {:title (fx/text title)})}
         (fx/center
           (fx/layout-kid-builder
+            ;;
             ;; for now, we must use the hard-coded :box-constraints to get that build parameter.
             ;; We could make this parameterizable, but builders are passed boxConstraints -- why
             ;; make that tailorable? Ah, because the builder mechanism is a general one. Well, layout-builder
-            ;; takes Constraints....
-            (when-let [box ^m/BoxConstraints? (faprop :box-constraints me)]
+            ;; takes BoxConstraints....they will be nil until the builder fn is invoked.
+            ;;
+            ;; Below we build no structure until we get a box, so navigation into this
+            ;; structure will not work until then.
+            ;;
+            ;; Alternatively, we could go ahead and build the structure without the box info,
+            ;; defaulting places where we intend to use the box. :box-constraints is a formula
+            ;; cell, so everything needing a box will calculate JIT when the builder is called--
+            ;; internals mset! :box-constraints just before calling fx-render.
+            ;;
+            (when-let [box ^m/BoxConstraints? (mget me :box-constraints)]
               (fx/center
                 (fx/padding {:padding (m/EdgeInsets.all 20)}
                   (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
