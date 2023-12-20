@@ -6,7 +6,7 @@
     ["package:flutter/painting.dart" :as p]
     ["dart:async" :as async]
     [tilton.mx.cell.base :as cb]
-    [tilton.mx.api :refer [dp dpx cF cF+ cI mget mpar fasc faprop muv minfo mset! fmu] :as mx]
+    [tilton.mx.api :refer [dp dpx cF cF+ cI mget mpar fm* fasc faprop muv minfo mset! fmu] :as mx]
     [tilton.fmx.api :refer [dart-cb within-ctx] :as fx]))
 
 (defn make-app []
@@ -24,7 +24,12 @@
                         (mset! me :elapsed (.-tick tmr)))))}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})}
-        (fx/center
+        (fx/center {}
+          {:csz (cF+ [:watch (fn [_ me new _ _]
+                                 (dp :CSZ!!! new))]
+                  (let [f (fm* :test-input)]
+                    (dp :TI!!!! f)
+                    f))}
           (fx/layout-kid-builder
             ;;
             ;; for now, we must use the hard-coded :box-constraints to get that build parameter.
@@ -40,7 +45,11 @@
             ;; cell, so everything needing a box will calculate JIT when the builder is called--
             ;; internals mset! :box-constraints just before calling fx-render.
             ;;
-            (when-let [box ^m/BoxConstraints? (mget me :box-constraints)]
+            (let [box ^m/BoxConstraints (or (mget me :box-constraints)
+                                           (m/BoxConstraints .maxHeight 0 .maxWidth 0))]
+              ;; we can also when-let and not offer the default, but then
+              ;; navigation tofind test-input will fail. Another approach would be not to default.
+              ;; but then all attempts to deref box would have to be ready for nil.
               (fx/center
                 (fx/padding {:padding (m/EdgeInsets.all 20)}
                   (fx/column {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
@@ -65,7 +74,8 @@
                                 (p/TextStyle
                                   .color (mget me :font-color)
                                   .fontSize (mget me :font-size)))}
-                      {:font-size  (cF (* 0.03 (.-maxHeight box)))
+                      {:name :fsz
+                       :font-size  (cF (* 0.03 (.-maxHeight box)))
                        :font-color (cF (cond
                                          (> (mget me :font-size) 25) m/Colors.red
                                          :else m/Colors.cyan))}

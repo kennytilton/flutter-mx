@@ -33,17 +33,10 @@
             *print-readably* true]
     (dp :main-entry--------------------------------------------)
 
-    #_(when (not (fx/is-web?))
-        (dp :platform-processors io/Platform.numberOfProcessors))
-
     (fx/initialize)
 
-    (binding [cty/*dpc-enabled* true
-              *fx$dpk* [; :propagate :pulse :cset :cnset
-                        ;:bbuild ;; :bbuild+
-                        ;; :gg
-                        ;:sstate :sstate+
-                        ]]
+    (binding [cty/*dpc-enabled* true]
+      ; *fx$dpk* [:propagate :pulse :cset :cnset bbuild :bbuild+ :gg :sstate :sstate+]
       (.ensureInitialized w/WidgetsFlutterBinding)
       (fx/run-fx-app
         (if false
@@ -51,6 +44,9 @@
           (eg/select))))
 
     #_(testing/run-tests)))
+
+#_ (when (not (fx/is-web?))
+       (dp :platform-processors io/Platform.numberOfProcessors))
 
 #_ (let [a (atom nil)
          b (atom {:me :b
