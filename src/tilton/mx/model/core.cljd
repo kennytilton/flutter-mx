@@ -117,7 +117,7 @@
   (chk me (str "mswap! passed nil for me accessing prop: " prop))
   (chk (mref? me) (str "mswap! passed non-model for me accessing prop: " prop ": " (minfo me)))
   (if (contains? @me prop)
-    (mset! me prop (apply swap-fn (mget me prop) swap-fn-args))
+    (mset! me prop (apply swap-fn (without-c-dependency (mget me prop)) swap-fn-args))
     (mx-throw
       "MXAPI_ILLEGAL_MUTATE_NO_SUCH_SLOT> mswap! was attempted on non-extant prop \"" prop "\".\n"
       "...> FYI: known non-internal slots are" (keys (dissoc @me :host :parent :fx$ikeys :fx-class :fx-gen)))))
