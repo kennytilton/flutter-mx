@@ -579,20 +579,6 @@
                          ~@(fx-props>mx (dissoc fx-props :key)))))))
        (tilton.mx.api/cFkids ~@kids))))
 
-(defmacro prop-param1-kidless [prop fx-class fx-props mx-props]
-  (let []
-    `(tilton.fmx.factory/make-fx-dart-widget
-       ~fx-props
-       (assoc ~mx-props
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn fgen [me# ctxtop#]
-                   (tilton.fmx.factory/gen-gen me# ctxtop#
-                     (fn [~'me ~'ctx]
-                       (tilton.mx.cell.base/dpm ~'me :prop-param1-kidless-gen (tilton.mx.api/minfo ~'me))
-                       (~fx-class (tilton.fmx.api/fx-render ~'ctx
-                                    (tilton.mx.api/mget ~'me ~prop))
-                         ~@(fx-props>mx (dissoc fx-props prop))))))))))
-
 (defmacro non-widget [fx-class fx-props mx-props]
   ;; does this exist just to avoid trying to supply .key?
   (let []

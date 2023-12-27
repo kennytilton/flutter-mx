@@ -41,12 +41,13 @@
     (or (when (mav :spawn-iso)
           (cond
             (mav :iso-paused?)
-            (fx/icon {:icon  m/Icons.sync_disabled
-                      :color m/Colors.grey})
+            (fx/icon {:color m/Colors.grey}
+              m/Icons.sync_disabled)
             :else (when-let [monitor (mav :health-monitor)]
                     (let [health (mget monitor :health)
                           ico (fn [icon color]
-                                (fx/icon {:icon icon :color color :size 48}))]
+                                (fx/icon {:color color :size 48}
+                                  icon))]
                       (case health
                         :healthy (ico m/Icons.sync_rounded m/Colors.green)
                         :slow (ico m/Icons.sync_rounded m/Colors.yellow)

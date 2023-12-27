@@ -138,10 +138,10 @@
                                (let [fb (mx/fasc :fab par)]
                                  (mx/mswap! fb :open? not)))}
           (fx/padding {:padding (m/EdgeInsets.all 8.0)}
-            (fx/icon {:icon  m/Icons.close
-                      :color (fx/within-ctx [me ctx]
+            (fx/icon {:color (fx/within-ctx [me ctx]
                                (.-primaryColor (m/Theme.of ctx)))}
-              {:name :fabicon-close})))))))
+              {:name :fabicon-close}
+              m/Icons.close)))))))
 
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
@@ -161,8 +161,9 @@
         (fx/floating-action-button
           {:onPressed (dart-cb []
                         (mx/mswap! (mx/fasc :fab par) :open? not))}
-          (fx/icon {:icon m/Icons.create}
-            {:name :fabicon-open}))))))
+          (fx/icon {}
+            {:name :fabicon-open}
+            m/Icons.create))))))
 
 (defn fake-item [is-big?]
   (m/Container
