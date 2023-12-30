@@ -48,10 +48,11 @@
     [example.demo.isolate.x03-mx-isolate :as iso3]
     [example.demo.isolate.x04-api-mx-iso :as iso4]
     [example.demo.isolate.x00-compute :as icompute]
-    [example.non-fmx.ctx-row :as ctxx]))
+    [example.non-fmx.ctx-row :as ctxx]
+    [example.demo.counter.counter]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo)
   (if true
-    (tekbox/make-app)
+    (counter/make-app)
     (x029k/make-app)))
