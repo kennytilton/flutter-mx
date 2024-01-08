@@ -67,10 +67,6 @@
 
 (declare counter-home-page)
 
-(defn main []
-  (fx/run-fx-app
-    (make-app)))
-
 (defn make-app []
   (fx/material-app
     {:title "Flutter/MX Counter Demo"
