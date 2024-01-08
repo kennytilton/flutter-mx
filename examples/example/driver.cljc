@@ -5,7 +5,7 @@
     [example.eg.x01-counter :as counter]
     [example.eg.x01-counter-desugared :as desugared]
     [example.eg.x02-two-counters-ala-flux :as ctr2flux]
-    [example.eg.x02-two-counters-ala-matrix :as ctr2]
+    [example.eg.x02-two-counters-ala-matrix :as ctr2mx]
     [example.eg.x03-physics-sim :as x03]
     [example.eg.x04-drawer :as x04]
     [example.eg.x05-fab :as x05]
@@ -49,10 +49,13 @@
     [example.demo.isolate.x04-api-mx-iso :as iso4]
     [example.demo.isolate.x00-compute :as icompute]
     [example.non-fmx.ctx-row :as ctxx]
-    [example.demo.counter.counter :as ctr-fmx]))
+    [example.demo.counter.ctr2 :as ctr2]
+    [example.demo.counter.counter-fmx :as ctr-fmx]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo)
-  (if true
-    (ctr-fmx/make-app)
-    (x029k/make-app)))
+  (case 3
+    0 (ctr-fmx/make-app)
+    1 (x029k/make-app)
+    2 (todo/make-app)
+    3 (ctr2/make-app)))

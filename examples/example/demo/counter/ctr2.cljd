@@ -1,0 +1,164 @@
+(ns example.demo.counter.ctr2
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+
+    [tilton.mx.model.peek :refer [Model]]
+    [tilton.mx.base :as mxb]
+    [tilton.mx.util :as util]
+    [tilton.mx.api :as mx
+     :refer [dp mget mupdate! mset! fasc mav muv fm* fmu cI cF cFn cF+]]
+    [tilton.fmx.factory :refer [deftag] :as fxf]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb material-app app-bar scaffold gesture-detector
+             center column text floating-action-button
+             image container visibility within-ctx]]))
+
+(mx/def-mx-props h- goal dealt-ct discards held-ct held-sum lost?)
+
+(deftype Hand []
+  :extends Model
+  #_#_PObserver
+          (observe [this prop me new-value prior-value cell]))
+
+(defn triangles [n]
+  (reduce (fn [a v]
+            (conj a (+ v (or (last a) 0))))
+    [] (range 1 (inc n))))
+
+(defn triangle-not [n]
+  (let [t (triangles n)
+        xt (vec (util/difference (set (range 1 (last t))) (set t)))]
+    (when (seq xt)
+      (nth xt (rand-int (count xt))))))
+
+(defn mk-hand []
+  (mx/make (Hand)
+    :goal (triangle-not 9)
+    :discards (cI (set nil))
+    :dealt-ct (cI 0)
+    :held-ct (cF (- (mget me :dealt-ct)
+                   (count (h-discards me))))
+    :held-sum (cF (reduce (fn [acc x]
+                            (+ acc (if (contains? (h-discards me) x)
+                                     0 x)))
+                    0 (range (inc (h-dealt-ct me)))))
+    :lost? (cF (> (h-held-sum me) (h-goal me)))))
+
+(declare deck playing-card home-page difficulty)
+
+(defn make-app []
+  (material-app
+    {:title "Flutter Demo"
+     :theme (m/ThemeData
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    (home-page .title "Flutter/MX Counter")))
+
+(defn home-page [.title]
+  (scaffold
+    {:appBar (app-bar {:backgroundColor (within-ctx [me ctx]
+                                          (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))
+                       :title           (m/Text title)})
+     :floatingActionButton
+     (floating-action-button
+       {:tooltip           "Increment"
+        :disabledElevation 1
+        :onPressed         (cF (dart-cb []
+                                 (cond
+                                   (< (h-held-sum (muv :game :hand))
+                                     (h-goal (muv :game :hand)))
+                                   (mupdate! (muv :game :hand) :dealt-ct inc)
+                                   :else (mset! (fmu :game) :hand (mk-hand)))))}
+       {:enabled? (cF (< (h-dealt-ct (muv :game :hand)) 7))}
+       (if (< (h-held-sum (muv :game :hand))
+             (h-goal (muv :game :hand)))
+         (m/Icon m/Icons.add)
+         (m/Icon m/Icons.restore)))}
+    {:name :game
+     :hand (cI (mk-hand))}
+    (center
+      (column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (difficulty)
+        (m/Text "We hold this many cards, values starting at one:")
+        (text {:style (within-ctx [me ctx]
+                        (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
+          (str (h-held-ct (mav :hand))))
+
+        (visibility
+          {:visible (cF (pos? (h-dealt-ct (mav :hand))))}
+          (column
+            (m/Text "Click to discard/reclaim a card:")
+            (fx/row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+              (mapv playing-card
+                (range 1 (inc (h-dealt-ct (mav :hand))))))))
+
+        (m/Text "The sum of the cards held is:")
+        (text {:style (within-ctx [me ctx]
+                        (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
+          (str (h-held-sum (mav :hand))))
+        (m/Text "Our goal:")
+        (text {:style (within-ctx [me ctx]
+                        (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
+          (str (h-goal (mav :hand))))
+
+        (container
+          (if (< (h-held-sum (mav :hand))
+                (h-goal (mav :hand)))
+            (m/Text "Click [+] to draw a card.")
+            (column
+              (image
+                {:image  (cF (m/AssetImage
+                               (if (= (h-held-sum (mav :hand)) (h-goal (mav :hand)))
+                                 "image/trophy.jpeg" "image/game-over.png")))
+                 :height 256}))))))))
+
+(defn playing-card [i]
+  (gesture-detector
+    {:onTap (cF (when-not (h-lost? (mav :hand))
+                  (dart-cb []
+                    (dp :disco i (mget me :discarded?))
+                    (cond
+                      (and (mget me :discarded?)
+                        (= :Hard (muv :difficulty :selected)))
+                      (m/showDialog
+                        .context ctx
+                        .builder (fn [ctx]
+                                   (m/AlertDialog
+                                     .content (m/Text "Un-discard not allowed in Hard mode"))))
+                      :else
+                      (mupdate! (mav :hand) :discards
+                        (if (mget me :discarded?) disj conj) i)))))}
+    {:discarded? (cF (contains? (h-discards (mav :hand)) i))}
+    (m/Icon (if (mav :discarded?)
+              ; m/Icons.do_disturb_on_outlined
+              m/Icons.circle_outlined
+              m/Icons.control_point
+              #_#_m/Icons.star_outline m/Icons.star)
+      .color (if (mav :discarded?)
+               m/Colors.red m/Colors.green)
+      .size 28)))
+
+(defn difficulty []
+  (fx/row {:mainAxisAlignment m/MainAxisAlignment.center}
+    {:name     :difficulty
+     :selected (cI :Hard)}
+    (mapv (fn [dgr]
+            (fx/sized-box {:width 144}
+              (fx/radio-list-tile
+                {:controlAffinity m/ListTileControlAffinity.leading
+                 :title           (m/Text (name dgr))
+                 :value           dgr
+                 :groupValue      (cF (mav :selected))
+                 :onChanged       (dart-cb [v]
+                                    (cond
+                                      (pos? (h-dealt-ct (muv :game :hand)))
+                                      (m/showDialog
+                                        .context ctx
+                                        .builder (fn [ctx]
+                                                   (m/AlertDialog
+                                                     .content (m/Text "Difficulty cannot be changed mid-game."))))
+                                      :else
+                                      (mset! (fasc :difficulty) :selected v)))})))
+      [:Easy :Hard])))
+

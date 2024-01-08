@@ -1,0 +1,138 @@
+(ns example.demo.counter.counter-fmx
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    [tilton.mx.api :as mx
+     :refer [mget mupdate! mset! fasc fmu mav muv cI cF cF+ cFn
+             dp minfo]]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
+             floating-action-button gesture-detector]]))
+
+#_(defn main []
+    (.ensureInitialized w/WidgetsFlutterBinding)
+    (fx/run-fx-app
+      (material-app
+        {:title "Flutter Demo"
+         :theme (m/ThemeData
+                  .colorScheme (m/ColorScheme.fromSeed
+                                 .seedColor m/Colors.deepPurple))}
+        (home-page .title "Flutter/MX Counter"))))
+
+(defn make-app []
+  (material-app
+    {:title "Flutter Demo"
+     :theme (m/ThemeData
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    (home-page .title "Flutter/MX Counter")))
+
+(defn headline-med []
+  (within-ctx [me ctx]
+    (-> (m/Theme.of ctx) .-textTheme .-headlineMedium)))
+
+(defn push-count []
+  (row {:mainAxisAlignment m/MainAxisAlignment.center}
+    (m/Text "You have pushed the button N times: ")
+    (text
+      ; first map is for flutter properties.
+      {:style (headline-med)}
+      ; second map is for custom properties, not flutter properties.
+      ; empty first map must be provided if customs are needed.
+      (str (mav :dealt-ct)))))
+
+
+(defn held-count []
+  (row {:mainAxisAlignment m/MainAxisAlignment.center}
+    (m/Text "You hold N cards: ")
+    (text
+      {:style (headline-med)}
+      (str (mav :held-ct)))))
+
+(defn held-sum []
+  (row {:mainAxisAlignment m/MainAxisAlignment.start}
+    (text
+      {:style (headline-med)}
+      (str (muv :hand :held-sum)))
+    (m/Text ": Sum of Cards Held")))
+
+(defn the-goal []
+  (row {:mainAxisAlignment m/MainAxisAlignment.start}
+    (text
+      {:style (headline-med)}
+      (str (muv :hand :goal)))
+    (m/Text ": Our goal")))
+
+(defn game-status []
+  (text
+    {:style (headline-med)}
+    (do (dp :vals (muv :hand :held-sum) (muv :hand :goal))
+        (str "We " (name (cond
+                           (> (muv :hand :held-sum) (muv :hand :goal)) :lose
+                           (= (muv :hand :held-sum) (muv :hand :goal)) :win
+                           :else :???))))))
+
+
+(defn playing-card [i]
+  (fx/material {:key          (m/ValueKey i)
+                :shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :elevation    4.0}
+    (fx/ink-well
+      {:radius      24
+       :splashColor (cF (if (mav :held?) m/Colors.red m/Colors.green))
+       :onTap       (fx/within-ctx [me ctx]
+                      (dart-cb []
+                        (cond
+                          (mav :held?) (do (mupdate! (fmu :hand) :discards conj i))
+                          (< (muv :hand :held-ct) (muv :hand :held-max)) (mupdate! (fmu :hand) :discards disj i)
+                          :else (m/showDialog
+                                  .context ctx
+                                  .builder (fn [ctx]
+                                             (m/AlertDialog
+                                               .content (m/Text (str "Restoring this card would put you over the limit of "
+                                                                  (muv :hand :held-max) "."))))))))}
+      {:held? (cF (not (contains? (mav :discards) i)))}
+      (m/Icon (if (mav :held?) m/Icons.star m/Icons.star_outline)))))
+
+(defn home-page [.title]
+  (scaffold
+    {:appBar (app-bar {:backgroundColor (within-ctx [me ctx]
+                                          (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))
+                       :title           (m/Text title)})
+     :floatingActionButton
+     (floating-action-button
+       {:tooltip           "Increment"
+        :disabledElevation 1
+        :foregroundColor   (cF (when-not (mav :enabled?)
+                                 m/Colors.grey))
+        :onPressed         (cF (when (mav :enabled?)
+                                 (dart-cb []
+                                   (mupdate! (fmu :hand) :dealt-ct inc))))}
+       {:enabled? (cF (< (muv :hand :held-ct) (muv :hand :held-max)))}
+       (m/Icon m/Icons.add))}
+    (center
+      (fx/padding {:padding (m/EdgeInsets.all 36.0)}
+        (column {:mainAxisAlignment m/MainAxisAlignment.center}
+          {:name     :hand
+           :goal     (+ 5 (rand-int 17))
+           :dealt-ct (cI 0)
+           :held-max 5
+           :held-ct  (cF (- (mav :dealt-ct)
+                           (count (mav :discards))))
+           :held-sum (cF (apply + (conj (mapv (fn [c]
+                                                (let [i (.-value ^m/ValueKey (mget c :key))]
+                                                  (if (contains? (mav :discards) i) 0 i)))
+                                          (mx/m*v :cards :kids)) 0)))
+           :discards (cI (set nil))}
+          (the-goal)
+          (push-count)
+
+          (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            {:name :cards}
+            (mapv (fn [i]
+                    (playing-card (inc i)))
+              (range (mget (fmu :hand) :dealt-ct))))
+          (held-count)
+          (held-sum)
+          (game-status))))))

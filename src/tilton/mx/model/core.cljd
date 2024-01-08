@@ -137,13 +137,11 @@
 
 (defn make [& arg-list]
   (cond
-    (odd? (count arg-list)) (do (dp :add-mxtype!!!!!!!!!!!! (first arg-list)
-                                  (dart/is? (first arg-list) Model))
-                                (cond
-                                  (dart/is? (first arg-list) Model)
-                                  (apply make :mx-type arg-list)
-                                  :default (throw (Exception. (str "Implied MX-TYPE " (first arg-list)
-                                                                " not a sub-type of Model")))))
+    (odd? (count arg-list)) (cond
+                              (dart/is? (first arg-list) Model)
+                              (apply make :mx-type arg-list)
+                              :default (throw (Exception. (str "Implied MX-TYPE " (first arg-list)
+                                                            " not a sub-type of Model"))))
     :else
     (do
       (let [iargs (apply hash-map arg-list)
