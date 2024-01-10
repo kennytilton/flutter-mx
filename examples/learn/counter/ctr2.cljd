@@ -1,4 +1,4 @@
-(ns example.demo.counter.ctr2
+(ns learn.counter.ctr2
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
@@ -114,6 +114,29 @@
                  :height 256}))))))))
 
 (defn playing-card [i]
+  (fx/icon-button
+    {:key   (m/ValueKey i)
+     :onPressed (cF (when-not (h-lost? (mav :hand))
+                      (dart-cb []
+                        (cond
+                          (and (mget me :discarded?)
+                            (= :Hard (muv :difficulty :selected)))
+                          (m/showDialog
+                            .context ctx
+                            .builder (fn [ctx]
+                                       (m/AlertDialog
+                                         .content (m/Text "Un-discard not allowed in Hard mode"))))
+                          :else
+                          (mupdate! (mav :hand) :discards
+                            (if (mget me :discarded?) disj conj) i)))))
+     :icon      (cF (m/Icon (if (mav :discarded?)
+                              m/Icons.circle_outlined
+                              m/Icons.control_point)
+                      .color (if (mav :discarded?)
+                               m/Colors.red m/Colors.green)
+                      .size 28))}
+    {:discarded? (cF (contains? (h-discards (mav :hand)) i))})
+  #_
   (gesture-detector
     {:onTap (cF (when-not (h-lost? (mav :hand))
                   (dart-cb []

@@ -1,4 +1,4 @@
-(ns example.demo.counter.counter-fmx
+(ns learn.counter.ctr3
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
@@ -9,7 +9,7 @@
      :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
              floating-action-button gesture-detector]]))
 
-#_(defn main []
+(defn main []
     (.ensureInitialized w/WidgetsFlutterBinding)
     (fx/run-fx-app
       (material-app
@@ -19,59 +19,32 @@
                                  .seedColor m/Colors.deepPurple))}
         (home-page .title "Flutter/MX Counter"))))
 
-(defn make-app []
-  (material-app
-    {:title "Flutter Demo"
-     :theme (m/ThemeData
-              .colorScheme (m/ColorScheme.fromSeed
-                             .seedColor m/Colors.deepPurple))}
-    (home-page .title "Flutter/MX Counter")))
-
 (defn headline-med []
   (within-ctx [me ctx]
     (-> (m/Theme.of ctx) .-textTheme .-headlineMedium)))
 
-(defn push-count []
-  (row {:mainAxisAlignment m/MainAxisAlignment.center}
-    (m/Text "You have pushed the button N times: ")
-    (text
-      ; first map is for flutter properties.
-      {:style (headline-med)}
-      ; second map is for custom properties, not flutter properties.
-      ; empty first map must be provided if customs are needed.
-      (str (mav :dealt-ct)))))
-
-
-(defn held-count []
-  (row {:mainAxisAlignment m/MainAxisAlignment.center}
-    (m/Text "You hold N cards: ")
-    (text
-      {:style (headline-med)}
-      (str (mav :held-ct)))))
-
-(defn held-sum []
-  (row {:mainAxisAlignment m/MainAxisAlignment.start}
-    (text
-      {:style (headline-med)}
-      (str (muv :hand :held-sum)))
-    (m/Text ": Sum of Cards Held")))
-
-(defn the-goal []
-  (row {:mainAxisAlignment m/MainAxisAlignment.start}
-    (text
-      {:style (headline-med)}
-      (str (muv :hand :goal)))
-    (m/Text ": Our goal")))
+(defmacro value-descr [value desc$]
+  `(row {:mainAxisAlignment m/MainAxisAlignment.start}
+     (fx/container {:constraints (m/BoxConstraints .minWidth 36)
+                    :margin      (m/EdgeInsets.only .right 12)
+                    :alignment   m/Alignment.centerRight}
+       (text
+         {:style (headline-med)}
+         ~value))
+     (text
+       {:style (headline-med)}
+       ~desc$)))
 
 (defn game-status []
   (text
     {:style (headline-med)}
-    (do (dp :vals (muv :hand :held-sum) (muv :hand :goal))
-        (str "We " (name (cond
-                           (> (muv :hand :held-sum) (muv :hand :goal)) :lose
-                           (= (muv :hand :held-sum) (muv :hand :goal)) :win
-                           :else :???))))))
-
+    (let [delta (- (muv :hand :goal) (muv :hand :held-sum))]
+      (do (dp :vals (muv :hand :goal) (muv :hand :held-sum))
+          (if (pos? delta)
+            "" (str "We " (name (cond
+                                  (> (muv :hand :held-sum) (muv :hand :goal)) :lose
+                                  (= (muv :hand :held-sum) (muv :hand :goal)) :win
+                                  :else :??))))))))
 
 (defn playing-card [i]
   (fx/material {:key          (m/ValueKey i)
@@ -125,14 +98,16 @@
                                                   (if (contains? (mav :discards) i) 0 i)))
                                           (mx/m*v :cards :kids)) 0)))
            :discards (cI (set nil))}
-          (the-goal)
-          (push-count)
-
           (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
             {:name :cards}
             (mapv (fn [i]
                     (playing-card (inc i)))
               (range (mget (fmu :hand) :dealt-ct))))
-          (held-count)
-          (held-sum)
+          (fx/sized-box {:height 12})
+          (value-descr (str (muv :hand :goal))
+            "is our goal!")
+          (value-descr (str (mav :dealt-ct))
+            "times have we pushed")
+          (value-descr (str (muv :hand :held-sum))
+            "sums the held cards")
           (game-status))))))
