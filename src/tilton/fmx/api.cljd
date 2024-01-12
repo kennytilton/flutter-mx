@@ -313,6 +313,15 @@
 (defn repl-ish []
   (dpx :REPL-ish-on-reload!!!!!!!!!!!))
 
+(defn user-alert [ctx content]
+  (m/showDialog
+    .context ctx
+    .builder (fn [ctx]
+               (m/AlertDialog
+                 .content (if (string? content)
+                            (m/Text content)
+                            content)))))
+
 (defmacro hot-reload-detector
   [& body]
   (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)

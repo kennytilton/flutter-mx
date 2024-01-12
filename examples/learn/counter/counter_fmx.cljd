@@ -1,0 +1,51 @@
+(ns learn.counter.counter-fmx
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    [tilton.mx.api :as mx
+     :refer [mget mupdate! mset! fasc fmu mav muv cI cF cF+ cFn]]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
+             floating-action-button]]))
+
+(declare home-page)
+
+(defn main []
+  (.ensureInitialized w/WidgetsFlutterBinding)
+
+  (fx/run-fx-app
+    (material-app
+      {:title "Flutter Demo"
+       :theme (m/ThemeData
+                .colorScheme (m/ColorScheme.fromSeed
+                               .seedColor m/Colors.deepPurple))}
+      (home-page .title "Flutter/MX Counter"))))
+
+(defn home-page [.title]
+  (scaffold
+    {:appBar (app-bar {:title           (m/Text title)
+                       :backgroundColor (within-ctx [me ctx]
+                                          (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))})
+     :floatingActionButton
+     (floating-action-button
+       {:tooltip           "Increment"
+        :disabledElevation 1
+        :foregroundColor   (cF (when-not (mav :enabled?)
+                                 m/Colors.grey))
+        :onPressed         (cF (when (mav :enabled?)
+                                 (dart-cb []
+                                   (mupdate! (fmu :counter) :value inc))))}
+       {:enabled? (cF (< (mget (fmu :counter) :value) 3))}
+       (m/Icon m/Icons.add))}
+    (center
+      (column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (m/Text "We have pushed the button N times:")
+        (text {:style (within-ctx [me ctx]
+                        (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
+          {:name  :counter
+           :value (cI 0)}
+          (str (mget me :value)))
+        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (mapv (fn [i]
+                  (m/Icon m/Icons.add))
+            (range (mget (fmu :counter) :value))))))))
