@@ -341,15 +341,17 @@
           :default
           (recur (rest sibs)))))))
 
-(defn fm-navig-hosted? [what where prop]
+(defn fm-navig-hosted? [what where skip prop]
   (chk (mref? where))
-  (fmdp :host :navhosted-entry prop what (minfo where))
+  (fmdp :host :navhosted-entry prop what (minfo where) :skipping skip)
   (when-let [it (mget where prop)]
-    (fmdp :host :navhosted-gotit prop what (minfo where))
+    (fmdp :host :navhosted-got-it prop what (minfo where))
     (cond
-      (mref? it) (do (fmdp :host :checking-hosted!! prop (minfo it))
-                     (fm-navig what it
-                       :me? true :inside? true :up? false))
+      (mref? it) (if (= it skip)
+                   (fmdp :host :skipping-skip (minfo skip))
+                   (do (fmdp :host :checking-hosted!! prop (minfo it))
+                       (fm-navig what it
+                         :me? true :inside? true :up? false)))
       (sequential? it) (do (fmdp :checking-hosted-seq!! (map minfo it))
                            (some (fn [it]
                                    (fm-navig what it
@@ -358,8 +360,7 @@
 
 (defn fm-navig [what where & options]
   ;; todo change so *navig-trace* unbound disables this, so lib users can enable/disable
-  (do
-    ;; wtrx (0 100 :fm-navig-entry *trdeep* options (if (mref? where) (minfo where)))
+  (do ;; wtrx (0 100 :fm-navig-entry tilton.mx.model.core/*navig-trace* *trdeep* options (if (mref? where) (minfo where)))
     (fmdp :all :navig-options options)
     (cond
       (> *trdeep* 64)                                       ; todo parameterize
@@ -378,7 +379,7 @@
                   (fmdp :me :nav-sees-me?-true (minfo where))
                   (if (fm-navig-eq? what where)
                     where
-                    (some (partial fm-navig-hosted? what where)
+                    (some (partial fm-navig-hosted? what where (:skip options))
                       ;; todo should navig be restricted to custom props and :kids?
                       ;; todo rework how delegates access full mx
                       (keep #{:persistentFooterButtons
@@ -409,7 +410,7 @@
                       :inside? true))
                   (if-let [host (:host @where)]
                     (do
-                      (fmdp :up :navig-uphost! (minfo host))
+                      (fmdp :up :navig-up-to-host! (minfo host))
                       (fm-navig what host
                         :up? true
                         :me? true

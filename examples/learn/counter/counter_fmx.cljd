@@ -39,19 +39,6 @@
 
 ;;; --- components ----------------------------------------
 
-(defn dealer-fab []
-  (floating-action-button
-    {:tooltip           "Increment"
-     :disabledElevation 1
-     :foregroundColor   (cF (when-not (mav :enabled?)
-                              m/Colors.grey))
-     :onPressed         (cF (when (mav :enabled?)
-                              (dart-cb []
-                                (mupdate! (fmu :counter) :value inc))))}
-    {:name     :fab
-     :enabled? (cF (not (mget (fmu :hand) :at-max?)))}
-    (m/Icon m/Icons.add)))
-
 (defn playing-card [i]
   (fx/icon-button
     {:key       (m/ValueKey i)
@@ -113,13 +100,28 @@
                        "image/trophy.jpeg" "image/game-over.png")))
        :height 256})))
 
+(defn dealer-fab []
+  (floating-action-button
+    {:tooltip           "Increment"
+     :onPressed         (cF (dart-cb []
+                              (cond
+                                (muv :hand :outcome) (do
+                                                       (mset! (fmu :counter) :value 0)
+                                                       (mset! (fmu :hand) :discards #{}))
+                                :else (mupdate! (fmu :counter) :value inc))))}
+    {:name :fab}
+    (if (muv :hand :outcome)
+      (m/Icon m/Icons.restore)
+      (m/Icon m/Icons.add))))
+
+;;; --- home page ---------------------------------------------------------------
 
 (defn home-page [.title]
   (scaffold
     {:appBar               (app-bar {:title           (m/Text title)
                                      :backgroundColor (within-ctx [me ctx]
                                                         (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))})
-     :floatingActionButton (dealer-fab)}
+     :floatingActionButton (cF (mx/with-host me (dealer-fab)))}
     (center
       (column {:mainAxisAlignment m/MainAxisAlignment.center}
         (game-difficulty)

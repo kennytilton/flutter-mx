@@ -301,7 +301,9 @@
 (defmacro fmu [name & [me]]
   (let [me-ref (or me 'me)]
     `(let [name# ~name]
-       (fm-navig #(= name# (mget? % :name))
+       (fm-navig #(do #_ (when-let [n# (:name (deref %))]
+                        (dp :comparing-name n# :with name# :mgot (tilton.mx.model.core/mget? % :name)))
+                      (= name# (tilton.mx.model.core/mget? % :name)))
          ~me-ref :me? false :up? true :inside? false))))
 
 (defmacro muv [name & [prop me]]
