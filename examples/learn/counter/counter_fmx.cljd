@@ -6,7 +6,7 @@
     ["dart:math" :as math]
     [clojure.string :as str]
     [tilton.mx.api :as mx
-     :refer [mget mupdate! mset! fasc fmu mav muv cI cF cF+ cFn]]
+     :refer [mget mupdate! mset! fasc fmu mav muv cI cF cF+ cFI]]
     [tilton.fmx.api :as fx
      :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
              floating-action-button]]))
@@ -24,6 +24,10 @@
 (defn triangulars-not [max]
   (remove is-triangular?
     (range (inc max))))
+
+(defn random-goal []
+  (let [non-tris (triangulars-not 22)]
+    (rand-nth non-tris)))
 
 (defmacro value-descr [value desc$]
   `(row {:mainAxisAlignment m/MainAxisAlignment.center}
@@ -62,8 +66,7 @@
      :dealt    (cF (range 1 (inc (mget (fmu :counter) :value))))
      :held-sum (cF (apply + (remove #(contains? (mav :discards) %)
                               (mav :dealt))))
-     :goal     (let [non-tris (triangulars-not 22)]
-                 (rand-nth non-tris))
+     :goal     (cFI (random-goal))
      :outcome  (cF (cond
                      (= (mav :held-sum) (mav :goal)) :win
                      (> (mav :held-sum) (mav :goal)) :lose))
@@ -102,17 +105,17 @@
 
 (defn dealer-fab []
   (floating-action-button
-    {:tooltip           "Increment"
-     :onPressed         (cF (dart-cb []
-                              (cond
-                                (muv :hand :outcome) (do
-                                                       (mset! (fmu :counter) :value 0)
-                                                       (mset! (fmu :hand) :discards #{}))
-                                :else (mupdate! (fmu :counter) :value inc))))}
+    {:tooltip   "Increment"
+     :onPressed (cF (dart-cb []
+                      (cond
+                        (muv :hand :outcome) (do
+                                               (mset! (fmu :counter) :value 0)
+                                               (mset! (fmu :hand) :discards #{})
+                                               (mset! (fmu :hand) :goal (random-goal)))
+                        :else (mupdate! (fmu :counter) :value inc))))}
     {:name :fab}
-    (if (muv :hand :outcome)
-      (m/Icon m/Icons.restore)
-      (m/Icon m/Icons.add))))
+    (m/Icon (if (muv :hand :outcome)
+              m/Icons.restore m/Icons.add))))
 
 ;;; --- home page ---------------------------------------------------------------
 

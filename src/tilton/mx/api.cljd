@@ -179,6 +179,21 @@
      :input? true
      :rule (tilton.mx.cell.core/c-fn (tilton.mx.cell.base/without-c-dependency ~@body))))
 
+;; -- cFn and cF+n are kept for historical reasons, but cFI and cFI+ are more accurate:
+
+(defmacro cFI [& body]
+  `(tilton.mx.cell.core/make-c-formula
+     :code '(tilton.mx.cell.base/without-c-dependency ~@body)
+     :input? true
+     :rule (tilton.mx.cell.core/c-fn (tilton.mx.cell.base/without-c-dependency ~@body))))
+
+(defmacro cFI+ [[& options] & body]
+  `(tilton.mx.cell.core/make-c-formula
+     ~@options
+     :code '(tilton.mx.cell.base/without-c-dependency ~@body)
+     :input? true
+     :rule (tilton.mx.cell.core/c-fn (tilton.mx.cell.base/without-c-dependency ~@body))))
+
 (defmacro cFonce [& body]
   `(tilton.mx.cell.core/make-c-formula
      :code '(tilton.mx.cell.base/without-c-dependency ~@body)
