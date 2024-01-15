@@ -2,50 +2,150 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["dart:math" :as math]
+    [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [mget mupdate! mset! fasc fmu mav muv cI cF cF+ cFn]]
     [tilton.fmx.api :as fx
      :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
              floating-action-button]]))
 
-(declare home-page)
+;;; --- helpers -----------------------------------------
+
+(defn headline-med []
+  (within-ctx [me ctx]
+    (-> (m/Theme.of ctx) .-textTheme .-headlineMedium)))
+
+(defn is-triangular? [n]
+  (let [basis (int (.floor (math/sqrt (* 2 n))))]
+    (= n (/ (* basis (inc basis)) 2))))
+
+(defn triangulars-not [max]
+  (remove is-triangular?
+    (range (inc max))))
+
+(defmacro value-descr [value desc$]
+  `(row {:mainAxisAlignment m/MainAxisAlignment.center}
+     (fx/container {:constraints (m/BoxConstraints .minWidth 36)
+                    :margin      (m/EdgeInsets.only .right 12)
+                    :alignment   m/Alignment.centerRight}
+       (text
+         {:style (headline-med)}
+         ~value))
+     (text
+       {:style (headline-med)}
+       ~desc$)))
+
+;;; --- components ----------------------------------------
+
+(defn dealer-fab []
+  (floating-action-button
+    {:tooltip           "Increment"
+     :disabledElevation 1
+     :foregroundColor   (cF (when-not (mav :enabled?)
+                              m/Colors.grey))
+     :onPressed         (cF (when (mav :enabled?)
+                              (dart-cb []
+                                (mupdate! (fmu :counter) :value inc))))}
+    {:name     :fab
+     :enabled? (cF (not (mget (fmu :hand) :at-max?)))}
+    (m/Icon m/Icons.add)))
+
+(defn playing-card [i]
+  (fx/icon-button
+    {:key       (m/ValueKey i)
+     :icon      (cF (m/Icon (if (mav :discarded?)
+                              m/Icons.circle_outlined m/Icons.add)))
+     :onPressed (dart-cb []
+                  (if (mav :discarded?)
+                    (cond
+                      (= :hard (muv :difficulty :selected))
+                      (fx/user-alert ctx "Un-discarding not allowed in Hard mode.")
+                      (mav :at-max?)
+                      (fx/user-alert ctx "Un-discarding would put us over the limit.")
+                      :else (mupdate! (fasc :hand) :discards disj i))
+                    (mupdate! (fasc :hand) :discards conj i)))}
+    {:discarded? (cF (contains? (mav :discards) i))}))
+
+(defn hand-of-cards []
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    {:name     :hand
+     :discards (cI #{})
+     :dealt    (cF (range 1 (inc (mget (fmu :counter) :value))))
+     :held-sum (cF (apply + (remove #(contains? (mav :discards) %)
+                              (mav :dealt))))
+     :goal     (let [non-tris (triangulars-not 22)]
+                 (rand-nth non-tris))
+     :outcome  (cF (cond
+                     (= (mav :held-sum) (mav :goal)) :win
+                     (> (mav :held-sum) (mav :goal)) :lose))
+     :at-max?  (cF (>= (- (muv :counter)
+                         (count (mav :discards))) 7))}
+    (mapv (fn [i] (playing-card i))
+      (mav :dealt))))
+
+(defn game-difficulty []
+  (fx/row {:mainAxisAlignment m/MainAxisAlignment.center}
+    {:name     :difficulty
+     :selected (cI :hard)}
+    (mapv (fn [dgr]
+            (fx/sized-box {:width 144}
+              (fx/radio-list-tile
+                {:controlAffinity m/ListTileControlAffinity.leading
+                 :title           (m/Text (str/capitalize (name dgr)))
+                 :value           dgr
+                 :groupValue      (cF (mav :selected))
+                 :onChanged       (dart-cb [v]
+                                    (cond
+                                      (pos? (muv :counter))
+                                      (fx/user-alert ctx "Difficulty cannot be changed during a hand.")
+                                      ;--
+                                      :else (mset! (fasc :difficulty) :selected v)))})))
+      [:easy :hard])))
+
+(defn outcome []
+  (fx/visibility
+    {:visible (cF (not (nil? (muv :hand :outcome))))}
+    (fx/image
+      {:image  (cF (m/AssetImage
+                     (if (= :win (muv :hand :outcome))
+                       "image/trophy.jpeg" "image/game-over.png")))
+       :height 256})))
+
+
+(defn home-page [.title]
+  (scaffold
+    {:appBar               (app-bar {:title           (m/Text title)
+                                     :backgroundColor (within-ctx [me ctx]
+                                                        (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))})
+     :floatingActionButton (dealer-fab)}
+    (center
+      (column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (game-difficulty)
+        (fx/sized-box {:height 24})
+        (text {:style (headline-med)}
+          "We pushed the button N times:")
+        (text {:style (headline-med)}
+          {:name  :counter
+           :value (cI 0)}
+          (str (mget me :value)))
+        (fx/sized-box {:height 24})
+        (value-descr (str (muv :hand :goal))
+          "is our goal!")
+        (hand-of-cards)
+        (value-descr (str (muv :hand :held-sum))
+          "sums the held cards")
+        (outcome)))))
 
 (defn main []
   (.ensureInitialized w/WidgetsFlutterBinding)
 
   (fx/run-fx-app
     (material-app
-      {:title "Flutter Demo"
+      {:title "Flutter/MX Demo"
        :theme (m/ThemeData
                 .colorScheme (m/ColorScheme.fromSeed
                                .seedColor m/Colors.deepPurple))}
-      (home-page .title "Flutter/MX Counter"))))
+      (home-page .title "Blackjack-Ish"))))
 
-(defn home-page [.title]
-  (scaffold
-    {:appBar (app-bar {:title           (m/Text title)
-                       :backgroundColor (within-ctx [me ctx]
-                                          (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))})
-     :floatingActionButton
-     (floating-action-button
-       {:tooltip           "Increment"
-        :disabledElevation 1
-        :foregroundColor   (cF (when-not (mav :enabled?)
-                                 m/Colors.grey))
-        :onPressed         (cF (when (mav :enabled?)
-                                 (dart-cb []
-                                   (mupdate! (fmu :counter) :value inc))))}
-       {:enabled? (cF (< (mget (fmu :counter) :value) 3))}
-       (m/Icon m/Icons.add))}
-    (center
-      (column {:mainAxisAlignment m/MainAxisAlignment.center}
-        (m/Text "We have pushed the button N times:")
-        (text {:style (within-ctx [me ctx]
-                        (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
-          {:name  :counter
-           :value (cI 0)}
-          (str (mget me :value)))
-        (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (mapv (fn [i]
-                  (m/Icon m/Icons.add))
-            (range (mget (fmu :counter) :value))))))))
