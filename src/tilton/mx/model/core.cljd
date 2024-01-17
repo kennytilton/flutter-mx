@@ -372,11 +372,11 @@
       (let [options (merge {:me?   false, :inside? false, :up? true, :wocd? true ;; without-c-dependency
                             :must? false}                   ;; todo test
                       (apply hash-map options))]
-        ;;(dp :fm-NET-navig-opts (assoc options :skip (minfo (:skip options))))
+        (fmdp :all :fm-NET-navig-skip (minfo (:skip options)))
         (binding [*depender* (if (:wocd? options) nil *depender*)]
           (when (mref? where)
             (or (when (:me? options)
-                  (fmdp :me :nav-sees-me?-true (minfo where))
+                  (fmdp :me :nav-doing-me (minfo where))
                   (if (fm-navig-eq? what where)
                     where
                     (some (partial fm-navig-hosted? what where (:skip options))

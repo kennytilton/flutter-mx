@@ -5,8 +5,9 @@
     ["package:flutter/painting.dart" :as p]
     ["dart:math" :as math]
     [clojure.string :as str]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken *md-host*]]
     [tilton.mx.api :as mx
-     :refer [mget mupdate! mset! fasc fmu mav muv cI cF cF+ cFI]]
+     :refer [dp minfo cinfo mget mupdate! mset! fasc fmu fm* mav muv cI cF cF+ cFI]]
     [tilton.fmx.api :as fx
      :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
              floating-action-button]]))
@@ -58,16 +59,6 @@
 
 ;;; --- components ----------------------------------------
 
-(defn dealer-fab []
-  (floating-action-button
-    {:tooltip           "Increment"
-     :disabledElevation 1
-     :onPressed         (cF (dart-cb []
-                              (mupdate! (fmu :counter) :value inc)))}
-    {:name :fab}
-    (m/Icon (if (muv :hand :outcome)
-              m/Icons.restore m/Icons.add))))
-
 (defn playing-card [i]
   (fx/icon-button
     {:icon      (cF (m/Icon (if (contains? (mav :discards) i)
@@ -83,7 +74,7 @@
 (defn hand-of-cards []
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
     {:name     :hand
-     :goal     (rand-nth (triangulars-not 32))
+     :goal     (cFI (rand-nth (triangulars-not 32)))
      :dealt    (cF (range 1 (inc (muv :counter))))
      :discards (cI #{})
      :held     (cF (let [discards (mav :discards)]
@@ -92,8 +83,7 @@
      :held-sum (cF (apply + (mav :held)))
      :outcome  (cF (cond
                      (= (mav :held-sum) (mav :goal)) :win
-                     (> (mav :held-sum) (mav :goal)) :lose))
-     }
+                     (> (mav :held-sum) (mav :goal)) :lose))}
     (mapv (fn [i]
             (playing-card i))
       (mav :dealt))))
@@ -117,12 +107,29 @@
                                       (mset! (fasc :difficulty) :selected v)))})))
       [:easy :hard])))
 
+(defn dealer-fab []
+  (floating-action-button
+    {:tooltip           "Increment!"
+     :disabledElevation 1
+     :onPressed         (cF (dart-cb []
+                              (if (= :deal (mav :action))
+                                (mupdate! (fmu :counter) :value inc)
+                                (do
+                                  (mset! (fmu :counter) :value 0)
+                                  (mset! (fmu :hand) :goal (random-goal))
+                                  (mset! (fmu :hand) :discards #{})))))}
+    {:name   :fab
+     :action (cF (if (muv :hand :outcome)
+                   :restart :deal))}
+    (m/Icon (if (= :deal (mav :action))
+              m/Icons.add m/Icons.restore))))
+
 (defn home-page [.title]
   (scaffold
     {:appBar               (app-bar {:title           (m/Text title)
                                      :backgroundColor (within-ctx [me ctx]
                                                         (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))})
-     :floatingActionButton (dealer-fab)}
+     :floatingActionButton (cF (dealer-fab))}
     (center
       (column {:mainAxisAlignment m/MainAxisAlignment.center}
         (game-difficulty)
@@ -141,8 +148,7 @@
         (value-descr (str (muv :hand :held-sum))
           "sums the held cards")
         (fx/sized-box {:height 36})
-        (outcome)
-        ))))
+        (outcome)))))
 
 (defn outcome []
   (fx/visibility
