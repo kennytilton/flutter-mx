@@ -60,6 +60,34 @@
 
 ;;; --- components ----------------------------------------
 
+(defn outcome []
+  (fx/visibility
+    {:visible (cF (not (nil? (muv :hand :outcome))))}
+    (fx/image
+      {:image  (cF (m/AssetImage
+                     (if (= :win (muv :hand :outcome))
+                       "image/trophy.jpeg" "image/game-over.png")))
+       :height 256})))
+
+(defn game-difficulty []
+  (fx/row {:mainAxisAlignment m/MainAxisAlignment.center}
+    {:name     :difficulty
+     :selected (cI :easy)}
+    (mapv (fn [dgr]
+            (fx/sized-box {:width 144}
+              (fx/radio-list-tile
+                {:controlAffinity m/ListTileControlAffinity.leading
+                 :title           (m/Text (str/capitalize (name dgr)))
+                 :value           dgr
+                 :groupValue      (cF (mav :selected))
+                 :onChanged       (dart-cb [v]
+                                    (cond
+                                      (pos? (muv :counter))
+                                      (fx/user-alert ctx "Difficulty cannot be changed mid-game.")
+                                      :else
+                                      (mset! (fasc :difficulty) :selected v)))})))
+      [:easy :hard])))
+
 (defn playing-card [i]
   (fx/icon-button
     {:icon      (cF (m/Icon (if (contains? (mav :discards) i)
@@ -89,25 +117,6 @@
             (playing-card i))
       (mav :dealt))))
 
-(defn game-difficulty []
-  (fx/row {:mainAxisAlignment m/MainAxisAlignment.center}
-    {:name     :difficulty
-     :selected (cI :easy)}
-    (mapv (fn [dgr]
-            (fx/sized-box {:width 144}
-              (fx/radio-list-tile
-                {:controlAffinity m/ListTileControlAffinity.leading
-                 :title           (m/Text (str/capitalize (name dgr)))
-                 :value           dgr
-                 :groupValue      (cF (mav :selected))
-                 :onChanged       (dart-cb [v]
-                                    (cond
-                                      (pos? (muv :counter))
-                                      (fx/user-alert ctx "Difficulty cannot be changed mid-game.")
-                                      :else
-                                      (mset! (fasc :difficulty) :selected v)))})))
-      [:easy :hard])))
-
 (defn dealer-fab []
   (floating-action-button
     {:tooltip           "Increment!"
@@ -134,11 +143,11 @@
     (center
       (column {:mainAxisAlignment m/MainAxisAlignment.center}
         (game-difficulty)
-        (fx/sized-box {:height 36})
+        ; (fx/sized-box {:height 36})
         (value-descr (str (muv :hand :goal))
           "is our goal")
         (fx/sized-box {:height 36})
-        (m/Text "You have pushed the button N times:")
+        (m/Text "We have pushed the button N times:")
         (text {:style (within-ctx [me ctx]
                         (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
           {:name  :counter
@@ -148,14 +157,4 @@
         (fx/sized-box {:height 36})
         (value-descr (str (muv :hand :held-sum))
           "sums the held cards")
-        (fx/sized-box {:height 36})
         (outcome)))))
-
-(defn outcome []
-  (fx/visibility
-    {:visible (cF (not (nil? (muv :hand :outcome))))}
-    (fx/image
-      {:image  (cF (m/AssetImage
-                     (if (= :win (muv :hand :outcome))
-                       "image/trophy.jpeg" "image/game-over.png")))
-       :height 256})))
