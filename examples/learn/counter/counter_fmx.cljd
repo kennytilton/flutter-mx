@@ -58,14 +58,39 @@
        {:style (headline-med)}
        ~desc$)))
 
+
+;;; --- domain -----------------------------------
+
+(deftype Hand []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]
+    #_ (dp :hand-sees prop :now new-value)))
+
+(def-mx-props h- goal dealt dealt-ct discards held held-sum outcome)
+
+(defn mk-hand []
+  (mx/make (Hand)
+    :goal     (cFI (rand-nth (triangulars-not 32)))
+    :dealt-ct (cI 0)
+    :dealt    (cF (range 1 (inc (mav :dealt-ct))))
+    :discards (cI #{})
+    :held     (cF (let [discards (mav :discards)]
+                    (remove #(contains? discards %)
+                      (mav :dealt))))
+    :held-sum (cF (apply + (mav :held)))
+    :outcome  (cF (cond
+                    (= (mav :held-sum) (mav :goal)) :win
+                    (> (mav :held-sum) (mav :goal)) :lose))))
+
 ;;; --- components ----------------------------------------
 
 (defn outcome []
   (fx/visibility
-    {:visible (cF (not (nil? (muv :hand :outcome))))}
+    {:visible (cF (not (nil? (h-outcome (muv :hand)))))}
     (fx/image
       {:image  (cF (m/AssetImage
-                     (if (= :win (muv :hand :outcome))
+                     (if (= :win (h-outcome (muv :hand)))
                        "image/trophy.jpeg" "image/game-over.png")))
        :height 256})))
 
@@ -82,7 +107,7 @@
                  :groupValue      (cF (mav :selected))
                  :onChanged       (dart-cb [v]
                                     (cond
-                                      (pos? (muv :counter))
+                                      (pos? (h-dealt-ct (muv :hand)))
                                       (fx/user-alert ctx "Difficulty cannot be changed mid-game.")
                                       :else
                                       (mset! (fasc :difficulty) :selected v)))})))
@@ -90,32 +115,23 @@
 
 (defn playing-card [i]
   (fx/icon-button
-    {:icon      (cF (m/Icon (if (contains? (mav :discards) i)
+    {:icon      (cF (m/Icon (if (mav :discarded?)
                               m/Icons.circle_outlined m/Icons.add)))
      :onPressed (dart-cb []
                   (cond
                     (and (mav :discarded?) (= :hard (muv :difficulty :selected)))
                     (fx/user-alert ctx "Un-discarding not allowed in hard mode.")
-                    :else (mupdate! (fasc :hand) :discards
+                    :else (mupdate! (muv :hand) :discards
                             (if (mav :discarded?) disj conj) i)))}
-    {:discarded? (cF (contains? (mav :discards) i))}))
+    {:discarded? (cF (contains? (h-discards (muv :hand)) i))}))
 
 (defn hand-of-cards []
   (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
     {:name     :hand
-     :goal     (cFI (rand-nth (triangulars-not 32)))
-     :dealt    (cF (range 1 (inc (muv :counter))))
-     :discards (cI #{})
-     :held     (cF (let [discards (mav :discards)]
-                     (remove #(contains? discards %)
-                       (mav :dealt))))
-     :held-sum (cF (apply + (mav :held)))
-     :outcome  (cF (cond
-                     (= (mav :held-sum) (mav :goal)) :win
-                     (> (mav :held-sum) (mav :goal)) :lose))}
+     :value (cI (mk-hand))}
     (mapv (fn [i]
             (playing-card i))
-      (mav :dealt))))
+      (h-dealt (mav :value)))))
 
 (defn dealer-fab []
   (floating-action-button
@@ -123,13 +139,10 @@
      :disabledElevation 1
      :onPressed         (cF (dart-cb []
                               (if (= :deal (mav :action))
-                                (mupdate! (fmu :counter) :value inc)
-                                (do
-                                  (mset! (fmu :counter) :value 0)
-                                  (mset! (fmu :hand) :goal (random-goal))
-                                  (mset! (fmu :hand) :discards #{})))))}
+                                (mupdate! (muv :hand) :dealt-ct inc)
+                                (mset! (fmu :hand) :value (mk-hand)))))}
     {:name   :fab
-     :action (cF (if (muv :hand :outcome)
+     :action (cF (if (h-outcome (muv :hand))
                    :restart :deal))}
     (m/Icon (if (= :deal (mav :action))
               m/Icons.add m/Icons.restore))))
@@ -144,17 +157,15 @@
       (column {:mainAxisAlignment m/MainAxisAlignment.center}
         (game-difficulty)
         ; (fx/sized-box {:height 36})
-        (value-descr (str (muv :hand :goal))
+        (value-descr (str (h-goal (muv :hand)))
           "is our goal")
         (fx/sized-box {:height 36})
         (m/Text "We have pushed the button N times:")
         (text {:style (within-ctx [me ctx]
                         (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
-          {:name  :counter
-           :value (cI 0)}
-          (str (mget me :value)))
+          (str (h-dealt-ct (muv :hand))))
         (hand-of-cards)
         (fx/sized-box {:height 36})
-        (value-descr (str (muv :hand :held-sum))
+        (value-descr (str (h-held-sum (muv :hand)))
           "sums the held cards")
         (outcome)))))
