@@ -33,31 +33,14 @@
      :refer [wtrx dp dpx trx *fx$dpk*]]
 
     [tilton.mx.api :as mx
-     :refer [minfo cinfo dp cI mupdate! fm* mav]]
+     :refer [minfo cinfo dp cI cF mupdate! fm* navig mav]]
    ; [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx
      :refer [dart-cb within-ctx
              material-app scaffold app-bar floating-action-button
              theme icon-theme center column text sized-box]]))
 
-#_ (:require
-     ["package:flutter/material.dart" :as m]
-     ["package:flutter/widgets.dart" :as w]
-     ["package:flutter/foundation.dart" :as f]
-     ["dart:io" :as io]
-     ;[cljd.flutter :as f]
-     [tilton.mx.cell.base :as cty]
-     [tilton.mx.model.core :as md]
-     [tilton.mx.util :as mxu]
-     [tilton.mx.base
-      :refer [wtrx dp dpx trx *fx$dpk*]]
-     [tilton.mx.api :refer [minfo cinfo] :as mx]
-     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
-     [tilton.fmx.api :as fx]
-     [tilton.testing :as testing]
-     [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
-     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
-     )
+
 
 ;;; --- The Flutter Classic: A Counter App -----------------------
 ;;; A straight transliteration from the Dart example Counter app,
@@ -84,13 +67,19 @@
                                                             (m/Theme.of ctx))))})
      :floatingActionButton (floating-action-button
                              {:onPressed (dart-cb []
+                                           ;; we'll save this little test of path navigation
+                                           ;; todo set up navigation suite of test demos
+                                           #_ (let [ctr (navig [:the-col :the-counter] me
+                                                       :must? true :out true :inside? false)]
+                                             (dp :nvg-sees-ctr (minfo ctr)))
                                            (mupdate! (fm* :the-counter) :counter inc))
                               :tooltip   "Increment"}
                              (m/Icon m/Icons.add))}
     (center
       (column {:mainAxisAlignment m/MainAxisAlignment.center}
-        (text "We have pushed the button this many times:")
-        (text {:style (within-ctx [me ctx]
+        {:name :the-col}
+        (fx/text "We have pushed the button this many times:")
+        (fx/text {:style (within-ctx [me ctx]
                         (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}
           {:name    :the-counter
            :counter (cI 0)}

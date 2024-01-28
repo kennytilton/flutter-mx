@@ -3,13 +3,13 @@
     ["dart:async" :as async]
     [clojure.string :as str]
     [tilton.mx.cell.base :as cty]
-    [tilton.fmx.api :refer [dart-cb ] :as fx]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
     [tilton.mx.api :as mx
-     :refer [wmx-iso mget mset! mswap! fm* fmu cF cF+ cI]]
+     :refer [dp dpx wmx-iso mget mset! mswap! fm* fmu cF cF+ cI]]
+    [tilton.mx.model.navigate :refer [with-nav-props]]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]
-    [tilton.mx.base :refer [dprn dp dpx]]))
+    ["package:flutter/painting.dart" :as p]))
 
 ;;; n.b. The astute reader may realize that our use here of the Dart stream could be replaced with a Cell dependency.
 ;;; That is true. We just want to demonstrate how an _external_ stream can be woven into MX dataflow.
@@ -151,7 +151,8 @@
                                           (fn [^String msg]
                                             (wmx-iso
                                               (mset! me :msg-rcvd msg)))))]
-                           (mget (fm* :msg-sender) :msg-stream))
+                           (mget (with-nav-props [:floatingActionButton]
+                                   (fm* :msg-sender)) :msg-stream))
 
              :msg-rcvd
              ;; this value will come from outside MX dataflow, specifically a Dart stream,

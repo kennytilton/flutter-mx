@@ -3,7 +3,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
     ["package:english_words/english_words.dart" :as en]
-    [tilton.mx.api :refer [dp cF cFn cI mget mset! mswap! fasc fmu muv] :as mx]
+    [tilton.mx.api :refer [dp cF cFn cI mget mset! mupdate! mav fasc fmu muv] :as mx]
     [tilton.mx.model.peek :refer [mname]]
     [tilton.fmx.api :refer [dart-cb] :as fx]))
 
@@ -16,9 +16,8 @@
       (fx/text {:style          (fx/within-ctx [me ctx]
                                   (.copyWith (.-displayMedium (.-textTheme (m/Theme.of ctx)))
                                     .color (-> (m/Theme.of ctx) .-colorScheme .-onPrimary)))
-                :semanticsLabel (cF (let [wp (mget (fasc :bigc) :word-pair)]
-                                      (.-asPascalCase ^en/WordPair wp)))}
-        (.-asCamelCase ^en/WordPair (mget (fasc :bigc) :word-pair))))))
+                :semanticsLabel (cF (.-asPascalCase ^en/WordPair (mav :word-pair)))}
+        (.-asCamelCase ^en/WordPair (mav :word-pair))))))
 
 (defn generator-page []
   (fx/center
@@ -28,15 +27,14 @@
       (fx/row {:mainAxisSize m/MainAxisSize.min}
         (fx/elevated-button+icon
           {:label     (fx/text "Like")
-           :icon      (cF (if ((mx/fmav :app :favorites)
-                               (mx/fmav :app :word-pair))
+           :icon      (cF (if ((mav :favorites)
+                               (mav :word-pair))
                             (m/Icon m/Icons.favorite)
                             (m/Icon m/Icons.favorite_border)))
            :onPressed (dart-cb []
-                        (let [word-pair (mx/fmav :app :word-pair)
-                              favs (mx/fmav :app :favorites)]
-                          (mswap! (fasc :app) :favorites
-                            (if (favs word-pair)
+                        (let [word-pair (mav :word-pair)]
+                          (mupdate! (fasc :app) :favorites
+                            (if ((mav :favorites) word-pair)
                               disj conj) word-pair)))})
         (m/SizedBox .width 10)
         (fx/elevated-button

@@ -34,12 +34,11 @@
     [example.eg.x040-named-routes :as x040]
     [example.eg.x029a-layout-kid-builder :as x029k]
     [example.eg.flutter-layout-tutorial :as dlayout]
-    [example.eg.flutter-tts :as ttso]
+    [example.eg.flutter-tts :as ttso] ;; does not start up well with default lang
     [example.demo.tts.core :as tts]
     [example.eg.x045-websocket :as sock]
     [example.eg.x050-just-audio :as just]                   ;; has make-app and make-app-two
     ;[example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
-    ;[example.non-fmx.ifernandez-isolates :as iiso]
     [example.eg.x055_isolates :as x055]
     [example.demo.isolate.x00-spawn :as ispawn]
     [example.demo.isolate.x01-iso-explorer :as ixpo]
@@ -51,9 +50,9 @@
     [learn.counter.counter-fmx :as rp1]))
 
 (defn select []
-  (comment hello counter x03 x05 x13 dlayout tts tek sock todo)
+  (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
   (case 0
     0 (rp1/make-app)
-    1 (x029k/make-app)
+    1 (icompute/make-app)
     2 (todo/make-app)
-    3 (tek/make-app)))
+    3 (rp1/make-app)))

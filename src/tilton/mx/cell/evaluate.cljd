@@ -237,15 +237,17 @@
   (when (some #{c} *call-stack*)
     (let [me (c-model c)
           prop (c-prop-name c)]
-      (dp "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> cyclic dependency detected while computing prop "
+      (dp "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> throwing cyclic dependency detected while computing prop "
         prop " of model " (c-mname c))
-      (dp "...> callstack brief, latest first:")
-      (doseq [cc *call-stack*]
-        (dp "....> mname:" (c-mname cc) " prop " (c-prop-name cc)))
-      (dp "...> callstack verbose, latest first:")
-      (doseq [cc *call-stack*]
-        (dp "....> mname:" (c-mname cc) " prop " (:prop @cc))
-        (dp "....code> " (c-code$ cc)))
+      (do
+
+        (dp "...> callstack brief, latest first:")
+        (doseq [cc *call-stack*]
+          (dp "....> cf-md:" (c-mname cc) " prop " (c-prop-name cc)))
+        (dp "...> callstack verbose, latest first:")
+        (doseq [cc *call-stack*]
+          (dp "....> cf-md:" (c-mname cc) " prop " (:prop @cc))
+          (dp "....code> " (c-code$ cc))))
 
       (mx-throw
         "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> cyclic dependency detected while computing prop "
@@ -262,7 +264,7 @@
       (dpx c :CNL-trying-formula-code (c-code$ c))
       (let [raw-value (try ((c-rule c) c)
                         (catch Exception e
-                          (dp :rule-exception (cinfo c) (c-code$ c) e)))
+                          (dp :calc-n-link>rule-exception (cinfo c) (c-code$ c) e)))
             #_ (try
               ((c-rule c) c)
               (catch Exception e
@@ -435,8 +437,8 @@ then clear our record of them."
 (defn md-cell-flush [c]
   (chk (cref? c) "cref? fail on md-cell-flush" (cinfo c))
   (when-let [me (c-model c)]
-    (rmap-set! [:cells-flushed me]
-      (conj (:cells-flushed me)
+    (rmap-meta-set! [:cells-flushed me]
+      (conj (:cells-flushed (meta me))
         [(c-prop c) (c-pulse-observed c)]))))
 
 ;; --- optimize away ------------------------------------------

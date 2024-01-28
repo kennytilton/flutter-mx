@@ -14,11 +14,11 @@
              :refer [atom? rmap-set! set-ify difference countit]]
             [tilton.mx.foundation :as mxf :refer [mx-type PObserver observe]]
 
-            [tilton.mx.model.peek :refer [chk minfo cinfo cref? Model]]
+            [tilton.mx.model.peek :refer [mmx mmx-md chk minfo cinfo cref? Model] :as mpeek]
             [tilton.mx.cell.base :refer [dpc dpm c-model c-prop-name] :as cz]
             [tilton.mx.api :as mx
              :refer [md-quiesce! md-quiesce-if-owned! rmap-meta-set! cref?
-                     mpar mhost mabove mref? make mget mget? mkids mswap! cI cFkids]]
+                     mref? make mget mget? mkids mswap! cI cFkids]]
             [clojure.string :as str]))
 
 (def ^:dynamic *ctx* mx/unbound)
@@ -145,7 +145,7 @@
         (rmap-set! [:sst v] true))))
   (apply tilton.mx.model.core/make
     :mx-type mx-type
-    :fx$ikeys (remove #{:fx-class :fx-gen :name :key}
+    :fx$ikeys (remove #{:fx-class :fx-gen :name :key :fx$dpk}
                 (concat (keys fx-props) (keys custom-props)))
     :kids cFkids-form
     (concat
@@ -203,8 +203,7 @@
     (not (:sst @cell)) (dpm me :sstate+ :TRG-C-SST-NOT! (cinfo cell))
     :else (binding [*trg-cell* cell]
             (when-not *fx-building?*                        ;;  vestigial?
-              (dpm me :sstate+ :TRG-build :c (cinfo cell) :mpar (minfo (mpar))
-                :mhost (minfo (mhost me)))
+              (dpm me :sstate+ :TRG-build :c (cinfo cell) :mx (minfo (mmx)))
               (trigger-state me)))))
 
 (defn trigger-state [me]
@@ -221,12 +220,12 @@
           (if (and ctx (.-debugIsDefunct ^m/Element ctx))
             (do
               (dpm me :sstate :TRG-not-using-unmounted-state-setter!!!!!!!!!)
-              (trigger-state (mabove)))
+              (trigger-state (mmx-md)))
             (do (dpm me :sstate :TRG-build-using-state-setter!! :trg (cinfo *trg-cell*))
                 (state-setter (fn [] (do))))))
         (do
           (dpm me :sstate+ :TRG-no-state/setter-so-trying-above)
-          (trigger-state (mabove)))))))
+          (trigger-state (mmx-md)))))))
 
 (defn md-quiesce-lost! [cell new-value prior-value]
   ;; sloppy
@@ -234,7 +233,7 @@
     (when prior-value
       (cond
         (mref? prior-value) (wtrx [0 999 nil :mdq-lost-solo!!!!!!! (cinfo cell) :prior (minfo prior-value)]
-                              (md-quiesce-if-owned! (c-model cell) prior-value))
+                              (md-quiesce-if-owned! cell prior-value))
         (coll? new-value) (cond
                             (coll? prior-value)
                             (let [lost (difference (set prior-value) (set new-value))]
@@ -242,11 +241,11 @@
                                 (doseq [md lost]
                                   (when (mref? md)
                                     (wtrx [0 999 nil :mdq-lost-coll-diff (cinfo cell) :lostk (minfo md)]
-                                      (md-quiesce-if-owned! (c-model cell) md))))))
+                                      (md-quiesce-if-owned! cell md))))))
                             :else (when (mref? prior-value)
                                     (when-not (some #{prior-value} new-value)
                                       (wtrx [0 999 nil :mdq-solo-not-in-coll (cinfo cell) :solo (minfo prior-value)]
-                                        (md-quiesce-if-owned! (c-model cell) prior-value)))))))))
+                                        (md-quiesce-if-owned! cell prior-value)))))))))
 
 (deftype FXDartWidget []
   :extends Model
@@ -254,7 +253,7 @@
   (observe [this prop me new-value prior-value cell]
     (dpx :fxdw-obs prop)
     (when-not (= prior-value cz/unbound)
-      (when-not (some #{prop} [:parent :name :mx-type :on-quiesce :initState :fx-class :cells-flushed
+      (when-not (some #{prop} [:parent :name :mx-type :on-quiesce :initState :fx-class
                                :fx$state :fx$ikeys :fx$notifier :fx$observer])
         (dpx :FXDartWidget-observing!!! (cinfo cell))
         (dpx :FXDartWidget-observing!!! prop new-value prior-value (minfo me) (cinfo cell))
@@ -537,6 +536,24 @@
                                 (tilton.mx.api/mget? ~'me :key))
                          ~@(fx-props>mx (dissoc fx-props :key))))))))))
 
+
+(defmacro prop-param1 [source-prop-name fx-class fx-props mx-props]
+  (let []
+    (prn :ppp1!!!!!!!!!!! source-prop-name fx-class fx-props mx-props)
+    `(tilton.fmx.factory/make-fx-dart-widget
+       ~fx-props
+       (assoc ~mx-props
+         :fx-class (quote ~fx-class)
+         :fx-gen (fn fgen [me# ctxtop#]
+                   (tilton.fmx.factory/gen-gen me# ctxtop#
+                     (fn [~'me ~'ctx]
+                       ;(dp :prop-param1-gen (tilton.mx.api/minfo ~'me))
+                       (~fx-class (tilton.fmx.api/fx-render ~'ctx
+                                    (tilton.mx.api/mget ~'me ~source-prop-name))
+                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
+                                (tilton.mx.api/mget? ~'me :key))
+                         ~@(fx-props>mx (dissoc fx-props :key source-prop-name))))))))))
+
 (defmacro konly-prop-dbg [target-prop-name fx-class fx-props mx-props & [only-kid]]
   ;; only-kid optional for, eg, AnimatedContainer, AlertDialog
   (let []
@@ -672,7 +689,7 @@
          :builder (tilton.mx.api/cF
                     (fn [~'ctx box-constraints#]
                       (tilton.fmx.factory/binding-ctx :konly-layout-kid ~'ctx
-                        (dpx :konly-builder-CALLED-box-ctx box-constraints# #_#_ :ctx ~'ctx)
+                        (dpx :konly-builder-CALLED-box-ctx box-constraints# #_#_:ctx ~'ctx)
                         ;; Convert box argument to reactive input
                         (binding [tilton.fmx.factory/*fx-building?* true]
                           (dpx :mset!-ting-box-con!!! box-constraints# (tilton.mx.api/minfo ~'me))

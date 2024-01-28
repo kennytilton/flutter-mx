@@ -70,8 +70,9 @@
                                        (when (mget (fm* :auto-play) :value)
                                          (do-stop me)       ;; <-- new since livecode #1
                                          (do-speak me)))))]
-                      (when-let [prefs (mget me :prefs)]
-                        (:lg-current prefs)))
+                      (if-let [prefs (mget me :prefs)]
+                        (:lg-current prefs)
+                        "en-AU"))
      }
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
@@ -183,8 +184,7 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [; app (mx/fasc-inclusive :app)                               ;; turns out 'me' _is_ the app
-        fts ^FlutterTts (get-fts)
+  (let [fts ^FlutterTts (get-fts)
         pitch (mget (fm* :pitch) :value)
         volume (mget (fm* :volume) :value)
         speech-rate (mget (fm* :speech-rate) :value)

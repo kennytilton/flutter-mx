@@ -4,17 +4,35 @@
     ["package:flutter/foundation.dart" :as fd]
     [tilton.mx.foundation :refer [MXImplementer PObserver mx-type]]))
 
+
+(def ^:dynamic *mx*
+  "An edge fron the matrix, implemented as vector of
+  a Model and a property name."
+  nil)
+
+(defn mx-md [mx]
+  (first mx))
+(defn mx-prop [mx]
+  (second mx))
+
+(defmacro mmx-md [& [me]]
+  (let [me (or me 'me)]
+    `(first (:mx @~me))))
+(defmacro mmx [& [me]]
+  (let [me (or me 'me)]
+    `(:mx @~me)))
+
 ;; --- assertions ---------------------------
 (defn flutter-release-mode []
   fd/kReleaseMode)
 
 (defn call-chk [condition & bits]
   (when-not condition
-    (throw (Exception. (str/join " - " bits)))))
+    (throw (Exception. (str "CHK> FAIL!!!: "(str/join " - " bits))))))
 
 (defmacro chk [test & bits]
-  `(do)
-  #_`(when-not (tilton.mx.model.peek/flutter-release-mode)
+  #_ `(do)
+  `(when-not (tilton.mx.model.peek/flutter-release-mode)
        ;(dp :chk-of '~test)
        (tilton.mx.model.peek/call-chk ~test '~test ~@bits)))
 

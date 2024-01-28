@@ -11,8 +11,8 @@
     [clojure.walk :as walk]
     [tilton.mx.util :as util]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv muiv fm* fm*v mav mx-bound? wmx-iso millis-now or-mx-bound]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset!
+              mav mx-bound? wmx-iso millis-now or-mx-bound]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -119,13 +119,12 @@
      :health-monitor (cF (when-let [iso (mget me :spawn-iso)]
                            (when-let [to-iso (mget me :to-iso)]
                              (when (not (mav :iso-paused?))
-                               (mx/with-host me
+                               (mx/with-mx-edge [me :health-monitor]
                                  (mk-health-monitor me iso to-iso))))))
 
      ; --- pausing ---------------------------------------------------
      :resume-cap     (cI nil)
      :iso-paused?    (cF+n [:watch (fn [_ me paused? prior _]
-                                     (dp :W-ipaused paused? prior)
                                      (when-let [iso ^Isolate? (mget me :spawn-iso)]
                                        (when (mx-bound? prior)
                                          (cond

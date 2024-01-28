@@ -1,0 +1,185 @@
+(ns tilton.mx.model.navigate
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.model.peek :refer [*mx* mx-md mx-prop]]
+    [tilton.mx.model.base :refer [md-cz]]
+    [tilton.mx.base
+     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props mx-throw]]
+    [tilton.mx.foundation :refer [mx-type PObserver observe]]
+    [tilton.mx.util
+     :refer [difference atom? rmap-set! rmap-meta-set! pln]]
+
+    [tilton.mx.cell.base
+     :refer [without-c-dependency dpc
+             cells-init c-optimized-away? c-formula? c-value c-optimize
+             c-unbound? c-input? c-quiesce!
+             c-model c-valid? c-useds
+             c-state +pulse+ c-pulse-observed
+             *call-stack* *defer-changes* unbound
+             c-rule c-me c-value-state c-callers
+             unlink-from-callers *causation*
+             c-synaptic? c-prop-name
+             c-pulse c-pulse-last-changed c-ephemeral? c-prop c-props
+             *depender* c-lazy] :as cty]
+
+    [tilton.mx.model.peek :refer [mmx mmx-md chk *md-quiescing* Model minfo cinfo mref? cref?]]
+    [tilton.mx.model.base :refer [mget mget? md-cell md-install-cell md-awaken]]))
+
+
+(def ^:dynamic *navig-trace* nil)
+
+(defn- fm-tracing? [key]
+  (some #{key :all} *navig-trace*))
+
+(defn- fmdp [key & mas]
+  #_(when *navig-trace*
+      (dp :fmdp-sees-key key :tracing *navig-trace*))
+  (when (fm-tracing? key)
+    (apply dp mas)))
+
+(defmacro navdbg [option & body]
+  `(let [options# ~option]
+     (binding [*navig-trace* (if (sequential? options#)
+                               options# (vector options#))]
+       (do ~@body))))
+
+(defn- navig-eq? [seek poss]
+  (chk (or (atom? poss) (string? poss))
+    (str "navig-eq? poss not ref!!!!!!!!! " poss))
+  (fmdp :eq :navig-eq? (fn? seek) (keyword? seek) (minfo poss))
+  (cond
+    (not (atom? poss))                                      ;; string child of html label?
+    (do (dp :navig-eq?-bail-not-ref poss)
+        false)
+
+    (fn? seek) (when-let [found (seek poss)]
+                 (fmdp :bingo found)
+                 found)
+    (keyword? seek) (do
+                      ;; (trx :navig-eq?sees seek (:name @poss) (mx-type poss))
+                      (or (= seek (:name @poss))
+                        ;; search for types will have to be converted to function tests
+                        ;; with explicit types coded
+                        #_(= (mx-type poss) seek)))
+    :else (do (trx :navig-eq?-else-pplain=! seek)
+              (= seek poss))))
+
+(declare navig-prop)
+
+(def ^:dynamic *nav-props* [:kids])
+
+(defmacro with-nav-props [[& props] & body]
+  `(binding [tilton.mx.model.navigate/*nav-props* [:kids ~@props]]
+     ~@body))
+
+#_
+(some (partial fm-navig-hosted? what where (:skip options))
+  ;; todo should navig be restricted to custom props and :kids?
+  ;; todo rework how delegates access full mx
+  (keep #{:persistentFooterButtons
+          :floatingActionButton
+          :home :body} (:fx$ikeys @where)))
+
+(defn- navig-ex [what where me? inside? out dbg skip]
+  (dpx :nex-in where)
+  (wtrx (0 100 nil :navig-ex-entry
+          what (minfo where) inside? out)
+    (assert (mref? where) (str "navig-ex passed non mref for where:" where))
+    (when (> *trdeep* 64)
+      (throw (Exception (str "navig-ex bailing at depth: " *trdeep*
+                          " seeking: " what " from: " where " options: " me? inside? out dbg))))
+    (or
+      (when me?
+        (when (navig-eq? what where)
+          (dpx :navex-bingo-eq! (minfo where))
+          where))
+      (and inside?
+        (some (partial navig-prop what where skip dbg)
+          *nav-props*))
+      (and out
+        (when-let [owner (mmx-md where)]
+          (navig-ex what owner true (not= out :asc-only) out dbg where))))))
+
+(defn- navig-prop [what where skip dbg prop]
+  (dpx :nprop-calls *call-stack*)
+  (when-not (some (fn [c]
+                    (when (and (= where (c-model c))
+                            (= prop (c-prop-name c)))
+                      (dp :navig-prop-skipping-cyclic (cinfo c))
+                      true)) *call-stack*)
+    (fmdp :host :navex-hosted-entry prop what (minfo where) :skipping skip)
+    (try
+      (when-let [it (mget where prop)]
+        (fmdp :host :navhosted-got-it prop it what (minfo where))
+        (cond
+          (mref? it) (if (= it skip)
+                       (fmdp :host :skipping-skip (minfo skip))
+                       (do (fmdp :host :checking-hosted!! prop (minfo it))
+                           (navig-ex what it true false false dbg skip)))
+          (sequential? it) (do (fmdp :checking-hosted-seq!! (map minfo it))
+                               (some (fn [it]
+                                       (when (and (mref? it) (not= it skip))
+                                         (dpx :hosted-chk-it)
+                                         (navig-ex what it true true false dbg skip))) it))
+          :else (when it (dpx :ignoring-prop-val it))))
+      (catch Exception e
+        (dp :navig-prop>ignoring-cyclic-prop prop :of (minfo where))))))
+
+(defn navig [what where & option-kvs]
+  (let [{:keys [me? inside? out wocd? :must? dbg]}
+        (merge
+          {:me? false :inside? false :out true :wocd? true :must? true :dbg nil}
+          (apply hash-map option-kvs))]
+    "Search the matrix directed tree starting `where` for `what`.
+      where: must be a model;
+      what: can be a keyword, type, or function taking a model node as its only param, returning true/false;
+      other options: me?, inside?, out (false|true|:asc), wocd?, must?, and dbg"
+    (dpx :navig> what (minfo where) me? inside? out :must?)
+    (cond
+      (sequential? what)
+      (do (assert (seq what))
+          (loop [[step & more-steps] what
+                 from where
+                 step-me? me?
+                 step-in? inside?
+                 step-out out]
+            (dpx :pathing step :in? inside? (minfo from))
+            (cond
+              (nil? step)
+              (or from (when :must?
+                         (throw (Exception (str "navig-must 1 failed on path what " what
+                                             ", starting from " (minfo where)
+                                             ", me/inside/out: " (str/join "/" [me? inside? out]))))))
+              :else (if-let [md (navig-ex step from step-me? step-in? step-out dbg nil)]
+                      (recur more-steps md false true false)
+                      (when :must?
+                        (throw (Exception (str "navig-must 2 failed on path what " what
+                                            ", at step " (minfo from)
+                                            ", starting from " (minfo where)
+                                            ", me/in/out: " (str/join "/" [me? inside? out])))))))))
+      ; ----
+      (keyword? what)
+      (let [it (binding [*depender* (if :wocd? nil *depender*)]
+                 (navig-ex (fn [node]
+                             (= what (mget? node :name))) where
+                   me? inside? out dbg nil))]
+        (cond
+          (and :must? (nil? it))
+          (throw (Exception (str "navig-must failed seeking what " what
+                              ", starting from " (minfo where)
+                              ", me/in/out: " (str/join "/" [me? inside? out]))))
+          :else it))
+      ; ---
+      (fn? what)
+      (let [it (binding [*depender* (if :wocd? nil *depender*)]
+                 (navig-ex what where me? inside? out dbg nil))]
+        (cond
+          (and :must? (nil? it))
+          (throw (Exception (str "navig-must failed seeking what " what
+                              ", starting from " (minfo where)
+                              ", me/in/out: " (str/join "/" [me? inside? out]))))
+          :else it))
+      ; ---
+      :else (throw (Exception (str "navig> invalid value for 'what': " what
+                                ", starting from " (minfo where)
+                                ", me/in/out: " (str/join "/" [me? inside? out])))))))

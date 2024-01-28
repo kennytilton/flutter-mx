@@ -1,10 +1,7 @@
 (ns example.eg.x15-fade-widget
   "FlutterMX port of CLJD Faithful port of https://docs.flutter.dev/cookbook/animation/opacity-animation"
   (:require ["package:flutter/material.dart" :as m]
-    ;["package:localstore/localstore.dart" :as ls]
-            [tilton.mx.model.core :refer [mget mset! mswap!] :as md]
-            [tilton.mx.cell.core :refer [cF cF+ cF_ cI c_F]]
-            [tilton.mx.api :refer [dp wmx-iso minfo]]
+            [tilton.mx.api :refer [dp dpx wmx-iso minfo mget mset! mupdate! muv fm* cF cI]]
             [tilton.fmx.api :as fx]))
 
 (defn make-app []
@@ -18,14 +15,14 @@
          :floatingActionButton (fx/within-ctx [me ctx]
                                  (fx/floating-action-button
                                    {:tooltip   "Toggle Opacity"
-                                    :onPressed #(wmx-iso (md/mswap! me :visible not))}
+                                    :onPressed #(wmx-iso (mupdate! me :visible not))}
                                    (fx/icon m/Icons.flip)))}
         {:visible (cI true)
          :name    :my-home}
         (fx/center {}
           {:name :zcenter}
           (fx/animated-opacity
-            {:opacity  (cF (cond (true? (md/mget (md/fm* :my-home) :visible)) 1.0
+            {:opacity  (cF (cond (true? (mget (fm* :my-home) :visible)) 1.0
                                  :else 0.0))
              :duration (Duration .milliseconds 500)}
             {:name :ani-opa}

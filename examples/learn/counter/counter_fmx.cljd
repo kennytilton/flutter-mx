@@ -20,17 +20,17 @@
 (declare home-page)
 
 (defn make-app []
-  (fx/run-fx-app
-    (material-app
-      {:title "Flutter Demo"
-       :theme (m/ThemeData
-                .colorScheme (m/ColorScheme.fromSeed
-                               .seedColor m/Colors.deepPurple))}
-      (home-page .title "Blackjack-Ish"))))
+  (material-app
+    {:title "Flutter Demo"
+     :theme (m/ThemeData
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    (home-page .title "Blackjack-Ish")))
 
 (defn main []
   (.ensureInitialized w/WidgetsFlutterBinding)
-  (make-app))
+  (fx/run-fx-app
+    (make-app)))
 
 ;;; --- helpers -----------------------------------------
 
