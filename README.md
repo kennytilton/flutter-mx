@@ -2,8 +2,6 @@
 
 Programming [Flutter](https://flutter.dev/?gclid=CjwKCAjwwdWVBhA4EiwAjcYJEEoxUuE14sd2MGLJW35qeuJynmTRjqpUL3SbIUhOiS4TihjyZ9iTVRoCJkoQAvD_BwE&gclsrc=aw.ds) with [ClojureDart](https://github.com/Tensegritics/ClojureDart) and [Matrix](https://github.com/kennytilton/matrix), a generic, fine-grained, transparent, reactive state manager.
 
-> [!WARNING]  
-I just upgraded to Mac OS X Sonoma, forcing an upgrade of XCode and Simulator. At least one package, flutter_tts stopped producing audio, and upgrading to the latest did not work. Googling revealed that flutter_tts has a fix in Beta, and that sims built to run on iOS 16.4 will work. That requires going into XCode settings/Platforms to add iOS 16.4, then in the Simulator app we get iOS 16 as an option when making a "New Simulator...". <gasp> 
 ## Documentation
 Please see our [WIP Wiki](https://github.com/kennytilton/flutter-mx/wiki), or just ping @kennytilton on the #clojurians or #fluttercommunity Slacks and we can pair to get you rolling.
 
