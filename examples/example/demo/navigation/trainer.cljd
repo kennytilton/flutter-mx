@@ -1,0 +1,84 @@
+(ns example.demo.navigation.trainer
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx
+             material-app scaffold app-bar floating-action-button
+             center column row container text-button text sized-box]]))
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Navigation Trainer"
+     :theme (m/ThemeData .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    (scaffold
+      {:appBar      (app-bar
+                      {:title           (m/Text "Flutter/MX Navigation Trainer")
+                       :backgroundColor (cF (.-inversePrimary
+                                              (.-colorScheme ^m/ThemeData (mav :theme))))})
+       :bottomSheet (container
+                      {:constraints (m/BoxConstraints .minHeight 48)
+                       :margin      (m/EdgeInsets.only .bottom 12)
+                       ;:alignment   m/Alignment.centerRight
+                       }
+                      (column
+                        {:mainAxisAlignment m/MainAxisAlignment.center}
+                        (m/Text "root")
+                        (row
+                          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+                          (container {:decoration (cF (fx/box-decoration
+                                                        {:border (cF (.all m/Border .color m/Colors.blue .width 2))
+                                                         :color  (.-shade50 m/Colors.blue)}))}
+                            (fx/padding {:padding (m/EdgeInsets.all 4.0)}
+                              (m/Text "one")))
+                          (m/Text "two")
+                          (m/Text "three"))))
+       #_(defn lang-button [i lang]
+           (fx/gesture-detector
+             {:key   (m/ValueKey. lang)
+              :onTap (dart-cb []
+                       (mset! (app-fts) :lg-current
+                         (first (get (app-lang-geos) lang))))}
+             (container
+               {:decoration (cF (fx/box-decoration
+                                  {:border (cF (when (= lang (app-fts-lang))
+                                                 (.all m/Border .color m/Colors.blue .width 2)))
+                                   :color  (.-shade50 (cond
+                                                        (even? i) m/Colors.blue
+                                                        :else m/Colors.yellow))}))}
+               (center
+                 (padding {:padding (m/EdgeInsets.all 4.0)}
+                   (fx/text
+                     {:style (p/TextStyle .color m/Colors.black
+                               .fontSize 16.0)}
+                     lang))))))
+       :floatingActionButton
+       (floating-action-button
+         {:onPressed (dart-cb []
+                       #_(mswap! (fm* :counter) :value inc))
+          :tooltip   "Increment"}
+         (m/Icon m/Icons.add .color m/Colors.black))}
+      (center
+        (fx/text-button
+          {:onPressed (dart-cb []
+                        #_(mset! selector
+                            :selection completion-enum))
+           :style     (cF (m/ButtonStyle .foregroundColor
+                            (if (mget me :selected?)
+                              (m/MaterialStateProperty.resolveWith
+                                (fn [s]
+                                  m/Colors.blue))
+                              (m/MaterialStateProperty.resolveWith
+                                (fn [s] m/Colors.black)))))}
+          {:name      :me
+           :selected? (cF true #_(= completion-enum
+                                   (mget selector :selection)))}
+          (m/Text (name (:name @me))))))))
+
+
+
+

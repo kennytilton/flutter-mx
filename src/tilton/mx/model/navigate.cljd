@@ -66,19 +66,23 @@
 
 (declare navig-prop)
 
-(def ^:dynamic *nav-props* [:kids])
+(def ^:dynamic *nav-props*
+  [:kids :home :body
+   :persistentFooterButtons
+   :floatingActionButton])
 
-(defmacro with-nav-props [[& props] & body]
+(defmacro with-nav-props
+  "Override default navigation edges with :kids and specified other model props."
+  [[& props] & body]
   `(binding [tilton.mx.model.navigate/*nav-props* [:kids ~@props]]
      ~@body))
 
-#_
-(some (partial fm-navig-hosted? what where (:skip options))
-  ;; todo should navig be restricted to custom props and :kids?
-  ;; todo rework how delegates access full mx
-  (keep #{:persistentFooterButtons
-          :floatingActionButton
-          :home :body} (:fx$ikeys @where)))
+#_(some (partial fm-navig-hosted? what where (:skip options))
+    ;; todo should navig be restricted to custom props and :kids?
+    ;; todo rework how delegates access full mx
+    (keep #{:persistentFooterButtons
+            :floatingActionButton
+            :home :body} (:fx$ikeys @where)))
 
 (defn- navig-ex [what where me? inside? out dbg skip]
   (dpx :nex-in where)
@@ -105,7 +109,7 @@
   (when-not (some (fn [c]
                     (when (and (= where (c-model c))
                             (= prop (c-prop-name c)))
-                      (dp :navig-prop-skipping-cyclic (cinfo c))
+                      (dpx :navig-prop-skipping-cyclic (cinfo c))
                       true)) *call-stack*)
     (fmdp :host :navex-hosted-entry prop what (minfo where) :skipping skip)
     (try
@@ -126,14 +130,14 @@
         (dp :navig-prop>ignoring-cyclic-prop prop :of (minfo where))))))
 
 (defn navig [what where & option-kvs]
-  (let [{:keys [me? inside? out wocd? :must? dbg]}
+  (let [{:keys [me? inside? out without-dependency? :must? dbg]}
         (merge
-          {:me? false :inside? false :out true :wocd? true :must? true :dbg nil}
+          {:me? false :inside? false :out true :without-dependency? true :must? true :dbg nil}
           (apply hash-map option-kvs))]
     "Search the matrix directed tree starting `where` for `what`.
       where: must be a model;
       what: can be a keyword, type, or function taking a model node as its only param, returning true/false;
-      other options: me?, inside?, out (false|true|:asc), wocd?, must?, and dbg"
+      other options: me?, inside?, out (false|true|:asc), without-dependency?, must?, and dbg"
     (dpx :navig> what (minfo where) me? inside? out :must?)
     (cond
       (sequential? what)
@@ -159,7 +163,7 @@
                                             ", me/in/out: " (str/join "/" [me? inside? out])))))))))
       ; ----
       (keyword? what)
-      (let [it (binding [*depender* (if :wocd? nil *depender*)]
+      (let [it (binding [*depender* (if :without-dependency? nil *depender*)]
                  (navig-ex (fn [node]
                              (= what (mget? node :name))) where
                    me? inside? out dbg nil))]
@@ -171,7 +175,7 @@
           :else it))
       ; ---
       (fn? what)
-      (let [it (binding [*depender* (if :wocd? nil *depender*)]
+      (let [it (binding [*depender* (if :without-dependency? nil *depender*)]
                  (navig-ex what where me? inside? out dbg nil))]
         (cond
           (and :must? (nil? it))

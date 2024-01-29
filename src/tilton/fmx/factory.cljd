@@ -536,47 +536,6 @@
                                 (tilton.mx.api/mget? ~'me :key))
                          ~@(fx-props>mx (dissoc fx-props :key))))))))))
 
-
-(defmacro prop-param1 [source-prop-name fx-class fx-props mx-props]
-  (let []
-    (prn :ppp1!!!!!!!!!!! source-prop-name fx-class fx-props mx-props)
-    `(tilton.fmx.factory/make-fx-dart-widget
-       ~fx-props
-       (assoc ~mx-props
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn fgen [me# ctxtop#]
-                   (tilton.fmx.factory/gen-gen me# ctxtop#
-                     (fn [~'me ~'ctx]
-                       ;(dp :prop-param1-gen (tilton.mx.api/minfo ~'me))
-                       (~fx-class (tilton.fmx.api/fx-render ~'ctx
-                                    (tilton.mx.api/mget ~'me ~source-prop-name))
-                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
-                                (tilton.mx.api/mget? ~'me :key))
-                         ~@(fx-props>mx (dissoc fx-props :key source-prop-name))))))))))
-
-(defmacro konly-prop-dbg [target-prop-name fx-class fx-props mx-props & [only-kid]]
-  ;; only-kid optional for, eg, AnimatedContainer, AlertDialog
-  (let []
-    `(tilton.fmx.factory/make-fx-dart-widget
-       ~fx-props
-       (assoc ~mx-props
-         :fx-class (quote ~fx-class)
-         :fx-gen (fn fgen [me# ctxtop#]
-                   (tilton.mx.cell.base/dpm me# :ggen :konlprop-fx-gen-sees (.-hashCode ctxtop#) ctxtop# (tilton.mx.api/minfo me#))
-                   (tilton.fmx.factory/gen-gen me# ctxtop#
-                     (fn [~'me ~'ctx]
-                       (tilton.mx.cell.base/dpm ~'me :ggen :konly-prop-gen ~target-prop-name ~'ctx (tilton.mx.api/minfo ~'me))
-                       (~fx-class
-                         .key (tilton.fmx.factory/fx-resolve ~'me ~'ctx
-                                (tilton.mx.api/mget? ~'me :key))
-                         ; the prop...
-                         ~(symbol (str "." (name target-prop-name)))
-                         (tilton.fmx.factory/fx-resolve :kid1 ~'me ~'ctx
-                           (first (tilton.mx.api/mkids ~'me)))
-                         ; other props
-                         ~@(fx-props>mx (dissoc fx-props :key)))))))
-       (tilton.mx.api/cFkids ~only-kid))))
-
 (defmacro kids-prop [target-prop-name fx-class fx-props mx-props & kids]
   (let []
     `(tilton.fmx.factory/make-fx-dart-widget
