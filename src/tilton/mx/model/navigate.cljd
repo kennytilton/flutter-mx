@@ -77,13 +77,6 @@
   `(binding [tilton.mx.model.navigate/*nav-props* [:kids ~@props]]
      ~@body))
 
-#_(some (partial fm-navig-hosted? what where (:skip options))
-    ;; todo should navig be restricted to custom props and :kids?
-    ;; todo rework how delegates access full mx
-    (keep #{:persistentFooterButtons
-            :floatingActionButton
-            :home :body} (:fx$ikeys @where)))
-
 (defn- navig-ex [what where me? inside? out dbg skip]
   (dpx :nex-in where)
   (wtrx (0 100 nil :navig-ex-entry
@@ -113,7 +106,7 @@
                       true)) *call-stack*)
     (fmdp :host :navex-hosted-entry prop what (minfo where) :skipping skip)
     (try
-      (when-let [it (mget where prop)]
+      (when-let [it (mget? where prop)]
         (fmdp :host :navhosted-got-it prop it what (minfo where))
         (cond
           (mref? it) (if (= it skip)
@@ -127,6 +120,7 @@
                                          (navig-ex what it true true false dbg skip))) it))
           :else (when it (dpx :ignoring-prop-val it))))
       (catch Exception e
+        (dp :navig-prop>ignoring e)
         (dp :navig-prop>ignoring-cyclic-prop prop :of (minfo where))))))
 
 (defn navig [what where & option-kvs]
