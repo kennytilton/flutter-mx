@@ -345,6 +345,34 @@
              (tilton.fmx.factory/binding-ctx :hotrelo ~flutter-build-ctx
                ~@body)))))))
 
+(defmacro hot-reload-detector-ctx
+  [& body]
+  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
+        state-sym `^w/State state#
+        super-sym `super#]
+    `(reify :extends (w/StatefulWidget.)
+       :no-meta true
+       (~'createState [_#]
+         (reify :extends w/State
+           :no-meta true
+           (~'initState [~state-sym]
+             (.initState ~(vary-meta state-sym assoc :tag 'super))
+             nil)
+           (^void ~'reassemble [this#]
+             (.reassemble ^{:tag ~'super} this#)
+             (repl-ish))
+           (~'dispose [~state-sym]
+             (.dispose ~(vary-meta state-sym assoc :tag 'super)))
+           (~'build [~state-sym ~flutter-build-ctx]
+             (tilton.fmx.factory/binding-ctx :hotrelo ~flutter-build-ctx
+               (let [~'ctx ~flutter-build-ctx]
+                 ~@body))))))))
+
+#_      (fx/run-app
+          (hot-reload-detector
+            (dp :XXXXXX---HRD--inside-body)
+            (fx/fx-render nil (%make-app))))
+
 (defmacro run-app [widget-expression]
   `(m/runApp
      (tilton.fmx.api/wrap-stateless
@@ -356,6 +384,12 @@
      (tilton.fmx.api/wrap-stateless
        (tilton.fmx.api/wrap-unique-key
          (tilton.fmx.api/fx-render ~'ctx ~fx-app)))))
+
+(defmacro run-fx-app-hot [fx-app]
+  `(m/runApp
+     (tilton.fmx.api/hot-reload-detector-ctx
+       (tilton.fmx.api/fx-render ~'ctx ~fx-app))))
+
 
 ;;; --- environment ------------------------
 
