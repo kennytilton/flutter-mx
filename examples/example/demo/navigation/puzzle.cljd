@@ -1,0 +1,43 @@
+(ns example.demo.navigation.puzzle
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.mx.foundation :refer [PObserver]]
+    [tilton.mx.model.peek :refer [Model]]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :as mx
+     :refer [dp minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav
+             def-mx-props]]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx
+             material-app scaffold app-bar floating-action-button
+             center column row container text-button text sized-box]]))
+
+;;; --- domain -----------------------------------
+
+(deftype Puzzle []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]
+    #_ (dp :hand-sees prop :now new-value)))
+
+(def-mx-props pz- structure start seek nvg-options)
+
+(defn mk-puzzle [structure]
+  (mx/make (Puzzle)
+    :structure structure
+    :nvg-options {:me? false :inside? false :out true :out-asc-only false :without-dependency? true :must? true
+                  :dbg false}
+    :start (cI nil)
+    :seek (cI nil)))
+
+;;; --- puzzles -------------------------------------------
+
+(def pz-zero [:app [:scaffy [[[:app-bar {:p0 42 :p1 "red"}] [:aaa :bbb [:ccc [:dddd :eeee :ffff]]]]
+                        #_#_ [:body [[:aa [:aaa]]
+                                [:aa [:aaa]]
+                                :bbb]]
+                        [:drawer [[:aa [:aaa]]
+                                  [:aa [:aaa]]
+                                  :bbb]]
+                        #_ :fab]]])

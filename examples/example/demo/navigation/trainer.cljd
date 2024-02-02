@@ -3,18 +3,26 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
-    [tilton.mx.api :refer [dp minfo cF cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
+    [tilton.mx.api :refer [dp minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
      :refer [dart-cb within-ctx
              material-app scaffold app-bar floating-action-button
-             center column row container text-button text sized-box]]))
+             center column row container text-button text sized-box]]
+
+    [example.demo.navigation.puzzle :as pz
+     :refer [mk-puzzle pz-zero pz-structure pz-nvg-options]]
+    [example.demo.navigation.component :refer [nvg-solution]]))
+
+; todo - structure extract utility
+; todo - do sth with dbg option
+; todo - 'what' text-field
 
 (defn make-app []
   (material-app
     {:title "Flutter/MX Navigation Trainer"
      :theme (m/ThemeData .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
-                             .seedColor m/Colors.deepPurple))}
+                             .seedColor m/Colors.teal.shade300))}
     (scaffold
       {:appBar (app-bar
                  {:title           (m/Text "Flutter/MX Navigation Trainer")
@@ -27,69 +35,80 @@
                        #_(mswap! (fm* :counter) :value inc))
           :tooltip   "Increment"}
          (m/Icon m/Icons.add .color m/Colors.black))}
-      (column {}
-        {:nvg-options (cI {:me? false :inside? false :out true :out-asc-only false :without-dependency? true :must? true})}
-        (tree :app [[:scaffy [[:app-bar [:aaa :bbb [:ccc [:dddd :eeee]]]]
-                              [:body [[:aa [:aaa]]
-                                      [:aa [:aaa]]
-                                      :bbb]]
-                              [:drawer [[:aa [:aaa]]
-                                        [:aa [:aaa]]
-                                        :bbb]]
-                              :fab]]])
-        (row
-          (navig-option :must?)
-          (navig-option :me?)
-          (navig-option :inside?)
-          (navig-option :out)
-          (navig-option :out-asc-only))))))
+      {:name           :scaffy
+       :puzzle-factory (cI pz-zero)}
+      (center
+        (column {}
+          {:puzzle      (cF (mk-puzzle (mav :puzzle-factory)))
+           :nvg-options (cFI (pz-nvg-options (mav :puzzle)))}
+          (md-tree :app #_(pz-structure (mav :puzzle)))
+          (nvg-solution))))))
 
-(defn navig-option [option]
-  (fx/sized-box {:width 200}
-    (fx/checkbox-list-tile
-      {:key             (m/ValueKey (name option))
-       :controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text (name option))
-       :value           (cF (get (mav :nvg-options) option))
-       :onChanged       (dart-cb [on-off]
-                          (mswap! (mav :nvg-options) option not))})))
-
-(defn tree
-  ([name] (tree name []))
-  ([name kids]
-
-   (container
-     {:constraints (m/BoxConstraints .minHeight 24)
-      :margin      (m/EdgeInsets.all 9)
-      :decoration  (cF (fx/box-decoration
-                         {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
-                          :color  (.-shade50 m/Colors.blue)}))}
-     (cond
-       (seq kids)
-       (column
-         {:mainAxisAlignment m/MainAxisAlignment.center}
-         (node name)
-         (row
-           {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
-            :crossAxisAlignment m/CrossAxisAlignment.start}
-           (mapv (fn [kid]
-                   (if (keyword? kid)
-                     (node kid)
-                     (tree (first kid) (second kid))))
-             kids)))
-       :else (node (str name))))))
-
-(defn node [name]
+(defn md-tree [tr]
+  (dp :tree-md tr)
   (container
     {:constraints (m/BoxConstraints .minHeight 24)
-     :margin      (m/EdgeInsets.all 16)
+     :margin      (m/EdgeInsets.all 3)
+     :decoration  (cF (fx/box-decoration
+                        {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                         :color  m/Colors.grey.shade50}))}
+    ; possibilities:
+    ;  just a model name such as :my-label, no props, no children, distinguished by tr being a keyword (or type?)
+    ;  just a vector pair, model and props, distinguished by props being a map;
+    ;    nb a prop value might be a md-tree
+    ;  a vector pair of a model and its kids, distinguished by the kids being a vector
+    (cond
+      (keyword? tr)
+      (model-view tr)
+      #_#_ :else
+      (column
+        {:mainAxisAlignment m/MainAxisAlignment.center}
+        (model md)
+        (row
+          {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+           :crossAxisAlignment m/CrossAxisAlignment.start}
+          (mapv (fn [kid]
+                  (cond
+                    (keyword? kid) (model kid {})
+                    :else (tree (first kid) (second kid))))
+            kids))))))
+
+#_
+(defn model [md]
+  (cond
+    (keyword? md) (model-props md nil)
+    (vector? md) (do (assert (and (= 2 (count md)
+                                    (keyword? (first md))
+                                    (map? (second md)))))
+                     (model-props (first md) (second md)))))
+
+(defn model-props [md props]
+  (cond
+    (nil? props)
+    (model-view md)
+    :else (container
+            {:constraints (m/BoxConstraints .minHeight 24)
+             :margin      (m/EdgeInsets.all 6)
+             :decoration  (cF (fx/box-decoration
+                                {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                                 :color (.-shade50 m/Colors.cyan)}))}
+            (column
+              (model-view md)
+              (props-view props)))))
+
+(defn model-view [md]
+  (container
+    {:constraints (m/BoxConstraints .minHeight 24)
+     :margin      (m/EdgeInsets.all 3)
      :decoration  (cF (fx/box-decoration
                         {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
-                         :color (.-shade50 m/Colors.yellow)}))}
+                         :color (.-shade50 m/Colors.red)}))}
     (fx/text {:style (p/TextStyle
                        ;.color (mget me :font-color)
                        .fontSize 18)}
-      (str name))))
+      (str (name md)))))
+
+(defn props-view [props])
 
 #_(fx/text
     {:style (within-ctx [me ctx]

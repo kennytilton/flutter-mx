@@ -52,7 +52,7 @@
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
-  (case 0
+  (case 3
     0 (x020/make-app)
     1 (icompute/make-app)
     2 (todo/make-app)
