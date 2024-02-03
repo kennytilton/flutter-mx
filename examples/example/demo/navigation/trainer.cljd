@@ -10,7 +10,7 @@
              center column row container text-button text sized-box]]
 
     [example.demo.navigation.puzzle :as pz
-     :refer [mk-puzzle pz-zero pz-structure pz-nvg-options]]
+     :refer [mk-puzzle pzl-zero pz-structure pz-nvg-options]]
     [example.demo.navigation.component :refer [nvg-solution]]
     [example.demo.navigation.tree :refer [md-tree-view]]))
 
@@ -37,12 +37,12 @@
           :tooltip   "Increment"}
          (m/Icon m/Icons.add .color m/Colors.black))}
       {:name           :scaffy
-       :puzzle-factory (cI pz-zero)}
+       :puzzle-structure (cI pzl-zero)}
       (center
         (column {}
-          {:puzzle      (cF (mk-puzzle (mav :puzzle-factory)))
+          {:puzzle      (cF (mk-puzzle (mav :puzzle-structure)))
            :nvg-options (cFI (pz-nvg-options (mav :puzzle)))}
-          (md-tree-view [[:app {:a 1 :b "2"}] [:scaffy :bogus]] #_(pz-structure (mav :puzzle)))
+          (md-tree-view  (pz-structure (mav :puzzle)))
           (nvg-solution))))))
 
 

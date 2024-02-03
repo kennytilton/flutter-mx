@@ -10,7 +10,7 @@
              center column row container text-button text sized-box]]
 
     [example.demo.navigation.puzzle :as pz
-     :refer [mk-puzzle pz-zero pz-structure pz-nvg-options]]
+     :refer [mk-puzzle pz-structure pz-nvg-options]]
     [example.demo.navigation.component :refer [nvg-solution]]))
 
 (defn md-props? [tr]
@@ -46,7 +46,7 @@
       ;--
       (md-kids? tr)
       (md-kids-view tr)
-      :else (m/Text (str "BAD TR> " (str tr))))))
+      :else (m/Text (str "." (str tr))))))
 
 (defn md-view [md]
   (dp :md-view-sees md )
@@ -68,6 +68,7 @@
                         {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
                          :color (.-shade50 m/Colors.cyan)}))}
     (column
+      {:mainAxisAlignment m/MainAxisAlignment.start}
       (md-view md)
       (props-view props))))
 
@@ -79,12 +80,13 @@
                         {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
                          :color (.-shade50 m/Colors.yellow)}))}
     (column
-      {:mainAxisAlignment m/MainAxisAlignment.center}
+      {:mainAxisAlignment m/MainAxisAlignment.start}
       (mapv (fn [[k v]]
-              (row {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+              (row {:mainAxisAlignment  m/MainAxisAlignment.center
                     :crossAxisAlignment m/CrossAxisAlignment.start}
                 (m/Text (name k))
-                (m/Text (str v)))) props))))
+                (m/Text ": ")
+                (md-tree-view v))) props))))
 
 (defn kids-view [kids]
   (container
