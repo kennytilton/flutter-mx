@@ -1,0 +1,144 @@
+(ns example.demo.navigation.tree
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :refer [dp minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx
+             material-app scaffold app-bar floating-action-button
+             center column row container text-button text sized-box]]
+
+    [example.demo.navigation.puzzle :as pz
+     :refer [mk-puzzle pz-zero pz-structure pz-nvg-options]]
+    [example.demo.navigation.component :refer [nvg-solution]]))
+
+(defn md-props? [tr]
+  (and (vector? tr) (= 2 (count tr))
+    (keyword? (first tr)) (map? (second tr))))
+
+(defn md? [tr]
+  (or (keyword? tr)
+    (md-props? tr)))
+
+(defn md-kids? [tr]
+  (and (vector? tr) (= 2 (count tr))
+    (let [[md kids] tr]
+      (and (md? md)
+        (vector? kids)))))
+
+(defn md-tree-view [tr]
+  (dp :tree-md tr)
+  (container
+    {:constraints (m/BoxConstraints .minHeight 24)
+     :margin      (m/EdgeInsets.all 3)
+     :decoration  (cF (fx/box-decoration
+                        {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                         :color  m/Colors.grey.shade50}))}
+    ; possibilities:
+    ;  just a model name such as :my-label, no props, no children, distinguished by tr being a keyword (or type?)
+    ;  just a vector pair, model and props, distinguished by props being a map;
+    ;    nb a prop value might be a md-tree
+    ;  a vector pair of a model and its kids, distinguished by the kids being a vector
+    (cond
+      (md? tr)
+      (md-view tr)
+      ;--
+      (md-kids? tr)
+      (md-kids-view tr)
+      :else (m/Text (str "BAD TR> " (str tr))))))
+
+(defn md-view [md]
+  (dp :md-view-sees md )
+  (cond
+    (keyword? md)
+    (fx/text {:style (p/TextStyle
+                       ;.color (mget me :font-color)
+                       .fontSize 18)}
+      (str (name md)))
+    (md-props? md)
+    (md-props-view md)
+    :else (m/Text (str "md-view> NG: " (str md)))))
+
+(defn md-props-view [[md props]]
+  (container
+    {:constraints (m/BoxConstraints .minHeight 24)
+     :margin      (m/EdgeInsets.all 6)
+     :decoration  (cF (fx/box-decoration
+                        {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                         :color (.-shade50 m/Colors.cyan)}))}
+    (column
+      (md-view md)
+      (props-view props))))
+
+(defn props-view [props]
+  (container
+    {:constraints (m/BoxConstraints .minHeight 24)
+     :margin      (m/EdgeInsets.all 2)
+     :decoration  (cF (fx/box-decoration
+                        {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                         :color (.-shade50 m/Colors.yellow)}))}
+    (column
+      {:mainAxisAlignment m/MainAxisAlignment.center}
+      (mapv (fn [[k v]]
+              (row {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+                    :crossAxisAlignment m/CrossAxisAlignment.start}
+                (m/Text (name k))
+                (m/Text (str v)))) props))))
+
+(defn kids-view [kids]
+  (container
+    {:constraints (m/BoxConstraints .minHeight 24)
+     :margin      (m/EdgeInsets.all 2)
+     :decoration  (cF (fx/box-decoration
+                        {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                         :color (.-shade50 m/Colors.cyan)}))}
+    (row
+      {:mainAxisAlignment m/MainAxisAlignment.center}
+      (mapv md-tree-view kids))))
+
+(defn md-kids-view [[md kids]]
+  (column
+    {:mainAxisAlignment m/MainAxisAlignment.center}
+    (md-view md)
+    (kids-view kids)))
+
+#_#_:else
+        (column
+          {:mainAxisAlignment m/MainAxisAlignment.center}
+          (model md)
+          (row
+            {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+             :crossAxisAlignment m/CrossAxisAlignment.start}
+            (mapv (fn [kid]
+                    (cond
+                      (keyword? kid) (model kid {})
+                      :else (tree (first kid) (second kid))))
+              kids)))
+#_
+        (container
+          {:constraints (m/BoxConstraints .minHeight 24)
+           :margin      (m/EdgeInsets.all 3)
+           :decoration  (cF (fx/box-decoration
+                              {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                               :color (.-shade50 m/Colors.red)}))}
+          (fx/text {:style (p/TextStyle
+                             ;.color (mget me :font-color)
+                             .fontSize 18)}
+            (str (name md))))
+
+
+
+#_(fx/text
+    {:style (within-ctx [me ctx]
+              (p/TextStyle
+                .color (mget me :font-color)
+                .fontSize (mget me :font-size)))}
+    {:name       :fsz
+     :font-size  (cF (* 0.03 (.-maxHeight box)))
+     :font-color (cF (cond
+                       (> (mget me :font-size) 25) m/Colors.red
+                       :else m/Colors.cyan))}
+    (str (mget (fasc :the-app) :msg)
+      "\nin font size "
+      (/ (int (* 10 (mget me :font-size))) 10)))

@@ -11,7 +11,8 @@
 
     [example.demo.navigation.puzzle :as pz
      :refer [mk-puzzle pz-zero pz-structure pz-nvg-options]]
-    [example.demo.navigation.component :refer [nvg-solution]]))
+    [example.demo.navigation.component :refer [nvg-solution]]
+    [example.demo.navigation.tree :refer [md-tree-view]]))
 
 ; todo - structure extract utility
 ; todo - do sth with dbg option
@@ -41,88 +42,9 @@
         (column {}
           {:puzzle      (cF (mk-puzzle (mav :puzzle-factory)))
            :nvg-options (cFI (pz-nvg-options (mav :puzzle)))}
-          (md-tree :app #_(pz-structure (mav :puzzle)))
+          (md-tree-view [[:app {:a 1 :b "2"}] [:scaffy :bogus]] #_(pz-structure (mav :puzzle)))
           (nvg-solution))))))
 
-(defn md-tree [tr]
-  (dp :tree-md tr)
-  (container
-    {:constraints (m/BoxConstraints .minHeight 24)
-     :margin      (m/EdgeInsets.all 3)
-     :decoration  (cF (fx/box-decoration
-                        {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
-                         :color  m/Colors.grey.shade50}))}
-    ; possibilities:
-    ;  just a model name such as :my-label, no props, no children, distinguished by tr being a keyword (or type?)
-    ;  just a vector pair, model and props, distinguished by props being a map;
-    ;    nb a prop value might be a md-tree
-    ;  a vector pair of a model and its kids, distinguished by the kids being a vector
-    (cond
-      (keyword? tr)
-      (model-view tr)
-      #_#_ :else
-      (column
-        {:mainAxisAlignment m/MainAxisAlignment.center}
-        (model md)
-        (row
-          {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
-           :crossAxisAlignment m/CrossAxisAlignment.start}
-          (mapv (fn [kid]
-                  (cond
-                    (keyword? kid) (model kid {})
-                    :else (tree (first kid) (second kid))))
-            kids))))))
-
-#_
-(defn model [md]
-  (cond
-    (keyword? md) (model-props md nil)
-    (vector? md) (do (assert (and (= 2 (count md)
-                                    (keyword? (first md))
-                                    (map? (second md)))))
-                     (model-props (first md) (second md)))))
-
-(defn model-props [md props]
-  (cond
-    (nil? props)
-    (model-view md)
-    :else (container
-            {:constraints (m/BoxConstraints .minHeight 24)
-             :margin      (m/EdgeInsets.all 6)
-             :decoration  (cF (fx/box-decoration
-                                {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
-                                 :color (.-shade50 m/Colors.cyan)}))}
-            (column
-              (model-view md)
-              (props-view props)))))
-
-(defn model-view [md]
-  (container
-    {:constraints (m/BoxConstraints .minHeight 24)
-     :margin      (m/EdgeInsets.all 3)
-     :decoration  (cF (fx/box-decoration
-                        {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
-                         :color (.-shade50 m/Colors.red)}))}
-    (fx/text {:style (p/TextStyle
-                       ;.color (mget me :font-color)
-                       .fontSize 18)}
-      (str (name md)))))
-
-(defn props-view [props])
-
-#_(fx/text
-    {:style (within-ctx [me ctx]
-              (p/TextStyle
-                .color (mget me :font-color)
-                .fontSize (mget me :font-size)))}
-    {:name       :fsz
-     :font-size  (cF (* 0.03 (.-maxHeight box)))
-     :font-color (cF (cond
-                       (> (mget me :font-size) 25) m/Colors.red
-                       :else m/Colors.cyan))}
-    (str (mget (fasc :the-app) :msg)
-      "\nin font size "
-      (/ (int (* 10 (mget me :font-size))) 10)))
 
 #_(center
     (fx/text-button
