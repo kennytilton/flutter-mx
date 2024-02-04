@@ -2,6 +2,7 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    [clojure.string :as str]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
     [tilton.mx.api :refer [dp minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
@@ -13,6 +14,31 @@
      :refer [mk-puzzle pz-structure pz-nvg-options]]))
 
 (defn nvg-solution []
+  (column
+    (m/Text "1. Click to select a starting widget. 2. Enter target name or path. 3. Set options. 4. Click FAB.")
+    (nvg-what)
+    (nvg-options)))
+
+(defn nvg-what []
+  (fx/material
+    {:elevation   6.0
+     :color       m/Colors.white
+     :shadowColor m/Colors.black}
+    (fx/intrinsic-width
+      (fx/text-field {:autofocus   true
+                      :focusNode   (m/FocusNode)
+                      :decoration  (m/InputDecoration
+                                     .hintText "Target?"
+                                     .border m.InputBorder/none
+                                     .contentPadding (m/EdgeInsets.all 9.0))
+                      :onSubmitted (dart-cb [value]
+                                     (let [trimmed (str/trim value)]
+                                       (mset! me :value trimmed)))
+                      :controller  (cFonce (fx/text-field-controller-basic me))}
+        {:name  :what
+         :value (cI "")}))))
+
+(defn nvg-options []
   (row {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
         :crossAxisAlignment m/CrossAxisAlignment.start}
     (nvg-option :must?)

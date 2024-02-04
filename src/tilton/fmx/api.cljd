@@ -368,10 +368,7 @@
                (let [~'ctx ~flutter-build-ctx]
                  ~@body))))))))
 
-#_      (fx/run-app
-          (hot-reload-detector
-            (dp :XXXXXX---HRD--inside-body)
-            (fx/fx-render nil (%make-app))))
+(defonce *fx-app* (atom nil))
 
 (defmacro run-app [widget-expression]
   `(m/runApp
@@ -385,10 +382,17 @@
        (tilton.fmx.api/wrap-unique-key
          (tilton.fmx.api/fx-render ~'ctx ~fx-app)))))
 
+(defmacro run-fx-app-warm [fx-app]
+  `(m/runApp
+     (tilton.fmx.api/hot-reload-detector
+       (tilton.fmx.api/fx-render nil ~fx-app))))
+
 (defmacro run-fx-app-hot [fx-app]
   `(m/runApp
      (tilton.fmx.api/hot-reload-detector-ctx
-       (tilton.fmx.api/fx-render ~'ctx ~fx-app))))
+       (tilton.fmx.api/fx-render ~'ctx
+         (reset! *fx-app*
+           ~fx-app)))))
 
 
 ;;; --- environment ------------------------

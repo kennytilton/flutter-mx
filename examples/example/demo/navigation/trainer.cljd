@@ -2,10 +2,12 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    [tilton.mx.model.peek :refer [atom?]]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
-    [tilton.mx.api :refer [dp minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
+    [tilton.mx.api :refer [dp dpx minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav
+                           mref? mname mkids] :as mx]
     [tilton.fmx.api :as fx
-     :refer [dart-cb within-ctx
+     :refer [dart-cb within-ctx *fx-app*
              material-app scaffold app-bar floating-action-button
              center column row container text-button text sized-box]]
 
@@ -14,9 +16,7 @@
     [example.demo.navigation.component :refer [nvg-solution]]
     [example.demo.navigation.tree :refer [md-tree-view]]))
 
-; todo - structure extract utility
 ; todo - do sth with dbg option
-; todo - 'what' text-field
 
 (defn make-app []
   (material-app
@@ -29,22 +29,47 @@
                  {:title           (m/Text "Flutter/MX Navigation Trainer")
                   :backgroundColor (cF (.-inversePrimary
                                          (.-colorScheme ^m/ThemeData (mav :theme))))})
-
        :floatingActionButton
        (floating-action-button
          {:onPressed (dart-cb []
-                       #_(mswap! (fm* :counter) :value inc))
+                       (let [app @*fx-app*]
+                         (dp :app (minfo app))
+                         (let [sk (nvg-skeleton app)]
+                           (binding [*print-level* 8]
+                             (prn :sk sk)))))
           :tooltip   "Increment"}
-         (m/Icon m/Icons.add .color m/Colors.black))}
-      {:name           :scaffy
+         (m/Icon m/Icons.public .size 48 .color m/Colors.black))}
+      {:name             :scaffy
        :puzzle-structure (cI pzl-zero)}
       (center
         (column {}
           {:puzzle      (cF (mk-puzzle (mav :puzzle-structure)))
            :nvg-options (cFI (pz-nvg-options (mav :puzzle)))}
-          (md-tree-view  (pz-structure (mav :puzzle)))
+          (md-tree-view (pz-structure (mav :puzzle)))
           (nvg-solution))))))
 
+(defn nvg-skeleton [mx]
+  (dpx :nvg-skell mx)
+  (cond
+    (mref? mx)
+    (vector (md-skeleton mx)
+      (mapv nvg-skeleton (mkids mx)))
+    ;-
+    (dart/is? mx m/Widget)
+    :dart/widget
+    ;-
+    :else :not-md))
+
+(defn md-skeleton [md]
+  (dpx :mdskel md (atom? md))
+  (cond
+    (mref? md)
+    (or (mname md) (:fx-class @md) :skanon)
+    ;-
+    (dart/is? md m/Widget)
+    :dart/widget
+    ;-
+    :else :not-md))
 
 #_(center
     (fx/text-button
