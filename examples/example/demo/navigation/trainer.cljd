@@ -64,7 +64,8 @@
   (dpx :mdskel md (atom? md))
   (cond
     (mref? md)
-    (or (mname md) (:fx-class @md) :skanon)
+    (let [c (:fx-class @md)]
+      (or (mname md) (:fx-class @md) :skanon))
     ;-
     (dart/is? md m/Widget)
     :dart/widget
