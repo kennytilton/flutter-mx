@@ -18,22 +18,26 @@
   ([md] (md-tree-view md 0))
   ([md depth]
    (cond (mref? md)
-         (container
-           {:constraints (m/BoxConstraints .minHeight 24)
-            :margin      (m/EdgeInsets.all 3)
-            :decoration  (cF (fx/box-decoration
-                               {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
-                                :color  m/Colors.grey.shade50}))}
-           (column
-             {:mainAxisAlignment m/MainAxisAlignment.center}
-             (fx/text {:style (p/TextStyle
-                                ;.color (mget me :font-color)
-                                .fontSize 18)}
-               (str (or (mname md) (:fx-class @md) :unknown)))
-             ;(md-props-view md)
-             (when (< depth 4)
-               (kids-view md depth))))
-         :else (m/Text (str "non-mref " md)))))
+         (cond (= :inspector (mname md))
+               (m/Text "ILOOP")
+               :else (container
+                       {:constraints (m/BoxConstraints .minHeight 24)
+                        :margin      (m/EdgeInsets.all 3)
+                        :decoration  (cF (fx/box-decoration
+                                           {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                                            :color  m/Colors.grey.shade50}))}
+                       (column
+                         {:mainAxisAlignment m/MainAxisAlignment.center}
+                         (fx/text {:style (p/TextStyle
+                                            ;.color (mget me :font-color)
+                                            .fontSize 18)}
+                           (str (or (mname md) (:fx-class @md) :unknown)))
+                         ;(md-props-view md)
+                         (when (< depth 5)
+                           (kids-view md depth)))))
+         (dart/is? md m/Widget)
+         (m/Text (str "dart:" (subs (str md) 8 14)))
+         :else (m/Text (str "?:" (subs (str md) 0 6))))))
 
 (defn kids-view [md depth]
   (dp :kids-view-entry depth (minfo md))
@@ -56,7 +60,7 @@
                   (dp :mtv-kid depth (minfo kid))
                   (md-tree-view kid (inc depth)))
             kids))
-        #_ (m/Text "...")))))
+        #_(m/Text "...")))))
 
 #_(defn md-view [md]
     (dpx :md-view-sees md)
