@@ -5,103 +5,48 @@
     ["package:english_words/english_words.dart" :as en]
     [tilton.mx.api :refer [minfo dpx dp cF cFn cI mget mset! mupdate! mav fasc fmu muv] :as mx]
     [tilton.mx.model.peek :refer [mname]]
-    [tilton.fmx.api :refer [dart-cb] :as fx]
-    [example.demo.fmx-inspector.tree-view :as tv]))
+    [tilton.fmx.api :refer [center column text sized-box dart-cb] :as fx]
+    [example.demo.fmx-inspector.tree-view :as tv]
+    [learn.counter.counter-fmx :as ctr]))
 
-(defn big-card []
-  (fx/card {:color (fx/within-ctx [me ctx]
-                     (-> (m/Theme.of ctx) .-colorScheme .-primary))}
-    {:name :bigc
-     :word-pair (cF (mget (fasc :app) :word-pair))}
-    (fx/padding {:padding (m/EdgeInsets.all 20)}
-      (fx/text {:style          (fx/within-ctx [me ctx]
-                                  (.copyWith (.-displayMedium (.-textTheme (m/Theme.of ctx)))
-                                    .color (-> (m/Theme.of ctx) .-colorScheme .-onPrimary)))
-                :semanticsLabel (cF (.-asPascalCase ^en/WordPair (mav :word-pair)))}
-        (.-asCamelCase ^en/WordPair (mav :word-pair))))))
+;; partial port of CLJD tabs sample, incidentally demonstrating
+;; that non-MX components can be added to MX components
 
-(defn generator-page []
-  (fx/center {}
-    {:name :generator}
-    (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
-      (big-card)
-      (m/SizedBox .height 10)
-      (fx/row {:mainAxisSize m/MainAxisSize.min}
-        (fx/elevated-button+icon
-          {:label     (fx/text "Like")
-           :icon      (cF (if ((mav :favorites)
-                               (mav :word-pair))
-                            (m/Icon m/Icons.favorite)
-                            (m/Icon m/Icons.favorite_border)))
-           :onPressed (dart-cb []
-                        (let [word-pair (mav :word-pair)]
-                          (mupdate! (fasc :app) :favorites
-                            (if ((mav :favorites) word-pair)
-                              disj conj) word-pair)))})
-        (m/SizedBox .width 10)
-        (fx/elevated-button
-          {:onPressed (dart-cb []
-                        (mset! (fasc :app) :word-pair (en/WordPair.random)))}
-          (fx/text "Next"))))))
+(defn make-app
+  []
+  (let [title "Tabs Demo"]
+    (fx/material-app {:title title}
+      (fx/default-tab-controller
+        {:length 2}
+        (fx/scaffold
+          {:appBar (fx/app-bar
+                     {:bottom (m/TabBar .tabs [(m/Tab .icon (m/Icon m/Icons.directions_car))
+                                               (m/Tab .icon (m/Icon m/Icons.public))])})}
+          (fx/tab-bar-view
+            (center {}
+              {:name :beef}
+              (ctr/home-page .title "Blackjack?")
+              #_
+              (column {:mainAxisAlignment m/MainAxisAlignment.center}
+                (text {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
+                  "Button push count:")
+                (sized-box
+                  {:height 28.0})
+                (text
+                  {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displayMedium)}
+                  {:name  :counter
+                   :value (cI 0)}
+                  (str (mget me :value)))))
 
-(defn favorites-page [favs]
-  (if (empty? favs)
-    (fx/center
-      (fx/text "No favorites yet."))
-    (fx/list-view
-      (fx/padding
-        {:padding (m/EdgeInsets.all 20)}
-        (fx/text (str "You have " (count favs) " favorite"
-                   (if (= 1 (count favs)) ":" "s:"))))
-      (doall (for [fav favs]
-               (fx/list-tile
-                 {:leading (m/Icon m/Icons.favorite)
-                  :title   (m/Text (.-asCamelCase ^en/WordPair fav))}))))))
-
-(defn make-app []
-  (let [title "FMX Inspector/POC2"]
-    (fx/material-app
-      {:title title
-       :theme (m/ThemeData
-                .useMaterial3 true
-                .colorScheme (m/ColorScheme.fromSeed
-                               .seedColor m/Colors.cyanAccent))}
-      (fx/scaffold
-        {:appBar (fx/app-bar {:title (fx/text title)})}
-        {:name      :app
-         :word-pair (cI (en/WordPair.random))
-         :favorites (cI #{})}
-        (fx/row {}
-          {:name :scaff-body}
-          (fx/safe-area
-            (fx/navigation-rail
-              {:extended              false
-               :selectedIndex         (cI 0 :watch (fn [_ _ new p c]
-                                                     (dp :newseli new)))
-               :onDestinationSelected (dart-cb [value]
-                                        (dp :rail-sets value)
-                                        (mset! me :selectedIndex value))}
-              {:name :nav}
-              (doall (for [[icon label] [[m/Icons.home "Home"]
-                                         [m/Icons.favorite "Favorites"]
-                                         [m/Icons.public "Inspector"]]]
-                       (m/NavigationRailDestination
-                         .icon (m/Icon icon)
-                         .label (m/Text label))))))
-          (fx/expanded
-            (fx/container
-              {:color (fx/within-ctx [me ctx]
-                        (-> (m/Theme.of ctx) .-colorScheme .-primaryContainer))}
-              (case (muv :nav :selectedIndex)
-                0 (generator-page)
-                1 (favorites-page
-                    (muv :app :favorites))
-                2 (inspector-page :app [:inspector])))))))))
+            (center {}
+              {:name :inspector-socket}
+              ;(fx/text "Inspector")
+              (inspector-page :beef nil))))))))
 
 (defn inspector-page [target excluding]
- #_  (fx/text {}
-    {:value (cF (fasc target))}
-    (name (mname (mav :value))))
+  #_(fx/text {}
+      {:value (cF (fasc target))}
+      (name (mname (mav :value))))
   (dp :target!!!!! target)
   (fx/container
     {:constraints (m/BoxConstraints .minHeight 24)
@@ -112,6 +57,6 @@
     {:name :inspector}
     ;; (m/Text "inspector!")#_
     (do (dp :ipage!!! (minfo me))
-        (let [tgt (fasc target)]
+        (let [tgt (fmu target)]
           (dp :tgt tgt)
           (tv/md-tree-view tgt)))))
