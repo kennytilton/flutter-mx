@@ -29,11 +29,10 @@
                        (column
                          {:mainAxisAlignment m/MainAxisAlignment.center}
                          (fx/text {:style (p/TextStyle
-                                            ;.color (mget me :font-color)
                                             .fontSize 18)}
                            (str (or (mname md) (:fx-class @md) :unknown)))
                          ;(md-props-view md)
-                         (when (< depth 6)
+                         (when (< depth 10)
                            (kids-view md depth)))))
          (dart/is? md m/Widget)
          (m/Text (str "dart:" (subs (str md) 8 14)))
@@ -47,20 +46,16 @@
      :decoration  (cF (fx/box-decoration
                         {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
                          :color (.-shade50 m/Colors.cyan)}))}
-    {:md-kids (cF (mx/without-c-dependency
-                    (mget? md :kids)))}
-    (column
-      {:mainAxisAlignment m/MainAxisAlignment.center}
-      (let [kids (mav :md-kids)]
-        (m/Text (str (count kids) "..."))
-        (m/Text (str (minfo (first kids)) "..."))
-        (row
-          {:mainAxisAlignment m/MainAxisAlignment.center}
-          (mapv (fn [kid]
-                  (dp :mtv-kid depth (minfo kid))
-                  (md-tree-view kid (inc depth)))
-            kids))
-        #_(m/Text "...")))))
+    {:md-kids (cF (mget? md :kids))}
+    (let [kids (filter mref? (mav :md-kids))]
+      (dp :mavkids (mapv minfo kids))
+      (row
+        {:mainAxisAlignment m/MainAxisAlignment.start}
+        (mapv (fn [kid]
+                (dp :mtv-kid depth (minfo kid))
+                (md-tree-view kid (inc depth)))
+          kids))
+      #_(m/Text "..."))))
 
 #_(defn md-view [md]
     (dpx :md-view-sees md)

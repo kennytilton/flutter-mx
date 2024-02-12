@@ -15,36 +15,43 @@
 (defn make-app
   []
   (let [title "Tabs Demo"]
-    (fx/material-app {:title title}
+    (fx/material-app {:title title
+                      :theme (m/ThemeData
+                               .fontFamily "RobotoMon")}
       (fx/default-tab-controller
-        {:length 2}
+        {:length 2 :initialIndex 0}
         (fx/scaffold
           {:appBar (fx/app-bar
-                     {:bottom (m/TabBar .tabs [(m/Tab .icon (m/Icon m/Icons.directions_car))
-                                               (m/Tab .icon (m/Icon m/Icons.public))])})}
-          (fx/tab-bar-view
-            (center {}
-              {:name :beef}
-              (ctr/home-page .title "Blackjack?"))
+                     {:bottom (m/TabBar .tabs [(m/Tab .icon (m/Icon m/Icons.home .size 48))
+                                               (m/Tab .icon (m/Icon m/Icons.public .size 48))])})}
+          #_ (m/Text "The quick brown fox"
+            .style (m/TextStyle
+                     .fontFamily "Inter" ;; <--- commenting out only this I see RobotoMono
+                     .fontSize 15
+                     .fontWeight m/FontWeight.w500
+                     .letterSpacing 0.3))
 
-            (center {}
-              {:name :inspector-socket}
-              (inspector-page :beef nil))))))))
+          (fx/tab-bar-view
+               (center {}
+                 {:name :blackjack}
+                 (ctr/home-page .title "Blackjack?"))
+
+               (center {}
+                 {:name :inspector-socket}
+                 (inspector-page :blackjack nil))))))))
 
 (defn inspector-page [target excluding]
-  #_(fx/text {}
-      {:value (cF (fasc target))}
-      (name (mname (mav :value))))
-  (dp :target!!!!! target)
-  (fx/container
-    {:constraints (m/BoxConstraints .minHeight 24)
-     :margin      (m/EdgeInsets.all 3)
-     :decoration  (cF (fx/box-decoration
-                        {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
-                         :color  m/Colors.grey.shade50}))}
-    {:name :inspector}
-    ;; (m/Text "inspector!")#_
-    (do (dp :ipage!!! (minfo me))
-        (let [tgt (fmu target)]
-          (dp :tgt tgt)
-          (tv/md-tree-view tgt)))))
+  (fx/single-child-scroll-view
+    {:scrollDirection m/Axis.horizontal}
+    (fx/container
+      {:constraints (m/BoxConstraints .minHeight 24)
+       :margin      (m/EdgeInsets.all 3)
+       :decoration  (cF (fx/box-decoration
+                          {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                           :color  m/Colors.grey.shade50}))}
+      {:name   :inspector
+       :target (cFn (fmu target))}
+      ;; todo history
+      (let [tgt (mav :target)]
+        (dp :top-tgt tgt)
+        (tv/md-tree-view tgt)))))

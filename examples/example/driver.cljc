@@ -58,4 +58,4 @@
     0 (fxi/make-app)
     1 (rp1/make-app)
     2 (ixp/make-app)
-    3 (hello/make-app)))
+    3 (x10/make-app)))
