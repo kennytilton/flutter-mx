@@ -47,6 +47,14 @@
             (items/todo-items)
             (about-credits)))))))
 
+(fx/material-app
+  {:db        (cF+ [:async? true]
+                (-> hv/Hive (.openBox "todo")))
+   :todo-list (cF (when-let [db (mget me :db)]
+                    (todo/make-ToDoList "todo"
+                      (stg/collection-docs "todo"))))}
+  ...)
+
 ;;; --- the app bar -----------------------------------------------
 (defn todo-app-bar [title]
   (fx/preferred-size
