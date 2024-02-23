@@ -50,13 +50,14 @@
   (let [non-tris (triangulars-not 22)]
     (rand-nth non-tris)))
 
-(defmacro value-descr [value desc$]
+(defmacro value-descr [value-name value desc$]
   `(row {:mainAxisAlignment m/MainAxisAlignment.center}
      (fx/container {:constraints (m/BoxConstraints .minWidth 36)
                     :margin      (m/EdgeInsets.only .right 12)
                     :alignment   m/Alignment.centerRight}
        (text
          {:style (headline-med)}
+         {:name ~value-name}
          ~value))
      (text
        {:style (headline-med)}
@@ -92,6 +93,7 @@
 (defn outcome []
   (fx/visibility
     {:visible (cF (not (nil? (h-outcome (muv :hand)))))}
+    {:name :outcome}
     (fx/image
       {:image  (cF (m/AssetImage
                      (if (= :win (h-outcome (muv :hand)))
@@ -114,7 +116,8 @@
                                       (pos? (h-dealt-ct (muv :hand)))
                                       (fx/user-alert ctx "Difficulty cannot be changed mid-game.")
                                       :else
-                                      (mset! (fasc :difficulty) :selected v)))})))
+                                      (mset! (fasc :difficulty) :selected v)))}
+                {:name dgr})))
       [:easy :hard])))
 
 (defn playing-card [i]
@@ -161,7 +164,8 @@
       (column {:mainAxisAlignment m/MainAxisAlignment.center}
         (game-difficulty)
         ; (fx/sized-box {:height 36})
-        (value-descr (str (h-goal (muv :hand)))
+        (value-descr :goal
+          (str (h-goal (muv :hand)))
           "is our goal")
         (fx/sized-box {:height 36})
         (m/Text "We have pushed the button N times:")
@@ -170,6 +174,7 @@
           (str (h-dealt-ct (muv :hand))))
         (hand-of-cards)
         (fx/sized-box {:height 36})
-        (value-descr (str (h-held-sum (muv :hand)))
+        (value-descr :held-sum
+          (str (h-held-sum (muv :hand)))
           "sums the held cards")
         (outcome)))))

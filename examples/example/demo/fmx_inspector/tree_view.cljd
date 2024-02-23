@@ -2,7 +2,11 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tilton.mx.api :refer [dp dpx minfo cF cFI cF+ cI cFn cFonce
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.cell.base :refer [c-prop]]
+    [tilton.mx.model.base :refer [md-cz]]
+    [tilton.mx.api :refer [dp dpx minfo cinfo cF cFI cF+ cI cFn cFonce
                            mname mref?
                            mmx-md mget mget? mset! mswap! navig fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
@@ -13,6 +17,7 @@
     #_#_[example.demo.navigation.puzzle :as pz
          :refer [mk-puzzle pz-structure pz-nvg-options]]
             [example.demo.navigation.component :refer [nvg-solution]]))
+(declare md-cells-view kids-view)
 
 (defn md-tree-view
   ([md] (md-tree-view md 0))
@@ -28,18 +33,64 @@
                                             :color  m/Colors.grey.shade50}))}
                        (column
                          {:mainAxisAlignment m/MainAxisAlignment.center}
-                         (fx/text {:style (p/TextStyle
-                                            .fontSize 18)}
-                           (str (or (mname md) (:fx-class @md) :unknown)))
-                         ;(md-props-view md)
+                         {:hidden? (cF false #_ (dp :hidden-sees (:fx-class @md)
+                                         (= "m/SizedBox" (str (:fx-class @md))))
+                                     (and (mav :condensed?)
+                                       (some #{(str (:fx-class @md))}
+                                         ["m/SizedBox"])))}
+                         (fx/visibility
+                           {:visible (cF (not (mav :hidden?)))}
+                           (fx/text {:style (p/TextStyle
+                                              .fontSize (if (mname md) 18 14)
+                                              .fontWeight (if (mname md)
+                                                            m/FontWeight.bold
+                                                            m/FontWeight.normal))}
+                             (str (or (mname md)
+                                    (str/replace (str (:fx-class @md)) "m/" "")
+                                    "??"))))
+                         (md-cells-view md)
+                         ; (md-props-view md)
                          (when (< depth 10)
                            (kids-view md depth)))))
          (dart/is? md m/Widget)
          (m/Text (str "dart:" (subs (str md) 8 14)))
          :else (m/Text (str "?:" (subs (str md) 0 6))))))
 
+(defn cell-view [prop c]
+  (dpx :cell-view-sees prop (cinfo c))
+  (cond (nil? c) (cond
+                   (some #{prop} [:kids :_param-1]) nil
+                   :else (fx/text
+                           {:style (p/TextStyle .color m/Colors.grey)}
+                           (name prop)))
+        :else
+        (container
+          {:constraints (m/BoxConstraints .minHeight 24)
+           :margin      (m/EdgeInsets.all 2)
+           :decoration  (cF (fx/box-decoration
+                              {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                               :color (.-shade50
+                                        (cond
+                                          (and (:rule @c) (:input? @c))
+                                          m/Colors.cyan
+
+                                          (:input? @c) m/Colors.blue
+                                          (:rule @c) m/Colors.green
+                                          :else m/Colors.red
+                                          ))
+                               }))}
+          (fx/text (name (c-prop c))))))
+
+(defn md-cells-view [md]
+  (row
+    {:mainAxisAlignment m/MainAxisAlignment.center}
+    (mapv (fn [[prop c]]
+            (dpx :see-cell prop (cinfo c))
+            (cell-view prop c))
+      (md-cz md))))
+
 (defn kids-view [md depth]
-  (dp :kids-view-entry depth (minfo md))
+  (dpx :kids-view-entry depth (minfo md))
   (container
     {:constraints (m/BoxConstraints .minHeight 24)
      :margin      (m/EdgeInsets.all 2)
@@ -48,11 +99,12 @@
                          :color (.-shade50 m/Colors.cyan)}))}
     {:md-kids (cF (mget? md :kids))}
     (let [kids (filter mref? (mav :md-kids))]
-      (dp :mavkids (mapv minfo kids))
+      (dpx :mavkids (mapv minfo kids))
       (row
-        {:mainAxisAlignment m/MainAxisAlignment.start}
+        {:mainAxisAlignment  m/MainAxisAlignment.start
+         :crossAxisAlignment m/CrossAxisAlignment.start}
         (mapv (fn [kid]
-                (dp :mtv-kid depth (minfo kid))
+                (dpx :mtv-kid depth (minfo kid))
                 (md-tree-view kid (inc depth)))
           kids))
       #_(m/Text "..."))))
@@ -97,22 +149,6 @@
                   (m/Text ": ")
                   (md-tree-view v))) props))))
 
-
-
-
-
-#_#_:else
-        (column
-          {:mainAxisAlignment m/MainAxisAlignment.center}
-          (model md)
-          (row
-            {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
-             :crossAxisAlignment m/CrossAxisAlignment.start}
-            (mapv (fn [kid]
-                    (cond
-                      (keyword? kid) (model kid {})
-                      :else (tree (first kid) (second kid))))
-              kids)))
 #_(container
     {:constraints (m/BoxConstraints .minHeight 24)
      :margin      (m/EdgeInsets.all 3)

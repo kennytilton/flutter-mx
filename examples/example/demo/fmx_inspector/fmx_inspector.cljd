@@ -1,6 +1,7 @@
 (ns example.demo.fmx-inspector.fmx-inspector
   (:require
     ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
     ["package:english_words/english_words.dart" :as en]
     [tilton.mx.api :refer [minfo dpx dp cF cFn cI mget mset! mupdate! mav fasc fmu muv] :as mx]
@@ -14,44 +15,62 @@
 
 (defn make-app
   []
-  (let [title "Tabs Demo"]
+  (let [title "f/mx Inspector"]
     (fx/material-app {:title title
-                      :theme (m/ThemeData
-                               .fontFamily "RobotoMon")}
+                      :theme (m/ThemeData .fontFamily "RobotoMon")}
       (fx/default-tab-controller
         {:length 2 :initialIndex 0}
         (fx/scaffold
           {:appBar (fx/app-bar
                      {:bottom (m/TabBar .tabs [(m/Tab .icon (m/Icon m/Icons.home .size 48))
                                                (m/Tab .icon (m/Icon m/Icons.public .size 48))])})}
-          #_ (m/Text "The quick brown fox"
-            .style (m/TextStyle
-                     .fontFamily "Inter" ;; <--- commenting out only this I see RobotoMono
-                     .fontSize 15
-                     .fontWeight m/FontWeight.w500
-                     .letterSpacing 0.3))
-
           (fx/tab-bar-view
-               (center {}
-                 {:name :blackjack}
-                 (ctr/home-page .title "Blackjack?"))
+            (center {}
+              {:name :blackjack}
+              (ctr/home-page .title "Blackjack?"))
+            (center {}
+              {:name :inspector-socket}
+              (inspector-page :blackjack nil))))))))
 
-               (center {}
-                 {:name :inspector-socket}
-                 (inspector-page :blackjack nil))))))))
+;;; --- utils ---------------------------------------------
+
+(defmacro even-row [& parts]
+  `(row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+     ~@parts))
+
+(defmacro app-section [& parts]
+  `(column
+     (m/Divider .thickness 0.5 .color m/Colors.grey)
+     ~@parts))
+
+(defn mk-condensed? []
+  ; (fx/sized-box {:width 300}
+  (fx/checkbox-list-tile
+    {:controlAffinity m/ListTileControlAffinity.leading
+     :title           (m/Text "condensed")
+     :value           (cF (mav :condensed?))
+     :onChanged (cF (dart-cb [value]
+                      (mset! (fasc :inspector) :condensed? value)))}
+    {:name :condensed?}))
+
+;;; --- inspector ----------------------------------------
 
 (defn inspector-page [target excluding]
-  (fx/single-child-scroll-view
-    {:scrollDirection m/Axis.horizontal}
-    (fx/container
-      {:constraints (m/BoxConstraints .minHeight 24)
-       :margin      (m/EdgeInsets.all 3)
-       :decoration  (cF (fx/box-decoration
-                          {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
-                           :color  m/Colors.grey.shade50}))}
-      {:name   :inspector
-       :target (cFn (fmu target))}
-      ;; todo history
-      (let [tgt (mav :target)]
-        (dp :top-tgt tgt)
-        (tv/md-tree-view tgt)))))
+  (column {}
+    {:name   :inspector
+     :target (cFn (fmu target))
+     :condensed? (cI false)}
+    (app-section
+      (mk-condensed?))
+    (app-section
+      (fx/single-child-scroll-view
+        {:scrollDirection m/Axis.horizontal}
+        (fx/container
+          {:constraints (m/BoxConstraints .minHeight 24)
+           :margin      (m/EdgeInsets.all 3)
+           :decoration  (cF (fx/box-decoration
+                              {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                               :color  m/Colors.grey.shade50}))}
+          (let [tgt (mav :target)]
+            (dpx :top-tgt tgt)
+            (tv/md-tree-view tgt)))))))
