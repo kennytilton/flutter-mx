@@ -1,0 +1,82 @@
+(ns example.demo.ai.gemini.simple_text
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["dart:io" :as io]
+    ["dart:convert" :as convert]
+    [tilton.fmx.factory :refer [deftag] :as fxf]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset!
+             muv mav mx-bound? wmx-iso millis-now or-mx-bound]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    ["package:google_generative_ai/google_generative_ai.dart" :as ai]))
+
+(deftag fxf/non-widget theme-data m/ThemeData)
+
+(def backpack-story "Write a story about a magic backpack.")
+
+(defn speech-input [prompt-initial]
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 16.0)
+       :controller (cFonce
+                     (m/TextEditingController .text (mget me :value)))
+       :onChanged  (dart-cb [text]
+                     (mset! me :value text))
+       :minLines   2 :maxLines 2}
+      {:name  :prompt
+       :value (cI prompt-initial)})))
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Hello Gemini"
+     :theme (cF (theme-data
+                  {:primarySwatch m/Colors.teal}))}
+    {:gem-pro (cF (ai/GenerativeModel
+                    .model "gemini-pro"
+                    .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))}
+    (scaffold
+      {:appBar (app-bar
+                 {:title (m/Text "Flutter/MX Hello Gemini")})}
+      (center
+        (column
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (speech-input backpack-story)
+          (fx/container {:width 900}
+            (fx/text {:maxLines nil
+                      :overflow m/TextOverflow.clip
+                      :softWrap true}
+              {:prompt   (cF (muv :prompt))
+               :response (cF+ [:async? true
+                               :async-then (fn [c raw] (dp :raw (.-text raw))
+                                             (.-text raw))]
+                           (let [content (.text ai/Content (mav :prompt))]
+                             (.generateContent ^ai/GenerativeModel (mav :gem-pro)
+                               [content])))}
+              (or (mav :response) "thinking..."))))))))
+
+;; The original gen code:
+;;
+; import 'package:google_generative_ai/google_generative_ai.dart';
+;
+;const apiKey = ...;
+;
+;void main() async {
+;  final model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+;
+;  final prompt = 'Write a story about a magic backpack.';
+;  final content = [Content.text(prompt)];
+;  final response = await model.generateContent(content);
+;
+;  print(response.text);
+;};
