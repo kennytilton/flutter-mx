@@ -20,6 +20,7 @@
      :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
     [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx binding-ctx *ctx*] :as fxf]))
 
+(defonce ^:dynamic *fx-app* (atom nil))
 (defn *ctx []
   fxf/*ctx*)
 
@@ -240,15 +241,13 @@
   (intrinsic-width m/IntrinsicWidth)
   (gesture-detector m/GestureDetector))
 
-(deftags-plus tilton.fmx.factory/kids-prop-dbg [:children]
-  (row m/Row))
-
 (deftags-plus tilton.fmx.factory/kids-prop [:children]
   (stack m/Stack)
   (column m/Column)
-  ; (row m/Row)
+  (row m/Row)
   (list-view m/ListView)
   (grid-view+count m/GridView.count)
+  (tab-bar-view m/TabBarView)
   (wrap w/Wrap))
 
 (deftag tilton.fmx.factory/kids-prop
@@ -368,10 +367,12 @@
                (let [~'ctx ~flutter-build-ctx]
                  ~@body))))))))
 
-#_      (fx/run-app
-          (hot-reload-detector
-            (dp :XXXXXX---HRD--inside-body)
-            (fx/fx-render nil (%make-app))))
+#_#_#_ ^:mixin m/WidgetsBindingObserver
+(didChangeAppLifecycleState [this st]
+  (cb st)
+  nil)
+
+(defonce *fx-app* (atom nil))
 
 (defmacro run-app [widget-expression]
   `(m/runApp
@@ -385,11 +386,39 @@
        (tilton.fmx.api/wrap-unique-key
          (tilton.fmx.api/fx-render ~'ctx ~fx-app)))))
 
+(defmacro run-fx-app-warm [fx-app]
+  `(m/runApp
+     (tilton.fmx.api/hot-reload-detector
+       (tilton.fmx.api/fx-render nil ~fx-app))))
+
 (defmacro run-fx-app-hot [fx-app]
   `(m/runApp
      (tilton.fmx.api/hot-reload-detector-ctx
-       (tilton.fmx.api/fx-render ~'ctx ~fx-app))))
+       (tilton.fmx.api/fx-render ~'ctx
+         (reset! *fx-app*
+           ~fx-app)))))
 
+#_
+(defn listen-lifecycle-state [^#/(m/AppLifecycleState? -> void) cb ^m/Widget .child]
+  (reify :extends m/StatefulWidget
+    :no-meta true
+    (createState [this]
+      (reify :extends m/State
+        :no-meta true
+        (initState [this]
+          (.initState ^super this)
+          (m/WidgetsBinding.instance.addObserver this)
+          (when-some [ls m/WidgetsBinding.instance.lifecycleState]
+            (cb ls))
+          nil)
+        (dispose [this]
+          (m/WidgetsBinding.instance.removeObserver this)
+          (.dispose ^super this))
+        (build [_ _] child)
+        ^:mixin m/WidgetsBindingObserver
+        (didChangeAppLifecycleState [this st]
+          (cb st)
+          nil)))))
 
 ;;; --- environment ------------------------
 

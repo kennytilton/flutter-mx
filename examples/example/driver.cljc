@@ -48,12 +48,14 @@
     [example.demo.isolate.x04-api-mx-iso :as iso4]
     [example.demo.isolate.x00-compute :as icompute]
     [learn.counter.counter-fmx :as rp1]
-    [example.demo.navigation.trainer :as nvg]))
+    ;;[example.demo.navigation.trainer :as nvg]
+    [example.demo.fmx-inspector.fmx-inspector :as fxi]))
 
 (defn select []
+  ; x04  nope: x028 x030 x040
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
   (case 0
-    0 (x020/make-app)
-    1 (icompute/make-app)
-    2 (todo/make-app)
-    3 (nvg/make-app)))
+    0 (fxi/make-app)
+    1 (rp1/make-app)
+    2 (ixp/make-app)
+    3 (todo/make-app)))
