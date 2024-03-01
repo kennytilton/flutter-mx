@@ -10,27 +10,6 @@
     [example.demo.fmx-inspector.tree-view :as tv]
     [learn.counter.counter-fmx :as ctr]))
 
-;; partial port of CLJD tabs sample, incidentally demonstrating
-;; that non-MX components can be added to MX components
-
-(defn make-app
-  []
-  (let [title "f/mx Inspector"]
-    (fx/material-app {:title title
-                      :theme (m/ThemeData .fontFamily "RobotoMon")}
-      (fx/default-tab-controller
-        {:length 2 :initialIndex 0}
-        (fx/scaffold
-          {:appBar (fx/app-bar
-                     {:bottom (m/TabBar .tabs [(m/Tab .icon (m/Icon m/Icons.home .size 48))
-                                               (m/Tab .icon (m/Icon m/Icons.public .size 48))])})}
-          (fx/tab-bar-view
-            (center {}
-              {:name :blackjack}
-              (ctr/home-page .title "Blackjack?"))
-            (center {}
-              {:name :inspector-socket}
-              (inspector-page :blackjack nil))))))))
 
 ;;; --- utils ---------------------------------------------
 
@@ -59,7 +38,8 @@
   (column {}
     {:name   :inspector
      :target (cFn (fmu target))
-     :condensed? (cI false)}
+     :condensed? (cI false)
+     :selected-cell (cI #{})}
     (app-section
       (mk-condensed?))
     (app-section
@@ -74,3 +54,24 @@
           (let [tgt (mav :target)]
             (dpx :top-tgt tgt)
             (tv/md-tree-view tgt)))))))
+
+;;; --- make-app ---------------------------------------------------------------
+
+(defn make-app
+  []
+  (let [title "f/mx Inspector"]
+    (fx/material-app {:title title
+                      :theme (m/ThemeData .fontFamily "RobotoMon")}
+      (fx/default-tab-controller
+        {:length 2 :initialIndex 0}
+        (fx/scaffold
+          {:appBar (fx/app-bar
+                     {:bottom (m/TabBar .tabs [(m/Tab .icon (m/Icon m/Icons.home .size 48))
+                                               (m/Tab .icon (m/Icon m/Icons.public .size 48))])})}
+          (fx/tab-bar-view
+            (center {}
+              {:name :blackjack}
+              (ctr/home-page .title "Blackjack?"))
+            (center {}
+              {:name :inspector-socket}
+              (inspector-page :blackjack nil))))))))

@@ -33,8 +33,8 @@
                                             :color  m/Colors.grey.shade50}))}
                        (column
                          {:mainAxisAlignment m/MainAxisAlignment.center}
-                         {:hidden? (cF false #_ (dp :hidden-sees (:fx-class @md)
-                                         (= "m/SizedBox" (str (:fx-class @md))))
+                         {:hidden? (cF false #_(dp :hidden-sees (:fx-class @md)
+                                                 (= "m/SizedBox" (str (:fx-class @md))))
                                      (and (mav :condensed?)
                                        (some #{(str (:fx-class @md))}
                                          ["m/SizedBox"])))}
@@ -64,22 +64,31 @@
                            {:style (p/TextStyle .color m/Colors.grey)}
                            (name prop)))
         :else
-        (container
-          {:constraints (m/BoxConstraints .minHeight 24)
-           :margin      (m/EdgeInsets.all 2)
-           :decoration  (cF (fx/box-decoration
-                              {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
-                               :color (.-shade50
-                                        (cond
-                                          (and (:rule @c) (:input? @c))
-                                          m/Colors.cyan
+        (fx/ink-well {:onTap (dart-cb []
+                               #_ (dart-cb []
+                                    (let [word-pair (mav :word-pair)]
+                                      (mupdate! (fasc :app) :favorites
+                                        (if ((mav :favorites) word-pair)
+                                          disj conj) word-pair)))
+                               (let [inx (mx/fasc :inspector)]
+                                 (mx/mupdate! inx :selected-cell
+                                   not)))}
+          (container
+            {:constraints (m/BoxConstraints .minHeight 24)
+             :margin      (m/EdgeInsets.all 2)
+             :decoration  (cF (fx/box-decoration
+                                {;:border (cF (.all m/Border .color m/Colors.blue .width 1))
+                                 :color (.-shade50
+                                          (cond
+                                            (and (:rule @c) (:input? @c))
+                                            m/Colors.cyan
 
-                                          (:input? @c) m/Colors.blue
-                                          (:rule @c) m/Colors.green
-                                          :else m/Colors.red
-                                          ))
-                               }))}
-          (fx/text (name (c-prop c))))))
+                                            (:input? @c) m/Colors.blue
+                                            (:rule @c) m/Colors.green
+                                            :else m/Colors.red
+                                            ))
+                                 }))}
+            (fx/text (name (c-prop c)))))))
 
 (defn md-cells-view [md]
   (row
