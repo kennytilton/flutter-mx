@@ -50,13 +50,14 @@
     [learn.counter.counter-fmx :as rp1]
     ;;[example.demo.navigation.trainer :as nvg]
     [example.demo.fmx-inspector.fmx-inspector :as fxi]
-    [example.demo.ai.gemini.simple_text :as gemini]))
+    [example.demo.ai.gemini.simple_text :as gemini]
+    [example.demo.ai.gemini.advanced_text :as gem2]))
 
 (defn select []
   ; x04  nope: x028 x030 x040
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
   (case 1
     0 (fxi/make-app)
-    1 (gemini/make-app)
+    1 (gem2/make-app)
     2 (ixp/make-app)
     3 (todo/make-app)))

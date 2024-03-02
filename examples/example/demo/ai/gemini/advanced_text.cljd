@@ -1,0 +1,132 @@
+; --- Dart original -------------------------------------
+;
+;import 'dart:io';
+;
+;import 'package:google_generative_ai/google_generative_ai.dart';
+;
+;void main() async {
+;  final apiKey = Platform.environment['GOOGLE_API_KEY'];
+;  if (apiKey == null) {
+;    stderr.writeln(r'No $GOOGLE_API_KEY environment variable');
+;    exit(1);
+;  }
+;  final model = GenerativeModel(
+;      model: 'gemini-pro',
+;      apiKey: apiKey,
+;      safetySettings: [
+;        SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.none)
+;      ]);
+;  final prompt = 'Please describe in detail the movie "Eyes wide shut"';
+;  print('Prompt: $prompt');
+;  final content = [Content.text(prompt)];
+;  final tokenCount = await model.countTokens(content);
+;  print('Token count: ${tokenCount.totalTokens}');
+;
+;  final responses = model.generateContentStream(content);
+;  await for (final response in responses) {
+;    stdout.write(response.text);
+;  }
+;  stdout.writeln();
+;}
+
+(ns example.demo.ai.gemini.advanced_text
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["dart:io" :as io]
+    ["dart:convert" :as convert]
+    [tilton.fmx.factory :refer [deftag] :as fxf]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset!
+             muv mav mx-bound? wmx-iso millis-now or-mx-bound]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    ["package:google_generative_ai/google_generative_ai.dart" :as ai]))
+
+(deftag fxf/non-widget theme-data m/ThemeData)
+
+(def backpack-story "Please describe in brief the movie \"Eyes Wide Shut\"")
+
+(defn speech-input [prompt-initial]
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 16.0)
+       :controller (cFonce
+                     (m/TextEditingController .text (mav :value)))
+       :onChanged  (dart-cb [text]
+                     (mset! me :value text))
+       :minLines   2 :maxLines 4}
+      {:name  :prompt
+       :value (cI prompt-initial)})))
+
+(defn generate-button []
+  (fx/elevated-button
+    {:onPressed (cF (dart-cb []
+                      (mset! me :value true)))}
+    {:name  :generate
+     :value (cI nil :ephemeral? true)}
+    (m/Text "Go")))
+
+(defn make-app []
+  (let [title "Google Gemini Advanced Text Sample"]
+    (material-app
+      {:title title
+       :theme (cF (theme-data
+                    {:primarySwatch m/Colors.teal}))}
+      {:gem-pro (cF (ai/GenerativeModel
+                      .model "gemini-pro"
+                      .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")
+                      .safetySettings [(ai/SafetySetting ai/HarmCategory.sexuallyExplicit
+                                         ai/HarmBlockThreshold.none)]))}
+      (scaffold
+        {:appBar (app-bar
+                   {:title (m/Text title)})}
+        (center
+          (column
+            {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+              (fx/sized-box {:width 800}
+                (speech-input backpack-story))
+              (generate-button))
+            (fx/container {:width 900}
+              (fx/text {:maxLines nil
+                        :overflow m/TextOverflow.clip
+                        :softWrap true}
+                {:name           :astory
+                 :content        (cF (when-let [p (muv :prompt)]
+                                       [(.text ai/Content (muv :prompt))]))
+                 :token-ct       (cF+ [:async? true
+                                       :async-then (fn [c ^ai/CountTokensResponse raw]
+                                                     (dp :raw (.-totalTokens raw))
+                                                     [(rand-int 99999) (.-totalTokens raw)])]
+                                   (when (muv :generate)
+                                     (.countTokens ^ai/GenerativeModel (mav :gem-pro)
+                                       (mav :content))))
+                 :content-stream (cF+ [:watch (fn [_ mex s _ _]
+                                                (dp :stream s (mx/minfo mex))
+                                                (when s
+                                                  (.forEach ^Stream s
+                                                    (fn [^ai/GenerateContentResponse r]
+                                                      (dp :txt (.-text r))
+                                                      (dp :txt-mex (mx/minfo mex))
+                                                      (mx/wmx-iso
+                                                        (mset! mex :story
+                                                          (str (mget mex :story) (.-text r)))
+                                                        #_
+                                                        (mset! mex :story
+                                                          (.-text r)))))))]
+                                   (when-let [tct (mav :token-ct)]
+                                     (dp :cs-tct tct)
+                                     (.generateContentStream ^ai/GenerativeModel (mav :gem-pro)
+                                       (mav :content))))
+                 :story          (cI "")}
+                (mav :story)))))))))
