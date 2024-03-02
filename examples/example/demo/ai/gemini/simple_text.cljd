@@ -30,12 +30,20 @@
                      .fontFamily "Helvetica Neue"
                      .fontSize 16.0)
        :controller (cFonce
-                     (m/TextEditingController .text (mget me :value)))
-       :onChanged  (dart-cb [text]
+                     (m/TextEditingController .text (mav :value)))
+       :onChanged   (dart-cb [text]
                      (mset! me :value text))
-       :minLines   2 :maxLines 2}
+       :minLines   2 :maxLines 4}
       {:name  :prompt
        :value (cI prompt-initial)})))
+
+(defn generate-button []
+  (fx/elevated-button
+    {:onPressed (cF (dart-cb []
+                      (mset! me :value true)))}
+    {:name :generate
+     :value (cI nil :ephemeral? true)}
+    (m/Text "Go")))
 
 (defn make-app []
   (material-app
@@ -51,19 +59,25 @@
       (center
         (column
           {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
-          (speech-input backpack-story)
+          (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            (fx/sized-box {:width 800}
+              (speech-input backpack-story))
+            (generate-button))
           (fx/container {:width 900}
             (fx/text {:maxLines nil
                       :overflow m/TextOverflow.clip
                       :softWrap true}
-              {:prompt   (cF (muv :prompt))
-               :response (cF+ [:async? true
-                               :async-then (fn [c raw] (dp :raw (.-text raw))
+              {:response (cF+ [:async? true
+                               :async-then (fn [c ^ai/GenerateContentResponse raw] (dp :raw (.-text raw))
                                              (.-text raw))]
-                           (let [content (.text ai/Content (mav :prompt))]
-                             (.generateContent ^ai/GenerativeModel (mav :gem-pro)
-                               [content])))}
-              (or (mav :response) "thinking..."))))))))
+                           (when (muv :generate)
+                             (dp :generating!!!!!!! (muv :prompt))
+                             (let [content (.text ai/Content (muv :prompt))]
+                               (.generateContent ^ai/GenerativeModel (mav :gem-pro)
+                                 [content]))))}
+              (or (mav :response)
+                ;(when (muv :generate) "thinking...")
+                "waiting..."))))))))
 
 ;; The original gen code:
 ;;
