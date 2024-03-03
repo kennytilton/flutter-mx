@@ -1,0 +1,104 @@
+; --- Dart original -------------------------------------
+;
+; import 'dart:io';
+;
+;import 'package:google_generative_ai/google_generative_ai.dart';
+;
+;Future<void> main() async {
+;  final apiKey = Platform.environment['GOOGLE_API_KEY'];
+;  if (apiKey == null) {
+;    stderr.writeln(r'No $GOOGLE_API_KEY environment variable');
+;    exit(1);
+;  }
+;  final model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+;  final chat = model.startChat();
+;  final message = 'Hello! How are you?';
+;  final content = Content.text(message);
+;
+;  final response = await chat.sendMessage(content);
+;  print(response.text);
+;}
+
+(ns example.demo.ai.gemini.simple-chat
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["dart:io" :as io]
+    ["dart:convert" :as convert]
+    [tilton.fmx.factory :refer [deftag] :as fxf]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset!
+             muv mav mx-bound? wmx-iso millis-now or-mx-bound]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    ["package:google_generative_ai/google_generative_ai.dart" :as ai]))
+
+(deftag fxf/non-widget theme-data m/ThemeData)
+
+(def chat-opener "Hello, how are you?")
+
+(defn speech-input [prompt-initial]
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 16.0)
+       :controller (cFonce
+                     (m/TextEditingController .text (mav :value)))
+       :onChanged  (dart-cb [text]
+                     (mset! me :value text))
+       :minLines   2 :maxLines 4}
+      {:name  :prompt
+       :value (cI prompt-initial)})))
+
+(defn generate-button []
+  (fx/elevated-button
+    {:onPressed (cF (dart-cb []
+                      (mset! me :value true)))}
+    {:name  :generate
+     :value (cI nil :ephemeral? true)}
+    (m/Text "Go")))
+
+(defn make-app []
+  (let [title "Google Gemini Simple Chat Sample"]
+    (material-app
+      {:title title
+       :theme (cF (theme-data
+                    {:primarySwatch m/Colors.teal}))}
+      {:gem-pro (cF (ai/GenerativeModel
+                      .model "gemini-pro"
+                      .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))
+       :chat    (cF (let [gem (mav :gem-pro)]
+                      (-> gem ai/StartChatExtension (.startChat))))}
+      (scaffold
+        {:appBar (app-bar
+                   {:title (m/Text title)})}
+        (center
+          (column
+            {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+              (fx/sized-box {:width 800}
+                (speech-input chat-opener))
+              (generate-button))
+            (fx/container {:width 900}
+              (fx/text {:maxLines nil
+                        :overflow m/TextOverflow.clip
+                        :softWrap true}
+                {:name      :astory
+                 :content   (cF (when-let [p (muv :prompt)]
+                                  (.text ai/Content (muv :prompt))))
+                 :chat-back (cF+ [:async? true
+                                  :async-then (fn [c ^ai/GenerateContentResponse raw]
+                                                (dp :raw (.-text raw))
+                                                (.-text raw))]
+                              (when (muv :generate)
+                                (.sendMessage ^ai/ChatSession (mav :chat)
+                                  (mav :content))))}
+                (or (mav :chat-back) "soon")))))))))
