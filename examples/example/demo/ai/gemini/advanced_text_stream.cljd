@@ -40,7 +40,7 @@
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset!
-             muv mav mx-bound? wmx-iso millis-now or-mx-bound]]
+             muv mav mx-bound? wmx-iso millis-now or-mx-bound c-value]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -70,8 +70,7 @@
 
 (defn generate-button []
   (fx/elevated-button
-    {:onPressed (cF (dart-cb []
-                      (mset! me :value true)))}
+    {:onPressed (cF (dart-cb [] (mset! me :value true)))}
     {:name  :generate
      :value (cI nil :ephemeral? true)}
     (m/Text "Go")))
@@ -101,31 +100,11 @@
               (fx/text {:maxLines nil
                         :overflow m/TextOverflow.clip
                         :softWrap true}
-                {:name           :astory
-                 :content        (cF (when-let [p (muv :prompt)]
-                                       (.text ai/Content (muv :prompt))))
-                 :token-ct       (cF+ [:async? true
-                                       :async-then (fn [c ^ai/CountTokensResponse raw]
-                                                     (dp :total-token-count (.-totalTokens raw))
-                                                     ; force token-ct to look different to Matrix
-                                                     ; should consecutive counts match
-                                                     [(rand-int 99999) (.-totalTokens raw)])]
-                                   (when (muv :generate)
-                                     (.countTokens ^ai/GenerativeModel (mav :gem-pro)
-                                       [(mav :content)])))
-                 :content-stream (cF+ [:watch (fn [_ me s _ _]
-                                                (dp :stream s (mx/minfo me))
-                                                (when s
-                                                  (.forEach ^Stream s
-                                                    (fn [^ai/GenerateContentResponse r]
-                                                      (dp :txt-chunk (.-text r))
-                                                      (mx/wmx-iso
-                                                        (mset! me :story
-                                                          (str (mget me :story) (.-text r))))))))]
-                                   (when-let [tct (mav :token-ct)]
-                                     ; artificial way to sequence count and response as per sample
-                                     (dp :cs-tct tct)
-                                     (.generateContentStream ^ai/GenerativeModel (mav :gem-pro)
-                                       [(mav :content)])))
-                 :story          (cI "")}
-                (mav :story)))))))))
+                {:content (cF+ [:stream? true
+                                :for-each (fn [me ^ai/GenerateContentResponse r s c]
+                                            ; append each chunk as it comes in
+                                            (str (c-value c) (.-text r)))]
+                            (when (muv :generate)           ; user clicked "Go"
+                              (.generateContentStream ^ai/GenerativeModel (mav :gem-pro)
+                                [(.text ai/Content (muv :prompt))])))}
+                (or (mav :content) "RSN")))))))))
