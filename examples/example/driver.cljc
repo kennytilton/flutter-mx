@@ -52,13 +52,14 @@
     [example.demo.fmx-inspector.fmx-inspector :as fxi]
     [example.demo.ai.gemini.simple_text :as gemini]
     [example.demo.ai.gemini.advanced_text :as gem2]
+    [example.demo.ai.gemini.advanced_text_stream :as gem2s]
     [example.demo.ai.gemini.simple-chat :as gem3]))
 
 (defn select []
   ; x04  nope: x028 x030 x040
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
   (case 1
-    0 (fxi/make-app)
-    1 (gem3/make-app)
+    0 (gem2/make-app)
+    1 (gem2s/make-app)
     2 (ixp/make-app)
     3 (todo/make-app)))
