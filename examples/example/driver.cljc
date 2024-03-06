@@ -61,6 +61,6 @@
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
   (case 3
     0 (gemini/make-app)
-    1 (gem-sti/make-app)
-    2 (ixp/make-app)
+    1 (gem2s/make-app)
+    2 (x020/make-app)
     3 (todo/make-app)))

@@ -62,7 +62,10 @@
                     .model "gemini-pro"
                     .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))
      :test (cF (dp :ctx!!!! fxf/*ctx*)
-             (dp :defbun (m/DefaultAssetBundle.of fxf/*ctx*)))}
+             (dp :defbun (m/DefaultAssetBundle.of fxf/*ctx*))
+             (let [bundle (m/DefaultAssetBundle.of fxf/*ctx*)]
+               (let [cat-bytes (.load bundle "image/cat_on_snow.jpeg")]
+                 (dp :cat cat-bytes))))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter/MX Hello Gemini")})}
       (center
