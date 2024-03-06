@@ -1,4 +1,4 @@
-(ns example.demo.ai.gemini.simple-text
+(ns example.demo.ai.gemini.simple-text-and-image
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -32,7 +32,7 @@
        :controller (cFonce
                      (m/TextEditingController .text (mav :value)))
        :onChanged   (dart-cb [text]
-                     (mset! me :value text))
+                      (mset! me :value text))
        :minLines   2 :maxLines 4}
       {:name  :prompt
        :value (cI prompt-initial)})))
@@ -46,13 +46,23 @@
     (m/Text "Go")))
 
 (defn make-app []
+  ;(let [cat (m/AssetImage "image/cat_on_snow.jpeg")]
+  #_
+  (let [cat (.load rootBundle "image/cat_on_snow.jpeg")]
+    ;(m/AssetImage "image/einstein.jpeg")
+    ; final byteData = await rootBundle.load('assets/$path');
+    (dp :cat!!! cat)
+    (dp :bytes (.-bundle cat)))
+
   (material-app
     {:title "Flutter/MX Hello Gemini"
      :theme (cF (theme-data
                   {:primarySwatch m/Colors.teal}))}
     {:gem-pro (cF (ai/GenerativeModel
                     .model "gemini-pro"
-                    .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))}
+                    .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))
+     :test (cF (dp :ctx!!!! fxf/*ctx*)
+             (dp :defbun (m/DefaultAssetBundle.of fxf/*ctx*)))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter/MX Hello Gemini")})}
       (center
@@ -78,18 +88,48 @@
                 ;(when (muv :generate) "thinking...")
                 "waiting..."))))))))
 
-;; The original gen code:
-;;
-; import 'package:google_generative_ai/google_generative_ai.dart';
+;// Licensed under the Apache License, Version 2.0 (the "License");
+;// you may not use this file except in compliance with the License.
+;// You may obtain a copy of the License at
+;//
+;//     http://www.apache.org/licenses/LICENSE-2.0
+;//
+;// Unless required by applicable law or agreed to in writing, software
+;// distributed under the License is distributed on an "AS IS" BASIS,
+;// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;// See the License for the specific language governing permissions and
+;// limitations under the License.
 ;
-;const apiKey = ...;
+;import 'dart:io';
+;
+;import 'package:google_generative_ai/google_generative_ai.dart';
+;
+;import 'util/resource.dart';
 ;
 ;void main() async {
-;  final model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+;  final apiKey = Platform.environment['GOOGLE_API_KEY'];
+;  if (apiKey == null) {
+;    stderr.writeln(r'No $GOOGLE_API_KEY environment variable');
+;    exit(1);
+;  }
+;  final model = GenerativeModel(model: 'gemini-pro-vision', apiKey: apiKey);
+;  final prompt = 'What do you see?';
+;  print('Prompt: $prompt');
 ;
-;  final prompt = 'Write a story about a magic backpack.';
-;  final content = [Content.text(prompt)];
+;  final (catBytes, sconeBytes) = await (
+;    readResource('cat.jpg'),
+;    readResource('scones.jpg'),
+;  ).wait;
+;  final content = [
+;    Content.multi([
+;      TextPart(prompt),
+;      // The only accepted mime types are image/*.
+;      DataPart('image/jpeg', catBytes),
+;      DataPart('image/jpeg', sconeBytes),
+;    ])
+;  ];
+;
 ;  final response = await model.generateContent(content);
-;
+;  print('Response:');
 ;  print(response.text);
-;};
+;}
