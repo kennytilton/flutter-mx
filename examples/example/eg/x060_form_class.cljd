@@ -1,0 +1,137 @@
+(ns example.eg.x060-form-class
+  "Port of CLJD faithful port of https://docs.flutter.dev/cookbook/forms/retrieve-input"
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.api :refer [dp mget mset! mswap!] :as md]
+    [tilton.fmx.api :as fx]
+    [tilton.fmx.factory :as fxf]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+(defn make-app []
+  (let [title "Form Using Flutter Form Class"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (m/AppBar .title (m/Text title))}
+        (fx/padding
+          {:padding (m/EdgeInsets.all 16.0)}
+
+          (fx/form
+            {:autovalidateMode w/AutovalidateMode.onUserInteraction}
+            {:name :entry-form}
+            (fx/column {:crossAxisAlignment m/CrossAxisAlignment.start}
+              ;(fx/text "Enter name")
+              (fx/text-form-field
+                {:controller (m/TextEditingController)
+                 :decoration (m/InputDecoration
+                               .icon (m/Icon m/Icons.person)
+                               .hintText "Enter name")
+                 :validator  (fn [value]
+                               (dp :ff-val-sees value (nil? value))
+                               (cond
+                                 (str/blank? value)
+                                 "Required."
+                                 :else nil))
+                 :onChanged  (fn [value]
+                               (dp :onchg-sees value))}
+                {:name :txt-1})
+              (m/SizedBox .height 36)
+
+              (fx/text-form-field
+                {:controller (m/TextEditingController #_#_.text "10023")
+                 :decoration (m/InputDecoration
+                               .icon (m/Icon m/Icons.mail)
+                               .hintText "Enter zip-5 or zip-9")
+                 :validator  (fn [value]
+                               (dp :ff-val-sees value (str/blank? value))
+                               (cond
+                                 (str/blank? value)
+                                 "Required."
+                                 (not (re-matches #"^\d{5}(?:[-\s]\d{4})?$" value))
+                                 "Postal code s/b 9(5) or 9(5)-9(4)"))
+                 :onChanged  (fn [value]
+                               (dp :onchg-sees value))}
+                {:name :zip-1})
+              (m/SizedBox .height 36)
+              (fx/dropdown-button-form-field
+                {:decoration (m/InputDecoration
+                               .icon (m/Icon m/Icons.home_work)
+                               .hintText "Work or home?")
+                 :onChanged (fn [value]
+                              (dp :downff-chg value))}
+                (fx/dropdown-menu-item {:value "home"}
+                  (m/Text "home"))
+                (fx/dropdown-menu-item {:value "work"}
+                  (m/Text "work")))
+              (m/SizedBox .height 36)
+              (fx/elevated-button
+                {:onPressed (fn []
+                              (dp :submit!!!!!!!!!!!))}
+                (m/Text "Submit")))))))))
+
+;  Padding(
+;            padding: const EdgeInsets.symmetric(vertical: 16.0),
+;            child: ElevatedButton(
+;              onPressed: () {
+;                // Validate will return true if the form is valid, or false if
+;                // the form is invalid.
+;                if (_formKey.currentState!.validate()) {
+;                  // Process data.
+;                }
+;              },
+;              child: const Text('Submit'),
+;
+;class FormExampleApp extends StatelessWidget {
+;  const FormExampleApp({super.key});
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return MaterialApp(
+;      home: Scaffold(
+;        appBar: AppBar(title: const Text('Form Sample')),
+;        body: const FormExample(),
+;      ),
+;    );
+;  }
+;}
+;
+;class FormExample extends StatefulWidget {
+;  const FormExample({super.key});
+;
+;  @override
+;  State<FormExample> createState() => _FormExampleState();
+;}
+;
+;class _FormExampleState extends State<FormExample> {
+;  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+;
+;  @override
+;  Widget build(BuildContext context) {
+;    return Form(
+;      key: _formKey,
+;      child: Column(
+;        crossAxisAlignment: CrossAxisAlignment.start,
+;        children: <Widget>[
+;          TextFormField(
+;            decoration: const InputDecoration(
+;              hintText: 'Enter your email',
+;            ),
+;            validator: (String? value) {
+;              if (value == null || value.isEmpty) {
+;                return 'Please enter some text';
+;              }
+;              return null;
+;            },
+;          ),
+;          Padding(
+;            padding: const EdgeInsets.symmetric(vertical: 16.0),
+;            child: ElevatedButton(
+;              onPressed: () {
+;                // Validate will return true if the form is valid, or false if
+;                // the form is invalid.
+;                if (_formKey.currentState!.validate()) {
+;                  // Process data.
+;                }
+;              },
+;              child: const Text('Submit'),

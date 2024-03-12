@@ -40,6 +40,7 @@
     [example.eg.x050-just-audio :as just]                   ;; has make-app and make-app-two
     ;[example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
     [example.eg.x055_isolates :as x055]
+    [example.eg.x060-form-class :as x060]
     [example.demo.isolate.x00-spawn :as ispawn]
     [example.demo.isolate.x01-iso-explorer :as ixpo]
     [example.demo.isolate.ixp.ixp :as ixp]
@@ -59,8 +60,8 @@
 (defn select []
   ; x04  nope: x028 x030 x040
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
-  (case 3
+  (case 2
     0 (gemini/make-app)
     1 (gem2s/make-app)
-    2 (x020/make-app)
+    2 (x060/make-app)
     3 (todo/make-app)))
