@@ -21,6 +21,7 @@
                  .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
 
 ;;;;;; --- the app --------------------------------------------------------
+(declare todos-dashboard)
 
 (defn make-app []
   (let [title "todo"]
@@ -36,6 +37,7 @@
        :todo-list (cF (when-let [db (mget me :db)]
                         (assert (stg/DB) (str "DB not populated but cell :db is: " db))
                         ;; Now we can load any existing todos from storage...
+                        ;(stg/collection-delete-all "todo")
                         (todo/make-ToDoList "todo"
                           (stg/collection-docs "todo"))))}
       (fx/scaffold
@@ -67,7 +69,7 @@
   (fx/row
     {:mainAxisAlignment m/MainAxisAlignment.center}
     (fx/expanded {:flex 1} (footer/items-remaining-display))
-    ;(fx/expanded {:flex 2} (footer/completion-filters))
+    (fx/expanded {:flex 2} (footer/completion-filters))
     (fx/expanded {:flex 1} (footer/clear-completed-button))))
 
 ;;; --- credits --------------------------------------------------------

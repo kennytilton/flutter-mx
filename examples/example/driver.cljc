@@ -60,13 +60,11 @@
 (defn select []
   ; x04  nope: x028 x030 x040
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
-  ; tts no sound. Not playing actually
-  ; todo overflow
-  ; todo cannot read todo
-  ; gemini, gem-sti, gem2, gem3: flex and no story
-  ; ttso flex
-  (case 1
-    0 (gemini/make-app)
-    1 (gem3/make-app)
+  ; iOS 17 tts no sound. Not playing actually. ttso flex
+  ; iOS 17 to-do overflow
+  ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
+  (case 0
+    0 (todo/make-app)
+    1 (ttso/make-app)
     2 (ixp/make-app)
     3 (todo/make-app)))
