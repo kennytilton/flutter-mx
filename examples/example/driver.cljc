@@ -64,7 +64,7 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   (case 0
-    0 (todo/make-app)
+    0 (x028/make-app)
     1 (ttso/make-app)
     2 (ixp/make-app)
     3 (todo/make-app)))

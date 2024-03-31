@@ -3,6 +3,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as f]
+    ["package:supabase_flutter/supabase_flutter.dart" :as supa]
     ["dart:io" :as io]
     ;[cljd.flutter :as f]
     [tilton.mx.cell.base :as cty]
@@ -14,7 +15,7 @@
     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
-    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+    ;; [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     #_ [learn.counter.counter-fmx :as l-ctr]))
 
@@ -38,12 +39,13 @@
     (binding [cty/*dpc-enabled* true]
       ; *fx$dpk* [:propagate :pulse :cset :cnset bbuild :bbuild+ :gg :sstate :sstate+]
       (.ensureInitialized w/WidgetsFlutterBinding)
+
       (if false
         (l-ctr/main)
         (fx/run-fx-app-hot
-          (if false
+          (if true
             (counter/make-app)
-            (eg/select)))))
+            #_ (eg/select)))))
 
     #_(testing/run-tests)))
 
