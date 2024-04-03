@@ -132,7 +132,7 @@
       where: must be a model;
       what: can be a keyword, type, or function taking a model node as its only param, returning true/false;
       other options: me?, inside?, out (false|true|:asc), without-dependency?, must?, and dbg"
-    (dpx :navig> what (minfo where) me? inside? out :must?)
+    (dpx :navig> what (minfo where) me? inside? out must?)
     (cond
       (sequential? what)
       (do (assert (seq what))
@@ -144,13 +144,13 @@
             (dpx :pathing step :in? inside? (minfo from))
             (cond
               (nil? step)
-              (or from (when :must?
+              (or from (when must?
                          (throw (Exception (str "navig-must 1 failed on path what " what
                                              ", starting from " (minfo where)
                                              ", me/inside/out: " (str/join "/" [me? inside? out]))))))
               :else (if-let [md (navig-ex step from step-me? step-in? step-out dbg nil)]
                       (recur more-steps md false true false)
-                      (when :must?
+                      (when must?
                         (throw (Exception (str "navig-must 2 failed on path what " what
                                             ", at step " (minfo from)
                                             ", starting from " (minfo where)
@@ -162,7 +162,7 @@
                              (= what (mget? node :name))) where
                    me? inside? out dbg nil))]
         (cond
-          (and :must? (nil? it))
+          (and must? (nil? it))
           (throw (Exception (str "navig-must failed seeking what " what
                               ", starting from " (minfo where)
                               ", me/in/out: " (str/join "/" [me? inside? out]))))
@@ -172,7 +172,7 @@
       (let [it (binding [*depender* (if :without-dependency? nil *depender*)]
                  (navig-ex what where me? inside? out dbg nil))]
         (cond
-          (and :must? (nil? it))
+          (and must? (nil? it))
           (throw (Exception (str "navig-must failed seeking what " what
                               ", starting from " (minfo where)
                               ", me/in/out: " (str/join "/" [me? inside? out]))))
