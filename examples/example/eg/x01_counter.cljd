@@ -16,25 +16,24 @@
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
     (scaffold
-      {:appBar (app-bar
-                 {:title           (m/Text "Flutter/MX Counter")
-                  :backgroundColor (cF (.-inversePrimary
-                                         (.-colorScheme ^m/ThemeData (mav :theme))))})
-       :floatingActionButton
-       (floating-action-button
-         {:onPressed (dart-cb []
-                       (mswap! (fm* :counter) :value inc))
-          :tooltip   "Increment"}
-         (m/Icon m/Icons.add .color m/Colors.black))}
+      {:appBar               (app-bar
+                               {:title           (m/Text "Flutter/MX Counter")
+                                :backgroundColor (cF (.-inversePrimary
+                                                       (.-colorScheme ^m/ThemeData (mav :theme))))})
+       :floatingActionButton (floating-action-button
+                               {:onPressed (dart-cb []
+                                             (mswap! (fm* :counter) :value inc))
+                                :tooltip   "Increment"}
+                               (m/Icon m/Icons.add .color m/Colors.black))}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
           (text {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)
                  ;;; this silliness is a test to see if the engine can propagate to setState
                  ;; when the reactivity is embedded in a delegate model, the text-style. So far so good.
                  ;; If it fails, try just wrapping the non-updating widget in `(fx/stateful-builder....)`
-                 #_ (cF (fx/text-style
-                          {:color    m/Colors.black
-                           :fontSize (cF (+ 24.0 (* 1.0 (mget (fm* :counter) :value))))}))}
+                 #_(cF (fx/text-style
+                         {:color    m/Colors.black
+                          :fontSize (cF (+ 24.0 (* 1.0 (mget (fm* :counter) :value))))}))}
             "Button push count:")
           (sized-box
             {:height 28.0})

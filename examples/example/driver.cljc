@@ -55,7 +55,9 @@
     [example.demo.ai.gemini.simple-text-and-image :as gem-sti]
     [example.demo.ai.gemini.advanced-text :as gem2]
     [example.demo.ai.gemini.advanced-text-stream :as gem2s]
-    [example.demo.ai.gemini.simple-chat :as gem3]))
+    [example.demo.ai.gemini.simple-chat :as gem3]
+    [example.eg.x065-autocomplete-basic :as x065]
+    [example.eg.x066-autocomplete-object :as x066]))
 
 (defn select []
   ; x04  nope: x028 x030 x040
@@ -64,7 +66,7 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   (case 0
-    0 (x028/make-app)
-    1 (ttso/make-app)
+    0 (x065/make-app)
+    1 (x066/make-app)
     2 (ixp/make-app)
     3 (todo/make-app)))

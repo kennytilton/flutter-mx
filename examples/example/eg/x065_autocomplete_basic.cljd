@@ -1,0 +1,81 @@
+(ns example.eg.x065-autocomplete-basic
+  "F/mx port of https://api.flutter.dev/flutter/material/Autocomplete-class.html"
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.api :refer [dp cI cF cFn cF+ mget mset! mswap!] :as mx]
+    [tilton.fmx.api :as fx]
+    [tilton.fmx.factory :as fxf]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+;;; In this example we demonstrate autocomplete from both a hard-coded
+;;; list and a reactive generated list rebuilt when the completion list
+;;; gets displayed, but ont while it is displayed.
+;;;
+;;; Remaining exercise is a deftag for #/(m/Autocomplete String)
+;;;
+
+(def kOptions-0 ["aardvark" "bobcat" "chameleon"])
+(def kOptions-1 ^List ["aardvark" "bobcat" "chameleon"])
+(def ^List kOptions-2  ["aardvark" "bobcat" "chameleon"])
+(def ^#/(List String) kOptions-ls ["aardvark" "bobcat" "chameleon"])
+
+(defn fn-options []
+  ["aardvark" "bobcat" "chameleon"])
+(defn ^List fn-options-cast []
+  ["aardvark" "bobcat" "chameleon"])
+(defn fn-options-cast-in []
+  ^List ["aardvark" "bobcat" "chameleon"])
+
+(defn fn-number-options [me]
+  (mapv (fn [i] (str "n-" i))
+    (range (mx/muv :counter))))
+
+(defn autocomplete-basic [me]
+  (#/(m/Autocomplete String)
+    .onSelected (fn [sel] (prn :selection!! sel))
+    .optionsBuilder (fn [^m/TextEditingValue val]
+                      (cond
+                        (= "" (.-text val))
+                        (.empty #/(Iterable String))
+                        ;--
+                        :else
+                        (let [^#/(Iterable String) it
+                              (.where ^List (fn-number-options me)
+                                ;; Choose any below to test approaches to casting
+                                ;; ok/warns kOptions-0
+                                ;; ok ^List kOptions-0
+                                ;; ok/warns kOptions-1
+                                ;; ok kOptions-2
+                                ;; ok ^List (fn-options)
+                                ;; ok (fn-options-cast)
+                                ;; ok/warns (fn-options-cast-in)
+                                ;; ok options
+                                ;; ok ["aardvark" "bobcat" "chameleon"]
+                                ;; ng kOptions-ls
+                                (fn [option]
+                                  (str/includes? option
+                                    (str/lower-case (.-text val)))))]
+                          it)))))
+
+(defn make-app []
+  (let [title "Autocomplete Basic"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (m/AppBar .title (m/Text title))
+         :floatingActionButton (fx/floating-action-button
+                                 {:onPressed (fx/dart-cb []
+                                               (mswap! (mx/fm* :counter) :value inc))
+                                  :tooltip   "Increment"}
+                                 (m/Icon m/Icons.add .color m/Colors.black))}
+        (fx/center
+          (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+            (fx/text
+              {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displayMedium)}
+              {:name  :counter
+               :value (cI 0)}
+              (str (mget me :value)))
+            (fx/text (str "Type below one of " (str/join "," kOptions-0) "."))
+            (fx/container
+              (autocomplete-basic me))))))))
