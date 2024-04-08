@@ -23,6 +23,7 @@
     [example.eg.x020-reactive-stream :as x020]
     ;[example.eg.layout-explorer :as layo]
     [example.demo.todoMVC.core :as todo]
+    [example.demo.todoMVX.core :as todox]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
     [example.eg.x25-flutter-tex :as tek]
     [example.eg.x26-latex-sandbox :as tekbox]
@@ -66,7 +67,7 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   (case 0
-    0 (x065/make-app)
+    0 (todox/make-app)
     1 (x066/make-app)
     2 (ixp/make-app)
     3 (todo/make-app)))
