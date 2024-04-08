@@ -1,0 +1,106 @@
+(ns example.demo.todoMVX.core
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    [tilton.mx.api :as mx]
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
+    [tilton.fmx.api :refer [within-ctx dart-cb] :as fx]
+    [tilton.fmx.factory :as fxf]
+    [example.demo.todoMVX.common :as cmm]
+    [example.demo.todoMVX.todo :as todo]
+    [example.demo.todoMVX.input :as input]
+    [example.demo.todoMVX.items :as items]
+    [example.demo.todoMVX.footer :as footer]
+    [example.demo.todoMVX.persist :as stg]
+    ;;["package:hive/hive.dart" :as hvroot]
+    ["package:hive_flutter/hive_flutter.dart" :as hv]))
+
+(def app-theme (m/ThemeData
+                 .fontFamily "Helvetica Neue"
+                 .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
+
+;;;;;; --- the app --------------------------------------------------------
+(declare todos-dashboard)
+
+(defn make-app []
+  (let [title "todo"]
+    (fx/material-app
+      {:title title
+       :theme app-theme}
+      {:name      :app
+       :db        (cF+ [:async? true
+                        :watch (fn [_ me hv-box _ _]
+                                 (stg/DB! hv-box))]
+                    (-> hv/Hive hv/HiveX .initFlutter await)
+                    (-> hv/Hive (.openBox "todo")))
+       :todo-list (cF (when-let [db (mget me :db)]
+                        (assert (stg/DB) (str "DB not populated but cell :db is: " db))
+                        (todo/make-ToDoList "todo"
+                          (stg/collection-docs "todo"))))}
+      (fx/scaffold
+        {:appBar                  (todo-app-bar title)
+         :persistentFooterButtons [(footer/todos-dashboard)]}
+        (fx/ink {:color m/Colors.white}
+          (fx/column {}
+            ;(input/todo-controls)
+            (items/todo-items)
+            (about-credits)))))))
+
+;;; --- the app bar -----------------------------------------------
+(defn todo-app-bar [title]
+  ; --- a bit of f/mx replacing Opus suggested code, to get the context via `within-ctx`
+  (fx/preferred-size
+    {:preferredSize (.fromHeight m/Size 140)}
+    (fx/container
+      (fx/safe-area
+        (fx/column
+          {:mainAxisAlignment m.MainAxisAlignment/center}
+          (fx/text
+            {:style (p/TextStyle
+                      .fontFamily "Helvetica Neue"
+                      .color (cmm/title-red)
+                      .fontWeight m/FontWeight.w100
+                      .fontSize 40.0)}
+            title)
+          (m/SizedBox .height 8.0)
+          (fx/row
+            {:mainAxisAlignment m.MainAxisAlignment/end}
+            (input/todo-toggle-all)
+            (m/Spacer)
+            (fx/icon-button
+              {:icon (m/Icon m.Icons/add)
+               :onPressed (fn []
+                            ; Handle the "+" icon press event
+                            ; Navigate to a new screen or show a dialog to add a new todo ite
+                            )})))))))
+;;; --- credits --------------------------------------------------------
+(defn about-credits []
+  (let [faint (p/TextStyle
+                ;; todo explore Themes
+                .color m/Colors.grey
+                .fontSize 14.0)
+        credits ["Double-click a todo to edit."
+                 "Make title blank to delete. Or click the big red X."
+                 "Red indicates meaningless hits on FDA.gov."
+                 "by Kenny Tilton"
+                 "Flutter \u2022 Matrix \u2022 ClojureDart"]]
+    (fx/padding
+      {:padding (m/EdgeInsets.all 16.0)}
+      {:name          :credits-toggle
+       :show-credits? (cI false)}
+      (fx/column
+        (when (mget (fasc :credits-toggle) :show-credits?)
+          (fx/column
+            (mapv #(fx/text {:style faint} %) credits)))
+        (fx/icon-button
+          {:onPressed (dart-cb []
+                        ;(mx/counts-dump :banner)
+                        ;(mx/counts-reset)
+                        (mswap! (fasc :credits-toggle) :show-credits? not))
+           :icon      (within-ctx [me ctx]
+                        (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
+                                  m.Icons/info_outline m.Icons/info)
+                          .color m/Colors.grey))})))))
+

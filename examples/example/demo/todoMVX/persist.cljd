@@ -1,0 +1,74 @@
+(ns example.demo.todoMVX.persist
+  (:require
+    ["package:hive_flutter/hive_flutter.dart" :as hv]
+    ["dart:convert" :as convert]
+    ["package:uuid/uuid.dart" :as uu]
+    [tilton.mx.util :as util]
+    [clojure.walk :as walk]))
+
+(def +DB+ (atom nil))                                       ;; n.b. just a cache, NOT reactive
+(defn ^hv/Box? DB [] (deref +DB+))
+(defn ^hv/Box? DB! [db] (reset! +DB+ db))
+
+(def +uuid+ (atom nil))
+(defn ^uu/Uuid UUID []
+  (or (deref +uuid+)
+    (uu/Uuid)))
+
+(defn td-store
+  "Write a CLJD ToDo map to persistent storage.
+  Map must contain :stg-id, a string identifier.
+  Returns the stg-id."
+  [td-map]
+  (let [stg-id (:stg-id td-map)]
+    (assert stg-id "td-rewrite map must include stg-id")
+    (.put (DB) stg-id
+      (convert/jsonEncode
+        (walk/stringify-keys
+          (select-keys td-map
+            [:stg-id :created-at :title :completed]))))
+    stg-id))
+
+(defn td-initialize
+  "Create a Hive to-do from a CLJD map alone.
+  Returns the unique storage key generated for the data."
+  [collection-name td-map]
+  (when-let [stg-id (:stg-id td-map)]
+    (throw (Exception. (str "td-initialize> sees :stg-id " stg-id ", suggesting td already written"))))
+
+  (let [new-stg-id (str collection-name "/" (.v4 (UUID)))]
+    (td-store
+      (assoc td-map :stg-id new-stg-id))
+    new-stg-id))
+
+(defn td-rewrite
+  "Update a stored to-do given only a CLJD map of its properties.
+   Map must contain non-nil :stg-id."
+  [td-map]
+  (assert (:stg-id td-map)
+    "td-rewrite> map must include stg-id")
+  (td-store td-map)
+  (:stg-id td-map))
+
+(defn td-delete
+  "Deletes storage associated with stg-id."
+  [stg-id]
+  (assert stg-id "td-delete> stg-id argument is nil. s/b string ID.")
+  (.delete (DB) stg-id)
+  stg-id)
+
+;;; --- collection-level utilities -------------
+
+(defn collection-docs [collection-name]
+  (let [all-td-keys (collection-keys collection-name)]
+    (mapv (fn [td-key]
+            (util/dart-map->cljd-map
+              (convert/jsonDecode (.get (DB) td-key))))
+      all-td-keys)))
+
+(defn collection-keys [collection-name]
+  (into #{} (.-keys (DB))))
+
+(defn collection-delete-all [collection-name]
+  (doseq [k (collection-keys collection-name)]
+    (td-delete k)))
