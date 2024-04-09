@@ -22,7 +22,7 @@
                  .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
 
 ;;;;;; --- the app --------------------------------------------------------
-(declare todos-dashboard)
+(declare todos-dashboard todo-app-bar)
 
 (defn make-app []
   (let [title "todo"]
@@ -42,7 +42,7 @@
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(footer/todos-dashboard)]}
-        (fx/ink {:color m/Colors.white}
+        (fx/ink {:color (cI m/Colors.white)}
           (fx/column {}
             ;(input/todo-controls)
             (items/todo-items)
@@ -52,7 +52,7 @@
 (defn todo-app-bar [title]
   ; --- a bit of f/mx replacing Opus suggested code, to get the context via `within-ctx`
   (fx/preferred-size
-    {:preferredSize (.fromHeight m/Size 140)}
+    {:preferredSize (.fromHeight m/Size 128)}
     (fx/container
       (fx/safe-area
         (fx/column
@@ -64,17 +64,20 @@
                       .fontWeight m/FontWeight.w100
                       .fontSize 40.0)}
             title)
-          (m/SizedBox .height 8.0)
+          (m/SizedBox .height 2.0)
           (fx/row
             {:mainAxisAlignment m.MainAxisAlignment/end}
             (input/todo-toggle-all)
             (m/Spacer)
-            (fx/icon-button
-              {:icon (m/Icon m.Icons/add)
-               :onPressed (fn []
-                            ; Handle the "+" icon press event
-                            ; Navigate to a new screen or show a dialog to add a new todo ite
-                            )})))))))
+            (fx/builder ;; needed for better context
+              (fx/icon-button
+                {:icon      (m/Icon m.Icons/add)
+                 :onPressed (dart-cb []
+                              (m/showDialog
+                                .context ctx
+                                .builder (fn [ctx]
+                                           (fx/fx-render ctx
+                                             (input/todo-input me ctx)))))}))))))))
 ;;; --- credits --------------------------------------------------------
 (defn about-credits []
   (let [faint (p/TextStyle

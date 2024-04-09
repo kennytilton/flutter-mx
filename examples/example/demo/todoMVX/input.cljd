@@ -10,7 +10,7 @@
     [example.demo.todoMVX.common :refer [my-todo-list] :as cmm]
     [example.demo.todoMVX.todo :refer [td-completed] :as todo]))
 
-(defn todo-input-onSubmitted-formula []
+(defn todo-input-onSubmitted-formula [host ctx]
   (cF (dart-cb [value]
         ;; blank or not we need to restore focus to the input per the spec
         (.requestFocus ^m/FocusNode (mget me :focusNode))
@@ -21,11 +21,13 @@
             (mset! me :value trimmed)                       ;; let text proxy know its cleaned value
             (.clear ^m/TextEditingController
               (mget me :controller))
-            (let [td-lst (my-todo-list)]
+            (let [td-lst (mx/mget (tilton.mx.model.core/fasc :app host)
+                           :todo-list)]
               (mswap! td-lst :kids conj
-                (todo/make-ToDo td-lst trimmed false))))))))
+                (todo/make-ToDo td-lst trimmed false))
+              (.pop (m/Navigator.of ctx))))))))
 
-(defn todo-input []
+(defn todo-input [host ctx]
   (fx/material
     {:elevation   20.0
      :color       m/Colors.white
@@ -33,10 +35,10 @@
     (fx/text-field {:autofocus   true
                     :focusNode   (m/FocusNode)
                     :decoration  (m/InputDecoration
-                                   .hintText "What needs doing?"
+                                   .hintText "What else needs doing?"
                                    .border m.InputBorder/none
                                    .contentPadding (m/EdgeInsets.all 9.0))
-                    :onSubmitted (todo-input-onSubmitted-formula)
+                    :onSubmitted (todo-input-onSubmitted-formula host ctx)
                     :controller  (cFonce (fx/text-field-controller-basic me))}
       {:name  :todo-input
        :value (cI "")})))
@@ -54,17 +56,19 @@
     {:name :togg-vis}
     (fx/icon-button
       {:onPressed (dart-cb []
+                    (dp :toggling!!!!!!!!)
+                    (fx/local-check :toggle ctx)
                     (let [todos (todo/app-todos (my-app))
                           all-done? (every? td-completed todos)]
                       (doseq [td todos]
                         ;; todo do all these in one change pulse
                         (mset! td :completed (if all-done? false true)))))
-       :icon (fx/icon
-               {:color (cF (if (every? td-completed (todo/app-todos (my-app)))
-                             m/Colors.black m/Colors.blueGrey))}
-               m.Icons/expand_more)})))
+       :icon      (fx/icon
+                    {:color (cF (if (every? td-completed (todo/app-todos (my-app)))
+                                  m/Colors.black m/Colors.blueGrey))}
+                    m.Icons/expand_more)})))
 
-#_ (m/Icon m.Icons/expand_more .color m/Colors.blueGrey)
+#_(m/Icon m.Icons/expand_more .color m/Colors.blueGrey)
 
 (defn todo-controls []
   (fx/row
@@ -72,9 +76,9 @@
       ;; handy widget to mark all to-dos at once
       (todo-toggle-all))
     ; --- the to-do input field ----
-    #_ (fx/expanded {:flex 9}
-      {:unwrapped? true}
-      (fx/padding
-        {:padding (m/EdgeInsets.all 16.0)}
+    #_(fx/expanded {:flex 9}
         {:unwrapped? true}
-        (todo-input)))))
+        (fx/padding
+          {:padding (m/EdgeInsets.all 16.0)}
+          {:unwrapped? true}
+          (todo-input)))))
