@@ -70,15 +70,62 @@
 
 #_(m/Icon m.Icons/expand_more .color m/Colors.blueGrey)
 
-(defn todo-controls []
-  (fx/row
-    (fx/expanded {:flex 1}
-      ;; handy widget to mark all to-dos at once
-      (todo-toggle-all))
-    ; --- the to-do input field ----
-    #_(fx/expanded {:flex 9}
-        {:unwrapped? true}
-        (fx/padding
-          {:padding (m/EdgeInsets.all 16.0)}
-          {:unwrapped? true}
-          (todo-input)))))
+
+
+(defn todo-dialog [on-save context]
+  (let [todo-controller (m/TextEditingController.)
+        date-controller (m/TextEditingController.)
+        builder (fn [context]
+                  (m/AlertDialog
+                    .title (m/Text "Add Todo")
+                    .content (m/Column
+                               .mainAxisSize m.MainAxisSize/min
+                               .children [(m/TextField
+                                            .controller todo-controller
+                                            .decoration (m/InputDecoration
+                                                          .labelText "Todo"))
+                                          (m/TextField
+                                            .controller date-controller
+                                            .decoration (m/InputDecoration
+                                                          .labelText "Due Date")
+                                            #_#_ .onTap #(m/showDatePicker
+                                                      .context context
+                                                      .initialDate (DateTime.now)
+                                                      .firstDate (DateTime.now)
+                                                      ;.lastDate (.. (DateTime.now) (add (Duration .days 365)))
+                                                      #_#_ .then (fn [date] (when date
+                                                                         (set! (.-text date-controller) (str date))))))])
+                    .actions [(m/TextButton
+                                .child (m/Text "CANCEL")
+                                .onPressed #(.pop (m/Navigator.of context)))
+                              (m/TextButton
+                                .child (m/Text "SAVE")
+                                .onPressed #(do
+                                              (on-save (.-text todo-controller) (.-text date-controller))
+                                              (.pop (m/Navigator.of context))))]))]
+    (m/showDialog
+      .builder builder
+      .context context)))
+
+(defn add-todo-button [on-save]
+  (m/Builder
+    .builder (fn [context]
+               (m/FloatingActionButton
+                 .child (m/Icon m.Icons/add)
+                 .onPressed #(todo-dialog on-save context)))))
+
+(defn todo-app []
+  (let [todos (atom [])
+        add-todo (fn [text due-date]
+                   (swap! todos conj {:text text :due-date due-date}))]
+    (fn []
+      (m/Scaffold
+        .appBar (m/AppBar .title (m/Text "Todo App"))
+        .body (m/ListView
+                .children (map (fn [{:keys [text due-date]}]
+                                 (m/ListTile
+                                   .title (m/Text text)
+                                   .subtitle (m/Text due-date)))
+                            @todos))
+        .floatingActionButton (add-todo-button add-todo)))))
+
