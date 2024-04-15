@@ -5,7 +5,7 @@
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
     [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.api :as mx :refer [cF cI cF+ cFonce mget mswap! mset!]]
+    [tilton.mx.api :as mx :refer [cF cI cF+ cFonce muv fmu mav mget mswap! mset!]]
     [tilton.fmx.api :refer [dart-cb my-app] :as fx]
     [example.demo.todoMVX.common :refer [my-todo-list] :as cmm]
     [example.demo.todoMVX.todo :refer [td-completed] :as todo]))
@@ -29,7 +29,7 @@
 
 (defn todo-input [host ctx]
   (fx/material
-    {:elevation   20.0
+    {:elevation   2.0
      :color       m/Colors.white
      :shadowColor m/Colors.black}
     (fx/text-field {:autofocus   true
@@ -56,8 +56,6 @@
     {:name :togg-vis}
     (fx/icon-button
       {:onPressed (dart-cb []
-                    (dp :toggling!!!!!!!!)
-                    (fx/local-check :toggle ctx)
                     (let [todos (todo/app-todos (my-app))
                           all-done? (every? td-completed todos)]
                       (doseq [td todos]
@@ -68,64 +66,33 @@
                                   m/Colors.black m/Colors.blueGrey))}
                     m.Icons/expand_more)})))
 
-#_(m/Icon m.Icons/expand_more .color m/Colors.blueGrey)
+(defn todo-capture-icon []
+  (fx/builder ;; <== needed to pull better context into widget tree for showDialog
+    (fx/icon-button
+      {:icon      (m/Icon m.Icons/add)
+       :onPressed (dart-cb [] ;; <== expands to  (with-ctx [me ctx] (fn [] ~@body))
+                    (let [host-md me
+                          todo-controller (m/TextEditingController.)
+                          date-controller (m/TextEditingController.)
+                          location-controller (m/TextEditingController.)
+                          is-save-disabled (fn [] (str/blank? (.-text todo-controller)))]
+                      (m/showDialog
+                        .context ctx
+                        .builder (fn [ctx]
+                                   (fx/fx-render ctx
+                                     (fx/alert-dialog
+                                       (fx/column {:mainAxisSize m/MainAxisSize.min}
+                                         (todo-input host-md ctx)
+                                         (fx/row
+                                           {:mainAxisAlignment m/MainAxisAlignment.center}
+                                           (fx/text-button
+                                             {:onPressed #(-> ctx m/Navigator.of .pop)}
+                                             (m/Text "Cancel"))
+                                           (fx/text-button
+                                             {:onPressed (cF (when-not (str/blank? (muv :todo-input))
+                                                               #(-> ctx m/Navigator.of .pop)))}
+                                              (m/Text "Save"))))))))))})))
 
 
 
-(defn todo-dialog [on-save context]
-  (let [todo-controller (m/TextEditingController.)
-        date-controller (m/TextEditingController.)
-        builder (fn [context]
-                  (m/AlertDialog
-                    .title (m/Text "Add Todo")
-                    .content (m/Column
-                               .mainAxisSize m.MainAxisSize/min
-                               .children [(m/TextField
-                                            .controller todo-controller
-                                            .decoration (m/InputDecoration
-                                                          .labelText "Todo"))
-                                          (m/TextField
-                                            .controller date-controller
-                                            .decoration (m/InputDecoration
-                                                          .labelText "Due Date")
-                                            #_#_ .onTap #(m/showDatePicker
-                                                      .context context
-                                                      .initialDate (DateTime.now)
-                                                      .firstDate (DateTime.now)
-                                                      ;.lastDate (.. (DateTime.now) (add (Duration .days 365)))
-                                                      #_#_ .then (fn [date] (when date
-                                                                         (set! (.-text date-controller) (str date))))))])
-                    .actions [(m/TextButton
-                                .child (m/Text "CANCEL")
-                                .onPressed #(.pop (m/Navigator.of context)))
-                              (m/TextButton
-                                .child (m/Text "SAVE")
-                                .onPressed #(do
-                                              (on-save (.-text todo-controller) (.-text date-controller))
-                                              (.pop (m/Navigator.of context))))]))]
-    (m/showDialog
-      .builder builder
-      .context context)))
-
-(defn add-todo-button [on-save]
-  (m/Builder
-    .builder (fn [context]
-               (m/FloatingActionButton
-                 .child (m/Icon m.Icons/add)
-                 .onPressed #(todo-dialog on-save context)))))
-
-(defn todo-app []
-  (let [todos (atom [])
-        add-todo (fn [text due-date]
-                   (swap! todos conj {:text text :due-date due-date}))]
-    (fn []
-      (m/Scaffold
-        .appBar (m/AppBar .title (m/Text "Todo App"))
-        .body (m/ListView
-                .children (map (fn [{:keys [text due-date]}]
-                                 (m/ListTile
-                                   .title (m/Text text)
-                                   .subtitle (m/Text due-date)))
-                            @todos))
-        .floatingActionButton (add-todo-button add-todo)))))
 

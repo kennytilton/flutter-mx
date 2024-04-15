@@ -47,14 +47,14 @@
 
 (defn language-selector []
   (fx/popup-menu-button
-    {:initialValue (cFonce (mget me :lang-code))
+    {:initialValue (cFonce (mget me :wh-name))
      :onSelected   (dart-cb [item]
-                     (mset! me :lang-code item))
+                     (mset! me :wh-name item))
      :itemBuilder  (language-selector-item-builder)}
     {:name           :lang-picker
      :languages      (cI cg4-languages)                     ;; cI? To allow for growth, sth NOT utilized this example
-     :lang-code      (cI nil #_"fr") #_(cFn (:code (first (mget me :languages))))
-     :lang-preferred (cF (when-let [code (mget me :lang-code)]
+     :wh-name      (cI nil #_"fr") #_(cFn (:code (first (mget me :languages))))
+     :lang-preferred (cF (when-let [code (mget me :wh-name)]
                            (some #(when (= code (:code %)) %)
                              (mget me :languages))))}
     (fx/container

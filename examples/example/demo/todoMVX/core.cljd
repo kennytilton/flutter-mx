@@ -69,21 +69,7 @@
             {:mainAxisAlignment m.MainAxisAlignment/end}
             (input/todo-toggle-all)
             (m/Spacer)
-
-            (fx/builder ;; needed for better context
-              (fx/icon-button
-                {:icon      (m/Icon m.Icons/add)
-                 :onPressed (dart-cb []
-                              (let [host me]
-                                (m/showDialog
-                                  .context ctx
-                                  .builder (fn [ctx]
-                                             (fx/fx-render ctx
-                                               (fx/alert-dialog
-                                                 {:actions [(m/TextButton
-                                                              .onPressed #(-> ctx m/Navigator.of .pop)
-                                                              .child (m/Text "Save"))]}
-                                                 (input/todo-input host ctx)))))))}))))))))
+            (input/todo-capture-icon)))))))
 ;;; --- credits --------------------------------------------------------
 (defn about-credits []
   (let [faint (p/TextStyle
