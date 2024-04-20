@@ -1,0 +1,49 @@
+(ns example.demo.todoMVX.supa
+  (:require
+    ["dart:convert" :as convert]
+    ["package:uuid/uuid.dart" :as uu]
+    ["package:supabase_flutter/supabase_flutter.dart" :as supabase]
+    [tilton.mx.api :as mx
+     :refer [dp dpx mget mget? mset! mswap! fasc cF cF+ cI]]
+    [clojure.string :as str]))
+
+
+(defn stg-upsert [table table-props me]                     ;; a model, such as light from make-Light
+  (dpx :STGupsert-sees table-props (mget? me :created_at)(mget? me :created-at))
+  (let [op (-> supabase/Supabase.instance.client
+             (.from table)
+             (.upsert (into {} (for [prop table-props]
+                                 [(str/replace (name prop) #"-" "_")
+                                  (mget me prop)]))))]
+    (dpx :upsert!!!!! op (dart/is? op Future))
+    (await op) ;; effects the write
+    (mget me :uid)))
+
+(defn stg-rewrite [table table-props me]                    ;; a model, such as light from make-Light
+  (dpx :stg-rewriting (mx/minfo me))
+  (stg-upsert table table-props me)
+  (mget me :uid))
+
+(defn stg-insert [table table-props props]                  ;; a model, such as light from make-Light
+  (dp :STGINSERT-entry table table-props props)
+  (let [row (into {} (for [prop table-props]
+                       [(str/replace (name prop) #"-" "_") ;; can't hurt if we never force hyphens on pg
+                        (get props prop)]))]
+    ;(dp :STGIN-ACTUAL-row table row)
+    (let [fop (-> supabase/Supabase.instance.client
+                (.from table)
+                (.insert row)
+                .select)]
+      (let [props (atom (await fop))]
+        (deref props)))))
+
+(defn stg-delete
+  "Deletes storage associated with uid."
+  [table uid]
+  (assert uid (str "stg-delete> " table " uid argument is nil. s/b string ID."))
+  (let [op (-> supabase/Supabase.instance.client
+             (.from table)
+             .delete
+             (.match {"uid" uid}))]
+    (await op)
+    uid))

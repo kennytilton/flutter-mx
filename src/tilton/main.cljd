@@ -15,7 +15,7 @@
     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
-    #_ [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
+    [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
     #_ [learn.counter.counter-fmx :as l-ctr]))
 
@@ -40,12 +40,19 @@
       ; *fx$dpk* [:propagate :pulse :cset :cnset bbuild :bbuild+ :gg :sstate :sstate+]
       (.ensureInitialized w/WidgetsFlutterBinding)
 
+      (do (dp :supa-URL (String/fromEnvironment "SUPA_MVX_URL"))
+          (dp :supa-KEY (String/fromEnvironment "SUPA_MVX_KEY"))
+          (dp :Supa-init
+            (await (.initialize supa/Supabase
+                     .url (String/fromEnvironment "SUPA_MVX_URL")
+                     .anonKey (String/fromEnvironment "SUPA_MVX_KEY")))))
+
       (if false
         (l-ctr/main)
         (fx/run-fx-app-hot
-          (if true
+          (if false
             (counter/make-app)
-            #_  (eg/select)))))
+            (eg/select)))))
 
     #_(testing/run-tests)))
 

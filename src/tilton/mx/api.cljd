@@ -49,6 +49,9 @@
 (defn pulse-now []
   (cb/pulse-now))
 
+(defn now-ms []
+  (.-millisecondsSinceEpoch (.now DateTime)))
+
 (defn millis-now []
   (.-millisecondsSinceEpoch (.now DateTime)))
 ;;; --- accessors -----------------------------------
@@ -318,6 +321,21 @@
   "DEFN getters named [PREFIX]slot for each symbol in SLOTS"
   [prefix & slots]
   `(do
+     ~@(map (fn [prop#]
+              `(defn ~(symbol (str (or prefix "")
+                                prop#))
+                 [~'ref]
+                 (tilton.mx.model.base/mget ~'ref ~(keyword prop#)))) slots)))
+
+(defmacro def-mx-pg-props
+  "DEFN getters named [PREFIX]slot for each symbol in SLOTS.
+  Convert hyphens in input to underscores in DB props"
+  [prefix & slots]
+  `(do
+     (defn ~(symbol (str prefix "props")) []
+       (let [kws# (vector ~@(map keyword slots))]
+         (dpx :kws-from-props kws#)
+         kws#))
      ~@(map (fn [prop#]
               `(defn ~(symbol (str (or prefix "")
                                 prop#))

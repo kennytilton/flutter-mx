@@ -1,0 +1,119 @@
+(ns example.demo.todoMVX.state
+  (:require
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:http/http.dart" :as dht]
+    ["package:uuid/uuid.dart" :as uu]
+
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.mx.util :as util]
+    [tilton.mx.foundation :refer [PObserver observe MXImplementer] :as cmx]
+    [tilton.mx.cell.base :as cb]
+
+    [tilton.mx.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
+    [tilton.mx.model.peek :refer [Model]]
+    [example.demo.todoMVX.common :as cmm]
+    [example.demo.todoMVX.supa :as supa]
+    [example.demo.todoMVX.persist :as stg]))
+
+(mx/def-mx-pg-props td-
+  uid title completed created-at)
+
+(deftype ToDo []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]
+    (when (and (td-uid me) (not= mx/unbound prior-value)) me)))
+
+(defn make-ToDo-from-props [lst props]
+  (mx/make
+    :uid (:uid props)
+    :parent lst
+    :mx-type (ToDo.)
+    :title (cI (:title props))
+    :completed (cI (:completed props))
+    :created-at (:created-at props)))
+
+(defn make-ToDo
+  ([lst title]
+   (make-ToDo lst nil title false nil))
+
+  ([lst uid title completed created-at]
+   (cond
+     (nil? uid)
+     (let [new-uid (.v4 (uu/Uuid))
+           created-at (cmm/app-now-utc)]
+       (supa/stg-insert "to-do" (td-props)
+         {:uid        new-uid
+          :title      title
+          :completed completed
+          :created-at created-at})
+       (make-ToDo lst new-uid title completed created-at))
+     ;--
+     :else
+     (make-ToDo-from-props lst
+       {:uid        uid
+        :title      title
+        :completed  completed
+        :created-at created-at}))))
+
+;;; --- higher level ---------------------------
+
+(deftype ToDoList []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]
+    (case prop
+      :kids (when (not= mx/unbound prior-value)
+              (let [lost (util/difference (set prior-value) (set new-value))]
+                (doseq [td lost]
+                  (if-let [uid (td-uid td)]
+                    (supa/stg-delete "to-do" uid)
+                    (dp :todolist-lost-mystery-elt (deref td))))))
+      nil)))
+
+(defn make-ToDoList
+  ([] (make-ToDoList nil))
+  ([existing]
+   (mx/make
+     :mx-type (ToDoList.)
+     :name :app-ToDoList
+     :kids (cFn (mapv (fn [xtd]
+                        (let [{:strs [uid title completed created_at]} xtd]
+                          (make-ToDo me uid title completed created_at)))
+                  existing)))))
+
+(defn ToDoList-refresh! [lst current-tds]
+  (let [old-tds (mkids lst)
+        old-ids (map td-uid old-tds)
+        current-ids (map :uid current-tds)
+        gained-ids (remove (fn [nx] (some #{nx} old-ids)) current-ids)
+        lost-ids (remove (fn [ox] (some #{ox} current-ids)) old-ids)]
+    (dpx :LLfresh-new-tds current-tds)
+
+    (let [kept (keep (fn [old]
+                       (when (some #{(td-uid old)} current-ids) old))
+                 old-tds)
+          news (keep (fn [new-lt]
+                       (when (some #{(:uid new-lt)} gained-ids)
+                         (dpx :LL-refresh-new!!!!!!!!!!! new-lt)
+                         (make-ToDo-from-props lst new-lt)))
+                 current-tds)]
+      (mx/mset! lst :kids
+        (concat kept news)))))
+
+(defn ToDoList-delete! [lst uid]
+  (mswap! lst :kids
+    (partial remove (fn [td] (= uid (td-uid td))))))
+
+(defn app-todos [app]
+  (when-let [lst (tilton.mx.model.base/mget app :todo-list)]
+    ;; we have to wait for tds to be loaded asynchronously
+    (assert (mx/mref? lst) (str "app-tds> lst not mref? " lst))
+    (mkids lst)))
+
+(defn td-lookup [me uid]
+  (some (fn [d]
+          (when (= uid (td-uid d)) d))
+    (cmm/my-todos)))
+

@@ -66,7 +66,7 @@
   ; iOS 17 tts no sound. Not playing actually. ttso flex
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
-  (case 1
+  (case 0
     0 (todox/make-app)
     1 (x27/make-app)
     2 (ixp/make-app)

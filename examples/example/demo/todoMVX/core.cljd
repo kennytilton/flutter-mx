@@ -3,13 +3,14 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/widgets.dart" :as w]
+    ["package:supabase_flutter/supabase_flutter.dart" :as supa]
     [tilton.mx.api :as mx]
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
     [tilton.fmx.api :refer [within-ctx dart-cb] :as fx]
     [tilton.fmx.factory :as fxf]
     [example.demo.todoMVX.common :as cmm]
-    [example.demo.todoMVX.todo :as todo]
+    [example.demo.todoMVX.state :as todo]
     [example.demo.todoMVX.input :as input]
     [example.demo.todoMVX.items :as items]
     [example.demo.todoMVX.footer :as footer]
@@ -29,16 +30,32 @@
     (fx/material-app
       {:title title
        :theme app-theme}
-      {:name      :app
-       :db        (cF+ [:async? true
-                        :watch (fn [_ me hv-box _ _]
-                                 (stg/DB! hv-box))]
-                    (-> hv/Hive hv/HiveX .initFlutter await)
-                    (-> hv/Hive (.openBox "todo")))
-       :todo-list (cF (when-let [db (mget me :db)]
-                        (assert (stg/DB) (str "DB not populated but cell :db is: " db))
-                        (todo/make-ToDoList "todo"
-                          (stg/collection-docs "todo"))))}
+      {:name       :app
+       :db         (cF+ [:async? true
+                         :watch (fn [_ me hv-box _ _]
+                                  (stg/DB! hv-box))]
+                     (-> hv/Hive hv/HiveX .initFlutter await)
+                     (-> hv/Hive (.openBox "todo")))
+       :todo-rows (cF+ [:async? true
+                         :watch (fn [_ _ new _ _]
+                                  (dp :todo-rows!!!! new))]
+                     (-> supa/Supabase.instance.client
+                       (.from "to-do") .select))
+       :todo-list (cF (when-let [rows (mget me :todo-rows)]
+                             (todo/make-ToDoList rows)))
+       #_#_:to-do-listen (cF (-> supabase/Supabase.instance.client
+                               (.from "to-do")
+                               (.stream .primaryKey ["uid"])
+                               (.listen (fn [data]
+                                          (let [to-dos (map dart-map->cljd-map data)]
+                                            (dp :to-dos!!!!!! (count to-dos))
+                                            (mx/wmx-iso
+                                              (when-let [lst (mget me :to-do-list)]
+                                                (to-do/BayList-refresh! lst to-dos))))))))
+       #_#_ :todo-list  (cF (when-let [db (mget me :db)]
+                         (assert (stg/DB) (str "DB not populated but cell :db is: " db))
+                         (todo/make-ToDoList "todo"
+                           (stg/collection-docs "todo"))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(footer/todos-dashboard)]}

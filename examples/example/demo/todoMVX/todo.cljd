@@ -15,91 +15,92 @@
     [example.demo.todoMVX.persist :as stg]))
 
 ;;; --- handy accessors ---------------------------------
-
-(mx/def-mx-props td-
-  stg-id title completed created-at)
-
-;;; --- FX-level to-dos and to-do list -----------------------------------------
-
-(defn ToDo-update [td]
-  (stg/td-rewrite
-    (select-keys @td [:stg-id :created-at :title :completed])))
-
-(deftype ToDo []
-  :extends Model
-  PObserver
-  (observe [this prop me new-value prior-value cell]
-    ;; the initial observe, signified by prior value unbound,
-    ;; is of the MX to-do being awakened after being loaded
-    ;; from the DB, even new to-dos, so no need to update DB,
-    (when (and (td-stg-id me) (not= mx/unbound prior-value))
-      (ToDo-update me))))
-
-(defn make-ToDo
-  ([td-lst title completed]
-   ;; brand new...
-   (make-ToDo td-lst title completed nil nil))
-
-  ([td-lst title completed stg-id created-at]
-   ;; create MX proxy to-do
-   (let [created-at (or created-at
-                      (.-millisecondsSinceEpoch (.now DateTime)))]
-     (mx/make
-       :parent td-lst
-       :mx-type (ToDo.)
-       :stg-id (or stg-id
-                 (stg/td-initialize "todo"
-                   {:title      title
-                    :created-at created-at
-                    :completed  completed}))
-       :created-at created-at
-       :ae-events? (cF+ [:async? true
-                         ; optional chance to filter async response before it
-                         ; gets set as the mx prop value
-                         :async-then (fn [c lookup]
-                                       (= 200 (.-statusCode ^dht/Response lookup)))]
-                     (dht/get (.https Uri "api.fda.gov" "drug/event.json"
-                                {"limit"  "1"
-                                 "search" (str "patient.drug.openfda.brand_name:"
-                                            (mget me :title))})))
-
-       ;--
-       :title (cI title)
-       :completed (cI completed)))))
-
-;;; --- higher level ---------------------------
-
-(deftype ToDoList []
-  :extends Model
-  PObserver
-  (observe [this prop me new-value prior-value cell]
-    (case prop
-      :kids (when (not= mx/unbound prior-value)
-              (let [lost (util/difference (set prior-value) (set new-value))]
-                (doseq [td lost]
-                  (stg/td-delete (td-stg-id td)))))
-      nil)))
-
-(defn make-ToDoList
-  ([name] (make-ToDoList name nil))
-  ([name existing-todos]
-   (dpx :existing!!!! existing-todos)
-   (mx/make
-     :mx-type (ToDoList.)
-     :name (str name "-list")
-     :kids (cFn (mapv (fn [xtd]
-                        (let [{:keys [title completed stg-id created-at]} xtd]
-                          (make-ToDo me title completed stg-id created-at)))
-                  existing-todos)))))
-
-(defn ToDoList-delete! [todo-list stg-id]
-  (mswap! todo-list :kids
-    (partial remove (fn [td] (= stg-id (td-stg-id td))))))
-
-(defn app-todos [app]
-  (when-let [td-lst (tilton.mx.model.base/mget app :todo-list)]
-    ;; we have to wait for todos to be loaded asynchronously
-    (assert (mx/mref? td-lst) (str "app-todos> td-lst not mref? " td-lst))
-    (mkids td-lst)))
+;
+;(mx/def-mx-props td-
+;  stg-id title completed created-at)
+;
+;;;; --- FX-level to-dos and to-do list -----------------------------------------
+;
+;(defn ToDo-update [td]
+;  (stg/td-rewrite
+;    (select-keys @td [:stg-id :created-at :title :completed])))
+;
+;(deftype ToDo []
+;  :extends Model
+;  PObserver
+;  (observe [this prop me new-value prior-value cell]
+;    ;; the initial observe, signified by prior value unbound,
+;    ;; is of the MX to-do being awakened after being loaded
+;    ;; from the DB, even new to-dos, so no need to update DB,
+;    (when (and (td-stg-id me) (not= mx/unbound prior-value))
+;      (ToDo-update me))))
+;
+;(defn make-ToDo
+;  ([td-lst title completed]
+;   ;; brand new...
+;   (make-ToDo td-lst title completed nil nil))
+;
+;  ([td-lst title completed stg-id created-at]
+;   ;; create MX proxy to-do
+;   (let [created-at (or created-at
+;                      (.-millisecondsSinceEpoch (.now DateTime)))]
+;     (mx/make
+;       :parent td-lst
+;       :mx-type (ToDo.)
+;       :stg-id (or stg-id
+;                 (stg/td-initialize "todo"
+;                   {:title      title
+;                    :created-at created-at
+;                    :completed  completed}))
+;       :created-at created-at
+;       :ae-events? (cF+ [:async? true
+;                         ; optional chance to filter async response before it
+;                         ; gets set as the mx prop value
+;                         :async-then (fn [c lookup]
+;                                       (= 200 (.-statusCode ^dht/Response lookup)))]
+;                     (dht/get (.https Uri "api.fda.gov" "drug/event.json"
+;                                {"limit"  "1"
+;                                 "search" (str "patient.drug.openfda.brand_name:"
+;                                            (mget me :title))})))
+;
+;       ;--
+;       :title (cI title)
+;       :completed (cI completed)))))
+;
+;;;; --- higher level ---------------------------
+;
+;(deftype ToDoList []
+;  :extends Model
+;  PObserver
+;  (observe [this prop me new-value prior-value cell]
+;    (case prop
+;      :kids (when (not= mx/unbound prior-value)
+;              (let [lost (util/difference (set prior-value) (set new-value))]
+;                (doseq [td lost]
+;                  (stg/td-delete (td-stg-id td)))))
+;      nil)))
+;
+;(defn make-ToDoList
+;  ([name] (make-ToDoList name nil))
+;  ([name existing-todos]
+;   (dpx :existing!!!! existing-todos)
+;   (mx/make
+;     :mx-type (ToDoList.)
+;     :name (str name "-list")
+;     :kids (cFn (mapv (fn [xtd]
+;                        (let [{:keys [title completed id created_at]} xtd]
+;                          (dp :todolist!!! title completed id created_at)
+;                          (make-ToDo me title completed stg-id created-at)))
+;                  existing-todos)))))
+;
+;(defn ToDoList-delete! [todo-list stg-id]
+;  (mswap! todo-list :kids
+;    (partial remove (fn [td] (= stg-id (td-stg-id td))))))
+;
+;(defn app-todos [app]
+;  (when-let [td-lst (tilton.mx.model.base/mget app :todo-list)]
+;    ;; we have to wait for todos to be loaded asynchronously
+;    (assert (mx/mref? td-lst) (str "app-todos> td-lst not mref? " td-lst))
+;    (mkids td-lst)))
 
 

@@ -16,46 +16,43 @@
     (uu/Uuid)))
 
 (defn td-store
-  "Write a CLJD ToDo map to persistent storage.
-  Map must contain :stg-id, a string identifier.
-  Returns the stg-id."
   [td-map]
-  (let [stg-id (:stg-id td-map)]
-    (assert stg-id "td-rewrite map must include stg-id")
-    (.put (DB) stg-id
+  (let [uid (:uid td-map)]
+    (assert uid "td-rewrite map must include uid")
+    (.put (DB) uid
       (convert/jsonEncode
         (walk/stringify-keys
           (select-keys td-map
-            [:stg-id :created-at :title :completed]))))
-    stg-id))
+            [:uid :created-at :title :completed]))))
+    uid))
 
 (defn td-initialize
   "Create a Hive to-do from a CLJD map alone.
   Returns the unique storage key generated for the data."
   [collection-name td-map]
-  (when-let [stg-id (:stg-id td-map)]
-    (throw (Exception. (str "td-initialize> sees :stg-id " stg-id ", suggesting td already written"))))
+  (when-let [uid (:uid td-map)]
+    (throw (Exception. (str "td-initialize> sees :uid " uid ", suggesting td already written"))))
 
-  (let [new-stg-id (str collection-name "/" (.v4 (UUID)))]
+  (let [new-uid (str collection-name "/" (.v4 (UUID)))]
     (td-store
-      (assoc td-map :stg-id new-stg-id))
-    new-stg-id))
+      (assoc td-map :uid new-uid))
+    new-uid))
 
 (defn td-rewrite
   "Update a stored to-do given only a CLJD map of its properties.
-   Map must contain non-nil :stg-id."
+   Map must contain non-nil :uid."
   [td-map]
-  (assert (:stg-id td-map)
-    "td-rewrite> map must include stg-id")
+  (assert (:uid td-map)
+    "td-rewrite> map must include uid")
   (td-store td-map)
-  (:stg-id td-map))
+  (:uid td-map))
 
 (defn td-delete
-  "Deletes storage associated with stg-id."
-  [stg-id]
-  (assert stg-id "td-delete> stg-id argument is nil. s/b string ID.")
-  (.delete (DB) stg-id)
-  stg-id)
+  "Deletes storage associated with uid."
+  [uid]
+  (assert uid "td-delete> uid argument is nil. s/b string ID.")
+  (.delete (DB) uid)
+  uid)
 
 ;;; --- collection-level utilities -------------
 

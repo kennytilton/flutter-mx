@@ -13,7 +13,7 @@
     [tilton.fmx.api :refer [dart-cb my-app] :as fx]
     [example.demo.todoMVX.common :as cmm
      :refer [my-todo-list]]
-    [example.demo.todoMVX.todo :refer [td-stg-id td-completed td-title] :as todo]))
+    [example.demo.todoMVX.state :refer [td-uid td-completed td-title] :as todo]))
 
 (defn- completion-toggler [todo]
   (fx/check-box
@@ -26,12 +26,12 @@
 (defn todo-delete-callback [todo tag]
   (dart-cb []
     (todo/ToDoList-delete! (my-todo-list)
-      (todo/td-stg-id todo))))
+      (todo/td-uid todo))))
 
 (defn todo-swipe-callback [todo tag]
   (dart-cb [direction]
     (todo/ToDoList-delete! (my-todo-list)
-      (todo/td-stg-id todo))))
+      (todo/td-uid todo))))
 
 (defn- delete-button [todo]
   (fx/visibility
@@ -73,11 +73,11 @@
      (commit-to-do-editing me todo (.-text tx-con))))
   ;--------
   ([me todo value]
-   (let [stg-id (td-stg-id todo)
+   (let [uid (td-uid todo)
          trimmed (str/trim value)]
      (cond
        (str/blank? trimmed) (mswap! (my-todo-list) :kids
-                              (partial remove (fn [td] (= stg-id (td-stg-id td)))))
+                              (partial remove (fn [td] (= uid (td-uid td)))))
        :else (do
                (mset! todo :title trimmed)                  ;; two dataflow triggers
                (mset! (fasc :item-control) :editing? false))))))
@@ -135,7 +135,7 @@
 
 (defn todo-list-item [todo]
   (fx/dismissible
-    {:key         (m/ValueKey. (td-stg-id todo))
+    {:key         (m/ValueKey. (td-uid todo))
      :direction   w/DismissDirection.horizontal
      :onDismissed (todo-swipe-callback todo :swipe-dismissed)}
     {:name       :todo-LI
@@ -197,9 +197,9 @@
                             (nth (mkids me) i))))}
         {:name :lv-builder}
         (mapv (fn [todo]
-                (let [stg-id (td-stg-id todo)
+                (let [uid (td-uid todo)
                       exg (some (fn [li]
-                                  (when (= stg-id (.-value ^m/ValueKey (mget li :key)))
+                                  (when (= uid (.-value ^m/ValueKey (mget li :key)))
                                     li))
                             (when (not= mx/unbound _cache) _cache))]
                   (or exg (todo-list-item todo))))
