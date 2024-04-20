@@ -10,11 +10,10 @@
     [tilton.mx.foundation :refer [PObserver observe MXImplementer] :as cmx]
     [tilton.mx.cell.base :as cb]
 
-    [tilton.mx.api :refer [cFn cF+ cI mget mkids mkids mswap!] :as mx]
+    [tilton.mx.api :refer [cFn cF+ cI mget mset! mkids mkids mswap!] :as mx]
     [tilton.mx.model.peek :refer [Model]]
     [example.demo.todoMVX.common :as cmm]
-    [example.demo.todoMVX.supa :as supa]
-    [example.demo.todoMVX.persist :as stg]))
+    [example.demo.todoMVX.supa :as supa]))
 
 (mx/def-mx-pg-props td-
   uid title completed created-at)
@@ -24,6 +23,7 @@
   PObserver
   (observe [this prop me new-value prior-value cell]
     (when (and (td-uid me) (not= mx/unbound prior-value))
+      (dp :TD-obs-REWRITE!!! prop new-value :after prior-value)
       (supa/stg-rewrite "to-do" (td-props) me))))
 
 (defn make-ToDo-from-props [lst props]
@@ -83,7 +83,7 @@
                         (let [{:strs [uid title completed created_at]} xtd]
                           (make-ToDo me uid title completed created_at)))
                   existing)))))
-
+#_
 (defn ToDoList-refresh! [lst current-tds]
   (let [old-tds (mkids lst)
         old-ids (map td-uid old-tds)
@@ -95,6 +95,34 @@
     (let [kept (keep (fn [old]
                        (when (some #{(td-uid old)} current-ids) old))
                  old-tds)
+          news (keep (fn [new-lt]
+                       (when (some #{(:uid new-lt)} gained-ids)
+                         (dpx :LL-refresh-new!!!!!!!!!!! new-lt)
+                         (make-ToDo-from-props lst new-lt)))
+                 current-tds)]
+      (mx/mset! lst :kids
+        (concat kept news)))))
+
+(defn ToDoList-refresh! [lst current-tds]
+  (let [old-tds (mkids lst)
+        old-ids (map td-uid old-tds)
+        current-ids (map :uid current-tds)
+        gained-ids (remove (fn [nx] (some #{nx} old-ids)) current-ids)
+        lost-ids (remove (fn [ox] (some #{ox} current-ids)) old-ids)]
+    (dp :LLfresh-new-tds current-tds)
+
+    (let [kept (keep (fn [old]
+                                 (when (some #{(td-uid old)} current-ids)
+                                   ; existing/old proxy lives on in notify payload; update it and keep it
+                                   (let [curr (some (fn [c]
+                                                      (when (= (:uid c) (td-uid old)) c))
+                                                current-tds)]
+                                     ; todo head off Supa update
+                                     (when (not= (mget old :title) (:title curr))
+                                       (dp :refesh-title-to (:title curr) :was (mget old :title))
+                                       (mset! old :title (:title curr)))
+                                     old)))
+                           old-tds)
           news (keep (fn [new-lt]
                        (when (some #{(:uid new-lt)} gained-ids)
                          (dpx :LL-refresh-new!!!!!!!!!!! new-lt)
