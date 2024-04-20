@@ -1,6 +1,7 @@
 (ns tilton.mx.api
   (:require
     [clojure.string :as str]
+    [clojure.walk :as walk]
     [tilton.mx.base :refer [mx-throw]]
     [tilton.mx.util :as util]
     [tilton.mx.cell.base :refer [c-prop-name c-model] :as cb]
@@ -356,6 +357,13 @@
 (defmacro without-integrity [& body]
   `(tilton.mx.cell.integrity/without-integrity
      ~@body))
+
+;;; --- utils -------------------------------
+
+(defn dart-map->cljd-map [dart-map]
+  (walk/keywordize-keys
+    (into {} dart-map)))
+
 
 ;;; --- debug -------------------------------
 
