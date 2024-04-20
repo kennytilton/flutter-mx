@@ -30,7 +30,7 @@
       {:name        :app
        :todo-rows   (cF+ [:async? true
                           :watch (fn [_ _ new _ _]
-                                   (dp :todo-rows!!!! new))]
+                                   (dpx :todo-rows!!!! new))]
                       (-> supabase/Supabase.instance.client
                         (.from "to-do") .select))
        :todo-list   (cF (when-let [rows (mget me :todo-rows)]
@@ -40,7 +40,7 @@
                           (.stream .primaryKey ["uid"])
                           (.listen (fn [data]
                                      (let [to-dos (map mx/dart-map->cljd-map data)]
-                                       (dp :to-dos-LISTEN!!!!!! (count to-dos) :DBG!!!!!!! (:dbg-id @_cell))
+                                       (dpx :to-dos-LISTEN!!!!!! (count to-dos) :DBG!!!!!!! (:dbg-id @_cell))
                                        (mx/wmx-iso
                                          (when-let [lst (mget me :todo-list)]
                                            (todo/ToDoList-refresh! lst to-dos))))))))}
