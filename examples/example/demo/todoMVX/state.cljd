@@ -23,7 +23,8 @@
   :extends Model
   PObserver
   (observe [this prop me new-value prior-value cell]
-    (when (and (td-uid me) (not= mx/unbound prior-value)) me)))
+    (when (and (td-uid me) (not= mx/unbound prior-value))
+      (supa/stg-rewrite "to-do" (td-props) me))))
 
 (defn make-ToDo-from-props [lst props]
   (mx/make

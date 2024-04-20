@@ -24,7 +24,7 @@
             (let [td-lst (mx/mget (tilton.mx.model.core/fasc :app host)
                            :todo-list)]
               (mswap! td-lst :kids conj
-                (todo/make-ToDo td-lst trimmed false))
+                (todo/make-ToDo td-lst trimmed))
               (.pop (m/Navigator.of ctx))))))))
 
 (defn todo-input [host ctx]
@@ -96,7 +96,7 @@
                                                                    (dart-cb []
                                                                      (let [td-lst (my-todo-list host-md)]
                                                                        (mswap! td-lst :kids conj
-                                                                         (todo/make-ToDo td-lst to-do false)))
+                                                                         (todo/make-ToDo td-lst to-do)))
                                                                      (-> ctx m/Navigator.of .pop))))))}
                                              (m/Text "Save"))))))))))})))
 

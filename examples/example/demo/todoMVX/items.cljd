@@ -6,8 +6,6 @@
     ["package:flutter/services.dart" :as srvc]
     ["package:http/http.dart" :as dht]
     [clojure.string :as str]
-    [tilton.mx.cell.base :as cty]
-
     [tilton.mx.api :refer [dp mget mswap! mset! mset! mkids fm* muv fmu fasc
                            cF cF+ cI cFonce wmx-iso dp dpx] :as mx]
     [tilton.fmx.api :refer [dart-cb my-app] :as fx]
@@ -59,9 +57,7 @@
                                      .color m/Colors.grey
                                      .decoration p.TextDecoration/lineThrough)
                                    (p/TextStyle .color
-                                     (if (mget todo :ae-events?)
-                                       m/Colors.red
-                                       m/Colors.blue))))}
+                                     m/Colors.blue)))}
                      {:name :todo-li-title-text}
                      (td-title todo)))}
     {:name :todo-dsp
@@ -79,6 +75,7 @@
        (str/blank? trimmed) (mswap! (my-todo-list) :kids
                               (partial remove (fn [td] (= uid (td-uid td)))))
        :else (do
+               (dp :committing!!!!! trimmed)
                (mset! todo :title trimmed)                  ;; two dataflow triggers
                (mset! (fasc :item-control) :editing? false))))))
 
