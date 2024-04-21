@@ -3,6 +3,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+    ["package:supabase_flutter/supabase_flutter.dart" :as supabase]
     [clojure.string :as str]
     [tilton.mx.base :refer [dprn dp dpx]]
     [tilton.mx.api :as mx :refer [cF cI cF+ cFonce muv fmu mav mget mswap! mset!]]
@@ -67,10 +68,10 @@
                     m.Icons/expand_more)})))
 
 (defn todo-capture-icon []
-  (fx/builder ;; <== needed to pull better context into widget tree for showDialog
+  (fx/builder                                               ;; <== needed to pull better context into widget tree for showDialog
     (fx/icon-button
       {:icon      (m/Icon m.Icons/add)
-       :onPressed (dart-cb [] ;; <== expands to  (with-ctx [me ctx] (fn [] ~@body))
+       :onPressed (dart-cb []                               ;; <== expands to  (with-ctx [me ctx] (fn [] ~@body))
                     (let [host-md me
                           todo-controller (m/TextEditingController.)
                           date-controller (m/TextEditingController.)
@@ -100,15 +101,16 @@
                                                                      (-> ctx m/Navigator.of .pop))))))}
                                              (m/Text "Save"))))))))))})))
 
-
-
-
-#_(let [trimmed (str/trim value)]
-    (when-not (str/blank? trimmed)
-      ;; --- we have a non-blank entry, so we save, clear entry, and store
-      (mset! me :value trimmed)                       ;; let text proxy know its cleaned value
-      (.clear ^m/TextEditingController
-        (mget me :controller))
-      (let [td-lst (my-todo-list)]
-        (mswap! td-lst :kids conj
-          (todo/make-ToDo td-lst trimmed false)))))
+(defn todo-broadcast-icon []
+  (fx/builder
+    (fx/icon-button
+      {:icon      (m/Icon m.Icons/podcasts)
+       :onPressed (dart-cb []
+                    (let [^supabase/RealtimeChannel ch (mget (my-app) :todo-ch)
+                          payload (Map)]
+                      (. payload "[]=" "message" "Hello, Dart!")
+                      (let [sbm (.sendBroadcastMessage ^supabase/RealtimeChannel ch
+                                  .event "test"
+                                  .payload payload)]
+                        (dp :sent!!!!! sbm)
+                        (dp :sentawait!!!!! (await sbm)))))})))

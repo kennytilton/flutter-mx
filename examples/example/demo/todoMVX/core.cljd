@@ -43,7 +43,30 @@
                                        (dpx :to-dos-LISTEN!!!!!! (count to-dos) :DBG!!!!!!! (:dbg-id @_cell))
                                        (mx/wmx-iso
                                          (when-let [lst (mget me :todo-list)]
-                                           (todo/ToDoList-refresh! lst to-dos))))))))}
+                                           (todo/ToDoList-refresh! lst to-dos))))))))
+       ; channelB.subscribe((status, error) {
+       ;  // Wait for successful connection
+       ;  if (status != RealtimeSubscribeStatus.subscribed) {
+       ;    return;
+       ;  }
+       ;
+       ;  // Send a message once the client is subscribed
+       ;  channelB.sendBroadcastMessage(
+       ;    event: 'test',
+       ;    payload: {'message': 'hello, world'},
+       ;  );
+       ;});
+       :todo-ch     (cF+ [:watch (fn [_ me ^supabase/RealtimeChannel ch _ _]
+                                   (dp :channel ch)
+                                   (when ch
+                                     (.subscribe ch (fn [status error]
+                                                      (if (= status supabase/RealtimeSubscribeStatus.subscribed)
+                                                        (dp :subscribed! ch status)
+                                                        (dp :subfail!!!!!! status error))
+
+                                                      nil))))]
+                      (-> supabase/Supabase.instance.client
+                        (.channel "to-do")))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(footer/todos-dashboard)]}
@@ -74,6 +97,7 @@
             {:mainAxisAlignment m.MainAxisAlignment/end}
             (input/todo-toggle-all)
             (m/Spacer)
+            (input/todo-broadcast-icon)
             (input/todo-capture-icon)))))))
 ;;; --- credits --------------------------------------------------------
 (defn about-credits []
