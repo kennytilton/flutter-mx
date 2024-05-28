@@ -15,6 +15,15 @@
     [example.demo.todoMVX.items :as items]
     [example.demo.todoMVX.footer :as footer]))
 
+; step 1: set up a database on https://supabase.com/
+;         record the provided DB URL and private key
+; step 2: in your shell login, export the URL and key as SUPA_MVX_URL and SUPA_MVX_KEY
+; step 3: kill any running f/mx and with pwd as the f/mx root, start with:
+;         - open -A Simulator
+;         - source sup.sh
+; step 4: if after a day or two you get errors connecting to your DB, go to your
+;         Supa console and restart the DB, or upgrade so they do not shut it down
+
 (def app-theme (m/ThemeData
                  .fontFamily "Helvetica Neue"
                  .backgroundColor (.fromRGBO m/Color 245 245 245 1)))
@@ -44,18 +53,6 @@
                                        (mx/wmx-iso
                                          (when-let [lst (mget me :todo-list)]
                                            (todo/ToDoList-refresh! lst to-dos))))))))
-       ; channelB.subscribe((status, error) {
-       ;  // Wait for successful connection
-       ;  if (status != RealtimeSubscribeStatus.subscribed) {
-       ;    return;
-       ;  }
-       ;
-       ;  // Send a message once the client is subscribed
-       ;  channelB.sendBroadcastMessage(
-       ;    event: 'test',
-       ;    payload: {'message': 'hello, world'},
-       ;  );
-       ;});
        :todo-ch     (cF+ [:watch (fn [_ me ^supabase/RealtimeChannel ch _ _]
                                    (dp :channel ch)
                                    (when ch
@@ -63,10 +60,13 @@
                                                       (if (= status supabase/RealtimeSubscribeStatus.subscribed)
                                                         (dp :subscribed! ch status)
                                                         (dp :subfail!!!!!! status error))
-
-                                                      nil))))]
+                                                      nil))
+                                     (.onBroadcast ^supabase/RealtimeChannel ch
+                                       .event "test"
+                                       .callback (fn [payload] (dp :broad-on-got-payload payload)))))]
                       (-> supabase/Supabase.instance.client
-                        (.channel "to-do")))}
+                        (.channel "to-do"
+                          .opts (supabase/RealtimeChannelConfig .self true))))}
       (fx/scaffold
         {:appBar                  (todo-app-bar title)
          :persistentFooterButtons [(footer/todos-dashboard)]}
@@ -78,7 +78,6 @@
 
 ;;; --- the app bar -----------------------------------------------
 (defn todo-app-bar [title]
-  ; --- a bit of f/mx replacing Opus suggested code, to get the context via `within-ctx`
   (fx/preferred-size
     {:preferredSize (.fromHeight m/Size 128)}
     (fx/container
@@ -102,7 +101,6 @@
 ;;; --- credits --------------------------------------------------------
 (defn about-credits []
   (let [faint (p/TextStyle
-                ;; todo explore Themes
                 .color m/Colors.grey
                 .fontSize 14.0)
         credits ["Double-click a todo to edit."
