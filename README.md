@@ -165,9 +165,13 @@ The code for our `Counter` app is [here](https://github.com/kennytilton/flutter-
 To try a different example:
 
 0. kill (^C) any `watch` you have running;
-1. Switch to the example branch:
+1. Modify `deps.edn` to include the `examples` source
 ```bash
-git checkout example
+{:paths     ["src" "examples" ]
+ :cljd/opts {:kind :flutter
+             :main tilton.main}
+  ...etc...
+}
 ```
 2. start another build/watch as explained above; and
 3. the latest example app should appear in your chosen device.
