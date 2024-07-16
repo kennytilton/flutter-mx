@@ -31,7 +31,7 @@
 (defn todo-input [host ctx]
   (fx/material
     {:elevation   2.0
-     :color       m/Colors.white
+     :color       m/Colors.blue
      :shadowColor m/Colors.black}
     (fx/text-field {:autofocus   true
                     :focusNode   (m/FocusNode)
@@ -70,7 +70,7 @@
 (defn todo-capture-icon []
   (fx/builder                                               ;; <== needed to pull better context into widget tree for showDialog
     (fx/icon-button
-      {:icon      (m/Icon m.Icons/add)
+      {:icon      (m/Icon m.Icons/add .color m/Colors.black)
        :onPressed (dart-cb []                               ;; <== expands to  (with-ctx [me ctx] (fn [] ~@body))
                     (let [host-md me
                           todo-controller (m/TextEditingController.)

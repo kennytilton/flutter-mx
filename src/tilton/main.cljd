@@ -17,7 +17,7 @@
     [tilton.testing :as testing]
     [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
     [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
-    #_ [learn.counter.counter-fmx :as l-ctr]))
+    #_[learn.counter.counter-fmx :as l-ctr]))
 
 ;;; The main branch as-is excludes all but one example. To pull those in:
 ;;; * modify deps.edn to include "examples" in :paths;
@@ -42,7 +42,7 @@
       (.ensureInitialized w/WidgetsFlutterBinding)
 
       ; if using Supabase, activate this:
-      #_ (do (dp :supa-URL (String/fromEnvironment "SUPA_MVX_URL"))
+      (do (dp :supa-URL (String/fromEnvironment "SUPA_MVX_URL"))
           (dp :supa-KEY (String/fromEnvironment "SUPA_MVX_KEY"))
           (dp :Supa-init
             (await (.initialize supa/Supabase
@@ -58,8 +58,8 @@
 
     #_(testing/run-tests)))
 
-#_ (when (not (fx/is-web?))
-       (dp :platform-processors io/Platform.numberOfProcessors))
+#_(when (not (fx/is-web?))
+    (dp :platform-processors io/Platform.numberOfProcessors))
 
 ;; (set! r/debugPaintSizeEnabled true)
 ;; (w/debugDumpApp)

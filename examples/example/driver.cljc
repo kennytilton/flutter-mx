@@ -29,11 +29,11 @@
     [example.eg.x26-latex-sandbox :as tekbox]
     [example.eg.x27-popup-menu :as x27]
     [example.eg.x028-bottom-navbar :as x028]
-    [example.eg.x029-layout-builder :as x029b]
+    [example.eg.x029-layout-builder :as x029]
+    [example.eg.x029a-layout-kid-builder :as x029a]
     [example.eg.x030-codelab-namer :as x030]
     [example.eg.x035-timer-poll :as x035]
     [example.eg.x040-named-routes :as x040]
-    [example.eg.x029a-layout-kid-builder :as x029k]
     [example.eg.flutter-layout-tutorial :as dlayout]
     [example.eg.flutter-tts :as ttso] ;; does not start up well with default lang
     [example.demo.tts.core :as tts]
@@ -52,11 +52,14 @@
     [learn.counter.counter-fmx :as rp1]
     ;;[example.demo.navigation.trainer :as nvg]
     [example.demo.fmx-inspector.fmx-inspector :as fxi]
-    [example.demo.ai.gemini.simple-text :as gemini]
-    [example.demo.ai.gemini.simple-text-and-image :as gem-sti]
-    [example.demo.ai.gemini.advanced-text :as gem2]
-    [example.demo.ai.gemini.advanced-text-stream :as gem2s]
-    [example.demo.ai.gemini.simple-chat :as gem3]
+
+    ; next need a current Gemini key or tokens or sth
+    ;[example.demo.ai.gemini.simple-text :as gemini]
+    ;[example.demo.ai.gemini.simple-text-and-image :as gem-sti]
+    ;[example.demo.ai.gemini.advanced-text :as gem2]
+    ;[example.demo.ai.gemini.advanced-text-stream :as gem2s]
+    ;[example.demo.ai.gemini.simple-chat :as gem3]
+
     [example.eg.x065-autocomplete-basic :as x065]
     [example.eg.x066-autocomplete-object :as x066]))
 
@@ -66,8 +69,9 @@
   ; iOS 17 tts no sound. Not playing actually. ttso flex
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
+  ; x040 null check used on null hot reload from diff demo
   (case 3
-    0 (todox/make-app)
-    1 (x27/make-app)
-    2 (ixp/make-app)
+    0 (hello/make-app)
+    1 (todox/make-app)
+    2 (fxi/make-app)
     3 (counter/make-app)))

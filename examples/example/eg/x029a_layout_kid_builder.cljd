@@ -46,6 +46,8 @@
             ;; cell, so everything needing a box will calculate JIT when the builder is called--
             ;; internals mset! :box-constraints just before calling fx-render.
             ;;
+            ;; KNOWN BUG: see x029 version of this (one vertical orientation does not trigger rebuild)
+
             (let [box ^m/BoxConstraints (or (mget me :box-constraints)
                                            (m/BoxConstraints .maxHeight 0 .maxWidth 0))]
               ;; we can also when-let and not offer the default, but then
