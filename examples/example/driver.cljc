@@ -75,4 +75,4 @@
     1 (hello/make-app)
     2 (todo/make-app)
     3 (fxi/make-app)
-    4 (gem2s/make-app)))
+    4 (gem3/make-app)))
