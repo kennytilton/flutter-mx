@@ -54,11 +54,11 @@
     [example.demo.fmx-inspector.fmx-inspector :as fxi]
 
     ; next need a current Gemini key or tokens or sth
-    ;[example.demo.ai.gemini.simple-text :as gemini]
-    ;[example.demo.ai.gemini.simple-text-and-image :as gem-sti]
-    ;[example.demo.ai.gemini.advanced-text :as gem2]
-    ;[example.demo.ai.gemini.advanced-text-stream :as gem2s]
-    ;[example.demo.ai.gemini.simple-chat :as gem3]
+    [example.demo.ai.gemini.simple-text :as gemini]
+    ; WIP. Do not try. [example.demo.ai.gemini.simple-text-and-image :as gem-sti]
+    [example.demo.ai.gemini.advanced-text :as gem2]
+    [example.demo.ai.gemini.advanced-text-stream :as gem2s]
+    [example.demo.ai.gemini.simple-chat :as gem3] ;; this starts the chat but no more
 
     [example.eg.x065-autocomplete-basic :as x065]
     [example.eg.x066-autocomplete-object :as x066]))
@@ -70,8 +70,9 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 3
-    0 (hello/make-app)
-    1 (todox/make-app)
-    2 (fxi/make-app)
-    3 (counter/make-app)))
+  (case 0
+    0 (counter/make-app)
+    1 (hello/make-app)
+    2 (todo/make-app)
+    3 (fxi/make-app)
+    4 (gem2s/make-app)))

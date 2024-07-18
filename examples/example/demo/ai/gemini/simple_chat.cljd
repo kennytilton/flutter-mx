@@ -37,6 +37,19 @@
              checkbox-list-tile icon-button fx-render dart-cb]]
     ["package:google_generative_ai/google_generative_ai.dart" :as ai]))
 
+;;; ALERT!!!!!!!!!!!!!!!!!!!!!!!
+; To run this example:
+; 1. Get a Google API Key
+;    a. go to https://aistudio.google.com/app/prompts/new_chat
+;    b. click "Get API Key", a blue button write at the top left
+;    c. in your login shell add:
+;              GOOG_AI_API_KEY="your API key here"
+; 2. In a terminal:
+;              open -a Simulator
+; 3. In a terminal, tart f/mx with:
+;              clj -M:cljd flutter --dart-define=GOOG_AI_API_KEY=$GOOG_AI_API_KEY
+
+
 (deftag fxf/non-widget theme-data m/ThemeData)
 
 (def chat-opener "Hello, how are you?")
@@ -76,7 +89,10 @@
                       .model "gemini-pro"
                       .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))
        :chat    (cF (let [gem (mav :gem-pro)]
-                      (-> gem ai/StartChatExtension (.startChat))))}
+                      (dp :got-gem-ok! gem)
+                      (let [chat (-> gem ai/StartChatExtension (.startChat))]
+                        (dp :got-chat! chat)
+                        chat)))}
       (scaffold
         {:appBar (app-bar
                    {:title (m/Text title)})}
@@ -99,6 +115,7 @@
                                                 (dp :raw (.-text raw))
                                                 (.-text raw))]
                               (when (muv :generate)
+                                (dp :sending-chat!!! (mav :content) )
                                 (.sendMessage ^ai/ChatSession (mav :chat)
                                   (mav :content))))}
                 (or (mav :chat-back) "soon")))))))))
