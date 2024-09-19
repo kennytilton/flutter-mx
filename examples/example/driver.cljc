@@ -46,6 +46,7 @@
     [example.demo.isolate.x01-iso-explorer :as ixpo]
     [example.demo.isolate.ixp.ixp :as ixp]
     [example.demo.isolate.x02-poc-mx-iso :as iso2]
+    [example.demo.isolate.x070-mqtt5 :as mqtt5]
     [example.demo.isolate.x03-mx-isolate :as iso3]
     [example.demo.isolate.x04-api-mx-iso :as iso4]
     [example.demo.isolate.x00-compute :as icompute]
@@ -70,9 +71,10 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 2
+  (case 4
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
-    3 (fxi/make-app)
+    3 (iso2/make-app)
+    4 (mqtt5/make-app)
     4 (gem3/make-app)))
