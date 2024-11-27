@@ -1,26 +1,4 @@
 (ns tilton.counter-app
-  #_ (:require
-    ["package:flutter/material.dart" :as m]
-    ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/foundation.dart" :as f]
-    ["dart:io" :as io]
-    [tilton.mx.cell.base :as cty]
-    [tilton.mx.model.core :as md]
-    [tilton.mx.util :as mxu]
-    [tilton.mx.base
-     :refer [wtrx dp dpx trx *fx$dpk*]]
-    [tilton.mx.api :refer [minfo cinfo  dp cI mupdate! fm* mav] :as mx]
-    ;[tilton.fmx.factory :refer [fx$sst-registry-clear]]
-    [tilton.fmx.api :as fx
-     :refer [scaffold center dart-cb within-ctx
-             material-app scaffold app-bar floating-action-button
-             theme icon-theme center column text sized-box
-             wrap-stateless wrap-unique-key fx-render]]
-    ;[tilton.testing :as testing]
-    ;[example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
-    #_ [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
-    )
-
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]

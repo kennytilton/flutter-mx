@@ -22,6 +22,7 @@
     [example.eg.x15-fade-widget :as fade]
     [example.eg.x020-reactive-stream :as x020]
     ;[example.eg.layout-explorer :as layo]
+    [example.demo.localStorage-todoMVC.core :as todols]
     [example.demo.todoMVC.core :as todo]
     [example.demo.todoMVX.core :as todox]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
@@ -71,10 +72,21 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 4
+  (case 2
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
     3 (iso2/make-app)
     4 (mqtt5/make-app)
     4 (gem3/make-app)))
+
+;; todols is legacy and fails like it
+;; todo: white text color when editing ng
+;; todo: no completion box if not complete; looks awful if completed -- not getting circle border
+;; x029a has a text input but the message does not track that. Should it?
+;; x035 layout scrunches at top when fetching stopped
+;; ttso has a null issue
+;; sock seems inoperative when msg sent
+;; ixpo seems inoperative on most
+;; gemini needs new credentials or st
+

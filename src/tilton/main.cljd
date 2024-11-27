@@ -16,7 +16,8 @@
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
     [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
-    [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
+    [example.eg.x01-counter :as excounter]
+    [tilton.counter-app :as counter]                        ;; BROKEN. this one uses sugary defs for scaffold and material-app
     #_[learn.counter.counter-fmx :as l-ctr]))
 
 ;;; The main branch as-is excludes all but one example. To pull those in:
@@ -49,11 +50,11 @@
                      .url (String/fromEnvironment "SUPA_MVX_URL")
                      .anonKey (String/fromEnvironment "SUPA_MVX_KEY")))))
 
-      (if false
-        (l-ctr/main)
+      (if false ;; as of 11/2024 we seem not to be able to run outside run-fx-app-hot
+        (excounter/make-app)
         (fx/run-fx-app-hot
           (if false
-            (counter/make-app)
+            (excounter/make-app)
             (eg/select)))))
 
     #_(testing/run-tests)))
