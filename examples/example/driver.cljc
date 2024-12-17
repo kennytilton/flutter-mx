@@ -78,7 +78,7 @@
     2 (todo/make-app)
     3 (iso2/make-app)
     4 (mqtt5/make-app)
-    4 (gem3/make-app)))
+    5 (tts/make-app)))
 
 ;; todols is legacy and fails like it
 ;; todo: white text color when editing ng
