@@ -144,6 +144,8 @@
                                     :shadowColor m/Colors.black}
                         ;; doing our best ^^^^ to emulate official TodoMVC styling. Looks great.
                         (fx/text-field {:autofocus   true
+                                        :style (m/TextStyle
+                                                 .color m/Colors.black)
                                         :focusNode   (cF (m/FocusNode
                                                            .onKeyEvent (fn [node ^m/KeyEvent event]
                                                                          ;; spec says to abandon edit if Escape key pressed
@@ -156,9 +158,12 @@
                                                                                m/KeyEventResult.handled)
                                                                              :else m/KeyEventResult.ignored)))))
                                         :decoration  (m/InputDecoration
-                                                       .border (m/OutlineInputBorder
-                                                                 .borderRadius (m/BorderRadius.all
-                                                                                 (m.Radius/circular 0.0)))
+                                                       .focusedBorder (m/OutlineInputBorder
+                                                                        .borderSide (m/BorderSide
+                                                                                      .color m/Colors.black
+                                                                                      .width 0.5)
+                                                                        .borderRadius (m/BorderRadius.all
+                                                                                        (m.Radius/circular 0.0)))
                                                        .contentPadding (m/EdgeInsets.all 9.0))
                                         :onSubmitted (cF (dart-cb [value]
                                                            (commit-to-do-editing me todo value)))
