@@ -71,12 +71,12 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 2
+  (case 4
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
     3 (iso2/make-app)
-    4 (mqtt5/make-app)
+    4 (x029a/make-app)
     5 (tts/make-app)))
 
 ;; todols is legacy and fails like it
