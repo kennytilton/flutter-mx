@@ -22,7 +22,6 @@
     [example.eg.x15-fade-widget :as fade]
     [example.eg.x020-reactive-stream :as x020]
     ;[example.eg.layout-explorer :as layo]
-    [example.demo.localStorage-todoMVC.core :as todols]
     [example.demo.todoMVC.core :as todo]
     [example.demo.todoMVX.core :as todox]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed

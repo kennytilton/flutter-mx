@@ -16,13 +16,7 @@
       {:title title}
       {:name    :the-app
        :msg     "\"Hi, Mom!\" "
-       :elapsed (cI 0)
-       #_#_:clock (cF+ [:on-quiesce (fn [cell]
-                                      (when-let [tmr ^async/Timer (cb/c-value cell)]
-                                        (.cancel tmr)))]
-                    (async/Timer.periodic (Duration .seconds 3)
-                      (fn [^async/Timer tmr]
-                        (mset! me :elapsed (.-tick tmr)))))}
+       :elapsed (cI 0)}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})}
         (fx/center {}
