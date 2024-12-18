@@ -81,8 +81,6 @@
     5 (tts/make-app)))
 
 ;; todols is legacy and fails like it
-;; todo: white text color when editing ng
-;; todo: no completion box if not complete; looks awful if completed -- not getting circle border
 ;; x029a has a text input but the message does not track that. Should it?
 ;; x035 layout scrunches at top when fetching stopped
 ;; ttso has a null issue
