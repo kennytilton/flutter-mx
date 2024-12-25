@@ -169,14 +169,16 @@
        :title           (m/Text "Auto-play")
        :value           (cF+ [:input? true
                               :watch (fn [_ me new prior _]
+                                       (dp :watching!!!!! prior)
                                        (when (mx-bound? prior)
                                          (when-let [db (mav :db)]
                                            (.put ^hv/Box db "auto-play" new)
                                            (when (mget (fm* :auto-play) :value)
                                              (do-stop me)   ;; <-- new since livecode #1
                                              (do-speak me)))))]
+                          (dp :prefs (mav :prefs))
                           (if-let [prefs (mav :prefs)]
-                            (:auto-play prefs)
+                            (boolean (:auto-play prefs))
                             false))
        :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
       {:name :auto-play})))

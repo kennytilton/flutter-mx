@@ -39,7 +39,7 @@
     [example.demo.tts.core :as tts]
     [example.eg.x045-websocket :as sock]
     [example.eg.x050-just-audio :as just]                   ;; has make-app and make-app-two
-    ;[example.eg.x055-isolates :as iso] ;; has make-app and make-app-two
+    ;[example.eg.x055-isolates :as iso]
     [example.eg.x055_isolates :as x055]
     [example.eg.x060-form-class :as x060]
     [example.demo.isolate.x00-spawn :as ispawn]
@@ -65,24 +65,21 @@
     [example.eg.x066-autocomplete-object :as x066]))
 
 (defn select []
-  ; x04  nope: x028 x030 x040
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
   ; iOS 17 tts no sound. Not playing actually. ttso flex
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 4
+  (case 5
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
     3 (iso2/make-app)
-    4 (x029a/make-app)
+    4 (x040/make-app)
     5 (tts/make-app)))
 
-;; todols is legacy and fails like it
-;; x029a has a text input but the message does not track that. Should it?
+;; todo does not show all three options -- unavailables may be black on black
 ;; x035 layout scrunches at top when fetching stopped
-;; ttso has a null issue
 ;; sock seems inoperative when msg sent
 ;; ixpo seems inoperative on most
 ;; gemini needs new credentials or st
