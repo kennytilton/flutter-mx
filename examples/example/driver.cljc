@@ -25,8 +25,8 @@
     [example.demo.todoMVC.core :as todo]
     [example.demo.todoMVX.core :as todox]
     ;[tilton.faq.navig-cycle :as faq-nav] ;; no make-app! use make-app-fail or make-app-fixed
-    [example.eg.x25-flutter-tex :as tek]
-    [example.eg.x26-latex-sandbox :as tekbox]
+    ; [example.eg.x25-flutter-tex :as tek]
+    ; [example.eg.x26-latex-sandbox :as tekbox]
     [example.eg.x27-popup-menu :as x27]
     [example.eg.x028-bottom-navbar :as x028]
     [example.eg.x029-layout-builder :as x029]
@@ -37,7 +37,6 @@
     [example.eg.flutter-layout-tutorial :as dlayout]
     [example.eg.flutter-tts :as ttso] ;; does not start up well with default lang
     [example.demo.tts.core :as tts]
-    [example.eg.x045-websocket :as sock]
     [example.eg.x046-websocket-lob :as socklob]
     [example.eg.x050-just-audio :as just]                   ;; has make-app and make-app-two
     ;[example.eg.x055-isolates :as iso]
@@ -63,7 +62,8 @@
     [example.demo.ai.gemini.simple-chat :as gem3] ;; this starts the chat but no more
 
     [example.eg.x065-autocomplete-basic :as x065]
-    [example.eg.x066-autocomplete-object :as x066]))
+    [example.eg.x066-autocomplete-object :as x066]
+    [example.eg.x070-speech-to-text :as dicto]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
@@ -71,11 +71,11 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 4
+  (case 3
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
-    3 (iso2/make-app)
+    3 (dicto/make-app)
     4 (socklob/make-app)
     5 (ttso/make-app)))
 
