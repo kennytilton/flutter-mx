@@ -1,0 +1,90 @@
+(ns example.eg.x070-speech-to-text
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:speech_to_text/speech_to_text.dart" :as s2t]
+    ; import 'package:speech_to_text/speech_recognition_error.dart';
+    ;import 'package:speech_to_text/speech_recognition_result.dart';
+    ["package:speech_to_text/speech_recognition_error.dart" :as s2te]
+    ["package:speech_to_text/speech_recognition_result.dart" :as s2tr]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :refer [dp dpx minfo cF cF+ cI cFn cFonce mmx-md mget mset! mswap! mupdate! fm* fmu fasc mav] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx
+             material-app scaffold app-bar floating-action-button
+             center column text sized-box]]))
+
+; This app has crashed because it attempted to access privacy-sensitive data without a usage description.
+; The app's Info.plist must contain an NSSpeechRecognitionUsageDescription key
+; with a string value explaining to the user how the app uses this data.
+
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Speech->Text Demo"
+     :theme (m/ThemeData .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    {:name         :app
+     :speech       (s2t/SpeechToText)
+     ; var hasSpeech = await speech.initialize(
+     ;        onError: errorListener,
+     ;        onStatus: statusListener,
+     ;        debugLogging: _logEvents,
+     ;      );
+     ;
+     :has-speech?  (cF+ [:async? true
+                        :watch (fn [_ _ new _ _]
+                                 (dp :has-speech new))]
+                     (when-let [sp ^s2t/SpeechToText (mget me :speech)]
+                       (dp :initting sp)
+                       (.initialize sp)))
+     :locale-names (cF+ [:async? true
+                        :watch (fn [_ _ new _ _]
+                                 (dp :loc-names new))]
+                     (when (mget me :has-speech?)
+                       (dpx :asking-locales-of (mget me :speech))
+                       (let [lox (.locales ^s2t/SpeechToText (mget me :speech))]
+                         (dpx :gotlox lox)
+                         lox)))
+     :system-locale (cF+ [:async? true
+                         :watch (fn [_ _ new _ _] (dp :loc-sys new))]
+                      (dp :testing-lox-names)
+                      (when-let [lox-names (mget me :locale-names)];;  (mget me :has-speech?)
+                        (dp :got-lox-namws (mapv (fn [loc]
+                                                   (.-localeId ^s2t/LocaleName loc)) lox-names))
+                        (.systemLocale ^s2t/SpeechToText (mget me :speech))))
+     :system-locale-id (cF+ [:async? true
+                            :watch (fn [_ _ new _ _]
+                                     (dp :loc-sys-id new))]
+                         (when-let [loc (mget me :system-locale)]
+                           (dp :sysloc-id-sees-loc loc (.-localeId ^s2t/LocaleName loc))
+                           (.-localeId ^s2t/LocaleName loc)))
+     :recording? (cI false
+                   :watch (fn [_ _ new _ _]
+                            (dp :recording!!! new)))}
+    (scaffold
+      {:appBar               (app-bar
+                               {:title           (m/Text "Flutter/MX Dicto")
+                                :backgroundColor (cF (.-inversePrimary
+                                                       (.-colorScheme ^m/ThemeData (mav :theme))))})
+       :floatingActionButton (floating-action-button
+                               {:onPressed (dart-cb []
+                                             (mupdate! (fasc :app) :recording? not))
+                                :tooltip   "Record"}
+                               (m/Icon m/Icons.add .color m/Colors.black))}
+      (center
+        (column {:mainAxisAlignment m/MainAxisAlignment.center}
+          (text {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
+            "You said:")
+          (sized-box
+            {:height 28.0})
+          (text
+            {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displayMedium)}
+            {:name  :counter
+             :value (cI 0)}
+            (str (mget me :value))))))))
+
+
+
+
