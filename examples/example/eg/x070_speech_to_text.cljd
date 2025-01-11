@@ -5,6 +5,7 @@
     ["package:speech_to_text/speech_to_text.dart" :as s2t]
     ; import 'package:speech_to_text/speech_recognition_error.dart';
     ;import 'package:speech_to_text/speech_recognition_result.dart';
+    ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as s2tpi]
     ["package:speech_to_text/speech_recognition_error.dart" :as s2te]
     ["package:speech_to_text/speech_recognition_result.dart" :as s2tr]
     [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
@@ -39,6 +40,8 @@
   ;      listenOptions: options,
   ;    );
   (let [s ^s2t/SpeechToText (mget app :speech)
+        options (s2tpi/SpeechListenOptions.
+                  .autoPunctuation true)
         result-listener (fn [^s2tr/SpeechRecognitionResult r]
                           (dp :result-words!! (.-recognizedWords r))
                           (when (.-finalResult r)
@@ -48,7 +51,8 @@
     (.listen s .onResult result-listener
       .listenFor (Duration .seconds 5)
       .pauseFor (Duration .seconds 2)
-      .localeId (mget app :system-locale-id))))
+      .localeId (mget app :system-locale-id)
+      .listenOptions options)))
 
 (defn make-app []
   (material-app
@@ -56,56 +60,56 @@
      :theme (m/ThemeData .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
-    {:name         :app
-     :speech       (s2t/SpeechToText)
+    {:name             :app
+     :speech           (s2t/SpeechToText)
      ; var hasSpeech = await speech.initialize(
      ;        onError: errorListener,
      ;        onStatus: statusListener,
      ;        debugLogging: _logEvents,
      ;      );
      ;
-     :has-speech?  (cF+ [:async? true
-                        :watch (fn [_ _ new _ _]
-                                 (dp :has-speech new))]
-                     (when-let [sp ^s2t/SpeechToText (mget me :speech)]
-                       (dp :initting sp)
-                       (.initialize sp)))
-     :locale-names (cF+ [:async? true
-                        :watch (fn [_ _ new _ _]
-                                 (dp :loc-names new))]
-                     (when (mget me :has-speech?)
-                       (dpx :asking-locales-of (mget me :speech))
-                       (let [lox (.locales ^s2t/SpeechToText (mget me :speech))]
-                         (dpx :gotlox lox)
-                         lox)))
-     :system-locale (cF+ [:async? true
-                         :watch (fn [_ _ new _ _] (dp :loc-sys new))]
-                      (dp :testing-lox-names)
-                      (when-let [lox-names (mget me :locale-names)];;  (mget me :has-speech?)
-                        (dp :got-lox-namws (mapv (fn [loc]
-                                                   (.-localeId ^s2t/LocaleName loc)) lox-names))
-                        (.systemLocale ^s2t/SpeechToText (mget me :speech))))
+     :has-speech?      (cF+ [:async? true
+                             :watch (fn [_ _ new _ _]
+                                      (dp :has-speech new))]
+                         (when-let [sp ^s2t/SpeechToText (mget me :speech)]
+                           (dp :initting sp)
+                           (.initialize sp)))
+     :locale-names     (cF+ [:async? true
+                             :watch (fn [_ _ new _ _]
+                                      (dp :loc-names new))]
+                         (when (mget me :has-speech?)
+                           (dpx :asking-locales-of (mget me :speech))
+                           (let [lox (.locales ^s2t/SpeechToText (mget me :speech))]
+                             (dpx :gotlox lox)
+                             lox)))
+     :system-locale    (cF+ [:async? true
+                             :watch (fn [_ _ new _ _] (dp :loc-sys new))]
+                         (when-let [lox-names (mget me :locale-names)] ;;  (mget me :has-speech?)
+                           (dp :got-lox-names (count lox-names)
+                             (mapv (fn [loc]
+                                     (.-localeId ^s2t/LocaleName loc)) lox-names))
+                           (.systemLocale ^s2t/SpeechToText (mget me :speech))))
      :system-locale-id (cF+ [:async? true
-                            :watch (fn [_ _ new _ _]
-                                     (dp :loc-sys-id new))]
+                             :watch (fn [_ _ new _ _]
+                                      (dp :loc-sys-id new))]
                          (when-let [loc (mget me :system-locale)]
                            (dp :sysloc-id-sees-loc loc (.-localeId ^s2t/LocaleName loc))
                            (.-localeId ^s2t/LocaleName loc)))
      ;; next we demonstrate that the above two can be coded together, by in-lining an await
      ;; on the first. This would be fine if we do not need the full LocaleName.
-     #_#_ :sys-locale-id (cF+ [:async? true
-                          :watch (fn [_ _ new _ _] (dp :loc-sys-id-2 new))]
-                      (when-let [lox-names (mget me :locale-names)];;  (mget me :has-speech?)
-                        (let [sys-loc (await
-                                        (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
-                          (dp :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
-                          (.-localeId ^s2t/LocaleName sys-loc))))
-     :recording? (cI false
-                   :watch (fn [_ app new _ _]
-                            (dp :recording!!! new)
-                            (if new
-                              (start-listening app)
-                              (stop-listening app))))}
+     #_#_:sys-locale-id (cF+ [:async? true
+                              :watch (fn [_ _ new _ _] (dp :loc-sys-id-2 new))]
+                          (when-let [lox-names (mget me :locale-names)] ;;  (mget me :has-speech?)
+                            (let [sys-loc (await
+                                            (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
+                              (dp :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
+                              (.-localeId ^s2t/LocaleName sys-loc))))
+     :recording?       (cI false
+                         :watch (fn [_ app new _ _]
+                                  (dp :recording!!! new)
+                                  (if new
+                                    (start-listening app)
+                                    (stop-listening app))))}
     (scaffold
       {:appBar               (app-bar
                                {:title           (m/Text "Flutter/MX Dicto")
