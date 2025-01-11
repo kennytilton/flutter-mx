@@ -18,6 +18,37 @@
 ; The app's Info.plist must contain an NSSpeechRecognitionUsageDescription key
 ; with a string value explaining to the user how the app uses this data.
 
+(defn stop-listening [app]
+  (dp :stop-FNYI))
+
+;  void resultListener(SpeechRecognitionResult result) {
+;    _logEvent(
+;        'Result listener final: ${result.finalResult}, words: ${result.recognizedWords}');
+;    setState(() {
+;      lastWords = '${result.recognizedWords} - ${result.finalResult}';
+;    });
+;  }
+
+(defn start-listening [app]
+  ; speech.listen(
+  ;      onResult: resultListener,
+  ;      listenFor: Duration(seconds: listenFor ?? 30),
+  ;      pauseFor: Duration(seconds: pauseFor ?? 3),
+  ;      localeId: _currentLocaleId,
+  ;      onSoundLevelChange: soundLevelListener,
+  ;      listenOptions: options,
+  ;    );
+  (let [s ^s2t/SpeechToText (mget app :speech)
+        result-listener (fn [^s2tr/SpeechRecognitionResult r]
+                          (dp :result-words!! (.-recognizedWords r))
+                          (when (.-finalResult r)
+                            (dp :result-final!! (.-recognizedWords r))
+                            (dp :stopping)
+                            (.stop s)))]
+    (.listen s .onResult result-listener
+      .listenFor (Duration .seconds 5)
+      .pauseFor (Duration .seconds 2)
+      .localeId (mget app :system-locale-id))))
 
 (defn make-app []
   (material-app
@@ -60,9 +91,21 @@
                          (when-let [loc (mget me :system-locale)]
                            (dp :sysloc-id-sees-loc loc (.-localeId ^s2t/LocaleName loc))
                            (.-localeId ^s2t/LocaleName loc)))
+     ;; next we demonstrate that the above two can be coded together, by in-lining an await
+     ;; on the first. This would be fine if we do not need the full LocaleName.
+     #_#_ :sys-locale-id (cF+ [:async? true
+                          :watch (fn [_ _ new _ _] (dp :loc-sys-id-2 new))]
+                      (when-let [lox-names (mget me :locale-names)];;  (mget me :has-speech?)
+                        (let [sys-loc (await
+                                        (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
+                          (dp :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
+                          (.-localeId ^s2t/LocaleName sys-loc))))
      :recording? (cI false
-                   :watch (fn [_ _ new _ _]
-                            (dp :recording!!! new)))}
+                   :watch (fn [_ app new _ _]
+                            (dp :recording!!! new)
+                            (if new
+                              (start-listening app)
+                              (stop-listening app))))}
     (scaffold
       {:appBar               (app-bar
                                {:title           (m/Text "Flutter/MX Dicto")
