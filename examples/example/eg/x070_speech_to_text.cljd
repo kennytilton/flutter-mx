@@ -2,9 +2,9 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
+
+    ;; --- https://pub.dev/packages/speech_to_text -------------
     ["package:speech_to_text/speech_to_text.dart" :as s2t]
-    ; import 'package:speech_to_text/speech_recognition_error.dart';
-    ;import 'package:speech_to_text/speech_recognition_result.dart';
     ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as s2tpi]
     ["package:speech_to_text/speech_recognition_error.dart" :as s2te]
     ["package:speech_to_text/speech_recognition_result.dart" :as s2tr]
@@ -15,43 +15,69 @@
              material-app scaffold app-bar floating-action-button
              center column text sized-box]]))
 
-; This app has crashed because it attempted to access privacy-sensitive data without a usage description.
-; The app's Info.plist must contain an NSSpeechRecognitionUsageDescription key
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+;
+; The app's ios/Runner/Info.plist  must contain an NSSpeechRecognitionUsageDescription key
 ; with a string value explaining to the user how the app uses this data.
+; Likewise, specify a NSMicrophoneUsageDescription.
+; Easiest way to edit is to double-click Info.plist, found at the path shown.
+
+; DISCLAIMER: this example is quite rough and just shows how to get some transcription
+; working, more or less. Work will continue in a full-blown multi-file demo app derived
+; from the existing Text-to-speech demo, where we will try to create a voice chat app.
+; This app will expose GUI controls for various Speech-to-text options.
+;
+; USAGE: Watch your console to see when transcription actually begins!
+; When you see:
+; flutter: :DPR> :starting-listening
+; ...(not really, the app just kicks off listen)
+;
+; Next you will see:
+; flutter: :DPR> :sp-status!!!!!!!!!!!! listening
+; ...this message is from the package and is accurate
+
+; Fun note: I tested with fr-FR as locale ID because my accent is pretty good, and
+; it did recognize my HS French. Mrs. Willens would be proud.
+
+; PROBLEM:
+; Hot reload does not seem to be enough. Jump to the console an hit return
+; to trigger a restart.
+
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
 
 (defn stop-listening [app]
   (dp :stop-FNYI))
 
-;  void resultListener(SpeechRecognitionResult result) {
-;    _logEvent(
-;        'Result listener final: ${result.finalResult}, words: ${result.recognizedWords}');
-;    setState(() {
-;      lastWords = '${result.recognizedWords} - ${result.finalResult}';
-;    });
-;  }
-
 (defn start-listening [app]
-  ; speech.listen(
-  ;      onResult: resultListener,
-  ;      listenFor: Duration(seconds: listenFor ?? 30),
-  ;      pauseFor: Duration(seconds: pauseFor ?? 3),
-  ;      localeId: _currentLocaleId,
-  ;      onSoundLevelChange: soundLevelListener,
-  ;      listenOptions: options,
-  ;    );
+  (dp :starting-listening)
   (let [s ^s2t/SpeechToText (mget app :speech)
-        options (s2tpi/SpeechListenOptions.
+        options (s2tpi/SpeechListenOptions
+                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of app
+                  .cancelOnError true
+                  .listenMode s2t/ListenMode.dictation      ;; search | confirmation | dictation
                   .autoPunctuation true)
         result-listener (fn [^s2tr/SpeechRecognitionResult r]
-                          (dp :result-words!! (.-recognizedWords r))
-                          (when (.-finalResult r)
-                            (dp :result-final!! (.-recognizedWords r))
-                            (dp :stopping)
-                            (.stop s)))]
+                          (let [wds (.-recognizedWords r)]
+                            (dp :result-words!! wds)
+
+                            (when (.-finalResult r)
+                              (dp :result-final!! wds)
+                              (try-wmx-iso
+                                (let [me app]
+                                  (mset! (fm* :transcript) :value wds)))
+                              (dp :stopping)
+                              (.stop s))))]
     (.listen s .onResult result-listener
-      .listenFor (Duration .seconds 5)
-      .pauseFor (Duration .seconds 2)
-      .localeId (mget app :system-locale-id)
+      .listenFor (Duration .seconds 20)
+      .pauseFor (Duration .seconds 3)
+      .localeId (mget app :system-locale-id)                ;; "fr-FR"
       .listenOptions options)))
 
 (defn make-app []
@@ -62,29 +88,26 @@
                              .seedColor m/Colors.deepPurple))}
     {:name             :app
      :speech           (s2t/SpeechToText)
-     ; var hasSpeech = await speech.initialize(
-     ;        onError: errorListener,
-     ;        onStatus: statusListener,
-     ;        debugLogging: _logEvents,
-     ;      );
-     ;
      :has-speech?      (cF+ [:async? true
                              :watch (fn [_ _ new _ _]
-                                      (dp :has-speech new))]
-                         (when-let [sp ^s2t/SpeechToText (mget me :speech)]
-                           (dp :initting sp)
-                           (.initialize sp)))
-     :locale-names     (cF+ [:async? true
-                             :watch (fn [_ _ new _ _]
-                                      (dp :loc-names new))]
+                                      (dp :has-speech? new))]
+                         (when-let [^s2t/SpeechToText sp (mget me :speech)]
+                           (let [stat-ltr (fn [status]
+                                            (dp :sp-status!!!!!!!!!!!! status))
+                                 err-ltr (fn [err]
+                                           (dp :sp-error!?
+                                             (.-errorMsg  err))
+                                           (try-wmx-iso
+                                             (mset! (fm* :transcript) :value
+                                               (str "Error: " (.-errorMsg  err)))))]
+                             (.initialize sp
+                               .onStatus stat-ltr
+                               .onError err-ltr))))
+     :locale-names     (cF+ [:async? true]
                          (when (mget me :has-speech?)
-                           (dpx :asking-locales-of (mget me :speech))
-                           (let [lox (.locales ^s2t/SpeechToText (mget me :speech))]
-                             (dpx :gotlox lox)
-                             lox)))
-     :system-locale    (cF+ [:async? true
-                             :watch (fn [_ _ new _ _] (dp :loc-sys new))]
-                         (when-let [lox-names (mget me :locale-names)] ;;  (mget me :has-speech?)
+                           (.locales ^s2t/SpeechToText (mget me :speech))))
+     :system-locale    (cF+ [:async? true]
+                         (when-let [lox-names (mget me :locale-names)]
                            (dp :got-lox-names (count lox-names)
                              (mapv (fn [loc]
                                      (.-localeId ^s2t/LocaleName loc)) lox-names))
@@ -105,11 +128,11 @@
                               (dp :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
                               (.-localeId ^s2t/LocaleName sys-loc))))
      :recording?       (cI false
+                         :ephemeral? true
                          :watch (fn [_ app new _ _]
                                   (dp :recording!!! new)
-                                  (if new
-                                    (start-listening app)
-                                    (stop-listening app))))}
+                                  (when new
+                                    (start-listening app))))}
     (scaffold
       {:appBar               (app-bar
                                {:title           (m/Text "Flutter/MX Dicto")
@@ -117,9 +140,9 @@
                                                        (.-colorScheme ^m/ThemeData (mav :theme))))})
        :floatingActionButton (floating-action-button
                                {:onPressed (dart-cb []
-                                             (mupdate! (fasc :app) :recording? not))
-                                :tooltip   "Record"}
-                               (m/Icon m/Icons.add .color m/Colors.black))}
+                                             (mset! (fasc :app) :recording? true))
+                                :tooltip   "Transcribe"}
+                               (m/Icon m/Icons.mic .color m/Colors.black))}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
           (text {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
@@ -127,9 +150,9 @@
           (sized-box
             {:height 28.0})
           (text
-            {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displayMedium)}
-            {:name  :counter
-             :value (cI 0)}
+            {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
+            {:name  :transcript
+             :value (cI "(click mic and speak)")}
             (str (mget me :value))))))))
 
 
