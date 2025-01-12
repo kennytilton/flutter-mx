@@ -55,11 +55,11 @@
 (defn stop-listening [app]
   (dp :stop-FNYI))
 
-(defn start-listening [app]
+(defn start-listening [ear]
   (dp :starting-listening)
-  (let [s ^s2t/SpeechToText (mget app :speech)
+  (let [s ^s2t/SpeechToText (mget ear :speech)
         options (s2tpi/SpeechListenOptions
-                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of app
+                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
                   .cancelOnError true
                   .listenMode s2t/ListenMode.dictation      ;; search | confirmation | dictation
                   .autoPunctuation true)
@@ -70,15 +70,79 @@
                             (when (.-finalResult r)
                               (dp :result-final!! wds)
                               (try-wmx-iso
-                                (let [me app]
+                                (let [me ear]
                                   (mset! (fm* :transcript) :value wds)))
                               (dp :stopping)
                               (.stop s))))]
     (.listen s .onResult result-listener
       .listenFor (Duration .seconds 20)
       .pauseFor (Duration .seconds 3)
-      .localeId (mget app :system-locale-id)                ;; "fr-FR"
+      .localeId (mget ear :system-locale-id)                ;; "fr-FR"
       .listenOptions options)))
+
+(defn stat-ltr [me status]
+  (try-wmx-iso
+    (dp :stat-ltr-status (keyword status))
+    (mset! me :status (keyword status))))
+
+(defn make-ear []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF (case (mget me :status)
+                                    :available m/Colors.cyan
+                                    m/Colors.red))
+                :elevation    4.0}
+    {:name             :ear
+     :speech           (cF+ [:watch (fn [_ me sp _ _]
+                                      (dp :sp!!!!! sp)
+                                      (dp :avail (.-isAvailable ^s2t/SpeechToText sp))
+                                      (try-wmx-iso
+                                        (mset! me :status
+                                          (cond
+                                            (.-isAvailable ^s2t/SpeechToText sp) :available
+                                            :else :unavailable))))]
+                         (s2t/SpeechToText))
+     :status           (cI nil :watch (fn [_ me new _ _]
+                                        (dp :ear-status!!!!!!!! new)))
+     :has-speech?      (cF+ [:async? true
+                             :watch (fn [_ me new _ _]
+                                      (dp :has-speech? new))]
+                         (when-let [^s2t/SpeechToText sp (mget me :speech)]
+                           (.initialize sp
+                             .onStatus (fn [status]
+                                         (stat-ltr me status))
+                             .onError (fn [^s2te/SpeechRecognitionError err]
+                                        (dp :sp-error! (.-errorMsg err))
+                                        (try-wmx-iso
+                                          (mset! (fm* :transcript) :value
+                                            (str "Error: " (.-errorMsg err))))))))
+     :locale-names     (cF+ [:async? true]
+                         (when (mget me :has-speech?)
+                           (.locales ^s2t/SpeechToText (mget me :speech))))
+     :system-locale-id (cF+ [:async? true
+                             :watch (fn [_ _ new _ _] (dp :loc-sys-id-2 new))]
+                         (when-let [lox-names (mget me :locale-names)] ;;  (mget me :has-speech?)
+                           (let [sys-loc (await
+                                           (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
+                             (dpx :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
+                             (.-localeId ^s2t/LocaleName sys-loc))))
+     :recording?       (cI false
+                         :ephemeral? true
+                         :watch (fn [_ me new _ _]
+                                  (dp :recording!!! new)
+                                  (when new
+                                    (start-listening (fm* :ear)))))}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    (dp :ears-two!!!!!!!!!!!))
+       :icon      (m/Icon m/Icons.hearing)
+       :color     (cF (fx/within-ctx [me ctx]
+                        (dp :mavstatus (mav :status))
+                        m/Colors.black #_(case (mav :status)
+                                           :available m/Colors.cyan
+                                           m/Colors.red)))})))
+
+;;; --- make app -----------------------------------------------
 
 (defn make-app []
   (material-app
@@ -86,53 +150,7 @@
      :theme (m/ThemeData .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
                              .seedColor m/Colors.deepPurple))}
-    {:name             :app
-     :speech           (s2t/SpeechToText)
-     :has-speech?      (cF+ [:async? true
-                             :watch (fn [_ _ new _ _]
-                                      (dp :has-speech? new))]
-                         (when-let [^s2t/SpeechToText sp (mget me :speech)]
-                           (let [stat-ltr (fn [status]
-                                            (dp :sp-status!!!!!!!!!!!! status))
-                                 err-ltr (fn [^s2te/SpeechRecognitionError err]
-                                           (dp :sp-error!?
-                                             (.-errorMsg err))
-                                           (try-wmx-iso
-                                             (mset! (fm* :transcript) :value
-                                               (str "Error: " (.-errorMsg err)))))]
-                             (.initialize sp
-                               .onStatus stat-ltr
-                               .onError err-ltr))))
-     :locale-names     (cF+ [:async? true]
-                         (when (mget me :has-speech?)
-                           (.locales ^s2t/SpeechToText (mget me :speech))))
-     :system-locale    (cF+ [:async? true]
-                         (when-let [lox-names (mget me :locale-names)]
-                           (dp :got-lox-names (count lox-names)
-                             (mapv (fn [loc]
-                                     (.-localeId ^s2t/LocaleName loc)) lox-names))
-                           (.systemLocale ^s2t/SpeechToText (mget me :speech))))
-     :system-locale-id (cF+ [:async? true
-                             :watch (fn [_ _ new _ _]
-                                      (dp :loc-sys-id new))]
-                         (when-let [loc (mget me :system-locale)]
-                           (dp :sysloc-id-sees-loc loc (.-localeId ^s2t/LocaleName loc))
-                           (.-localeId ^s2t/LocaleName loc)))
-     ;; next we demonstrate that the above two can be coded together, by in-lining an await
-     ;; on the first. This would be fine if we do not need the full LocaleName.
-     #_#_:sys-locale-id (cF+ [:async? true
-                              :watch (fn [_ _ new _ _] (dp :loc-sys-id-2 new))]
-                          (when-let [lox-names (mget me :locale-names)] ;;  (mget me :has-speech?)
-                            (let [sys-loc (await
-                                            (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
-                              (dp :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
-                              (.-localeId ^s2t/LocaleName sys-loc))))
-     :recording?       (cI false
-                         :ephemeral? true
-                         :watch (fn [_ app new _ _]
-                                  (dp :recording!!! new)
-                                  (when new
-                                    (start-listening app))))}
+    {}
     (scaffold
       {:appBar               (app-bar
                                {:title           (m/Text "Flutter/MX Dicto")
@@ -140,11 +158,12 @@
                                                        (.-colorScheme ^m/ThemeData (mav :theme))))})
        :floatingActionButton (floating-action-button
                                {:onPressed (dart-cb []
-                                             (mset! (fasc :app) :recording? true))
+                                             (start-listening (fm* :ear)))
                                 :tooltip   "Transcribe"}
                                (m/Icon m/Icons.mic .color m/Colors.black))}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
+          (make-ear)
           (text {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
             "You said:")
           (sized-box

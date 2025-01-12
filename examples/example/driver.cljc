@@ -35,7 +35,7 @@
     [example.eg.x035-timer-poll :as x035]
     [example.eg.x040-named-routes :as x040]
     [example.eg.flutter-layout-tutorial :as dlayout]
-    [example.eg.flutter-tts :as ttso] ;; does not start up well with default lang
+    [example.eg.flutter-tts :as ttso] ;; deprecated. Suggest instead example.demo.tts.core
     [example.demo.tts.core :as tts]
     [example.eg.x046-websocket-lob :as socklob]
     [example.eg.x050-just-audio :as just]                   ;; has make-app and make-app-two
@@ -77,7 +77,7 @@
     2 (todo/make-app)
     3 (dicto/make-app)
     4 (socklob/make-app)
-    5 (ttso/make-app)))
+    5 (tts/make-app)))
 
 ;; todo does not show all three options -- unavailables may be black on black
 ;; x035 layout scrunches at top when fetching stopped
