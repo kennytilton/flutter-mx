@@ -94,12 +94,12 @@
                          (when-let [^s2t/SpeechToText sp (mget me :speech)]
                            (let [stat-ltr (fn [status]
                                             (dp :sp-status!!!!!!!!!!!! status))
-                                 err-ltr (fn [err]
+                                 err-ltr (fn [^s2te/SpeechRecognitionError err]
                                            (dp :sp-error!?
-                                             (.-errorMsg  err))
+                                             (.-errorMsg err))
                                            (try-wmx-iso
                                              (mset! (fm* :transcript) :value
-                                               (str "Error: " (.-errorMsg  err)))))]
+                                               (str "Error: " (.-errorMsg err)))))]
                              (.initialize sp
                                .onStatus stat-ltr
                                .onError err-ltr))))
