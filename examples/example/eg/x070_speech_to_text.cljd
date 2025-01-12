@@ -80,23 +80,18 @@
       .localeId (mget ear :system-locale-id)                ;; "fr-FR"
       .listenOptions options)))
 
-(defn stat-ltr [me status]
-  (try-wmx-iso
-    (dp :stat-ltr-status (keyword status))
-    (mset! me :status (keyword status))))
-
 (defn make-ear []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
                 :color        (cF (case (mget me :status)
                                     :available m/Colors.cyan
+                                    :unavailable m/Colors.yellow
                                     :listening m/Colors.red
-                                    :done m/Colors.yellow
+                                    :done m/Colors.cyan
                                     m/Colors.grey))
                 :elevation    4.0}
     {:name             :ear
      :speech           (cF+ [:watch (fn [_ me sp _ _]
-                                      (dp :sp!!!!! sp)
                                       (dp :avail (.-isAvailable ^s2t/SpeechToText sp))
                                       (try-wmx-iso
                                         (mset! me :status
@@ -112,7 +107,9 @@
                          (when-let [^s2t/SpeechToText sp (mget me :speech)]
                            (.initialize sp
                              .onStatus (fn [status]
-                                         (stat-ltr me status))
+                                         (try-wmx-iso
+                                           (dp :stat-ltr-status (keyword status))
+                                           (mset! me :status (keyword status))))
                              .onError (fn [^s2te/SpeechRecognitionError err]
                                         (dp :sp-error! (.-errorMsg err))
                                         (try-wmx-iso
@@ -123,7 +120,8 @@
                            (.locales ^s2t/SpeechToText (mget me :speech))))
      :system-locale-id (cF+ [:async? true
                              :watch (fn [_ _ new _ _] (dp :loc-sys-id-2 new))]
-                         (when-let [lox-names (mget me :locale-names)] ;;  (mget me :has-speech?)
+                         (when-let [lox-names (mget me :locale-names)]
+                           (dp :locales (count lox-names))
                            (let [sys-loc (await
                                            (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
                              (dpx :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
@@ -136,7 +134,8 @@
                                     (start-listening (fm* :ear)))))}
     (fx/icon-button
       {:onPressed (dart-cb []
-                    (dp :ears-two!!!!!!!!!!!))
+                    (dp :ears-two!!!!!!!!!!!)
+                    (start-listening (fmu :ear)))
        :icon      (m/Icon m/Icons.hearing)
        :color     (cF (fx/within-ctx [me ctx]
                         (dp :mavstatus (mav :status))
@@ -146,6 +145,8 @@
 
 ;;; --- make app -----------------------------------------------
 
+(def prompt "(click mic and speak)")
+(def you-said "You said....")
 (defn make-app []
   (material-app
     {:title "Flutter/MX Speech->Text Demo"
@@ -157,12 +158,7 @@
       {:appBar               (app-bar
                                {:title           (m/Text "Flutter/MX Dicto")
                                 :backgroundColor (cF (.-inversePrimary
-                                                       (.-colorScheme ^m/ThemeData (mav :theme))))})
-       :floatingActionButton (floating-action-button
-                               {:onPressed (dart-cb []
-                                             (start-listening (fm* :ear)))
-                                :tooltip   "Transcribe"}
-                               (m/Icon m/Icons.mic .color m/Colors.black))}
+                                                       (.-colorScheme ^m/ThemeData (mav :theme))))})}
       (center
         (column {:mainAxisAlignment m/MainAxisAlignment.center}
           (make-ear)
