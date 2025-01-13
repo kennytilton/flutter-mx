@@ -45,6 +45,11 @@
 ; PROBLEM:
 ; Hot reload does not seem to be enough. Jump to the console an hit return
 ; to trigger a restart.
+;
+; When the app sits for a *waves hands* long time, the SpeechToText (S2T) will become
+
+; incurably "unavailable. Restart the sim.
+
 
 (defmacro try-wmx-iso [& body]
   `(try
@@ -121,15 +126,36 @@
 
 ;;; --- make app -----------------------------------------------
 
-(def user-prompt "(click ear, wait, then speak)")
+(def user-prompt "(click mic icon, wait for red ear, then speak)")
 (def you-said "You said....")
 
 (defn make-app []
   (material-app
     {:title "Flutter/MX Speech->Text Demo"
-     :theme (m/ThemeData .useMaterial3 true
+     ; (m/ThemeData
+     ;  .useMaterial3 true
+     ;  .colorScheme (m/ColorScheme.fromSeed
+     ;                 .seedColor m/Colors.deepPurple)
+     ;  .textTheme (-> (m/ThemeData.light .textTheme)
+     ;                 (.copyWith
+     ;                   :displaySmall (.copyWith (.-displaySmall (m/ThemeData.light .textTheme))
+     ;                                             :fontSize 30))))
+     #_ (m/ThemeData
+       .useMaterial3 true
+       .colorScheme (m/ColorScheme.fromSeed
+                      .seedColor m/Colors.deepPurple)
+       .textTheme (-> (m/ThemeData.light .textTheme)
+                    (.copyWith
+                      :displaySmall (.copyWith (.-displaySmall (m/ThemeData.light .textTheme))
+                                      :fontSize 30))))
+     :theme (m/ThemeData
+              .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
-                             .seedColor m/Colors.deepPurple))}
+                             .seedColor m/Colors.deepPurple)
+             #_#_  .textTheme (-> (m/ThemeData.light .textTheme)
+                           (.copyWith
+                             .displaySmall (.copyWith (.-displaySmall (m/ThemeData.light .textTheme))
+                                             .fontSize 30))))}
     {:name             :app
      :transcript       (cI "...")
      :speak-prompt     (cF (if (= (mget me :transcript) "...")
@@ -175,20 +201,30 @@
                   :backgroundColor (cF (.-inversePrimary
                                          (.-colorScheme ^m/ThemeData (mav :theme))))})}
       (center
-        (column {:mainAxisAlignment m/MainAxisAlignment.center}
-          (row {}
-            (make-mic)
-            (make-ear))
-          (sized-box
-            {:height 28.0})
-          (text {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
-            (mav :speak-prompt))
-          (sized-box
-            {:height 28.0})
-          (text
-            {:style (-> (m/Theme.of (fx/*ctx)) .-textTheme .-displaySmall)}
-            {:value (cI "(click mic and speak)")}
-            (str (mav :transcript))))))))
+        (fx/padding {:padding (m/EdgeInsets.all 16.0)}
+          (column {:mainAxisAlignment m/MainAxisAlignment.center}
+            (row {:mainAxisSize m/MainAxisSize.min}
+              (make-mic)
+              (sized-box
+                {:width 28.0})
+              (make-ear))
+            (sized-box
+              {:height 28.0})
+            #_{:style (p/TextStyle
+                        .color m/Colors.blue
+                        .fontSize 24)}
+            (text {:style (p/TextStyle
+                            .color m/Colors.blue
+                            .fontSize 24)}
+              (mav :speak-prompt))
+            (sized-box
+              {:height 28.0})
+            (text
+              {:style (p/TextStyle
+                        .color m/Colors.black
+                        .fontSize 24)}
+              {:value (cI "(click mic and speak)")}
+              (str (mav :transcript)))))))))
 
 
 
