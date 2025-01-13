@@ -47,7 +47,6 @@
 ; to trigger a restart.
 ;
 ; When the app sits for a *waves hands* long time, the SpeechToText (S2T) will become
-
 ; incurably "unavailable. Restart the sim.
 
 
@@ -57,8 +56,9 @@
      (catch Exception e#
        (dp :FLUTTERCATCH!! e#))))
 
-(defn stop-listening [app]
-  (dp :stop-FNYI))
+(defn stop-listening [me]
+  (dp :requesting-stop)
+  (.stop ^s2t/SpeechToText (mav :speech)))
 
 (defn start-listening [me]                                  ;; me s/b ear
   (dp :starting-listening)
@@ -75,7 +75,7 @@
                               (dp :result-final!! wds)
                               (try-wmx-iso
                                 (mset! (fmu :app) :transcript wds))
-                              (dp :stopping)
+                              (dp :stopping-on-final-result-perhaps-reduntantly)
                               (.stop s))))]
     (.listen s .onResult result-listener
       .listenFor (Duration .seconds 20)
@@ -84,32 +84,38 @@
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
 
+;;; --- mic ----------------------------------------
+
 (defn make-mic []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (cF (case (mav :sp-status)
-                                    :available m/Colors.cyan
-                                    :unavailable m/Colors.red
-                                    :listening m/Colors.grey
-                                    :done m/Colors.cyan
-                                    m/Colors.grey))
+                :color        (cF (dp :mic-color-sees-status (mav :sp-status))
+                                (case (mav :sp-status)
+                                  :available m/Colors.cyan
+                                  :unavailable m/Colors.red
+                                  :listening m/Colors.grey
+                                  :done m/Colors.cyan
+                                  m/Colors.grey))
                 :elevation    4.0}
     {:name :ear}
     (fx/icon-button
       {:onPressed (dart-cb []
-                    (dp :ears-two!!!!!!!!!!!)
+                    (dp :starting-listening)
                     (start-listening (fmu :ear)))
        :icon      (m/Icon m/Icons.mic)
        :color     (cF (fx/within-ctx [me ctx]
                         (dp :mic-status (mav :sp-status))
                         m/Colors.black))})))
 
+;;; --- ear ------------------------------------------
+
 (defn make-ear []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (cF (dp :ear-sees-status (mav :sp-status))
+                :color        (cF (dp :ear-color-sees-status (mav :sp-status))
                                 (case (mav :sp-status)
                                   :started m/Colors.yellow
+                                  :stopped m/Colors.orange
                                   :listening m/Colors.red
                                   m/Colors.grey))
                 :elevation    4.0}
@@ -119,6 +125,8 @@
                     ; todo offer cancel as well as stop, or have mic handle
                     ;   stop and this ear mean cancel while listening
                     (when (= :listening (mav :sp-status))
+                      (dp :stopping-on-ear-press)
+                      (mset! (fmu :app) :sp-status :stopped)
                       (stop-listening (fmu :ear))))
        :icon      (m/Icon m/Icons.hearing)
        :color     (cF (fx/within-ctx [me ctx]
@@ -132,47 +140,38 @@
 (defn make-app []
   (material-app
     {:title "Flutter/MX Speech->Text Demo"
-     ; (m/ThemeData
-     ;  .useMaterial3 true
-     ;  .colorScheme (m/ColorScheme.fromSeed
-     ;                 .seedColor m/Colors.deepPurple)
-     ;  .textTheme (-> (m/ThemeData.light .textTheme)
-     ;                 (.copyWith
-     ;                   :displaySmall (.copyWith (.-displaySmall (m/ThemeData.light .textTheme))
-     ;                                             :fontSize 30))))
-     #_ (m/ThemeData
-       .useMaterial3 true
-       .colorScheme (m/ColorScheme.fromSeed
-                      .seedColor m/Colors.deepPurple)
-       .textTheme (-> (m/ThemeData.light .textTheme)
-                    (.copyWith
-                      :displaySmall (.copyWith (.-displaySmall (m/ThemeData.light .textTheme))
-                                      :fontSize 30))))
      :theme (m/ThemeData
               .useMaterial3 true
               .colorScheme (m/ColorScheme.fromSeed
-                             .seedColor m/Colors.deepPurple)
-             #_#_  .textTheme (-> (m/ThemeData.light .textTheme)
-                           (.copyWith
-                             .displaySmall (.copyWith (.-displaySmall (m/ThemeData.light .textTheme))
-                                             .fontSize 30))))}
+                             .seedColor m/Colors.deepPurple))}
     {:name             :app
      :transcript       (cI "...")
      :speak-prompt     (cF (if (= (mget me :transcript) "...")
                              user-prompt you-said))
-     :speech           (cF+ [:watch (fn [_ me sp _ _]
-                                      (dp :avail (.-isAvailable ^s2t/SpeechToText sp))
-                                      (try-wmx-iso
-                                        (mset! me :sp-status
-                                          (cond
-                                            (.-isAvailable ^s2t/SpeechToText sp) :available
-                                            :else :unavailable))))]
-                         (s2t/SpeechToText))
+     :speech (s2t/SpeechToText)
+     ;; this next is all wrong. available means init has succeeded. Init is yet to come.
+     #_ (cF+ [:watch (fn [_ me sp _ _]
+                    (dp :new-avail (.-isAvailable ^s2t/SpeechToText sp))
+                    (dp :new-listening (.-isListening ^s2t/SpeechToText sp))
+                    (dp :news-has-error (.-hasError ^s2t/SpeechToText sp))
+                    (try-wmx-iso
+                      (mset! me :sp-status
+                        (cond
+                          (.-isAvailable ^s2t/SpeechToText sp) :available
+                          :else :unavailable))))]
+       (s2t/SpeechToText))
      :sp-status        (cI nil :watch (fn [_ me new _ _]
                                         (dp :sp-status!!!!!!!! new)))
      :has-speech?      (cF+ [:async? true
                              :watch (fn [_ me new _ _]
-                                      (dpx :has-speech? new))]
+                                      (dp :has-speech? new (mget me :speech))
+                                      (when-let [^s2t/SpeechToText sp (mget me :speech)]
+                                        (dp :init-avail (.-isAvailable ^s2t/SpeechToText sp))
+                                        (dp :init-listening (.-isListening ^s2t/SpeechToText sp))
+                                        (dp :init-has-error (.-hasError ^s2t/SpeechToText sp))
+                                        (when new
+                                          (try-wmx-iso
+                                            (mset! me :sp-status :available)))))]
                          (when-let [^s2t/SpeechToText sp (mget me :speech)]
                            (.initialize sp
                              .onStatus (fn [status]
@@ -180,7 +179,7 @@
                                            (dp :onStatus!!!!!!!!-sets-status (keyword status))
                                            (mset! me :sp-status (keyword status))))
                              .onError (fn [^s2te/SpeechRecognitionError err]
-                                        (dp :sp-error! (.-errorMsg err))
+                                        (dp :sp-error!!!!! (.-errorMsg err))
                                         (try-wmx-iso
                                           (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
      :locale-names     (cF+ [:async? true]
@@ -210,9 +209,6 @@
               (make-ear))
             (sized-box
               {:height 28.0})
-            #_{:style (p/TextStyle
-                        .color m/Colors.blue
-                        .fontSize 24)}
             (text {:style (p/TextStyle
                             .color m/Colors.blue
                             .fontSize 24)}
