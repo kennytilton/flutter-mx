@@ -3,8 +3,11 @@
       Port of https://docs.flutter.dev/cookbook/navigation/named-routes.html"
   (:require
     [tilton.fmx.api :as fx
-     :refer [dart-cb scaffold app-bar elevated-button text center material-app ctxd?]]
+     :refer [dart-cb scaffold app-bar elevated-button text center material-app ]]
     ["package:flutter/material.dart" :as m]))
+
+;; KNOWN BUG: Coming into this example on hot reload after a different example was running
+;; fails in builder on "Null check operator used on a null value"
 
 (defn first-screen [ctx]
   (scaffold
@@ -13,7 +16,6 @@
     (center
       (elevated-button
         {:onPressed (dart-cb []
-                      (ctxd? :x040-launch me ctx)
                       (.pushNamed (-> ctx m/Navigator.of) "/second"))}
         (text "Launch Screen")))))
 
@@ -24,7 +26,6 @@
     (center
       (elevated-button
         {:onPressed (dart-cb []
-                      (ctxd? :x040-seco me ctx)
                       (-> ctx m/Navigator.of .pop))}
         (fx/text "Go Back!")))))
 

@@ -13,12 +13,24 @@
      :refer [Isolate SendPort ReceivePort]]
     ["package:flutter/painting.dart" :as p]
     ["package:flutter/foundation.dart" :as fnd]
+    ["dart:convert" :as convert]
+    [clojure.walk :as walk]
 
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]))
+
+(defn iso-ping [iso ^SendPort port priority response]
+  (let [res (convert/jsonEncode
+                   (walk/stringify-keys response))]
+    (.ping ^Isolate iso port
+      .response res
+      .priority priority)))
+
+(defn m99 [n]
+  (str (quot n 1000000) "m" (mod n 1000000)))
 
 (defn iso-name
   ([] (iso-name (Isolate.current)))
@@ -45,7 +57,7 @@
 ;;; --- test jobs --------------------------------------------------
 
 (defn just-slow-is-prime? [n]
-  (dp :slow-is-prime-entry n
+  (dpx :slow-is-prime-entry n
     :processors (when (not (fx/is-web?)) io/Platform.numberOfProcessors))
   (cond
     (= n 1) false

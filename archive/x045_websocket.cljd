@@ -15,7 +15,8 @@
 (def +hello+ "Hello!! Is this thing on?")
 (def +bye+ "Bye!! ")
 
-;;; Visit https://socketsbay.com/test-websockets and connect
+;;; KNOWN ISSUE: certificate at socketsbay expired
+;;; PRERQUISITE! Visit https://socketsbay.com/test-websockets and connect
 (def +socket-server+ "wss://socketsbay.com/wss/v2/1/demo/")
 
 (defn make-app []
@@ -40,7 +41,6 @@
                       ; if we get the same message twice in a row, we want to process it again.
                       ; (Attaching a timestamp or other differentiator fails if a second dependency changes.)
                       :ephemeral? true
-                      :debug true
                       :watch (fn [_ _ new _ _]
                                (dp :socket-msg-watch new)))}
     (scaffold

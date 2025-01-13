@@ -1,12 +1,7 @@
 (ns example.eg.x09-form-change
   (:require
-    [tilton.mx.foundation :refer [mx-type PObserver observe]]
-    [tilton.mx.base
-     :refer [trx wtrx dprn dp dpx prog1 dprn dp dpx *trx?* *trdeep* def-rmap-props]]
-    [tilton.mx.cell.base :refer [unbound *depender*] :as cty]
-    [tilton.mx.cell.core :as cell
-     :refer [cF cFonce cI]]
-    [tilton.mx.model.core :refer [make mget cFkids fasc muv] :as md]
+    [tilton.mx.api :refer [dp dpx wmx-iso minfo mget mset! mupdate! mav muv
+                           fasc fm* cF cF+ cI cFonce ]]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     ["package:flutter/widgets.dart"
      :refer [Text State StatefulWidget StatelessWidget] :as w]
@@ -26,20 +21,20 @@
             {:mainAxisAlignment MainAxisAlignment/center}
             (fx/text-field
               {:onChanged (dart-cb [text]
-                            (md/mset! me :value text))}
+                            (mset! me :value text))}
               {:name  :input-a
                :value (cI nil :watch (fn [prop me newv priorv c]
                                        (dp (str "First text field: " newv))))})
             (fx/text-field
               {:onChanged (dart-cb [text]
-                            (md/mset! me :value text))}
+                            (mset! me :value text))}
               {:name       :input-b
                :value      (cI "And then...?")
                :controller (cFonce (let [c (m/TextEditingController .text (mget me :value))]
                                      (.addListener c
                                        (fn [] (dp (str "Second text field: " (.-text c)))))
                                      c))})
-            (fx/text (str "(a) " (md/muv :input-a) " and (b) " (md/muv :input-b)))))))))
+            (fx/text (str "(a) " (muv :input-a) " and (b) " (muv :input-b)))))))))
 
 
 

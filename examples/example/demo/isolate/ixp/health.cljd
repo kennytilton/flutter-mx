@@ -1,0 +1,61 @@
+(ns example.demo.isolate.ixp.health
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["dart:io" :as io]
+    ["dart:async" :as async]
+    ["dart:convert" :as convert]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! wmx-iso millis-now or-mx-bound]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    [example.demo.isolate.common :as cmn
+     :refer [iso-ping]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort Capability ReceivePort]]))
+
+(defonce HCINTERVAL 200)
+
+(defn mk-health-monitor [app iso to-iso]
+  (mx/make
+    ;; health
+    :name :health-monitor
+    :health-clock  (cF+ [:watch (fn [_ _ _ prior _]
+                                  (when (dart/is? prior async/Timer)
+                                    (.cancel ^async/Timer prior)))
+                         :on-quiesce (fn [c] (when-let [tmr ^async/Timer (mx/c-value c)]
+                                               (dp :ONQ-health-cancel!!!!!!!!!!!!!!!)
+                                               (.cancel tmr)))]
+                     (async/Timer.periodic (Duration .milliseconds HCINTERVAL)
+                       (fn [^async/Timer tmr]
+                         (wmx-iso
+                           (mset! me :health-check
+                             {:msg-type "health-check"
+                              :epoch    (millis-now)})))))
+    :health-ack    (cF (let [{:keys [msg-type response] :as msg} (mget app :worker-msg)]
+                         (cond
+                           (or (nil? msg)
+                             (not= :health-check-ack msg-type))
+                           (or-mx-bound _cache nil)
+                           :else response)))
+
+    :health-check  (cI nil :watch (fn [_ me check _ _]
+                                    (when check
+                                      (iso-ping iso to-iso
+                                        Isolate.beforeNextEvent
+                                        check))))
+
+    :health        (cF (if-let [chk (mget me :health-check)]
+                         (let [ack (mget me :health-ack)
+                               delta (cond
+                                       (nil? ack) (- (millis-now) (:epoch chk))
+                                       (< (:epoch ack) (:epoch chk)) (- (:epoch chk) (:epoch ack))
+                                       :else (- (:epoch ack) (:epoch chk)))]
+                           (cond
+                             (>= delta (* 5 HCINTERVAL)) :dead
+                             (>= delta (* 1.5 HCINTERVAL)) :slow
+                             :else :healthy))
+                         :unchecked))))

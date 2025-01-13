@@ -16,11 +16,7 @@
              c-synaptic? c-quiesce!
              c-pulse c-pulse-last-changed c-ephemeral? c-prop c-lazy] :as cty]
     [tilton.mx.cell.evaluate :refer [cget c-awaken]]
-    [tilton.mx.model.peek :refer [chk minfo md-type mref? cref? mname *md-quiescing*]]))
-
-(def ^:dynamic *md-host*
-  "used for navigation above `me` for delegate MX nodes with no parent, such as an appBar"
-  nil)
+    [tilton.mx.model.peek :refer [*mx* chk minfo md-type mref? cref? mname *md-quiescing*]]))
 
 (def-rmap-props md-
   name)
@@ -65,19 +61,51 @@
 
   (wtrx [0 999 nil :awk-entry (minfo me)]
     (rmap-meta-set! [:state me] :awakening)
-    (binding [*md-host* me]
-      (doseq [[prop value] @me]
-        ;; next is tricky: if prop is in :cz but nil, it has been
-        ;; optimized-away and observed then in the rare case
-        ;; it gets optimized away on other than the initial
-        ;; value.
+    (doseq [[prop value] @me]
+      ;; next is tricky: if prop is in :cz but nil, it has been
+      ;; optimized-away and observed then in the rare case
+      ;; it gets optimized away on other than the initial value.
+      (binding [*mx* [me prop]]
         (when-let [c (prop (md-cz me) :not-found)]
           (cond
             (= c :not-found)
             ;; these need at least an initial observe
             (when (not (some #{prop} [:parent :name :fx-gen :on-quiesce]))
               (observe (md-type me) prop me value unbound nil))
-            :else (when-not (= (c-state c) :awake)        ;; might have happened already
+            :else (when-not (= (c-state c) :awake)          ;; might have happened already
                     (c-awaken c))))))
     (rmap-meta-set! [:state me] :awake)
     me))
+
+
+(defn mget [me prop]
+  (chk me (str "mget passed nil for me accessing prop: " prop))
+  (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " (minfo me)))
+  (if (not (contains? @me prop))
+    (do                                                     ;(prn :mget>nosuchprop!!! prop :me @me)
+      ;(dp :mget prop (minfo me))
+      (mx-throw (str "MXAPI_ILLEGAL_GET_NO_SUCH_prop> mget was attempted on non-existent prop \"" prop "\"."
+                  "\n...> FYI: known props are" (keys @me)
+                  "\n...> FYI: minof " (minfo me)
+
+                  "\n...> FYI: use mget? if prop might not exist."))
+      nil)
+    (let [dbg? false]
+      (when dbg?
+        (prn :mget-sees-c? (cinfo (md-cell me prop)))
+        (prn :me-prop (prop @me)))
+      (if-let [c (md-cell me prop)]
+        (cget c)
+        (prop @me)))))
+
+(defn mget?
+  ([me prop]
+   (mget? me prop nil))
+  ([me prop alt-val]
+   (chk me (str "mget passed nil for me accessing prop: " prop))
+   (chk (mref? me) (str "mget passed non-model for me accessing prop: " prop ": " (minfo me)))
+   (if (contains? @me prop)
+     (mget me prop)
+     alt-val)))
+
+

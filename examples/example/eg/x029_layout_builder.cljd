@@ -1,14 +1,16 @@
-(ns example.eg.x029_layout_builder
+(ns example.eg.x029-layout-builder
   (:require
     ["dart:math" :as math]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.api :refer [dp cF cI mget muv] :as mx]
+    [tilton.fmx.factory :refer [binding-ctx]]
     [tilton.fmx.api :refer [within-ctx dart-cb] :as fx]))
 
 (defn make-app []
-  (let [title "Layout Builder Dynamic Text Size"]
+  (let [title "Layout Builder Dynamic Text Size?"]
+    (dp :builder-app!! )
     (fx/material-app {:title title}
       (fx/scaffold
         {:appBar (fx/app-bar {:title (fx/text title)})}
@@ -18,14 +20,36 @@
                         ;; next bit is key: the layout builder wants back a native Flutter
                         ;; widget, so we have to do the conversion from f/mx proxy to Flutter
                         ;; ourselves, sth normally midden by f/mx macrology.
-                        (fx/fx-render ctx
-                          ; now we can play in f/mx world....
-                          (fx/text
-                            {:style (cF (p/TextStyle
-                                          .color (mget me :font-color)
-                                          .fontSize (mget me :font-size)))}
-                            {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
-                             :font-color (cF (cond
-                                               (> (mget me :font-size) 50) m/Colors.red
-                                               :else m/Colors.cyan))}
-                            (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10)))))}))))))
+
+                        ;; KNOWN BUG:
+                        (dp :builder-runz!! box-constraint)
+                        ;; above output shows repeated rotation does not invoke builder going
+                        ;; from one horizontal (not sure how to define it) to one portait orientation,
+                        ;; so layout does not get rebuilt.
+
+                        (binding-ctx :xo2p-builder-exp ctx
+                          (fx/fx-render ctx
+                            ; now we can play in f/mx world....
+
+                            (fx/column
+                              (let [height (.-height (.-size (m/MediaQuery.of ctx)))]
+                                ;(dp :x029b-sees-height :mq-height height :ctx (fx/*ctx))
+                                (when (> height 600)
+                                  (fx/text
+                                    {:style (p/TextStyle
+                                              .color m/Colors.blue
+                                              .fontSize 24)}
+                                    {:name :test}
+                                    "Rotate the device or sim to see layout effect.")))
+                              (fx/text
+                                {:style (cF (p/TextStyle
+                                              .color (mget me :font-color)
+                                              .fontSize (mget me :font-size)))}
+                                {:font-size  (* 0.1 (.-maxHeight ^m/BoxConstraints box-constraint))
+                                 :font-color (cF (cond
+                                                   (> (mget me :font-size) 50) m/Colors.red
+                                                   :else m/Colors.cyan))}
+                                (str "Fontsize " (/ (int (* 10 (mget me :font-size))) 10)))
+                              (fx/text-field {:controller (m/TextEditingController
+                                                            .text "Hi, Mom.")}
+                                {:name :test-input})))))}))))))

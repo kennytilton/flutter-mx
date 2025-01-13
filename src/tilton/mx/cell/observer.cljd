@@ -33,7 +33,7 @@
 
 (defn fx-observe [prop-name me new-val old-val c]
   (chk me (str "model observe invoked for standalone cell? " (cinfo c)))
-  (dpx :watch-oskool prop-name (minfo me) new-val)
+  (dpx :watch-oskool prop-name (minfo me) )
 
   (when-let [obs (:fx$observer @me)]
     ;; note that we carry on with generic observe after specific observe
@@ -59,7 +59,7 @@ call parameters: prop, me, new, old, and c."
   ([c prior-value why]
    (chk (cref? c) (str "cref? fail on c-observe" (cinfo c)))
    (chk (dart/is? @+pulse+ int))
-   ; (dp :c-observe> why (cinfo c))
+   (dpx :c-observe> why (cinfo c))
 
    (rmap-set! [:pulse-observed c] @+pulse+)
    (when-let [me (c-model c)] ;; not in standalone cells, mostly in test suite
@@ -67,7 +67,6 @@ call parameters: prop, me, new, old, and c."
      (fx-observe (c-prop c) me (c-value c) prior-value c)
 
      (when-let [md-type (md-type (c-model c))]
-       (dpx :observing-md-type!!! md-type why)
        (mx/observe md-type (c-prop c) me (c-value c) prior-value c)))
 
    ;; ...and also do observes specified ad hoc on the cI/cF call.

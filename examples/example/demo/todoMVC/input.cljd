@@ -12,6 +12,7 @@
 
 (defn todo-input-onSubmitted-formula []
   (cF (dart-cb [value]
+        (dp :onsubmitted!!! value)
         ;; blank or not we need to restore focus to the input per the spec
         (.requestFocus ^m/FocusNode (mget me :focusNode))
         ;; spec says to trim, and to silently ignore blank entry
@@ -34,8 +35,12 @@
                     :focusNode   (m/FocusNode)
                     :decoration  (m/InputDecoration
                                    .hintText "What needs doing?"
+                                   .hintStyle (p/TextStyle
+                                                .color m/Colors.grey)
                                    .border m.InputBorder/none
                                    .contentPadding (m/EdgeInsets.all 9.0))
+                    :style (p/TextStyle
+                             .color m/Colors.blue)
                     :onSubmitted (todo-input-onSubmitted-formula)
                     :controller  (cFonce (fx/text-field-controller-basic me))}
       {:name  :todo-input
@@ -60,9 +65,9 @@
                         ;; todo do all these in one change pulse
                         (mset! td :completed (if all-done? false true)))))
        :icon (fx/icon
-               {:icon m.Icons/expand_more
-                :color (cF (if (every? td-completed (todo/app-todos (my-app)))
-                             m/Colors.black m/Colors.blueGrey))})})))
+               {:color (cF (if (every? td-completed (todo/app-todos (my-app)))
+                             m/Colors.black m/Colors.blueGrey))}
+               m.Icons/expand_more)})))
 
 #_ (m/Icon m.Icons/expand_more .color m/Colors.blueGrey)
 

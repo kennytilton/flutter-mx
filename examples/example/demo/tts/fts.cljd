@@ -11,8 +11,8 @@
     [tilton.mx.model.peek :refer [Model]]
     [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv muiv m*v fm* mav mx-bound? wmx-iso]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv muv-inc m*v fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -53,6 +53,7 @@
                (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
+                                   (dp :locales (count locales))
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
@@ -73,7 +74,7 @@
   (fts-speak me))
 
 (defmacro app-fts []
-  `(tilton.mx.api/mget (tilton.mx.api/fasc-inclusive :app) :fts))
+  `(tilton.mx.api/mget (tilton.mx.api/fasc-inc :app) :fts))
 
 (defmacro app-tts []
   `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :tts))
@@ -100,10 +101,10 @@
         speech (muv :text-in)]
     (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
-        (.setPitch tts (muiv :pitch))
-        (.setVolume tts (muiv :volume))
+        (.setPitch tts (muv-inc :pitch))
+        (.setVolume tts (muv-inc :volume))
         (.setLanguage tts lg)
-        (.setSpeechRate tts (muiv :speech-rate))
+        (.setSpeechRate tts (muv-inc :speech-rate))
         (.speak tts speech)))))
 
 (defn fts-pause [me]

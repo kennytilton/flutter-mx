@@ -8,8 +8,8 @@
     [clojure.string :as str]
     [tilton.mx.util :as mxu]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv muiv m*v mav mx-bound? wmx-iso]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv muv-inc m*v mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -109,17 +109,17 @@
       (icon-button
         {:key         (m/ValueKey (if playing? "FTS_PAUSE" "FTS-SPEAK"))
          :iconSize    48
-         :icon        (fx/icon {:icon (if playing? m/Icons.pause
-                                        m/Icons.play_arrow)})
+         :icon        (fx/icon (if playing? m/Icons.pause
+                                            m/Icons.play_arrow))
          :color       (if playing? m/Colors.blue
-                        m/Colors.green)
+                                   m/Colors.green)
          :splashColor (if playing? m/Colors.blueAccent
-                        m/Colors.greenAccent)
+                                   m/Colors.greenAccent)
          :onPressed   (fn [] ((if playing? fts-pause fts-speak) me))}))))
 
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
-                                     (let [{:keys [full-text word-end]}
+                                   (let [{:keys [full-text word-end]}
                                            (app-fts-progress)]
                                        (< word-end (* 0.2 (count full-text))))))}
       (opacity {:opacity (cF (if (mav :ignoring)
@@ -128,7 +128,7 @@
                  :mainAxisAlignment m/MainAxisAlignment.center}
           (icon-button
             {:key         (m/ValueKey "FTS-STOP")
-             :icon        (fx/icon {:icon m/Icons.stop})
+             :icon        (fx/icon m/Icons.stop)
              :iconSize    48
              :color       m/Colors.red
              :splashColor m/Colors.redAccent
@@ -156,7 +156,7 @@
             :mainAxisAlignment m/MainAxisAlignment.center}
      (icon-button
        {:key         (m/ValueKey "FTS-STOP")
-        :icon        (fx/icon {:icon m/Icons.stop})
+        :icon        (fx/icon m/Icons.stop)
         :iconSize    48
         :color       m/Colors.red
         :splashColor m/Colors.redAccent

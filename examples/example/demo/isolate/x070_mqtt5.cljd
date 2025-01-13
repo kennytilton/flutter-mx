@@ -1,0 +1,126 @@
+(ns example.demo.isolate.x070-mqtt5
+  (:require
+    ["package:flutter/gestures.dart" :as g]
+    ["package:flutter/material.dart" :as m
+     :refer [Canvas Size]]
+    ["package:flutter/painting.dart" :as p]
+    ["package:vector_math/vector_math_64.dart" :as vm]
+    ["dart:math" :as math
+     :refer [pi cos sin]]
+    ["dart:async" :as async
+     :refer [Completer StreamSubscription]]
+    ["dart:isolate" :as di
+     :refer [Isolate SendPort ReceivePort]]
+
+    [tilton.mx.cell.base :as cb]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+    [tilton.fmx.api :as fx]
+    [example.demo.isolate.common
+     :refer [clock-face slow-is-prime? dbgiso iso-name say-delay]]))
+
+(defn stock-worker [msg]
+  (dp :stock-worker-sees msg)
+  (let [{:keys [msg-type ^SendPort result-port]} msg
+        task-port (ReceivePort)]
+    (dp :stock-worker-sends-its-receiver (.-sendPort task-port))
+    (.send result-port {:msg-type  :config
+                        :task-port (.-sendPort task-port)})
+    (dp :stock-worker-starts-listening task-port)
+    (.listen task-port (fn [{:keys [msg-type of-integer] :as task}]
+                         (dp :stock-afworker-sees-task task)
+                         ;; (afw task result-port)
+                         ((:sub-worker msg) task result-port)
+                         nil))
+    nil))
+
+(defn sub-worker [{:keys [msg-type of-integer] :as task} result-port]
+  (dp :sub-worker-sees-task task)
+  (case msg-type
+    :compute-factorial (let [r (atom 1)]
+                         (doseq [i (range 1 (inc of-integer))]
+                           (swap! r * i))
+                         (dp :worker-sending :factorial= @r
+                           :on-result-port result-port)
+                         (.send ^SendPort result-port {:msg-type :factorial
+                                                       :value    @r}))
+    (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
+  nil)
+
+(defn make-app []
+  (let [title "MQTT5 Clock"]
+    (fx/material-app
+      {:title title}
+      (fx/scaffold
+        {:appBar (fx/app-bar {:title (fx/text title)})
+         :floatingActionButton
+         (fx/floating-action-button
+           {:onPressed (fx/dart-cb []
+                         (wmx-iso
+                           (let [fo (fmu :facto-display)]
+                             (dp :fab-bumping-fof (minfo fo))
+                             (mswap! fo :of + 1))))
+            :tooltip   "Send msg"})}
+        (fx/column
+          (clock-face)
+          (fx/text {:style (p/TextStyle
+                             .fontSize 24)}
+
+            {:name              :iso-home
+             :fx$dpk            [:sstate :build]
+             :target            :facto-display
+             :result-port       (ReceivePort)
+             :also-facto-worker sub-worker
+             :worker-iso        (cF+ [:async? true
+                                      :watch (fn [_ me worker _ _]
+                                               (when worker
+                                                 (dp :got-worker-isolate! worker)))]
+                                  (let [afw (mget me :also-facto-worker)]
+                                    (dp :afw!!!!!! afw)
+                                    (Isolate.spawn stock-worker
+                                      {:msg-type    :config
+                                       :sub-worker  afw
+                                       :result-port (.-sendPort ^ReceivePort (mget me :result-port))})))
+             :result-listener   (cF+ []
+                                  (when-let [iso (mget me :worker-iso)]
+                                    (dp :main (iso-name) :starts-listening-to-iso (iso-name iso))
+                                    (.listen ^ReceivePort (mget me :result-port)
+                                      (fn [message]
+                                        (dp :main-hears message)
+                                        (case (:msg-type message)
+                                          :config (do (dpx :result-config!! message)
+                                                      (wmx-iso
+                                                        (dp :main-msets-task-out-port message)
+                                                        (mset! me :task-out-port (:task-port message))))
+                                          :factorial (wmx-iso
+                                                       (dp :main-gets-facto-msg message)
+                                                       (mset! (fmu (mget me :target))
+                                                         :factorial (:value message)))
+                                          :eoj (do (dp :eoj!!!! message)
+                                                   (.close ^ReceivePort (mget me :result-port))
+                                                   (.kill ^Isolate (mget me :worker-iso))))))))
+             :task-out-port     (cI nil :watch (fn [_ me new _ _]
+                                                 (dp :task-out-port-now new)))
+
+             :dispatcher        (cF+ [:watch (fn [_ me dispo _ _]
+                                               (when dispo
+                                                 (dispo 1)))]
+                                  (when-let [task-out (mget me :task-out-port)]
+                                    (fn disp-task [task-n]
+                                      (dbgiso :dispatcher-sending-N-to-iso (mget me :worker-iso))
+                                      (dp :dispatcher-sending-N-to-task-out task-n)
+                                      (.send ^SendPort task-out
+                                        {:msg-type   :compute-factorial
+                                         :of-integer task-n}))))}
+            "ISO HOME")
+          (fx/text {:style (p/TextStyle
+                             .fontSize 24)}
+            {:name      :facto-display
+             :of        (cI 1 :watch (fn [_ me new _ _]
+                                       (when new
+                                         (when-let [dispo (mget (fmu :iso-home) :dispatcher)]
+                                           (dp :of-watch-dispox-ing!!!!!! new)
+                                           (dispo new)))))
+             :factorial (cI :RSN)}
+            (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))

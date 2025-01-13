@@ -4,25 +4,25 @@
     [cljd.flutter.alpha :as f]
 
     [tilton.mx.model.peek :refer [Model minfo mref?]]
-    [tilton.mx.api :refer [cF cF+ cI mget muv] :as mx]
+    [tilton.mx.api :refer [navdbg cF cF+ cI mget muv mav] :as mx]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]))
 
 (defn make-app []
   (fx/material-app {:title "Expandable Fab"}
-    (fx/scaffold
-      {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
-       :floatingActionButton (expandable-fab
-                               :initial-open? false
-                               :distance 112.0
-                               :actions [{:title "Create Post" :icon (m/Icon m/Icons.format_size)}
-                                         {:title "Upload Photo" :icon (m/Icon m/Icons.insert_photo)}
-                                         {:title "Upload Video" :icon (m/Icon m/Icons.videocam)}])}
-      (fx/list-view+builder
-        {:padding     (m/EdgeInsets.symmetric .vertical 8.0)
-         :itemCount   25
-         :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
+      (fx/scaffold
+        {:appBar               (fx/app-bar {:title (fx/text "Expandable FAB")})
+         :floatingActionButton (expandable-fab
+                                 :initial-open? false
+                                 :distance 112.0
+                                 :actions [{:title "Create Post" :icon (m/Icon m/Icons.format_size)}
+                                           {:title "Upload Photo" :icon (m/Icon m/Icons.insert_photo)}
+                                           {:title "Upload Video" :icon (m/Icon m/Icons.videocam)}])}
+        (fx/list-view+builder
+          {:padding     (m/EdgeInsets.symmetric .vertical 8.0)
+           :itemCount   25
+           :itemBuilder (fn [ctx i] (fake-item (odd? i)))}))))
 
 (defn expandable-fab [& {:keys [initial-open? distance actions] :or {initial-open? false}}]
   (fx/sized-box+expand
@@ -32,6 +32,8 @@
      ; --- Dart lifecycle ---------------------------
      :initState     (fn [state me]
                       ;; todo dispose this controller
+                      ;; next two uses of rmap-set! are a first, establishing ad hoc
+                      ;; MX properties, deferred until the Flutter lifecycle initState fires.
                       (let [cont (mx/rmap-set! [:controller me]
                                    (m/AnimationController
                                      .value (if initial-open? 1.0 0.0)
@@ -55,7 +57,7 @@
                                         (case new-value
                                           :forward (.forward c)
                                           :reverse (.reverse c))))]
-                         (if (mget me :open?)
+                         (if (mav :open?)
                            :forward :reverse))}
     (fx/stack
       {:alignment    m/Alignment.bottomRight
@@ -65,7 +67,7 @@
       (doall (map-indexed
                (fn [i action]
                  (expanding-action-button me
-                   :direction-degrees (* i (muv :fab :step))
+                   :direction-degrees (* i (mav :step))
                    :max-distance distance
                    :progress-key :expand-animation
                    :action action))
@@ -75,9 +77,9 @@
 (defn expanding-action-button [me & {:keys [action direction-degrees max-distance progress-key]}]
   (fx/animated-builder
     {:animation (fx/within-ctx [me ctx]
-                  (fx/state-prop-get (mx/fasc :fab) :expand-animation))
+                  (mav :expand-animation))
      :builder   (dart-cb [ctx child]
-                  (let [progress ^m/CurvedAnimation (fx/state-prop-get (mx/fasc :fab) :expand-animation)
+                  (let [progress ^m/CurvedAnimation (mav :expand-animation)
                         offset (m/Offset.fromDirection
                                  (* direction-degrees (/ math/pi 180.00))
                                  (* (.-value progress) max-distance))]
@@ -93,7 +95,7 @@
                         child))))}
     (fx/fade-transition
       {:opacity (fx/within-ctx [me ctx]
-                  (fx/state-prop-get (mx/fasc :fab) :expand-animation))}
+                  (mav :expand-animation))}
       (action-button
         :icon (:icon action)
         :onPressed (fx/within-ctx [me ctx]
@@ -136,12 +138,12 @@
                     :elevation    4.0}
         (fx/ink-well {:onTap (dart-cb []
                                (let [fb (mx/fasc :fab par)]
-                                 (mx/mswap! fb :open? not)))}
+                                 (mx/mupdate! fb :open? not)))}
           (fx/padding {:padding (m/EdgeInsets.all 8.0)}
-            (fx/icon {:icon  m/Icons.close
-                      :color (fx/within-ctx [me ctx]
+            (fx/icon {:color (fx/within-ctx [me ctx]
                                (.-primaryColor (m/Theme.of ctx)))}
-              {:name :fabicon-close})))))))
+              {:name :fabicon-close}
+              m/Icons.close)))))))
 
 (defn- tap-to-open-fab [par]
   (fx/ignore-pointer
@@ -160,9 +162,10 @@
          :duration (dart:core/Duration .milliseconds 250)}
         (fx/floating-action-button
           {:onPressed (dart-cb []
-                        (mx/mswap! (mx/fasc :fab par) :open? not))}
-          (fx/icon {:icon m/Icons.create}
-            {:name :fabicon-open}))))))
+                        (mx/mupdate! (mx/fasc :fab par) :open? not))}
+          (fx/icon {}
+            {:name :fabicon-open}
+            m/Icons.create))))))
 
 (defn fake-item [is-big?]
   (m/Container

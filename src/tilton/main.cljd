@@ -2,8 +2,8 @@
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/widgets.dart" :as w]
     ["package:flutter/foundation.dart" :as f]
+    ["package:supabase_flutter/supabase_flutter.dart" :as supa]
     ["dart:io" :as io]
     ;[cljd.flutter :as f]
     [tilton.mx.cell.base :as cty]
@@ -11,13 +11,14 @@
     [tilton.mx.util :as mxu]
     [tilton.mx.base
      :refer [wtrx dp dpx trx *fx$dpk*]]
-    [tilton.mx.api :refer [minfo cinfo] :as mx]
+    [tilton.mx.api :refer [navdbg minfo cinfo] :as mx]
     [tilton.fmx.factory :refer [fx$sst-registry-clear]]
     [tilton.fmx.api :as fx]
     [tilton.testing :as testing]
     [example.driver :as eg]                                 ;; <--- comment out when excluding examples dir in deps.edn
-    [tilton.counter-app :as counter]                        ;; this one uses sugary defs for scaffold and material-app
-    ))
+    [example.eg.x01-counter :as excounter]
+    [tilton.counter-app :as counter]                        ;; BROKEN. this one uses sugary defs for scaffold and material-app
+    #_[learn.counter.counter-fmx :as l-ctr]))
 
 ;;; The main branch as-is excludes all but one example. To pull those in:
 ;;; * modify deps.edn to include "examples" in :paths;
@@ -26,102 +27,43 @@
 ;;; * restart the app to pick up the deps.edn.
 
 (defn main []
-  (binding [*async-error-handler* (fn [exc stack-trace]
-                                    (dp :OUTER-ASYNC-ERROR-TRAPS!! exc)
-                                    (dp :OUTER-ASYNC-ERROR-stack-trace!! stack-trace))]
+  (binding [#_#_ *async-error-handler* (fn [exc stack-trace]
+                                    (dp :ASYNC-ERROR-TRAPS exc)
+                                    (dp :ASYNC-ERROR-stack-trace stack-trace))
+            *print-level* 5
+            *print-length* 10
+            *print-readably* true]
     (dp :main-entry--------------------------------------------)
-    (when (not (fx/is-web?))
-      (dp :platform-processors io/Platform.numberOfProcessors))
-    (cty/cells-reset)
-    (md/md-quiesce-feature! true)
-    (fx/fx$sst-registry-initialize true)
-    (fx/widget-key-clear)
 
-    ;; (fxk/fmx-debugger-set! sample-debugger)
 
-    (binding [cty/*dpc-enabled* true
-              *fx$dpk* [; :propagate :pulse :cset :cnset
-                        ;:build
-                        ;; :gg
-                        #_:sstate #_:sstate+]]
+    (fx/initialize)
+
+    (binding [cty/*dpc-enabled* true]
+      ; *fx$dpk* [:propagate :pulse :cset :cnset bbuild :bbuild+ :gg :sstate :sstate+]
       (.ensureInitialized w/WidgetsFlutterBinding)
 
-      (fx/run-fx-app
-        (if false
-          (counter/make-app)
-          (eg/select))))))
+      ; if using Supabase, activate this:
+      #_ (do (dp :supa-URL (String/fromEnvironment "SUPA_MVX_URL"))
+          (dp :supa-KEY (String/fromEnvironment "SUPA_MVX_KEY"))
+          (dp :Supa-init
+            (await (.initialize supa/Supabase
+                     .url (String/fromEnvironment "SUPA_MVX_URL")
+                     .anonKey (String/fromEnvironment "SUPA_MVX_KEY")))))
 
-#_(f/run (fx/fx-render nil
-           (if true
-             (eg/select)
-             (counter/make-app))))
+      (if false ;; as of 11/2024 we seem not to be able to run outside run-fx-app-hot
+        (excounter/make-app)
+        (fx/run-fx-app-hot
+          (if false
+            (excounter/make-app)
+            (eg/select)))))
 
-#_(fx/run-app
-    (hot-reload-detector
-      (binding [cty/*dpc-enabled* false]
-        ;;(testing/run-tests)
-        (fx/fx-render nil
-          (if nil
-            (counter/make-app)
-            (eg/select))))))
+    #_(testing/run-tests)))
 
-#_(defn main []
-    (dp :main-entry-dp2!!)
-    (cty/cells-reset)
-    (md/md-quiesce-feature! true)
-
-    (fx/widget-key-clear)
-    (.ensureInitialized w/WidgetsFlutterBinding)
-    ;; (fxk/fmx-debugger-set! sample-debugger)
-
-    (wtrx [0 999 :run-app]
-      (fx/run-fx-app
-        ;; Change the  namespace below to one above and rebuild to see a different example.
-        ;; ------ VVVVV either/or next two--------------------------------------------
-        (binding [cty/*dpc-enabled* true]
-          (if true
-            (counter/make-app)
-            (eg/select)))))                                 ;; <--- cannot use when excluding examples directory in deps.edn, or example.driver in this ns
-
-    (testing/run-tests)
-
-    (dp :main-exit))
-
-
-(defmacro hot-reload-detector
-  [& body]
-  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
-        state-sym `^w/State state#
-        super-sym `super#
-        user-widget
-        `(reify :extends (w/StatefulWidget.)
-           :no-meta true
-           (~'createState [_#]
-             (reify :extends w/State
-               :no-meta true
-               (~'initState [~state-sym]
-                 (.initState ~(vary-meta state-sym assoc :tag 'super))
-                 nil)
-               (^void ~'reassemble [this#]
-                 (.reassemble ^{:tag ~'super} this#)
-                 (repl-ish))
-               (~'dispose [~state-sym]
-                 (.dispose ~(vary-meta state-sym assoc :tag 'super)))
-               (~'build [~state-sym ~flutter-build-ctx]
-                 (tilton.fmx.factory/with-ctx :hotrelo ~flutter-build-ctx
-                   ~@body)))))]
-    user-widget))
+#_(when (not (fx/is-web?))
+    (dp :platform-processors io/Platform.numberOfProcessors))
 
 ;; (set! r/debugPaintSizeEnabled true)
 ;; (w/debugDumpApp)
-
-(defn repl-ish []
-  (dp :REPL-ish-on-reload!!!!!!!!!!!))
-
-;(defn main [] ;<id:1673573645>
-; (fx/run-app
-;  (hot-reload-detector
-;   (fx/fx-render nil (home/make)))))
 
 (defn sample-debugger [opcode data]
   (case opcode

@@ -5,7 +5,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [clojure.string :as str]
-    [tilton.mx.api :refer [with-par dp dpx cF cF+ cI mget mswap! mset! mav fasc fm* muv fmu minfo] :as mx]
+    [tilton.mx.api :refer [ dp dpx cF cF+ cI mget mswap! mset! mav fasc fm* muv fmu minfo] :as mx]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding within-ctx]]))
@@ -49,15 +49,15 @@
               "Oeschinen Lake Campground"))
           (text {:style (m/TextStyle .color (m/Colors.grey 500))}
             "Kandersteg, Switzerland")))
-      (fx/icon {:icon  m/Icons.star
-             :color (m/Colors.red 500)})
+      (fx/icon {:color (m/Colors.red 500)}
+        m/Icons.star)
       (text "41"))))
 
 (defn button-column [color icon label]
   (column {:mainAxisSize      m/MainAxisSize.min
            :mainAxisAlignment m/MainAxisAlignment.center}
     {:name :button-col}
-    (fx/icon {:icon icon :color color})
+    (fx/icon {:color color} icon)
     (container {:margin (m/EdgeInsets.only .top 8)}
       (text {:style (fx/text-style {:fontSize   12
                                     :fontWeight m/FontWeight.w400

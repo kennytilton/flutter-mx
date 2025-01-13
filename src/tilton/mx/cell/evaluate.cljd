@@ -9,12 +9,12 @@
     [tilton.mx.cell.base
      :refer [without-c-dependency wmx-iso c-optimized-away? c-formula? c-value c-optimize
              c-unbound? c-input? c-code$ dpm
-             c-model c-valid? c-useds  c-quiesced? c-on-quiesce
+             c-model c-valid? c-useds c-quiesced? c-on-quiesce
              c-state +pulse+ c-pulse-observed
              *call-stack* *defer-changes* dependency-drop
              c-rule c-code c-me c-value-state c-callers dependency-record
              unlink-from-callers *causation* c-synaptic? c-mname
-             c-pulse c-pulse-last-changed c-ephemeral? c-then? c-prop c-props c-prop-name
+             c-pulse c-pulse-last-changed c-ephemeral? c-async-then c-for-each c-prop c-props c-prop-name
              *depender* *c-prop-depth* c-lazy dpc c-async?] :as cty]
     [tilton.mx.cell.observer :refer [c-observe]]
     [tilton.mx.cell.integrity
@@ -40,12 +40,12 @@
   (when-not (c-optimized-away? used)
     (chk *depender*)
     #_(chk (cref? *depender*) (str/join " | "
-                                     ["reco-dep sees non c-ref depender: " *depender*
-                                      [:used (cinfo used)]
-                                      (when (atom? *depender*) (deref *depender*))
-                                      (when (and (atom? *depender*)
-                                              (dart/is? @*depender* #/(Future dynamic)))
-                                        [:future])]))
+                                ["reco-dep sees non c-ref depender: " *depender*
+                                 [:used (cinfo used)]
+                                 (when (atom? *depender*) (deref *depender*))
+                                 (when (and (atom? *depender*)
+                                         (dart/is? @*depender* #/(Future dynamic)))
+                                   [:future])]))
 
     #_(trx nil :reco-dep!!! :used (c-prop used) :caller (c-prop *depender*))
     #_(dpx :reco-dep-sees-dep @*depender*)
@@ -85,13 +85,13 @@
       ;; --- also easy with an optimize edge case lost to history -------
       (and (c-input? c)
         (c-valid? c)                                        ;; a cFn (ruled-then-input) cell will not be valid at first
-        #_ (not (and (c-formula? c)
-               (= (c-optimize c) :when-value-t)
-               (nil? (c-value c)))))
+        #_(not (and (c-formula? c)
+                 (= (c-optimize c) :when-value-t)
+                 (nil? (c-value c)))))
       (c-value c)
 
       ;; --- above we had valid values so did not care. now... -------
-      (when-let [md (c-model c)] ;; standalone cells are supported
+      (when-let [md (c-model c)]                            ;; standalone cells are supported
         (md-quiesced? md))
       (mx-throw (str/join " " ["evic> model: " (c-model c) "of cell" c "is quiessed"]))
 
@@ -101,7 +101,7 @@
           (when used
             (ensure-value-is-current used :nested c)
             ;; now see if it actually changed
-            (dpm c :evic :pulse-checks-------------- :used (c-prop used) :last (c-pulse-last-changed used) :c (c-prop c)(c-pulse c))
+            (dpm c :evic :pulse-checks-------------- :used (c-prop used) :last (c-pulse-last-changed used) :c (c-prop c) (c-pulse c))
             (or (> (c-pulse-last-changed used) (c-pulse c))
               (recur urest)))))
       (do
@@ -134,8 +134,8 @@
     (c-quiesced? c)
     (do
       (dp :ILLOGIC-cget-sees-QUIESCED-c (cinfo c)
-        #_ (minfo (c-model c)))
-      (throw (Exception. (str :CQI!! (cinfo c) #_ (minfo (c-model c)))))
+        #_(minfo (c-model c)))
+      (throw (Exception. (str :CQI!! (cinfo c) #_(minfo (c-model c)))))
       (c-value c))
 
     :else
@@ -165,49 +165,60 @@
           (record-dependency c)
           (dpx :cget-reco-dependency-cool (cinfo c)))))))
 
+(defn calc-and-set-async [c raw-calc propagation-code dbgid dbgdata]
+  (let [cfo (cinfo c true)]
+    (cond
+      ; --- Stream ---------------------------------------------
+      (dart/is? raw-calc Stream)
+      (do
+        (.forEach ^Stream raw-calc
+          (fn [elt]
+            (wmx-iso
+              (with-integrity [:change :stream-for-each]
+                (c-value-assume c (if-let [each-handler (c-for-each c)]
+                                    (each-handler (c-model c) elt raw-calc c)
+                                    elt)
+                  propagation-code)))))
+        (c-value-assume c nil propagation-code))
+      ; --- Future -----------------------------------------------
+      (dart/is? raw-calc Future)
+      (do
+        (.then ^Future raw-calc
+          (fn [fu-val]
+            (chk (atom? c) (str "CNSET> in future then atom? false origc "
+                             cfo " cnow " (cinfo c)))
+            (chk (map? @c) (str "CNSET> in future then: map? false origc "
+                             cfo :meta (meta c)))
+            (chk (cref? c) (str "CNSET> in future then cref? false origc "
+                             cfo " derefnow " (cinfo c)))
+            (wmx-iso
+              (with-integrity [:change :future-then]
+                (chk (cref? c) (str "CNSET> in future then withininetg cref? false origc "
+                                 cfo))
+                (rmap-set! [:then? c] true)
+                (c-value-assume c (if-let [and-then (:async-then @c)]
+                                    (and-then c fu-val) fu-val) nil)))))
+        (c-value-assume c nil propagation-code))
+      ;--- nil ----------------------------------------------------
+      (nil? raw-calc)
+      (c-value-assume c nil propagation-code)
+      ;---
+      ; we could also just let non-async values slide, but for now a sanity check
+      :else  (str "cnset-async got non-nil, non-async: " cfo raw-calc dbgid dbgdata))))
+
 (defn calculate-and-set
   "Calculate, link, record, and propagate."
   [c dbgid dbgdata]
   (do
     ;; cty/with-cdbg (and (= :style (c-prop c)) (= :counter (c-mname c)))
     (dpx c :calcnset-sees!!!!!!!!!!!!!!!!!!! dbgid dbgdata (cinfo c))
-    (let [[raw-value propagation-code] (calculate-and-link c dbgid)]
-      (dpm c :cnset :calcnset-raw!!! (dbgval raw-value) :fut? (dart/is? raw-value Future) :opti? (c-optimized-away? c)
+    (let [[raw-calc propagation-code] (calculate-and-link c dbgid)]
+      (dpm c :cnset :calcnset-raw!!! (dbgval raw-calc) :fut? (dart/is? raw-calc Future) :opti? (c-optimized-away? c)
         #_#_:meta-mw (meta (c-me c)))
 
       (cond
-        (c-async? c) (let [cfo (cinfo c true)]
-                       (chk (or (nil? raw-value)            ;; someday support other default future cell values, mebbe :pending
-                              (dart/is? raw-value Future))
-                         (str "cnset-future got non future: " raw-value dbgid dbgdata))
-
-                       (if (dart/is? raw-value Future)
-                         (do
-                           ;; (dp :got-future :defchg cty/*defer-changes* :wii cty/*within-integrity*)
-                           (.then ^Future raw-value
-                             (fn [fu-val]
-                               ;(dp :then-callback-sees :defchg cty/*defer-changes* :wii cty/*within-integrity*)
-                               ;(dp :FUVAL-RECEIVED!!!!! fu-val)
-                               (chk (atom? c) (str "CNSET> in future then atom? false origc "
-                                                cfo " cnow " (cinfo c)))
-                               (chk (map? @c) (str "CNSET> in future then: map? false origc "
-                                                cfo :meta (meta c)))
-                               (chk (cref? c) (str "CNSET> in future then cref? false origc "
-                                                 cfo " derefnow " (cinfo c)))
-                               (wmx-iso
-                                 (with-integrity [:change :future-then]
-                                   ;; todo if a cfu is meant to run repeatedly as dependencies change,
-                                   ;;      do we need to clear :then? Or is opti-away not a problem
-                                   ;;      since it would have happened were there no users??
-                                   (chk (cref? c) (str "CNSET> in future then withininetg cref? false origc "
-                                                     cfo))
-                                   (rmap-set! [:then? c] true)
-                                   (c-value-assume c (if-let [and-then (:async-then @c)]
-                                                       (and-then c fu-val) fu-val) nil)))))
-                           ;; forcing nil pending future
-                           ;; TODO support :pending-future-placeholder-value and force that instead
-                           (c-value-assume c nil propagation-code))
-                         (c-value-assume c nil propagation-code)))
+        (c-async? c)
+        (calc-and-set-async c raw-calc propagation-code dbgid dbgdata)
         :else (when-not (c-optimized-away? c)
                 (chk (map? (deref c)) "calc-n-set")
                 (dpc c :not-opti)
@@ -215,8 +226,8 @@
                 ;; can be re-entered unnoticed since that "clears" *call-stack*. If re-entered, a subsequent
                 ;; re-exit will be of an optimized away cell, which will have been value-assumed
                 ;; as part of the opti-away processing.
-                ;;(trx :calc-n-set->assume raw-value)
-                (c-value-assume c raw-value propagation-code)
+                ;;(trx :calc-n-set->assume raw-calc)
+                (c-value-assume c raw-calc propagation-code)
                 (chk (or (map? (deref c))
                        (c-optimized-away? c)) "calc-n-set post CVASS deref c not map or opti"))))))
 
@@ -237,18 +248,21 @@
   (when (some #{c} *call-stack*)
     (let [me (c-model c)
           prop (c-prop-name c)]
+      (dp "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> throwing cyclic dependency detected while computing prop "
+        prop " of model " (c-mname c))
+      (do
+
+        (dp "...> callstack brief, latest first:")
+        (doseq [cc *call-stack*]
+          (dp "....> cf-md:" (c-mname cc) " prop " (c-prop-name cc)))
+        (dp "...> callstack verbose, latest first:")
+        (doseq [cc *call-stack*]
+          (dp "....> cf-md:" (c-mname cc) " prop " (:prop @cc))
+          (dp "....code> " (c-code$ cc))))
+
       (mx-throw
-        "MXAPI_COMPUTE_CYCLE_DETECTED> cyclic dependency detected while computing prop '"
-        prop "' of model '" (c-mname c) "'.\n"
-        "...> formula for " prop ":\n"
-        (c-code$ c)
-        "\n...> full cell: \n"
-        (cinfo c)
-        "\n\n...> callstack, latest first: \n"
-        (str/join "\n" (mapv (fn [cd]
-                               (str "....> mname:" (c-mname cd) " prop: " (c-prop-name cd)
-                                 "\n....>    code:" (c-code$ cd)))
-                         *call-stack*)))))
+        "MXAPI_COMPUTE_CYCLE_DETECTED>\n..> cyclic dependency detected while computing prop "
+        prop " of model " (c-mname c) ";\n")))
 
   (do                                                       ;; wtrx (0 100 nil "calc-n-link" c (cty/cinfo c))
     (binding [*depender* c
@@ -259,33 +273,33 @@
 
       (dpx c :CNL-trying-formula (cinfo c))
       (dpx c :CNL-trying-formula-code (c-code$ c))
-      (let [raw-value (try ((c-rule c) c)
-                        (catch Exception e
-                          (dp :rule-exception (cinfo c) (c-code$ c) e)))
-            #_ (try
-              ((c-rule c) c)
-              (catch Exception e
-                (dprn :cnl-exception e)
-                (dprn :cnl-error-calculating-formula (c-code c))
-                (dprn :error-calculating-cinfo (cinfo c))
-                (dprn :error-calculating-minfo (minfo (c-model c)))
-                (dprn :ex-data (ex-data e))
-                ;   (dprn :ex-message (ex-message e))
-                ;  (dprn :ex-cause (ex-cause e))
-                (dprn :rule-calc-caught e)
-                (throw e)))
+      (let [raw-calc (try ((c-rule c) c)
+                           (catch Exception e
+                             (dp :calc-n-link>rule-exception (cinfo c) (c-code$ c) e)))
+            #_(try
+                ((c-rule c) c)
+                (catch Exception e
+                  (dprn :cnl-exception e)
+                  (dprn :cnl-error-calculating-formula (c-code c))
+                  (dprn :error-calculating-cinfo (cinfo c))
+                  (dprn :error-calculating-minfo (minfo (c-model c)))
+                  (dprn :ex-data (ex-data e))
+                  ;   (dprn :ex-message (ex-message e))
+                  ;  (dprn :ex-cause (ex-cause e))
+                  (dprn :rule-calc-caught e)
+                  (throw e)))
             prop-code? (and (c-synaptic? c)
-                         (vector? raw-value)
-                         (contains? (meta raw-value) :propagate))]
-        (dpm c :cnset :cn-link-got (c-code$ c) (minfo raw-value) prop-code?)
+                         (vector? raw-calc)
+                         (contains? (meta raw-calc) :propagate))]
+        (dpm c :cnset :cn-link-got (c-code$ c) (minfo raw-calc) prop-code?)
         (if prop-code?
-          [(first raw-value) (:propagate (meta raw-value))]
-          [raw-value nil])))))
+          [(first raw-calc) (:propagate (meta raw-calc))]
+          [raw-calc nil])))))
 
 ;;; --- awakening ------------------------------------
 
 (defn c-awaken [c]
-  (do ;; try
+  (do                                                       ;; try
     (cond
       (c-formula? c)
       (cond
@@ -315,15 +329,15 @@
       (dp :c-awaken-fall-thru (if (atom? c)
                                 [:ref-of (meta c) (cinfo c)]
                                 [:unref (cinfo c)])))
-    #_ (catch Exception e
-      (dprn :awaken-error-calculating-cinfo (cinfo c))
-      (dprn :c-awaken-exception e)
+    #_(catch Exception e
+        (dprn :awaken-error-calculating-cinfo (cinfo c))
+        (dprn :c-awaken-exception e)
 
-      (dprn :awaken-error-calculating-formula (c-code c))
+        (dprn :awaken-error-calculating-formula (c-code c))
 
-      (dprn :error-calculating-minfo (minfo (c-model c)))
-      (dprn :ex-data (ex-data e))
-      (throw e))))
+        (dprn :error-calculating-minfo (minfo (c-model c)))
+        (dprn :ex-data (ex-data e))
+        (throw e))))
 
 ;; ------------------------------------------------------------
 
@@ -345,13 +359,13 @@
   cells."
 
   [c new-value propagation-code]
-
+  (dpx :c-val-ass)
   (chk (cref? c) "CVASS> c not cref? "
-                    (cinfo c)
-                    " assuming value " ;; new-value
-                    " atom? " (atom? c)
-                    " map? " (when (atom? c) (map? (deref c))))
-  ;; (println :cva-entry (c-prop c) new-value)
+    (cinfo c)
+    " assuming value "                                      ;; new-value
+    " atom? " (atom? c)
+    " map? " (when (atom? c) (map? (deref c))))
+  (dpx :cva-entry (c-prop c))
   (do                                                       ;; (wtrx (0 100 :cv-ass (:prop @c) new-value)
     (prog1 new-value                                        ;; sans doubt
       (without-c-dependency
@@ -388,6 +402,7 @@
             (optimize-away?! c prior-value))
 
           (dpm c :propagate :prop-sees-caller-ct (count callers))
+          (dpx :cva-prop-x (c-prop c))
 
           (let [known-changed? (atom nil)]
             (if (or
@@ -398,24 +413,26 @@
                       (cinfo c))
                     (reset! known-changed?
                       (c-value-changed? c new-value prior-value))))
-            ;; --- something happened ---
-            ;; we may be overridden by a :no-propagate below, but anyway
-            ;; we now can look to see if we can be optimized away
-            (let []
-              ;; --- data flow propagation -----------
-              #_ (when (or @known-changed?
-                      ; next happens if changed test in conditional not reached
-                      (and (nil? @known-changed?)
-                        (c-value-changed? c new-value prior-value)))
-                (dpm c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
-                (rmap-set! [:pulse-last-changed c] @+pulse+))
+              ;; --- something happened ---
+              ;; we may be overridden by a :no-propagate below, but anyway
+              ;; we now can look to see if we can be optimized away
+              (let []
+                ;; --- data flow propagation -----------
+                #_(when (or @known-changed?
+                          ; next happens if changed test in conditional not reached
+                          (and (nil? @known-changed?)
+                            (c-value-changed? c new-value prior-value)))
+                    (dpm c :pulse :CVASS_SETS-pulse-last-changed!!!! @+pulse+)
+                    (rmap-set! [:pulse-last-changed c] @+pulse+))
 
-              (when-not (or (= propagation-code :no-propagate)
-                          #_(c-optimized-away? c))
-                ;;(chk (map? @c))
-                (dpm c :propagate :prop-to-callers! (count callers))
-                (propagate c prior-value callers)))
-            (dpm c :propagate :NOT-PROPAGATING))))))))
+                (when-not (or (= propagation-code :no-propagate)
+                            #_(c-optimized-away? c))
+                  ;;(chk (map? @c))
+                  (dpx :cva-prop-y (c-prop c))
+                  (dpm c :propagate :prop-to-callers! (count callers))
+                  (propagate c prior-value callers)))
+              (dpm c :propagate :NOT-PROPAGATING)))))))
+  (dpx :cvass-exit))
 
 ;; --- unlinking ----------------------------------------------
 (defn unlink-from-used [c why]
@@ -431,8 +448,8 @@ then clear our record of them."
 (defn md-cell-flush [c]
   (chk (cref? c) "cref? fail on md-cell-flush" (cinfo c))
   (when-let [me (c-model c)]
-    (rmap-set! [:cells-flushed me]
-      (conj (:cells-flushed me)
+    (rmap-meta-set! [:cells-flushed me]
+      (conj (:cells-flushed (meta me))
         [(c-prop c) (c-pulse-observed c)]))))
 
 ;; --- optimize away ------------------------------------------
@@ -450,8 +467,8 @@ then clear our record of them."
   (when (and (c-formula? c)
           (or (empty? (c-useds c))
             (= :freeze (c-optimize c))
-            #_ (and (= :when-value-t (c-optimize c))
-              (not (nil? (c-value c)))))
+            #_(and (= :when-value-t (c-optimize c))
+                (not (nil? (c-value c)))))
           (not (c-on-quiesce c))
           (c-optimize c)
           (not (and (c-async? c)                            ;; we will need the cell to handle the response when it comes in
@@ -558,12 +575,14 @@ then clear our record of them."
         (propagate-to-callers c callers)
         ;;(trx :watch-chkpulse!!!!!!!! @+pulse+ (c-pulse-observed c))
 
+        (dpx :prop-callers (c-prop c))
+
         (when-not (c-optimized-away? c)                     ;; they get observed at the time
-          #_(dp :not-opti-decide-obs!!!! (c-prop-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
+          (dpx :not-opti-decide-obs!!!! (c-prop-name c) :obspulse (c-pulse-observed c) :pulse @+pulse+)
           (when (or (> @+pulse+ (c-pulse-observed c))
                   (some #{(c-lazy c)}
                     [:once-asked :always true]))            ;; messy: these can get set!ed/propagated twice in one pulse+
-            ;; (dp :observing-unobserved-or-lazy!! (c-prop c) (c-value c))
+            (dpx :observing-unobserved-or-lazy!! (c-prop c))
             (c-observe c prior-value :propagate)))
 
         ;;
@@ -577,6 +596,7 @@ then clear our record of them."
         ;; would this be bad for persistent CLOS, in which a DB would think there was still a link
         ;; between two records until the value actually got cleared?
         ;;
+        (dpx :ephemming (c-prop c))
         (ephemeral-reset c)))))
 
 (defn propagate-to-callers [c callers]

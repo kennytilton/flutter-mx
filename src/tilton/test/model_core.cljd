@@ -25,8 +25,11 @@
     [tilton.mx.model.peek :refer [mname mref? cref?]]
     [tilton.mx.model.base :refer [ md-cz md-cell]]
     [tilton.mx.model.core
-     :refer [make cFkids the-kids mdv! mget fm-navig fm! make mset! mswap!]
-     :as md]))
+     :refer [make cFkids the-kids mdv! fm! make mset! mswap!]
+     :as md]
+    [tilton.mx.api :refer [dp dpx wmx-iso minfo mget mset! mupdate! mav muv
+                           navig fasc fm* cF cF+ cI cFonce ]]))
+
 
 (defn fm-0 []
   (cells-init)
@@ -48,7 +51,7 @@
       ;;(dp :resetting-cell kon)
       (cset! kon true)
       (assert (= 1 (count (:kids @u))))
-      (assert (md/fm-navig :konzo u :inside? true))
+      (assert (navig :konzo u :inside? true))
       )))
 
 (defn fm-2 []
@@ -69,17 +72,12 @@
                                       (md/make
                                         :parent me
                                         :name :bbb)))))))]
-    ;; (assert (fm-navig :bba u :inside? true :must? true))
-    ;; (assert (thrown-with-msg?
-    ;;      Exception #"fm-navig-must-failed"
-    ;;      (fm-navig :bbax u :inside? true :must? true)))
-    ;; (assert (nil? (fm-navig :bbax u :inside? true :must? false)))
-    (let [bba (fm-navig :bba u :inside? true :must? true)]
+    (let [bba (navig :bba u :inside? true :must? true)]
       (assert bba)
-      (assert (md/fm-navig :uni bba :inside? true :up? true))
-      (assert (fm-navig :aa bba :inside? false :up? true))
-      (assert (fm-navig :bb bba :inside? true :up? true))
-      (assert (fm-navig :bbb bba :inside? false :up? true))
+      (assert (navig :uni bba :inside? true :out true))
+      (assert (navig :aa bba :inside? false :out true))
+      (assert (navig :bb bba :inside? true :out true))
+      (assert (navig :bbb bba :inside? false :out true))
       )
     ))
 
@@ -108,12 +106,12 @@
     (assert (= 63 (mget u :u63)))
     (assert (= 42 (mdv! :aa :aa42 u)))
     (assert (= 21 (mdv! :bb :bb21 u)))
-    (assert (nil? (fm-navig :konzo u :must? false)))
+    (assert (nil? (navig :konzo u :must? false)))
     (cset! (md-cell u :kon) true)
     (assert (:kon @u))
     (assert (md-cell u :kon))
     (assert (= 3 (count (:kids @u))))
-    (assert (fm-navig :konzo u :inside? true))
+    (assert (navig :konzo u :inside? true))
     ))
 
 (defn fm-3x []
@@ -136,12 +134,12 @@
     (assert (= 63 (mget u :u63)))
     (assert (= 42 (mdv! :aa :aa42 u)))
     (assert (= 21 (mdv! :bb :bb21 u)))
-    (assert (nil? (fm-navig :konzo u :must? false)))
+    (assert (nil? (navig :konzo u :must? false)))
     (cset! (md-cell u :kon) true)
     (assert (:kon @u))
     (assert (md-cell u :kon))
     (assert (= 3 (count (:kids @u))))
-    (assert (fm-navig :konzo u :inside? true))
+    (assert (navig :konzo u :inside? true))
     ))
 
 
@@ -156,7 +154,7 @@
                                       (md/make
                                         :name :bbx))))
                         (md/make :name :dd
-                          :kzo (cF (let [p (fm-navig :picker me)]
+                          :kzo (cF (let [p (navig :picker me)]
                                      (dp :bingo p)
                                      (mget p :value)))))))]
     (assert (= 42 (mdv! :picker :value u)))
@@ -201,7 +199,7 @@
                            :leave :away
                            :return :home
                            :missing))))]
-    (dp :meta (meta res))
+    ;(dp :meta (meta res))
     (assert (= (:cz (meta res)) (md-cz res)))
     (assert (= 4 (count (md-cz res))))
     (assert (every? cref? (vals (md-cz res))))
@@ -212,7 +210,7 @@
                  (vals (md-cz res))))))
     (assert (= "Bob" (:name @res)))
     (assert (= "Bob" (mname res)))
-    (dp :res @res)
+    ;(dp :res @res)
     (assert (= 42 (:bogus @res)))
     (assert (= nil (:bogus-e @res))) ;; ephemeral, so reset to nil silently
     (assert (= nil (:action @res)))

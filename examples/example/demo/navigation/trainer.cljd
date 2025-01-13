@@ -1,0 +1,112 @@
+(ns example.demo.navigation.trainer
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.mx.model.peek :refer [atom?]]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :refer [dp dpx minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav
+                           mref? mname mkids] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx *fx-app*
+             material-app scaffold app-bar floating-action-button
+             center column row container text-button text sized-box]]
+
+    [example.demo.navigation.puzzle :as pz
+     :refer [mk-puzzle pzl-zero pz-structure pz-nvg-options]]
+    [example.demo.navigation.component :refer [nvg-solution]]
+    [example.demo.navigation.tree :refer [md-tree-view]]))
+
+; todo - do sth with dbg option
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Navigation Trainer"
+     :theme (m/ThemeData .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.teal.shade300))}
+    (scaffold
+      {:appBar (app-bar
+                 {:title           (m/Text "Flutter/MX Navigation Trainer")
+                  :backgroundColor (cF (.-inversePrimary
+                                         (.-colorScheme ^m/ThemeData (mav :theme))))})
+       :floatingActionButton
+       (floating-action-button
+         {:onPressed (dart-cb []
+                       (let [app @*fx-app*]
+                         (dp :app (minfo app))
+                         (let [sk (nvg-skeleton app)]
+                           (binding [*print-level* 8]
+                             (prn :sk sk)))))
+          :tooltip   "Increment"}
+         (m/Icon m/Icons.public .size 48 .color m/Colors.black))}
+      {:name             :scaffy
+       :puzzle-structure (cI pzl-zero)}
+      (center
+        (column {}
+          {:puzzle      (cF (mk-puzzle (mav :puzzle-structure)))
+           :nvg-options (cFI (pz-nvg-options (mav :puzzle)))}
+          (md-tree-view (pz-structure (mav :puzzle)))
+          (nvg-solution))))))
+
+(defn nvg-skeleton [mx]
+  (dpx :nvg-skell mx)
+  (cond
+    (mref? mx)
+    (vector (md-skeleton mx)
+      (mapv nvg-skeleton (mkids mx)))
+    ;-
+    (dart/is? mx m/Widget)
+    :dart/widget
+    ;-
+    :else :not-md))
+
+(defn md-skeleton [md]
+  (dpx :mdskel md (atom? md))
+  (cond
+    (mref? md)
+    (let [c (:fx-class @md)]
+      (or (mname md) (:fx-class @md) :skanon))
+    ;-
+    (dart/is? md m/Widget)
+    :dart/widget
+    ;-
+    :else :not-md))
+
+#_(center
+    (fx/text-button
+      {:onPressed (dart-cb []
+                    #_(mset! selector
+                        :selection completion-enum))
+       :style     (cF (m/ButtonStyle .foregroundColor
+                        (if (mget me :selected?)
+                          (m/MaterialStateProperty.resolveWith
+                            (fn [s]
+                              m/Colors.blue))
+                          (m/MaterialStateProperty.resolveWith
+                            (fn [s] m/Colors.black)))))}
+      {:name      :me
+       :selected? (cF true #_(= completion-enum
+                               (mget selector :selection)))}
+      (m/Text (str (:name @me)))))
+
+#_(defn lang-button [i lang]
+    (fx/gesture-detector
+      {:key   (m/ValueKey. lang)
+       :onTap (dart-cb []
+                (mset! (app-fts) :lg-current
+                  (first (get (app-lang-geos) lang))))}
+      (container
+        {:decoration (cF (fx/box-decoration
+                           {:border (cF (when (= lang (app-fts-lang))
+                                          (.all m/Border .color m/Colors.blue .width 2)))
+                            :color  (.-shade50 (cond
+                                                 (even? i) m/Colors.blue
+                                                 :else m/Colors.yellow))}))}
+        (center
+          (padding {:padding (m/EdgeInsets.all 4.0)}
+            (fx/text
+              {:style (p/TextStyle .color m/Colors.black
+                        .fontSize 16.0)}
+              lang))))))
+
+

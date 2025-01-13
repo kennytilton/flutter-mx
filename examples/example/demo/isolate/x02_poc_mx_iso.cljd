@@ -14,24 +14,11 @@
 
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.isolate.common
      :refer [clock-face slow-is-prime? dbgiso iso-name say-delay]]))
-
-(defn facto-worker [{:keys [msg-type of-integer] :as task} result-port]
-  (dp :stock-worker-sees-task task (iso-name))
-  (case msg-type
-    :compute-factorial (let [r (atom 1)]
-                         (doseq [i (range 1 (inc of-integer))]
-                           (swap! r * i))
-                         (dp :worker-sending-eoj :factorial= @r
-                           :on-result-port result-port)
-                         (.send ^SendPort result-port {:msg-type :eoj
-                                                       :value    @r}))
-    (dp :WORKER-UNEXPECTED-TASK!!!!!!! task))
-  nil)
 
 (defn stock-worker [msg]
   (dp :stock-worker-sees msg)
@@ -104,9 +91,10 @@
                                         (case (:msg-type message)
                                           :config (do (dpx :result-config!! message)
                                                     (wmx-iso
-                                                      (dpx :main-msets-task-out-port message)
+                                                      (dp :main-msets-task-out-port message)
                                                       (mset! me :task-out-port (:task-port message))))
                                           :factorial (wmx-iso
+                                                       (dp :main-gets-facto-msg message)
                                                        (mset! (fmu (mget me :target))
                                                          :factorial (:value message)))
                                           :eoj (do (dp :eoj!!!! message)
@@ -115,7 +103,10 @@
              :task-out-port     (cI nil :watch (fn [_ me new _ _]
                                                  (dp :task-out-port-now new)))
 
-             :dispatcher        (cF (when-let [task-out (mget me :task-out-port)]
+             :dispatcher        (cF+ [:watch (fn [_ me dispo _ _]
+                                               (when dispo
+                                                 (dispo 1)))]
+                                  (when-let [task-out (mget me :task-out-port)]
                                       (fn disp-task [task-n]
                                         (dbgiso :dispatcher-sending-N-to-iso (mget me :worker-iso))
                                         (dp :dispatcher-sending-N-to-task-out task-n)
@@ -128,12 +119,8 @@
             {:name      :facto-display
              :of        (cI 1 :watch (fn [_ me new _ _]
                                        (when new
-                                         (when-let [dispo (mget me :dispo)]
-                                           (dp :of-watch-dispoing new)
+                                         (when-let [dispo (mget (fmu :iso-home) :dispatcher)]
+                                           (dp :of-watch-dispox-ing!!!!!! new)
                                            (dispo new)))))
-             :dispo     (cF+ [:watch (fn [_ me dsp-fn _ _]
-                                       (when dsp-fn
-                                         (dpx :got-disp-fn dsp-fn)))]
-                          (mget (fmu :iso-home) :dispatcher))
              :factorial (cI :RSN)}
             (str "The factorial of " (mget me :of) " is " (mget me :factorial))))))))

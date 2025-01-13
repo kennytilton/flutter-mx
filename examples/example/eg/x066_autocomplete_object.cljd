@@ -1,0 +1,47 @@
+(ns example.eg.x066-autocomplete-object
+  "F/mx port of https://api.flutter.dev/flutter/material/Autocomplete-class.html"
+  (:require
+    [clojure.string :as str]
+    [tilton.mx.api :refer [dp mget mset! mswap!] :as md]
+    [tilton.fmx.api :as fx]
+    [tilton.fmx.factory :as fxf]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]))
+
+;;; --- autocomplete with object ----------------------------
+
+(def users [{:name "Alice" :email "alice@example.com"}
+            {:name "Bob" :email "bob@example.com"}
+            {:name "Charlie" :email "charlie123@gmail.com"}])
+
+(defn autocomplete-custom-type []
+  (#/(m/Autocomplete Map)
+    .onSelected (fn [sel] (prn :selection!! sel))
+    .displayStringForOption (fn [{:keys [name email] :as opt}]
+                              (str name ": " email))
+    .optionsBuilder (fn [^m/TextEditingValue val]
+                      (cond
+                        (= "" (.-text val))
+                        (.empty #/(Iterable Map))
+                        ;--
+                        :else
+                        (let [^#/(Iterable Map) it
+                              (.where ^List users
+                                (fn [option]
+                                  (dp :jwoption option)
+                                  (boolean
+                                    (when (str/includes? (str option)
+                                            (str/lower-case (.-text val)))
+                                      option))))]
+                          it)))))
+
+(defn make-app []
+  (let [title "Autocomplete Basic"]
+    (fx/material-app {:title title}
+      (fx/scaffold
+        {:appBar (m/AppBar .title (m/Text title))}
+        (fx/center
+          (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+            (fx/text (str "Type below one of " (str/join "," users) "."))
+            (autocomplete-custom-type)))))))

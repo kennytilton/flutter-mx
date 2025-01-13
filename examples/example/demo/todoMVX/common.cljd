@@ -1,0 +1,32 @@
+(ns example.demo.todoMVX.common
+  (:require
+    ["package:flutter/material.dart" :as m]
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.mx.api :as mx]))
+
+(defn title-red []
+  (.fromRGBO m/Color 184 63 69 0.5))
+
+
+(defn app-now []
+  (mx/now-ms))
+
+(defn app-now-utc []
+  (.toString (.fromMillisecondsSinceEpoch DateTime (app-now)
+               .isUtc true)))
+
+
+(defmacro my-todo-list [& [me]]
+  `(let [me# ~(or me 'me)]
+     (tilton.mx.model.base/mget
+       (tilton.mx.model.core/fasc :app me#)
+       :todo-list)))
+
+(defmacro my-todos []
+  `(tilton.mx.api/mkids (example.demo.todoMVX.common/my-todo-list)))
+
+(defmacro my-todo-add [title]
+  `(let [list# (example.demo.todoMVX.common/my-todo-list)]
+     (tilton.mx.api/mswap! list# :kids conj
+       (example.demo.todoMVX.common/make-ToDo list#
+         ~title))))

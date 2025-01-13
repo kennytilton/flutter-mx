@@ -31,10 +31,9 @@
 ; todo: stand-alone cells with observers should be observed when they are made
 
 (def +valid-input-options+ #{:obs :watch :prop :ephemeral? :unchanged-if
-                             :value :input? :dbg :on-quiesce :sink :sst})
+                             :value :input? :dbg :on-quiesce :sst})
 (def +valid-formula-options+ #{:obs :watch :prop :input? :lazy :optimize :ephemeral? :unchanged-if
-                               :code :value :rule :async? :async-then :sink :dbg
-                               :on-quiesce :sst})
+                               :code :value :rule :async? :async-then :for-each :dbg :on-quiesce :sst})
 
 (defn c-options-canonicalize [options allowed]
   ;;(dp :coc-entry options)
@@ -85,6 +84,7 @@
       (chk (some #{lazy} [true false :until-asked]) (str "make-cf sees invalid value for :lazy " lazy)))
 
     (atom (merge {:mx-type            (CellFormula.)
+                  :dbg-id (rand-int 999999)
                   :value              unbound
                   ;; todo move internals into third map so they cannot be overridden
                   :state              :nascent              ;; s/b :unbound?
@@ -276,6 +276,7 @@ in the CL version of Cells SETF itself is the change API dunction."
     :winteg? cty/*within-integrity*  :defer? *defer-changes* :fut? (c-async? c))
   (chk (not (c-async? c)) "attempt to cset! cfuture " (cinfo c))
 
+  (dpx :cset-checks-ok)
   (when-not (c-input? c)
     (dp :formula!!!!!! (c-code c))
     (dp :formula!!!!!!!? (c-code$ c))
@@ -286,7 +287,7 @@ in the CL version of Cells SETF itself is the change API dunction."
         (str "...> FYI: the formula is: " (c-code$ c) "\n"))
       "...> FYI: intended new value is [" new-value "]; current value is [" (:value @c) "].\n"
       "...> FYI: instance is " (minfo (c-model c)) "\n."))
-
+  (dpx :cset-checks-ok-2)
   (cond
     *defer-changes*
     #_(let [prop (c-prop-name c)
@@ -310,7 +311,9 @@ in the CL version of Cells SETF itself is the change API dunction."
     ;-------------------------------------------
     :else
     (do (dpm c :cset+ :cset-pre-w-integrity-new-value new-value)
+        (dpx :csetgo)
         (with-integrity (:change (c-prop c))
+          (dpx :cset-wi)
           (dpm c :cset :cset!-pre-cvass-new-value new-value)
           (c-value-assume c new-value nil)))))
 

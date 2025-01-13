@@ -12,6 +12,8 @@
 
     [tilton.mx.foundation :refer [PObserver observe] :as mx]))
 
+(declare dpm)
+
 ;; --- the Cells beef -----------------------
 
 ;; --- pulse, the Cells state clock ---------
@@ -44,13 +46,6 @@ rule to get once behavior or just when fm-traversing to find someone"
          tilton.mx.cell.base/*depender*
          tilton.mx.cell.base/*defer-changes*
          tilton.mx.cell.base/*call-stack*))
-     ~@body))
-
-(defmacro with-mx-isolation [& body]
-  `(binding [tilton.mx.cell.base/*within-integrity* nil
-             tilton.mx.cell.base/*depender* nil
-             tilton.mx.cell.base/*defer-changes* false
-             tilton.mx.cell.base/*call-stack* nil]
      ~@body))
 
 (defmacro wmx-iso [& body]
@@ -120,7 +115,7 @@ rule to get once behavior or just when fm-traversing to find someone"
 (mxb/def-rmap-props c-
   me prop state input? rule pulse pulse-last-changed pulse-observed
   useds users callers optimize ephemeral? sink on-quiesce
-  lazy synapses synaptic? code async? then? debug)
+  lazy synapses synaptic? code async? async-then for-each debug)
 
 (defn c-code$ [c]
   (prn-str (:code @c)))
@@ -153,8 +148,8 @@ rule to get once behavior or just when fm-traversing to find someone"
 (defn c-value-state [rc]
   (let [v (c-value rc)]
     (cond
-      (= v unbound) :unbound
-      (= v uncurrent) :uncurrent
+      (= unbound v) :unbound
+      (= uncurrent v) :uncurrent
       :else :valid)))
 
 (defn c-unbound? [rc]
@@ -219,6 +214,7 @@ rule to get once behavior or just when fm-traversing to find someone"
   #_ (when-not (keyword? label)
     (dart:core/print [:dpmmac-sees-non-keyword-label ]))
   `(tilton.mx.cell.base/without-c-dependency
+     ;(tilton.mx.base/dp :dpm ~category ~label)
      (let [mx# ~mx]
        (when-let [mx-dbg# (tilton.mx.cell.base/dpm-mx-dbg mx#)]
          (when (tilton.mx.cell.base/dpm-match mx-dbg# ~category)

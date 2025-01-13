@@ -14,7 +14,7 @@
     [tilton.mx.api :as md]
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
              fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.isolate.common :as cmn
@@ -82,7 +82,7 @@
                            (case (:msg-type result)
                              :config (throw "result-handler got config")
                              :result (let [{:keys [of-integer factorial]} (:value result)]
-                                       (dp :result result :factorial-of of-integer :is factorial)
+                                       (dpx :result result :factorial-of of-integer :is factorial)
                                        (wmx-iso
                                          (mset! (fm* :facto-display the-app)
                                            :factorial factorial))

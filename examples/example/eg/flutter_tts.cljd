@@ -12,7 +12,7 @@
     [tilton.mx.cell.base :as cbase]
     [tilton.mx.util :as util]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
              fm* mav mx-bound? wmx-iso cinfo]]
     [tilton.fmx.factory :refer [deftag deftags deftags-plus] :as fxf]
     [tilton.fmx.api :as fx
@@ -70,8 +70,9 @@
                                        (when (mget (fm* :auto-play) :value)
                                          (do-stop me)       ;; <-- new since livecode #1
                                          (do-speak me)))))]
-                      (when-let [prefs (mget me :prefs)]
-                        (:lg-current prefs)))
+                      (if-let [prefs (mget me :prefs)]
+                        (:lg-current prefs)
+                        "en-AU"))
      }
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter TTS Demo")})}
@@ -136,7 +137,7 @@
      :mainAxisAlignment m/MainAxisAlignment.center}
     (icon-button
       {:key         (m/ValueKey label)
-       :icon        (fx/icon {:icon icon})
+       :icon        (fx/icon icon)
        :iconSize    48
        :color       color
        :splashColor splash-color
@@ -168,14 +169,16 @@
        :title           (m/Text "Auto-play")
        :value           (cF+ [:input? true
                               :watch (fn [_ me new prior _]
+                                       (dp :watching!!!!! prior)
                                        (when (mx-bound? prior)
                                          (when-let [db (mav :db)]
                                            (.put ^hv/Box db "auto-play" new)
                                            (when (mget (fm* :auto-play) :value)
                                              (do-stop me)   ;; <-- new since livecode #1
                                              (do-speak me)))))]
+                          (dp :prefs (mav :prefs))
                           (if-let [prefs (mav :prefs)]
-                            (:auto-play prefs)
+                            (boolean (:auto-play prefs))
                             false))
        :onChanged       (cF (fn [new] (wmx-iso (mswap! me :value not))))}
       {:name :auto-play})))
@@ -183,8 +186,7 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn do-speak [me]
-  (let [; app (mx/fasc-inclusive :app)                               ;; turns out 'me' _is_ the app
-        fts ^FlutterTts (get-fts)
+  (let [fts ^FlutterTts (get-fts)
         pitch (mget (fm* :pitch) :value)
         volume (mget (fm* :volume) :value)
         speech-rate (mget (fm* :speech-rate) :value)

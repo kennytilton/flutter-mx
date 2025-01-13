@@ -15,8 +15,8 @@
 
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             navig fmu muv fm* mav mx-bound? wmx-iso with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.isolate.common :as cmn
      :refer [clock-face slow-is-prime? dbgiso]]))
@@ -30,7 +30,6 @@
                                    .fontSize 24))
        :value           (cI starting)
        :onChanged       (cF #(wmx-iso
-                               (dp :go!--------------------------------)
                                (mset! me :value %)
                                (mset! (fmu :primer) :of 9000039)))}
       {:name :use-compute?})))
@@ -47,7 +46,6 @@
          (fx/floating-action-button
            {:onPressed (fx/dart-cb []
                          (wmx-iso
-                           (dp :bump!------------------)
                            (mswap! (fmu :primer) :of + 2)))}
            (m/Icon m/Icons.play_arrow
              .color m/Colors.black))}
@@ -57,21 +55,17 @@
           (use-compute? false)
           (fx/row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
             (fx/text {:style (p/TextStyle .fontSize 24)}
-              {:name      :primer
-               :of        (cI 9000039)
-               :prime? (cF+ [:async? true
-                                #_#_ :watch (fn [_ me new old _]
-                                         (dp :prime-of? new))]
-                            (let [n (mget me :of)
-                                  use? (mx/muv :use-compute?)]
-                              (dp :prime?-computing!!!! n :in-iso? use?)
-                              (if use?
-                                (fnd/compute slow-is-prime? n)
-                                (future (slow-is-prime? n)))))}
-              "" #_ (str "Is " (mget me :of) " prime? "))
+              {:name   :primer
+               :of     (cI 9000039)
+               :prime? (cF+ [:async? true]
+                         (let [n (mget me :of)
+                               use? (mx/muv :use-compute?)]
+                           (if use?
+                             (fnd/compute slow-is-prime? n)
+                             (future (slow-is-prime? n)))))}
+              "" #_(str "Is " (mget me :of) " prime? "))
             ; ... results:
             (prime-decision))
-
           (fx/text {:style (p/TextStyle .fontSize 16)}
             "Tap for next in 9000041,.49,.59,.67,.."))))))
 
@@ -83,8 +77,9 @@
                       {:fontSize   24
                        :fontWeight m/FontWeight.w400
                        :color      (if prime? m/Colors.green m/Colors.red)})))}
+      {:name :prime-dec-text}
       (let [{:keys [of prime?]} (mget (fmu :primer) :prime?)]
-        (dp :decision-sees of :prime? prime? )
+        (dpx :decision-sees of :prime? prime?)
         (str "Is " of " prime? "
           (cond
             (nil? prime?) "..."

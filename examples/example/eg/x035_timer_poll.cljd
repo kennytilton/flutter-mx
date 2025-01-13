@@ -7,8 +7,7 @@
     ["package:flutter/painting.dart" :as p]
     ["package:http/http.dart" :as dht]
     [tilton.mx.cell.base :as cb]
-    ;[tilton.mx.model.core :refer [with-par]]
-    [tilton.mx.api :refer [wmx-iso with-par dp dpx cF cF+ cI mget mswap! mset! mav fasc fm* muv fmu minfo] :as mx]
+    [tilton.mx.api :refer [wmx-iso dp dpx cF cF+ cI mget mswap! mset! mav fasc fm* muv fmu minfo] :as mx]
     [tilton.fmx.api :refer [dart-cb] :as fx]))
 
 ;;; This is a half-baked example that shows a widget dispatching
@@ -61,10 +60,10 @@
                 "Making fetch #")))
           (fx/text
             {:style (fx/within-ctx [me ctx]
-                      (.-headline4 (.-textTheme (m/Theme.of ctx))))}
+                      (.-headlineMedium (.-textTheme (m/Theme.of ctx))))}
             {:name  :counter
              :value (cI 0)}
-            (str (mx/my-value)))
+            (str (mav :value)))
           (fx/text {}
             {:name      :ae-says
              :ae-lookup (cF+ [:async? true

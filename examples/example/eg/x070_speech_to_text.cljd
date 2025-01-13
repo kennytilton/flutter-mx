@@ -1,0 +1,223 @@
+(ns example.eg.x070-speech-to-text
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+
+    ;; --- https://pub.dev/packages/speech_to_text -------------
+    ["package:speech_to_text/speech_to_text.dart" :as s2t]
+    ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as s2tpi]
+    ["package:speech_to_text/speech_recognition_error.dart" :as s2te]
+    ["package:speech_to_text/speech_recognition_result.dart" :as s2tr]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :refer [dp dpx minfo cF cF+ cI cFn cFonce mmx-md mget mset! mswap! mupdate! fm* fmu fasc mav] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx
+             material-app scaffold app-bar floating-action-button
+             center column row text sized-box]]))
+
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+; !!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!
+;
+; The app's ios/Runner/Info.plist  must contain an NSSpeechRecognitionUsageDescription key
+; with a string value explaining to the user how the app uses this data.
+; Likewise, specify a NSMicrophoneUsageDescription.
+; Easiest way to edit is to double-click Info.plist, found at the path shown.
+
+; DISCLAIMER: this example is quite rough and just shows how to get some transcription
+; working, more or less. Work will continue in a full-blown multi-file demo app derived
+; from the existing Text-to-speech demo, where we will try to create a voice chat app.
+; This app will expose GUI controls for various Speech-to-text options.
+;
+; USAGE: Watch your console to see when transcription actually begins!
+; When you see:
+; flutter: :DPR> :starting-listening
+; ...(not really, the app just kicks off listen)
+;
+; Next you will see:
+; flutter: :DPR> :sp-status!!!!!!!!!!!! listening
+; ...this message is from the package and is accurate
+
+; Fun note: I tested with fr-FR as locale ID because my accent is pretty good, and
+; it did recognize my HS French. Mrs. Willens would be proud.
+
+; PROBLEMs:
+; Hot reload does not seem to be enough. Jump to the console and hit return
+; If still no good, close sim and start over
+;
+; When the app sits for a *waves hands* long time, the SpeechToText (S2T) will become
+; incurably "unavailable. Restart the sim.
+;
+; If I start talking while the ear is yellow, meaning not yet listening after a mic click,
+; dictation is partial or otherwise broken.
+;
+; Debugging is confusing because the pauseFor can be exceeded but we do not see anything
+; because transcription silently runs taking another few seconds.
+
+
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
+
+(defn stop-listening [me]
+  (dp :requesting-stop)
+  (.stop ^s2t/SpeechToText (mav :speech)))
+
+(defn start-listening [me]                                  ;; me s/b ear
+  (dp :starting-listening)
+  (let [s ^s2t/SpeechToText (mav :speech)
+        options (s2tpi/SpeechListenOptions
+                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
+                  .cancelOnError true
+                  .listenMode s2t/ListenMode.dictation      ;; search | confirmation | dictation
+                  .autoPunctuation true)
+        result-listener (fn [^s2tr/SpeechRecognitionResult r]
+                          (let [wds (.-recognizedWords r)]
+                            (dp :result-words!! wds)
+                            (when (.-finalResult r)
+                              (dp :result-final!! wds)
+                              (try-wmx-iso
+                                (mset! (fmu :app) :transcript wds))
+                              (dp :stopping-on-final-result-perhaps-reduntantly)
+                              (.stop s))))]
+    (.listen s .onResult result-listener
+      .listenFor (Duration .seconds 20)                     ;; what it says
+      .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
+      .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
+      .listenOptions options)
+    (mset! (fmu :app) :sp-status :started)))
+
+;;; --- mic ----------------------------------------
+
+(defn make-mic []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF (dp :mic-color-sees-status (mav :sp-status))
+                                (case (mav :sp-status)
+                                  :available m/Colors.cyan
+                                  :unavailable m/Colors.red
+                                  :listening m/Colors.grey
+                                  :done m/Colors.cyan
+                                  m/Colors.grey))
+                :elevation    4.0}
+    {:name :ear}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    (dp :starting-listening)
+                    (mset! (fmu :app) :transcript "")
+                    (start-listening (fmu :ear)))
+       :icon      (m/Icon m/Icons.mic)
+       :color     (cF (fx/within-ctx [me ctx]
+                        (dp :mic-status (mav :sp-status))
+                        m/Colors.black))})))
+
+;;; --- ear ------------------------------------------
+
+(defn make-ear []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF (dp :ear-color-sees-status (mav :sp-status))
+                                (case (mav :sp-status)
+                                  :started m/Colors.yellow
+                                  :stopped m/Colors.orange
+                                  :listening m/Colors.red
+                                  m/Colors.grey))
+                :elevation    4.0}
+    {:name :ear}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    ; todo offer cancel as well as stop, or have mic handle
+                    ;   stop and this ear mean cancel while listening
+                    (when (= :listening (mav :sp-status))
+                      (dp :stopping-on-ear-press)
+                      (mset! (fmu :app) :sp-status :stopped)
+                      (stop-listening (fmu :ear))))
+       :icon      (m/Icon m/Icons.hearing)
+       :color     (cF (fx/within-ctx [me ctx]
+                        m/Colors.black))})))
+
+;;; --- make app -----------------------------------------------
+
+(def user-prompt "(click mic icon, wait for red ear, then speak)")
+(def you-said "You said....")
+
+(defn make-app []
+  (material-app
+    {:title "Flutter/MX Speech->Text Demo"
+     :theme (m/ThemeData
+              .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    {:name             :app
+     :transcript       (cI "...")
+     :speak-prompt     (cF (if (= (mget me :transcript) "...")
+                             user-prompt you-said))
+     :speech           (s2t/SpeechToText)
+     :sp-status        (cI nil :watch (fn [_ me new _ _]
+                                        (dp :sp-status-now!!!!!!!! new)))
+     :has-speech?      (cF+ [:async? true
+                             :watch (fn [_ me new _ _]
+                                      (dp :has-speech? new (mget me :speech))
+                                      (when-let [^s2t/SpeechToText sp (mget me :speech)]
+                                        (dp :post-init-avail (.-isAvailable ^s2t/SpeechToText sp))
+                                        (dp :post-init-listening (.-isListening ^s2t/SpeechToText sp))
+                                        (dp :post-init-has-error (.-hasError ^s2t/SpeechToText sp))
+                                        (when new
+                                          (try-wmx-iso
+                                            (mset! me :sp-status :available)))))]
+                         (when-let [^s2t/SpeechToText sp (mget me :speech)]
+                           (.initialize sp
+                             .onStatus (fn [status]
+                                         (try-wmx-iso
+                                           (dp :onStatus!!!!!!!!-sets-status (keyword status))
+                                           (mset! me :sp-status (keyword status))))
+                             .onError (fn [^s2te/SpeechRecognitionError err]
+                                        (dp :sp-error!!!!! (.-errorMsg err))
+                                        (try-wmx-iso
+                                          (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
+     :locale-names     (cF+ [:async? true]
+                         (when (mget me :has-speech?)
+                           (.locales ^s2t/SpeechToText (mget me :speech))))
+     :system-locale-id (cF+ [:async? true
+                             :watch (fn [_ _ new _ _] (dpx :loc-sys-id-2 new))]
+                         (when-let [lox-names (mget me :locale-names)]
+                           (dp :locales (count lox-names))
+                           (let [sys-loc (await
+                                           (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
+                             (dpx :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
+                             (.-localeId ^s2t/LocaleName sys-loc))))
+     }
+    (scaffold
+      {:appBar (app-bar
+                 {:title           (m/Text "Flutter/MX Dicto")
+                  :backgroundColor (cF (.-inversePrimary
+                                         (.-colorScheme ^m/ThemeData (mav :theme))))})}
+      (center
+        (fx/padding {:padding (m/EdgeInsets.all 16.0)}
+          (column {:mainAxisAlignment m/MainAxisAlignment.center}
+            (row {:mainAxisSize m/MainAxisSize.min}
+              (make-mic)
+              (sized-box
+                {:width 28.0})
+              (make-ear))
+            (sized-box
+              {:height 28.0})
+            (text {:style (p/TextStyle
+                            .color m/Colors.blue
+                            .fontSize 24)}
+              (mav :speak-prompt))
+            (sized-box
+              {:height 28.0})
+            (text
+              {:style (p/TextStyle
+                        .color m/Colors.black
+                        .fontSize 24)}
+              {:value (cI "(click mic and speak)")}
+              (str (mav :transcript)))))))))
+
+
+
+

@@ -1,8 +1,9 @@
 (ns example.eg.x02-two-counters-ala-flux
+  "In response to a challenge, we show what it would be like to have
+  a single map serving as a store, a la Flux."
   (:require
     [clojure.string :as str]
-    [tilton.mx.cell.core :refer [cF cI]]
-    [tilton.mx.model.core :refer [mget mset! mswap!] :as md]
+    [tilton.mx.api :refer [dp minfo mav fasc cF cI mget mset! mswap!]]
     [tilton.fmx.api :as fx]
 
     ["package:flutter/widgets.dart"
@@ -16,17 +17,17 @@
   (fx/expanded
     (fx/column
       {:mainAxisAlignment MainAxisAlignment/center}
-      {:name  :counter-col
-       :value (cF (let [app (md/fm-ascendant :counter-app me :must? true)]
-                    (get-in (mget app :flux-store) [:counters counter-key])))}
+      {:name counter-key
+       :counter (cF (get-in (mav :flux-store) [:counters counter-key]))}
       (fx/text (str/capitalize (name counter-key)))
       (fx/text {:style (TextStyle
                          .color m/Colors.cyan
                          .fontSize 32.0)}
-        (str (md/muv :counter-col)))
+        {:name :ctr-text}
+        (str (mav :counter)))
       (fx/elevated-button
         {:onPressed (fx/dart-cb []
-                      (mswap! (md/fm-ascendant :counter-app me)
+                      (mswap! (fasc :counter-app)
                         :flux-store update-in [:counters counter-key] inc))}
         (fx/text "+")))))
 

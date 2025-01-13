@@ -1,0 +1,71 @@
+(ns example.demo.todoMVX.persist
+  (:require
+    ["package:hive_flutter/hive_flutter.dart" :as hv]
+    ["dart:convert" :as convert]
+    ["package:uuid/uuid.dart" :as uu]
+    [tilton.mx.util :as util]
+    [clojure.walk :as walk]))
+
+(def +DB+ (atom nil))                                       ;; n.b. just a cache, NOT reactive
+(defn ^hv/Box? DB [] (deref +DB+))
+(defn ^hv/Box? DB! [db] (reset! +DB+ db))
+
+(def +uuid+ (atom nil))
+(defn ^uu/Uuid UUID []
+  (or (deref +uuid+)
+    (uu/Uuid)))
+
+(defn td-store
+  [td-map]
+  (let [uid (:uid td-map)]
+    (assert uid "td-rewrite map must include uid")
+    (.put (DB) uid
+      (convert/jsonEncode
+        (walk/stringify-keys
+          (select-keys td-map
+            [:uid :created-at :title :completed]))))
+    uid))
+
+(defn td-initialize
+  "Create a Hive to-do from a CLJD map alone.
+  Returns the unique storage key generated for the data."
+  [collection-name td-map]
+  (when-let [uid (:uid td-map)]
+    (throw (Exception. (str "td-initialize> sees :uid " uid ", suggesting td already written"))))
+
+  (let [new-uid (str collection-name "/" (.v4 (UUID)))]
+    (td-store
+      (assoc td-map :uid new-uid))
+    new-uid))
+
+(defn td-rewrite
+  "Update a stored to-do given only a CLJD map of its properties.
+   Map must contain non-nil :uid."
+  [td-map]
+  (assert (:uid td-map)
+    "td-rewrite> map must include uid")
+  (td-store td-map)
+  (:uid td-map))
+
+(defn td-delete
+  "Deletes storage associated with uid."
+  [uid]
+  (assert uid "td-delete> uid argument is nil. s/b string ID.")
+  (.delete (DB) uid)
+  uid)
+
+;;; --- collection-level utilities -------------
+
+(defn collection-docs [collection-name]
+  (let [all-td-keys (collection-keys collection-name)]
+    (mapv (fn [td-key]
+            (util/dart-map->cljd-map
+              (convert/jsonDecode (.get (DB) td-key))))
+      all-td-keys)))
+
+(defn collection-keys [collection-name]
+  (into #{} (.-keys (DB))))
+
+(defn collection-delete-all [collection-name]
+  (doseq [k (collection-keys collection-name)]
+    (td-delete k)))

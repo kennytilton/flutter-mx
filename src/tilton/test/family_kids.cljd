@@ -25,9 +25,10 @@
     [tilton.mx.model.peek :refer [mref? cref?]]
     [tilton.mx.model.base :refer [md-cz md-cell]]
     [tilton.mx.model.core
-     :refer [the-kids mdv! mget fm! make mset! *md-quiesce-log?*]
+     :refer [the-kids mdv!  fm! make mset! *md-quiesce-log?*]
      :as md]
-    ))
+    [tilton.mx.api :refer [dp dpx wmx-iso minfo mget mset! mupdate! mav muv
+                           navig fasc fm* cF cF+ cI cFonce ]]))
 
 (defn k-notq2be []
   (binding [*md-quiesce-log?* true]
@@ -51,16 +52,19 @@
         (assert (not (empty? (mget f :kids))))
         (assert (= 42 (mdv! :yep :value f)))
 
-        (dp :ok-42!!!!!!!!)
+        (dp :ok-42!!)
         (let [dmw (first (mget f :kids))]
           (assert (mref? dmw))
+          (dp :ok-42-2!!)
           (mset! f :ee 0)
+          (dp :ok-42-3!!)
           (assert (empty? (mget f :kids)))
 
-          (dp :dmw @dmw :meta (meta dmw))
+          ;; (dp :dmw @dmw :meta (meta dmw))
           ;; todo get kids observe to quiesce kids
 
-          (assert (= :md-quiesced (:state (meta dmw)))))))))
+          (assert (= :md-quiesced (:state (meta dmw)))))
+        (dp :k-notq2be-exit)))))
 
 (defn run-tests []
   (k-notq2be)

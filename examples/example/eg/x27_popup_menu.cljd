@@ -4,7 +4,7 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.api :refer [cF cI cFn cFonce mpar mget mset! mswap! fasc fmu fm*] :as mx]
+    [tilton.mx.api :refer [cF cI cFn cFonce mmx-md mget mset! mswap! fasc fmu fm*] :as mx]
     [tilton.fmx.api :refer [dart-cb] :as fx]))
 
 (def cg4-languages [{:code "es", :name "Spanish", :translation "Hola, mundo."}
@@ -22,6 +22,10 @@
 (defn language-selector-item-builder []
   (fx/within-ctx [me ctx]
     (fn ^#/(List m/PopupMenuEntry) [ctx]
+      ; next we see a so-called "magicast" achieved by
+      ; the pattern (let [^cast dummy expr] dummy).
+      ; Simply hinting the returned expression without
+      ; the LET var will not work.
       (let [^#/(List m/PopupMenuEntry) result
             (mapv (fn [{:keys [code name]}]
                     (m/PopupMenuItem
@@ -43,14 +47,14 @@
 
 (defn language-selector []
   (fx/popup-menu-button
-    {:initialValue (cFonce (mget me :lang-code))
+    {:initialValue (cFonce (mget me :wh-name))
      :onSelected   (dart-cb [item]
-                     (mset! me :lang-code item))
+                     (mset! me :wh-name item))
      :itemBuilder  (language-selector-item-builder)}
     {:name           :lang-picker
      :languages      (cI cg4-languages)                     ;; cI? To allow for growth, sth NOT utilized this example
-     :lang-code      (cI nil #_ "fr") #_(cFn (:code (first (mget me :languages))))
-     :lang-preferred (cF (when-let [code (mget me :lang-code)]
+     :wh-name      (cI nil #_"fr") #_(cFn (:code (first (mget me :languages))))
+     :lang-preferred (cF (when-let [code (mget me :wh-name)]
                            (some #(when (= code (:code %)) %)
                              (mget me :languages))))}
     (fx/container

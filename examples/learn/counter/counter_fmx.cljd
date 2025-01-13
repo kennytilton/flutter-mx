@@ -1,0 +1,180 @@
+(ns learn.counter.counter-fmx
+  ;
+  ; The classic Flutter Counter App, now evolved over several live-coding
+  ; videos to be a poor imitation of blackjack.
+  ;
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["dart:math" :as math]
+    [clojure.string :as str]
+    [tilton.mx.foundation :refer [PObserver]]
+    [tilton.mx.model.peek :refer [Model]]
+    [tilton.mx.api :as mx
+     :refer [dp minfo cinfo def-mx-props mget mupdate! mset! fasc fmu fm* mav muv cI cF cF+ cFI]]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx material-app scaffold center text row column app-bar
+             floating-action-button]]))
+
+(declare home-page)
+
+(defn make-app []
+  (material-app
+    {:title "Flutter Demo"
+     :theme (m/ThemeData
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.deepPurple))}
+    (home-page .title "Blackjack-Ish")))
+
+(defn main []
+  (.ensureInitialized w/WidgetsFlutterBinding)
+  (fx/run-fx-app
+    (make-app)))
+
+;;; --- helpers -----------------------------------------
+
+(defn headline-med []
+  (within-ctx [me ctx]
+    (-> (m/Theme.of ctx) .-textTheme .-headlineMedium)))
+
+(defn is-triangular? [n]
+  (let [basis (int (.floor (math/sqrt (* 2 n))))]
+    (= n (/ (* basis (inc basis)) 2))))
+
+(defn triangulars-not [max]
+  (remove is-triangular?
+    (range (inc max))))
+
+(defn random-goal []
+  (let [non-tris (triangulars-not 22)]
+    (rand-nth non-tris)))
+
+(defmacro value-descr [value-name value desc$]
+  `(row {:mainAxisAlignment m/MainAxisAlignment.center}
+     (fx/container {:constraints (m/BoxConstraints .minWidth 36)
+                    :margin      (m/EdgeInsets.only .right 12)
+                    :alignment   m/Alignment.centerRight}
+       (text
+         {:style (headline-med)}
+         {:name ~value-name}
+         ~value))
+     (text
+       {:style (headline-med)}
+       ~desc$)))
+
+
+;;; --- domain -----------------------------------
+
+(deftype Hand []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]
+    #_ (dp :hand-sees prop :now new-value)))
+
+(def-mx-props h- goal dealt dealt-ct discards held held-sum outcome)
+
+(defn mk-hand []
+  (mx/make (Hand)
+    :goal     (cFI (rand-nth (triangulars-not 32)))
+    :dealt-ct (cI 0)
+    :dealt    (cF (range 1 (inc (mav :dealt-ct))))
+    :discards (cI #{})
+    :held     (cF (let [discards (mav :discards)]
+                    (remove #(contains? discards %)
+                      (mav :dealt))))
+    :held-sum (cF (apply + (mav :held)))
+    :outcome  (cF (cond
+                    (= (mav :held-sum) (mav :goal)) :win
+                    (> (mav :held-sum) (mav :goal)) :lose))))
+
+;;; --- components ----------------------------------------
+
+(defn outcome []
+  (fx/visibility
+    {:visible (cF (not (nil? (h-outcome (muv :hand)))))}
+    {:name :outcome}
+    (fx/image
+      {:image  (cF (m/AssetImage
+                     (if (= :win (h-outcome (muv :hand)))
+                       "image/trophy.jpeg" "image/game-over.png")))
+       :height 256})))
+
+(defn game-difficulty []
+  (fx/row {:mainAxisAlignment m/MainAxisAlignment.center}
+    {:name     :difficulty
+     :selected (cI :easy)}
+    (mapv (fn [dgr]
+            (fx/sized-box {:width 144}
+              (fx/radio-list-tile
+                {:controlAffinity m/ListTileControlAffinity.leading
+                 :title           (m/Text (str/capitalize (name dgr)))
+                 :value           dgr
+                 :groupValue      (cF (mav :selected))
+                 :onChanged       (dart-cb [v]
+                                    (cond
+                                      (pos? (h-dealt-ct (muv :hand)))
+                                      (fx/user-alert ctx "Difficulty cannot be changed mid-game.")
+                                      :else
+                                      (mset! (fasc :difficulty) :selected v)))}
+                {:name dgr})))
+      [:easy :hard])))
+
+(defn playing-card [i]
+  (fx/icon-button
+    {:icon      (cF (m/Icon (if (mav :discarded?)
+                              m/Icons.circle_outlined m/Icons.add)))
+     :onPressed (dart-cb []
+                  (cond
+                    (and (mav :discarded?) (= :hard (muv :difficulty :selected)))
+                    (fx/user-alert ctx "Un-discarding not allowed in hard mode.")
+                    :else (mupdate! (muv :hand) :discards
+                            (if (mav :discarded?) disj conj) i)))}
+    {:discarded? (cF (contains? (h-discards (muv :hand)) i))}))
+
+(defn hand-of-cards []
+  (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    {:name     :hand
+     :value (cI (mk-hand))}
+    (mapv (fn [i]
+            (playing-card i))
+      (h-dealt (mav :value)))))
+
+(defn dealer-fab []
+  (floating-action-button
+    {:tooltip           "Increment!"
+     :disabledElevation 1
+     :onPressed         (cF (dart-cb []
+                              (if (= :deal (mav :action))
+                                (mupdate! (muv :hand) :dealt-ct inc)
+                                (mset! (fmu :hand) :value (mk-hand)))))}
+    {:name   :fab
+     :action (cF (if (h-outcome (muv :hand))
+                   :restart :deal))}
+    (m/Icon (if (= :deal (mav :action))
+              m/Icons.add m/Icons.restore))))
+
+(defn home-page [.title]
+  (scaffold
+    {:appBar               (app-bar {:title           (m/Text title)
+                                     :backgroundColor (within-ctx [me ctx]
+                                                        (-> (m/Theme.of ctx) .-colorScheme .-inversePrimary))})
+     :floatingActionButton (cF (dealer-fab))}
+    (center
+      (column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (game-difficulty)
+        ; (fx/sized-box {:height 36})
+        (value-descr :goal
+          (str (h-goal (muv :hand)))
+          "is our goal")
+        (fx/sized-box {:height 36})
+        (m/Text "We have pushed the button N times:")
+        (text {:style (within-ctx [me ctx]
+                        (-> (m/Theme.of ctx) .-textTheme .-headlineMedium))}
+          (str (h-dealt-ct (muv :hand))))
+        (hand-of-cards)
+        (fx/sized-box {:height 36})
+        (value-descr :held-sum
+          (str (h-held-sum (muv :hand)))
+          "sums the held cards")
+        (outcome)))))

@@ -91,9 +91,7 @@
                                             ;; spec says commit on blur...
                                             (commit-to-do-editing (fm* :todo-editor) todo)
                                             (mset! (fasc :item-control) :editing? false))))}
-                    {:host tile}
-                    ;; ^^^ this widget is a delegate, not a child, so we record the ListTile as the "host",
-                    ;; and modified navigation to try any host if "parent" is nil while searching up the Matrix.
+                    {:mx [tile :title]}
                     (fx/container
                       {:margin (.only m/EdgeInsets .left 52)}
                       (fx/material {:elevation   3.0
@@ -125,7 +123,7 @@
                            :value (cI title)}))))))}
     {:name :todo-edt
      :todo todo
-     :host me}))
+     :host [me :tile]}))
 
 (defn todo-list-item [todo]
   (fx/dismissible

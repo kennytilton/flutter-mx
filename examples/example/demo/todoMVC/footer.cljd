@@ -5,15 +5,15 @@
     ["package:flutter/painting.dart" :as p]
 
     [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.api :refer [mget mset! mswap! mkids cI cF]]
+    [tilton.mx.api :refer [mav mget mset! mswap! mkids cI cF]]
     [tilton.fmx.api :refer [dart-cb my-app] :as fx]
 
     [example.demo.todoMVC.common :as cmm
-     :refer [ my-todo-list ]]
+     :refer [my-todo-list]]
     [example.demo.todoMVC.todo :refer [td-completed] :as todo]))
 
 (defn items-remaining-display []
-  (fx/text {}{:name :remaining}
+  (fx/text {} {:name :remaining}
     (if-let [td-lst (my-todo-list)]
       (let [remaining (remove td-completed (mkids td-lst))]
         (str (count remaining)
@@ -40,29 +40,22 @@
           ;; where "me" is no longer this :completions object, so they do not have to navigate to it.
           ;; This trick rarely gets used.
           choice (fn [completion-enum label]
-                   (fx/ink-well
-                     {:onTap (dart-cb []
-                               (mset! selector
-                                 ;; ^^^ lexical scope is a big Lisp win
-                                 :selection completion-enum))}
-                     {:name :choice}
-                     (fx/container
-                       {:decoration (cF                     ;; we can compute "Flutter" properties as well as app semantic properties
-                                      (when (mget me :selected?)
-                                        ;; next we see that a "native" Flutter object can be mingled with FMX objects
-                                        (m/BoxDecoration
-                                          .border (.all m/Border .color (cmm/title-red) .width 0.5)
-                                          .borderRadius (m/BorderRadius.all (m.Radius/circular 4.0)))))}
-                       {:name :completion-cont
-                        :selected? (cF ;; for a bit of readability, we reify an ad hoc "selected?" property
-                                     ;; so it can be used directly by the decoration rule ^^^.
-                                     (= completion-enum
-                                       (mget selector :selection)))}
-                       (fx/padding
-                         {:padding (m/EdgeInsets.all 3.0)}
-                         ;; note again that a native Flutter m/Text can be mingled with FMX, here
-                         ;; an m/Text will become the :child of an FMX padding widget.
-                         (m/Text label)))))]
+                   (fx/text-button
+                     {:onPressed (dart-cb []
+                                   (mset! selector
+                                     :selection completion-enum))
+                      :style     (cF (m/ButtonStyle .foregroundColor
+                                       (if (mget me :selected?)
+                                         (m/MaterialStateProperty.resolveWith
+                                           (fn [s]
+                                             m/Colors.blue))
+                                         (m/MaterialStateProperty.resolveWith
+                                           (fn [s] m/Colors.black)))))}
+                     {:selected? (cF                        ;; for a bit of readability, we reify an ad hoc "selected?" property
+                                   ;; so it can be used directly by the decoration rule ^^^.
+                                   (= completion-enum
+                                     (mget selector :selection)))}
+                     (m/Text label)))]
       [(choice :all "All")
        (choice :active "Active")
        (choice :done "Done")])))
@@ -77,9 +70,9 @@
      :maintainSize      true
      :maintainAnimation true
      :maintainState     true}
-    {:name :clr-comp-vis}
     (fx/text-button
       {:onPressed (dart-cb []
                     (mswap! (my-todo-list) :kids
                       (partial remove td-completed)))}
       (fx/text "Clear done"))))
+

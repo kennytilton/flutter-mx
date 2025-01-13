@@ -1,0 +1,154 @@
+(ns example.demo.ai.gemini.simple-text-and-image
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["dart:io" :as io]
+    ["dart:convert" :as convert]
+    [tilton.fmx.factory :refer [deftag] :as fxf]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset!
+             muv mav mx-bound? wmx-iso millis-now or-mx-bound]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    ["package:google_generative_ai/google_generative_ai.dart" :as ai]))
+
+;;; DOUBLE-ALERT!!!!!!!!!!!!: this is an unfinished non-working example.
+
+;;; ALERT!!!!!!!!!!!!!!!!!!!!!!!
+; To run this example:
+; 1. Get a Google API Key
+;    a. go to https://aistudio.google.com/app/prompts/new_chat
+;    b. click "Get API Key", a blue button write at the top left
+;    c. in your login shell add:
+;              GOOG_AI_API_KEY="your API key here"
+; 2. In a terminal:
+;              open -a Simulator
+; 3. In a terminal, tart f/mx with:
+;              clj -M:cljd flutter --dart-define=GOOG_AI_API_KEY=$GOOG_AI_API_KEY
+
+
+
+(deftag fxf/non-widget theme-data m/ThemeData)
+
+(def vision-query "What do you see?")
+
+(defn speech-input [prompt-initial]
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 16.0)
+       :controller (cFonce
+                     (m/TextEditingController .text (mav :value)))
+       :onChanged   (dart-cb [text]
+                      (mset! me :value text))
+       :minLines   2 :maxLines 4}
+      {:name  :prompt
+       :value (cI prompt-initial)})))
+
+(defn generate-button []
+  (fx/elevated-button
+    {:onPressed (cF (dart-cb []
+                      (mset! me :value true)))}
+    {:name :generate
+     :value (cI nil :ephemeral? true)}
+    (m/Text "Go")))
+
+(defn make-app []
+  ;(let [cat (m/AssetImage "image/cat_on_snow.jpeg")]
+  #_
+  (let [cat (.load rootBundle "image/cat_on_snow.jpeg")]
+    ;(m/AssetImage "image/einstein.jpeg")
+    ; final byteData = await rootBundle.load('assets/$path');
+    (dp :cat!!! cat)
+    (dp :bytes (.-bundle cat)))
+
+  (material-app
+    {:title "Flutter/MX Hello Gemini"
+     :theme (cF (theme-data
+                  {:primarySwatch m/Colors.teal}))}
+    {:gem-pro (cF (ai/GenerativeModel
+                    .model "gemini-pro-vision"
+                    .apiKey (String/fromEnvironment "GOOG_AI_API_KEY")))
+     :test (cF (dp :ctx!!!! fxf/*ctx*)
+             (dp :defbun (m/DefaultAssetBundle.of fxf/*ctx*))
+             (let [bundle (m/DefaultAssetBundle.of fxf/*ctx*)]
+               (let [cat-bytes (.load bundle "image/cat_on_snow.jpeg")]
+                 (dp :cat cat-bytes))))}
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "Flutter/MX Gemini Text/Image")})}
+      (center
+        (column
+          {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+          (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+            (fx/sized-box {:width 800}
+              (speech-input vision-query))
+            (generate-button))
+          (fx/container {:width 900}
+            (fx/text {:maxLines nil
+                      :overflow m/TextOverflow.clip
+                      :softWrap true}
+              {:response (cF+ [:async? true
+                               :async-then (fn [c ^ai/GenerateContentResponse raw] (dp :raw (.-text raw))
+                                             (.-text raw))]
+                           (when (muv :generate)
+                             (dp :generating!!!!!!! (muv :prompt))
+                             (let [content (.text ai/Content (muv :prompt))]
+                               (.generateContent ^ai/GenerativeModel (mav :gem-pro)
+                                 [content]))))}
+              (or (mav :response)
+                ;(when (muv :generate) "thinking...")
+                "waiting..."))))))))
+
+;// Licensed under the Apache License, Version 2.0 (the "License");
+;// you may not use this file except in compliance with the License.
+;// You may obtain a copy of the License at
+;//
+;//     http://www.apache.org/licenses/LICENSE-2.0
+;//
+;// Unless required by applicable law or agreed to in writing, software
+;// distributed under the License is distributed on an "AS IS" BASIS,
+;// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;// See the License for the specific language governing permissions and
+;// limitations under the License.
+;
+;import 'dart:io';
+;
+;import 'package:google_generative_ai/google_generative_ai.dart';
+;
+;import 'util/resource.dart';
+;
+;void main() async {
+;  final apiKey = Platform.environment['GOOGLE_API_KEY'];
+;  if (apiKey == null) {
+;    stderr.writeln(r'No $GOOGLE_API_KEY environment variable');
+;    exit(1);
+;  }
+;  final model = GenerativeModel(model: 'gemini-pro-vision', apiKey: apiKey);
+;  final prompt = 'What do you see?';
+;  print('Prompt: $prompt');
+;
+;  final (catBytes, sconeBytes) = await (
+;    readResource('cat.jpg'),
+;    readResource('scones.jpg'),
+;  ).wait;
+;  final content = [
+;    Content.multi([
+;      TextPart(prompt),
+;      // The only accepted mime types are image/*.
+;      DataPart('image/jpeg', catBytes),
+;      DataPart('image/jpeg', sconeBytes),
+;    ])
+;  ];
+;
+;  final response = await model.generateContent(content);
+;  print('Response:');
+;  print(response.text);
+;}

@@ -1,0 +1,129 @@
+(ns example.demo.todoMVX.core
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:supabase_flutter/supabase_flutter.dart" :as supabase]
+    [tilton.mx.api :as mx]
+    [tilton.mx.base :refer [dprn dp dpx]]
+    [tilton.mx.api :refer [mget mswap! fasc cF cF+ cI]]
+    [tilton.fmx.api :refer [within-ctx dart-cb] :as fx]
+    [tilton.fmx.factory :as fxf]
+    [example.demo.todoMVX.common :as cmm]
+    [example.demo.todoMVX.state :as todo]
+    [example.demo.todoMVX.input :as input]
+    [example.demo.todoMVX.items :as items]
+    [example.demo.todoMVX.footer :as footer]))
+
+; step 1: set up a database on https://supabase.com/
+;         record the provided DB URL and private key
+; step 2: in your shell login, export the URL and key as SUPA_MVX_URL and SUPA_MVX_KEY
+; step 3: kill any running f/mx and with pwd as the f/mx root, start with:
+;         - open -A Simulator
+;         - source sup.sh
+; step 4: if after a day or two you get errors connecting to your DB, go to your
+;         Supa console and restart the DB, or upgrade so they do not shut it down
+
+(def app-theme (m/ThemeData
+                 .fontFamily "Helvetica Neue"
+                 .colorScheme (m/ColorScheme.dark
+                                .background (.fromRGBO m/Color 245 245 245 1))))
+
+;;;;;; --- the app --------------------------------------------------------
+(declare todos-dashboard todo-app-bar)
+
+(defn make-app []
+  (let [title "todo"]
+    (fx/material-app
+      {:title title
+       :theme app-theme}
+      {:name        :app
+       :todo-rows   (cF+ [:async? true
+                          :watch (fn [_ _ new _ _]
+                                   (dpx :todo-rows!!!! new))]
+                      (-> supabase/Supabase.instance.client
+                        (.from "to-do") .select))
+       :todo-list   (cF (when-let [rows (mget me :todo-rows)]
+                          (todo/make-ToDoList rows)))
+       :todo-listen (cF (-> supabase/Supabase.instance.client
+                          (.from "to-do")
+                          (.stream .primaryKey ["uid"])
+                          (.listen (fn [data]
+                                     (let [to-dos (map mx/dart-map->cljd-map data)]
+                                       (dpx :to-dos-LISTEN!!!!!! (count to-dos) :DBG!!!!!!! (:dbg-id @_cell))
+                                       (mx/wmx-iso
+                                         (when-let [lst (mget me :todo-list)]
+                                           (todo/ToDoList-refresh! lst to-dos))))))))
+       :todo-ch     (cF+ [:watch (fn [_ me ^supabase/RealtimeChannel ch _ _]
+                                   (dp :channel ch)
+                                   (when ch
+                                     (.subscribe ch (fn [status error]
+                                                      (if (= status supabase/RealtimeSubscribeStatus.subscribed)
+                                                        (dp :subscribed! ch status)
+                                                        (dp :subfail!!!!!! status error))
+                                                      nil))
+                                     (.onBroadcast ^supabase/RealtimeChannel ch
+                                       .event "test"
+                                       .callback (fn [payload] (dp :broad-on-got-payload payload)))))]
+                      (-> supabase/Supabase.instance.client
+                        (.channel "to-do"
+                          .opts (supabase/RealtimeChannelConfig .self true))))}
+      (fx/scaffold
+        {:appBar                  (todo-app-bar title)
+         :persistentFooterButtons [(footer/todos-dashboard)]}
+        (fx/ink {:color (cI m/Colors.white)}
+          (fx/column {}
+            ; oskool (input/todo-controls)
+            (items/todo-items)
+            (about-credits)))))))
+
+;;; --- the app bar -----------------------------------------------
+(defn todo-app-bar [title]
+  (fx/preferred-size
+    {:preferredSize (.fromHeight m/Size 128)}
+    (fx/container
+      (fx/safe-area
+        (fx/column
+          {:mainAxisAlignment m.MainAxisAlignment/center}
+          (fx/text
+            {:style (p/TextStyle
+                      .fontFamily "Helvetica Neue"
+                      .color (cmm/title-red)
+                      .fontWeight m/FontWeight.w100
+                      .fontSize 40.0)}
+            title)
+          (m/SizedBox .height 2.0)
+          (fx/row
+            {:mainAxisAlignment m.MainAxisAlignment/end}
+            (input/todo-toggle-all)
+            (m/Spacer)
+            ;(input/todo-broadcast-icon)
+            (input/todo-capture-icon)))))))
+;;; --- credits --------------------------------------------------------
+(defn about-credits []
+  (let [faint (p/TextStyle
+                .color m/Colors.grey
+                .fontSize 14.0)
+        credits ["Double-click a todo to edit."
+                 "Make title blank to delete. Or click the big red X."
+                 "Red indicates meaningless hits on FDA.gov."
+                 "by Kenny Tilton"
+                 "Flutter \u2022 Matrix \u2022 ClojureDart"]]
+    (fx/padding
+      {:padding (m/EdgeInsets.all 16.0)}
+      {:name          :credits-toggle
+       :show-credits? (cI false)}
+      (fx/column
+        (when (mget (fasc :credits-toggle) :show-credits?)
+          (fx/column
+            (mapv #(fx/text {:style faint} %) credits)))
+        (fx/icon-button
+          {:onPressed (dart-cb []
+                        ;(mx/counts-dump :banner)
+                        ;(mx/counts-reset)
+                        (mswap! (fasc :credits-toggle) :show-credits? not))
+           :icon      (within-ctx [me ctx]
+                        (m/Icon (if (mget (fasc :credits-toggle) :show-credits?)
+                                  m.Icons/info_outline m.Icons/info)
+                          .color m/Colors.grey))})))))
+

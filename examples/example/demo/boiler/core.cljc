@@ -4,7 +4,7 @@
     ["package:flutter/painting.dart" :as p]
     [tilton.mx.cell.base :as cty]
     [tilton.mx.model.core :refer [make]]
-    [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mpar mget mset! mswap! fm* fmu fasc mav] :as mx]
+    [tilton.mx.api :refer [dp minfo cF cI cFn cFonce mmx-md mget mset! mswap! fm* fmu fasc mav] :as mx]
     [tilton.fmx.api :as fx
      :refer [dart-cb within-ctx
              material-app scaffold app-bar floating-action-button

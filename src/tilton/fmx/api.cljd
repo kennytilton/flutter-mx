@@ -15,24 +15,29 @@
     [tilton.mx.base :refer [wtrx dp dpx mx-throw]]
     [tilton.mx.util :refer [atom?]]
     [tilton.mx.model.peek :refer [chk Model mref? minfo]]
+    [tilton.mx.model.core :as md]
     [tilton.mx.api :as mx
      :refer [cF+ mset! cI rmap-set! rmap-meta-set! make mget mget? mkids mswap! cFkids wmx-iso]]
-    [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx with-ctx *ctx*] :as fxf]))
+    [tilton.fmx.factory :refer [deftag deftags deftags-plus my-ctx binding-ctx *ctx*] :as fxf]))
 
-(defn fxctx []
+(defonce ^:dynamic *fx-app* (atom nil))
+(defn *ctx []
   fxf/*ctx*)
-
-(defn fx$sst-registry-initialize [tracking?]
-  (fxf/fx$sst-registry-initialize tracking?))
-
-(defn widget-key-clear []
-  (fxf/widget-key-clear))
 
 (defn widget-key
   ([me ctx] (widget-key me ctx :untag))
   ([me ctx tag]
    (dp :API-widg-key! (minfo me))
    (fxf/widget-key me ctx tag)))
+
+(defn initialize [& options]
+  (cty/cells-reset)
+  (md/md-quiesce-feature! true)
+  (fxf/fx$sst-registry-initialize true)
+  (fxf/widget-key-clear)
+
+  ;; (fxk/fmx-debugger-set! sample-debugger)
+  )
 
 (defn ctx-page-push
   ([ctx fx-page-def]
@@ -65,7 +70,7 @@
          (throw (Exception. (str "within-ctx> context is null for body: " '~body))))
        (when (not= ~ctx-var tilton.fmx.factory/*ctx*)
          (tilton.mx.base/dp :winctx-sees-ctx-diff ~ctx-var :dynctx tilton.fmx.factory/*ctx*))
-       (tilton.fmx.factory/with-ctx :within-ctx ~ctx-var
+       (tilton.fmx.factory/binding-ctx :within-ctx ~ctx-var
          ~@body))))
 
 (defmacro when-my-state [[state-var] & body]
@@ -87,6 +92,7 @@
      ^m/AnimationController? con#))
 
 (defn state-prop-get [me prop-key]
+  ;; todo why does this exist?
   (assert (contains? (deref me) prop-key)
     (str "my-state-prop> prop key " prop-key
       " not contained by fx/state of " (tilton.mx.api/minfo me)))
@@ -123,6 +129,7 @@
 ;;; ---- sundry factories  ------------------
 
 (deftag tilton.fmx.factory/kidless-childless checkbox-list-tile m/CheckboxListTile)
+(deftag tilton.fmx.factory/kidless-childless radio-list-tile m/RadioListTile)
 (deftag tilton.fmx.factory/konly-prop sized-box w/SizedBox [:child])
 
 #_(defmacro sized-box+expand [fx-props mx-props & children]
@@ -160,9 +167,9 @@
   (preferred-size m/PreferredSize)
   (animated-opacity m/AnimatedOpacity)
   (drawer-header m/DrawerHeader)
-  ;; (floating-action-button m/FloatingActionButton)
   (align m/Align)
   (visibility m/Visibility)
+  (offstage m/Offstage)
   (drawer m/Drawer)
   (sized-box m/SizedBox)
   (opacity m/Opacity)
@@ -173,8 +180,10 @@
 (deftags tilton.fmx.factory/kidless-childless
   (app-bar m/AppBar)
   (data-table m/DataTable)
+  (image w/Image)
   (list-tile m/ListTile)
   (layout-builder w/LayoutBuilder)
+  (text-form-field m/TextFormField)
   (flutter-logo m/FlutterLogo)
   (cupertino-activity-indicator m/CuptertinoActivityIndicator)
   (navigation-rail-destination w/NavigationRailDestination))
@@ -223,7 +232,6 @@
   (focus-scope m/FocusScope)
   (text-button m/TextButton)
   (focus+focus-node m/Focus.withExternalFocusNode)
-  (animated-builder m/AnimatedBuilder)
   )
 
 (deftags-plus tilton.fmx.factory/konly-prop [:child]
@@ -232,17 +240,17 @@
   (outlined-button m/OutlinedButton)
   (text-button m/TextButton)
   (intrinsic-width m/IntrinsicWidth)
-  (gesture-detector m/GestureDetector))
-
-(deftags-plus tilton.fmx.factory/kids-prop-dbg [:children]
-  (row m/Row))
+  (gesture-detector m/GestureDetector)
+  (form w/Form))
 
 (deftags-plus tilton.fmx.factory/kids-prop [:children]
   (stack m/Stack)
   (column m/Column)
-  ; (row m/Row)
+  (row m/Row)
   (list-view m/ListView)
   (grid-view+count m/GridView.count)
+  (tab-bar-view m/TabBarView)
+  (dropdown-menu )
   (wrap w/Wrap))
 
 (deftag tilton.fmx.factory/kids-prop
@@ -251,7 +259,10 @@
 (deftag tilton.fmx.factory/kids-prop
   bottom-navigation-bar m/BottomNavigationBar :items)
 
-(deftag tilton.fmx.factory/prop-param1-kidless icon m/Icon :icon)
+(deftag tilton.fmx.factory/kids-prop
+  dropdown-button-form-field m/DropdownButtonFormField :items)
+
+(deftag tilton.fmx.factory/konly-param1 icon m/Icon)
 
 (deftag tilton.fmx.factory/kids-kids list-view+builder m/ListView.builder)
 (deftag tilton.fmx.factory/kids-kids list-view+separated m/ListView.separated) ;; untested
@@ -262,6 +273,8 @@
 
 (deftag tilton.fmx.factory/konly-builder builder w/Builder)
 (deftag tilton.fmx.factory/konly-builder-stateful stateful-builder w/StatefulBuilder)
+(deftag tilton.fmx.factory/konly-builder-stateful form-field w/FormField)
+
 (deftag tilton.fmx.factory/konly-builder-stateful tween-animation-builder w/TweenAnimationBuilder)
 
 ;;; ---------------------------------------------------
@@ -282,6 +295,11 @@
          ;(tilton.mx.api/counts-reset)
          ~@body))))
 
+(defn local-check [tag ctx]
+  (dp :local-check-??? tag)
+  (m/debugCheckHasMaterialLocalizations ctx)
+  (dp :local-check-OK! tag))
+
 (defmacro my-app []
   ;; fasc "captures" 'me
   `(tilton.mx.api/fasc :app))
@@ -291,28 +309,131 @@
 (defmacro wrap-stateless [widget-expression]
   `(reify :extends (w/StatelessWidget)
      (~'build [self# ctx#]
-       (tilton.fmx.factory/with-ctx :wrapstless ctx#
+       (tilton.fmx.factory/binding-ctx :wrapstless ctx#
          ~widget-expression))))
 
 (defmacro wrap-unique-key [widget-expression]
-  `(reify :extends (m/StatefulWidget .key (foundation/UniqueKey))
+  `(reify :extends (w/StatefulWidget .key (foundation/UniqueKey))
      (~'createState [_#]
        (reify :extends w/State
          (~'build [_# ~'ctx]
-           (tilton.fmx.factory/with-ctx :wuq-key ~'ctx
-             ~widget-expression))))))
+           (tilton.fmx.factory/binding-ctx :wuq-key ~'ctx
+             ~widget-expression))
+         (^void ~'reassemble [this#]
+           (.reassemble ^{:tag ~'super} this#)
+           (tilton.fmx.api/repl-ish))))))
+
+(defn repl-ish []
+  (dp :REPL-ish-reload!!!!!!!!!!!))
+
+(defn user-alert [ctx content]
+  (m/showDialog
+    .context ctx
+    .builder (fn [ctx]
+               (m/AlertDialog
+                 .content (if (string? content)
+                            (m/Text content)
+                            content)))))
+
+(defmacro hot-reload-detector
+  [& body]
+  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
+        state-sym `^w/State state#
+        super-sym `super#]
+    `(reify :extends (w/StatefulWidget.)
+       :no-meta true
+       (~'createState [_#]
+         (reify :extends w/State
+           :no-meta true
+           (~'initState [~state-sym]
+             (.initState ~(vary-meta state-sym assoc :tag 'super))
+             nil)
+           (^void ~'reassemble [this#]
+             (.reassemble ^{:tag ~'super} this#)
+             (repl-ish))
+           (~'dispose [~state-sym]
+             (dp :dispo-hot-reload-detector)
+             (.dispose ~(vary-meta state-sym assoc :tag 'super)))
+           (~'build [~state-sym ~flutter-build-ctx]
+             (tilton.fmx.factory/binding-ctx :hotrelo ~flutter-build-ctx
+               ~@body)))))))
+
+(defmacro hot-reload-detector-ctx
+  [& body]
+  (let [flutter-build-ctx (vary-meta `ctx# assoc :tag `w/BuildContext)
+        state-sym `^w/State state#
+        super-sym `super#]
+    `(reify :extends (w/StatefulWidget.)
+       :no-meta true
+       (~'createState [_#]
+         (reify :extends w/State
+           :no-meta true
+           (~'initState [~state-sym]
+             (.initState ~(vary-meta state-sym assoc :tag 'super))
+             nil)
+           (^void ~'reassemble [this#]
+             (.reassemble ^{:tag ~'super} this#)
+             (tilton.fmx.api/repl-ish))
+           (~'dispose [~state-sym]
+             (dp :dispo-hot-reload-detector-ctx)
+             (.dispose ~(vary-meta state-sym assoc :tag 'super)))
+           (~'build [~state-sym ~flutter-build-ctx]
+             (tilton.fmx.factory/binding-ctx :hotrelo ~flutter-build-ctx
+               (let [~'ctx ~flutter-build-ctx]
+                 ~@body))))))))
+
+#_#_#_ ^:mixin m/WidgetsBindingObserver
+(didChangeAppLifecycleState [this st]
+  (cb st)
+  nil)
+
+(defonce *fx-app* (atom nil))
 
 (defmacro run-app [widget-expression]
   `(m/runApp
-     (wrap-stateless
-       (wrap-unique-key
+     (tilton.fmx.api/wrap-stateless
+       (tilton.fmx.api/wrap-unique-key
          ~widget-expression))))
 
 (defmacro run-fx-app [fx-app]
   `(m/runApp
-     (wrap-stateless
-       (wrap-unique-key
-         (fx-render ~'ctx ~fx-app)))))
+     (tilton.fmx.api/wrap-stateless
+       (tilton.fmx.api/wrap-unique-key
+         (tilton.fmx.api/fx-render ~'ctx ~fx-app)))))
+
+(defmacro run-fx-app-warm [fx-app]
+  `(m/runApp
+     (tilton.fmx.api/hot-reload-detector
+       (tilton.fmx.api/fx-render nil ~fx-app))))
+
+(defmacro run-fx-app-hot [fx-app]
+  `(m/runApp
+     (tilton.fmx.api/hot-reload-detector-ctx
+       (tilton.fmx.api/fx-render ~'ctx
+         (reset! *fx-app*
+           ~fx-app)))))
+
+#_
+(defn listen-lifecycle-state [^#/(m/AppLifecycleState? -> void) cb ^m/Widget .child]
+  (reify :extends m/StatefulWidget
+    :no-meta true
+    (createState [this]
+      (reify :extends m/State
+        :no-meta true
+        (initState [this]
+          (.initState ^super this)
+          (m/WidgetsBinding.instance.addObserver this)
+          (when-some [ls m/WidgetsBinding.instance.lifecycleState]
+            (cb ls))
+          nil)
+        (dispose [this]
+          (m/WidgetsBinding.instance.removeObserver this)
+          (.dispose ^super this))
+        (build [_ _] child)
+        ^:mixin m/WidgetsBindingObserver
+        (didChangeAppLifecycleState [this st]
+          (cb st)
+          nil)))))
 
 ;;; --- environment ------------------------
 

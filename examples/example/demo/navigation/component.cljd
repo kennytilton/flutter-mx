@@ -1,0 +1,59 @@
+(ns example.demo.navigation.component
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [clojure.string :as str]
+    [tilton.mx.model.base :refer [md-cell md-install-cell md-awaken]]
+    [tilton.mx.api :refer [dp minfo cF cFI cF+ cI cFn cFonce mmx-md mget mset! mswap! navig fm* fmu fasc mav] :as mx]
+    [tilton.fmx.api :as fx
+     :refer [dart-cb within-ctx
+             material-app scaffold app-bar floating-action-button
+             center column row container text-button text sized-box]]
+
+    [example.demo.navigation.puzzle :as pz
+     :refer [mk-puzzle pz-structure pz-nvg-options]]))
+
+(defn nvg-solution []
+  (column
+    (m/Text "1. Click to select a starting widget. 2. Enter target name or path. 3. Set options. 4. Click FAB.")
+    (nvg-what)
+    (nvg-options)))
+
+(defn nvg-what []
+  (fx/material
+    {:elevation   6.0
+     :color       m/Colors.white
+     :shadowColor m/Colors.black}
+    (fx/intrinsic-width
+      (fx/text-field {:autofocus   true
+                      :focusNode   (m/FocusNode)
+                      :decoration  (m/InputDecoration
+                                     .hintText "Target?"
+                                     .border m.InputBorder/none
+                                     .contentPadding (m/EdgeInsets.all 9.0))
+                      :onSubmitted (dart-cb [value]
+                                     (let [trimmed (str/trim value)]
+                                       (mset! me :value trimmed)))
+                      :controller  (cFonce (fx/text-field-controller-basic me))}
+        {:name  :what
+         :value (cI "")}))))
+
+(defn nvg-options []
+  (row {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+        :crossAxisAlignment m/CrossAxisAlignment.start}
+    (nvg-option :must?)
+    (nvg-option :me?)
+    (nvg-option :inside?)
+    (nvg-option :out)
+    (nvg-option :out-asc-only)
+    (nvg-option :dbg)))
+
+(defn nvg-option [option]
+  (fx/sized-box {:width 200}
+    (fx/checkbox-list-tile
+      {:key             (m/ValueKey (name option))
+       :controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text (name option))
+       :value           (cF (option (mav :nvg-options)))
+       :onChanged       (dart-cb [on-off]
+                          (mswap! (mav :nvg-options) option not))})))

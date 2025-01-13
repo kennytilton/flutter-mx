@@ -9,8 +9,8 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [tilton.mx.api :as mx
-     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inclusive
-             fmu muv fm* mav mx-bound? wmx-iso with-cc]]
+     :refer [dp dpx cI cF cF+ mget mget? mset! mswap! minfo fasc
+             mav with-cc millis-now or-mx-bound]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
@@ -20,91 +20,10 @@
      :refer [Isolate SendPort ReceivePort]]
     [example.demo.isolate.common
      :refer [clock-face slow-is-prime? just-slow-is-prime?
-             dbgiso iso-name say-delay]]))
-
-(defn on-off []
-  (fx/elevated-button+icon
-    {:label     (cF (m/Text (if (mget me :value) "Clear" "Spawn")))
-     :icon      (cF (if (mget me :value) (m/Icon m/Icons.cancel) (m/Icon m/Icons.play_arrow)))
-     :onPressed (dart-cb []
-                  (mswap! me :value not))}
-    {:name  :on-off
-     :value (cI true)}))
-
-(defn start-paused []
-  (fx/sized-box {:width 180}
-    (checkbox-list-tile
-      {:key             (m/ValueKey "start-paused")
-       :controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Start Paused")
-       :value           (cF (mav :start-paused?))
-       :onChanged       (dart-cb [on-off]
-                          (mswap! (fasc :app) :start-paused? not))})))
-
-(defn pause-resume []
-  (fx/elevated-button+icon
-    {:label     (cF (m/Text (if (mav :spawn-iso-paused?) "Resume" "Pause")))
-     :icon      (cF (m/Icon (if (mav :spawn-iso-paused?) m/Icons.play_arrow m/Icons.pause)))
-     :onPressed (cF (when-let [iso ^Isolate? (mav :spawn-iso)]
-                      (dart-cb []
-                        (mswap! (fasc :app) :spawn-iso-paused? not))))}))
-
-(defn kill []
-  (fx/elevated-button+icon
-    {:label     (m/Text "Kill")
-     :icon      (m/Icon m/Icons.cancel)
-     :onPressed (cF (when-let [iso (mav :spawn-iso)]
-                      (dart-cb []
-                        (.kill ^Isolate iso))))}))
-
-(defn ping [when ping-text]
-  (let [ping-id (atom -1)]
-    (fx/elevated-button+icon
-      {:label     (m/Text (if (= when Isolate.immediate) "Ping Now" "Ping Next"))
-       :icon      (m/Icon m/Icons.network_ping)
-       :onPressed (cF (when-let [iso (mav :spawn-iso)]
-                        (when-let [to-iso (mav :to-iso)]
-                          (dart-cb []
-                            (.ping ^Isolate iso to-iso
-                              ; ping is fussier about what it will allow in a response, so
-                              ; we convert the map to a string and decode on the other side
-                              .response (convert/jsonEncode
-                                          (walk/stringify-keys
-                                            {:msg-type "ping"
-                                             :response (str (swap! ping-id inc) ": " ping-text)}))
-                              .priority when)))))})))
-
-(defn request-spawn-exit []
-  (fx/elevated-button
-    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (dart-cb []
-                          (.send ^SendPort to-iso
-                            {:msg-type :exit})))))}
-    (m/Text "Request Exit")))
-
-(defn request-spawn-throw []
-  (fx/elevated-button
-    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (dart-cb []
-                          (.send ^SendPort to-iso
-                            {:msg-type :throw
-                             :value (.toString (.now DateTime))})))))}
-    (m/Text "Request Throw")))
+             dbgiso iso-name say-delay m99 iso-ping]]
+    [example.demo.isolate.ixp.common :refer [result-clear]]))
 
 ;;; --- job starters -----------
-
-(defn decide-in-spawn [n]
-  (fx/elevated-button
-    {:onPressed (cF (when-let [iso (mav :spawn-iso)]
-                      (when-let [to-iso (mav :to-iso)]
-                        (dart-cb []
-                          (result-clear)
-                          (.send ^SendPort to-iso
-                            {:msg-type :decide-prime
-                             :n        n})))))}
-    (m/Text (str "Iso " (m99 n)))))
 
 (defn decide-in-main [n]
   (fx/elevated-button
@@ -113,7 +32,7 @@
                       (doto (.-instance m/WidgetsBinding)
                         (.addPostFrameCallback
                           (fn [^Duration d]
-                            (mset! (fasc :app) :worker-result
+                            (mset! (fasc :app) :worker-msg
                               {:msg-type :prime-decision
                                :method   "Main.iso"
                                :n        n
@@ -129,8 +48,8 @@
      :result   (cF+ [:async? true
                      :watch (fn [_ me new _ _]
                               (when (not (nil? new))
-                                (with-cc :worker-result
-                                  (mset! (fasc :app) :worker-result
+                                (with-cc :worker-res
+                                  (mset! (fasc :app) :worker-msg
                                     {:msg-type :prime-decision
                                      :method "fnf/compute"
                                      :n        n
@@ -146,40 +65,20 @@
                   (mset! (fasc :app) :run-job
                     {:msg-type :decide-prime
                      :n n
-                     :id (.-millisecondsSinceEpoch (.now DateTime))
+                     :id (millis-now)
                      :method "Iso.run"}))}
     (m/Text (str "Iso.run " (m99 n)))))
 
 ;;; --- worker result -----------------------------------------------
 
-(defmacro result-clear []
-  `(mset! (fasc :app) :worker-result
-     {:msg-type :clear}))
-
-(defn worker-result-display []
+(defn worker-msg-display []
   (text {:style (p/TextStyle .fontSize 16)}
-    (let [{:keys [method msg-type n value] :as result} (mav :worker-result)]
-      (dp :result msg-type n value method)
+    (let [{:keys [method msg-type n value] :as result} (mav :worker-msg)]
+      (dpx :result msg-type n value method)
       (case msg-type
         :prime-decision (str (or method "Anon") " says " (or n "NIL") " is " (when-not value "NOT ") "prime.")
         :ping-ack (:response result)
         :alert (:msg result)
         :clear "..."
-        "<rsn>"))))
+        (or-mx-bound _cache "<rsn>")))))
 
-;;; --- run enabled? ------------------------------------------------
-
-(defn iso-run-allowed []
-  ; this is a silly option just to demonstrate when ephemerals are indispensable
-  (fx/sized-box {:width 180}
-    (checkbox-list-tile
-      {:controlAffinity m/ListTileControlAffinity.leading
-       :title           (m/Text "Run OK?")
-       :value           (cI true)
-       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
-      {:name :iso-run-ok?})))
-
-;;; --- util ----------------------------------------------
-
-(defn m99 [n]
-  (str (quot n 1000000) "m" (mod n 1000000)))

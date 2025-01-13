@@ -5,9 +5,7 @@
     ["package:vector_math/vector_math_64.dart" :as vm]
     [cljd.flutter.alpha :as f]
 
-    [tilton.mx.base :refer [dprn dp dpx]]
-    [tilton.mx.cell.core :as cell :refer [cF cI]]
-    [tilton.mx.model.core :refer [mget muv] :as md]
+    [tilton.mx.api :refer [dp dpx mget mset! mupdate! muv cF cI]]
     [tilton.fmx.api :as fx :refer [within-ctx]]))
 
 ;; Original: https://github.com/Tensegritics/ClojureDart/tree/main/samples/gesture_detector
@@ -59,17 +57,17 @@
                                            [:parallelogram delta])
                                          ;; fall thru binding id and delta to nil. The id being nil is key
                                          )]
-                        (md/mset! me :drag-op {:dragee id :delta delta}))))
+                        (mset! me :drag-op {:dragee id :delta delta}))))
      :onPanUpdate (within-ctx [me ctx]
                     (fn [^g/DragUpdateDetails details]
-                      (let [{:keys [dragee delta]} (md/mget me :drag-op)
+                      (let [{:keys [dragee delta]} (mget me :drag-op)
                             new-pos (when delta
                                       (.- (.-localPosition details) delta))]
                         (cond
                           (= dragee :parallelogram)
-                          (md/mswap! me :vertices move-to new-pos)
+                          (mupdate! me :vertices move-to new-pos)
                           (int? dragee)
-                          (md/mswap! me :vertices assoc dragee new-pos)))))}
+                          (mupdate! me :vertices assoc dragee new-pos)))))}
     {:fx$notifier (m/ChangeNotifier)
      :vertices    (cI [(m/Offset 150 150) (m/Offset 250 150) (m/Offset 150 350)])
      :drag-op     (cI {:delta  nil
@@ -78,7 +76,7 @@
       .size (m/Size double/infinity double/infinity)
       .painter (reify :extends (m/CustomPainter .repaint (mget me :fx$notifier))
                  (paint [this canvas size]
-                   (let [[^m/Offset o ^m/Offset a ^m/Offset b] (md/mget me :vertices)
+                   (let [[^m/Offset o ^m/Offset a ^m/Offset b] (mget me :vertices)
                          c (.- (.+ b a) o)
                          paint (doto (m/Paint)
                                  (-> .-color (set! m/Colors.grey))
