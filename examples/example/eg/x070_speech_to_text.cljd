@@ -42,12 +42,18 @@
 ; Fun note: I tested with fr-FR as locale ID because my accent is pretty good, and
 ; it did recognize my HS French. Mrs. Willens would be proud.
 
-; PROBLEM:
-; Hot reload does not seem to be enough. Jump to the console an hit return
-; to trigger a restart.
+; PROBLEMs:
+; Hot reload does not seem to be enough. Jump to the console and hit return
+; If still no good, close sim and start over
 ;
 ; When the app sits for a *waves hands* long time, the SpeechToText (S2T) will become
 ; incurably "unavailable. Restart the sim.
+;
+; If I start talking while the ear is yellow, meaning not yet listening after a mic click,
+; dictation is partial or otherwise broken.
+;
+; Debugging is confusing because the pauseFor can be exceeded but we do not see anything
+; because transcription silently runs taking another few seconds.
 
 
 (defmacro try-wmx-iso [& body]
@@ -78,8 +84,8 @@
                               (dp :stopping-on-final-result-perhaps-reduntantly)
                               (.stop s))))]
     (.listen s .onResult result-listener
-      .listenFor (Duration .seconds 20)
-      .pauseFor (Duration .seconds 3)
+      .listenFor (Duration .seconds 20)                     ;; what it says
+      .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
       .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
@@ -101,6 +107,7 @@
     (fx/icon-button
       {:onPressed (dart-cb []
                     (dp :starting-listening)
+                    (mset! (fmu :app) :transcript "")
                     (start-listening (fmu :ear)))
        :icon      (m/Icon m/Icons.mic)
        :color     (cF (fx/within-ctx [me ctx]
@@ -148,27 +155,16 @@
      :transcript       (cI "...")
      :speak-prompt     (cF (if (= (mget me :transcript) "...")
                              user-prompt you-said))
-     :speech (s2t/SpeechToText)
-     ;; this next is all wrong. available means init has succeeded. Init is yet to come.
-     #_ (cF+ [:watch (fn [_ me sp _ _]
-                    (dp :new-avail (.-isAvailable ^s2t/SpeechToText sp))
-                    (dp :new-listening (.-isListening ^s2t/SpeechToText sp))
-                    (dp :news-has-error (.-hasError ^s2t/SpeechToText sp))
-                    (try-wmx-iso
-                      (mset! me :sp-status
-                        (cond
-                          (.-isAvailable ^s2t/SpeechToText sp) :available
-                          :else :unavailable))))]
-       (s2t/SpeechToText))
+     :speech           (s2t/SpeechToText)
      :sp-status        (cI nil :watch (fn [_ me new _ _]
-                                        (dp :sp-status!!!!!!!! new)))
+                                        (dp :sp-status-now!!!!!!!! new)))
      :has-speech?      (cF+ [:async? true
                              :watch (fn [_ me new _ _]
                                       (dp :has-speech? new (mget me :speech))
                                       (when-let [^s2t/SpeechToText sp (mget me :speech)]
-                                        (dp :init-avail (.-isAvailable ^s2t/SpeechToText sp))
-                                        (dp :init-listening (.-isListening ^s2t/SpeechToText sp))
-                                        (dp :init-has-error (.-hasError ^s2t/SpeechToText sp))
+                                        (dp :post-init-avail (.-isAvailable ^s2t/SpeechToText sp))
+                                        (dp :post-init-listening (.-isListening ^s2t/SpeechToText sp))
+                                        (dp :post-init-has-error (.-hasError ^s2t/SpeechToText sp))
                                         (when new
                                           (try-wmx-iso
                                             (mset! me :sp-status :available)))))]
