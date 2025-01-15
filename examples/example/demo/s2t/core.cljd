@@ -1,0 +1,84 @@
+(ns example.demo.s2t.core
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :as fts
+     :refer [FlutterTts]]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    [example.demo.s2t.fts  :as fts
+     :refer [app-fts-progress app-fts-status]]
+    [example.demo.s2t.component
+     :refer [lang-chooser geo-chooser play-pause-button stop-button auto-play
+             equalizer choice-header]]
+    [example.demo.s2t.poetry :as poetry]))
+
+;;; === app ======================================================
+(declare dashboard speech-input)
+
+(defn chyron []
+  (container
+    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
+    (fx/text {:textAlign m/TextAlign.center}
+      {:phrase (cF+ [:sst nil]
+                 (when (not= :off (app-fts-status))
+                   (let [{:keys [word]} (app-fts-progress)]
+                     (if (nil? word) []
+                       (take-last 5
+                         (concat (if (mx-bound? _cache) _cache [])
+                           [word]))))))}
+      (str/join "..." (mget me :phrase)))))
+
+(defn make-app []
+  (material-app {}
+    {:name :app
+     :fts  (cF (fts/make-flutter-tts))}
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "Flutter S2T/TTS Demo")})}
+      (column
+        {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+        (choice-header "Languages")
+        (lang-chooser)
+        (choice-header "Geography")
+        (geo-chooser)
+        (speech-input poetry/graves-reproach-s1 )
+        (chyron)
+        (dashboard)
+        (auto-play)
+        (equalizer)))))
+
+;;; --- dashboard ---------------------------------------------------------------
+
+(defn dashboard []
+  (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
+    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (play-pause-button)
+      (stop-button))))
+
+;;; --- text input --------------------------------------------------------------
+
+(defn speech-input [speech-initial]
+  (container
+    {:alignment m/Alignment.topCenter
+     :padding   (m/EdgeInsets.only
+                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text-field
+      {:style      (p/TextStyle
+                     .fontFamily "Helvetica Neue"
+                     .fontSize 20.0)
+       :controller (cFonce
+                     (m/TextEditingController .text (mget me :value)))
+       :onChanged  (dart-cb [text]
+                     (mset! me :value text))
+       :minLines   6 :maxLines 11}
+      {:name  :text-in
+       :value (cI speech-initial)})))
+

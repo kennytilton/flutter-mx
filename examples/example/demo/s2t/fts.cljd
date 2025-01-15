@@ -1,0 +1,126 @@
+(ns example.demo.s2t.fts
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :as fts
+     :refer [FlutterTts]]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.foundation :refer [mx-type PObserver]]
+    [tilton.mx.model.peek :refer [Model]]
+    [tilton.mx.model.core :as md]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv muv-inc m*v fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]))
+
+;;; --- start-up ----------------------------------------------
+
+(deftype MXFlutterTTS []
+  :extends Model
+  PObserver
+  (observe [this prop me new-value prior-value cell]))
+
+(defn make-flutter-tts []
+  (md/make (MXFlutterTTS)
+    :name :mx-fts
+    :tts (cFonce
+           (doto ^FlutterTts (FlutterTts)
+             (.setSharedInstance true)
+             (.setProgressHandler
+               (fn [text startOffset endOffset word]
+                 (wmx-iso
+                   (mset! me
+                     :progress {:full-text   text
+                                :word        word
+                                :word-offset startOffset
+                                :word-end    endOffset}))))
+             (.setStartHandler
+               #(wmx-iso (mset! me :play-status :on)))
+             (.setCompletionHandler
+               #(wmx-iso (mset! me :play-status :off)))
+             (.setCancelHandler
+               #(wmx-iso (mset! me :play-status :off)))
+             (.setPauseHandler
+               #(wmx-iso (mset! me :play-status :paused)))
+             (.setContinueHandler
+               #(wmx-iso (mset! me :play-status :on)))
+             (.setErrorHandler
+               (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
+    :lang-geos (cF+ [:async? true
+                     :async-then (fn [c locales]
+                                   (dp :locales (count locales))
+                                   (group-by lg-lang
+                                     (take 999 (sort locales))))]
+                 (.-getLanguages ^FlutterTts (mget me :tts)))
+    :lg-pref "en-AU"                                        ;; faux stored preference
+    :lg-current (cF+n [:watch (fn [_ me new prior c]
+                                (when (mx-bound? prior)
+                                  (when (muv :auto-play)
+                                    (fts-restart me))))]
+                  (mget me :lg-pref))
+    :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
+    :lg-geo (cF (lg-geo (mget me :lg-current)))
+    :play-status (cI :off)                                  ;; [:off | :on | :paused}
+    :progress (cI nil)))
+
+(defn fts-restart [me]
+  (when (not= :off (app-fts-status))
+    (fts-stop me))
+  (fts-speak me))
+
+(defmacro app-fts []
+  `(tilton.mx.api/mget (tilton.mx.api/fasc-inc :app) :fts))
+
+(defmacro app-tts []
+  `(tilton.mx.api/mget (example.demo.s2t.fts/app-fts) :tts))
+
+(defmacro app-fts-status []
+  `(tilton.mx.api/mget (example.demo.s2t.fts/app-fts) :play-status))
+
+(defmacro app-fts-progress []
+  `(tilton.mx.api/mget (example.demo.s2t.fts/app-fts) :progress))
+
+(defmacro app-fts-lang []
+  `(tilton.mx.api/mget (example.demo.s2t.fts/app-fts) :lg-lang))
+
+(defmacro app-fts-geo []
+  `(tilton.mx.api/mget (example.demo.s2t.fts/app-fts) :lg-geo))
+
+(defmacro app-lang-geos []
+  `(tilton.mx.api/mget (example.demo.s2t.fts/app-fts) :lang-geos))
+
+;;; --- speech control actions -----------------------------------------------
+
+(defn fts-speak [me]
+  (let [tts ^FlutterTts (mget (app-fts) :tts)
+        speech (muv :text-in)]
+    (when-let [lg (mget (app-fts) :lg-current)]
+      (when (not (str/blank? speech))
+        (.setPitch tts (muv-inc :pitch))
+        (.setVolume tts (muv-inc :volume))
+        (.setLanguage tts lg)
+        (.setSpeechRate tts (muv-inc :speech-rate))
+        (.speak tts speech)))))
+
+(defn fts-pause [me]
+  (let [tts ^FlutterTts (app-tts)]
+    (await (.pause tts))))
+
+(defn fts-stop [me]
+  (let [tts ^FlutterTts (app-tts)]
+    (await (.stop tts))))
+
+(defn lg-lang
+  "Return the leading two-char language designator of a five char language-region pair."
+  [lg]
+  ;; eg "fr-FR" -> "fr"
+  ;; used to group FTS languages by languages
+  (when lg (subs lg 0 2)))
+
+(defn lg-geo [lg]
+  (when lg (subs lg 3)))
