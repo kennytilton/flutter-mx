@@ -74,12 +74,11 @@
 
 (defn stop-listening [me]
   (dp :requesting-stop)
-  (.stop ^s2t/SpeechToText (mav :speech)))
+  (.stop STT))
 
 (defn start-listening [me]                                  ;; me s/b ear
   (dp :starting-listening)
-  (let [s ^s2t/SpeechToText (mav :speech)
-        options (s2tpi/SpeechListenOptions
+  (let [options (s2tpi/SpeechListenOptions
                   ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
                   .cancelOnError true
                   .listenMode s2t/ListenMode.dictation      ;; search | confirmation | dictation
@@ -92,8 +91,8 @@
                               (try-wmx-iso
                                 (mset! (fmu :app) :transcript wds))
                               (dp :stopping-on-final-result-perhaps-reduntantly)
-                              (.stop s))))]
-    (.listen s .onResult result-listener
+                              (.stop STT))))]
+    (.listen STT .onResult result-listener
       .listenFor (Duration .seconds 20)                     ;; what it says
       .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
       .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
@@ -151,6 +150,8 @@
 
 ;;; --- make app -----------------------------------------------
 
+(def ^s2t/SpeechToText STT (s2t/SpeechToText))
+
 (def user-prompt "(click mic icon, wait for red ear, then speak)")
 (def you-said "You said (wait for it)....")
 
@@ -165,38 +166,36 @@
      :transcript       (cI "...")
      :speak-prompt     (cF (if (= (mget me :transcript) "...")
                              user-prompt you-said))
-     :speech           (s2t/SpeechToText)
      :sp-status        (cI nil :watch (fn [_ me new _ _]
                                         (dp :sp-status-now!!!!!!!! new)))
-     :has-speech?      (cF+ [:async? true
+     :initialized?      (cF+ [:async? true
                              :watch (fn [_ me new _ _]
-                                      (dp :has-speech? new (mget me :speech))
-                                      (when-let [^s2t/SpeechToText sp (mget me :speech)]
-                                        (dp :post-init-avail (.-isAvailable ^s2t/SpeechToText sp))
-                                        (dp :post-init-listening (.-isListening ^s2t/SpeechToText sp))
-                                        (dp :post-init-has-error (.-hasError ^s2t/SpeechToText sp))
+                                      (dp :initialized? new)
+                                      (when new
+                                        (dp :post-init-avail (.-isAvailable STT))
+                                        (dp :post-init-listening (.-isListening STT))
+                                        (dp :post-init-has-error (.-hasError STT))
                                         (when new
                                           (try-wmx-iso
                                             (mset! me :sp-status :available)))))]
-                         (when-let [^s2t/SpeechToText sp (mget me :speech)]
-                           (.initialize sp
-                             .onStatus (fn [status]
-                                         (try-wmx-iso
-                                           (dp :onStatus!!!!!!!!-sets-status (keyword status))
-                                           (mset! me :sp-status (keyword status))))
-                             .onError (fn [^s2te/SpeechRecognitionError err]
-                                        (dp :sp-error!!!!! (.-errorMsg err))
-                                        (try-wmx-iso
-                                          (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
+                         (.initialize STT
+                           .onStatus (fn [status]
+                                       (try-wmx-iso
+                                         (dp :onStatus!!!!!!!!-sets-status (keyword status))
+                                         (mset! me :sp-status (keyword status))))
+                           .onError (fn [^s2te/SpeechRecognitionError err]
+                                      (dp :sp-error!!!!! (.-errorMsg err))
+                                      (try-wmx-iso
+                                        (mset! me :transcript (str "Error: " (.-errorMsg err)))))))
      :locale-names     (cF+ [:async? true]
-                         (when (mget me :has-speech?)
-                           (.locales ^s2t/SpeechToText (mget me :speech))))
+                         (when (mget me :initialized?)
+                           (.locales STT)))
      :system-locale-id (cF+ [:async? true
                              :watch (fn [_ _ new _ _] (dpx :loc-sys-id-2 new))]
                          (when-let [lox-names (mget me :locale-names)]
                            (dp :locales (count lox-names))
                            (let [sys-loc (await
-                                           (.systemLocale ^s2t/SpeechToText (mget me :speech)))]
+                                           (.systemLocale STT))]
                              (dpx :sys-loc!!!!!! (.-localeId ^s2t/LocaleName sys-loc))
                              (.-localeId ^s2t/LocaleName sys-loc))))
      }
