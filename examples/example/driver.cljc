@@ -63,7 +63,8 @@
 
     [example.eg.x065-autocomplete-basic :as x065]
     [example.eg.x066-autocomplete-object :as x066]
-    [example.eg.x070-speech-to-text :as dicto]))
+    [example.eg.x070-speech-to-text :as dicto]
+    [example.demo.s2t.core :as s2t]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
@@ -76,7 +77,7 @@
     1 (hello/make-app)
     2 (todo/make-app)
     3 (dicto/make-app)
-    4 (socklob/make-app)
+    4 (s2t/make-app)
     5 (tts/make-app)))
 
 ;; todo does not show all three options -- unavailables may be black on black

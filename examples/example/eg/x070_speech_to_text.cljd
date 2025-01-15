@@ -30,31 +30,41 @@
 ; from the existing Text-to-speech demo, where we will try to create a voice chat app.
 ; This app will expose GUI controls for various Speech-to-text options.
 ;
-; USAGE: Watch your console to see when transcription actually begins!
-; When you see:
-; flutter: :DPR> :starting-listening
-; ...(not really, the app just kicks off listen)
-;
-; Next you will see:
-; flutter: :DPR> :sp-status!!!!!!!!!!!! listening
-; ...this message is from the package and is accurate
-
-; Fun note: I tested with fr-FR as locale ID because my accent is pretty good, and
-; it did recognize my HS French. Mrs. Willens would be proud.
+; USAGE:
+; When the mic truns blue, initialization is complete and successful
+; You can now tap the microphone, which initiates listening. The ear turns yellow, signifying
+; that listening is delayed a second or three. This delay may be much shorter so that the yellow phase
+; is not seen.
+; Once the ear is red, you have just a second to start talking. This can be extended in the source
+; by increasing the pauseFor value. paiseFor also applies once speaking has begun. TODO: add support
+; for a second pauseFor to be set, so the initial value can be longer. Of course, allso
+; a TODO is letting the user specify either pauseFor!
+; When we stop talking, first the oauseFor must pass, then the result must be finalized.
+; Clicking the ear while it is red stops the recording and reports the result so far.
+; TODO: arrange a cancel gesture. Cancel does not report any result.
+; When the mic turns blue again, a new message can be recorder.
 
 ; PROBLEMs:
-; Hot reload does not seem to be enough. Jump to the console and hit return
-; If still no good, close sim and start over
+; Hot reload does not seem always to be enough. Maybe one time in two or three a restart
+; will be required. A symptom might be not getting the red (live) mic, it just stays
+; yellow tho we see "listening" in the console. But it will not listen!
+; We may also get an exception saying:
 ;
-; When the app sits for a *waves hands* long time, the SpeechToText (S2T) will become
-; incurably "unavailable. Restart the sim.
+;   "No top-level getter 'you_said$v7' declared."
+;
+; That is weird. you-said is a string constant.
+
+; If this happens, jump to the console and hit return
+; to get a restart. If still no good, close sim and start over.
+;
+; When the app sits for *waves hands* a long time, the SpeechToText (S2T) may become
+; incurably "unavailable". Restart the sim.
 ;
 ; If I start talking while the ear is yellow, meaning not yet listening after a mic click,
-; dictation is partial or otherwise broken.
+; dictation is partial (no surprise, yellow is not recording), or otherwise broken. Try to wait for the red.
 ;
-; Debugging is confusing because the pauseFor can be exceeded but we do not see anything
+; Debugging is confusing because the pauseFor can be exceeded, but we do not see anything
 ; because transcription silently runs taking another few seconds.
-
 
 (defmacro try-wmx-iso [& body]
   `(try
@@ -142,7 +152,7 @@
 ;;; --- make app -----------------------------------------------
 
 (def user-prompt "(click mic icon, wait for red ear, then speak)")
-(def you-said "You said....")
+(def you-said "You said (wait for it)....")
 
 (defn make-app []
   (material-app
