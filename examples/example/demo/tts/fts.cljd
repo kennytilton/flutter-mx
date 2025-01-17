@@ -26,22 +26,28 @@
   PObserver
   (observe [this prop me new-value prior-value cell]))
 
+(defn dartify [m] ; todo move to utils
+  (reduce-kv (fn [d k v]
+               (assoc d (name k) v))
+    {} m))
+
 (defn make-flutter-tts []
   (md/make (MXFlutterTTS)
     :name :mx-fts
     :tts-voices (cF+ [:async? true
-                  :async-then (fn [c voices]
-                                (dpx :vs voices)
-                                (when-let [vs (map util/dart-map->cljd-map voices)]
-                                  (let [loc-vs (group-by :locale vs)]
-                                    (dp :en-voices (get loc-vs "en-US"))
-                                    loc-vs)))
-                  :watch (fn [_ me new prior c]
-                           (dpx :voice-count (count new))
-                           (dpx :v1 (first new))
-                           (dpx :v1loc (:locale (first new))) ;;(get (first new) "locale"))
-                           (dpx :voices!!! new))]
-              (.-getVoices ^FlutterTts (mget me :tts)))
+                      :async-then (fn [c voices]
+                                    (dpx :vs voices)
+                                    (when-let [vs voices]
+                                      (let [loc-vs (group-by (fn [v] (get v "locale")) vs)]
+                                        ;(dp :au-voices (get loc-vs "en-AU"))
+                                        ;(dp :en-voices (get loc-vs "en-US"))
+                                        loc-vs)))
+                      #_#_ :watch (fn [_ me new prior c]
+                               (dp :voice-count (count new))
+                               (dp :v1 (first new))
+                               (dp :v1loc (get (first new) "locale"))
+                               (dpx :voices!!! new))]
+                  (.-getVoices ^FlutterTts (mget me :tts)))
     :tts (cFonce
            (doto ^FlutterTts (FlutterTts)
              (.setSharedInstance true)
@@ -67,7 +73,7 @@
                (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
-                                   (dp :locales (count locales))
+                                   ;(dp :locales (count locales))
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
@@ -79,22 +85,28 @@
                   (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
     :lg-geo (cF (lg-geo (mget me :lg-current)))
-    :voice-pref {:quality "default" :name "Karen" :gender "female" :locale "en-AU"
-                 :identifier "com.apple.voice.compact.en-AU.Karen"}
-    #_ {:gender "female", :locale "en-US",
-                 :name "Samantha", :identifier "com.apple.voice.compact.en-US.Samantha",
-                 :quality "default"}
-    :lg-voices (cF+ [:watch (fn [_ _ new _ _]
+    :voice-pref (dartify {:quality    "default"
+                          :name       "Karen" :gender "female" :locale "en-AU"
+                          :identifier "com.apple.voice.compact.en-AU.Karen"})
+    :lg-voices (cF+ [:watch (fn [_ me new _ _]
+                              ; todo here or on the voices display, call setVoice when new lg means new default
+
                               (dp :lg-voices-now
-                                (map (fn [v] (:name v)) new)))]
+                                (map (fn [v] (get v "name")) new))
+                              (when new
+                                (mx/with-cc :voice-echo
+                                  (dp :lgvoices-setting-voice-current (first new))
+                                  (mset! me :voice-current (first new)))))]
                  (when-let [lg (mget me :lg-current)]
-                   (dp :lg-voices-sees lg)
                    (get (mget me :tts-voices) lg)))
     :voice-current (cF+n [:watch (fn [_ me new prior c]
-                           (when (mx-bound? prior)
-                             (when (muv :auto-play)
-                               (fts-restart me))))]
-             (mget me :voice-pref))
+                                   (dp :voice-curr-sees!!!!!!!!! new)
+                                   (when-let [^FlutterTts tts (mget me :tts)]
+                                     (.setVoice tts new))
+                                   (when (mx-bound? prior)
+                                     (when (muv :auto-play)
+                                       (fts-restart me))))]
+                     (mget me :voice-pref))
     :play-status (cI :off)                                  ;; [:off | :on | :paused}
     :progress (cI nil)))
 
@@ -136,12 +148,11 @@
   (let [tts ^FlutterTts (mget (app-fts) :tts)
         speech (muv :text-in)]
     (when-let [lg (mget (app-fts) :lg-current)]
-      (dp :setting-voice!! (mget (app-fts) :voice-current))
       (when (not (str/blank? speech))
-        (.setVoice tts (mget (app-fts) :voice-current))
         (.setPitch tts (muv-inc :pitch))
         (.setVolume tts (muv-inc :volume))
         (.setLanguage tts lg)
+        (.setVoice tts (mget (app-fts) :voice-current)) ;; must follow setLanguage ^^^
         (.setSpeechRate tts (muv-inc :speech-rate))
         (.speak tts speech)))))
 

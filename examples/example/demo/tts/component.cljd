@@ -70,8 +70,10 @@
       {:name :voice-chooser}
       (map-indexed voice-button
         (when-let [loc (app-fts-lg-current)]
-          (dp :got-loc!!!!!!!! loc :vs (app-locale-voices))
-          (filter #(= (:locale %) loc)
+          (dpx :got-loc!!!!!!!! loc :vs (app-locale-voices))
+          (dp :locvoices!!!!!!! (filter #(= (get % "locale") loc)
+                                  (app-locale-voices)))
+          (filter #(= (get % "locale") loc)
             (app-locale-voices)))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
@@ -115,15 +117,16 @@
                       .fontSize 16.0)}
             (lg-geo lang-geo)))))))
 
-(defn voice-button [i voice]
+(defn voice-button [i voice] ;; voice is a Dart map
   (fx/gesture-detector
-    {:key   (m/ValueKey. (:voice-id voice))
+    {:key   (m/ValueKey. (get voice "identifier"))
      :onTap (dart-cb []
-              (dp :Todo!!!!!!!!-set-voice voice)
+              (dp :setting-voice-current voice)
               (mset! (app-fts) :voice-current voice))}
     (container
       {:decoration (cF (fx/box-decoration
-                         {:border (cF (when (= (:voice-id voice) (mget (app-fts) :voice-current))
+                         {:border (cF (when (= (get voice "identifier")
+                                              (get (mget (app-fts) :voice-current) "identifier"))
                                         (.all m/Border .color m/Colors.blue .width 2)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
@@ -133,7 +136,7 @@
           (fx/text
             {:style (p/TextStyle .color m/Colors.black
                       .fontSize 16.0)}
-            (:name voice)))))))
+            (get voice "name")))))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 
