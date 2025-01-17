@@ -71,7 +71,7 @@
       (map-indexed voice-button
         (when-let [loc (app-fts-lg-current)]
           (dpx :got-loc!!!!!!!! loc :vs (app-locale-voices))
-          (dp :locvoices!!!!!!! (filter #(= (get % "locale") loc)
+          (dpx :locvoices!!!!!!! (filter #(= (get % "locale") loc)
                                   (app-locale-voices)))
           (filter #(= (get % "locale") loc)
             (app-locale-voices)))))))
@@ -121,7 +121,7 @@
   (fx/gesture-detector
     {:key   (m/ValueKey. (get voice "identifier"))
      :onTap (dart-cb []
-              (dp :setting-voice-current voice)
+              (dpx :setting-voice-current voice)
               (mset! (app-fts) :voice-current voice))}
     (container
       {:decoration (cF (fx/box-decoration

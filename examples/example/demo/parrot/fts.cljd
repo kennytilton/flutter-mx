@@ -7,6 +7,7 @@
      :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
     [clojure.string :as str]
+    [tilton.mx.util :as util]
     [tilton.mx.foundation :refer [mx-type PObserver]]
     [tilton.mx.model.peek :refer [Model]]
     [tilton.mx.model.core :as md]
@@ -25,9 +26,28 @@
   PObserver
   (observe [this prop me new-value prior-value cell]))
 
+(defn dartify [m] ; todo move to utils
+  (reduce-kv (fn [d k v]
+               (assoc d (name k) v))
+    {} m))
+
 (defn make-flutter-tts []
   (md/make (MXFlutterTTS)
     :name :mx-fts
+    :tts-voices (cF+ [:async? true
+                      :async-then (fn [c voices]
+                                    (dpx :vs voices)
+                                    (when-let [vs voices]
+                                      (let [loc-vs (group-by (fn [v] (get v "locale")) vs)]
+                                        ;(dp :au-voices (get loc-vs "en-AU"))
+                                        ;(dp :en-voices (get loc-vs "en-US"))
+                                        loc-vs)))
+                      #_#_ :watch (fn [_ me new prior c]
+                               (dp :voice-count (count new))
+                               (dp :v1 (first new))
+                               (dp :v1loc (get (first new) "locale"))
+                               (dpx :voices!!! new))]
+                  (.-getVoices ^FlutterTts (mget me :tts)))
     :tts (cFonce
            (doto ^FlutterTts (FlutterTts)
              (.setSharedInstance true)
@@ -65,6 +85,27 @@
                   (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
     :lg-geo (cF (lg-geo (mget me :lg-current)))
+    :voice-pref (dartify {:quality    "default"
+                          :name       "Karen" :gender "female" :locale "en-AU"
+                          :identifier "com.apple.voice.compact.en-AU.Karen"})
+    :lg-voices (cF+ [:watch (fn [_ me new _ _]
+                              ; todo here or on the voices display, call setVoice when new lg means new default
+
+                              (dpx :lg-voices-now
+                                (map (fn [v] (get v "name")) new))
+                              (when new
+                                (mx/with-cc :voice-echo
+                                  (mset! me :voice-current (first new)))))]
+                 (when-let [lg (mget me :lg-current)]
+                   (get (mget me :tts-voices) lg)))
+    :voice-current (cF+n [:watch (fn [_ me new prior c]
+                                   (dpx :voice-curr-sees!!!!!!!!! new)
+                                   (when-let [^FlutterTts tts (mget me :tts)]
+                                     (.setVoice tts new))
+                                   (when (mx-bound? prior)
+                                     (when (muv :auto-play)
+                                       (fts-restart me))))]
+                     (mget me :voice-pref))
     :play-status (cI :off)                                  ;; [:off | :on | :paused}
     :progress (cI nil)))
 
@@ -83,7 +124,10 @@
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :play-status))
 
 (defmacro app-fts-progress []
-  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :progress))
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :progress))
+
+(defmacro app-fts-lg-current []
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lg-current))
 
 (defmacro app-fts-lang []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-lang))
@@ -92,7 +136,10 @@
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))
 
 (defmacro app-lang-geos []
-  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lang-geos))
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lang-geos))
+
+(defmacro app-locale-voices []
+  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lg-voices))
 
 ;;; --- speech control actions -----------------------------------------------
 
@@ -104,6 +151,7 @@
         (.setPitch tts (muv-inc :pitch))
         (.setVolume tts (muv-inc :volume))
         (.setLanguage tts lg)
+        (.setVoice tts (mget (app-fts) :voice-current)) ;; must follow setLanguage ^^^
         (.setSpeechRate tts (muv-inc :speech-rate))
         (.speak tts speech)))))
 

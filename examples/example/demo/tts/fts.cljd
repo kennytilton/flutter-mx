@@ -91,16 +91,15 @@
     :lg-voices (cF+ [:watch (fn [_ me new _ _]
                               ; todo here or on the voices display, call setVoice when new lg means new default
 
-                              (dp :lg-voices-now
+                              (dpx :lg-voices-now
                                 (map (fn [v] (get v "name")) new))
                               (when new
                                 (mx/with-cc :voice-echo
-                                  (dp :lgvoices-setting-voice-current (first new))
                                   (mset! me :voice-current (first new)))))]
                  (when-let [lg (mget me :lg-current)]
                    (get (mget me :tts-voices) lg)))
     :voice-current (cF+n [:watch (fn [_ me new prior c]
-                                   (dp :voice-curr-sees!!!!!!!!! new)
+                                   (dpx :voice-curr-sees!!!!!!!!! new)
                                    (when-let [^FlutterTts tts (mget me :tts)]
                                      (.setVoice tts new))
                                    (when (mx-bound? prior)
