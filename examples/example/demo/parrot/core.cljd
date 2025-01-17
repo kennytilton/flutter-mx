@@ -1,4 +1,4 @@
-(ns example.demo.s2t.core
+(ns example.demo.parrot.core
   "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
   (:require
     ["package:flutter/material.dart" :as m]
@@ -6,6 +6,12 @@
     ["package:flutter_tts/flutter_tts.dart" :as fts
      :refer [FlutterTts]]
     ["package:flutter/widgets.dart" :as w]
+    ;
+    ["package:speech_to_text/speech_to_text.dart" :as stt]
+    ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as sttpi]
+    ["package:speech_to_text/speech_recognition_error.dart" :as stte]
+    ["package:speech_to_text/speech_recognition_result.dart" :as sttr]
+
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
@@ -14,14 +20,24 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
-    [example.demo.s2t.fts  :as fts
-     :refer [app-fts-progress app-fts-status]]
-    [example.demo.s2t.component
+    [example.demo.parrot.fts  :as fts
+     :refer [app-lang-geos app-fts-progress app-fts-status]]
+    [example.demo.parrot.component
      :refer [lang-chooser geo-chooser play-pause-button stop-button auto-play
              equalizer choice-header]]
-    [example.demo.s2t.poetry :as poetry]))
+    [example.demo.parrot.poetry :as poetry]
+    [example.demo.parrot.stt.core :as stt]))
 
 ;;; === app ======================================================
+
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
+
+;;; -----------------------------------
+
 (declare dashboard speech-input)
 
 (defn chyron []
@@ -40,16 +56,41 @@
 (defn make-app []
   (material-app {}
     {:name :app
-     :fts  (cF (fts/make-flutter-tts))}
+     :fts  (cF (fts/make-flutter-tts))
+     ; speech recognition
+     ;:transcript       (cI "...")
+     ;:speak-prompt     (cF (if (= (mget me :transcript) "...")
+     ;                        stt/user-prompt stt/you-said))
+     :sp-status        (cI nil :watch (fn [_ me new _ _]
+                                        (dp :sp-status-now new)))
+     :sp-initialized?      (stt/sp-initializer-rule)
+     :locale-names (cF+ [:async? true
+                         :watch (fn [_ me new _ _]
+                                  (dp :tss-langs (keys (app-lang-geos)))
+                                  (dp :sttlox (count new)
+                                    (map (fn [loc]
+                                           (.-localeId loc))
+                                      (take 5 new))))]
+                     (when (mget me :sp-initialized?)
+                       (.locales stt/STT)))
+     ;:system-locale-id (cF+ [:async? true
+     ;                        :watch (fn [_ _ new _ _] (dpx :loc-sys-id-2 new))]
+     ;                    (when-let [lox-names (mget me :locale-names)]
+     ;                      (dp :locales (count lox-names))
+     ;                      (let [sys-loc (await
+     ;                                      (.systemLocale STT))]
+     ;                        (dpx :sys-loc!!!!!! (.-localeId ^stt/LocaleName sys-loc))
+     ;                        (.-localeId ^stt/LocaleName sys-loc))))
+     }
     (scaffold
-      {:appBar (app-bar {:title (m/Text "Flutter S2T/TTS Demo")})}
+      {:appBar (app-bar {:title (m/Text "Flutter stt/TTS Demo")})}
       (column
         {:crossAxisAlignment m/CrossAxisAlignment.stretch}
-        (choice-header "Languages")
+        ;(choice-header "Languages")
         (lang-chooser)
         (choice-header "Geography")
         (geo-chooser)
-        (speech-input poetry/graves-reproach-s1 )
+        (speech-input "")
         (chyron)
         (dashboard)
         (auto-play)

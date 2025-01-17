@@ -15,7 +15,8 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.tts.fts :as fts
-     :refer [app-tts app-fts app-fts-lang app-fts-status app-fts-progress
+     :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
+             app-fts-status app-fts-progress
              app-lang-geos fts-speak fts-pause fts-stop fts-restart
              lg-geo lg-lang]]))
 
@@ -26,7 +27,7 @@
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-play")
-       :value           (cI true :watch (fn [_ me new prior _]
+       :value           (cI false :watch (fn [_ me new prior _]
                                           (when (and new
                                                   (mx-bound? prior)
                                                   (= :off (app-fts-status)))
@@ -39,7 +40,7 @@
 (defn lang-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
+      {:crossAxisCount  12 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
       {:name :lang-chooser}
@@ -50,7 +51,7 @@
 (defn geo-chooser []
   (do                                                       ;; expanded
     (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
+      {:crossAxisCount  12 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)
        :shrinkWrap      true}
@@ -58,6 +59,20 @@
       (map-indexed geo-button
         (when-let [lgc (app-fts-lang)]
           (get (app-lang-geos) lgc))))))
+
+(defn voice-chooser []
+  (do                                                       ;; expanded
+    (fx/grid-view+count
+      {:crossAxisCount  12 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 1.8
+       :padding         (m/EdgeInsets.all 8)
+       :shrinkWrap      true}
+      {:name :voice-chooser}
+      (map-indexed voice-button
+        (when-let [loc (app-fts-lg-current)]
+          (dp :got-loc!!!!!!!! loc :vs (app-locale-voices))
+          (filter #(= (:locale %) loc)
+            (app-locale-voices)))))))
 
 ;;; --- lang and geo buttons ----------------------------------------------------
 
@@ -99,6 +114,26 @@
             {:style (p/TextStyle .color m/Colors.black
                       .fontSize 16.0)}
             (lg-geo lang-geo)))))))
+
+(defn voice-button [i voice]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. (:voice-id voice))
+     :onTap (dart-cb []
+              (dp :Todo!!!!!!!!-set-voice voice)
+              (mset! (app-fts) :voice-current voice))}
+    (container
+      {:decoration (cF (fx/box-decoration
+                         {:border (cF (when (= (:voice-id voice) (mget (app-fts) :voice-current))
+                                        (.all m/Border .color m/Colors.blue .width 2)))
+                          :color  (.-shade50 (cond
+                                               (even? i) m/Colors.blue
+                                               :else m/Colors.yellow))}))}
+      (center
+        (padding {:padding (m/EdgeInsets.all 4.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 16.0)}
+            (:name voice)))))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
 

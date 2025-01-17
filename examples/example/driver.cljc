@@ -64,7 +64,7 @@
     [example.eg.x065-autocomplete-basic :as x065]
     [example.eg.x066-autocomplete-object :as x066]
     [example.eg.x070-speech-to-text :as dicto]
-    [example.demo.s2t.core :as s2t]))
+    [example.demo.parrot.core :as polly]))
 
 (defn select []
   (comment hello counter x03 x05 x13 dlayout tts tek sock todo icompute)
@@ -72,12 +72,12 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 3
+  (case 5
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
     3 (dicto/make-app)
-    4 (s2t/make-app)
+    4 (polly/make-app)
     5 (tts/make-app)))
 
 ;; todo does not show all three options -- unavailables may be black on black
