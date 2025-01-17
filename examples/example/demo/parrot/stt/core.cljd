@@ -1,0 +1,79 @@
+(ns example.demo.parrot.stt.core
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ;
+    ["package:speech_to_text/speech_to_text.dart" :as stt]
+    ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as sttpi]
+    ["package:speech_to_text/speech_recognition_error.dart" :as stte]
+    ["package:speech_to_text/speech_recognition_result.dart" :as sttr]
+
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]))
+
+; todo: move to mx api
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
+
+(def ^stt/SpeechToText STT (stt/SpeechToText))
+(def user-prompt "(click mic icon, wait for red ear, then speak)")
+(def you-said "You said (wait for it)....")
+
+(defn sp-initializer-rule []
+  (cF+ [:async? true
+        :watch (fn [_ me new _ _]
+                 (dp :initialized? new)
+                 (when new
+                   (dp :post-init-avail (.-isAvailable STT))
+                   (dp :post-init-listening (.-isListening STT))
+                   (dp :post-init-has-error (.-hasError STT))
+                   (when new
+                     (try-wmx-iso
+                       (mset! me :sp-status :available)))))]
+    (.initialize STT
+      .onStatus (fn [status]
+                  (try-wmx-iso
+                    (dp :onStatus!!!!!!!!-sets-status (keyword status))
+                    (mset! me :sp-status (keyword status))))
+      .onError (fn [^stte/SpeechRecognitionError err]
+                 (dp :sp-error!!!!! (.-errorMsg err))
+                 (try-wmx-iso
+                   (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
+
+(defn stop-listening [me]
+  (dp :requesting-stop)
+  (.stop STT))
+
+(defn start-listening [me]                                  ;; me s/b ear
+  (dp :starting-listening)
+  (let [options (sttpi/SpeechListenOptions
+                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
+                  .cancelOnError true
+                  .listenMode stt/ListenMode.dictation      ;; search | confirmation | dictation
+                  .autoPunctuation true)
+        result-listener (fn [^sttr/SpeechRecognitionResult r]
+                          (let [wds (.-recognizedWords r)]
+                            (dp :result-words!! wds)
+                            (when (.-finalResult r)
+                              (dp :result-final!! wds)
+                              (try-wmx-iso
+                                (mset! (fmu :app) :transcript wds))
+                              (dp :stopping-on-final-result-perhaps-reduntantly)
+                              (.stop STT))))]
+    (.listen STT .onResult result-listener
+      .listenFor (Duration .seconds 20)                     ;; what it says
+      .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
+      .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
+      .listenOptions options)
+    (mset! (fmu :app) :sp-status :started)))
+
