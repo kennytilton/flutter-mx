@@ -145,14 +145,14 @@
 
 (defn fts-speak [me]
   (let [tts ^FlutterTts (mget (app-fts) :tts)
-        speech (muv :text-in)]
+        speech (mav :transcript)]
     (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
-        (.setPitch tts (muv-inc :pitch))
         (.setVolume tts (muv-inc :volume))
         (.setLanguage tts lg)
         (.setVoice tts (mget (app-fts) :voice-current)) ;; must follow setLanguage ^^^
         (.setSpeechRate tts (muv-inc :speech-rate))
+        (.setPitch tts (muv-inc :pitch))
         (.speak tts speech)))))
 
 (defn fts-pause [me]

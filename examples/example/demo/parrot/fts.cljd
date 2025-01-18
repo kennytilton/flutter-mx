@@ -144,8 +144,11 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-speak [me]
+  (dp :damn)
+  (assert false)
+  #_
   (let [tts ^FlutterTts (mget (app-fts) :tts)
-        speech (muv :text-in)]
+        speech (mget me :transcript)]
     (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
         (.setVolume tts (muv-inc :volume))

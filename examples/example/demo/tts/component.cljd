@@ -153,17 +153,19 @@
                                    m/Colors.green)
          :splashColor (if playing? m/Colors.blueAccent
                                    m/Colors.greenAccent)
-         :onPressed   (fn [] ((if playing? fts-pause fts-speak) me))}))))
+         :onPressed   (dart-cb []
+                        (dp :yep "yep" playing?)
+                        ((if playing? fts-pause fts-speak) me))}))))
 
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
                                    (let [{:keys [full-text word-end]}
-                                           (app-fts-progress)]
-                                       (< word-end (* 0.2 (count full-text))))))}
-      (opacity {:opacity (cF (if (mav :ignoring)
-                               0.15 1.0))}
-        (column {:mainAxisSize      m/MainAxisSize.min
-                 :mainAxisAlignment m/MainAxisAlignment.center}
+                                         (app-fts-progress)]
+                                     (< word-end (* 0.2 (count full-text))))))}
+    (opacity {:opacity (cF (if (mav :ignoring)
+                             0.15 1.0))}
+      (column {:mainAxisSize      m/MainAxisSize.min
+               :mainAxisAlignment m/MainAxisAlignment.center}
           (icon-button
             {:key         (m/ValueKey "FTS-STOP")
              :icon        (fx/icon m/Icons.stop)
