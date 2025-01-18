@@ -70,7 +70,8 @@
     {:name            :app
      :fts             (cF (fts/make-flutter-tts))
      ; speech recognition
-     :transcript       (cI "...")
+     :transcript       (cI "your transcript here")
+
      ;:speak-prompt     (cF (if (= (mget me :transcript) "...")
      ;                        stt/user-prompt stt/you-said))
      :sp-status       (cI nil :watch (fn [_ me new _ _]
@@ -90,6 +91,7 @@
                                  (dp :tts-lox new))]
                     #_ (.-getLanguages (mget (mget me :fts) :tts))
                     (when-let [tts (mget (mget me :fts) :tts)]
+                      (dp :tts!!!!!!!!!!!!!! tts (.-getLanguages tts))
                       (.-getLanguages tts)))
      :fts-locales     (cF+ [;; :async? true
                             :watch (fn [_ _ new _ _]
@@ -113,7 +115,7 @@
         (voice-chooser)
         (choice-header "Script")
         (make-recorder)
-        (speech-input poetry/graves-jealousy)
+        (speech-input)
         (chyron)
         (dashboard)
         (auto-play)
@@ -129,20 +131,19 @@
 
 ;;; --- text input --------------------------------------------------------------
 
-(defn speech-input [speech-initial]
+(defn speech-input []
   (container
     {:alignment m/Alignment.topCenter
      :padding   (m/EdgeInsets.only
                   .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
-    (fx/text-field
+    (fx/text
       {:style      (p/TextStyle
                      .fontFamily "Helvetica Neue"
                      .fontSize 20.0)
-       :controller (cFonce
-                     (m/TextEditingController .text (mget me :value)))
-       :onChanged  (dart-cb [text]
-                     (mset! me :value text))
-       :minLines   6 :maxLines 11}
-      {:name  :text-in
-       :value (cI speech-initial)})))
+       ;:minLines   6
+       :maxLines 11
+       :overflow m/TextOverflow.clip
+       :softWrap true}
+      {:name  :text-in}
+      (mget (fmu :app) :transcript))))
 
