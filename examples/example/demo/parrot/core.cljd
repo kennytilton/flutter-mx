@@ -26,7 +26,10 @@
      :refer [lang-chooser geo-chooser voice-chooser play-pause-button stop-button auto-play
              equalizer choice-header]]
     [example.demo.parrot.poetry :as poetry]
-    [example.demo.parrot.stt.core :as stt]))
+    [example.demo.parrot.stt.core :as stt]
+    [example.demo.parrot.stt.common :as cmn]
+    [example.demo.parrot.stt.recorder
+     :refer [make-recorder make-mic make-ear]]))
 
 ;;; === app ======================================================
 
@@ -81,7 +84,7 @@
                            (.locales STT)))
                         (when (mget me :sp-initialized?)
                           ; (map (fn [loc] (.-localeId loc)) (.locales stt/STT))
-                          (.locales stt/STT)))
+                          (.locales cmn/STT)))
      :tts-locales (cF+ [:async? true
                         #_#_ :watch (fn [_ _ new _ _]
                                  (dp :tts-lox new))]
@@ -93,9 +96,9 @@
                                      (dp :common-lox new))]
                         #_ (.-getLanguages (mget (mget me :fts) :tts))
                         (when-let [tts (mget me :tts-locales)]
-                          (dp :tts tts)
+                          ;(dp :tts tts)
                           (when-let [stt (mget me :stt-locales)]
-                            (dp :stt (map (fn [loc] (.-localeId loc)) stt))
+                            ;(dp :stt (map (fn [loc] (.-localeId loc)) stt))
                             (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter stt/TTS Demo")})}
@@ -108,6 +111,7 @@
         (choice-header "Voices")
         (voice-chooser)
         (choice-header "Script")
+        (make-recorder)
         (speech-input poetry/graves-jealousy)
         (chyron)
         (dashboard)

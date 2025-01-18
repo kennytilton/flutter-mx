@@ -148,10 +148,11 @@
         speech (muv :text-in)]
     (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
-        (.setPitch tts (muv-inc :pitch))
         (.setVolume tts (muv-inc :volume))
         (.setLanguage tts lg)
         (.setVoice tts (mget (app-fts) :voice-current)) ;; must follow setLanguage ^^^
+        (dart:core/print (str/join :setting-pitch (muv-inc :pitch)))
+        (.setPitch tts (muv-inc :pitch))
         (.setSpeechRate tts (muv-inc :speech-rate))
         (.speak tts speech)))))
 

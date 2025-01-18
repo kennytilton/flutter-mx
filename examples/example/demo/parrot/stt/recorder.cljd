@@ -1,4 +1,4 @@
-(ns example.demo.parrot.stt.core
+(ns example.demo.parrot.stt.recorder
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -16,7 +16,8 @@
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
-             checkbox-list-tile icon-button fx-render dart-cb]]
+             checkbox-list-tile icon-button sized-box fx-render dart-cb]]
+
     [example.demo.parrot.stt.common :as cmn]))
 
 ; todo: move to mx api
@@ -26,29 +27,6 @@
      (catch Exception e#
        (dp :FLUTTERCATCH!! e#))))
 
-(def user-prompt "(click mic icon, wait for red ear, then speak)")
-(def you-said "You said (wait for it)....")
-
-(defn sp-initializer-rule []
-  (cF+ [:async? true
-        :watch (fn [_ me new _ _]
-                 (dpx :initialized? new)
-                 (when new
-                   (dpx :post-init-avail (.-isAvailable cmn/STT))
-                   (dpx :post-init-listening (.-isListening cmn/STT))
-                   (dpx :post-init-has-error (.-hasError cmn/STT))
-                   (when new
-                     (try-wmx-iso
-                       (mset! me :sp-status :available)))))]
-    (.initialize cmn/STT
-      .onStatus (fn [status]
-                  (try-wmx-iso
-                    (dp :onStatus!!!!!!!!-sets-status (keyword status))
-                    (mset! me :sp-status (keyword status))))
-      .onError (fn [^stte/SpeechRecognitionError err]
-                 (dp :sp-error!!!!! (.-errorMsg err))
-                 (try-wmx-iso
-                   (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
 
 (defn stop-listening [me]
   (dp :requesting-stop)
@@ -76,4 +54,60 @@
       .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
+
+;;; --- mic ----------------------------------------
+
+(defn make-mic []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF (dp :mic-color-sees-status (mav :sp-status))
+                                (case (mav :sp-status)
+                                  :available m/Colors.cyan
+                                  :unavailable m/Colors.red
+                                  :listening m/Colors.grey
+                                  :done m/Colors.cyan
+                                  m/Colors.grey))
+                :elevation    4.0}
+    {:name :ear}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    (dp :starting-listening)
+                    (mset! (fmu :app) :transcript "")
+                    (start-listening (fmu :ear)))
+       :icon      (m/Icon m/Icons.mic)
+       :color     (cF (fx/within-ctx [me ctx]
+                        (dp :mic-status (mav :sp-status))
+                        m/Colors.black))})))
+
+;;; --- ear ------------------------------------------
+
+(defn make-ear []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF (dp :ear-color-sees-status (mav :sp-status))
+                                (case (mav :sp-status)
+                                  :started m/Colors.yellow
+                                  :stopped m/Colors.orange
+                                  :listening m/Colors.red
+                                  m/Colors.grey))
+                :elevation    4.0}
+    {:name :ear}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    ; todo offer cancel as well as stop, or have mic handle
+                    ;   stop and this ear mean cancel while listening
+                    (when (= :listening (mav :sp-status))
+                      (dp :stopping-on-ear-press)
+                      (mset! (fmu :app) :sp-status :stopped)
+                      (stop-listening (fmu :ear))))
+       :icon      (m/Icon m/Icons.hearing)
+       :color     (cF (fx/within-ctx [me ctx]
+                        m/Colors.black))})))
+
+(defn make-recorder []
+  (row {:mainAxisSize m/MainAxisSize.min}
+    (make-mic)
+    (sized-box
+      {:width 28.0})
+    (make-ear)))
 
