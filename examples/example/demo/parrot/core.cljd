@@ -70,7 +70,7 @@
     {:name            :app
      :fts             (cF (fts/make-flutter-tts))
      ; speech recognition
-     ;:transcript       (cI "...")
+     :transcript       (cI "...")
      ;:speak-prompt     (cF (if (= (mget me :transcript) "...")
      ;                        stt/user-prompt stt/you-said))
      :sp-status       (cI nil :watch (fn [_ me new _ _]
@@ -99,7 +99,8 @@
                           ;(dp :tts tts)
                           (when-let [stt (mget me :stt-locales)]
                             ;(dp :stt (map (fn [loc] (.-localeId loc)) stt))
-                            (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))}
+                            (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))
+     }
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter stt/TTS Demo")})}
       (column

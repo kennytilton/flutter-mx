@@ -17,7 +17,12 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
-    [example.demo.parrot.stt.common :as cmn]))
+    [example.demo.parrot.stt.common :as cmn]
+    [example.demo.tts.fts :as fts
+     :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
+             app-fts-status app-fts-progress
+             app-lang-geos fts-speak fts-pause fts-stop fts-restart
+             lg-geo lg-lang]]))
 
 ; todo: move to mx api
 (defmacro try-wmx-iso [& body]
@@ -48,7 +53,7 @@
       .onError (fn [^stte/SpeechRecognitionError err]
                  (dp :sp-error!!!!! (.-errorMsg err))
                  (try-wmx-iso
-                   (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
+                   (mset! (fmu :app) :transcript (str "Error: " (.-errorMsg err))))))))
 
 (defn stop-listening [me]
   (dp :requesting-stop)
@@ -73,7 +78,7 @@
     (.listen cmn/STT .onResult result-listener
       .listenFor (Duration .seconds 20)                     ;; what it says
       .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
-      .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
+      .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
 

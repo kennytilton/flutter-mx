@@ -18,7 +18,12 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button sized-box fx-render dart-cb]]
 
-    [example.demo.parrot.stt.common :as cmn]))
+    [example.demo.parrot.stt.common :as cmn]
+    [example.demo.tts.fts :as fts
+     :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
+             app-fts-status app-fts-progress
+             app-lang-geos fts-speak fts-pause fts-stop fts-restart
+             lg-geo lg-lang]]))
 
 ; todo: move to mx api
 (defmacro try-wmx-iso [& body]
@@ -51,7 +56,7 @@
     (.listen cmn/STT .onResult result-listener
       .listenFor (Duration .seconds 20)                     ;; what it says
       .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
-      .localeId (mav :system-locale-id)                     ;; try "fr-FR", eg, or your best language
+      .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
 
@@ -106,6 +111,8 @@
 
 (defn make-recorder []
   (row {:mainAxisSize m/MainAxisSize.min}
+    (sized-box
+      {:width 28.0})
     (make-mic)
     (sized-box
       {:width 28.0})
