@@ -20,7 +20,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
-    [example.demo.tts.fts  :as fts
+    [example.demo.tts.fts :as fts
      :refer [app-fts-progress app-fts-status]]
     [example.demo.tts.component
      :refer [lang-chooser geo-chooser voice-chooser play-pause-button stop-button auto-play
@@ -40,6 +40,15 @@
 
 (declare dashboard speech-input)
 
+(defn list-difference [list1 list2]
+  (let [set2 (set list2)]
+    (filter #(not (contains? set2 %)) list1)))
+
+(defn list-intersection [list1 list2]
+  (let [set2 (set list2)]
+    (filter #(contains? set2 %) list1)))
+
+
 (defn chyron []
   (container
     {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
@@ -48,40 +57,46 @@
                  (when (not= :off (app-fts-status))
                    (let [{:keys [word]} (app-fts-progress)]
                      (if (nil? word) []
-                       (take-last 5
-                         (concat (if (mx-bound? _cache) _cache [])
-                           [word]))))))}
+                                     (take-last 5
+                                       (concat (if (mx-bound? _cache) _cache [])
+                                         [word]))))))}
       (str/join "..." (mget me :phrase)))))
 
 (defn make-app []
   (material-app {}
-    {:name :app
-     :fts  (cF (fts/make-flutter-tts))
+    {:name            :app
+     :fts             (cF (fts/make-flutter-tts))
      ; speech recognition
      ;:transcript       (cI "...")
      ;:speak-prompt     (cF (if (= (mget me :transcript) "...")
      ;                        stt/user-prompt stt/you-said))
-     :sp-status        (cI nil :watch (fn [_ me new _ _]
-                                        (dp :sp-status-now new)))
-     :sp-initialized?      (stt/sp-initializer-rule)
-     :locale-names (cF+ [:async? true
-                         :watch (fn [_ me new _ _]
-                                  #_#_ (dp :tss-langs (keys (app-lang-geos)))
-                                  (dp :sttlox (count new)
-                                    (map (fn [loc]
-                                           (.-localeId loc))
-                                      (take 5 new))))]
-                     (when (mget me :sp-initialized?)
-                       (.locales stt/STT)))
-     ;:system-locale-id (cF+ [:async? true
-     ;                        :watch (fn [_ _ new _ _] (dpx :loc-sys-id-2 new))]
-     ;                    (when-let [lox-names (mget me :locale-names)]
-     ;                      (dp :locales (count lox-names))
-     ;                      (let [sys-loc (await
-     ;                                      (.systemLocale STT))]
-     ;                        (dpx :sys-loc!!!!!! (.-localeId ^stt/LocaleName sys-loc))
-     ;                        (.-localeId ^stt/LocaleName sys-loc))))
-     }
+     :sp-status       (cI nil :watch (fn [_ me new _ _]
+                                       (dp :sp-status-now new)))
+     :sp-initialized? (stt/sp-initializer-rule)
+     :stt-locales    (cF+ [:async? true
+                            #_#_ :watch (fn [_ me new _ _]
+                                     (dp :stt-lox new))]
+                       #_ (cF+ [:async? true]
+                         (when (mget me :initialized?)
+                           (.locales STT)))
+                        (when (mget me :sp-initialized?)
+                          ; (map (fn [loc] (.-localeId loc)) (.locales stt/STT))
+                          (.locales stt/STT)))
+     :tts-locales (cF+ [:async? true
+                        #_#_ :watch (fn [_ _ new _ _]
+                                 (dp :tts-lox new))]
+                    #_ (.-getLanguages (mget (mget me :fts) :tts))
+                    (when-let [tts (mget (mget me :fts) :tts)]
+                      (.-getLanguages tts)))
+     :fts-locales     (cF+ [;; :async? true
+                            :watch (fn [_ _ new _ _]
+                                     (dp :common-lox new))]
+                        #_ (.-getLanguages (mget (mget me :fts) :tts))
+                        (when-let [tts (mget me :tts-locales)]
+                          (dp :tts tts)
+                          (when-let [stt (mget me :stt-locales)]
+                            (dp :stt (map (fn [loc] (.-localeId loc)) stt))
+                            (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter stt/TTS Demo")})}
       (column
