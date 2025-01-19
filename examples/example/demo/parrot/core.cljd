@@ -31,17 +31,7 @@
     [example.demo.parrot.stt.recorder
      :refer [make-recorder make-mic make-ear]]))
 
-;;; === app ======================================================
-
-(defmacro try-wmx-iso [& body]
-  `(try
-     (tilton.mx.api/wmx-iso ~@body)
-     (catch Exception e#
-       (dp :FLUTTERCATCH!! e#))))
-
-;;; -----------------------------------
-
-(declare dashboard speech-input)
+; todo move these to MX utilities
 
 (defn list-difference [list1 list2]
   (let [set2 (set list2)]
@@ -51,72 +41,48 @@
   (let [set2 (set list2)]
     (filter #(contains? set2 %) list1)))
 
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
 
-(defn chyron []
-  (container
-    {:padding (m/EdgeInsets.symmetric .horizontal 16.0)}
-    (fx/text {:textAlign m/TextAlign.center}
-      {:phrase (cF+ [:sst nil]
-                 (when (not= :off (app-fts-status))
-                   (let [{:keys [word]} (app-fts-progress)]
-                     (if (nil? word) []
-                                     (take-last 5
-                                       (concat (if (mx-bound? _cache) _cache [])
-                                         [word]))))))}
-      (str/join "..." (mget me :phrase)))))
+;;; === app ======================================================
+
+(declare dashboard speech-input)
 
 (defn make-app []
   (material-app {}
     {:name            :app
+     ; --- text to speech
      :fts             (cF (fts/make-flutter-tts))
-     ; speech recognition
-     :transcript       (cI "testing")
-
-     ;:speak-prompt     (cF (if (= (mget me :transcript) "...")
-     ;                        stt/user-prompt stt/you-said))
+     :tts-locales     (cF+ [:async? true]
+                        (when-let [tts (mget (mget me :fts) :tts)]
+                          (dpx :tts!!!!!!!!!!!!!! tts (.-getLanguages tts))
+                          (.-getLanguages tts)))
+     :fts-locales     (cF (when-let [tts (mget me :tts-locales)]
+                            (when-let [stt (mget me :stt-locales)]
+                              (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))
+     ; --- speech to text
      :sp-status       (cI nil :watch (fn [_ me new _ _]
                                        (dp :sp-status-now new)))
      :sp-initialized? (stt/sp-initializer-rule)
-     :stt-locales    (cF+ [:async? true
-                            #_#_ :watch (fn [_ me new _ _]
-                                     (dp :stt-lox new))]
-                       #_ (cF+ [:async? true]
-                         (when (mget me :initialized?)
-                           (.locales STT)))
+     :stt-locales     (cF+ [:async? true]
                         (when (mget me :sp-initialized?)
-                          ; (map (fn [loc] (.-localeId loc)) (.locales stt/STT))
                           (.locales cmn/STT)))
-     :tts-locales (cF+ [:async? true
-                        #_#_ :watch (fn [_ _ new _ _]
-                                 (dp :tts-lox new))]
-                    #_ (.-getLanguages (mget (mget me :fts) :tts))
-                    (when-let [tts (mget (mget me :fts) :tts)]
-                      (dp :tts!!!!!!!!!!!!!! tts (.-getLanguages tts))
-                      (.-getLanguages tts)))
-     :fts-locales     (cF+ [;; :async? true
-                            :watch (fn [_ _ new _ _]
-                                     (dp :common-lox new))]
-                        #_ (.-getLanguages (mget (mget me :fts) :tts))
-                        (when-let [tts (mget me :tts-locales)]
-                          ;(dp :tts tts)
-                          (when-let [stt (mget me :stt-locales)]
-                            ;(dp :stt (map (fn [loc] (.-localeId loc)) stt))
-                            (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))
-     }
+     :transcript      (cI "Your grieving moonlight face looks down through the forest of my fears.")}
     (scaffold
-      {:appBar (app-bar {:title (m/Text "Flutter stt/TTS Demo")})}
+      {:appBar (app-bar {:title (m/Text "Flutter Speech <-> Text")})}
       (column
         {:crossAxisAlignment m/CrossAxisAlignment.stretch}
-        ;(choice-header "Languages")
+        (choice-header "Languages")
         (lang-chooser)
         (choice-header "Geography")
         (geo-chooser)
         (choice-header "Voices")
         (voice-chooser)
-        ;(choice-header "Script")
         (make-recorder)
         (speech-input)
-       ;; (chyron)
         (dashboard)
         (row {;:mainAxisSize      m/MainAxisSize.min
               :mainAxisAlignment m/MainAxisAlignment.center}
@@ -127,7 +93,10 @@
 
 (defn dashboard []
   (container {:padding (m/EdgeInsets.only .top 4 .bottom 4)}
-    (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+    (row {;:mainAxisSize      m/MainAxisSize.min
+          :mainAxisAlignment m/MainAxisAlignment.center}
+      #_{:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (text "Playback")
       (play-pause-button)
       (stop-button))))
 
@@ -135,17 +104,19 @@
 
 (defn speech-input []
   (container
-    {:alignment m/Alignment.topCenter
-     :padding   (m/EdgeInsets.only
-                  .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    {:alignment  m/Alignment.topCenter
+     :decoration (cF (fx/box-decoration
+                       {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                        :color  m/Colors.grey.shade50}))
+     :padding    (m/EdgeInsets.only
+                   .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
     (fx/text
-      {:style      (p/TextStyle
-                     .fontFamily "Helvetica Neue"
-                     .fontSize 20.0)
-       ;:minLines   6
-       :maxLines 11
+      {:style    (p/TextStyle
+                   .fontFamily "Helvetica Neue"
+                   .fontSize 20.0)
+       :maxLines 2
        :overflow m/TextOverflow.clip
        :softWrap true}
-      {:name  :text-in}
+      {:name :text-in}
       (mget (fmu :app) :transcript))))
 

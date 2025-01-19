@@ -48,7 +48,6 @@
           ""
           match))))) ;; todo >>> util
 
-
 (def eo-speech "bingo")
 
 (defn start-listening [me]                                  ;; me s/b ear
@@ -198,9 +197,13 @@
   (row {:mainAxisAlignment m/MainAxisAlignment.end
         :mainAxisSize      m/MainAxisSize.min}
     (row {:mainAxisSize m/MainAxisSize.min}
-      (make-mic)
-      (sized-box {:width 28.0})
-      (make-ear)
+      (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (text "Recording")
+        (sized-box {:height 6.0})
+        (row {:mainAxisSize m/MainAxisSize.min}
+          (make-mic)
+          (sized-box {:width 28.0})
+          (make-ear)))
       (sized-box {:width 64.0}))
     (listen-mode)
     (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}

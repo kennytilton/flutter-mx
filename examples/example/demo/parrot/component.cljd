@@ -1,5 +1,5 @@
 (ns example.demo.parrot.component
-  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  "Originally, a straight port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
   (:require
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
@@ -42,7 +42,7 @@
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 0
        :mainAxisSpacing 4 :childAspectRatio 3.0
-       :padding         (m/EdgeInsets.all 0)}
+       :padding         (m/EdgeInsets.only .left 40)}
       {:name :lang-chooser}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
@@ -53,7 +53,7 @@
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 0
        :mainAxisSpacing 0 :childAspectRatio 4.0
-       ;:padding         (m/EdgeInsets.all 0)
+       :padding         (m/EdgeInsets.only .left 40)
        :shrinkWrap      true}
       {:name :geo-chooser}
       (map-indexed geo-button
@@ -64,8 +64,8 @@
   (do                                                       ;; expanded
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.8
-       :padding         (m/EdgeInsets.all 8)
+       :mainAxisSpacing 4 :childAspectRatio 4.0
+       :padding         (m/EdgeInsets.only .left 40)
        :shrinkWrap      true}
       {:name :voice-chooser}
       (map-indexed voice-button
@@ -87,7 +87,7 @@
     (container
       {:decoration (cF (fx/box-decoration
                          {:border (cF (when (= lang (app-fts-lang))
-                                        (.all m/Border .color m/Colors.blue .width 2)))
+                                        (.all m/Border .color m/Colors.blue .width 1.0)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}))}
@@ -106,12 +106,12 @@
     (container
       {:decoration (cF (fx/box-decoration
                          {:border (cF (when (= (lg-geo lang-geo) (mget (app-fts) :lg-geo))
-                                        (.all m/Border .color m/Colors.blue .width 0.5)))
+                                        (.all m/Border .color m/Colors.blue .width 1.0)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}))}
       (center
-        (padding {:padding (m/EdgeInsets.all 4.0)}
+        (padding {:padding (m/EdgeInsets.all 0.0)}
           (fx/text
             {:style (p/TextStyle .color m/Colors.black
                       .fontSize 12.0)}
@@ -127,15 +127,15 @@
       {:decoration (cF (fx/box-decoration
                          {:border (cF (when (= (get voice "identifier")
                                               (get (mget (app-fts) :voice-current) "identifier"))
-                                        (.all m/Border .color m/Colors.blue .width 2)))
+                                        (.all m/Border .color m/Colors.blue .width 1.0)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}))}
       (center
-        (padding {:padding (m/EdgeInsets.all 4.0)}
+        (padding {:padding (m/EdgeInsets.all 0.0)}
           (fx/text
             {:style (p/TextStyle .color m/Colors.black
-                      .fontSize 16.0)}
+                      .fontSize 14.0)}
             (get voice "name")))))))
 
 ;;; --- play, stop, pause -------------------------------------------------------
@@ -176,7 +176,7 @@
 
 (defn property-slider [label prop color init-val min max divisions watch]
   ;; NB: an example of composability.
-  ;; Because all f/mx widgets are CLJD macros are functions (vs markup), we
+  ;; Because all f/mx widgets are CLJD macros are functions, we
   ;; can create functions like this easily.
   ;; NB2: parameters are not like React "props", tracked internally to avoid rebuilding.
   ;; Parameters just provide initial values, often permanent.
@@ -191,7 +191,7 @@
     {:name prop}))
 
 (def equalizer-sliders
-  [["Volume" :volume m/Colors.blue 0.3 0 1 10
+  [["Volume" :volume m/Colors.blue 0.8 0 1 10
     (fn [_ me new _ _]
       (.setVolume ^FlutterTts (app-tts) new))]
    ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
