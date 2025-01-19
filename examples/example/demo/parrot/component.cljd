@@ -14,7 +14,7 @@
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
-    [example.demo.tts.fts :as fts
+    [example.demo.parrot.fts :as fts
      :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
              app-fts-status app-fts-progress
              app-lang-geos fts-speak fts-pause fts-stop fts-restart
@@ -40,7 +40,7 @@
 (defn lang-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
+      {:crossAxisCount  12 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)}
       {:name :lang-chooser}
@@ -51,7 +51,7 @@
 (defn geo-chooser []
   (do                                                       ;; expanded
     (fx/grid-view+count
-      {:crossAxisCount  8 :crossAxisSpacing 4
+      {:crossAxisCount  12 :crossAxisSpacing 4
        :mainAxisSpacing 4 :childAspectRatio 1.8
        :padding         (m/EdgeInsets.all 8)
        :shrinkWrap      true}
@@ -189,21 +189,6 @@
      :label       (cF (str (mget me :value)))
      :activeColor color}
     {:name prop}))
-
-#_ (column {:mainAxisSize      m/MainAxisSize.min
-            :mainAxisAlignment m/MainAxisAlignment.center}
-     (icon-button
-       {:key         (m/ValueKey "FTS-STOP")
-        :icon        (fx/icon m/Icons.stop)
-        :iconSize    48
-        :color       m/Colors.red
-        :splashColor m/Colors.redAccent
-        :onPressed   (cF (when-not
-                           (or (= :off (app-fts-status))
-                             (let [{:keys [full-text word-end]}
-                                   (app-fts-progress)]
-                               (< word-end (* 0.2 (count full-text)))))
-                           (fn [] (fts-stop me))))}))
 
 (def equalizer-sliders
   [["Volume" :volume m/Colors.blue 0.3 0 1 10

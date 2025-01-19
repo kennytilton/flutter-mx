@@ -12,14 +12,14 @@
     [clojure.string :as str]
     [tilton.mx.api :as mx
      :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
-             fmu muv fm* mav mx-bound? wmx-iso]]
+             fmu  muv fm* mav mx-bound? wmx-iso]]
     [tilton.fmx.api :as fx
      :refer [scaffold app-bar text center column hero material-app
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button sized-box fx-render dart-cb]]
 
     [example.demo.parrot.stt.common :as cmn]
-    [example.demo.tts.fts :as fts
+    [example.demo.parrot.fts :as fts
      :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
              app-fts-status app-fts-progress
              app-lang-geos fts-speak fts-pause fts-stop fts-restart
@@ -32,30 +32,52 @@
      (catch Exception e#
        (dp :FLUTTERCATCH!! e#))))
 
-
 (defn stop-listening [me]
   (dp :requesting-stop)
   (.stop cmn/STT))
+
+(defn escape-regex [s]
+  ;; Escapes regex special characters in the substring
+  (str/replace s #"[.*+?^${}()|\[\]\\]" "\\\\$0"))
+(defn remove-substring-ci [full-str sub-str]
+  (let [escaped-sub-str (escape-regex sub-str)
+        regex (re-pattern escaped-sub-str)]
+    (str/replace full-str regex
+      (fn [match]
+        (if (= (str/lower-case match) (str/lower-case sub-str))
+          ""
+          match))))) ;; todo >>> util
+
+
+(def eo-speech "bingo")
 
 (defn start-listening [me]                                  ;; me s/b ear
   (dp :starting-listening)
   (let [options (sttpi/SpeechListenOptions
                   ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
-                  .cancelOnError true
-                  .listenMode stt/ListenMode.dictation      ;; search | confirmation | dictation
-                  .autoPunctuation true)
+
+                  .cancelOnError (mget (fm* :cancel-on-error) :value)
+                  .listenMode (case (mget (fm* :listen-mode) :selected)
+                                :dictation stt/ListenMode.dictation
+                                :confirm stt/ListenMode.confirmation
+                                :search stt/ListenMode.search) ;; search | confirmation | dictation
+                  .autoPunctuation (muv :auto-punctuation))
         result-listener (fn [^sttr/SpeechRecognitionResult r]
                           (let [wds (.-recognizedWords r)]
-                            (dp :result-words!! wds)
+                            (dp :result-words!! (string? wds) wds)
+                            (when (str/includes? wds eo-speech)
+                              (.stop cmn/STT))
                             (when (.-finalResult r)
                               (dp :result-final!! wds)
                               (try-wmx-iso
-                                (mset! (fmu :app) :transcript wds))
-                              (dp :stopping-on-final-result-perhaps-reduntantly)
+                                (mset! (fmu :app) :transcript
+                                  (remove-substring-ci wds eo-speech))
+                                (fts-speak me))
+                              (dp :RECORDER-stopping-on-final-result-perhaps-reduntantly)
                               (.stop cmn/STT))))]
     (.listen cmn/STT .onResult result-listener
-      .listenFor (Duration .seconds 20)                     ;; what it says
-      .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
+      .listenFor (Duration .seconds (mget (fmu :listenFor) :value))                  ;; what it says
+      .pauseFor (Duration .seconds (mget (fmu :pauseFor) :value)) ;; pause too long and it stops automatically
       .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
@@ -109,12 +131,80 @@
        :color     (cF (fx/within-ctx [me ctx]
                         m/Colors.black))})))
 
+;;; --- recorder options ------------------------------
+
+(defn listen-mode []
+  (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+    {:name     :listen-mode
+     :selected (cI :dictation)}
+    (text "Listen Mode")
+    (mapv (fn [mode]
+            (fx/sized-box {:width 200}
+              (fx/radio-list-tile
+                {:controlAffinity m/ListTileControlAffinity.leading
+                 :title           (m/Text (str/capitalize (name mode)))
+                 :value           mode
+                 :groupValue      (cF (mav :selected))
+                 :onChanged       (dart-cb [v]
+                                    (mset! (fasc :listen-mode) :selected v))}
+                {:name mode})))
+      [:confirm :search :dictation])))
+
+(defn auto-punctuation []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-punc")
+       :value           (cI true)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :auto-punctuation})))
+
+(defn cancel-on-error []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Error Cancel")
+       :value           (cI true)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :cancel-on-error})))
+
+(defn prop-slider [label prop color init-val min max divisions]
+  (dp :slider-init init-val)
+  (fx/slider
+    {:value       (cI init-val #_ (Duration .seconds init-val))
+     :onChanged   (cF #(mx/wmx-iso
+                         (dp :slider-chg %)
+                         (mset! me :value (.toInt %) #_(Duration .seconds (.toInt %)))
+                         (fts-restart me)))
+     :min         min :max max :divisions divisions
+     :label       (cF (str (mget me :value)))
+     :activeColor color}
+    {:name prop}))
+
+(defn timing []
+  (column
+    (doall (for [[label & opnds]
+                 [["Duration" :listenFor m/Colors.blue 5 0 30 15]
+                  ["Pause For" :pauseFor m/Colors.green 3 0 5 5]]]
+             (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+               (fx/row
+                 {:mainAxisAlignment m/MainAxisAlignment.end
+                  :mainAxisSize      m/MainAxisSize.min}
+                 (container {:width     64
+                             :alignment m/Alignment.topRight}
+                   (m/Text label))
+                 (apply prop-slider label opnds)))))))
+
 (defn make-recorder []
-  (row {:mainAxisSize m/MainAxisSize.min}
-    (sized-box
-      {:width 28.0})
-    (make-mic)
-    (sized-box
-      {:width 28.0})
-    (make-ear)))
+  (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+    (row {:mainAxisSize m/MainAxisSize.min}
+      (listen-mode)
+      (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (auto-punctuation)
+        (cancel-on-error))
+      (timing))
+    (row {:mainAxisSize m/MainAxisSize.min}
+      (make-mic)
+      (sized-box {:width 28.0})
+      (make-ear))))
 

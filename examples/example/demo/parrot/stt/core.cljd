@@ -18,7 +18,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.parrot.stt.common :as cmn]
-    [example.demo.tts.fts :as fts
+    [example.demo.parrot.fts :as fts
      :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
              app-fts-status app-fts-progress
              app-lang-geos fts-speak fts-pause fts-stop fts-restart
@@ -46,10 +46,9 @@
                      (try-wmx-iso
                        (mset! me :sp-status :available)))))]
     (.initialize cmn/STT
-      .onStatus (fn [status]
-                  (try-wmx-iso
-                    (dp :onStatus!!!!!!!!-sets-status (keyword status))
-                    (mset! me :sp-status (keyword status))))
+      .onStatus (dart-cb [status]
+                  (dp :onStatus!!!!!!!!-sets-status (keyword status))
+                  (mset! me :sp-status (keyword status)))
       .onError (fn [^stte/SpeechRecognitionError err]
                  (dp :sp-error!!!!! (.-errorMsg err))
                  (try-wmx-iso

@@ -124,10 +124,10 @@
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :play-status))
 
 (defmacro app-fts-progress []
-  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :progress))
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :progress))
 
 (defmacro app-fts-lg-current []
-  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lg-current))
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-current))
 
 (defmacro app-fts-lang []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-lang))
@@ -136,27 +136,25 @@
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))
 
 (defmacro app-lang-geos []
-  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lang-geos))
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lang-geos))
 
 (defmacro app-locale-voices []
-  `(tilton.mx.api/mget (example.demo.tts.fts/app-fts) :lg-voices))
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-voices))
 
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-speak [me]
-  (dp :damn)
-  (assert false)
-  #_
+  (dp :speaking  me)
   (let [tts ^FlutterTts (mget (app-fts) :tts)
-        speech (mget me :transcript)]
+        speech (mget (fasc :app) :transcript)]
+    (dp :speech speech)
     (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
         (.setVolume tts (muv-inc :volume))
         (.setLanguage tts lg)
         (.setVoice tts (mget (app-fts) :voice-current)) ;; must follow setLanguage ^^^
-        (dart:core/print (str/join :setting-pitch (muv-inc :pitch)))
-        (.setPitch tts (muv-inc :pitch))
         (.setSpeechRate tts (muv-inc :speech-rate))
+        (.setPitch tts (muv-inc :pitch))
         (.speak tts speech)))))
 
 (defn fts-pause [me]
