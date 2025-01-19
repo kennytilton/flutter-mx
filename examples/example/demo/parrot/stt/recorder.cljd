@@ -52,7 +52,7 @@
 (def eo-speech "bingo")
 
 (defn start-listening [me]                                  ;; me s/b ear
-  (dp :starting-listening)
+  (dp :initiates-listening)
   (let [options (sttpi/SpeechListenOptions
                   ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
 
@@ -134,12 +134,11 @@
 ;;; --- recorder options ------------------------------
 
 (defn listen-mode []
-  (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+  (fx/column {:mainAxisAlignment m/MainAxisAlignment.start}
     {:name     :listen-mode
      :selected (cI :dictation)}
-    (text "Listen Mode")
     (mapv (fn [mode]
-            (fx/sized-box {:width 200}
+            (fx/sized-box {:width 200 :height 40}
               (fx/radio-list-tile
                 {:controlAffinity m/ListTileControlAffinity.leading
                  :title           (m/Text (str/capitalize (name mode)))
@@ -151,7 +150,7 @@
       [:confirm :search :dictation])))
 
 (defn auto-punctuation []
-  (fx/sized-box {:width 180}
+  (fx/sized-box {:width 250}
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Auto-punc")
@@ -160,7 +159,7 @@
       {:name :auto-punctuation})))
 
 (defn cancel-on-error []
-  (fx/sized-box {:width 180}
+  (fx/sized-box {:width 250}
     (checkbox-list-tile
       {:controlAffinity m/ListTileControlAffinity.leading
        :title           (m/Text "Error Cancel")
@@ -174,37 +173,38 @@
     {:value       (cI init-val #_ (Duration .seconds init-val))
      :onChanged   (cF #(mx/wmx-iso
                          (dp :slider-chg %)
-                         (mset! me :value (.toInt %) #_(Duration .seconds (.toInt %)))
-                         (fts-restart me)))
+                         (mset! me :value (.toInt %) #_(Duration .seconds (.toInt %)))))
      :min         min :max max :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}
     {:name prop}))
 
 (defn timing []
-  (column
+  (column {:mainAxisAlignment m/MainAxisAlignment.start
+           :crossAxisAlignment m/CrossAxisAlignment.start}
     (doall (for [[label & opnds]
-                 [["Duration" :listenFor m/Colors.blue 5 0 30 15]
+                 [["Duration" :listenFor m/Colors.blue 20 0 30 15]
                   ["Pause For" :pauseFor m/Colors.green 3 0 5 5]]]
-             (container {:margin (m/EdgeInsets.only .right 24 .bottom 24)}
+             (container {:margin (m/EdgeInsets.only .right 0 .bottom 0)}
                (fx/row
-                 {:mainAxisAlignment m/MainAxisAlignment.end
+                 {:mainAxisAlignment m/MainAxisAlignment.start
                   :mainAxisSize      m/MainAxisSize.min}
-                 (container {:width     64
-                             :alignment m/Alignment.topRight}
+                 (container {:width     68
+                             :alignment m/Alignment.topLeft}
                    (m/Text label))
                  (apply prop-slider label opnds)))))))
 
 (defn make-recorder []
-  (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
-    (row {:mainAxisSize m/MainAxisSize.min}
-      (listen-mode)
-      (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
-        (auto-punctuation)
-        (cancel-on-error))
-      (timing))
+  (row {:mainAxisAlignment m/MainAxisAlignment.end
+        :mainAxisSize      m/MainAxisSize.min}
     (row {:mainAxisSize m/MainAxisSize.min}
       (make-mic)
       (sized-box {:width 28.0})
-      (make-ear))))
+      (make-ear)
+      (sized-box {:width 64.0}))
+    (listen-mode)
+    (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+      (auto-punctuation)
+      (cancel-on-error))
+    (timing)))
 

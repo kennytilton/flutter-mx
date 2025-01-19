@@ -40,9 +40,9 @@
 (defn lang-chooser []
   (expanded
     (fx/grid-view+count
-      {:crossAxisCount  12 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.8
-       :padding         (m/EdgeInsets.all 8)}
+      {:crossAxisCount  12 :crossAxisSpacing 0
+       :mainAxisSpacing 4 :childAspectRatio 3.0
+       :padding         (m/EdgeInsets.all 0)}
       {:name :lang-chooser}
       (map-indexed lang-button
         (take 99                                            ;; hack widget layout issue
@@ -51,9 +51,9 @@
 (defn geo-chooser []
   (do                                                       ;; expanded
     (fx/grid-view+count
-      {:crossAxisCount  12 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 1.8
-       :padding         (m/EdgeInsets.all 8)
+      {:crossAxisCount  12 :crossAxisSpacing 0
+       :mainAxisSpacing 0 :childAspectRatio 4.0
+       ;:padding         (m/EdgeInsets.all 0)
        :shrinkWrap      true}
       {:name :geo-chooser}
       (map-indexed geo-button
@@ -92,10 +92,10 @@
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}))}
       (center
-        (padding {:padding (m/EdgeInsets.all 4.0)}
+        (padding {:padding (m/EdgeInsets.all 0.0)}
           (fx/text
             {:style (p/TextStyle .color m/Colors.black
-                      .fontSize 16.0)}
+                      .fontSize 12.0)}
             lang))))))
 
 (defn geo-button [i lang-geo]
@@ -106,7 +106,7 @@
     (container
       {:decoration (cF (fx/box-decoration
                          {:border (cF (when (= (lg-geo lang-geo) (mget (app-fts) :lg-geo))
-                                        (.all m/Border .color m/Colors.blue .width 2)))
+                                        (.all m/Border .color m/Colors.blue .width 0.5)))
                           :color  (.-shade50 (cond
                                                (even? i) m/Colors.blue
                                                :else m/Colors.yellow))}))}
@@ -114,7 +114,7 @@
         (padding {:padding (m/EdgeInsets.all 4.0)}
           (fx/text
             {:style (p/TextStyle .color m/Colors.black
-                      .fontSize 16.0)}
+                      .fontSize 12.0)}
             (lg-geo lang-geo)))))))
 
 (defn voice-button [i voice] ;; voice is a Dart map
@@ -204,8 +204,8 @@
       (.setSpeechRate ^FlutterTts (app-tts) new))]])
 
 (defn equalizer []
-  (container {:margin (m/EdgeInsets.only .bottom 24)}
-    (column
+  (container {:margin (m/EdgeInsets.only .bottom 0)}
+    (row
       (mapv (fn [[label & opnds]]
               (container {:margin (m/EdgeInsets.only .right 24 .bottom 0)}
                 (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
@@ -219,5 +219,5 @@
 (defn choice-header [content]
   (padding {:padding (m/EdgeInsets.all 12)}
     (text {:style (p/TextStyle .color m/Colors.black
-                    .fontSize 20.0)}
+                    .fontSize 16.0)}
       content)))

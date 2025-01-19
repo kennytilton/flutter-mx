@@ -37,7 +37,7 @@
 (defn sp-initializer-rule []
   (cF+ [:async? true
         :watch (fn [_ me new _ _]
-                 (dpx :initialized? new)
+                 (dp :initialized? new)
                  (when new
                    (dpx :post-init-avail (.-isAvailable cmn/STT))
                    (dpx :post-init-listening (.-isListening cmn/STT))
@@ -46,9 +46,10 @@
                      (try-wmx-iso
                        (mset! me :sp-status :available)))))]
     (.initialize cmn/STT
-      .onStatus (dart-cb [status]
-                  (dp :onStatus!!!!!!!!-sets-status (keyword status))
-                  (mset! me :sp-status (keyword status)))
+      .onStatus (fn [status]
+                  (try-wmx-iso
+                    (dp :onStatus!!!!!!!!-sets-status (keyword status))
+                    (mset! me :sp-status (keyword status))))
       .onError (fn [^stte/SpeechRecognitionError err]
                  (dp :sp-error!!!!! (.-errorMsg err))
                  (try-wmx-iso

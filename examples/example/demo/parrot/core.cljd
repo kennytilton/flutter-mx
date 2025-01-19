@@ -107,24 +107,26 @@
       {:appBar (app-bar {:title (m/Text "Flutter stt/TTS Demo")})}
       (column
         {:crossAxisAlignment m/CrossAxisAlignment.stretch}
-        (choice-header "Languages")
+        ;(choice-header "Languages")
         (lang-chooser)
         (choice-header "Geography")
         (geo-chooser)
         (choice-header "Voices")
         (voice-chooser)
-        (choice-header "Script")
+        ;(choice-header "Script")
         (make-recorder)
         (speech-input)
-        (chyron)
+       ;; (chyron)
         (dashboard)
-        (auto-play)
-        (equalizer)))))
+        (row {;:mainAxisSize      m/MainAxisSize.min
+              :mainAxisAlignment m/MainAxisAlignment.center}
+          (auto-play)
+          (equalizer))))))
 
 ;;; --- dashboard ---------------------------------------------------------------
 
 (defn dashboard []
-  (container {:padding (m/EdgeInsets.only .top 8 .bottom 8)}
+  (container {:padding (m/EdgeInsets.only .top 4 .bottom 4)}
     (row {:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
       (play-pause-button)
       (stop-button))))
