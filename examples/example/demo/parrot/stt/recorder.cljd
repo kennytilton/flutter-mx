@@ -74,9 +74,10 @@
                                 (fts-speak me))
                               (dp :RECORDER-stopping-on-final-result-perhaps-reduntantly)
                               (.stop cmn/STT))))]
+    (dpx :listen-call-pause!!!!!!!! 60 (mget (fmu :pauseFor) :value))
     (.listen cmn/STT .onResult result-listener
       .listenFor (Duration .seconds (mget (fmu :listenFor) :value))                  ;; what it says
-      .pauseFor (Duration .seconds (mget (fmu :pauseFor) :value)) ;; pause too long and it stops automatically
+      .pauseFor (Duration .seconds 60 #_ (mget (fmu :pauseFor) :value)) ;; pause too long and it stops automatically
       .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
@@ -183,7 +184,8 @@
            :crossAxisAlignment m/CrossAxisAlignment.start}
     (doall (for [[label & opnds]
                  [["Duration" :listenFor m/Colors.blue 20 0 30 15]
-                  ["Pause For" :pauseFor m/Colors.green 3 0 5 5]]]
+                  ;["Pause For" :pauseFor m/Colors.green 3 0 5 5]]]
+                  ["Pause For" :pauseFor m/Colors.green 3 0 10 100]]]
              (container {:margin (m/EdgeInsets.only .right 0 .bottom 0)}
                (fx/row
                  {:mainAxisAlignment m/MainAxisAlignment.start
