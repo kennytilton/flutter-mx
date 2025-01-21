@@ -26,7 +26,7 @@
   PObserver
   (observe [this prop me new-value prior-value cell]))
 
-(defn dartify [m] ; todo move to utils
+(defn dartify [m]                                           ; todo move to utils
   (reduce-kv (fn [d k v]
                (assoc d (name k) v))
     {} m))
@@ -39,14 +39,7 @@
                                     (dpx :vs voices)
                                     (when-let [vs voices]
                                       (let [loc-vs (group-by (fn [v] (get v "locale")) vs)]
-                                        ;(dp :au-voices (get loc-vs "en-AU"))
-                                        ;(dp :en-voices (get loc-vs "en-US"))
-                                        loc-vs)))
-                      #_#_ :watch (fn [_ me new prior c]
-                               (dp :voice-count (count new))
-                               (dp :v1 (first new))
-                               (dp :v1loc (get (first new) "locale"))
-                               (dpx :voices!!! new))]
+                                        loc-vs)))]
                   (.-getVoices ^FlutterTts (mget me :tts)))
     :tts (cFonce
            (doto ^FlutterTts (FlutterTts)
@@ -78,11 +71,7 @@
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
     :lg-pref "en-AU"                                        ;; faux stored preference
-    :lg-current (cF+n [:watch (fn [_ me new prior c]
-                                (when (mx-bound? prior)
-                                  (when (muv :auto-play)
-                                    (fts-restart me))))]
-                  (mget me :lg-pref))
+    :lg-current (cFn (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
     :lg-geo (cF (lg-geo (mget me :lg-current)))
     :voice-pref (dartify {:quality    "default"
@@ -90,29 +79,32 @@
                           :identifier "com.apple.voice.compact.en-AU.Karen"})
     :lg-voices (cF+ [:watch (fn [_ me new _ _]
                               ; todo here or on the voices display, call setVoice when new lg means new default
-
                               (dpx :lg-voices-now
                                 (map (fn [v] (get v "name")) new))
                               (when new
                                 (mx/with-cc :voice-echo
+                                  (dpx :new-voices-watch-sets-first (first new))
                                   (mset! me :voice-current (first new)))))]
                  (when-let [lg (mget me :lg-current)]
                    (get (mget me :tts-voices) lg)))
     :voice-current (cF+n [:watch (fn [_ me new prior c]
                                    (dpx :voice-curr-sees!!!!!!!!! new)
-                                   (when-let [^FlutterTts tts (mget me :tts)]
-                                     (.setVoice tts new))
+                                   ; remmed 1/21/2025
+                                   #_(when-let [^FlutterTts tts (mget me :tts)]
+                                       (.setVoice tts new))
+                                   (dpx :voice-curr-has-set-voice new)
                                    (when (mx-bound? prior)
                                      (when (muv :auto-play)
-                                       (fts-restart me))))]
+                                       (fts-restart me :curr-voice-wathc))))]
                      (mget me :voice-pref))
     :play-status (cI :off)                                  ;; [:off | :on | :paused}
     :progress (cI nil)))
 
-(defn fts-restart [me]
+(defn fts-restart [me dbg]
   (when (not= :off (app-fts-status))
     (fts-stop me))
-  (fts-speak me))
+  ;(dp :fts-restart-invokes-speak dbg)
+  (fts-speak me dbg))
 
 (defmacro app-fts []
   `(tilton.mx.api/mget (tilton.mx.api/fasc-inc :app) :fts))
@@ -133,7 +125,7 @@
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-lang))
 
 (defmacro app-fts-geo []
-  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))co
 
 (defmacro app-lang-geos []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lang-geos))
@@ -143,19 +135,30 @@
 
 ;;; --- speech control actions -----------------------------------------------
 
-(defn fts-speak [me]
-  (dpx :speaking  me)
+(defn fts-speak [me dbg]
   (let [tts ^FlutterTts (mget (app-fts) :tts)
         speech (mget (fasc :app) :transcript)]
     (dpx :speech speech)
     (when-let [lg (mget (app-fts) :lg-current)]
+      (dpx :fts-speaking dbg lg)
       (when (not (str/blank? speech))
-        (.setVolume tts (muv-inc :volume))
-        (.setLanguage tts lg)
-        (.setVoice tts (mget (app-fts) :voice-current)) ;; must follow setLanguage ^^^
-        (.setSpeechRate tts (muv-inc :speech-rate))
-        (.setPitch tts (muv-inc :pitch))
-        (.speak tts speech)))))
+        (let [language-and-voice (future
+                                   (await (.setLanguage tts lg))
+                                   (await (.setVoice tts (mget (app-fts) :voice-current))))
+              other-settings (Future.wait [(future (.setVolume tts (muv-inc :volume)))
+                                           (future (.setSpeechRate tts (muv-inc :speech-rate)))
+                                           (future (.setPitch tts (muv-inc :pitch)))])]
+          (await (Future.wait [language-and-voice other-settings])) ;; Combine both bundles
+          (.speak tts speech)))
+
+      #_(when (not (str/blank? speech))
+          ;; should these eahc be changed individually, when the app sees them changing
+          (await (.setVolume tts (muv-inc :volume)))
+          (await (.setLanguage tts lg))
+          (await (.setVoice tts (mget (app-fts) :voice-current))) ;; must follow setLanguage ^^^
+          (await (.setSpeechRate tts (muv-inc :speech-rate)))
+          (await (.setPitch tts (muv-inc :pitch)))
+          (.speak tts speech)))))
 
 (defn fts-pause [me]
   (let [tts ^FlutterTts (app-tts)]

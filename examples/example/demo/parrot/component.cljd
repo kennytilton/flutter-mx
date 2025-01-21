@@ -31,7 +31,7 @@
                                           (when (and new
                                                   (mx-bound? prior)
                                                   (= :off (app-fts-status)))
-                                            (fts-speak me))))
+                                            (fts-speak me :auto-play-watch))))
        :onChanged       (cF #(wmx-iso (mset! me :value %)))}
       {:name :auto-play})))
 
@@ -153,7 +153,7 @@
                                    m/Colors.green)
          :splashColor (if playing? m/Colors.blueAccent
                                    m/Colors.greenAccent)
-         :onPressed   (fn [] ((if playing? fts-pause fts-speak) me))}))))
+         :onPressed   (fn [] ((if playing? fts-pause fts-speak) me :play-pause))}))))
 
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
@@ -184,7 +184,7 @@
     {:value       (cI init-val :watch watch)
      :onChanged   (cF #(mx/wmx-iso
                          (mset! me :value %)
-                         (fts-restart me)))
+                         (fts-restart me (str :slider-set label))))
      :min         min :max max :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}
