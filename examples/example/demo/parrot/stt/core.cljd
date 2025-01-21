@@ -34,7 +34,7 @@
 (defn sp-initializer-rule []
   (cF+ [:async? true
         :watch (fn [_ me new _ _]
-                 (dp :initialized? new)
+                 (dpx :initialized? new)
                  (when new
                    (dpx :post-init-avail (.-isAvailable cmn/STT))
                    (dpx :post-init-listening (.-isListening cmn/STT))
@@ -45,7 +45,7 @@
     (.initialize cmn/STT
       .onStatus (fn [status]
                   (try-wmx-iso
-                    (dp :onStatus!!!!!!!!-sets-status (keyword status))
+                    (dp :onStatus-sets-status (keyword status))
                     (mset! me :sp-status (keyword status))))
       .onError (fn [^stte/SpeechRecognitionError err]
                  (dp :sp-error!!!!! (.-errorMsg err))
@@ -53,30 +53,7 @@
                    (mset! me :transcript (str "Error: " (.-errorMsg err))))))))
 
 (defn stop-listening [me]
-  (dp :requesting-stop)
+  (dpx :requesting-stop)
   (.stop cmn/STT))
 
-#_
-(defn start-listening [me]                                  ;; me s/b ear
-  (dp :starting-listening)
-  (let [options (sttpi/SpeechListenOptions
-                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
-                  .cancelOnError true
-                  .listenMode stt/ListenMode.dictation      ;; search | confirmation | dictation
-                  .autoPunctuation true)
-        result-listener (fn [^sttr/SpeechRecognitionResult r]
-                          (let [wds (.-recognizedWords r)]
-                            (dp :result-words!! wds)
-                            (when (.-finalResult r)
-                              (dp :result-final!! wds)
-                              (try-wmx-iso
-                                (mset! (fmu :app) :transcript wds))
-                              (dp :stopping-on-final-result-perhaps-reduntantly)
-                              (.stop cmn/STT))))]
-    (.listen cmn/STT .onResult result-listener
-      .listenFor (Duration .seconds 20)                     ;; what it says
-      .pauseFor (Duration .seconds 3)                       ;; pause longer and it stops automatically
-      .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
-      .listenOptions options)
-    (mset! (fmu :app) :sp-status :started)))
 

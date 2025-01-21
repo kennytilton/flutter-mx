@@ -73,7 +73,7 @@
                (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
     :lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
-                                   (dp :locales (count locales))
+                                   (dpx :locales (count locales))
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
@@ -144,10 +144,10 @@
 ;;; --- speech control actions -----------------------------------------------
 
 (defn fts-speak [me]
-  (dp :speaking  me)
+  (dpx :speaking  me)
   (let [tts ^FlutterTts (mget (app-fts) :tts)
         speech (mget (fasc :app) :transcript)]
-    (dp :speech speech)
+    (dpx :speech speech)
     (when-let [lg (mget (app-fts) :lg-current)]
       (when (not (str/blank? speech))
         (.setVolume tts (muv-inc :volume))

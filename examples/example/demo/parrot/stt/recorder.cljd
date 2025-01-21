@@ -33,7 +33,7 @@
        (dp :FLUTTERCATCH!! e#))))
 
 (defn stop-listening [me]
-  (dp :requesting-stop)
+  (dpx :requesting-stop)
   (.stop cmn/STT))
 
 (defn escape-regex [s]
@@ -51,7 +51,7 @@
 (def eo-speech "bingo")
 
 (defn start-listening [me]                                  ;; me s/b ear
-  (dp :initiates-listening)
+  (dpx :initiates-listening)
   (let [options (sttpi/SpeechListenOptions
                   ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
 
@@ -72,7 +72,7 @@
                                 (mset! (fmu :app) :transcript
                                   (remove-substring-ci wds eo-speech))
                                 (fts-speak me))
-                              (dp :RECORDER-stopping-on-final-result-perhaps-reduntantly)
+                              (dpx :RECORDER-stopping-on-final-result-perhaps-reduntantly)
                               (.stop cmn/STT))))]
     (dpx :listen-call-pause!!!!!!!! 60 (mget (fmu :pauseFor) :value))
     (.listen cmn/STT .onResult result-listener
@@ -87,7 +87,7 @@
 (defn make-mic []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (cF (dp :mic-color-sees-status (mav :sp-status))
+                :color        (cF (dpx :mic-color-sees-status (mav :sp-status))
                                 (case (mav :sp-status)
                                   :available m/Colors.cyan
                                   :unavailable m/Colors.red
@@ -98,12 +98,12 @@
     {:name :ear}
     (fx/icon-button
       {:onPressed (dart-cb []
-                    (dp :starting-listening)
+                    (dpx :starting-listening)
                     (mset! (fmu :app) :transcript "")
                     (start-listening (fmu :ear)))
        :icon      (m/Icon m/Icons.mic)
        :color     (cF (fx/within-ctx [me ctx]
-                        (dp :mic-status (mav :sp-status))
+                        (dpx :mic-status (mav :sp-status))
                         m/Colors.black))})))
 
 ;;; --- ear ------------------------------------------
@@ -111,7 +111,7 @@
 (defn make-ear []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (cF (dp :ear-color-sees-status (mav :sp-status))
+                :color        (cF (dpx :ear-color-sees-status (mav :sp-status))
                                 (case (mav :sp-status)
                                   :started m/Colors.yellow
                                   :stopped m/Colors.orange
@@ -124,7 +124,7 @@
                     ; todo offer cancel as well as stop, or have mic handle
                     ;   stop and this ear mean cancel while listening
                     (when (= :listening (mav :sp-status))
-                      (dp :stopping-on-ear-press)
+                      (dpx :stopping-on-ear-press)
                       (mset! (fmu :app) :sp-status :stopped)
                       (stop-listening (fmu :ear))))
        :icon      (m/Icon m/Icons.hearing)
@@ -168,11 +168,11 @@
       {:name :cancel-on-error})))
 
 (defn prop-slider [label prop color init-val min max divisions]
-  (dp :slider-init init-val)
+  (dpx :slider-init init-val)
   (fx/slider
     {:value       (cI init-val #_ (Duration .seconds init-val))
      :onChanged   (cF #(mx/wmx-iso
-                         (dp :slider-chg %)
+                         (dpx :slider-chg %)
                          (mset! me :value (.toInt %) #_(Duration .seconds (.toInt %)))))
      :min         min :max max :divisions divisions
      :label       (cF (str (mget me :value)))
