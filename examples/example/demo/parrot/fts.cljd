@@ -38,7 +38,15 @@
                       :async-then (fn [c voices]
                                     (dpx :vs voices)
                                     (when-let [vs voices]
-                                      (let [loc-vs (group-by (fn [v] (get v "locale")) vs)]
+                                      (doseq [v (take 3 voices)]
+                                        (dp :vc-sample v))
+                                      (let [sel-vs (remove #(some (partial str/includes? (get % "identifier"))
+                                                                    ["eloquence" "synthesis"])
+                                                     (filter #(.startsWith (get % "locale") "en-")
+                                                       vs))
+                                            _ (doseq [v sel-vs]
+                                                (dp :selv v))
+                                            loc-vs (group-by (fn [v] (get v "locale")) sel-vs)]
                                         loc-vs)))]
                   (.-getVoices ^FlutterTts (mget me :tts)))
     :tts (cFonce
@@ -70,13 +78,13 @@
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
-    :lg-pref "en-AU"                                        ;; faux stored preference
+    :lg-pref "en-US"                                        ;; faux stored preference
     :lg-current (cFn (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
     :lg-geo (cF (lg-geo (mget me :lg-current)))
     :voice-pref (dartify {:quality    "default"
-                          :name       "Karen" :gender "female" :locale "en-AU"
-                          :identifier "com.apple.voice.compact.en-AU.Karen"})
+                          :name       "Victoria" :gender "female" :locale "en-US"
+                          :identifier "com.apple.voice.compact.en-US.Victoria"})
     :lg-voices (cF+ [:watch (fn [_ me new _ _]
                               ; todo here or on the voices display, call setVoice when new lg means new default
                               (dpx :lg-voices-now
@@ -125,7 +133,7 @@
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-lang))
 
 (defmacro app-fts-geo []
-  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))co
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))
 
 (defmacro app-lang-geos []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lang-geos))
@@ -149,16 +157,7 @@
                                            (future (.setSpeechRate tts (muv-inc :speech-rate)))
                                            (future (.setPitch tts (muv-inc :pitch)))])]
           (await (Future.wait [language-and-voice other-settings])) ;; Combine both bundles
-          (.speak tts speech)))
-
-      #_(when (not (str/blank? speech))
-          ;; should these eahc be changed individually, when the app sees them changing
-          (await (.setVolume tts (muv-inc :volume)))
-          (await (.setLanguage tts lg))
-          (await (.setVoice tts (mget (app-fts) :voice-current))) ;; must follow setLanguage ^^^
-          (await (.setSpeechRate tts (muv-inc :speech-rate)))
-          (await (.setPitch tts (muv-inc :pitch)))
-          (.speak tts speech)))))
+          (.speak tts speech))))))
 
 (defn fts-pause [me]
   (let [tts ^FlutterTts (app-tts)]

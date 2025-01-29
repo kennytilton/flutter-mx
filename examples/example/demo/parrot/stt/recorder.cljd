@@ -60,7 +60,8 @@
                                 :dictation stt/ListenMode.dictation
                                 :confirm stt/ListenMode.confirmation
                                 :search stt/ListenMode.search) ;; search | confirmation | dictation
-                  .autoPunctuation (muv :auto-punctuation))
+                  .autoPunctuation true #_ (muv :auto-punctuation))
+        _ (dp :options (muv :auto-punctuation) (mget (fm* :listen-mode) :selected))
         result-listener (fn [^sttr/SpeechRecognitionResult r]
                           (let [wds (.-recognizedWords r)]
                             (dp :result-words!! (string? wds) wds)
