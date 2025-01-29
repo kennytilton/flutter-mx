@@ -70,35 +70,40 @@
                       :async-then (fn [c voices]
                                     (dpx :vs voices)
                                     (when-let [vs voices]
-                                      (doseq [v (take 3 voices)]
+                                      (doseq [v (take 3
+                                                  voices)]
                                         (dp :vc-sample v))
                                       (let [sel-vs (remove #(some (partial str/includes? (get % "identifier"))
                                                               ["eloquence" "synthesis"])
-                                                     (filter #(.startsWith (get % "locale") "en-")
+                                                     (filter #(or (.startsWith (get % "locale") "en-") ;; M/B
+                                                                (.startsWith (get % "locale") "fr-"))
                                                        vs))
                                             ;  _ (doseq [v sel-vs] (dp :selv v))
                                             loc-vs (group-by (fn [v] (get v "locale")) sel-vs)]
                                         loc-vs)))]
                   (.-getVoices ^FlutterTts (mget me :tts)))
-    :lg-pref "en-US"                                        ;; faux stored preference
+    :lg-pref "fr-FR" #_ "en-US"                                        ;; faux stored preference
     :lg-current (cFn (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
     :lg-geo (cF (lg-geo (mget me :lg-current)))
     :voice-pref (dartify {:quality    "default"
+                          :name       "Audrey" :gender "female" :locale "fr-FR"
+                          :identifier "com.apple.voice.compact.fr-FR.Audrey"}
+                  #_ {:quality    "default"
                           :name       "Victoria" :gender "female" :locale "en-US"
                           :identifier "com.apple.voice.compact.en-US.Victoria"})
     :lg-voices (cF+ [:watch (fn [_ me new _ _]
                               ; todo here or on the voices display, call setVoice when new lg means new default
-                              (dpx :lg-voices-now
+                              (dp :lg-voices-now
                                 (map (fn [v] (get v "name")) new))
                               (when new
                                 (mx/with-cc :voice-echo
-                                  (dpx :new-voices-watch-sets-first (first new))
+                                  (dp :new-voices-watch-sets-first (first new))
                                   (mset! me :voice-current (first new)))))]
                  (when-let [lg (mget me :lg-current)]
                    (get (mget me :tts-voices) lg)))
     :voice-current (cF+n [:watch (fn [_ me new prior c]
-                                   (dpx :voice-curr-sees!!!!!!!!! new)
+                                   (dp :voice-curr-sees!!!!!!!!! new)
                                    ; remmed 1/21/2025
                                    #_(when-let [^FlutterTts tts (mget me :tts)]
                                        (.setVoice tts new))
