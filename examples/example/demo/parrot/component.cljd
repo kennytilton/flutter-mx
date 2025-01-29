@@ -38,21 +38,20 @@
 ;;; --- lang/geo choosers -------------------------------------------------
 
 (defn lang-chooser []
-  (expanded
+  (fx/sized-box {:height 64} ;;fx/flexible {:flex 1} ;;expanded
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 0
-       :mainAxisSpacing 4 :childAspectRatio 3.0
+       :mainAxisSpacing 4 :childAspectRatio 2.0
        :padding         (m/EdgeInsets.only .left 40)}
       {:name :lang-chooser}
       (map-indexed lang-button
-        (take 99                                            ;; hack widget layout issue
-          (sort (app-fts-langs)))))))
+        (sort (app-fts-langs))))))
 
 (defn geo-chooser []
   (do                                                       ;; expanded
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 0
-       :mainAxisSpacing 0 :childAspectRatio 4.0
+       :mainAxisSpacing 0 :childAspectRatio 2.0
        :padding         (m/EdgeInsets.only .left 40)
        :shrinkWrap      true}
       {:name :geo-chooser}
@@ -64,7 +63,7 @@
   (do                                                       ;; expanded
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 4
-       :mainAxisSpacing 4 :childAspectRatio 4.0
+       :mainAxisSpacing 4 :childAspectRatio 2.0
        :padding         (m/EdgeInsets.only .left 40)
        :shrinkWrap      true}
       {:name :voice-chooser}
