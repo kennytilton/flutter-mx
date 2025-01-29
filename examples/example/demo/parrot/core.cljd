@@ -60,9 +60,6 @@
                         (when-let [tts (mget (mget me :fts) :tts)]
                           (dpx :tts!!!!!!!!!!!!!! tts (.-getLanguages tts))
                           (.-getLanguages tts)))
-     :fts-locales     (cF (when-let [tts (mget me :tts-locales)]
-                            (when-let [stt (mget me :stt-locales)]
-                              (list-intersection tts (map (fn [loc] (.-localeId loc)) stt)))))
      ; --- speech to text
      :sp-status       (cI nil :watch (fn [_ me new _ _]
                                        (dpx :sp-status-now new)))
@@ -70,8 +67,20 @@
      :stt-locales     (cF+ [:async? true]
                         (when (mget me :sp-initialized?)
                           (.locales cmn/STT)))
-     :transcript      (cI "The falcon cannot hear the falconer. Things fall apart.
-     The center cannot hold.")}
+     ; --- unified TTS and STT ---------------------
+     :fts-locales     (cF+ [:watch (fn [_ _ new _ _]
+                                     (dp :fts-lox new))]
+                        (when-let [tts (mget me :tts-locales)]
+                          (when-let [stt (mget me :stt-locales)]
+                            (filter #(some (fn [pfx]
+                                             (str/starts-with? % pfx))
+                                       ["en-" "fr-"]) ;; HHACK
+                              (list-intersection tts (map (fn [loc] (.-localeId loc)) stt))))))
+     :fts-langs (cF+ [:watch (fn [_ _ new _ _]
+                              (dp :fts-langs new))]
+                  (set (map fts/lg-lang (mget me :fts-locales))))
+     ; ---
+     :transcript      (cI "The center cannot hold.")}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter Speech <-> Text")})}
       (column

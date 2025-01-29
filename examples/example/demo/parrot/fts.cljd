@@ -19,6 +19,8 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]))
 
+;; todo rename tts.cljd? The idea was that FTS is a direct mirror of TTS in a CLJD object
+
 ;;; --- start-up ----------------------------------------------
 
 (deftype MXFlutterTTS []
@@ -34,21 +36,7 @@
 (defn make-flutter-tts []
   (md/make (MXFlutterTTS)
     :name :mx-fts
-    :tts-voices (cF+ [:async? true
-                      :async-then (fn [c voices]
-                                    (dpx :vs voices)
-                                    (when-let [vs voices]
-                                      (doseq [v (take 3 voices)]
-                                        (dp :vc-sample v))
-                                      (let [sel-vs (remove #(some (partial str/includes? (get % "identifier"))
-                                                                   ["eloquence" "synthesis"])
-                                                     (filter #(.startsWith (get % "locale") "en-")
-                                                       vs))
-                                            _ (doseq [v sel-vs]
-                                                (dp :selv v))
-                                            loc-vs (group-by (fn [v] (get v "locale")) sel-vs)]
-                                        loc-vs)))]
-                  (.-getVoices ^FlutterTts (mget me :tts)))
+
     :tts (cFonce
            (doto ^FlutterTts (FlutterTts)
              (.setSharedInstance true)
@@ -72,12 +60,26 @@
                #(wmx-iso (mset! me :play-status :on)))
              (.setErrorHandler
                (fn [e] (dp :flutter-error!!!!!!!! #_e)))))
-    :lang-geos (cF+ [:async? true
+    :tts-lang-geos (cF+ [:async? true
                      :async-then (fn [c locales]
-                                   (dpx :locales (count locales))
+                                   (dp :locales (count locales) (take 3 locales))
                                    (group-by lg-lang
                                      (take 999 (sort locales))))]
                  (.-getLanguages ^FlutterTts (mget me :tts)))
+    :tts-voices (cF+ [:async? true
+                      :async-then (fn [c voices]
+                                    (dpx :vs voices)
+                                    (when-let [vs voices]
+                                      (doseq [v (take 3 voices)]
+                                        (dp :vc-sample v))
+                                      (let [sel-vs (remove #(some (partial str/includes? (get % "identifier"))
+                                                              ["eloquence" "synthesis"])
+                                                     (filter #(.startsWith (get % "locale") "en-")
+                                                       vs))
+                                            ;  _ (doseq [v sel-vs] (dp :selv v))
+                                            loc-vs (group-by (fn [v] (get v "locale")) sel-vs)]
+                                        loc-vs)))]
+                  (.-getVoices ^FlutterTts (mget me :tts)))
     :lg-pref "en-US"                                        ;; faux stored preference
     :lg-current (cFn (mget me :lg-pref))
     :lg-lang (cF (lg-lang (mget me :lg-current)))           ;; avoid excess work by geo-chooser
@@ -132,11 +134,14 @@
 (defmacro app-fts-lang []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-lang))
 
+(defmacro app-fts-langs []
+  `(tilton.mx.api/mget (tilton.mx.api/fasc-inc :app) :fts-langs))
+
 (defmacro app-fts-geo []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-geo))
 
-(defmacro app-lang-geos []
-  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lang-geos))
+(defmacro app-tts-lang-geos []
+  `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :tts-lang-geos))
 
 (defmacro app-locale-voices []
   `(tilton.mx.api/mget (example.demo.parrot.fts/app-fts) :lg-voices))
