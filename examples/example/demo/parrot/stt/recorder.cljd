@@ -54,14 +54,13 @@
   (dpx :initiates-listening)
   (let [options (sttpi/SpeechListenOptions
                   ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
-
                   .cancelOnError (mget (fm* :cancel-on-error) :value)
                   .listenMode (case (mget (fm* :listen-mode) :selected)
                                 :dictation stt/ListenMode.dictation
                                 :confirm stt/ListenMode.confirmation
                                 :search stt/ListenMode.search) ;; search | confirmation | dictation
-                  .autoPunctuation true #_ (muv :auto-punctuation))
-        _ (dp :options (muv :auto-punctuation) (mget (fm* :listen-mode) :selected))
+                  .autoPunctuation (muv :auto-punctuation))
+        _ (dp :punc? (muv :auto-punctuation) :mode (mget (fm* :listen-mode) :selected))
         result-listener (fn [^sttr/SpeechRecognitionResult r]
                           (let [wds (.-recognizedWords r)]
                             (dp :result-words!! (string? wds) wds)
@@ -78,7 +77,7 @@
     (dpx :listen-call-pause!!!!!!!! 60 (mget (fmu :pauseFor) :value))
     (.listen cmn/STT .onResult result-listener
       .listenFor (Duration .seconds (mget (fmu :listenFor) :value))                  ;; what it says
-      .pauseFor (Duration .seconds 60 #_ (mget (fmu :pauseFor) :value)) ;; pause too long and it stops automatically
+      .pauseFor (Duration .seconds (mget (fmu :pauseFor) :value)) ;; pause too long and it stops automatically
       .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
       .listenOptions options)
     (mset! (fmu :app) :sp-status :started)))
@@ -137,7 +136,7 @@
 (defn listen-mode []
   (fx/column {:mainAxisAlignment m/MainAxisAlignment.start}
     {:name     :listen-mode
-     :selected (cI :dictation)}
+     :selected (cI :confirm)}
     (mapv (fn [mode]
             (fx/sized-box {:width 200 :height 40}
               (fx/radio-list-tile
@@ -173,8 +172,8 @@
   (fx/slider
     {:value       (cI init-val #_ (Duration .seconds init-val))
      :onChanged   (cF #(mx/wmx-iso
-                         (dpx :slider-chg %)
-                         (mset! me :value (.toInt %) #_(Duration .seconds (.toInt %)))))
+                         (dp :slider-chg label prop % )
+                         (mset! me :value (.toInt ^double %) #_(Duration .seconds (.toInt %)))))
      :min         min :max max :divisions divisions
      :label       (cF (str (mget me :value)))
      :activeColor color}
@@ -185,8 +184,8 @@
            :crossAxisAlignment m/CrossAxisAlignment.start}
     (doall (for [[label & opnds]
                  [["Duration" :listenFor m/Colors.blue 20 0 30 15]
-                  ;["Pause For" :pauseFor m/Colors.green 3 0 5 5]]]
-                  ["Pause For" :pauseFor m/Colors.green 3 0 10 100]]]
+                  ["Pause For" :pauseFor m/Colors.green 2 0 5 5]
+                  #_ ["Pause For" :pauseFor m/Colors.green 3 0 10 100]]]
              (container {:margin (m/EdgeInsets.only .right 0 .bottom 0)}
                (fx/row
                  {:mainAxisAlignment m/MainAxisAlignment.start

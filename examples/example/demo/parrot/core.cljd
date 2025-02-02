@@ -58,10 +58,8 @@
      ; --- text to speech
      :fts             (cF (fts/make-flutter-tts))
      :tts-locales     (cF+ [:async? true]
-                        ; (.-getLanguages ^FlutterTts (mget me :tts))
-                        (when-let [ttsxx (mget (mget me :fts) :tts)]
-                          (dp :tts ttsxx )
-                          (.-getLanguages ^ftslib/FlutterTts (ttsxx))))
+                        (when-let [tts (mget (mget me :fts) :tts)]
+                          (.-getLanguages ^ftslib/FlutterTts tts)))
      ; --- speech to text
      :sp-status       (cI nil :watch (fn [_ me new _ _]
                                        (dpx :sp-status-now new)))
@@ -71,7 +69,7 @@
                           (.locales cmn/STT)))
      ; --- unified TTS and STT ---------------------
      :fts-locales     (cF+ [:watch (fn [_ _ new _ _]
-                                     (dp :fts-lox new))]
+                                     (dpx :fts-lox new))]
                         (when-let [tts (mget me :tts-locales)]
                           (when-let [lox (mget me :stt-locales)]
                             (filter #(some (fn [pfx]
@@ -79,11 +77,10 @@
                                        ["en-" "fr-"]) ;; HHACK
                               (list-intersection tts (map (fn [loc] (.-localeId ^LocaleName loc)) lox))))))
      :fts-langs (cF+ [:watch (fn [_ _ new _ _]
-                              (dp :fts-langs new))]
+                              (dpx :fts-langs new))]
                   (set (map fts/lg-lang (mget me :fts-locales))))
      ; ---
-     :transcript      (cI "Dis donc, où est la bibliothèque?
-     Pas loin d'ici. Tu y va tout de suite ?")}
+     :transcript      (cI "Your grieving moonlight face." #_ "Dis donc, où est la bibliothèque?")}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter Speech <-> Text")})}
       (column
