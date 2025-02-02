@@ -22,7 +22,7 @@
              container row expanded icon padding opacity ignore-pointer
              checkbox-list-tile icon-button fx-render dart-cb]]
     [example.demo.parrot.fts :as fts
-     :refer [app-fts-progress app-fts-status]]
+     :refer [app-fts app-fts-progress app-fts-status app-locale-voices]]
     [example.demo.parrot.component
      :refer [lang-chooser geo-chooser voice-chooser play-pause-button stop-button auto-play
              equalizer choice-header]]
@@ -50,7 +50,7 @@
 
 ;;; === app ======================================================
 
-(declare dashboard speech-input)
+(declare dashboard speech-input chat-do)
 
 (defn make-app []
   (material-app {}
@@ -80,7 +80,10 @@
                               (dpx :fts-langs new))]
                   (set (map fts/lg-lang (mget me :fts-locales))))
      ; ---
-     :transcript      (cI "Your grieving moonlight face." #_ "Dis donc, où est la bibliothèque?")}
+     :transcript      (cI "Your grieving moonlight face." #_ "Dis donc, où est la bibliothèque?"
+                        :watch (fn [_ me new _ _]
+                                 (try-wmx-iso
+                                   (chat-do me new))))}
     (scaffold
       {:appBar (app-bar {:title (m/Text "Flutter Speech <-> Text")})}
       (column
@@ -99,6 +102,20 @@
               :mainAxisAlignment m/MainAxisAlignment.center}
           (auto-play)
           (equalizer))))))
+
+;;; --- chat-do ----------------------------------------------------------
+
+(defn chat-do [me command]
+  (dp :chat-do!! command)
+  (when (str/starts-with? command "Talk to ")
+    (let [vn (str/replace command #"Talk to " "")]
+      (dp :talking-to vn)
+      (let [v (some (fn [v]
+                      (when (str/includes? (get v "identifier") vn)
+                        v))
+                (app-locale-voices))]
+        (dp :bingo v)
+        (mset! (app-fts) :voice-current v)))))
 
 ;;; --- dashboard ---------------------------------------------------------------
 

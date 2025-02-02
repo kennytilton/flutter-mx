@@ -38,7 +38,7 @@
 ;;; --- lang/geo choosers -------------------------------------------------
 
 (defn lang-chooser []
-  (fx/sized-box {:height 64} ;;fx/flexible {:flex 1} ;;expanded
+  (fx/sized-box {:height 64}                                ;;fx/flexible {:flex 1} ;;expanded
     (fx/grid-view+count
       {:crossAxisCount  12 :crossAxisSpacing 0
        :mainAxisSpacing 4 :childAspectRatio 2.0
@@ -71,7 +71,7 @@
         (when-let [loc (app-fts-lg-current)]
           (dpx :got-loc!!!!!!!! loc :vs (app-locale-voices))
           (dpx :locvoices!!!!!!! (filter #(= (get % "locale") loc)
-                                  (app-locale-voices)))
+                                   (app-locale-voices)))
           (filter #(= (get % "locale") loc)
             (app-locale-voices)))))))
 
@@ -116,7 +116,7 @@
                       .fontSize 12.0)}
             (lg-geo lang-geo)))))))
 
-(defn voice-button [i voice] ;; voice is a Dart map
+(defn voice-button [i voice]                                ;; voice is a Dart map
   (fx/gesture-detector
     {:key   (m/ValueKey. (get voice "identifier"))
      :onTap (dart-cb []
@@ -157,19 +157,19 @@
 (defn stop-button []
   (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
                                    (let [{:keys [full-text word-end]}
-                                           (app-fts-progress)]
-                                       (< word-end (* 0.2 (count full-text))))))}
-      (opacity {:opacity (cF (if (mav :ignoring)
-                               0.15 1.0))}
-        (column {:mainAxisSize      m/MainAxisSize.min
-                 :mainAxisAlignment m/MainAxisAlignment.center}
-          (icon-button
-            {:key         (m/ValueKey "FTS-STOP")
-             :icon        (fx/icon m/Icons.stop)
-             :iconSize    48
-             :color       m/Colors.red
-             :splashColor m/Colors.redAccent
-             :onPressed   (fn [] (fts-stop me))})))))
+                                         (app-fts-progress)]
+                                     (< word-end (* 0.2 (count full-text))))))}
+    (opacity {:opacity (cF (if (mav :ignoring)
+                             0.15 1.0))}
+      (column {:mainAxisSize      m/MainAxisSize.min
+               :mainAxisAlignment m/MainAxisAlignment.center}
+        (icon-button
+          {:key         (m/ValueKey "FTS-STOP")
+           :icon        (fx/icon m/Icons.stop)
+           :iconSize    48
+           :color       m/Colors.red
+           :splashColor m/Colors.redAccent
+           :onPressed   (fn [] (fts-stop me))})))))
 
 ;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
 
