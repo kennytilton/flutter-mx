@@ -87,36 +87,49 @@
 (defn make-mic []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (cF (dpx :mic-color-sees-status (mav :sp-status))
-                                (case (mav :sp-status)
-                                  :available m/Colors.cyan
-                                  :unavailable m/Colors.red
-                                  :listening m/Colors.grey
-                                  :done m/Colors.cyan
-                                  m/Colors.grey))
+                :color        (cF+ [:watch (fn [_ me new _ _]
+                                             (dp :mic-watch new))]
+                                (dp :mic-color-sees-status (mav :sp-status))
+                                (when-let [sp-stat (mav :sp-status)]
+                                  (case sp-stat
+                                    :available m/Colors.cyan
+                                    :started m/Colors.yellow
+                                    ;;:unavailable m/Colors.orange
+                                    :listening m/Colors.grey
+                                    :done m/Colors.blue
+                                    #_#_nil m/Colors.grey)))
                 :elevation    4.0}
-    {:name :ear}
+    {:name :mic}
     (fx/icon-button
       {:onPressed (dart-cb []
-                    (dpx :starting-listening)
-                    (mset! (fmu :app) :transcript "")
-                    (start-listening (fmu :ear)))
-       :icon      (m/Icon m/Icons.mic)
-       :color     (cF (fx/within-ctx [me ctx]
-                        (dpx :mic-status (mav :sp-status))
-                        m/Colors.black))})))
+                    (let [sp-stat (mav :sp-status)]
+                      (cond
+                        (some (fn [s]
+                                (= sp-stat s))
+                          [:available :done])
+                        (do
+                          (dp :starting-listening)
+                          (mset! (fmu :app) :transcript "")
+                          (start-listening (fmu :ear)))
+                        :else (dp :mic-cannot-star!!!!-at-status sp-stat))))
+       :icon (m/Icon m/Icons.mic)
+       :color (cF (fx/within-ctx [me ctx] (dpx :mic-status (mav :sp-status))
+                    m/Colors.black))})))
 
 ;;; --- ear ------------------------------------------
 
 (defn make-ear []
   (fx/material {:shape        (m/CircleBorder)
                 :clipBehavior m/Clip.antiAlias
-                :color        (cF (dpx :ear-color-sees-status (mav :sp-status))
-                                (case (mav :sp-status)
+                :color        (cF+ [:watch (fn [_ me new _ _]
+                                             (dp :ear-watch (str new)))] (dp :ear-color-sees-status (mav :sp-status))
+                                (when-let [sp-stat (mav :sp-status)]
+                                  (case sp-stat
                                   :started m/Colors.yellow
-                                  :stopped m/Colors.orange
                                   :listening m/Colors.red
-                                  m/Colors.grey))
+                                  :done m/Colors.grey
+                                  :stopped m/Colors.grey
+                                  :available m/Colors.grey)))
                 :elevation    4.0}
     {:name :ear}
     (fx/icon-button
@@ -184,7 +197,7 @@
            :crossAxisAlignment m/CrossAxisAlignment.start}
     (doall (for [[label & opnds]
                  [["Duration" :listenFor m/Colors.blue 20 0 30 15]
-                  ["Pause For" :pauseFor m/Colors.green 2 0 5 5]
+                  ["Pause For" :pauseFor m/Colors.green 3 0 5 5]
                   #_ ["Pause For" :pauseFor m/Colors.green 3 0 10 100]]]
              (container {:margin (m/EdgeInsets.only .right 0 .bottom 0)}
                (fx/row

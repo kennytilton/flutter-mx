@@ -30,7 +30,7 @@
     [example.demo.parrot.stt.core :refer [sp-initializer-rule]]
     [example.demo.parrot.stt.common :as cmn]
     [example.demo.parrot.stt.recorder
-     :refer [make-recorder make-mic make-ear]]))
+     :refer [make-recorder make-mic make-ear start-listening]]))
 
 ; todo move these to MX utilities
 
@@ -62,7 +62,7 @@
                           (.-getLanguages ^ftslib/FlutterTts tts)))
      ; --- speech to text
      :sp-status       (cI nil :watch (fn [_ me new _ _]
-                                       (dpx :sp-status-now new)))
+                                       (dp :sp-status-watch-new new)))
      :sp-initialized? (sp-initializer-rule)
      :stt-locales     (cF+ [:async? true]
                         (when (mget me :sp-initialized?)
@@ -115,7 +115,10 @@
                         v))
                 (app-locale-voices))]
         (dp :bingo v)
-        (mset! (app-fts) :voice-current v)))))
+        (when v
+          (mset! (app-fts) :voice-current v)
+          (wmx-iso
+            (start-listening (fmu :ear))))))))
 
 ;;; --- dashboard ---------------------------------------------------------------
 
