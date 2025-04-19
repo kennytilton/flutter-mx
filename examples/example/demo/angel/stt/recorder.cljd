@@ -1,0 +1,231 @@
+(ns example.demo.angel.stt.recorder
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter/widgets.dart" :as w]
+    ;
+    ["package:speech_to_text/speech_to_text.dart" :as stt]
+    ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as sttpi]
+    ["package:speech_to_text/speech_recognition_error.dart" :as stte]
+    ["package:speech_to_text/speech_recognition_result.dart" :as sttr]
+
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu  muv fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button sized-box fx-render dart-cb]]
+
+    [example.demo.angel.stt.common :as cmn]
+    [example.demo.angel.fts :as fts
+     :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
+             app-fts-status app-fts-progress
+             app-tts-lang-geos fts-speak fts-pause fts-stop fts-restart
+             lg-geo lg-lang]]))
+
+; todo: move to mx api
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
+
+(defn stop-listening [me]
+  (dpx :requesting-stop)
+  (.stop cmn/STT))
+
+(defn escape-regex [s]
+  ;; Escapes regex special characters in the substring
+  (str/replace s #"[.*+?^${}()|\[\]\\]" "\\\\$0"))
+(defn remove-substring-ci [full-str sub-str]
+  (let [escaped-sub-str (escape-regex sub-str)
+        regex (re-pattern escaped-sub-str)]
+    (str/replace full-str regex
+      (fn [match]
+        (if (= (str/lower-case match) (str/lower-case sub-str))
+          ""
+          match))))) ;; todo >>> util
+
+(def eo-speech "bingo")
+
+;; convert to run with app as me
+
+
+(defn start-listening [me]                                  ;; me s/b ear
+  (dp :initiates-listening)
+  (let [options (sttpi/SpeechListenOptions
+                  ;;.sampleRate 44100 CAUTION this breaks listening, requiring exit of ear
+                  .cancelOnError (mget (fm* :cancel-on-error) :value)
+                  .listenMode (case (mget (fm* :listen-mode) :selected)
+                                :dictation stt/ListenMode.dictation
+                                :confirm stt/ListenMode.confirmation
+                                :search stt/ListenMode.search) ;; search | confirmation | dictation
+                  .autoPunctuation (muv :auto-punctuation))
+        _ (dp :punc? (muv :auto-punctuation) :mode (mget (fm* :listen-mode) :selected))
+        result-listener (fn [^sttr/SpeechRecognitionResult r]
+                          (let [wds (.-recognizedWords r)]
+                            (dp :result-words!! (string? wds) wds)
+                            (when (str/includes? wds eo-speech)
+                              (.stop cmn/STT))
+                            (when (.-finalResult r)
+                              (dp :result-final!! wds)
+                              (try-wmx-iso
+                                (mset! (fmu :app) :transcript
+                                  (remove-substring-ci wds eo-speech))
+                                (fts-speak me :resukt))
+                              (dpx :RECORDER-stopping-on-final-result-perhaps-reduntantly)
+                              (.stop cmn/STT))))]
+    (dp :listen-call!!!!!!!! (app-fts-lg-current) #_ (mget (fmu :pauseFor) :value))
+    (.listen cmn/STT .onResult result-listener
+      .listenFor (Duration .seconds (mget (fmu :listenFor) :value))                  ;; what it says
+      .pauseFor (Duration .seconds (mget (fmu :pauseFor) :value)) ;; pause too long and it stops automatically
+      .localeId (app-fts-lg-current)                     ;; try "fr-FR", eg, or your best language
+      .listenOptions options)
+    (mset! (fmu :app) :sp-status :started)))
+
+;;; --- mic ----------------------------------------
+
+(defn make-mic []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF+ [:watch (fn [_ me new _ _]
+                                             (dpx :mic-color-watch new))]
+                                (dpx :mic-color-sees-status (mav :sp-status))
+                                (when-let [sp-stat (mav :sp-status)]
+                                  (case sp-stat
+                                    :available m/Colors.cyan
+                                    :started m/Colors.yellow
+                                    ;;:unavailable m/Colors.orange
+                                    :listening m/Colors.grey
+                                    :done m/Colors.blue
+                                    #_#_nil m/Colors.grey)))
+                :elevation    4.0}
+    {:name :mic}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    (let [sp-stat (mav :sp-status)]
+                      (cond
+                        (some (fn [s]
+                                (= sp-stat s))
+                          [:available :done])
+                        (do
+                          (dp :starting-listening)
+                          (mset! (fmu :app) :transcript "")
+                          (start-listening (fm* :ear)))
+                        :else (dp :mic-cannot-star!!!!-at-status sp-stat))))
+       :icon (m/Icon m/Icons.mic)
+       :color (cF (fx/within-ctx [me ctx] (dpx :mic-status (mav :sp-status))
+                    m/Colors.black))})))
+
+;;; --- ear ------------------------------------------
+
+(defn make-ear []
+  (fx/material {:shape        (m/CircleBorder)
+                :clipBehavior m/Clip.antiAlias
+                :color        (cF+ [:watch (fn [_ me new _ _]
+                                             (dpx :ear-watch (str new)))] (dpx :ear-color-sees-status (mav :sp-status))
+                                (when-let [sp-stat (mav :sp-status)]
+                                  (case sp-stat
+                                  :started m/Colors.yellow
+                                  :listening m/Colors.red
+                                  :done m/Colors.grey
+                                  :stopped m/Colors.grey
+                                  :available m/Colors.grey)))
+                :elevation    4.0}
+    {:name :ear}
+    (fx/icon-button
+      {:onPressed (dart-cb []
+                    ; todo offer cancel as well as stop, or have mic handle
+                    ;   stop and this ear mean cancel while listening
+                    (when (= :listening (mav :sp-status))
+                      (dpx :stopping-on-ear-press)
+                      (mset! (fmu :app) :sp-status :stopped)
+                      (stop-listening (fmu :ear))))
+       :icon      (m/Icon m/Icons.hearing)
+       :color     (cF (fx/within-ctx [me ctx]
+                        m/Colors.black))})))
+
+;;; --- recorder options ------------------------------
+
+(defn listen-mode []
+  (fx/column {:mainAxisAlignment m/MainAxisAlignment.start}
+    {:name     :listen-mode
+     :selected (cI :confirm)}
+    (mapv (fn [mode]
+            (fx/sized-box {:width 200 :height 40}
+              (fx/radio-list-tile
+                {:controlAffinity m/ListTileControlAffinity.leading
+                 :title           (m/Text (str/capitalize (name mode)))
+                 :value           mode
+                 :groupValue      (cF (mav :selected))
+                 :onChanged       (dart-cb [v]
+                                    (mset! (fasc :listen-mode) :selected v))}
+                {:name mode})))
+      [:confirm :search :dictation])))
+
+(defn auto-punctuation []
+  (fx/sized-box {:width 250}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-punc")
+       :value           (cI true)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :auto-punctuation})))
+
+(defn cancel-on-error []
+  (fx/sized-box {:width 250}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Error Cancel")
+       :value           (cI true)
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :cancel-on-error})))
+
+(defn prop-slider [label prop color init-val min max divisions]
+  (dpx :slider-init init-val)
+  (fx/slider
+    {:value       (cI init-val #_ (Duration .seconds init-val))
+     :onChanged   (cF #(mx/wmx-iso
+                         (dp :slider-chg label prop % )
+                         (mset! me :value (.toInt ^double %) #_(Duration .seconds (.toInt %)))))
+     :min         min :max max :divisions divisions
+     :label       (cF (str (mget me :value)))
+     :activeColor color}
+    {:name prop}))
+
+(defn timing []
+  (column {:mainAxisAlignment m/MainAxisAlignment.start
+           :crossAxisAlignment m/CrossAxisAlignment.start}
+    (doall (for [[label & opnds]
+                 [["Duration" :listenFor m/Colors.blue 20 0 30 15]
+                  ["Pause For" :pauseFor m/Colors.green 3 0 5 5]
+                  #_ ["Pause For" :pauseFor m/Colors.green 3 0 10 100]]]
+             (container {:margin (m/EdgeInsets.only .right 0 .bottom 0)}
+               (fx/row
+                 {:mainAxisAlignment m/MainAxisAlignment.start
+                  :mainAxisSize      m/MainAxisSize.min}
+                 (container {:width     68
+                             :alignment m/Alignment.topLeft}
+                   (m/Text label))
+                 (apply prop-slider label opnds)))))))
+
+(defn make-recorder []
+  (row {:mainAxisAlignment m/MainAxisAlignment.end
+        :mainAxisSize      m/MainAxisSize.min}
+    (row {:mainAxisSize m/MainAxisSize.min}
+      (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+        (text "Recording")
+        (sized-box {:height 6.0})
+        (row {:mainAxisSize m/MainAxisSize.min}
+          (make-mic)
+          (sized-box {:width 28.0})
+          (make-ear)))
+      (sized-box {:width 64.0}))
+    (listen-mode)
+    (fx/column {:mainAxisAlignment m/MainAxisAlignment.center}
+      (auto-punctuation)
+      (cancel-on-error))
+    (timing)))
+
