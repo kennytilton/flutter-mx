@@ -1,0 +1,174 @@
+(ns example.demo.angel.core
+  "Originally, a straught port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :as ftslib
+     :refer [FlutterTts]]
+    ["package:flutter/widgets.dart" :as w]
+
+    ["package:speech_to_text/speech_to_text.dart" :as s2t
+     :refer [LocaleName]]
+    ["package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart" :as sttpi]
+    ["package:speech_to_text/speech_recognition_error.dart" :as stte]
+    ["package:speech_to_text/speech_recognition_result.dart" :as sttr]
+
+    [clojure.string :as str]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv fm* mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    [example.demo.angel.fts :as fts
+     :refer [app-fts app-fts-progress app-fts-status app-locale-voices]]
+    [example.demo.angel.component
+     :refer [lang-chooser geo-chooser voice-chooser play-pause-button stop-button auto-play
+             equalizer choice-header]]
+    [example.demo.angel.poetry :as poetry]
+    [example.demo.angel.stt.core :refer [sp-initializer-rule]]
+    [example.demo.angel.stt.common :as cmn]
+    [example.demo.angel.stt.recorder
+     :refer [make-recorder make-mic make-ear start-listening]]))
+
+; todo move these to MX utilities
+
+(defn list-difference [list1 list2]
+  (let [set2 (set list2)]
+    (filter #(not (contains? set2 %)) list1)))
+
+(defn list-intersection [list1 list2]
+  (let [set2 (set list2)]
+    (filter #(contains? set2 %) list1)))
+
+(defmacro try-wmx-iso [& body]
+  `(try
+     (tilton.mx.api/wmx-iso ~@body)
+     (catch Exception e#
+       (dp :FLUTTERCATCH!! e#))))
+
+;;; === app ======================================================
+
+(declare dashboard speech-input chat-do)
+
+(defn fsm [app input state]
+  (let [sp-stat (mget me :sp-status)]
+    (case (:status state)
+      :start-up (case input
+                  :record-requested (start-listening (fm* :ear))
+                  ;; (mset! (fmu :app) :transcript "") ;; todo needed? if start-up
+                  (do
+                    (dp :startup-ignoring!!!!!!!!!!!!!!!! input)
+                    state)
+      :waiting (case input
+                 :record-requested (start-listening (fm* :ear))
+                 (mset! (fmu :app) :transcript "") ;; todo needed? if start-up
+                 (dp :waiting-ignoring!!!!!!!!!!!!!!!! input))
+      (dp :mic-cannot-star!!!!-at-status input (:status state) sp-stat))))
+
+(defn make-app []
+  (material-app {}
+    {:name            :app
+     :app-input (cI nil :ephemeral? true)
+     :app-state (cF+ [:watch (fn [_ me new prior _]
+                               (dp :app-st!!! new :was prior))]
+                  (if-let [in (mget me :app-input)]
+                    (fsm me in _cache)
+                    {:status :start-up}))
+     ; --- text to speech
+     :fts             (cF (fts/make-flutter-tts))
+     :tts-locales     (cF+ [:async? true]
+                        (when-let [tts (mget (mget me :fts) :tts)]
+                          (.-getLanguages ^ftslib/FlutterTts tts)))
+     ; --- speech to text
+     :sp-status       (cI nil :watch (fn [_ me new _ _]
+                                       (dp :sp-status-watch-new new)))
+     :sp-initialized? (sp-initializer-rule)
+     :stt-locales     (cF+ [:async? true]
+                        (when (mget me :sp-initialized?)
+                          (.locales cmn/STT)))
+     ; --- unified TTS and STT ---------------------
+     :fts-locales     (cF+ [:watch (fn [_ _ new _ _]
+                                     (dpx :fts-lox new))]
+                        (when-let [tts (mget me :tts-locales)]
+                          (when-let [lox (mget me :stt-locales)]
+                            (filter #(some (fn [pfx]
+                                             (str/starts-with? % pfx))
+                                       ["en-" "fr-"]) ;; HHACK
+                              (list-intersection tts (map (fn [loc] (.-localeId ^LocaleName loc)) lox))))))
+     :fts-langs (cF+ [:watch (fn [_ _ new _ _]
+                              (dpx :fts-langs new))]
+                  (set (map fts/lg-lang (mget me :fts-locales))))
+     ; ---
+     :transcript      (cI "Your grieving moonlight face." #_ "Dis donc, où est la bibliothèque?"
+                        :watch (fn [_ me new _ _]
+                                 (try-wmx-iso
+                                   (chat-do me new))))}
+    (scaffold
+      {:appBar (app-bar {:title (m/Text "Flutter Speech <-> Text")})}
+      (column
+        {:mainAxisAlignment m/MainAxisAlignment.start
+         :crossAxisAlignment m/CrossAxisAlignment.stretch}
+        (choice-header "Languages")
+        (lang-chooser)
+        (choice-header "Geography")
+        (geo-chooser)
+        (choice-header "Voices")
+        (voice-chooser)
+        (make-recorder)
+        (speech-input)
+        (dashboard)
+        (row {;:mainAxisSize      m/MainAxisSize.min
+              :mainAxisAlignment m/MainAxisAlignment.center}
+          (auto-play)
+          (equalizer))))))
+
+;;; --- chat-do ----------------------------------------------------------
+
+(defn chat-do [me command]
+  (dp :chat-do!! me command)
+  (when (str/starts-with? command "Talk to ")
+    (let [vn (str/replace command #"Talk to " "")]
+      (dp :talking-to vn)
+      (let [v (some (fn [v]
+                      (when (str/includes? (get v "identifier") vn)
+                        v))
+                (app-locale-voices))]
+        (dp :found-talk-to v)
+        (when v
+          (mset! (app-fts) :voice-current v))))))
+
+
+
+;;; --- dashboard ---------------------------------------------------------------
+
+(defn dashboard []
+  (container {:padding (m/EdgeInsets.only .top 4 .bottom 4)}
+    (row {;:mainAxisSize      m/MainAxisSize.min
+          :mainAxisAlignment m/MainAxisAlignment.center}
+      #_{:mainAxisAlignment m/MainAxisAlignment.spaceEvenly}
+      (text "Playback")
+      (play-pause-button)
+      (stop-button))))
+
+;;; --- text input --------------------------------------------------------------
+
+(defn speech-input []
+  (container
+    {:alignment  m/Alignment.topCenter
+     :decoration (cF (fx/box-decoration
+                       {:border (cF (.all m/Border .color m/Colors.blue .width 0.5))
+                        :color  m/Colors.grey.shade50}))
+     :padding    (m/EdgeInsets.only
+                   .top 25.0 .left 25.0 .right 25.0 .bottom 9)}
+    (fx/text
+      {:style    (p/TextStyle
+                   .fontFamily "Helvetica Neue"
+                   .fontSize 20.0)
+       :maxLines 2
+       :overflow m/TextOverflow.clip
+       :softWrap true}
+      {:name :text-in}
+      (mget (fmu :app) :transcript))))
+

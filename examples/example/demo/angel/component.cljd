@@ -1,0 +1,222 @@
+(ns example.demo.angel.component
+  "Originally, a straight port of the `flutter_tts` package example https://github.com/dlutton/flutter_tts/blob/master/example/lib/main.dart"
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:flutter_tts/flutter_tts.dart" :refer [FlutterTts]]
+    ["package:flutter/widgets.dart" :as w]
+    [clojure.string :as str]
+    [tilton.mx.util :as mxu]
+    [tilton.mx.api :as mx
+     :refer [dp dpx cI cF cF+ cF+n cFn cFonce mget mget? mset! mswap! minfo fasc fasc-inc
+             fmu muv muv-inc m*v mav mx-bound? wmx-iso]]
+    [tilton.fmx.api :as fx
+     :refer [scaffold app-bar text center column hero material-app
+             container row expanded icon padding opacity ignore-pointer
+             checkbox-list-tile icon-button fx-render dart-cb]]
+    [example.demo.angel.fts :as fts
+     :refer [app-tts app-fts app-fts-lang app-fts-lg-current app-fts-geo app-locale-voices
+             app-fts-status app-fts-progress app-fts-langs
+             app-tts-lang-geos fts-speak fts-pause fts-stop fts-restart
+             lg-geo lg-lang]]))
+
+;;; --- auto play --------------------------------------------------------
+
+(defn auto-play []
+  (fx/sized-box {:width 180}
+    (checkbox-list-tile
+      {:controlAffinity m/ListTileControlAffinity.leading
+       :title           (m/Text "Auto-play")
+       :value           (cI true :watch (fn [_ me new prior _]
+                                          (when (and new
+                                                  (mx-bound? prior)
+                                                  (= :off (app-fts-status)))
+                                            (fts-speak me :auto-play-watch))))
+       :onChanged       (cF #(wmx-iso (mset! me :value %)))}
+      {:name :auto-play})))
+
+;;; --- lang/geo choosers -------------------------------------------------
+
+(defn lang-chooser []
+  (fx/sized-box {:height 64}                                ;;fx/flexible {:flex 1} ;;expanded
+    (fx/grid-view+count
+      {:crossAxisCount  12 :crossAxisSpacing 0
+       :mainAxisSpacing 4 :childAspectRatio 2.0
+       :padding         (m/EdgeInsets.only .left 40)}
+      {:name :lang-chooser}
+      (map-indexed lang-button
+        (sort (app-fts-langs))))))
+
+(defn geo-chooser []
+  (do                                                       ;; expanded
+    (fx/grid-view+count
+      {:crossAxisCount  12 :crossAxisSpacing 0
+       :mainAxisSpacing 0 :childAspectRatio 2.0
+       :padding         (m/EdgeInsets.only .left 40)
+       :shrinkWrap      true}
+      {:name :geo-chooser}
+      (map-indexed geo-button
+        (when-let [lgc (app-fts-lang)]
+          (get (app-tts-lang-geos) lgc))))))
+
+(defn voice-chooser []
+  (do                                                       ;; expanded
+    (fx/grid-view+count
+      {:crossAxisCount  12 :crossAxisSpacing 4
+       :mainAxisSpacing 4 :childAspectRatio 2.0
+       :padding         (m/EdgeInsets.only .left 40)
+       :shrinkWrap      true}
+      {:name :voice-chooser}
+      (map-indexed voice-button
+        (when-let [loc (app-fts-lg-current)]
+          (dpx :got-loc!!!!!!!! loc :vs (app-locale-voices))
+          (dpx :locvoices!!!!!!! (filter #(= (get % "locale") loc)
+                                   (app-locale-voices)))
+          (filter #(= (get % "locale") loc)
+            (app-locale-voices)))))))
+
+;;; --- lang and geo buttons ----------------------------------------------------
+
+(defn lang-button [i lang]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang)
+     :onTap (dart-cb []
+              (mset! (app-fts) :lg-current
+                (first (get (app-tts-lang-geos) lang))))}
+    (container
+      {:decoration (cF (fx/box-decoration
+                         {:border (cF (when (= lang (app-fts-lang))
+                                        (.all m/Border .color m/Colors.blue .width 1.0)))
+                          :color  (.-shade50 (cond
+                                               (even? i) m/Colors.blue
+                                               :else m/Colors.yellow))}))}
+      (center
+        (padding {:padding (m/EdgeInsets.all 0.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 12.0)}
+            lang))))))
+
+(defn geo-button [i lang-geo]
+  (fx/gesture-detector
+    {:key   (m/ValueKey. lang-geo)
+     :onTap (dart-cb []
+              (mset! (app-fts) :lg-current lang-geo))}
+    (container
+      {:decoration (cF (fx/box-decoration
+                         {:border (cF (when (= (lg-geo lang-geo) (mget (app-fts) :lg-geo))
+                                        (.all m/Border .color m/Colors.blue .width 1.0)))
+                          :color  (.-shade50 (cond
+                                               (even? i) m/Colors.blue
+                                               :else m/Colors.yellow))}))}
+      (center
+        (padding {:padding (m/EdgeInsets.all 0.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 12.0)}
+            (lg-geo lang-geo)))))))
+
+(defn voice-button [i voice]                                ;; voice is a Dart map
+  (fx/gesture-detector
+    {:key   (m/ValueKey. (get voice "identifier"))
+     :onTap (dart-cb []
+              (dpx :setting-voice-current voice)
+              (mset! (app-fts) :voice-current voice))}
+    (container
+      {:decoration (cF (fx/box-decoration
+                         {:border (cF (when (= (get voice "identifier")
+                                              (get (mget (app-fts) :voice-current) "identifier"))
+                                        (.all m/Border .color m/Colors.blue .width 1.0)))
+                          :color  (.-shade50 (cond
+                                               (even? i) m/Colors.blue
+                                               :else m/Colors.yellow))}))}
+      (center
+        (padding {:padding (m/EdgeInsets.all 0.0)}
+          (fx/text
+            {:style (p/TextStyle .color m/Colors.black
+                      .fontSize 14.0)}
+            (get voice "name")))))))
+
+;;; --- play, stop, pause -------------------------------------------------------
+
+(defn play-pause-button []
+  (column {:mainAxisSize      m/MainAxisSize.min
+           :mainAxisAlignment m/MainAxisAlignment.center}
+    (let [playing? (= :on (app-fts-status))]
+      (icon-button
+        {:key         (m/ValueKey (if playing? "FTS_PAUSE" "FTS-SPEAK"))
+         :iconSize    48
+         :icon        (fx/icon (if playing? m/Icons.pause
+                                            m/Icons.play_arrow))
+         :color       (if playing? m/Colors.blue
+                                   m/Colors.green)
+         :splashColor (if playing? m/Colors.blueAccent
+                                   m/Colors.greenAccent)
+         :onPressed   (fn [] ((if playing? fts-pause fts-speak) me :play-pause))}))))
+
+(defn stop-button []
+  (ignore-pointer {:ignoring (cF (or (= :off (app-fts-status))
+                                   (let [{:keys [full-text word-end]}
+                                         (app-fts-progress)]
+                                     (< word-end (* 0.2 (count full-text))))))}
+    (opacity {:opacity (cF (if (mav :ignoring)
+                             0.15 1.0))}
+      (column {:mainAxisSize      m/MainAxisSize.min
+               :mainAxisAlignment m/MainAxisAlignment.center}
+        (icon-button
+          {:key         (m/ValueKey "FTS-STOP")
+           :icon        (fx/icon m/Icons.stop)
+           :iconSize    48
+           :color       m/Colors.red
+           :splashColor m/Colors.redAccent
+           :onPressed   (fn [] (fts-stop me))})))))
+
+;;; --- equalizer rate, pitch, volume sliders -----------------------------------------------------------
+
+(defn property-slider [label prop color init-val min max divisions watch]
+  ;; NB: an example of composability.
+  ;; Because all f/mx widgets are CLJD macros are functions, we
+  ;; can create functions like this easily.
+  ;; NB2: parameters are not like React "props", tracked internally to avoid rebuilding.
+  ;; Parameters just provide initial values, often permanent.
+  (fx/slider
+    {:value       (cI init-val :watch watch)
+     :onChanged   (cF #(mx/wmx-iso
+                         (mset! me :value %)
+                         (fts-restart me (str :slider-set label))))
+     :min         min :max max :divisions divisions
+     :label       (cF (str (mget me :value)))
+     :activeColor color}
+    {:name prop}))
+
+(def equalizer-sliders
+  [["Volume" :volume m/Colors.blue 0.8 0 1 10
+    (fn [_ me new _ _]
+      (.setVolume ^FlutterTts (app-tts) new))]
+   ["Pitch" :pitch m/Colors.red 1.0 0.5 2 15
+    (fn [_ me new _ _]
+      (dpx :slider-sets-pitch new)
+      (.setPitch ^FlutterTts (app-tts) new))]
+   ["Rate" :speech-rate m/Colors.green 0.5 0 1 20
+    (fn [_ me new _ _]
+      (dpx :slider-sets-rate new)
+      (.setSpeechRate ^FlutterTts (app-tts) new))]])
+
+(defn equalizer []
+  (container {:margin (m/EdgeInsets.only .bottom 0)}
+    (row
+      (mapv (fn [[label & opnds]]
+              (container {:margin (m/EdgeInsets.only .right 24 .bottom 0)}
+                (fx/row {:mainAxisAlignment m/MainAxisAlignment.end
+                         :mainAxisSize      m/MainAxisSize.min}
+                  (container {:width     64
+                              :alignment m/Alignment.topRight}
+                    (m/Text label))
+                  (apply property-slider label opnds))))
+        equalizer-sliders))))
+
+(defn choice-header [content]
+  (padding {:padding (m/EdgeInsets.all 12)}
+    (text {:style (p/TextStyle .color m/Colors.black
+                    .fontSize 16.0)}
+      content)))
