@@ -72,7 +72,7 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 5
+  (case 4
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
