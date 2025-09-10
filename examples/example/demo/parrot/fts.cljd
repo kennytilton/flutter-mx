@@ -78,6 +78,7 @@
                                                        vs))
                                             ;  _ (doseq [v sel-vs] (dp :selv v))
                                             loc-vs (group-by (fn [v] (get v "locale")) sel-vs)]
+                                        (dp :all-voices-en-fr loc-vs)
                                         loc-vs)))]
                   (.-getVoices ^FlutterTts (mget me :tts)))
     :lg-pref #_ "fr-FR" "en-US"                                        ;; faux stored preference
@@ -99,7 +100,7 @@
                           :identifier "com.apple.voice.compact.en-US.Victoria"})
     :lg-voices (cF+ [:watch (fn [_ me new old _]
                               ; todo here or on the voices display, call setVoice when new lg means new default
-                              (dpx :lg-voices-now
+                              (dp :lg-voices-now
                                 (map (fn [v] (get v "name")) new))
                               (dpx :old-lgvoices (count (or-mx-bound old)))
                               (when (and new (or-mx-bound old))

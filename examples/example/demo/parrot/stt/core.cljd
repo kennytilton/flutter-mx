@@ -29,11 +29,11 @@
 (defn sp-initializer-rule []
   (cF+ [:async? true
         :watch (fn [_ me new _ _]
-                 (dpx :initialized? new)
+                 (dp :initialized? new)
                  (when new
-                   (dpx :post-init-avail (.-isAvailable cmn/STT))
-                   (dpx :post-init-listening (.-isListening cmn/STT))
-                   (dpx :post-init-has-error (.-hasError cmn/STT))
+                   (dp :post-init-avail (.-isAvailable cmn/STT))
+                   (dp :post-init-listening (.-isListening cmn/STT))
+                   (dp :post-init-has-error (.-hasError cmn/STT))
                    (when new
                      (try-wmx-iso
                        (mset! me :sp-status :available)))))]
