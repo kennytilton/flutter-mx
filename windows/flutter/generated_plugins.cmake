@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  flutter_sound
   flutter_tts
   speech_to_text_windows
   url_launcher_windows
