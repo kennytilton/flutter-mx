@@ -1,6 +1,109 @@
-(ns example.demo.teacup.core
+(ns tilton.fmx.example.teacup.core
+  "Tai Chi Teacup hello world.
+
+   Captures 10 seconds of userAccelerometer data at 10 Hz (gravity
+   removed) and plots:
+     - xy-magnitude on the left axis [0, 5] m/s^2
+     - z on the right axis [-5, +5] m/s^2 (mapped onto the same chart Y)
+
+   The title shows a random build tag so each launch is visually
+   distinct. If you see the same number twice, the build did not pick
+   up your changes.
+
+   Tap Start to begin a capture. It auto-stops at 100 samples or 10
+   seconds, whichever comes first. Tap Stop to abort early.
+
+   Architecture:
+     - material-app is the root model, named :teacup, carrying the
+       app-level state slots (:running?, :samples, :start-ms).
+     - The capture widget (sensor.cljd) is mounted in the tree only
+       while :running? is true. It owns the StreamSubscription via a
+       pure-cell-value :sub with :on-quiesce that cancels on unmount.
+     - State reset (clearing :samples, stamping :start-ms) happens in
+       the Start button's dart-cb, which then flips :running? to true.
+       Cell formulas remain pure functions of their dependencies.
+     - The chart (plot.cljd) reads :samples in a cF; konly-param1's
+       :sst flag drives setState-based rebuilds when samples change."
   (:require
-    [example.demo.teacup.ui :as ui]))
+    ["dart:math" :as math]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.mx.api :as mx
+     :refer [cF cI mget mset! mswap! fmu]]
+    [tilton.mx.util :refer [now-ms]]
+    [tilton.fmx.example.teacup.sensor :as sensor :refer [capture]]
+    [tilton.fmx.example.teacup.plot   :as plot   :refer [line-chart chart-data]]))
+
+(def build-tag (.nextInt (math/Random) 1000))
+
+(defn title-text []
+  (str "Tai Chi Teacup v" build-tag))
+
+(defn counter-label [samples running?]
+  (let [n (count samples)]
+    (cond
+      running?    (str n " / " sensor/target-count)
+      (zero? n)   "Press Start"
+      :else       (str "Captured " n " samples"))))
+
+(defn- start! [root]
+  ;; Procedural state reset, then flip :running? -- which causes the
+  ;; capture widget to be mounted, which builds & activates the
+  ;; StreamSubscription as its :sub cell value.
+  (mset! root :samples [])
+  (mset! root :start-ms (now-ms))
+  (mset! root :running? true))
+
+(defn- stop! [root]
+  ;; Just flip :running?. The capture widget unmounts; its :sub cell's
+  ;; :on-quiesce cancels the subscription.
+  (mset! root :running? false))
 
 (defn make-app []
-  (ui/make-app))
+  (fx/material-app
+    {:title (title-text)
+     :theme (m/ThemeData .primarySwatch m/Colors.teal)}
+    {:name     :teacup
+     :running? (cI false)
+     :start-ms (cI nil)
+     :samples  (cI [])}
+    (fx/scaffold
+      {:appBar (fx/app-bar
+                 {:title (m/Text (title-text))})}
+      (fx/column
+        {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+         :crossAxisAlignment m/CrossAxisAlignment.stretch}
+
+        ;; sample counter, reactive
+        (fx/text
+          {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
+           :textAlign m/TextAlign.center}
+          (counter-label
+            (mget (fmu :teacup) :samples)
+            (mget (fmu :teacup) :running?)))
+
+        ;; Start/Stop button. Reactive label tracks :running?.
+        (fx/elevated-button
+          {:onPressed (dart-cb []
+                        (let [root (fmu :teacup)]
+                          (if (mget root :running?)
+                            (stop! root)
+                            (start! root))))}
+          (fx/text
+            (if (mget (fmu :teacup) :running?) "Stop" "Start")))
+
+        ;; Capture widget: only present in the tree while running?.
+        ;; When :running? flips false, this kid becomes nil and the
+        ;; previous capture model is quiesced; its :sub cell's
+        ;; :on-quiesce cancels the StreamSubscription.
+        (when (mget (fmu :teacup) :running?)
+          (capture))
+
+        ;; The chart, in an Expanded so it fills remaining space.
+        (fx/expanded
+          (line-chart {}
+            ;; only-kid: cF yielding LineChartData; depends on :samples
+            ;; via fmu, which drives the konly-param1 setState rebuild.
+            (cF (chart-data
+                  (mget (fmu :teacup) :samples)))))))))
