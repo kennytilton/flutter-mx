@@ -100,3 +100,69 @@ Widget properties become reactive model slots; child widgets are expressed as `:
 3. If the app hot-reloads cleanly, check the simulator/device.
 4. If changes don't appear, switch to the launch terminal and press `Return` to trigger a hot restart.
 5. Print output from `dp` appears in the Flutter console (build terminal).
+
+## CLJD Coding Rules
+
+### tilton.mx.api and tilton.fmx.api are one-stop require files
+
+`tilton.mx.api` and `tilton.fmx.api` were created to serve two purposes: they
+document the public surface of their respective libraries, and they provide a
+single convenient require entry for all commonly needed symbols. Always require
+`dp`, `dpx`, cell variants, navigation helpers, and mutation functions from
+`tilton.mx.api` — not from internal namespaces like `tilton.mx.base` or
+`tilton.mx.cell.base`. Similarly, Flutter widget macros and helpers come from
+`tilton.fmx.api`. Only reach into internal namespaces (e.g. `tilton.mx.cell.base`
+for `cb/c-value`) when the symbol is genuinely not re-exported by the api namespace.
+
+### Require clauses must be kept in sync with the code
+
+**Before writing any type hint, interop call, or symbol reference, verify that the
+namespace providing that type or function is present in the `ns` form's `:require`
+clause with an appropriate alias.**
+
+Concretely:
+- Every Dart type used as a type hint (`^alias/TypeName`) needs a matching
+  `["dart:libname" :as alias]` or `["package:..." :as alias]` in `:require`.
+- `dart:async`, `dart:core`, `dart:math`, etc. are NOT implicitly available as
+  type-hint prefixes — they must be required and aliased explicitly.
+- When adding new interop (a new Dart API, a new sensors_plus type, a new Flutter
+  class), add its require entry at the same time, in the same edit.
+- When reviewing or producing any `.cljd` file, scan the ns `:require` block first
+  and confirm every alias used in the file body is declared there.
+
+### Do not use ^:const
+
+`^:const` is unnecessary in CLJD and generates compiler warnings. Use plain `def`.
+
+### Dynamic warnings must be fixed with type hints
+
+CLJD dynamic warnings ("can't resolve member X on target type dynamic") must be
+resolved by adding a type hint (`^alias/Type`) to the binding where the type is
+known. Do not leave dynamic warnings unaddressed. Fix the first warning first —
+they cascade.
+
+### Never wrap widget children in cF
+
+f/mx widget factory macros (`konly-param1`, `k1-child`, `k1-content`, `k1-body`,
+`children-stateless`, etc.) already wrap their child/children arguments in formulas
+automatically. Adding an explicit `cF` around a child expression is redundant and
+wrong — it breaks `me` binding and the build cycle.
+
+**Pass child expressions directly, never wrapped in `cF`:**
+
+```clojure
+; CORRECT
+(fx/expanded
+  (line-chart {}
+    (chart-data (mget (fmu :teacup) :samples))))
+
+; WRONG — do not do this
+(fx/expanded
+  (line-chart {}
+    (cF (chart-data (mget (fmu :teacup) :samples)))))
+```
+
+More broadly: we cannot think of a case where UI structure needed an explicit `cF`.
+`cF` belongs in model slot definitions (`:value`, `:style`, `:color`, etc.), not
+wrapping child widget expressions. If you find yourself writing `cF` around a child,
+stop and reconsider.

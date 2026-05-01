@@ -1,47 +1,37 @@
-(ns tilton.fmx.example.teacup.sensor
+(ns example.demo.teacup.sensor
   "CoreMotion (via sensors_plus) bridge for Teacup hello world.
 
-   Idiom: the StreamSubscription to userAccelerometerEventStream IS the
-   value of the :sub cell on a 'capture' widget. The cell has no Cell
-   dependencies, so it computes once at md-awaken: build the stream,
-   call .listen, return the subscription handle. :on-quiesce cancels
-   when the widget is unmounted.
-
-   The capture widget is mounted only while (mget root :running?) is
-   true. Resetting :samples / :start-ms is done by the START button's
-   dart-cb BEFORE it flips :running? -- not from inside any formula.
-
-   The listener writes incoming samples to (cI :samples) on the root
-   via (wmx-iso (mset! ...)), enforces 10 Hz downsampling, and triggers
-   auto-stop by flipping :running? on the root. That flip causes the
-   capture widget to be unmounted, which fires :on-quiesce, which
-   cancels the subscription."
+   Two cells on the capture widget:
+     :clock -- Timer.periodic fires every second. On each tick, if
+               still running: decrements :secs-left on root. When
+               :secs-left hits 0: stops sampling (same as Stop button).
+               :on-quiesce cancels the timer on unmount.
+     :sub   -- StreamSubscription accumulates samples at 10 Hz.
+               :on-quiesce cancels on unmount."
   (:require
+    ["dart:async" :as async]
     ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
     ["package:sensors_plus/sensors_plus.dart" :as sp]
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
-     :refer [cF+ mget mset! mupdate! fmu wmx-iso]]
-    [tilton.mx.util :refer [now-ms]]
-    [tilton.mx.base :refer [dp]]
+     :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms]]
     [tilton.fmx.api :as fx]))
 
-(def ^:const target-count 100)
-(def ^:const sample-period-ms 100)         ;; 10 Hz target
-(def ^:const run-duration-ms 10000)        ;; 10 s
+(def sample-period-ms 100)                              ;; 10 Hz
+(def run-duration-ms 10000)                             ;; 10 s
+(def run-duration-s (quot run-duration-ms 1000))        ;; derived
+(def target-count (quot run-duration-ms sample-period-ms)) ;; derived
 
 ;;; ----- listener body -----
-;;
-;; Pure closure over root model and gating atoms. Called by the Dart
-;; stream from outside the matrix, so writes go through wmx-iso.
 
 (defn- make-listener [root last-stamp-atom stopped?-atom]
-  (fn [ev]
+  (fn [^sp/UserAccelerometerEvent ev]
     (when-not @stopped?-atom
       (let [now  (now-ms)
             last @last-stamp-atom]
         (when (>= (- now last) sample-period-ms)
+          (dp :sampling!!!)
           (reset! last-stamp-atom now)
           (let [start  (mget root :start-ms)
                 t-rel  (- now start)
@@ -53,35 +43,52 @@
             (wmx-iso
               (mupdate! root :samples conj sample)
               (let [n (count (mget root :samples))]
-                (when (or (>= n target-count)
-                          (>= t-rel run-duration-ms))
+                (when (>= n target-count)
+                  (dp :sample-count-stop! :n n)
                   (reset! stopped?-atom true)
                   (mset! root :running? false))))))))))
 
 ;;; ----- capture widget -----
-;;
-;; Mounted into the tree only when :running? is true on the root.
-;; Visually a small status text. The :sub cell's value is the active
-;; StreamSubscription; building that value (calling .listen) IS what
-;; activates the stream. :on-quiesce cancels on unmount.
 
 (defn capture []
   (fx/text
     {:style (fx/within-ctx [me ctx]
               (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
-    {:name :capture
-     :sub  (cF+ [:on-quiesce (fn [c]
-                               (when-let [sub (cb/c-value c)]
-                                 (.cancel sub)
-                                 (dp :sensor-cancelled!)))]
-             ;; Pure formula: build subscription, return it as the value.
-             ;; No deps -> runs once at awaken. No mset! in this body.
-             (let [last-stamp (atom 0)
-                   stopped?   (atom false)
-                   stream     (sp/userAccelerometerEventStream
-                                .samplingPeriod
-                                (Duration .milliseconds sample-period-ms))]
-               (dp :sensor-subscribing!)
-               (.listen stream
-                 (make-listener (fmu :teacup) last-stamp stopped?))))}
+    {:name  :capture
+
+     ;; Periodic timer: ticks every second.
+     ;; Each tick: if still running, decrement :secs-left.
+     ;; When :secs-left reaches 0: stop sampling.
+     :clock (cF+ [:on-quiesce (fn [c]
+                                (when-let [^async/Timer tmr (cb/c-value c)]
+                                  (dp :clock-cancelled!)
+                                  (.cancel tmr)))]
+              (let [root (fmu :teacup)]
+                (dp :clock-starting!)
+                (async/Timer.periodic (Duration .seconds 1)
+                  (fn [^async/Timer tmr]
+                    (wmx-iso
+                      (when (mget root :running?)
+                        (let [remaining (dec (mget root :secs-left))]
+                          (dp :clock-tick! :secs-left remaining)
+                          (mset! root :secs-left remaining)
+                          (when (<= remaining 0)
+                            (dp :clock-stopping!)
+                            (.cancel tmr)
+                            (mset! root :running? false)))))))))
+
+     ;; Stream subscription: accumulates samples at 10 Hz.
+     :sub   (cF+ [:on-quiesce (fn [c]
+                                (when-let [^async/StreamSubscription sub (cb/c-value c)]
+                                  (dp :sub-cancelled!)
+                                  (.cancel sub)))]
+              (let [last-stamp (atom 0)
+                    stopped?   (atom false)
+                    root       (fmu :teacup)
+                    stream     (sp/userAccelerometerEventStream
+                                 .samplingPeriod
+                                 (Duration .milliseconds sample-period-ms))]
+                (dp :sensor-subscribing!)
+                (.listen stream
+                  (make-listener root last-stamp stopped?))))}
     "capturing..."))

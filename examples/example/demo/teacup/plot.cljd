@@ -1,4 +1,4 @@
-(ns tilton.fmx.example.teacup.plot
+(ns example.demo.teacup.plot
   "Dual-axis LineChart for Teacup using fl_chart.
 
    The chart's true Y range is [0, 5] (m/s^2 -- the xy magnitude range).
@@ -16,15 +16,26 @@
    animates."
   (:require
     ["package:flutter/widgets.dart" :as w]
-    ["package:fl_chart/fl_chart.dart" :as flc]
-    [tilton.fmx.api :as fx]
-    [tilton.fmx.factory :refer [deftag] :as fxf]
+    ["package:flutter/material.dart" :as m]
+    ["package:fl_chart/fl_chart.dart" :as flc
+     :refer [LineChart]]
+    [tilton.fmx.factory :refer [deftag konly-param1] :as fxf]
     [tilton.mx.api :as mx
      :refer [mget cF fmu]]))
 
-(def ^:const y-min 0.0)
-(def ^:const y-max 5.0)
-(def ^:const x-max-ms 10000.0)             ;; 10 s window
+;;; ----- f/mx wrapper for fl_chart's LineChart -----
+;;
+;; LineChart is a StatefulWidget that takes its data (LineChartData,
+;; non-Widget) as its first positional ctor arg. konly-param1 fits
+;; this exactly: it stashes only-kid as :_param-1 (a cell with
+;; :sst true, forcing stateful build), and at build time renders it as
+;; the first arg. fx-render passes non-Widget values through unchanged.
+
+(deftag tilton.fmx.factory/konly-param1 line-chart flc/LineChart)
+
+(def y-min 0.0)
+(def y-max 5.0)
+(def x-max-ms 3000.0)               ;; 3 s window
 
 (defn- z->plot ^double [^double z]
   (/ (+ z 5.0) 2.0))
@@ -38,14 +49,14 @@
                       (double (transform (y-key s)))))
         samples))
 
-(defn- left-title-widget [value _meta]
+(defn ^m/Widget left-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed value 1)))
 
-(defn- right-title-widget [value _meta]
+(defn ^m/Widget right-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (v->z value) 1)))
 
-(defn- bottom-title-widget [value _meta]
-  (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
+(defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
+  (w/Text (.toStringAsFixed (/ value 1000.0) 1)))
 
 (defn chart-data
   "Build a LineChartData from the current samples vector."
@@ -90,13 +101,3 @@
       .topTitles
       (flc/AxisTitles
         .sideTitles (flc/SideTitles .showTitles false)))))
-
-;;; ----- f/mx wrapper for fl_chart's LineChart -----
-;;
-;; LineChart is a StatefulWidget that takes its data (LineChartData,
-;; non-Widget) as its first positional ctor arg. konly-param1 fits
-;; this exactly: it stashes only-kid as :_param-1 (a cell with
-;; :sst true, forcing stateful build), and at build time renders it as
-;; the first arg. fx-render passes non-Widget values through unchanged.
-
-(deftag fxf/konly-param1 line-chart flc/LineChart)
