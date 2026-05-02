@@ -1,95 +1,47 @@
 (ns example.demo.teacup.core
-  "Tai Chi Teacup hello world.
-
-   Captures 10 seconds of userAccelerometer data at 10 Hz (gravity
-   removed) and plots:
-     - xy-magnitude on the left axis [0, 5] m/s^2
-     - z on the right axis [-5, +5] m/s^2 (mapped onto the same chart Y)
-
-   Architecture:
-     - :teacup root carries :running?, :samples, :start-ms, :secs-left.
-     - :secs-left counts down from run-duration-s each second via the
-       :clock Timer.periodic in the capture widget.
-     - counter-label shows the countdown while running.
-     - SafeArea keeps content clear of the Dynamic Island."
+  "Teacup app shell: material-app, root model, bottom nav."
   (:require
     ["dart:math" :as math]
+    ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter/painting.dart" :as p]
-    ["package:fl_chart/fl_chart.dart" :as flc
-     :refer [LineChart]]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     [tilton.mx.api :as mx
-     :refer [dp cF cI mget mset! mswap! fmu now-ms]]
-    [example.demo.teacup.sensor :as sensor :refer [capture]]
-    [example.demo.teacup.plot   :as plot   :refer [line-chart chart-data]]))
+     :refer [cF cI mget mset! fmu]]
+    [example.demo.teacup.sensor :as sensor]
+    [example.demo.teacup.monitor :refer [monitor-page]]
+    [example.demo.teacup.summary :refer [summary-page]]))
 
 (def build-tag (.nextInt (math/Random) 1000))
 
 (defn title-text []
   (str "Tai Chi Teacup v" build-tag))
 
-(defn counter-label [samples running? secs-left]
-  (let [n (count samples)]
-    (cond
-      running?    (str n " samples  |  " secs-left "s remaining")
-      (zero? n)   "Press Start"
-      :else       (str "Captured " n " samples"))))
-
-(defn- start! [root]
-  (dp :start!)
-  (mset! root :samples [])
-  (mset! root :start-ms (now-ms))
-  (mset! root :secs-left sensor/run-duration-s)
-  (mset! root :running? true))
-
-(defn- stop! [root]
-  (dp :stop!)
-  (mset! root :running? false))
-
 (defn make-app []
   (fx/material-app
     {:title (title-text)
      :theme (m/ThemeData .primarySwatch m/Colors.teal)}
-    {:name      :teacup
-     :running?  (cI false)
-     :start-ms  (cI nil)
-     :secs-left (cI sensor/run-duration-s)
-     :samples   (cI [])}
+    {:name            :teacup
+     :running?        (cI false)
+     :start-ms        (cI nil)
+     :secs-left       (cI sensor/run-duration-s)
+     :samples         (cI [])
+     :current-page-id (cI :chart)}
     (fx/scaffold
-      {:appBar (fx/app-bar
-                 {:title (m/Text (title-text))})}
-      (fx/safe-area
-        (fx/column
-          {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
-           :crossAxisAlignment m/CrossAxisAlignment.stretch}
-
-          ;; Status: sample count and countdown while running.
-          (fx/text
-            {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
-             :textAlign m/TextAlign.center}
-            (let [root (fmu :teacup)]
-              (counter-label
-                (mget root :samples)
-                (mget root :running?)
-                (mget root :secs-left))))
-
-          ;; Start/Stop button.
-          (fx/elevated-button
-            {:onPressed (dart-cb []
-                                 (let [root (fmu :teacup)]
-                                   (if (mget root :running?)
-                                     (stop! root)
-                                     (start! root))))}
-            (fx/text
-              (if (mget (fmu :teacup) :running?) "Stop" "Start")))
-
-          ;; Capture widget: mounted only while running?.
-          (when (mget (fmu :teacup) :running?)
-            (capture))
-
-          ;; Chart.
-          (fx/expanded
-            (line-chart {}
-                        (chart-data
-                          (mget (fmu :teacup) :samples)))))))))
+      {:appBar              (fx/app-bar
+                              {:title (m/Text (title-text))})
+       :bottomNavigationBar (cF
+                              (fx/bottom-navigation-bar
+                                {:currentIndex (if (= :chart (mget (fmu :teacup) :current-page-id)) 0 1)
+                                 :onTap        (dart-cb [i]
+                                                 (mset! (fmu :teacup) :current-page-id
+                                                   (if (= i 0) :chart :summary)))}
+                                (fx/bottom-navigation-bar-item
+                                  {:icon  (m/Icon m/Icons.show_chart)
+                                   :label "Chart"})
+                                (fx/bottom-navigation-bar-item
+                                  {:icon  (m/Icon m/Icons.grid_on)
+                                   :label "Summary"})))}
+      (if (= :chart (mget (fmu :teacup) :current-page-id))
+        (monitor-page)
+        (summary-page)))))
