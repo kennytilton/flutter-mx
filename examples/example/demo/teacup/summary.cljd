@@ -1,0 +1,25 @@
+(ns example.demo.teacup.summary
+  "Summary stats page."
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    [tilton.fmx.api :as fx]
+    [tilton.mx.api :as mx
+     :refer [mget fmu]]))
+
+(defn- duration-s [samples]
+  (if (empty? samples)
+    0
+    (.round (/ (:t (last samples)) 1000.0))))
+
+(defn summary-page []
+  (fx/safe-area
+    (fx/column
+      {:mainAxisAlignment  m/MainAxisAlignment.center
+       :crossAxisAlignment m/CrossAxisAlignment.center}
+      (fx/text
+        {:style (p/TextStyle .fontSize 22.0 .color m/Colors.black)}
+        (let [samples (mget (fmu :teacup) :samples)]
+          (str "Duration: " (duration-s samples) "s"))))))

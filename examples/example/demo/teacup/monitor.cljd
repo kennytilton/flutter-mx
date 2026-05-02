@@ -1,0 +1,62 @@
+(ns example.demo.teacup.monitor
+  "Live monitor page: chart + capture controls."
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.mx.api :as mx
+     :refer [dp mget mset! fmu now-ms]]
+    [example.demo.teacup.sensor :as sensor :refer [capture]]
+    [example.demo.teacup.plot   :as plot   :refer [line-chart chart-data]]))
+
+(defn counter-label [samples running? secs-left]
+  (let [n (count samples)]
+    (cond
+      running?    (str n " samples  |  " secs-left "s remaining")
+      (zero? n)   "Press Start"
+      :else       (str "Captured " n " samples"))))
+
+(defn- start! [root]
+  (dp :start!)
+  (mset! root :samples [])
+  (mset! root :start-ms (now-ms))
+  (mset! root :secs-left sensor/run-duration-s)
+  (mset! root :running? true))
+
+(defn- stop! [root]
+  (dp :stop!)
+  (mset! root :running? false))
+
+(defn monitor-page []
+  (fx/safe-area
+    (fx/column
+      {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+       :crossAxisAlignment m/CrossAxisAlignment.stretch}
+
+      (fx/text
+        {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
+         :textAlign m/TextAlign.center}
+        (let [root (fmu :teacup)]
+          (counter-label
+            (mget root :samples)
+            (mget root :running?)
+            (mget root :secs-left))))
+
+      (fx/elevated-button
+        {:onPressed (dart-cb []
+                      (let [root (fmu :teacup)]
+                        (if (mget root :running?)
+                          (stop! root)
+                          (start! root))))}
+        (fx/text
+          (if (mget (fmu :teacup) :running?) "Stop" "Start")))
+
+      (when (mget (fmu :teacup) :running?)
+        (capture))
+
+      (fx/expanded
+        (line-chart {}
+          (chart-data
+            (mget (fmu :teacup) :samples)))))))
