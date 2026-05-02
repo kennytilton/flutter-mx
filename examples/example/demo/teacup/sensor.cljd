@@ -15,68 +15,60 @@
                accepted tick reads gyro-atom and conjoins sample.
      :clock -- Timer.periodic; counts down :secs-left; stops at 0.
 
-   gyro-atom is created once in (capture) and closed over by both
-   the :gyro listener and make-listener."
+   No stopped?-atom: (mget root :running?) serves as the gate.
+   Once :running? is false, wmx-iso checks it and bails."
   (:require
     ["dart:async" :as async]
     ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
-    ["package:sensors_plus/sensors_plus.dart" :as sp]
+    ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
-
+    ["package:sensors_plus/sensors_plus.dart" :as sp]
     [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
      :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms]]
     [tilton.fmx.api :as fx]))
 
-(def sample-period-ms 100)                                 ;; 10 Hz
-(def run-duration-ms 10000)                                ;; 10 s
-(def run-duration-s  (quot run-duration-ms 1000))          ;; derived
-(def target-count    (quot run-duration-ms sample-period-ms)) ;; derived
+(def sample-period-ms 100)
+(def run-duration-ms 10000)
+(def run-duration-s  (quot run-duration-ms 1000))
+(def target-count    (quot run-duration-ms sample-period-ms))
 
-;;; ----- listener body -----
-
-(defn- make-listener [root last-stamp-atom stopped?-atom gyro-atom]
+(defn- make-listener [root last-stamp-atom gyro-atom]
   (fn [^sp/UserAccelerometerEvent ev]
-    (when-not @stopped?-atom
-      (let [now  (now-ms)
-            last @last-stamp-atom]
-        (when (>= (- now last) sample-period-ms)
-          (reset! last-stamp-atom now)
-          (let [start  (mget root :start-ms)
-                t-rel  (- now start)
-                ax     (.-x ev)
-                ay     (.-y ev)
-                az     (.-z ev)
-                xy     (math/sqrt (+ (* ax ax) (* ay ay)))
-                g      @gyro-atom
-                gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
-                gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
-                gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
-                gxz    (math/sqrt (+ (* gx gx) (* gz gz)))
-                sample {:t t-rel :xy xy :az az :gz gy :gxz gxz}]
-            (dp :sample :n (count (mget root :samples)) :t-rel t-rel
-                :xy xy :az az :gz gy :gxz gxz)
-            (wmx-iso
+    (let [now  (now-ms)
+          last @last-stamp-atom]
+      (when (>= (- now last) sample-period-ms)
+        (reset! last-stamp-atom now)
+        (let [start  (mget root :start-ms)
+              t-rel  (- now start)
+              ax     (.-x ev)
+              ay     (.-y ev)
+              az     (.-z ev)
+              xy     (math/sqrt (+ (* ax ax) (* ay ay)))
+              g      @gyro-atom
+              gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
+              gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
+              gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
+              gxz    (math/sqrt (+ (* gx gx) (* gz gz)))
+              sample {:t t-rel :xy xy :az az :gz gy :gxz gxz}]
+          (dp :sample :n (count (mget root :samples)) :t-rel t-rel
+              :xy xy :az az :gz gy :gxz gxz)
+          (wmx-iso
+            (when (mget root :running?)
               (mupdate! root :samples conj sample)
-              (let [n (count (mget root :samples))]
-                (when (>= n target-count)
-                  (dp :sample-count-stop! :n n)
-                  (reset! stopped?-atom true)
-                  (mset! root :running? false))))))))))
-
-;;; ----- capture widget -----
+              (when (>= (count (mget root :samples)) target-count)
+                (dp :sample-count-stop! :n (count (mget root :samples)))
+                (mset! root :running? false)))))))))
 
 (defn capture []
-  ;; gyro-atom is shared between :gyro and :sub cells.
   (let [gyro-atom (atom nil)]
     (fx/text
       {:style (fx/within-ctx [me ctx]
                 (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
       {:name  :capture
 
-       ;; Gyroscope subscription: stores latest event in gyro-atom.
        :gyro  (cF+ [:on-quiesce (fn [c]
                                   (when-let [^async/StreamSubscription sub (cb/c-value c)]
                                     (dp :gyro-cancelled!)
@@ -88,7 +80,6 @@
                   (fn [^sp/GyroscopeEvent ev]
                     (reset! gyro-atom ev))))
 
-       ;; Periodic timer: ticks every second, decrements :secs-left, stops at 0.
        :clock (cF+ [:on-quiesce (fn [c]
                                   (when-let [^async/Timer tmr (cb/c-value c)]
                                     (dp :clock-cancelled!)
@@ -107,18 +98,16 @@
                               (.cancel tmr)
                               (mset! root :running? false)))))))))
 
-       ;; Accelerometer subscription: samples at 10 Hz, reads gyro-atom each tick.
        :sub   (cF+ [:on-quiesce (fn [c]
                                   (when-let [^async/StreamSubscription sub (cb/c-value c)]
                                     (dp :sub-cancelled!)
                                     (.cancel sub)))]
                 (let [last-stamp (atom 0)
-                      stopped?   (atom false)
                       root       (fmu :teacup)
                       stream     (sp/userAccelerometerEventStream
                                    .samplingPeriod
                                    (Duration .milliseconds sample-period-ms))]
                   (dp :sensor-subscribing!)
                   (.listen stream
-                    (make-listener root last-stamp stopped? gyro-atom))))}
+                    (make-listener root last-stamp gyro-atom))))}
       "capturing...")))

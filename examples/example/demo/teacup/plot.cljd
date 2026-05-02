@@ -1,17 +1,13 @@
 (ns example.demo.teacup.plot
-  "Dual-axis LineChart for Teacup using fl_chart.
-
-   Four series:
-     blue   -- :xy  sqrt(ax^2 + ay^2): horizontal accel magnitude
+  "Four-series LineChart for Teacup using fl_chart.
+     blue   -- :xy  sqrt(ax^2+ay^2): horizontal accel magnitude
      red    -- :az  accelerometer z
-     orange -- :gxz sqrt(gx^2 + gz^2): off-axis angular magnitude
-     cyan   -- :gz  gyro y (yaw)
-
-   Y range auto-scaled. X fixed at [0, run-duration-ms].
-   Line width 4.0. No y-axis labels."
+     orange -- :gxz sqrt(gx^2+gz^2): off-axis angular magnitude
+     cyan   -- :gz  gyro y (yaw)"
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     [tilton.fmx.factory :refer [deftag konly-param1] :as fxf]
     [tilton.mx.api :as mx
@@ -20,7 +16,7 @@
 
 (deftag tilton.fmx.factory/konly-param1 line-chart flc/LineChart)
 
-(def x-max-ms (double sensor/run-duration-ms))   ;; derived
+(def x-max-ms (double sensor/run-duration-ms))
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -31,9 +27,7 @@
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
 
-(defn chart-data
-  "Build a LineChartData from the current samples vector."
-  [samples]
+(defn chart-data [samples]
   (flc/LineChartData
     .minX 0.0
     .maxX x-max-ms
