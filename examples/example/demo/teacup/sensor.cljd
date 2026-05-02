@@ -1,13 +1,22 @@
 (ns example.demo.teacup.sensor
-  "CoreMotion (via sensors_plus) bridge for Teacup hello world.
+  "CoreMotion (via sensors_plus) bridge for Teacup.
 
-   Two cells on the capture widget:
-     :clock -- Timer.periodic fires every second. On each tick, if
-               still running: decrements :secs-left on root. When
-               :secs-left hits 0: stops sampling (same as Stop button).
-               :on-quiesce cancels the timer on unmount.
-     :sub   -- StreamSubscription accumulates samples at 10 Hz.
-               :on-quiesce cancels on unmount."
+   Samples userAccelerometer and gyroscope at 10 Hz.
+   Each sample map: {:t t-rel :xy xy :az az :gz gz :gxz gxz}
+     :xy  -- sqrt(ax^2 + ay^2) -- horizontal accel magnitude
+     :az  -- accelerometer z axis
+     :gz  -- gyroscope y axis (yaw in pocket orientation)
+     :gxz -- sqrt(gx^2 + gz^2) -- off-axis angular magnitude
+
+   Three cells on capture widget:
+     :gyro  -- subscribes to gyroscopeEventStream; stores latest event
+               in a shared gyro-atom for the accel listener to read.
+     :sub   -- subscribes to userAccelerometerEventStream; on each
+               accepted tick reads gyro-atom and conjoins sample.
+     :clock -- Timer.periodic; counts down :secs-left; stops at 0.
+
+   gyro-atom is created once in (capture) and closed over by both
+   the :gyro listener and make-listener."
   (:require
     ["dart:async" :as async]
     ["dart:math" :as math]
@@ -18,28 +27,34 @@
      :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms]]
     [tilton.fmx.api :as fx]))
 
-(def sample-period-ms 100)                              ;; 10 Hz
-(def run-duration-ms 10000)                             ;; 10 s
-(def run-duration-s (quot run-duration-ms 1000))        ;; derived
-(def target-count (quot run-duration-ms sample-period-ms)) ;; derived
+(def sample-period-ms 100)                                 ;; 10 Hz
+(def run-duration-ms 10000)                                ;; 10 s
+(def run-duration-s  (quot run-duration-ms 1000))          ;; derived
+(def target-count    (quot run-duration-ms sample-period-ms)) ;; derived
 
 ;;; ----- listener body -----
 
-(defn- make-listener [root last-stamp-atom stopped?-atom]
+(defn- make-listener [root last-stamp-atom stopped?-atom gyro-atom]
   (fn [^sp/UserAccelerometerEvent ev]
     (when-not @stopped?-atom
       (let [now  (now-ms)
             last @last-stamp-atom]
         (when (>= (- now last) sample-period-ms)
-          (dp :sampling!!!)
           (reset! last-stamp-atom now)
           (let [start  (mget root :start-ms)
                 t-rel  (- now start)
-                x      (.-x ev)
-                y      (.-y ev)
-                z      (.-z ev)
-                xy     (math/sqrt (+ (* x x) (* y y)))
-                sample {:t t-rel :xy xy :z z}]
+                ax     (.-x ev)
+                ay     (.-y ev)
+                az     (.-z ev)
+                xy     (math/sqrt (+ (* ax ax) (* ay ay)))
+                g      @gyro-atom
+                gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
+                gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
+                gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
+                gxz    (math/sqrt (+ (* gx gx) (* gz gz)))
+                sample {:t t-rel :xy xy :az az :gz gy :gxz gxz}]
+            (dp :sample :n (count (mget root :samples)) :t-rel t-rel
+                :xy xy :az az :gz gy :gxz gxz)
             (wmx-iso
               (mupdate! root :samples conj sample)
               (let [n (count (mget root :samples))]
@@ -51,44 +66,56 @@
 ;;; ----- capture widget -----
 
 (defn capture []
-  (fx/text
-    {:style (fx/within-ctx [me ctx]
-              (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
-    {:name  :capture
+  ;; gyro-atom is shared between :gyro and :sub cells.
+  (let [gyro-atom (atom nil)]
+    (fx/text
+      {:style (fx/within-ctx [me ctx]
+                (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
+      {:name  :capture
 
-     ;; Periodic timer: ticks every second.
-     ;; Each tick: if still running, decrement :secs-left.
-     ;; When :secs-left reaches 0: stop sampling.
-     :clock (cF+ [:on-quiesce (fn [c]
-                                (when-let [^async/Timer tmr (cb/c-value c)]
-                                  (dp :clock-cancelled!)
-                                  (.cancel tmr)))]
-              (let [root (fmu :teacup)]
-                (dp :clock-starting!)
-                (async/Timer.periodic (Duration .seconds 1)
-                  (fn [^async/Timer tmr]
-                    (wmx-iso
-                      (when (mget root :running?)
-                        (let [remaining (dec (mget root :secs-left))]
-                          (dp :clock-tick! :secs-left remaining)
-                          (mset! root :secs-left remaining)
-                          (when (<= remaining 0)
-                            (dp :clock-stopping!)
-                            (.cancel tmr)
-                            (mset! root :running? false)))))))))
+       ;; Gyroscope subscription: stores latest event in gyro-atom.
+       :gyro  (cF+ [:on-quiesce (fn [c]
+                                  (when-let [^async/StreamSubscription sub (cb/c-value c)]
+                                    (dp :gyro-cancelled!)
+                                    (.cancel sub)))]
+                (dp :gyro-subscribing!)
+                (.listen (sp/gyroscopeEventStream
+                           .samplingPeriod
+                           (Duration .milliseconds sample-period-ms))
+                  (fn [^sp/GyroscopeEvent ev]
+                    (reset! gyro-atom ev))))
 
-     ;; Stream subscription: accumulates samples at 10 Hz.
-     :sub   (cF+ [:on-quiesce (fn [c]
-                                (when-let [^async/StreamSubscription sub (cb/c-value c)]
-                                  (dp :sub-cancelled!)
-                                  (.cancel sub)))]
-              (let [last-stamp (atom 0)
-                    stopped?   (atom false)
-                    root       (fmu :teacup)
-                    stream     (sp/userAccelerometerEventStream
-                                 .samplingPeriod
-                                 (Duration .milliseconds sample-period-ms))]
-                (dp :sensor-subscribing!)
-                (.listen stream
-                  (make-listener root last-stamp stopped?))))}
-    "capturing..."))
+       ;; Periodic timer: ticks every second, decrements :secs-left, stops at 0.
+       :clock (cF+ [:on-quiesce (fn [c]
+                                  (when-let [^async/Timer tmr (cb/c-value c)]
+                                    (dp :clock-cancelled!)
+                                    (.cancel tmr)))]
+                (let [root (fmu :teacup)]
+                  (dp :clock-starting!)
+                  (async/Timer.periodic (Duration .seconds 1)
+                    (fn [^async/Timer tmr]
+                      (wmx-iso
+                        (when (mget root :running?)
+                          (let [remaining (dec (mget root :secs-left))]
+                            (dp :clock-tick! :secs-left remaining)
+                            (mset! root :secs-left remaining)
+                            (when (<= remaining 0)
+                              (dp :clock-stopping!)
+                              (.cancel tmr)
+                              (mset! root :running? false)))))))))
+
+       ;; Accelerometer subscription: samples at 10 Hz, reads gyro-atom each tick.
+       :sub   (cF+ [:on-quiesce (fn [c]
+                                  (when-let [^async/StreamSubscription sub (cb/c-value c)]
+                                    (dp :sub-cancelled!)
+                                    (.cancel sub)))]
+                (let [last-stamp (atom 0)
+                      stopped?   (atom false)
+                      root       (fmu :teacup)
+                      stream     (sp/userAccelerometerEventStream
+                                   .samplingPeriod
+                                   (Duration .milliseconds sample-period-ms))]
+                  (dp :sensor-subscribing!)
+                  (.listen stream
+                    (make-listener root last-stamp stopped? gyro-atom))))}
+      "capturing...")))

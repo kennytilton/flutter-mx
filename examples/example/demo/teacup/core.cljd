@@ -1,7 +1,7 @@
 (ns example.demo.teacup.core
   "Tai Chi Teacup hello world.
 
-   Captures 3 seconds of userAccelerometer data at 10 Hz (gravity
+   Captures 10 seconds of userAccelerometer data at 10 Hz (gravity
    removed) and plots:
      - xy-magnitude on the left axis [0, 5] m/s^2
      - z on the right axis [-5, +5] m/s^2 (mapped onto the same chart Y)
@@ -10,7 +10,8 @@
      - :teacup root carries :running?, :samples, :start-ms, :secs-left.
      - :secs-left counts down from run-duration-s each second via the
        :clock Timer.periodic in the capture widget.
-     - counter-label shows the countdown while running."
+     - counter-label shows the countdown while running.
+     - SafeArea keeps content clear of the Dynamic Island."
   (:require
     ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
@@ -58,36 +59,37 @@
     (fx/scaffold
       {:appBar (fx/app-bar
                  {:title (m/Text (title-text))})}
-      (fx/column
-        {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
-         :crossAxisAlignment m/CrossAxisAlignment.stretch}
+      (fx/safe-area
+        (fx/column
+          {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+           :crossAxisAlignment m/CrossAxisAlignment.stretch}
 
-        ;; Status: sample count and countdown while running.
-        (fx/text
-          {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
-           :textAlign m/TextAlign.center}
-          (let [root (fmu :teacup)]
-            (counter-label
-              (mget root :samples)
-              (mget root :running?)
-              (mget root :secs-left))))
-
-        ;; Start/Stop button.
-        (fx/elevated-button
-          {:onPressed (dart-cb []
-                        (let [root (fmu :teacup)]
-                          (if (mget root :running?)
-                            (stop! root)
-                            (start! root))))}
+          ;; Status: sample count and countdown while running.
           (fx/text
-            (if (mget (fmu :teacup) :running?) "Stop" "Start")))
+            {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
+             :textAlign m/TextAlign.center}
+            (let [root (fmu :teacup)]
+              (counter-label
+                (mget root :samples)
+                (mget root :running?)
+                (mget root :secs-left))))
 
-        ;; Capture widget: mounted only while running?.
-        (when (mget (fmu :teacup) :running?)
-          (capture))
+          ;; Start/Stop button.
+          (fx/elevated-button
+            {:onPressed (dart-cb []
+                                 (let [root (fmu :teacup)]
+                                   (if (mget root :running?)
+                                     (stop! root)
+                                     (start! root))))}
+            (fx/text
+              (if (mget (fmu :teacup) :running?) "Stop" "Start")))
 
-        ;; Chart.
-        (fx/expanded
-          (line-chart {}
-            (chart-data
-              (mget (fmu :teacup) :samples))))))))
+          ;; Capture widget: mounted only while running?.
+          (when (mget (fmu :teacup) :running?)
+            (capture))
+
+          ;; Chart.
+          (fx/expanded
+            (line-chart {}
+                        (chart-data
+                          (mget (fmu :teacup) :samples)))))))))

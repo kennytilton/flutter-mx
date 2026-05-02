@@ -1,19 +1,14 @@
 (ns example.demo.teacup.plot
   "Dual-axis LineChart for Teacup using fl_chart.
 
-   The chart's true Y range is [0, 5] (m/s^2 -- the xy magnitude range).
-   The z series is signed in [-5, +5]; we map it linearly onto [0, 5]
-   for plotting:
-       z-plot(z) = (z + 5) / 2          ;; -5 -> 0, 0 -> 2.5, +5 -> 5
-   Right-side tick labels show the inverse:
-       z-true(v) = (v * 2) - 5
+   Four series:
+     blue   -- :xy  sqrt(ax^2 + ay^2): horizontal accel magnitude
+     red    -- :az  accelerometer z
+     orange -- :gxz sqrt(gx^2 + gz^2): off-axis angular magnitude
+     cyan   -- :gz  gyro y (yaw)
 
-   Update story: the only-kid passed to (line-chart ...) is a cF that
-   reads (mget (fmu :teacup) :samples). When samples change, the cell
-   recomputes; konly-param1 stashes the value in a :sst-true cell which
-   forces the wrapping widget into f/mx's stateful build path; setState
-   fires; build() reruns; fl_chart receives a fresh LineChartData and
-   animates."
+   Y range auto-scaled. X fixed at [0, run-duration-ms].
+   Line width 4.0. No y-axis labels."
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -21,42 +16,21 @@
      :refer [LineChart]]
     [tilton.fmx.factory :refer [deftag konly-param1] :as fxf]
     [tilton.mx.api :as mx
-     :refer [mget cF fmu]]))
-
-;;; ----- f/mx wrapper for fl_chart's LineChart -----
-;;
-;; LineChart is a StatefulWidget that takes its data (LineChartData,
-;; non-Widget) as its first positional ctor arg. konly-param1 fits
-;; this exactly: it stashes only-kid as :_param-1 (a cell with
-;; :sst true, forcing stateful build), and at build time renders it as
-;; the first arg. fx-render passes non-Widget values through unchanged.
+     :refer [mget cF fmu]]
+    [example.demo.teacup.sensor :as sensor]))
 
 (deftag tilton.fmx.factory/konly-param1 line-chart flc/LineChart)
 
-(def y-min 0.0)
-(def y-max 5.0)
-(def x-max-ms 3000.0)               ;; 3 s window
+(def x-max-ms (double sensor/run-duration-ms))   ;; derived
 
-(defn- z->plot ^double [^double z]
-  (/ (+ z 5.0) 2.0))
-
-(defn- v->z ^double [^double v]
-  (- (* v 2.0) 5.0))
-
-(defn- spots-for [samples y-key transform]
+(defn- spots-for [samples y-key]
   (mapv (fn [s]
           (flc/FlSpot (double (:t s))
-                      (double (transform (y-key s)))))
+                      (double (y-key s))))
         samples))
 
-(defn ^m/Widget left-title-widget [^double value ^flc/TitleMeta _meta]
-  (w/Text (.toStringAsFixed value 1)))
-
-(defn ^m/Widget right-title-widget [^double value ^flc/TitleMeta _meta]
-  (w/Text (.toStringAsFixed (v->z value) 1)))
-
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
-  (w/Text (.toStringAsFixed (/ value 1000.0) 1)))
+  (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
 
 (defn chart-data
   "Build a LineChartData from the current samples vector."
@@ -64,39 +38,46 @@
   (flc/LineChartData
     .minX 0.0
     .maxX x-max-ms
-    .minY y-min
-    .maxY y-max
+    .clipData (flc/FlClipData.none)
     .lineBarsData
     [(flc/LineChartBarData
-       .spots (spots-for samples :xy identity)
+       .spots (spots-for samples :xy)
+       .color m/Colors.blue
+       .barWidth 4.0
        .isCurved false
        .dotData (flc/FlDotData .show false))
      (flc/LineChartBarData
-       .spots (spots-for samples :z z->plot)
+       .spots (spots-for samples :az)
+       .color m/Colors.red
+       .barWidth 4.0
+       .isCurved false
+       .dotData (flc/FlDotData .show false))
+     (flc/LineChartBarData
+       .spots (spots-for samples :gxz)
+       .color m/Colors.orange
+       .barWidth 4.0
+       .isCurved false
+       .dotData (flc/FlDotData .show false))
+     (flc/LineChartBarData
+       .spots (spots-for samples :gz)
+       .color m/Colors.cyan
+       .barWidth 4.0
        .isCurved false
        .dotData (flc/FlDotData .show false))]
     .titlesData
     (flc/FlTitlesData
       .leftTitles
       (flc/AxisTitles
-        .sideTitles
-        (flc/SideTitles .showTitles true
-                        .reservedSize 32.0
-                        .interval 1.25
-                        .getTitlesWidget left-title-widget))
+        .sideTitles (flc/SideTitles .showTitles false))
       .rightTitles
       (flc/AxisTitles
-        .sideTitles
-        (flc/SideTitles .showTitles true
-                        .reservedSize 32.0
-                        .interval 1.25
-                        .getTitlesWidget right-title-widget))
+        .sideTitles (flc/SideTitles .showTitles false))
       .bottomTitles
       (flc/AxisTitles
         .sideTitles
         (flc/SideTitles .showTitles true
                         .reservedSize 24.0
-                        .interval 1000.0
+                        .interval 2000.0
                         .getTitlesWidget bottom-title-widget))
       .topTitles
       (flc/AxisTitles
