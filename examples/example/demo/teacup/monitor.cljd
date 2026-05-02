@@ -7,7 +7,8 @@
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     [tilton.mx.api :as mx
-     :refer [dp mget mset! fmu now-ms]]
+     :refer [dp mget mset! fmu]]
+    [example.demo.teacup.util :refer [uformx]]
     [example.demo.teacup.sensor :as sensor :refer [capture]]
     [example.demo.teacup.plot   :as plot   :refer [line-chart chart-data]]))
 
@@ -18,17 +19,6 @@
       (zero? n)   "Press Start"
       :else       (str "Captured " n " samples"))))
 
-(defn- start! [root]
-  (dp :start!)
-  (mset! root :samples [])
-  (mset! root :start-ms (now-ms))
-  (mset! root :secs-left sensor/run-duration-s)
-  (mset! root :running? true))
-
-(defn- stop! [root]
-  (dp :stop!)
-  (mset! root :running? false))
-
 (defn monitor-page []
   (fx/safe-area
     (fx/column
@@ -38,25 +28,30 @@
       (fx/text
         {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
          :textAlign m/TextAlign.center}
-        (let [root (fmu :teacup)]
+        (if-let [fx (uformx)]
           (counter-label
-            (mget root :samples)
-            (mget root :running?)
-            (mget root :secs-left))))
+            (mget fx :samples)
+            (mget fx :running?)
+            (mget fx :secs-left))
+          "Press Start"))
 
       (fx/elevated-button
         {:onPressed (dart-cb []
-                      (let [root (fmu :teacup)]
-                        (if (mget root :running?)
-                          (stop! root)
-                          (start! root))))}
+                      (let [root (fmu :teacup)
+                            fx   (uformx)]
+                        (if (and fx (mget fx :running?))
+                          (mset! root :event :stop)
+                          (mset! root :event :start))))}
         (fx/text
-          (if (mget (fmu :teacup) :running?) "Stop" "Start")))
+          (if-let [fx (uformx)]
+            (if (mget fx :running?) "Stop" "Start")
+            "Start")))
 
-      (when (mget (fmu :teacup) :running?)
-        (capture))
+      (capture)
 
       (fx/expanded
         (line-chart {}
           (chart-data
-            (mget (fmu :teacup) :samples)))))))
+            (if-let [fx (uformx)]
+              (mget fx :samples)
+              [])))))))
