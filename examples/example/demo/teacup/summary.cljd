@@ -1,6 +1,7 @@
 (ns example.demo.teacup.summary
   "Summary stats page."
   (:require
+    ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/painting.dart" :as p]
@@ -10,10 +11,36 @@
      :refer [mget fmu]]
     [example.demo.teacup.util :refer [uformx]]))
 
-(defn- duration-s [samples]
+(defn- mean [xs]
+  (if (empty? xs)
+    0.0
+    (/ (reduce + xs) (count xs))))
+
+(defn- std-dev [xs]
+  (if (< (count xs) 2)
+    0.0
+    (let [m (mean xs)
+          variance (mean (map #(let [d (- % m)] (* d d)) xs))]
+      (math/sqrt variance))))
+
+(defn- m-to-in [x] (* x 39.3701))
+
+(defn- stat-line [label value unit]
+  (str label ": " (.toStringAsFixed value 1) " " unit))
+
+(defn- stat-line-int [label value unit]
+  (str label ": " (.round value) " " unit))
+
+(defn- compute-stats [samples]
   (if (empty? samples)
-    0
-    (.round (/ (:t (last samples)) 1000.0))))
+    nil
+    (let [speeds  (map #(+ (:xy %) (:gz %)) samples)
+          bobs    (map :az samples)
+          leans   (map :gxz samples)]
+      {:speed   (mean speeds)
+       :river   (std-dev speeds)
+       :bobbing (mean (map #(.abs %) bobs))
+       :lean    (mean (map #(* % (/ 180.0 math/pi)) leans))})))
 
 (defn summary-page []
   (fx/safe-area
@@ -23,5 +50,11 @@
       (fx/text
         {:style (p/TextStyle .fontSize 22.0 .color m/Colors.black)}
         (if-let [fx (uformx)]
-          (str "Duration: " (duration-s (mget fx :samples)) "s")
+          (let [samples (mget fx :samples)]
+            (if-let [s (compute-stats samples)]
+              (str (stat-line     "Speed"   (m-to-in (:speed s))   "in/s²") "\n"
+                   (stat-line     "River"   (m-to-in (:river s))   "in/s²") "\n"
+                   (stat-line     "Bobbing" (m-to-in (:bobbing s)) "in/s²") "\n"
+                   (stat-line-int "Lean"    (:lean s)              "°/s"))
+              "No samples yet"))
           "No data yet")))))
