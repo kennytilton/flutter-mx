@@ -1,22 +1,28 @@
 (ns example.demo.teacup.sensor
-  "Sensor constants and make-listener for Teacup.
-   The :gyro, :clock, and :sub cells live on formx in core.cljd."
+  "CoreMotion (via sensors_plus) bridge for Teacup.
+
+   capture is always mounted. :gyro and :sub use :watch to cancel
+   when their value goes nil. :clock cancels itself internally."
   (:require
+    ["dart:async" :as async]
     ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     ["package:sensors_plus/sensors_plus.dart" :as sp]
+    [tilton.mx.cell.base :as cb]
     [tilton.mx.api :as mx
-     :refer [dp mget mset! mupdate! wmx-iso now-ms]]))
+     :refer [dp cF cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound?]]
+    [tilton.fmx.api :as fx]
+    [example.demo.teacup.util :refer [uformx]]))
 
-(def sample-period-ms 100)
-(def run-duration-ms 10000)
+(def sample-period-ms 500)
+(def run-duration-ms 3000)
 (def run-duration-s  (quot run-duration-ms 1000))
 (def target-count    (quot run-duration-ms sample-period-ms))
 
-(defn make-listener [formx last-stamp-atom gyro-atom]
+(defn- make-listener [formx last-stamp-atom gyro-atom]
   (fn [^sp/UserAccelerometerEvent ev]
     (let [now  (now-ms)
           last @last-stamp-atom]
@@ -42,3 +48,68 @@
               (when (>= (count (mget formx :samples)) target-count)
                 (dp :sample-count-stop! :n (count (mget formx :samples)))
                 (mset! formx :running? false)))))))))
+
+(defn capture []
+  (let [gyro-atom (atom nil)]
+    (fx/text
+      {:style (fx/within-ctx [me ctx]
+                (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
+      {:name  :capture
+
+       :gyro  (cF+ [:watch (fn [_ _ new prior _]
+                              (when (and (nil? new) (mx-bound? prior) (some? prior))
+                                (dp :gyro-cancelling!)
+                                (.cancel prior)
+                                (dp :gyro-cancelled!)))]
+                (let [formx    (uformx)
+                      running? (when formx (mget formx :running?))]
+                  (dp :gyro-sees-running running?)
+                  (when running?
+                    (dp :gyro-subscribing!)
+                    (.listen (sp/gyroscopeEventStream
+                               .samplingPeriod
+                               (Duration .milliseconds sample-period-ms))
+                      (fn [^sp/GyroscopeEvent ev]
+                        (reset! gyro-atom ev))))))
+
+       :clock (cF+ [:watch (fn [_ _ new prior _]
+                              (when (and (nil? new) (mx-bound? prior) (some? prior))
+                                (dp :clock-cancelling!)
+                                (.cancel prior)
+                                (dp :clock-cancelled!)))]
+                (let [formx    (uformx)
+                      running? (when formx (mget formx :running?))]
+                  (dp :clock-sees-running running?)
+                  (when running?
+                    (dp :clock-starting!)
+                    (async/Timer.periodic (Duration .seconds 1)
+                      (fn [^async/Timer tmr]
+                        (wmx-iso
+                          (when (mget formx :running?)
+                            (let [remaining (dec (mget formx :secs-left))]
+                              (dp :clock-tick! :secs-left remaining)
+                              (mset! formx :secs-left remaining)
+                              (when (<= remaining 0)
+                                (dp :clock-stopping!)
+                                (.cancel tmr)
+                                (mset! formx :running? false))))))))))
+
+       :sub   (cF+ [:watch (fn [_ _ new prior _]
+                              (when (and (nil? new) (mx-bound? prior) (some? prior))
+                                (dp :sub-cancelling!)
+                                (.cancel prior)
+                                (dp :sub-cancelled!)))]
+                (let [formx    (uformx)
+                      running? (when formx (mget formx :running?))]
+                  (dp :sub-sees-running running?)
+                  (when running?
+                    (let [last-stamp (atom 0)
+                          stream     (sp/userAccelerometerEventStream
+                                       .samplingPeriod
+                                       (Duration .milliseconds sample-period-ms))]
+                      (dp :sensor-subscribing!)
+                      (.listen stream
+                        (make-listener formx last-stamp gyro-atom))))))}
+
+      (let [formx (uformx)]
+        (if (and formx (mget formx :running?)) "capturing..." "")))))

@@ -9,7 +9,8 @@
     [tilton.mx.api :as mx
      :refer [dp mget mset! fmu]]
     [example.demo.teacup.util :refer [uformx]]
-    [example.demo.teacup.plot :as plot :refer [line-chart chart-data]]))
+    [example.demo.teacup.sensor :as sensor :refer [capture]]
+    [example.demo.teacup.plot   :as plot   :refer [line-chart chart-data]]))
 
 (defn counter-label [samples running? secs-left]
   (let [n (count samples)]
@@ -37,7 +38,7 @@
       (fx/elevated-button
         {:onPressed (dart-cb []
                       (let [root (fmu :teacup)
-                            fx   (uformx)]
+                            fx   (mget root :formx)]
                         (if (and fx (mget fx :running?))
                           (mset! root :event :stop)
                           (mset! root :event :start))))}
@@ -45,6 +46,8 @@
           (if-let [fx (uformx)]
             (if (mget fx :running?) "Stop" "Start")
             "Start")))
+
+      (capture)
 
       (fx/expanded
         (line-chart {}

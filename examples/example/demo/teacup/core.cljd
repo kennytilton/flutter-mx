@@ -3,24 +3,20 @@
 
    Root state:
      :event   -- (cI nil) -- set to :start or :stop by buttons
-     :formx   -- (cF ...) -- MX model owning the run (the UMI):
+     :formx   -- (cF ...) -- derives a plain MX model on :start,
+                             nil on :stop, _cache otherwise.
+                             All run state lives on formx:
                              :samples :start-ms :secs-left :running?
-                             :gyro :clock :sub
      :current-page-id -- (cI :chart)"
   (:require
-    ["dart:async" :as async]
     ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
-    ["package:sensors_plus/sensors_plus.dart" :as sp]
-    ["package:flutter_beep/flutter_beep.dart" :as beep]
-    [tilton.mx.cell.base :as cb]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     [tilton.mx.api :as mx
-     :refer [dp cF cF+ cI mget mset! fmu make now-ms wmx-iso _cache-bound]]
-    [example.demo.teacup.util :as u]
+     :refer [cF cI mget mset! fmu make now-ms _cache-bound]]
     [example.demo.teacup.sensor :as sensor]
     [example.demo.teacup.monitor :refer [monitor-page]]
     [example.demo.teacup.summary :refer [summary-page]]))
@@ -31,59 +27,14 @@
   (str "Tai Chi Teacup v" build-tag))
 
 (defn make-formx []
-  (.playSysSound beep/FlutterBeep u/Begin-Recording)
-  (let [gyro-atom (atom nil)]
-    (make
-      :name      :formx
-      :samples   (cI [])
-      :start-ms  (cI (now-ms))
-      :secs-left (cI sensor/run-duration-s)
-      :running?  (cI true :watch (fn [_ _ new prior _]
-                                   (when (and (false? new) (true? prior))
-                                     (.playSysSound beep/FlutterBeep u/End-Recording))))
-
-      :gyro      (cF+ [:on-quiesce (fn [c]
-                                     (when-let [^async/StreamSubscription sub (cb/c-value c)]
-                                       (dp :gyro-cancelled!)
-                                       (.cancel sub)))]
-                   (dp :gyro-subscribing!)
-                   (.listen (sp/gyroscopeEventStream
-                              .samplingPeriod
-                              (Duration .milliseconds sensor/sample-period-ms))
-                     (fn [^sp/GyroscopeEvent ev]
-                       (reset! gyro-atom ev))))
-
-      :clock     (cF+ [:on-quiesce (fn [c]
-                                     (when-let [^async/Timer tmr (cb/c-value c)]
-                                       (dp :clock-cancelled!)
-                                       (.cancel tmr)))]
-                   (dp :clock-starting!)
-                   (async/Timer.periodic (Duration .seconds 1)
-                     (fn [^async/Timer tmr]
-                       (wmx-iso
-                         (when (mget me :running?)
-                           (let [remaining (dec (mget me :secs-left))]
-                             (dp :clock-tick! :secs-left remaining)
-                             (mset! me :secs-left remaining)
-                             (when (<= remaining 0)
-                               (dp :clock-stopping!)
-                               (.cancel tmr)
-                               (mset! me :running? false))))))))
-
-      :sub       (cF+ [:on-quiesce (fn [c]
-                                     (when-let [^async/StreamSubscription sub (cb/c-value c)]
-                                       (dp :sub-cancelled!)
-                                       (.cancel sub)))]
-                   (let [last-stamp (atom 0)
-                         stream     (sp/userAccelerometerEventStream
-                                      .samplingPeriod
-                                      (Duration .milliseconds sensor/sample-period-ms))]
-                     (dp :sensor-subscribing!)
-                     (.listen stream
-                       (sensor/make-listener me last-stamp gyro-atom)))))))
+  (make
+    :name      :formx
+    :samples   (cI [])
+    :start-ms  (cI (now-ms))
+    :secs-left (cI sensor/run-duration-s)
+    :running?  (cI true)))
 
 (defn make-app []
-  (.playSysSound beep/FlutterBeep u/Sent-Message)
   (fx/material-app
     {:title (title-text)
      :theme (m/ThemeData .primarySwatch m/Colors.teal)}
