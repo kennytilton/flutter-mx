@@ -1,0 +1,60 @@
+(ns example.demo.teacup2.summary
+  "Summary stats page."
+  (:require
+    ["dart:math" :as math]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    [tilton.fmx.api :as fx]
+    [tilton.mx.api :as mx
+     :refer [mget fmu]]
+    [example.demo.teacup2.util :refer [uformx]]))
+
+(defn- mean [xs]
+  (if (empty? xs)
+    0.0
+    (/ (reduce + xs) (count xs))))
+
+(defn- std-dev [xs]
+  (if (< (count xs) 2)
+    0.0
+    (let [m (mean xs)
+          variance (mean (map #(let [d (- % m)] (* d d)) xs))]
+      (math/sqrt variance))))
+
+(defn- m-to-in [x] (* x 39.3701))
+
+(defn- stat-line [label value unit]
+  (str label ": " (.toStringAsFixed ^num value 1) " " unit))
+
+(defn- stat-line-int [label value unit]
+  (str label ": " (.round ^num value) " " unit))
+
+(defn- compute-stats [samples]
+  (if (empty? samples)
+    nil
+    (let [speeds  (map #(+ (:xy %) (:gz %)) samples)
+          bobs    (map :az samples)
+          leans   (map :gxz samples)]
+      {:speed   (mean speeds)
+       :river   (std-dev speeds)
+       :bobbing (mean (map #(.abs ^num %) bobs))
+       :lean    (mean (map #(* % (/ 180.0 math/pi)) leans))})))
+
+(defn summary-page []
+  (fx/safe-area
+    (fx/column
+      {:mainAxisAlignment  m/MainAxisAlignment.center
+       :crossAxisAlignment m/CrossAxisAlignment.center}
+      (fx/text
+        {:style (p/TextStyle .fontSize 22.0 .color m/Colors.black)}
+        (if-let [fx (uformx)]
+          (let [samples (mget fx :samples)]
+            (if-let [s (compute-stats samples)]
+              (str (stat-line     "Speed"   (m-to-in (:speed s))   "in/s²") "\n"
+                   (stat-line     "River"   (m-to-in (:river s))   "in/s²") "\n"
+                   (stat-line     "Bobbing" (m-to-in (:bobbing s)) "in/s²") "\n"
+                   (stat-line-int "Lean"    (:lean s)              "°/s"))
+              "No samples yet"))
+          "No data yet")))))

@@ -1,0 +1,83 @@
+(ns example.demo.teacup2.monitor
+  "Live monitor page: chart + capture controls."
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.mx.api :as mx
+     :refer [dp mget mset! fmu]]
+    [example.demo.teacup2.util :refer [uformx]]
+    [example.demo.teacup2.sensor :as sensor :refer [capture]]
+    [example.demo.teacup2.plot   :as plot   :refer [line-chart chart-data]]))
+
+(defn counter-label [samples running? secs-left]
+  (let [n (count samples)]
+    (cond
+      running?    (str n " samples  |  " secs-left "s remaining")
+      (zero? n)   "Press Start"
+      :else       (str "Captured " n " samples"))))
+
+(defn monitor-page []
+  (fx/safe-area
+    (fx/column
+      {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
+       :crossAxisAlignment m/CrossAxisAlignment.stretch}
+
+      (fx/text
+        {:style     (p/TextStyle .fontSize 18.0 .color m/Colors.black)
+         :textAlign m/TextAlign.center}
+        (if-let [fx (uformx)]
+          (counter-label
+            (mget fx :samples)
+            (mget fx :running?)
+            (mget fx :secs-left))
+          "Press Start"))
+
+      (let [root   (fmu :teacup2)
+            source (mget root :sensor-source)]
+        (fx/row
+          {:mainAxisAlignment m/MainAxisAlignment.center}
+          (fx/text-button
+            {:onPressed (dart-cb []
+                          (sensor/disconnect-witmotion!)
+                          (mset! root :sensor-source :iphone))}
+            (fx/text
+              {:style (p/TextStyle
+                        .fontWeight (if (= source :iphone)
+                                      p/FontWeight.bold
+                                      p/FontWeight.normal))}
+              {}
+              "iPhone IMU"))
+          (fx/text-button
+            {:onPressed (dart-cb []
+                          (mset! root :sensor-source :witmotion-ble))}
+            (fx/text
+              {:style (p/TextStyle
+                        .fontWeight (if (= source :witmotion-ble)
+                                      p/FontWeight.bold
+                                      p/FontWeight.normal))}
+              {}
+              "WitMotion BLE"))))
+
+      (fx/elevated-button
+        {:onPressed (dart-cb []
+                      (let [root (fmu :teacup2)
+                            fx   (mget root :formx)]
+                        (if (and fx (mget fx :running?))
+                          (mset! root :event :stop)
+                          (mset! root :event :start))))}
+        (fx/text
+          (if-let [fx (uformx)]
+            (if (mget fx :running?) "Stop" "Start")
+            "Start")))
+
+      (capture)
+
+      (fx/expanded
+        (line-chart {}
+          (chart-data
+            (if-let [fx (uformx)]
+              (mget fx :samples)
+              [])))))))

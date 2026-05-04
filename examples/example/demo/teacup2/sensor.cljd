@@ -1,0 +1,366 @@
+(ns example.demo.teacup2.sensor
+  "Sensor bridge for Teacup2.
+
+   The app can capture from either the iPhone IMU via sensors_plus or a
+   WitMotion WT901BLE device via flutter_blue_plus. Both paths append the same
+   sample map shape used by the original Teacup chart and summary:
+   {:t elapsed-ms :xy horizontal-accel :az vertical-accel :gz yaw-rate :gxz off-axis-rate}."
+  (:require
+    ["dart:async" :as async]
+    ["dart:math" :as math]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter_blue_plus/flutter_blue_plus.dart" :as fbp]
+    ["package:sensors_plus/sensors_plus.dart" :as sp]
+    [tilton.mx.api :as mx
+     :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound?]]
+    [tilton.fmx.api :as fx]
+    [example.demo.teacup2.util :refer [uformx]]))
+
+(def sample-period-ms 200)
+(def run-duration-ms 10000)
+(def run-duration-s  (quot run-duration-ms 1000))
+(def target-count    (quot run-duration-ms sample-period-ms))
+
+(def device-name-prefix "WT901BLE")
+(def scan-timeout-seconds 10)
+
+(def frame-header-byte-0 0x55)
+(def frame-header-byte-1 0x61)
+(def frame-length 20)
+
+(def accel-scale (/ 16.0 32768.0))
+(def gyro-scale  (/ 2000.0 32768.0))
+(def angle-scale (/ 180.0 32768.0))
+(def deg->rad (/ math/pi 180.0))
+
+(def ^:private ble-state
+  (atom {:status "idle"
+         :run-id 0
+         :scan-sub nil
+         :found-device nil
+         :notify-sub nil}))
+
+(def ^:private rx-buf (atom []))
+
+(defn source-label [source]
+  (case source
+    :witmotion-ble "WitMotion BLE"
+    :iphone        "iPhone IMU"
+    "Unknown"))
+
+(defn- root-source [me]
+  (mget (fmu :teacup2 me) :sensor-source))
+
+(defn- set-ble-status! [s]
+  (dp :ble-status-> s)
+  (swap! ble-state assoc :status s))
+
+(defn ble-status []
+  (:status @ble-state))
+
+(defn- capture-running? [formx run-id]
+  (and formx
+       (= run-id (:run-id @ble-state))
+       (mget formx :running?)))
+
+(defn- append-sample! [formx sample]
+  (wmx-iso
+    (when (mget formx :running?)
+      (mupdate! formx :samples conj sample)
+      (when (>= (count (mget formx :samples)) target-count)
+        (dp :sample-count-stop! :n (count (mget formx :samples)))
+        (mset! formx :running? false)))))
+
+(defn- read-i16-le [bs ^int offset]
+  (let [lo (nth bs offset)
+        hi (nth bs (inc offset))
+        u  (bit-or (bit-and lo 0xff)
+             (bit-shift-left (bit-and hi 0xff) 8))]
+    (if (>= u 0x8000)
+      (- u 0x10000)
+      u)))
+
+(defn- decode-0x61-frame [bs]
+  (when (and (= (count bs) frame-length)
+          (= (bit-and (nth bs 0) 0xff) frame-header-byte-0)
+          (= (bit-and (nth bs 1) 0xff) frame-header-byte-1))
+    (let [ax (read-i16-le bs 2)
+          ay (read-i16-le bs 4)
+          az (read-i16-le bs 6)
+          wx (read-i16-le bs 8)
+          wy (read-i16-le bs 10)
+          wz (read-i16-le bs 12)
+          rx (read-i16-le bs 14)
+          ry (read-i16-le bs 16)
+          rz (read-i16-le bs 18)]
+      {:ax-g      (* ax accel-scale)
+       :ay-g      (* ay accel-scale)
+       :az-g      (* az accel-scale)
+       :wx-rad-s  (* wx gyro-scale deg->rad)
+       :wy-rad-s  (* wy gyro-scale deg->rad)
+       :wz-rad-s  (* wz gyro-scale deg->rad)
+       :roll-deg  (* rx angle-scale)
+       :pitch-deg (* ry angle-scale)
+       :yaw-deg   (* rz angle-scale)})))
+
+(defn- witmotion-sample [formx decoded]
+  (let [now   (now-ms)
+        t-rel (- now (mget formx :start-ms))
+        ax    (:ax-g decoded)
+        ay    (:ay-g decoded)
+        az    (:az-g decoded)
+        wx    (:wx-rad-s decoded)
+        wy    (:wy-rad-s decoded)
+        wz    (:wz-rad-s decoded)]
+    {:t   t-rel
+     :xy  (math/sqrt (+ (* ax ax) (* ay ay)))
+     :az  az
+     :gz  wy
+     :gxz (math/sqrt (+ (* wx wx) (* wz wz)))}))
+
+(defn- consume-frames! [formx run-id]
+  (loop [buf @rx-buf]
+    (cond
+      (< (count buf) frame-length)
+      (reset! rx-buf buf)
+
+      (not= (bit-and (nth buf 0) 0xff) frame-header-byte-0)
+      (recur (subvec buf 1))
+
+      :else
+      (let [frame (subvec buf 0 frame-length)
+            rest- (subvec buf frame-length)]
+        (when-let [decoded (decode-0x61-frame frame)]
+          (dp :witmotion-decoded decoded)
+          (when (capture-running? formx run-id)
+            (append-sample! formx (witmotion-sample formx decoded))))
+        (recur rest-)))))
+
+(defn- handle-witmotion-bytes! [formx run-id bytes]
+  (let [v (vec bytes)]
+    (swap! rx-buf into v)
+    (consume-frames! formx run-id)))
+
+(defn- log-characteristic [^fbp/BluetoothCharacteristic c]
+  (let [props (.-properties c)]
+    (dp :char
+      :uuid (.toString (.-uuid c))
+      :read (.-read props)
+      :write (.-write props)
+      :writeNR (.-writeWithoutResponse props)
+      :notify (.-notify props)
+      :indicate (.-indicate props))))
+
+(defn- pick-notify-characteristic [services]
+  (loop [svcs (seq services) found nil]
+    (if (or found (nil? svcs))
+      found
+      (let [^fbp/BluetoothService s (first svcs)]
+        (dp :service :uuid (.toString (.-uuid s)))
+        (let [chars (.-characteristics s)
+              hit   (loop [cs (seq chars) hit nil]
+                      (if (or hit (nil? cs))
+                        hit
+                        (let [^fbp/BluetoothCharacteristic c (first cs)]
+                          (log-characteristic c)
+                          (recur (next cs)
+                            (if (.-notify (.-properties c)) c hit)))))]
+          (recur (next svcs) hit))))))
+
+(defn- name-matches? [^String s]
+  (and (string? s)
+       (not (.-isEmpty s))
+       (.startsWith s device-name-prefix)))
+
+(defn ^:async stop-witmotion! []
+  (swap! ble-state update :run-id inc)
+  (set-ble-status! "idle")
+  (reset! rx-buf [])
+  (when-let [^async/StreamSubscription sub (:scan-sub @ble-state)]
+    (await (.cancel sub)))
+  (when-let [^async/StreamSubscription sub (:notify-sub @ble-state)]
+    (await (.cancel sub)))
+  (try
+    (await (fbp/FlutterBluePlus.stopScan))
+    (catch Object e
+      (dp :ble-stop-scan-ignored e)))
+  (swap! ble-state assoc
+    :scan-sub nil
+    :notify-sub nil))
+
+(defn ^:async disconnect-witmotion! []
+  (await (stop-witmotion!))
+  (when-let [^fbp/BluetoothDevice dev (:found-device @ble-state)]
+    (try
+      (await (.disconnect dev))
+      (catch Object e
+        (dp :ble-disconnect-ignored e))))
+  (swap! ble-state assoc :found-device nil)
+  (set-ble-status! "disconnected"))
+
+(defn ^:async connect-and-listen! [formx run-id ^fbp/BluetoothDevice dev]
+  (when (capture-running? formx run-id)
+    (set-ble-status! (str "connecting to " (.-platformName dev)))
+    (try
+      (await (.connect dev .timeout (Duration .seconds 15)))
+      (catch Object e
+        (dp :ble-connect-ignored-or-failed e)))
+    (when (capture-running? formx run-id)
+      (set-ble-status! "connected, discovering services")
+      (let [services (await (.discoverServices dev))]
+        (if-let [^fbp/BluetoothCharacteristic notify-c
+                 (pick-notify-characteristic services)]
+          (do
+            (dp :using-notify-char :uuid (.toString (.-uuid notify-c)))
+            (await (.setNotifyValue notify-c true))
+            (set-ble-status! "subscribed")
+            (let [sub (.listen (.-onValueReceived notify-c)
+                        (fn [bytes]
+                          (try
+                            (handle-witmotion-bytes! formx run-id bytes)
+                            (catch Object e
+                              (dp :witmotion-decode-exception e)))))]
+              (.cancelWhenDisconnected dev sub)
+              (swap! ble-state assoc :notify-sub sub)))
+          (set-ble-status! "ERROR: no notify characteristic"))))))
+
+(defn ^:async on-scan-result [formx run-id ^fbp/ScanResult r]
+  (let [name (.-platformName (.-device r))
+        adv  (.-advName (.-advertisementData r))]
+    (dp :scan-hit :platform-name name :adv-name adv :rssi (.-rssi r))
+    (when (and (capture-running? formx run-id)
+            (nil? (:found-device @ble-state))
+            (or (name-matches? name)
+              (name-matches? adv)))
+      (swap! ble-state assoc :found-device (.-device r))
+      (await (fbp/FlutterBluePlus.stopScan))
+      (await (connect-and-listen! formx run-id (.-device r))))))
+
+(defn ^:async wait-for-adapter-on! [run-id]
+  (set-ble-status! "waiting for BT adapter")
+  (let [^async/Stream stream (fbp/FlutterBluePlus.adapterState)
+        on-state (.-first (.where stream
+                            (fn [s]
+                              (and (= run-id (:run-id @ble-state))
+                                (= s fbp/BluetoothAdapterState.on)))))]
+    (await on-state)
+    (set-ble-status! "adapter on")))
+
+(defn ^:async start-witmotion! [formx]
+  (await (stop-witmotion!))
+  (let [run-id (:run-id @ble-state)]
+    (try
+      (await (wait-for-adapter-on! run-id))
+      (when (capture-running? formx run-id)
+        (if-let [^fbp/BluetoothDevice dev (:found-device @ble-state)]
+          (await (connect-and-listen! formx run-id dev))
+          (do
+            (set-ble-status! "scanning")
+            (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
+                        (fn [results]
+                          (doseq [r results]
+                            (on-scan-result formx run-id r))))]
+              (swap! ble-state assoc :scan-sub sub)
+              (await (fbp/FlutterBluePlus.startScan
+                       .timeout (Duration .seconds scan-timeout-seconds)))))))
+      (catch Object e
+        (dp :witmotion-flow-exception e)
+        (set-ble-status! (str "ERROR: " e))))))
+
+(defn- make-iphone-listener [formx last-stamp-atom gyro-atom]
+  (fn [^sp/UserAccelerometerEvent ev]
+    (let [now  (now-ms)
+          last @last-stamp-atom]
+      (when (>= (- now last) sample-period-ms)
+        (reset! last-stamp-atom now)
+        (let [start  (mget formx :start-ms)
+              t-rel  (- now start)
+              ax     (.-x ev)
+              ay     (.-y ev)
+              az     (.-z ev)
+              xy     (math/sqrt (+ (* ax ax) (* ay ay)))
+              g      @gyro-atom
+              gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
+              gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
+              gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
+              gxz    (math/sqrt (+ (* gx gx) (* gz gz)))
+              sample {:t t-rel :xy xy :az az :gz gy :gxz gxz}]
+          (dp :iphone-sample :n (count (mget formx :samples)) :t-rel t-rel
+              :xy xy :az az :gz gy :gxz gxz)
+          (append-sample! formx sample))))))
+
+(defn capture []
+  (let [gyro-atom (atom nil)]
+    (fx/text
+      {:style (fx/within-ctx [me ctx]
+                (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
+      {:name :capture
+
+       :iphone-gyro
+       (cF+ [:watch (fn [_ _ new prior _]
+                      (when (and (nil? new) (mx-bound? prior) (some? prior))
+                        (dp :iphone-gyro-cancelling!)
+                        (.cancel ^async/StreamSubscription prior)))]
+         (let [formx    (uformx)
+               running? (when formx (mget formx :running?))]
+           (when (and running? (= :iphone (root-source me)))
+             (dp :iphone-gyro-subscribing!)
+             (.listen (sp/gyroscopeEventStream
+                        .samplingPeriod
+                        (Duration .milliseconds sample-period-ms))
+               (fn [^sp/GyroscopeEvent ev]
+                 (reset! gyro-atom ev))))))
+
+       :clock
+       (cF+ [:watch (fn [_ _ new prior _]
+                      (when (and (nil? new) (mx-bound? prior) (some? prior))
+                        (dp :clock-cancelling!)
+                        (.cancel ^async/Timer prior)))]
+         (let [formx    (uformx)
+               running? (when formx (mget formx :running?))]
+           (when running?
+             (dp :clock-starting!)
+             (async/Timer.periodic (Duration .seconds 1)
+               (fn [^async/Timer tmr]
+                 (wmx-iso
+                   (when (mget formx :running?)
+                     (let [remaining (dec (mget formx :secs-left))]
+                       (mset! formx :secs-left remaining)
+                       (when (<= remaining 0)
+                         (.cancel tmr)
+                         (mset! formx :running? false))))))))))
+
+       :iphone-sub
+       (cF+ [:watch (fn [_ _ new prior _]
+                      (when (and (nil? new) (mx-bound? prior) (some? prior))
+                        (dp :iphone-sub-cancelling!)
+                        (.cancel ^async/StreamSubscription prior)))]
+         (let [formx    (uformx)
+               running? (when formx (mget formx :running?))]
+           (when (and running? (= :iphone (root-source me)))
+             (let [last-stamp (atom 0)
+                   stream     (sp/userAccelerometerEventStream
+                                .samplingPeriod
+                                (Duration .milliseconds sample-period-ms))]
+               (dp :iphone-sensor-subscribing!)
+               (.listen stream
+                 (make-iphone-listener formx last-stamp gyro-atom))))))
+
+       :witmotion
+       (cF+ [:watch (fn [_ _ new prior _]
+                      (dp :witmotion-watch-sees :new new :prior prior)
+                      (when (and (nil? new) (mx-bound? prior) prior)
+                        (stop-witmotion!)))]
+         (let [formx    (uformx)
+               running? (when formx (mget formx :running?))]
+           (when (and running? (= :witmotion-ble (root-source me)))
+             (dp :witmotion-starting!)
+             (start-witmotion! formx)
+             true)))}
+
+      (let [formx  (uformx)
+            source (root-source me)]
+        (cond
+          (not (and formx (mget formx :running?))) ""
+          (= source :witmotion-ble) (str "capturing from WitMotion BLE: " (ble-status))
+          :else "capturing from iPhone IMU")))))

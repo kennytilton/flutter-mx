@@ -1,0 +1,77 @@
+(ns example.demo.teacup2.plot
+  "Four-series LineChart for Teacup2 using fl_chart.
+     blue   -- :xy  sqrt(ax^2+ay^2): horizontal accel magnitude
+     red    -- :az  accelerometer z
+     orange -- :gxz sqrt(gx^2+gz^2): off-axis angular magnitude
+     cyan   -- :gz  gyro y (yaw)"
+  (:require
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    [tilton.fmx.factory :refer [deftag konly-param1] :as fxf]
+    [tilton.mx.api :as mx
+     :refer [mget cF fmu]]
+    [example.demo.teacup2.sensor :as sensor]))
+
+(deftag tilton.fmx.factory/konly-param1 line-chart flc/LineChart)
+
+(def x-max-ms (double sensor/run-duration-ms))
+
+(defn- spots-for [samples y-key]
+  (mapv (fn [s]
+          (flc/FlSpot (double (:t s))
+                      (double (y-key s))))
+        samples))
+
+(defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
+  (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
+
+(defn chart-data [samples]
+  (flc/LineChartData
+    .minX 0.0
+    .maxX x-max-ms
+    .clipData (flc/FlClipData.none)
+    .lineBarsData
+    [(flc/LineChartBarData
+       .spots (spots-for samples :xy)
+       .color m/Colors.blue
+       .barWidth 4.0
+       .isCurved false
+       .dotData (flc/FlDotData .show false))
+     (flc/LineChartBarData
+       .spots (spots-for samples :az)
+       .color m/Colors.red
+       .barWidth 4.0
+       .isCurved false
+       .dotData (flc/FlDotData .show false))
+     (flc/LineChartBarData
+       .spots (spots-for samples :gxz)
+       .color m/Colors.orange
+       .barWidth 4.0
+       .isCurved false
+       .dotData (flc/FlDotData .show false))
+     (flc/LineChartBarData
+       .spots (spots-for samples :gz)
+       .color m/Colors.cyan
+       .barWidth 4.0
+       .isCurved false
+       .dotData (flc/FlDotData .show false))]
+    .titlesData
+    (flc/FlTitlesData
+      .leftTitles
+      (flc/AxisTitles
+        .sideTitles (flc/SideTitles .showTitles false))
+      .rightTitles
+      (flc/AxisTitles
+        .sideTitles (flc/SideTitles .showTitles false))
+      .bottomTitles
+      (flc/AxisTitles
+        .sideTitles
+        (flc/SideTitles .showTitles true
+                        .reservedSize 24.0
+                        .interval 2000.0
+                        .getTitlesWidget bottom-title-widget))
+      .topTitles
+      (flc/AxisTitles
+        .sideTitles (flc/SideTitles .showTitles false)))))

@@ -1,0 +1,69 @@
+(ns example.demo.teacup2.core
+  "Teacup2 app shell: material-app, root model, bottom nav.
+
+   Root state:
+     :event   -- (cI nil) -- set to :start or :stop by buttons
+     :formx   -- (cF ...) -- derives a plain MX model on :start,
+                             nil on :stop, _cache otherwise.
+                             All run state lives on formx:
+                             :samples :start-ms :secs-left :running?
+     :current-page-id -- (cI :chart)"
+  (:require
+    ["dart:math" :as math]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/widgets.dart" :as w]
+    ["package:flutter/painting.dart" :as p]
+    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.mx.api :as mx
+     :refer [cF cI mget mset! fmu make now-ms _cache-bound]]
+    [example.demo.teacup2.sensor :as sensor]
+    [example.demo.teacup2.monitor :refer [monitor-page]]
+    [example.demo.teacup2.summary :refer [summary-page]]))
+
+(def build-tag (.nextInt (math/Random) 1000))
+
+(defn title-text []
+  (str "Tai Chi Teacup2 v" build-tag))
+
+(defn make-formx []
+  (make
+    :name      :formx
+    :samples   (cI [])
+    :start-ms  (cI (now-ms))
+    :secs-left (cI sensor/run-duration-s)
+    :running?  (cI true)))
+
+(defn make-app []
+  (fx/material-app
+    {:title (title-text)
+     :theme (m/ThemeData .primarySwatch m/Colors.teal)}
+    {:name            :teacup2
+     :event           (cI nil :ephemeral? true)
+     :sensor-source   (cI :iphone)
+     :formx           (cF (case (mget me :event)
+                             :start (make-formx)
+                             :stop  nil
+                             (_cache-bound)))
+     :current-page-id (cI :chart)}
+    (fx/scaffold
+      {:appBar              (fx/app-bar
+                              {:title (m/Text (title-text))})
+       :bottomNavigationBar (cF
+                              (let [root (fmu :teacup2)]
+                                (fx/bottom-navigation-bar
+                                  {:currentIndex (if (= :chart (mget root :current-page-id)) 0 1)
+                                   :onTap        (dart-cb [i]
+                                                   (mset! root :current-page-id
+                                                     (if (= i 0) :chart :summary)))}
+                                  (fx/bottom-navigation-bar-item
+                                    {:icon  (m/Icon m/Icons.show_chart)
+                                     :label "Chart"}
+                                    {})
+                                  (fx/bottom-navigation-bar-item
+                                    {:icon  (m/Icon m/Icons.grid_on)
+                                     :label "Summary"}
+                                    {}))))}
+      (if (= :chart (mget (fmu :teacup2) :current-page-id))
+        (monitor-page)
+        (summary-page)))))
