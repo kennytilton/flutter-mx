@@ -67,6 +67,7 @@
     [example.eg.x080-witmotion-ble :as umi]
     [example.demo.parrot.core :as polly]
     [example.demo.teacup.core :as teacup]
+    [example.demo.teacup2.core :as teacup2]
     ))
 
 (defn select []
@@ -75,7 +76,7 @@
   ; iOS 17 to-do overflow
   ; gemini, gem-sti, gem2, gem3: WITHOUT goog api key: flex and no story
   ; x040 null check used on null hot reload from diff demo
-  (case 6
+  (case 8
     0 (counter/make-app)
     1 (hello/make-app)
     2 (todo/make-app)
@@ -83,11 +84,11 @@
     4 (polly/make-app)
     5 (tts/make-app) ;; broken
     6 (umi/make-app)
-    7 (teacup/make-app)))
+    7 (teacup/make-app)
+    8 (teacup2/make-app)))
 
 ;; todo does not show all three options -- unavailables may be black on black
 ;; x035 layout scrunches at top when fetching stopped
 ;; sock seems inoperative when msg sent
 ;; ixpo seems inoperative on most
 ;; gemini needs new credentials or st
-
