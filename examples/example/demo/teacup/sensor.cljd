@@ -56,7 +56,7 @@
                 (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
       {:name  :capture
 
-       :gyro  (cF+ [:watch (fn [_ _ new prior _]
+       :gyro  (cF+ [:watch (fn [_ _ new ^async/StreamSubscription prior _]
                               (when (and (nil? new) (mx-bound? prior) (some? prior))
                                 (dp :gyro-cancelling!)
                                 (.cancel prior)
@@ -72,7 +72,7 @@
                       (fn [^sp/GyroscopeEvent ev]
                         (reset! gyro-atom ev))))))
 
-       :clock (cF+ [:watch (fn [_ _ new prior _]
+       :clock (cF+ [:watch (fn [_ _ new ^async/Timer prior _]
                               (when (and (nil? new) (mx-bound? prior) (some? prior))
                                 (dp :clock-cancelling!)
                                 (.cancel prior)
@@ -94,7 +94,7 @@
                                 (.cancel tmr)
                                 (mset! formx :running? false))))))))))
 
-       :sub   (cF+ [:watch (fn [_ _ new prior _]
+       :sub   (cF+ [:watch (fn [_ _ new ^async/StreamSubscription prior _]
                               (when (and (nil? new) (mx-bound? prior) (some? prior))
                                 (dp :sub-cancelling!)
                                 (.cancel prior)

@@ -64,6 +64,7 @@
     [example.eg.x065-autocomplete-basic :as x065]
     [example.eg.x066-autocomplete-object :as x066]
     [example.eg.x070-speech-to-text :as dicto]
+    [example.eg.x080-witmotion-ble :as umi]
     [example.demo.parrot.core :as polly]
     [example.demo.teacup.core :as teacup]
     ))
@@ -81,7 +82,8 @@
     3 (dicto/make-app) ;; bug on first try only
     4 (polly/make-app)
     5 (tts/make-app) ;; broken
-    6 (teacup/make-app)))
+    6 (umi/make-app)
+    7 (teacup/make-app)))
 
 ;; todo does not show all three options -- unavailables may be black on black
 ;; x035 layout scrunches at top when fetching stopped

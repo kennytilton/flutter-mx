@@ -26,10 +26,10 @@
 (defn- m-to-in [x] (* x 39.3701))
 
 (defn- stat-line [label value unit]
-  (str label ": " (.toStringAsFixed value 1) " " unit))
+  (str label ": " (.toStringAsFixed ^num value 1) " " unit))
 
 (defn- stat-line-int [label value unit]
-  (str label ": " (.round value) " " unit))
+  (str label ": " (.round ^num value) " " unit))
 
 (defn- compute-stats [samples]
   (if (empty? samples)
@@ -39,7 +39,7 @@
           leans   (map :gxz samples)]
       {:speed   (mean speeds)
        :river   (std-dev speeds)
-       :bobbing (mean (map #(.abs %) bobs))
+       :bobbing (mean (map #(.abs ^num %) bobs))
        :lean    (mean (map #(* % (/ 180.0 math/pi)) leans))})))
 
 (defn summary-page []

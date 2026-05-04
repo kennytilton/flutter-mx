@@ -1,0 +1,345 @@
+(ns example.eg.x080-witmotion-ble
+  "Teacup first-cut: scan BLE, connect to a WT901BLECL, decode packets,
+   print to console. No f/mx wiring -- pure Dart-side state. Goal is to
+   prove the byte-level protocol decode end-to-end before we hook the
+   stream into cells.
+
+   What this file does on launch:
+     1. Wait for the Bluetooth adapter to be ON.
+     2. Start a 10-second scan (no service-UUID filter -- WitMotion's
+        custom service UUID varies between firmwares, so we filter by
+        advertised name prefix 'WT901BLE').
+     3. On finding a match, stop scan, connect.
+     4. discoverServices() and log every service+characteristic UUID and
+        properties we see -- this is partly diagnostic so we know the
+        actual GATT layout for THIS unit.
+     5. Find the first characteristic with .properties.notify and
+        subscribe to it via setNotifyValue(true).
+     6. Each notify packet -> decoder. Decoder prints accel (g), gyro
+        (deg/s), and Euler angles (deg). All values via dp.
+
+   This file is f/mx-free deliberately. Pick (3) from the Q. Once the
+   bytes flow, x081_* will wrap the same in cells.
+
+   References:
+     - WT901BLECL datasheet v23-0420 (WitMotion). Protocol is documented
+       in section 6 'Communication Protocol'. Default 0x55 0x61 frame:
+       11 bytes header+type already implied; 18 bytes data (3 axes *
+       3 sensors * 2 bytes signed little-endian) + checksum byte.
+       Total 20 bytes per frame.
+     - Scaling per datasheet:
+         accel  = (raw / 32768.0) * 16        ; g
+         gyro   = (raw / 32768.0) * 2000      ; deg/s
+         angle  = (raw / 32768.0) * 180       ; deg
+     - flutter_blue_plus 2.x notify pattern:
+         await characteristic.setNotifyValue(true)
+         characteristic.onValueReceived.listen(...)
+         device.cancelWhenDisconnected(subscription)"
+  (:require
+    ["dart:async" :as async]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter_blue_plus/flutter_blue_plus.dart" :as fbp]
+    [tilton.mx.api :refer [cI cF cFonce mget mset! fmu] :as mx]
+    [tilton.mx.base :refer [dp]]
+    [tilton.fmx.api :as fx
+     :refer [material-app scaffold app-bar center column text]]))
+
+;;; ============================================================
+;;; Constants
+;;; ============================================================
+
+;; Per Kenneth's standing rule: NO ^:const in CLJD.
+(def device-name-prefix "WT901BLE")
+
+(def scan-timeout-seconds 10)
+
+;; Frame type byte for the default streaming packet.
+(def frame-header-byte-0 0x55)
+(def frame-header-byte-1 0x61)
+(def frame-length 20)
+
+;; Scaling factors per datasheet section 6.1.
+(def accel-scale (/ 16.0 32768.0))           ;; result in g
+(def gyro-scale  (/ 2000.0 32768.0))         ;; result in deg/s
+(def angle-scale (/ 180.0 32768.0))          ;; result in deg
+
+;;; ============================================================
+;;; Packet decoder
+;;; ============================================================
+
+(defn ^int read-i16-le
+  "Read a signed 16-bit little-endian value from byte list `bs` at
+   `offset`. Bytes are unsigned 0..255; combine, then sign-extend."
+  [bs ^int offset]
+  (let [lo (nth bs offset)
+        hi (nth bs (inc offset))
+        u  (bit-or (bit-and lo 0xff)
+             (bit-shift-left (bit-and hi 0xff) 8))]
+    ;; Sign-extend from 16 bits.
+    (if (>= u 0x8000)
+      (- u 0x10000)
+      u)))
+
+(defn checksum-ok?
+  "WitMotion checksum: sum of bytes 0..(n-2) low 8 bits == byte n-1.
+   Returns true if frame `bs` of length `frame-length` checks out."
+  [bs]
+  (let [n (count bs)]
+    (when (= n frame-length)
+      (let [sum (loop [i 0 acc 0]
+                  (if (< i (dec n))
+                    (recur (inc i) (+ acc (bit-and (nth bs i) 0xff)))
+                    acc))
+            expected (bit-and (nth bs (dec n)) 0xff)]
+        (dp :checksum :computed (bit-and sum 0xff) :expected expected)
+        (= (bit-and sum 0xff) expected)))))
+
+(defn decode-0x61-frame
+  "Decode the standard 0x55 0x61 frame layout per datasheet:
+     bytes 0,1   : 0x55 0x61                (header)
+     bytes 2..7  : ax, ay, az  (i16 LE * 3) (raw accel)
+     bytes 8..13 : wx, wy, wz  (i16 LE * 3) (raw gyro)
+     bytes 14..19: rx, ry, rz  (i16 LE * 3) (raw Euler angles)
+   Returns a map of decoded values with engineering units, or nil if
+   the frame fails sanity checks."
+  [bs]
+  (dp :decode-enter :len (count bs)
+    :first-bytes (when (>= (count bs) 4)
+                   [(bit-and (nth bs 0) 0xff)
+                    (bit-and (nth bs 1) 0xff)
+                    (bit-and (nth bs 2) 0xff)
+                    (bit-and (nth bs 3) 0xff)]))
+  (cond
+    (not= (count bs) frame-length)
+    (do (dp :decode-bad-length (count bs)) nil)
+
+    (not= (bit-and (nth bs 0) 0xff) frame-header-byte-0)
+    (do (dp :decode-bad-header-0 (bit-and (nth bs 0) 0xff)) nil)
+
+    (not= (bit-and (nth bs 1) 0xff) frame-header-byte-1)
+    (do (dp :decode-bad-header-1 (bit-and (nth bs 1) 0xff)) nil)
+
+    :else
+    (let [ax (read-i16-le bs 2)
+          ay (read-i16-le bs 4)
+          az (read-i16-le bs 6)
+          wx (read-i16-le bs 8)
+          wy (read-i16-le bs 10)
+          wz (read-i16-le bs 12)
+          rx (read-i16-le bs 14)
+          ry (read-i16-le bs 16)
+          rz (read-i16-le bs 18)
+          out {:ax-g  (* ax accel-scale)
+               :ay-g  (* ay accel-scale)
+               :az-g  (* az accel-scale)
+               :wx-dps (* wx gyro-scale)
+               :wy-dps (* wy gyro-scale)
+               :wz-dps (* wz gyro-scale)
+               :roll-deg  (* rx angle-scale)
+               :pitch-deg (* ry angle-scale)
+               :yaw-deg   (* rz angle-scale)}]
+      (dp :decoded out)
+      out)))
+
+;;; ============================================================
+;;; BLE plumbing
+;;; ============================================================
+
+;; State held in plain Dart-side atoms. No f/mx in this first cut.
+(def ^:private state
+  (atom {:adapter-state nil
+         :scan-sub      nil
+         :found-device  nil
+         :conn-sub      nil
+         :notify-sub    nil
+         :status        "boot"}))
+
+(defn set-status! [s]
+  (dp :status-> s)
+  (swap! state assoc :status s))
+
+;; Frame accumulator. WitMotion BLE frames may arrive split across
+;; notifications, or two frames in one notification. We buffer raw
+;; bytes and consume 20-byte frames whenever a 0x55 boundary appears.
+(def ^:private rx-buf (atom []))
+
+(defn consume-frames!
+  "Walk the rx buffer; whenever we have >= frame-length bytes starting
+   with 0x55, decode and drain. Tolerate junk: if byte 0 isn't 0x55,
+   advance one byte until we resync."
+  []
+  (loop [buf @rx-buf]
+    (cond
+      (< (count buf) frame-length)
+      (do (reset! rx-buf buf)
+          (dp :buf-keeping (count buf) :bytes))
+
+      (not= (bit-and (nth buf 0) 0xff) frame-header-byte-0)
+      (do (dp :buf-resync-drop (bit-and (nth buf 0) 0xff))
+          (recur (subvec buf 1)))
+
+      :else
+      (let [frame (subvec buf 0 frame-length)
+            rest- (subvec buf frame-length)]
+        (decode-0x61-frame frame)
+        (recur rest-)))))
+
+(defn handle-notify-bytes! [bytes]
+  ;; bytes arrives as a Dart List<int>. Convert to a plain Clojure
+  ;; vector for easy slicing/recurrence; tiny enough that perf is fine.
+  (let [v (vec bytes)]
+    (dp :rx-bytes (count v) :first8 (take 8 v))
+    (swap! rx-buf into v)
+    (consume-frames!)))
+
+(defn log-characteristic [^fbp/BluetoothCharacteristic c]
+  (let [props (.-properties c)]
+    (dp :char
+      :uuid (.toString (.-uuid c))
+      :read    (.-read props)
+      :write   (.-write props)
+      :writeNR (.-writeWithoutResponse props)
+      :notify  (.-notify props)
+      :indicate (.-indicate props))))
+
+(defn pick-notify-characteristic [services]
+  ;; Walk every service, log every characteristic, return first one
+  ;; whose .notify property is true.
+  (loop [svcs (seq services) found nil]
+    (if (or found (nil? svcs))
+      found
+      (let [^fbp/BluetoothService s (first svcs)]
+        (dp :service :uuid (.toString (.-uuid s)))
+        (let [chars (.-characteristics s)
+              hit (loop [cs (seq chars) hit nil]
+                    (if (or hit (nil? cs))
+                      hit
+                      (let [^fbp/BluetoothCharacteristic c (first cs)]
+                        (log-characteristic c)
+                        (recur (next cs)
+                          (if (.-notify (.-properties c)) c hit)))))]
+          (recur (next svcs) hit))))))
+
+(defn ^:async connect-and-listen! [^fbp/BluetoothDevice dev]
+  (set-status! (str "connecting to " (.-platformName dev)))
+  (dp :connect-begin :remote-id (.toString (.-remoteId dev)))
+  (await (.connect dev .timeout (Duration .seconds 15)))
+  (set-status! "connected, discovering services")
+  (dp :connected)
+
+  (let [services (await (.discoverServices dev))]
+    (dp :services-discovered :count (count services))
+    (if-let [^fbp/BluetoothCharacteristic notify-c
+             (pick-notify-characteristic services)]
+      (do
+        (dp :using-notify-char :uuid (.toString (.-uuid notify-c)))
+        (await (.setNotifyValue notify-c true))
+        (set-status! "subscribed; waiting for packets")
+        (let [sub (.listen (.-onValueReceived notify-c)
+                    (fn [bytes]
+                      (try
+                        (handle-notify-bytes! bytes)
+                        (catch Object e
+                          (dp :rx-decode-exception e)))))]
+          (.cancelWhenDisconnected dev sub)
+          (swap! state assoc :notify-sub sub)))
+      (do
+        (dp :no-notify-characteristic-found!)
+        (set-status! "ERROR: no notify characteristic found")))))
+
+(defn- name-matches? [^String s]
+  (and (string? s)
+       (not (.-isEmpty s))
+       (.startsWith s device-name-prefix)))
+
+(defn ^:async on-scan-result [^fbp/ScanResult r]
+  (let [name (.-platformName (.-device r))
+        adv  (.-advName (.-advertisementData r))]
+    (dp :scan-hit :platform-name name :adv-name adv :rssi (.-rssi r))
+    (when (and (nil? (:found-device @state))
+            (or (name-matches? name)
+                (name-matches? adv)))
+      (dp :match-found! :name name)
+      (swap! state assoc :found-device (.-device r))
+      (await (fbp/FlutterBluePlus.stopScan))
+      (await (connect-and-listen! (.-device r))))))
+
+(defn ^:async start-scan! []
+  (set-status! "scanning")
+  (dp :scan-start :timeout-seconds scan-timeout-seconds)
+  (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
+              (fn [results]
+                (doseq [r results]
+                  (on-scan-result r))))]
+    (swap! state assoc :scan-sub sub)
+    (await (fbp/FlutterBluePlus.startScan
+             .timeout (Duration .seconds scan-timeout-seconds)))
+    (dp :scan-started)))
+
+(defn ^:async wait-for-adapter-on! []
+  (set-status! "waiting for BT adapter")
+  (dp :adapter-wait-begin)
+  (let [^async/Stream stream (fbp/FlutterBluePlus.adapterState)
+        ;; Filter for the .on state and take first.
+        ;; .-first is a property (getter), not a method -- needs dash form.
+        on-state (.-first (.where stream
+                            (fn [s]
+                              (dp :adapter-state-tick s)
+                              (= s fbp/BluetoothAdapterState.on))))]
+    (await on-state)
+    (dp :adapter-on)
+    (set-status! "adapter on")))
+
+(defn ^:async run-ble-flow! []
+  (try
+    (await (wait-for-adapter-on!))
+    (await (start-scan!))
+    (catch Object e
+      (dp :run-ble-flow-exception e)
+      (set-status! (str "ERROR: " e)))))
+
+;;; ============================================================
+;;; Trivial UI -- just prove the app starts and BLE work runs.
+;;; ============================================================
+
+(defn make-app []
+  ;; A single material-app with a center'd text. The BLE work runs on
+  ;; first build via cFonce. The body refreshes every couple seconds
+  ;; from the `state` atom so we can see status text update without
+  ;; deeper f/mx wiring -- a Timer.periodic kicks a counter cell.
+  ;;
+  ;; This uses minimal f/mx (one cI, one cFonce) ONLY to drive a status
+  ;; refresh. The BLE code itself is f/mx-free per the design choice.
+  (material-app
+    {:title "Teacup BLE x080"
+     :theme (m/ThemeData .useMaterial3 true
+              .colorScheme (m/ColorScheme.fromSeed
+                             .seedColor m/Colors.teal))}
+    {:name :app
+     :tick (cI 0)
+     :booter (cFonce
+               (dp :booter-fires)
+               (run-ble-flow!)
+               ;; Periodic status refresher. Capture `me` (the booter
+               ;; cell's owning model = the :app) in a closure -- inside
+               ;; a Timer callback `me` is NOT lexically bound.
+               (let [app-md me]
+                 (async/Timer.periodic
+                   (Duration .milliseconds 500)
+                   (fn [_]
+                     (mx/wmx-iso
+                       (mx/mupdate! app-md :tick inc))))))}
+    (scaffold
+      {:appBar (app-bar
+                 {:title (text {} {} "Teacup BLE x080")
+                  :backgroundColor m/Colors.teal})}
+      (center
+        {}
+        (column
+          {:mainAxisAlignment m/MainAxisAlignment.center}
+          (text {:style (m/TextStyle .fontSize 14.0)} {}
+            ;; Navigate up to :app to read :tick -- me here is the text widget.
+            (do (mget (fmu :app) :tick)
+                (str "status: " (:status @state))))
+          (text {:style (m/TextStyle .fontSize 12.0)} {}
+            "watch the console for :rx-bytes and :decoded"))))))
