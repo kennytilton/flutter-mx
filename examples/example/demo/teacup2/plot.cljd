@@ -19,8 +19,8 @@
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
-          (flc/FlSpot (double (:t s))
-                      (double (or (y-key s) 0.0))))
+          (flc/FlSpot (double (get s :t))
+                      (double (or (get s y-key) 0.0))))
         samples))
 
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
@@ -28,7 +28,7 @@
 
 (defn latest-t-ms [samples]
   (if-let [sample (last samples)]
-    (double (:t sample))
+    (double (get sample :t))
     0.0))
 
 (defn chart-window [samples running?]

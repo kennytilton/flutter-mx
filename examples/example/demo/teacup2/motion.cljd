@@ -5,6 +5,11 @@
 
 (def default-up {:x 0.0 :y 0.0 :z 1.0})
 
+(def mount-up
+  {:z-up           default-up
+   :up-back-right  {:x 0.0 :y 1.0 :z 0.0}
+   :yzx            {:x 0.0 :y 1.0 :z 0.0}})
+
 (def default-weights
   {:jerk 0.45
    :vertical-accel 0.20
@@ -18,19 +23,19 @@
   {:x (double x) :y (double y) :z (double z)})
 
 (defn v+ [a b]
-  (v3 (+ (:x a) (:x b))
-    (+ (:y a) (:y b))
-    (+ (:z a) (:z b))))
+  (v3 (+ (get a :x) (get b :x))
+    (+ (get a :y) (get b :y))
+    (+ (get a :z) (get b :z))))
 
 (defn v- [a b]
-  (v3 (- (:x a) (:x b))
-    (- (:y a) (:y b))
-    (- (:z a) (:z b))))
+  (v3 (- (get a :x) (get b :x))
+    (- (get a :y) (get b :y))
+    (- (get a :z) (get b :z))))
 
 (defn dot [a b]
-  (+ (* (:x a) (:x b))
-    (* (:y a) (:y b))
-    (* (:z a) (:z b))))
+  (+ (* (get a :x) (get b :x))
+    (* (get a :y) (get b :y))
+    (* (get a :z) (get b :z))))
 
 (defn norm [a]
   (math/sqrt (dot a a)))
@@ -39,7 +44,10 @@
   (let [n (norm a)]
     (if (zero? n)
       default-up
-      (v3 (/ (:x a) n) (/ (:y a) n) (/ (:z a) n)))))
+      (v3 (/ (get a :x) n) (/ (get a :y) n) (/ (get a :z) n)))))
+
+(defn up-for-mount [mount-code]
+  (or (get mount-up mount-code) default-up))
 
 (defn clamp [x lo hi]
   (max lo (min hi x)))
@@ -63,28 +71,28 @@
 (defn score-sample
   ([raw prior] (score-sample raw prior default-weights))
   ([raw prior weights]
-   (let [timestamp (:timestamp raw)
-         accel-raw (:accel-raw raw)
-         gravity   (normalize (:gravity raw))
-         gyro      (:gyro raw)
-         up        (or (:up raw) default-up)
+   (let [timestamp (get raw :timestamp)
+         accel-raw (get raw :accel-raw)
+         gravity   (normalize (get raw :gravity))
+         gyro      (get raw :gyro)
+         up        (or (get raw :up) default-up)
          linear    (v- accel-raw gravity)
-         dt        (if (and prior timestamp (:timestamp prior))
-                     (max 0.001 (/ (- timestamp (:timestamp prior)) 1000.0))
+         dt        (if (and prior timestamp (get prior :timestamp))
+                     (max 0.001 (/ (- timestamp (get prior :timestamp)) 1000.0))
                      (/ 200.0 1000.0))
          ;; Accelerometer gravity sign differs by source/platform. Lean is
          ;; deviation from the vertical axis, so +up and -up are both upright.
          lean      (math/acos (.abs ^num (clamp (dot gravity (normalize up)) -1.0 1.0)))
          vertical  (dot linear gravity)
-         jerk      (if (and prior (:linear-accel prior))
-                     (/ (norm (v- linear (:linear-accel prior))) dt)
+         jerk      (if (and prior (get prior :linear-accel))
+                     (/ (norm (v- linear (get prior :linear-accel))) dt)
                      0.0)
-         angular   (if (and prior (:gyro prior))
-                     (/ (norm (v- gyro (:gyro prior))) dt)
+         angular   (if (and prior (get prior :gyro))
+                     (/ (norm (v- gyro (get prior :gyro))) dt)
                      0.0)
-         combined  (+ (* (:jerk weights) jerk)
-                     (* (:vertical-accel weights) (.abs ^num vertical))
-                     (* (:angular-accel weights) angular))]
+         combined  (+ (* (get weights :jerk) jerk)
+                     (* (get weights :vertical-accel) (.abs ^num vertical))
+                     (* (get weights :angular-accel) angular))]
      (merge raw
        {:lean lean
         :lean-deg (rad->deg lean)
@@ -95,7 +103,7 @@
         :angular-accel angular
         :combined-sudden-change combined
         ;; Compatibility fields during transition.
-        :xy (norm (v3 (:x linear) (:y linear) 0.0))
+        :xy (norm (v3 (get linear :x) (get linear :y) 0.0))
         :az vertical
-        :gz (:y gyro)
-        :gxz (norm (v3 (:x gyro) 0.0 (:z gyro)))}))))
+        :gz (get gyro :y)
+        :gxz (norm (v3 (get gyro :x) 0.0 (get gyro :z)))}))))

@@ -33,8 +33,8 @@
 (defn- compute-stats [samples]
   (if (empty? samples)
     nil
-    {:lean (mean (map :lean-deg samples))
-     :sudden-change (mean (map :combined-sudden-change samples))}))
+    {:lean (mean (map #(get % :lean-deg) samples))
+     :sudden-change (mean (map #(get % :combined-sudden-change) samples))}))
 
 (defn summary-page []
   (fx/safe-area
@@ -46,7 +46,7 @@
         (if-let [fx (uformx)]
           (let [samples (mget fx :samples)]
             (if-let [s (compute-stats samples)]
-              (str (stat-line "LEAN" (:lean s) "°") "\n"
-                   (stat-line "SUDDEN CHANGE" (:sudden-change s) ""))
+              (str (stat-line "LEAN" (get s :lean) "°") "\n"
+                   (stat-line "SUDDEN CHANGE" (get s :sudden-change) ""))
               "No samples yet"))
           "No data yet")))))

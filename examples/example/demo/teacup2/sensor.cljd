@@ -63,18 +63,27 @@
   (swap! ble-state assoc :status s))
 
 (defn ble-status []
-  (:status @ble-state))
+  (get @ble-state :status))
 
 (defn- capture-running? [formx run-id]
   (and formx
-       (= run-id (:run-id @ble-state))
+       (= run-id (get @ble-state :run-id))
        (mget formx :running?)))
 
 (defn- append-raw-sample! [formx raw]
   (wmx-iso
     (when (mget formx :running?)
-      (let [prior  (last (mget formx :samples))
-            sample (motion/score-sample raw prior)]
+      (let [gravity    (motion/normalize (get raw :gravity))
+            neutral-up (or (mget formx :neutral-up)
+                         gravity
+                         (motion/up-for-mount (mget formx :mount-code)))
+            _          (when-not (mget formx :neutral-up)
+                         (dp :calibrated-neutral-up gravity)
+                         (mset! formx :neutral-up gravity))
+            prior      (last (mget formx :samples))
+            sample     (motion/score-sample
+                         (assoc raw :up neutral-up)
+                         prior)]
         (mupdate! formx :samples conj sample))
       (when (and (not run-indefinitely?)
               (>= (count (mget formx :samples)) target-count))
@@ -116,22 +125,22 @@
 (defn- witmotion-sample [formx decoded]
   (let [now   (now-ms)
         t-rel (- now (mget formx :start-ms))
-        ax    (:ax-g decoded)
-        ay    (:ay-g decoded)
-        az    (:az-g decoded)
-        wx    (:wx-rad-s decoded)
-        wy    (:wy-rad-s decoded)
-        wz    (:wz-rad-s decoded)]
+        ax    (get decoded :ax-g)
+        ay    (get decoded :ay-g)
+        az    (get decoded :az-g)
+        wx    (get decoded :wx-rad-s)
+        wy    (get decoded :wy-rad-s)
+        wz    (get decoded :wz-rad-s)]
     {:timestamp now
      :t t-rel
      :source :witmotion-ble
      :up motion/default-up
      :accel-raw (motion/v3 ax ay az)
-     :gravity (motion/euler-gravity (:roll-deg decoded) (:pitch-deg decoded))
+     :gravity (motion/euler-gravity (get decoded :roll-deg) (get decoded :pitch-deg))
      :gyro (motion/v3 wx wy wz)
-     :pitch (:pitch-deg decoded)
-     :roll (:roll-deg decoded)
-     :yaw (:yaw-deg decoded)}))
+     :pitch (get decoded :pitch-deg)
+     :roll (get decoded :roll-deg)
+     :yaw (get decoded :yaw-deg)}))
 
 (defn- consume-frames! [formx run-id]
   (loop [buf @rx-buf]
@@ -191,9 +200,9 @@
   (swap! ble-state update :run-id inc)
   (set-ble-status! "idle")
   (reset! rx-buf [])
-  (when-let [^async/StreamSubscription sub (:scan-sub @ble-state)]
+  (when-let [^async/StreamSubscription sub (get @ble-state :scan-sub)]
     (await (.cancel sub)))
-  (when-let [^async/StreamSubscription sub (:notify-sub @ble-state)]
+  (when-let [^async/StreamSubscription sub (get @ble-state :notify-sub)]
     (await (.cancel sub)))
   (try
     (await (fbp/FlutterBluePlus.stopScan))
@@ -205,7 +214,7 @@
 
 (defn ^:async disconnect-witmotion! []
   (await (stop-witmotion!))
-  (when-let [^fbp/BluetoothDevice dev (:found-device @ble-state)]
+  (when-let [^fbp/BluetoothDevice dev (get @ble-state :found-device)]
     (try
       (await (.disconnect dev))
       (catch Object e
@@ -244,7 +253,7 @@
         adv  (.-advName (.-advertisementData r))]
     (dp :scan-hit :platform-name name :adv-name adv :rssi (.-rssi r))
     (when (and (capture-running? formx run-id)
-            (nil? (:found-device @ble-state))
+            (nil? (get @ble-state :found-device))
             (or (name-matches? name)
               (name-matches? adv)))
       (swap! ble-state assoc :found-device (.-device r))
@@ -256,18 +265,18 @@
   (let [^async/Stream stream (fbp/FlutterBluePlus.adapterState)
         on-state (.-first (.where stream
                             (fn [s]
-                              (and (= run-id (:run-id @ble-state))
+                              (and (= run-id (get @ble-state :run-id))
                                 (= s fbp/BluetoothAdapterState.on)))))]
     (await on-state)
     (set-ble-status! "adapter on")))
 
 (defn ^:async start-witmotion! [formx]
   (await (stop-witmotion!))
-  (let [run-id (:run-id @ble-state)]
+  (let [run-id (get @ble-state :run-id)]
     (try
       (await (wait-for-adapter-on! run-id))
       (when (capture-running? formx run-id)
-        (if-let [^fbp/BluetoothDevice dev (:found-device @ble-state)]
+        (if-let [^fbp/BluetoothDevice dev (get @ble-state :found-device)]
           (await (connect-and-listen! formx run-id dev))
           (do
             (set-ble-status! "scanning")
@@ -285,8 +294,8 @@
 (defn- make-iphone-listener [formx last-stamp-atom accel-atom gyro-atom]
   (fn [^sp/UserAccelerometerEvent ev]
     (let [now  (now-ms)
-          last @last-stamp-atom]
-      (when (>= (- now last) sample-period-ms)
+          prior-stamp @last-stamp-atom]
+      (when (>= (- now prior-stamp) sample-period-ms)
         (reset! last-stamp-atom now)
         (let [start  (mget formx :start-ms)
               t-rel  (- now start)
@@ -316,8 +325,7 @@
                          :roll nil
                          :yaw nil}]
           (dp :iphone-sample :n (count (mget formx :samples))
-            :t-rel t-rel
-            :lean-deg (:lean-deg (motion/score-sample raw (last (mget formx :samples)))))
+            :t-rel t-rel)
           (append-raw-sample! formx raw))))))
 
 (defn capture []
