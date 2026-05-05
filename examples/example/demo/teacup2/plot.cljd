@@ -1,9 +1,7 @@
 (ns example.demo.teacup2.plot
-  "Four-series LineChart for Teacup2 using fl_chart.
-     blue   -- :xy  sqrt(ax^2+ay^2): horizontal accel magnitude
-     red    -- :az  accelerometer z
-     orange -- :gxz sqrt(gx^2+gz^2): off-axis angular magnitude
-     cyan   -- :gz  gyro y (yaw)"
+  "Two-series LineChart for Teacup2 using fl_chart.
+     orange -- lean in degrees
+     red    -- combined sudden-change score"
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -16,44 +14,51 @@
 
 (deftag tilton.fmx.factory/konly-param1 line-chart flc/LineChart)
 
-(def x-max-ms (double sensor/run-duration-ms))
+(def live-window-ms 10000.0)
+(def stopped-window-width 360.0)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
           (flc/FlSpot (double (:t s))
-                      (double (y-key s))))
+                      (double (or (y-key s) 0.0))))
         samples))
 
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
 
-(defn chart-data [samples]
-  (flc/LineChartData
-    .minX 0.0
-    .maxX x-max-ms
+(defn latest-t-ms [samples]
+  (if-let [sample (last samples)]
+    (double (:t sample))
+    0.0))
+
+(defn chart-window [samples running?]
+  (let [latest (latest-t-ms samples)]
+    (if running?
+      [(max 0.0 (- latest live-window-ms))
+       (max live-window-ms latest)]
+      [0.0 (max live-window-ms latest)])))
+
+(defn stopped-chart-width [samples]
+  (* stopped-window-width
+    (/ (second (chart-window samples false))
+      live-window-ms)))
+
+(defn chart-data [samples running?]
+  (let [[min-x max-x] (chart-window samples running?)]
+    (flc/LineChartData
+      .minX min-x
+      .maxX max-x
     .clipData (flc/FlClipData.none)
     .lineBarsData
-    [(flc/LineChartBarData
-       .spots (spots-for samples :xy)
-       .color m/Colors.blue
-       .barWidth 4.0
-       .isCurved false
-       .dotData (flc/FlDotData .show false))
-     (flc/LineChartBarData
-       .spots (spots-for samples :az)
-       .color m/Colors.red
-       .barWidth 4.0
-       .isCurved false
-       .dotData (flc/FlDotData .show false))
-     (flc/LineChartBarData
-       .spots (spots-for samples :gxz)
+     [(flc/LineChartBarData
+       .spots (spots-for samples :lean-deg)
        .color m/Colors.orange
        .barWidth 4.0
        .isCurved false
        .dotData (flc/FlDotData .show false))
      (flc/LineChartBarData
-       .spots (spots-for samples :gz)
-       .color m/Colors.cyan
+       .spots (spots-for samples :combined-sudden-change)
+       .color m/Colors.red
        .barWidth 4.0
        .isCurved false
        .dotData (flc/FlDotData .show false))]
@@ -74,4 +79,4 @@
                         .getTitlesWidget bottom-title-widget))
       .topTitles
       (flc/AxisTitles
-        .sideTitles (flc/SideTitles .showTitles false)))))
+        .sideTitles (flc/SideTitles .showTitles false))))))

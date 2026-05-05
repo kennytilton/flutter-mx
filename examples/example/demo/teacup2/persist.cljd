@@ -1,0 +1,30 @@
+(ns example.demo.teacup2.persist
+  "Hive-backed settings persistence for Teacup2."
+  (:require
+    ["package:hive_flutter/hive_flutter.dart" :as hv]))
+
+(def settings-box-name "teacup2-settings")
+(def sensor-source-key "sensor-source")
+
+(def +DB+ (atom nil))
+
+(defn ^hv/Box? DB [] @+DB+)
+(defn ^hv/Box? DB! [db] (reset! +DB+ db))
+
+(defn ^:async open-settings-box []
+  (-> hv/Hive hv/HiveX .initFlutter await)
+  (-> hv/Hive (.openBox settings-box-name)))
+
+(defn sensor-source-read [^hv/Box db]
+  (case (.get db sensor-source-key)
+    "witmotion-ble" :witmotion-ble
+    "iphone" :iphone
+    nil))
+
+(defn sensor-source-write! [^hv/Box db source]
+  (.put db sensor-source-key
+    (case source
+      :witmotion-ble "witmotion-ble"
+      :iphone "iphone"
+      (name source)))
+  source)

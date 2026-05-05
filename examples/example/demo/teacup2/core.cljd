@@ -16,15 +16,18 @@
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     [tilton.mx.api :as mx
-     :refer [cF cI mget mset! fmu make now-ms _cache-bound]]
+     :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound]]
     [example.demo.teacup2.sensor :as sensor]
+    [example.demo.teacup2.persist :as stg]
+    [example.demo.teacup2.util.audio :as audio]
     [example.demo.teacup2.monitor :refer [monitor-page]]
-    [example.demo.teacup2.summary :refer [summary-page]]))
+    [example.demo.teacup2.summary :refer [summary-page]]
+    [example.demo.teacup2.settings :refer [settings-page]]))
 
 (def build-tag (.nextInt (math/Random) 1000))
 
 (defn title-text []
-  (str "Tai Chi Teacup2 v" build-tag))
+  (str "Tai Chi Teacup v" build-tag))
 
 (defn make-formx []
   (make
@@ -34,13 +37,39 @@
     :secs-left (cI sensor/run-duration-s)
     :running?  (cI true)))
 
+(defn- page-index [page-id]
+  (case page-id
+    :chart 0
+    :summary 1
+    :settings 2
+    0))
+
+(defn- index-page [i]
+  (case i
+    0 :chart
+    1 :summary
+    2 :settings
+    :chart))
+
 (defn make-app []
+  (audio/play-sys-sound! audio/New-Mail)
   (fx/material-app
     {:title (title-text)
      :theme (m/ThemeData .primarySwatch m/Colors.teal)}
     {:name            :teacup2
      :event           (cI nil :ephemeral? true)
-     :sensor-source   (cI :iphone)
+     :db              (cF+ [:async? true
+                            :watch (fn [_ _ db _ _]
+                                     (stg/DB! db))]
+                        (stg/open-settings-box))
+     :sensor-source   (cF+ [:input? true
+                            :watch (fn [_ me new prior _]
+                                     (when (mx/mx-bound? prior)
+                                       (when-let [db (mget me :db)]
+                                         (stg/sensor-source-write! db new))))]
+                        (or (when-let [db (mget me :db)]
+                              (stg/sensor-source-read db))
+                          :iphone))
      :formx           (cF (case (mget me :event)
                              :start (make-formx)
                              :stop  nil
@@ -52,10 +81,10 @@
        :bottomNavigationBar (cF
                               (let [root (fmu :teacup2)]
                                 (fx/bottom-navigation-bar
-                                  {:currentIndex (if (= :chart (mget root :current-page-id)) 0 1)
+                                  {:currentIndex (page-index (mget root :current-page-id))
                                    :onTap        (dart-cb [i]
                                                    (mset! root :current-page-id
-                                                     (if (= i 0) :chart :summary)))}
+                                                     (index-page i)))}
                                   (fx/bottom-navigation-bar-item
                                     {:icon  (m/Icon m/Icons.show_chart)
                                      :label "Chart"}
@@ -63,7 +92,13 @@
                                   (fx/bottom-navigation-bar-item
                                     {:icon  (m/Icon m/Icons.grid_on)
                                      :label "Summary"}
+                                    {})
+                                  (fx/bottom-navigation-bar-item
+                                    {:icon  (m/Icon m/Icons.settings)
+                                     :label "Settings"}
                                     {}))))}
-      (if (= :chart (mget (fmu :teacup2) :current-page-id))
-        (monitor-page)
-        (summary-page)))))
+      (case (mget (fmu :teacup2) :current-page-id)
+        :chart (monitor-page)
+        :summary (summary-page)
+        :settings (settings-page)
+        (monitor-page)))))

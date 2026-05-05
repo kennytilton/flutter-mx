@@ -1,0 +1,38 @@
+(ns example.demo.teacup2.settings
+  "Settings page for Teacup2."
+  (:require
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.mx.api :refer [mget mset! fmu]]
+    [example.demo.teacup2.sensor :as sensor]))
+
+(defn- source-button [root selected? source label]
+  (fx/text-button
+    {:onPressed (dart-cb []
+                  (when (= source :iphone)
+                    (sensor/disconnect-witmotion!))
+                  (mset! root :sensor-source source))}
+    (fx/text
+      {:style (p/TextStyle
+                .fontSize 18.0
+                .fontWeight (if selected?
+                              p/FontWeight.bold
+                              p/FontWeight.normal))}
+      {}
+      label)))
+
+(defn settings-page []
+  (fx/safe-area
+    (let [root   (fmu :teacup2)
+          source (mget root :sensor-source)]
+      (fx/column
+        {:mainAxisAlignment  m/MainAxisAlignment.center
+         :crossAxisAlignment m/CrossAxisAlignment.stretch}
+        (fx/text
+          {:style     (p/TextStyle .fontSize 20.0 .color m/Colors.black)
+           :textAlign m/TextAlign.center}
+          {}
+          "Sensor")
+        (source-button root (= source :iphone) :iphone "iPhone IMU")
+        (source-button root (= source :witmotion-ble) :witmotion-ble "WitMotion BLE")))))

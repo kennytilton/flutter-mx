@@ -2,9 +2,8 @@
   "Sensor bridge for Teacup2.
 
    The app can capture from either the iPhone IMU via sensors_plus or a
-   WitMotion WT901BLE device via flutter_blue_plus. Both paths append the same
-   sample map shape used by the original Teacup chart and summary:
-   {:t elapsed-ms :xy horizontal-accel :az vertical-accel :gz yaw-rate :gxz off-axis-rate}."
+   WitMotion WT901BLE device via flutter_blue_plus. Both paths normalize source
+   data into the Teacup2 motion scoring sample shape."
   (:require
     ["dart:async" :as async]
     ["dart:math" :as math]
@@ -14,9 +13,11 @@
     [tilton.mx.api :as mx
      :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound?]]
     [tilton.fmx.api :as fx]
+    [example.demo.teacup2.motion :as motion]
     [example.demo.teacup2.util :refer [uformx]]))
 
 (def sample-period-ms 200)
+(def run-indefinitely? true)
 (def run-duration-ms 10000)
 (def run-duration-s  (quot run-duration-ms 1000))
 (def target-count    (quot run-duration-ms sample-period-ms))
@@ -42,6 +43,12 @@
 
 (def ^:private rx-buf (atom []))
 
+;; TODO Teacup2 BLE resilience:
+;; - If the user presses Start while Bluetooth is off, show a clear in-app status
+;;   and recover when they enable it.
+;; - If Bluetooth turns off, the device disconnects, or the WitMotion battery dies
+;;   while sampling, stop/mark capture gracefully without losing collected samples.
+
 (defn source-label [source]
   (case source
     :witmotion-ble "WitMotion BLE"
@@ -63,11 +70,14 @@
        (= run-id (:run-id @ble-state))
        (mget formx :running?)))
 
-(defn- append-sample! [formx sample]
+(defn- append-raw-sample! [formx raw]
   (wmx-iso
     (when (mget formx :running?)
-      (mupdate! formx :samples conj sample)
-      (when (>= (count (mget formx :samples)) target-count)
+      (let [prior  (last (mget formx :samples))
+            sample (motion/score-sample raw prior)]
+        (mupdate! formx :samples conj sample))
+      (when (and (not run-indefinitely?)
+              (>= (count (mget formx :samples)) target-count))
         (dp :sample-count-stop! :n (count (mget formx :samples)))
         (mset! formx :running? false)))))
 
@@ -112,11 +122,16 @@
         wx    (:wx-rad-s decoded)
         wy    (:wy-rad-s decoded)
         wz    (:wz-rad-s decoded)]
-    {:t   t-rel
-     :xy  (math/sqrt (+ (* ax ax) (* ay ay)))
-     :az  az
-     :gz  wy
-     :gxz (math/sqrt (+ (* wx wx) (* wz wz)))}))
+    {:timestamp now
+     :t t-rel
+     :source :witmotion-ble
+     :up motion/default-up
+     :accel-raw (motion/v3 ax ay az)
+     :gravity (motion/euler-gravity (:roll-deg decoded) (:pitch-deg decoded))
+     :gyro (motion/v3 wx wy wz)
+     :pitch (:pitch-deg decoded)
+     :roll (:roll-deg decoded)
+     :yaw (:yaw-deg decoded)}))
 
 (defn- consume-frames! [formx run-id]
   (loop [buf @rx-buf]
@@ -133,7 +148,7 @@
         (when-let [decoded (decode-0x61-frame frame)]
           (dp :witmotion-decoded decoded)
           (when (capture-running? formx run-id)
-            (append-sample! formx (witmotion-sample formx decoded))))
+            (append-raw-sample! formx (witmotion-sample formx decoded))))
         (recur rest-)))))
 
 (defn- handle-witmotion-bytes! [formx run-id bytes]
@@ -267,7 +282,7 @@
         (dp :witmotion-flow-exception e)
         (set-ble-status! (str "ERROR: " e))))))
 
-(defn- make-iphone-listener [formx last-stamp-atom gyro-atom]
+(defn- make-iphone-listener [formx last-stamp-atom accel-atom gyro-atom]
   (fn [^sp/UserAccelerometerEvent ev]
     (let [now  (now-ms)
           last @last-stamp-atom]
@@ -275,26 +290,58 @@
         (reset! last-stamp-atom now)
         (let [start  (mget formx :start-ms)
               t-rel  (- now start)
-              ax     (.-x ev)
-              ay     (.-y ev)
-              az     (.-z ev)
-              xy     (math/sqrt (+ (* ax ax) (* ay ay)))
+              uax    (.-x ev)
+              uay    (.-y ev)
+              uaz    (.-z ev)
+              a      @accel-atom
+              ax     (if a (.-x ^sp/AccelerometerEvent a) uax)
+              ay     (if a (.-y ^sp/AccelerometerEvent a) uay)
+              az     (if a (.-z ^sp/AccelerometerEvent a) uaz)
               g      @gyro-atom
               gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
               gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
               gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
-              gxz    (math/sqrt (+ (* gx gx) (* gz gz)))
-              sample {:t t-rel :xy xy :az az :gz gy :gxz gxz}]
-          (dp :iphone-sample :n (count (mget formx :samples)) :t-rel t-rel
-              :xy xy :az az :gz gy :gxz gxz)
-          (append-sample! formx sample))))))
+              accel-raw (motion/v3 ax ay az)
+              linear    (motion/v3 uax uay uaz)
+              gravity   (motion/v- accel-raw linear)
+              raw       {:timestamp now
+                         :t t-rel
+                         :source :iphone
+                         :up motion/default-up
+                         :accel-raw accel-raw
+                         :gravity gravity
+                         :linear-accel linear
+                         :gyro (motion/v3 gx gy gz)
+                         :pitch nil
+                         :roll nil
+                         :yaw nil}]
+          (dp :iphone-sample :n (count (mget formx :samples))
+            :t-rel t-rel
+            :lean-deg (:lean-deg (motion/score-sample raw (last (mget formx :samples)))))
+          (append-raw-sample! formx raw))))))
 
 (defn capture []
-  (let [gyro-atom (atom nil)]
+  (let [accel-atom (atom nil)
+        gyro-atom  (atom nil)]
     (fx/text
       {:style (fx/within-ctx [me ctx]
                 (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
       {:name :capture
+
+       :iphone-accel
+       (cF+ [:watch (fn [_ _ new prior _]
+                      (when (and (nil? new) (mx-bound? prior) (some? prior))
+                        (dp :iphone-accel-cancelling!)
+                        (.cancel ^async/StreamSubscription prior)))]
+         (let [formx    (uformx)
+               running? (when formx (mget formx :running?))]
+           (when (and running? (= :iphone (root-source me)))
+             (dp :iphone-accel-subscribing!)
+             (.listen (sp/accelerometerEventStream
+                        .samplingPeriod
+                        (Duration .milliseconds sample-period-ms))
+               (fn [^sp/AccelerometerEvent ev]
+                 (reset! accel-atom ev))))))
 
        :iphone-gyro
        (cF+ [:watch (fn [_ _ new prior _]
@@ -326,7 +373,8 @@
                    (when (mget formx :running?)
                      (let [remaining (dec (mget formx :secs-left))]
                        (mset! formx :secs-left remaining)
-                       (when (<= remaining 0)
+                       (when (and (not run-indefinitely?)
+                               (<= remaining 0))
                          (.cancel tmr)
                          (mset! formx :running? false))))))))))
 
@@ -344,7 +392,7 @@
                                 (Duration .milliseconds sample-period-ms))]
                (dp :iphone-sensor-subscribing!)
                (.listen stream
-                 (make-iphone-listener formx last-stamp gyro-atom))))))
+                 (make-iphone-listener formx last-stamp accel-atom gyro-atom))))))
 
        :witmotion
        (cF+ [:watch (fn [_ _ new prior _]

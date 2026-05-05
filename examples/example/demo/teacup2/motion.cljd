@@ -1,0 +1,101 @@
+(ns example.demo.teacup2.motion
+  "Motion scoring for Teacup2."
+  (:require
+    ["dart:math" :as math]))
+
+(def default-up {:x 0.0 :y 0.0 :z 1.0})
+
+(def default-weights
+  {:jerk 0.45
+   :vertical-accel 0.20
+   :angular-accel 0.35})
+
+(def default-thresholds
+  {:lean-deg 10.0
+   :combined-sudden-change 8.0})
+
+(defn v3 [x y z]
+  {:x (double x) :y (double y) :z (double z)})
+
+(defn v+ [a b]
+  (v3 (+ (:x a) (:x b))
+    (+ (:y a) (:y b))
+    (+ (:z a) (:z b))))
+
+(defn v- [a b]
+  (v3 (- (:x a) (:x b))
+    (- (:y a) (:y b))
+    (- (:z a) (:z b))))
+
+(defn dot [a b]
+  (+ (* (:x a) (:x b))
+    (* (:y a) (:y b))
+    (* (:z a) (:z b))))
+
+(defn norm [a]
+  (math/sqrt (dot a a)))
+
+(defn normalize [a]
+  (let [n (norm a)]
+    (if (zero? n)
+      default-up
+      (v3 (/ (:x a) n) (/ (:y a) n) (/ (:z a) n)))))
+
+(defn clamp [x lo hi]
+  (max lo (min hi x)))
+
+(defn rad->deg [r]
+  (* r (/ 180.0 math/pi)))
+
+(defn deg->rad [d]
+  (* d (/ math/pi 180.0)))
+
+(defn euler-gravity
+  "Approximate gravity vector from roll/pitch using Teacup's z-up convention."
+  [roll-deg pitch-deg]
+  (let [roll  (deg->rad (or roll-deg 0.0))
+        pitch (deg->rad (or pitch-deg 0.0))]
+    (normalize
+      (v3 (math/sin roll)
+        (math/sin pitch)
+        (* (math/cos roll) (math/cos pitch))))))
+
+(defn score-sample
+  ([raw prior] (score-sample raw prior default-weights))
+  ([raw prior weights]
+   (let [timestamp (:timestamp raw)
+         accel-raw (:accel-raw raw)
+         gravity   (normalize (:gravity raw))
+         gyro      (:gyro raw)
+         up        (or (:up raw) default-up)
+         linear    (v- accel-raw gravity)
+         dt        (if (and prior timestamp (:timestamp prior))
+                     (max 0.001 (/ (- timestamp (:timestamp prior)) 1000.0))
+                     (/ 200.0 1000.0))
+         ;; Accelerometer gravity sign differs by source/platform. Lean is
+         ;; deviation from the vertical axis, so +up and -up are both upright.
+         lean      (math/acos (.abs ^num (clamp (dot gravity (normalize up)) -1.0 1.0)))
+         vertical  (dot linear gravity)
+         jerk      (if (and prior (:linear-accel prior))
+                     (/ (norm (v- linear (:linear-accel prior))) dt)
+                     0.0)
+         angular   (if (and prior (:gyro prior))
+                     (/ (norm (v- gyro (:gyro prior))) dt)
+                     0.0)
+         combined  (+ (* (:jerk weights) jerk)
+                     (* (:vertical-accel weights) (.abs ^num vertical))
+                     (* (:angular-accel weights) angular))]
+     (merge raw
+       {:lean lean
+        :lean-deg (rad->deg lean)
+        :gravity gravity
+        :linear-accel linear
+        :vertical-accel vertical
+        :jerk jerk
+        :angular-accel angular
+        :combined-sudden-change combined
+        ;; Compatibility fields during transition.
+        :xy (norm (v3 (:x linear) (:y linear) 0.0))
+        :az vertical
+        :gz (:y gyro)
+        :gxz (norm (v3 (:x gyro) 0.0 (:z gyro)))}))))
