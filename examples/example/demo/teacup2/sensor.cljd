@@ -139,6 +139,39 @@
       (mset! formx since-slot nil)
       false)))
 
+(defn- recording-stop-elapsed? [formx now calm-up? lean-deg gyro-norm lin-norm]
+  (let [since (mget formx :stop-steady-since-ms)]
+    (cond
+      calm-up?
+      (let [since (or since now)]
+        (when-not (mget formx :stop-steady-since-ms)
+          (mset! formx :stop-steady-since-ms now)
+          (dp :recording-stop-timer-start
+            :steady-ms stop-steady-ms
+            :lean-deg lean-deg
+            :lean-max vertical-lean-tolerance-deg
+            :gyro gyro-norm
+            :gyro-steady-max steady-gyro-tolerance-rad-s
+            :lin lin-norm
+            :lin-steady-max steady-linear-accel-tolerance-g))
+        (>= (- now since) stop-steady-ms))
+
+      since
+      (do
+        (dp :recording-stop-timer-reset
+          :elapsed-ms (- now since)
+          :steady-ms stop-steady-ms
+          :lean-deg lean-deg
+          :lean-max vertical-lean-tolerance-deg
+          :gyro gyro-norm
+          :gyro-steady-max steady-gyro-tolerance-rad-s
+          :lin lin-norm
+          :lin-steady-max steady-linear-accel-tolerance-g)
+        (mset! formx :stop-steady-since-ms nil)
+        false)
+
+      :else false)))
+
 (defn- clear-ready-gravity! [formx]
   (mset! formx :ready-gravity-sum nil)
   (mset! formx :ready-gravity-count 0))
@@ -319,7 +352,7 @@
               (do
                 (mset! formx :saw-recording-motion? true)
                 (mset! formx :stop-steady-since-ms nil))
-              (when (elapsed? formx :stop-steady-since-ms now calm-up? stop-steady-ms)
+              (when (recording-stop-elapsed? formx now calm-up? lean-deg gyro-norm lin-norm)
                 (dp :recording-stopped-by-stillness
                   :steady-ms stop-steady-ms
                   :lean-deg lean-deg
