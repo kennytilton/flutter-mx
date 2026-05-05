@@ -37,6 +37,15 @@
     :secs-left (cI sensor/run-duration-s)
     :mount-code (cI :up-back-right)
     :neutral-up (cI nil)
+    :gate-state (cI :await-ready)
+    :ready-since-ms (cI nil)
+    :ready-gravity-sum (cI nil)
+    :ready-gravity-count (cI 0)
+    :begin-steady-since-ms (cI nil)
+    :nod-acked-ms (cI nil)
+    :stop-steady-since-ms (cI nil)
+    :last-gate-dp-ms (cI nil)
+    :saw-recording-motion? (cI false)
     :running?  (cI true)))
 
 (defn- page-index [page-id]
@@ -54,7 +63,7 @@
     :chart))
 
 (defn make-app []
-  (audio/play-sys-sound! audio/New-Mail)
+  (audio/play-sys-sound! audio/Sent-Message)
   (fx/material-app
     {:title (title-text)
      :theme (m/ThemeData .primarySwatch m/Colors.teal)}

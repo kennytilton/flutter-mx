@@ -14,6 +14,7 @@
      :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound?]]
     [tilton.fmx.api :as fx]
     [example.demo.teacup2.motion :as motion]
+    [example.demo.teacup2.util.audio :as audio]
     [example.demo.teacup2.util :refer [uformx]]))
 
 (def sample-period-ms 200)
@@ -33,6 +34,20 @@
 (def gyro-scale  (/ 2000.0 32768.0))
 (def angle-scale (/ 180.0 32768.0))
 (def deg->rad (/ math/pi 180.0))
+
+(def ready-steady-ms 3000)
+(def begin-steady-ms 3000)
+(def stop-steady-ms 3000)
+(def vertical-lean-tolerance-deg 10.0)
+(def steady-gyro-tolerance-rad-s 0.18)
+(def steady-linear-accel-tolerance-g 0.15)
+(def moving-gyro-rad-s 0.50)
+(def moving-linear-accel-g 0.18)
+(def nod-gyro-rad-s 0.45)
+(def nod-settle-ms 1500)
+(def game-over-gyro-rad-s 1.50)
+(def game-over-linear-accel-g 0.80)
+(def gate-debug-interval-ms 1000)
 
 (def ^:private ble-state
   (atom {:status "idle"
@@ -70,25 +85,253 @@
        (= run-id (get @ble-state :run-id))
        (mget formx :running?)))
 
+(defn- expected-up [formx raw]
+  (motion/up-for-mount (mget formx :mount-code)))
+
+(defn- lean-deg-for [gravity up]
+  (motion/rad->deg
+    (math/acos
+      (.abs ^num
+        (motion/clamp
+          (motion/dot (motion/normalize gravity) (motion/normalize up))
+          -1.0
+          1.0)))))
+
+(defn- linear-accel [raw]
+  (or (get raw :linear-accel)
+    (motion/v- (get raw :accel-raw) (motion/normalize (get raw :gravity)))))
+
+(defn- raw-steady? [raw]
+  (and (<= (motion/norm (get raw :gyro)) steady-gyro-tolerance-rad-s)
+    (<= (motion/norm (linear-accel raw)) steady-linear-accel-tolerance-g)))
+
+(defn- raw-vertical? [raw up]
+  (<= (lean-deg-for (get raw :gravity) up) vertical-lean-tolerance-deg))
+
+(defn- raw-moving? [raw]
+  (or (> (motion/norm (get raw :gyro)) moving-gyro-rad-s)
+    (> (motion/norm (linear-accel raw)) moving-linear-accel-g)))
+
+(defn- gyro-abs [raw]
+  (let [gyro (get raw :gyro)]
+    {:x (.abs ^num (get gyro :x))
+     :y (.abs ^num (get gyro :y))
+     :z (.abs ^num (get gyro :z))}))
+
+(defn- clear-forward-nod? [raw]
+  (let [gyro  (gyro-abs raw)
+        max-g (max (get gyro :x)
+                (get gyro :y)
+                (get gyro :z))]
+    (> max-g nod-gyro-rad-s)))
+
+(defn- wild-moving? [gyro-norm lin-norm]
+  (or (> gyro-norm game-over-gyro-rad-s)
+    (> lin-norm game-over-linear-accel-g)))
+
+(defn- elapsed? [formx since-slot now ok? duration-ms]
+  (if ok?
+    (let [since (or (mget formx since-slot) now)]
+      (when-not (mget formx since-slot)
+        (mset! formx since-slot now))
+      (>= (- now since) duration-ms))
+    (do
+      (mset! formx since-slot nil)
+      false)))
+
+(defn- clear-ready-gravity! [formx]
+  (mset! formx :ready-gravity-sum nil)
+  (mset! formx :ready-gravity-count 0))
+
+(defn- track-ready-gravity! [formx raw steady?]
+  (if steady?
+    (let [gravity (motion/normalize (get raw :gravity))]
+      (mset! formx :ready-gravity-sum
+        (if-let [sum (mget formx :ready-gravity-sum)]
+          (motion/v+ sum gravity)
+          gravity))
+      (mset! formx :ready-gravity-count
+        (inc (or (mget formx :ready-gravity-count) 0))))
+    (clear-ready-gravity! formx)))
+
+(defn- ready-neutral-up [formx raw]
+  (let [n (mget formx :ready-gravity-count)]
+    (if (pos? n)
+      (motion/normalize
+        (motion/v3 (/ (get (mget formx :ready-gravity-sum) :x) n)
+          (/ (get (mget formx :ready-gravity-sum) :y) n)
+          (/ (get (mget formx :ready-gravity-sum) :z) n)))
+      (motion/normalize (get raw :gravity)))))
+
+(defn- reset-gate! [formx]
+  (mset! formx :gate-state :await-ready)
+  (mset! formx :neutral-up nil)
+  (mset! formx :ready-since-ms nil)
+  (clear-ready-gravity! formx)
+  (mset! formx :begin-steady-since-ms nil)
+  (mset! formx :nod-acked-ms nil)
+  (mset! formx :stop-steady-since-ms nil)
+  (mset! formx :last-gate-dp-ms nil)
+  (mset! formx :saw-recording-motion? false))
+
+(defn- game-over! [formx]
+  (audio/play-sys-sound! audio/Descent)
+  (reset-gate! formx))
+
+(defn- append-scored-sample! [formx raw]
+  (let [prior  (last (mget formx :samples))
+        sample (motion/score-sample
+                 (assoc raw :up (mget formx :neutral-up))
+                 prior)]
+    (mupdate! formx :samples conj sample)
+    (when (and (not run-indefinitely?)
+            (>= (count (mget formx :samples)) target-count))
+      (dp :sample-count-stop! :n (count (mget formx :samples)))
+      (mset! formx :running? false))))
+
+(defn- maybe-dp-gate! [formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?]
+  (let [now     (get raw :timestamp)
+        last-dp (mget formx :last-gate-dp-ms)]
+    (when (or (nil? last-dp)
+            (>= (- now last-dp) gate-debug-interval-ms))
+      (mset! formx :last-gate-dp-ms now)
+      (if (and steady? (not vertical?))
+        (dp :not-verticla lean-deg)
+        (dp :gate
+          :state state
+          :source (get raw :source)
+          :lean-deg lean-deg
+          :lean-max vertical-lean-tolerance-deg
+          :gyro gyro-norm
+          :gyro-steady-max steady-gyro-tolerance-rad-s
+          :lin lin-norm
+          :lin-steady-max steady-linear-accel-tolerance-g
+          :vertical? vertical?
+          :steady? steady?
+          :moving? moving?
+          :up up
+          :gravity (motion/normalize (get raw :gravity))
+          :euler-gravity (get raw :euler-gravity)
+          :ready-since (mget formx :ready-since-ms)
+          :begin-since (mget formx :begin-steady-since-ms)
+          :stop-since (mget formx :stop-steady-since-ms))))))
+
 (defn- append-raw-sample! [formx raw]
   (wmx-iso
     (when (mget formx :running?)
-      (let [gravity    (motion/normalize (get raw :gravity))
-            neutral-up (or (mget formx :neutral-up)
-                         gravity
-                         (motion/up-for-mount (mget formx :mount-code)))
-            _          (when-not (mget formx :neutral-up)
-                         (dp :calibrated-neutral-up gravity)
-                         (mset! formx :neutral-up gravity))
-            prior      (last (mget formx :samples))
-            sample     (motion/score-sample
-                         (assoc raw :up neutral-up)
-                         prior)]
-        (mupdate! formx :samples conj sample))
-      (when (and (not run-indefinitely?)
-              (>= (count (mget formx :samples)) target-count))
-        (dp :sample-count-stop! :n (count (mget formx :samples)))
-        (mset! formx :running? false)))))
+      (let [now       (get raw :timestamp)
+            state     (mget formx :gate-state)
+            up        (or (mget formx :neutral-up)
+                        (expected-up formx raw))
+            lean-deg  (lean-deg-for (get raw :gravity) up)
+            gyro-norm (motion/norm (get raw :gyro))
+            lin-norm  (motion/norm (linear-accel raw))
+            vertical? (<= lean-deg vertical-lean-tolerance-deg)
+            steady?   (and (<= gyro-norm steady-gyro-tolerance-rad-s)
+                        (<= lin-norm steady-linear-accel-tolerance-g))
+            ready?    vertical?
+            calm-up?  (and steady? ready?)
+            moving?   (or (> gyro-norm moving-gyro-rad-s)
+                        (> lin-norm moving-linear-accel-g))
+            wild?     (wild-moving? gyro-norm lin-norm)
+            nod-acked-ms (mget formx :nod-acked-ms)
+            settling-after-nod? (and nod-acked-ms
+                                  (< (- now nod-acked-ms) nod-settle-ms))]
+        (maybe-dp-gate! formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?)
+        (case state
+          :await-ready
+          (do
+            (track-ready-gravity! formx raw calm-up?)
+            (when (elapsed? formx :ready-since-ms now calm-up? ready-steady-ms)
+              (let [neutral (ready-neutral-up formx raw)]
+                (dp :ready :neutral-up neutral)
+                (mset! formx :neutral-up neutral)
+                (mset! formx :gate-state :await-nod)
+                (clear-ready-gravity! formx)
+                (mset! formx :begin-steady-since-ms nil)
+                (mset! formx :nod-acked-ms nil)
+                (audio/play-sys-sound! audio/Sent-Message))))
+
+          :await-nod
+          (cond
+            (clear-forward-nod? raw)
+            (do
+              (dp :nod-ack
+                :gyro (gyro-abs raw)
+                :gyro-threshold nod-gyro-rad-s
+                :lean-deg lean-deg
+                :lin lin-norm)
+              (mset! formx :gate-state :await-begin-steady)
+              (mset! formx :begin-steady-since-ms nil)
+              (mset! formx :nod-acked-ms now)
+              (audio/play-sys-sound! audio/Sent-Message))
+
+            wild?
+            (do
+              (dp :protocol-reset
+                :await-nod
+                :reason :wild-moving
+                :gyro (gyro-abs raw)
+                :gyro-norm gyro-norm
+                :lin lin-norm
+                :lean-deg lean-deg)
+              (game-over! formx))
+
+            moving?
+            (dp :nod-move-not-ack
+              :gyro (gyro-abs raw)
+              :gyro-threshold nod-gyro-rad-s
+              :gyro-norm gyro-norm
+              :lin lin-norm
+              :lean-deg lean-deg))
+
+          :await-begin-steady
+          (cond
+            settling-after-nod?
+            (do
+              (mset! formx :begin-steady-since-ms nil)
+              (when moving?
+                (dp :nod-settling
+                  :gyro gyro-norm
+                  :lin lin-norm
+                  :lean-deg lean-deg)))
+
+            (elapsed? formx :begin-steady-since-ms now calm-up? begin-steady-ms)
+            (do
+              (dp :begin-recording)
+              (mset! formx :samples [])
+              (mset! formx :start-ms now)
+              (mset! formx :secs-left run-duration-s)
+              (mset! formx :stop-steady-since-ms nil)
+              (mset! formx :saw-recording-motion? false)
+              (mset! formx :gate-state :recording)
+              (audio/play-sys-sound! audio/Sent-Message))
+
+            moving?
+            (do
+              (dp :protocol-reset :await-begin-steady)
+              (game-over! formx)))
+
+          :recording
+          (do
+            (append-scored-sample! formx raw)
+            (if moving?
+              (do
+                (mset! formx :saw-recording-motion? true)
+                (mset! formx :stop-steady-since-ms nil))
+              (when (elapsed? formx :stop-steady-since-ms now calm-up? stop-steady-ms)
+                (dp :recording-stopped-by-stillness
+                  :steady-ms stop-steady-ms
+                  :lean-deg lean-deg
+                  :lean-max vertical-lean-tolerance-deg
+                  :gyro gyro-norm
+                  :gyro-steady-max steady-gyro-tolerance-rad-s
+                  :lin lin-norm
+                  :lin-steady-max steady-linear-accel-tolerance-g)
+                (audio/play-sys-sound! audio/Descent)
+                (mset! formx :running? false))))
+
+          (reset-gate! formx))))))
 
 (defn- read-i16-le [bs ^int offset]
   (let [lo (nth bs offset)
@@ -130,13 +373,16 @@
         az    (get decoded :az-g)
         wx    (get decoded :wx-rad-s)
         wy    (get decoded :wy-rad-s)
-        wz    (get decoded :wz-rad-s)]
+        wz    (get decoded :wz-rad-s)
+        accel-raw (motion/v3 ax ay az)
+        gravity   (motion/normalize accel-raw)]
     {:timestamp now
      :t t-rel
      :source :witmotion-ble
      :up motion/default-up
-     :accel-raw (motion/v3 ax ay az)
-     :gravity (motion/euler-gravity (get decoded :roll-deg) (get decoded :pitch-deg))
+     :accel-raw accel-raw
+     :gravity gravity
+     :euler-gravity (motion/euler-gravity (get decoded :roll-deg) (get decoded :pitch-deg))
      :gyro (motion/v3 wx wy wz)
      :pitch (get decoded :pitch-deg)
      :roll (get decoded :roll-deg)
@@ -250,12 +496,13 @@
 
 (defn ^:async on-scan-result [formx run-id ^fbp/ScanResult r]
   (let [name (.-platformName (.-device r))
-        adv  (.-advName (.-advertisementData r))]
-    (dp :scan-hit :platform-name name :adv-name adv :rssi (.-rssi r))
+        adv  (.-advName (.-advertisementData r))
+        target? (or (name-matches? name)
+                 (name-matches? adv))]
     (when (and (capture-running? formx run-id)
             (nil? (get @ble-state :found-device))
-            (or (name-matches? name)
-              (name-matches? adv)))
+            target?)
+      (dp :scan-target :platform-name name :adv-name adv :rssi (.-rssi r))
       (swap! ble-state assoc :found-device (.-device r))
       (await (fbp/FlutterBluePlus.stopScan))
       (await (connect-and-listen! formx run-id (.-device r))))))
@@ -324,8 +571,6 @@
                          :pitch nil
                          :roll nil
                          :yaw nil}]
-          (dp :iphone-sample :n (count (mget formx :samples))
-            :t-rel t-rel)
           (append-raw-sample! formx raw))))))
 
 (defn capture []
@@ -418,5 +663,6 @@
             source (root-source me)]
         (cond
           (not (and formx (mget formx :running?))) ""
-          (= source :witmotion-ble) (str "capturing from WitMotion BLE: " (ble-status))
-          :else "capturing from iPhone IMU")))))
+          (= source :witmotion-ble) (str "WitMotion BLE: " (ble-status)
+                                      " | " (name (mget formx :gate-state)))
+          :else (str "iPhone IMU | " (name (mget formx :gate-state))))))))
