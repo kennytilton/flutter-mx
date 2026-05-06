@@ -22,7 +22,8 @@
     [example.demo.teacup2.util.audio :as audio]
     [example.demo.teacup2.monitor :refer [monitor-page]]
     [example.demo.teacup2.summary :refer [summary-page]]
-    [example.demo.teacup2.settings :refer [settings-page]]))
+    [example.demo.teacup2.settings :refer [settings-page]]
+    [example.demo.teacup2.hack :refer [hack-page]]))
 
 (def build-tag (.nextInt (math/Random) 1000))
 
@@ -53,6 +54,7 @@
     :chart 0
     :summary 1
     :settings 2
+    :hack 3
     0))
 
 (defn- index-page [i]
@@ -60,6 +62,7 @@
     0 :chart
     1 :summary
     2 :settings
+    3 :hack
     :chart))
 
 (defn make-app []
@@ -95,6 +98,7 @@
                               (let [root (fmu :teacup2)]
                                 (fx/bottom-navigation-bar
                                   {:currentIndex (page-index (mget root :current-page-id))
+                                   :type         m/BottomNavigationBarType.fixed
                                    :onTap        (dart-cb [i]
                                                    (mset! root :current-page-id
                                                      (index-page i)))}
@@ -109,9 +113,14 @@
                                   (fx/bottom-navigation-bar-item
                                     {:icon  (m/Icon m/Icons.settings)
                                      :label "Settings"}
+                                    {})
+                                  (fx/bottom-navigation-bar-item
+                                    {:icon  (m/Icon m/Icons.hardware)
+                                     :label "Hack"}
                                     {}))))}
       (case (mget (fmu :teacup2) :current-page-id)
         :chart (monitor-page)
         :summary (summary-page)
         :settings (settings-page)
+        :hack (hack-page)
         (monitor-page)))))
