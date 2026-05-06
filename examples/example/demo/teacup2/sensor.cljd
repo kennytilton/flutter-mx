@@ -129,6 +129,21 @@
   (or (> gyro-norm game-over-gyro-rad-s)
     (> lin-norm game-over-linear-accel-g)))
 
+(defn- fmt1 [x]
+  (if (number? x)
+    (.toStringAsFixed ^num x 1)
+    "-"))
+
+(defn- fmt2 [x]
+  (if (number? x)
+    (.toStringAsFixed ^num x 2)
+    "-"))
+
+(defn- fmt-v3 [v]
+  (if v
+    (str (fmt2 (get v :x)) "," (fmt2 (get v :y)) "," (fmt2 (get v :z)))
+    "-"))
+
 (defn- elapsed? [formx since-slot now ok? duration-ms]
   (if ok?
     (let [since (or (mget formx since-slot) now)]
@@ -228,26 +243,11 @@
     (when (or (nil? last-dp)
             (>= (- now last-dp) gate-debug-interval-ms))
       (mset! formx :last-gate-dp-ms now)
-      (if (and steady? (not vertical?))
-        (dp :not-verticla lean-deg)
-        (dp :gate
-          :state state
-          :source (get raw :source)
-          :lean-deg lean-deg
-          :lean-max vertical-lean-tolerance-deg
-          :gyro gyro-norm
-          :gyro-steady-max steady-gyro-tolerance-rad-s
-          :lin lin-norm
-          :lin-steady-max steady-linear-accel-tolerance-g
-          :vertical? vertical?
-          :steady? steady?
-          :moving? moving?
-          :up up
-          :gravity (motion/normalize (get raw :gravity))
-          :euler-gravity (get raw :euler-gravity)
-          :ready-since (mget formx :ready-since-ms)
-          :begin-since (mget formx :begin-steady-since-ms)
-          :stop-since (mget formx :stop-steady-since-ms))))))
+      (dp :gate
+        :st state
+        :ok [vertical? steady? moving?]
+        :lean (str (fmt1 lean-deg) "/" (fmt1 vertical-lean-tolerance-deg))
+        :g (fmt-v3 (motion/normalize (get raw :gravity)))))))
 
 (defn- append-raw-sample! [formx raw]
   (wmx-iso
@@ -434,7 +434,6 @@
       (let [frame (subvec buf 0 frame-length)
             rest- (subvec buf frame-length)]
         (when-let [decoded (decode-0x61-frame frame)]
-          (dp :witmotion-decoded decoded)
           (when (capture-running? formx run-id)
             (append-raw-sample! formx (witmotion-sample formx decoded))))
         (recur rest-)))))
