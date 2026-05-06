@@ -28,12 +28,26 @@
 
 (def frame-header-byte-0 0x55)
 (def frame-header-byte-1 0x61)
+(def register-frame-byte-1 0x71)
 (def frame-length 20)
+(def read-register-command 0x27)
+(def rrate-register 0x03)
 
 (def accel-scale (/ 16.0 32768.0))
 (def gyro-scale  (/ 2000.0 32768.0))
 (def angle-scale (/ 180.0 32768.0))
 (def deg->rad (/ math/pi 180.0))
+
+(def rrate-label
+  {0x01 "0.1 Hz"
+   0x02 "0.5 Hz"
+   0x03 "1 Hz"
+   0x04 "2 Hz"
+   0x05 "5 Hz"
+   0x06 "10 Hz"
+   0x07 "20 Hz"
+   0x08 "50 Hz"
+   0x09 "100 Hz"})
 
 (def ready-steady-ms 3000)
 (def begin-steady-ms 3000)
@@ -375,6 +389,10 @@
       (- u 0x10000)
       u)))
 
+(defn- read-u16-le [bs ^int offset]
+  (bit-or (bit-and (nth bs offset) 0xff)
+    (bit-shift-left (bit-and (nth bs (inc offset)) 0xff) 8)))
+
 (defn- decode-0x61-frame [bs]
   (when (and (= (count bs) frame-length)
           (= (bit-and (nth bs 0) 0xff) frame-header-byte-0)
@@ -397,6 +415,23 @@
        :roll-deg  (* rx angle-scale)
        :pitch-deg (* ry angle-scale)
        :yaw-deg   (* rz angle-scale)})))
+
+(defn- decode-register-frame [bs]
+  (when (and (= (count bs) frame-length)
+          (= (bit-and (nth bs 0) 0xff) frame-header-byte-0)
+          (= (bit-and (nth bs 1) 0xff) register-frame-byte-1))
+    (let [start-reg (read-u16-le bs 2)]
+      (when (and (<= start-reg rrate-register)
+              (< rrate-register (+ start-reg 8)))
+        (let [offset (+ 4 (* 2 (- rrate-register start-reg)))]
+          {:start-reg start-reg
+           :rrate-code (read-u16-le bs offset)})))))
+
+(defn- log-rrate! [code]
+  (dp :ble-rrate
+    :register rrate-register
+    :code code
+    :rate (or (get rrate-label code) "unknown")))
 
 (defn- witmotion-sample [formx decoded]
   (let [now   (now-ms)
@@ -468,6 +503,24 @@
                           (recur (next cs)
                             (if (.-notify (.-properties c)) c hit)))))]
           (recur (next svcs) hit))))))
+
+(defn- pick-write-characteristic [services]
+  (loop [svcs (seq services) found nil]
+    (if (or found (nil? svcs))
+      found
+      (let [^fbp/BluetoothService s (first svcs)
+            chars (.-characteristics s)
+            hit   (loop [cs (seq chars) hit nil]
+                    (if (or hit (nil? cs))
+                      hit
+                      (let [^fbp/BluetoothCharacteristic c (first cs)
+                            props (.-properties c)]
+                        (recur (next cs)
+                          (if (or (.-write props)
+                                (.-writeWithoutResponse props))
+                            c
+                            hit)))))]
+        (recur (next svcs) hit)))))
 
 (defn- name-matches? [^String s]
   (and (string? s)
@@ -569,6 +622,156 @@
       (catch Object e
         (dp :witmotion-flow-exception e)
         (set-ble-status! (str "ERROR: " e))))))
+
+(defn- command-bytes [& xs]
+  (mapv #(bit-and % 0xff) xs))
+
+(def writable-register
+  {:rrate rrate-register})
+
+(defn- register-code [register]
+  (or (get writable-register register)
+    (throw (Exception. (str "Unknown BLE register: " register)))))
+
+(defn- ble-write-register! [^fbp/BluetoothCharacteristic write-c register value]
+  (.write write-c
+    (command-bytes 0xff 0xaa (register-code register) value 0x00)
+    .withoutResponse (.-writeWithoutResponse (.-properties write-c))))
+
+(defn ^:async ble-set-device!
+  [^fbp/BluetoothDevice dev register value ^async/Completer done]
+  (await (fbp/FlutterBluePlus.stopScan))
+  (await (.connect dev .timeout (Duration .seconds 15)))
+  (let [services (await (.discoverServices dev))]
+    (if-let [^fbp/BluetoothCharacteristic write-c
+             (pick-write-characteristic services)]
+      (do
+        (await (ble-write-register! write-c register value))
+        (dp :ble-set! :ok register value)
+        (when-not (.-isCompleted done)
+          (.complete done true)))
+      (do
+        (dp :ble-set! :error "no write characteristic")
+        (when-not (.-isCompleted done)
+          (.complete done false))))))
+
+(defn ^:async ble-set! [register value]
+  (dp :ble-set! :starting register value)
+  (await (stop-witmotion!))
+  (let [run-id (get @ble-state :run-id)
+        ^async/Completer done (async/Completer)]
+    (try
+      (await (wait-for-adapter-on! run-id))
+      (set-ble-status! "set scanning")
+      (let [scan-sub (.listen (fbp/FlutterBluePlus.onScanResults)
+                       (fn [results]
+                         (doseq [r results]
+                           (let [^fbp/ScanResult r r
+                                 ^fbp/BluetoothDevice dev (.-device r)
+                                 name (.-platformName dev)
+                                 adv  (.-advName (.-advertisementData r))]
+                             (when (and (not (.-isCompleted done))
+                                     (or (name-matches? name)
+                                       (name-matches? adv)))
+                               (future
+                                 (await (ble-set-device! dev register value done))))))))]
+        (swap! ble-state assoc :scan-sub scan-sub)
+        (await (fbp/FlutterBluePlus.startScan
+                 .timeout (Duration .seconds scan-timeout-seconds)))
+        (await (Future.any [(.-future done)
+                            (Future.delayed (Duration .seconds scan-timeout-seconds)
+                              (fn [] false))]))
+        (when-not (.-isCompleted done)
+          (dp :ble-set! :error "timeout")
+          (.complete done false)))
+      (catch Object e
+        (dp :ble-set! :exception e)))
+    (await (disconnect-witmotion!))
+    (dp :ble-set! :done register value)))
+
+(defn- probe-consume-frames! [rx ^async/Completer done]
+  (loop [buf @rx]
+    (cond
+      (< (count buf) frame-length)
+      (reset! rx buf)
+
+      (not= (bit-and (nth buf 0) 0xff) frame-header-byte-0)
+      (recur (subvec buf 1))
+
+      :else
+      (let [frame (subvec buf 0 frame-length)
+            rest- (subvec buf frame-length)]
+        (when-let [{:keys [rrate-code]} (decode-register-frame frame)]
+          (log-rrate! rrate-code)
+          (when-not (.-isCompleted done)
+            (.complete done true)))
+        (recur rest-)))))
+
+(defn- probe-handle-bytes! [rx ^async/Completer done bytes]
+  (swap! rx into (vec bytes))
+  (probe-consume-frames! rx done))
+
+(defn ^:async probe-device! [^fbp/BluetoothDevice dev rx ^async/Completer done]
+  (await (fbp/FlutterBluePlus.stopScan))
+  (await (.connect dev .timeout (Duration .seconds 15)))
+  (let [services (await (.discoverServices dev))]
+    (if-let [^fbp/BluetoothCharacteristic notify-c
+             (pick-notify-characteristic services)]
+      (if-let [^fbp/BluetoothCharacteristic write-c
+               (pick-write-characteristic services)]
+        (do
+          (await (.setNotifyValue notify-c true))
+          (let [notify-sub (.listen (.-onValueReceived notify-c)
+                             (fn [bytes]
+                               (probe-handle-bytes! rx done bytes)))]
+            (.cancelWhenDisconnected dev notify-sub)
+            (await (.write write-c
+                     (command-bytes 0xff 0xaa read-register-command rrate-register 0x00)
+                     .withoutResponse (.-writeWithoutResponse (.-properties write-c))))))
+        (do
+          (dp :ble-probe :error "no write characteristic")
+          (when-not (.-isCompleted done)
+            (.complete done false))))
+      (do
+        (dp :ble-probe :error "no notify characteristic")
+        (when-not (.-isCompleted done)
+          (.complete done false))))))
+
+(defn ^:async probe []
+  (dp :ble-probe :rrate :starting)
+  (await (stop-witmotion!))
+  (let [run-id (get @ble-state :run-id)
+        ^async/Completer done (async/Completer)
+        rx     (atom [])]
+    (try
+      (await (wait-for-adapter-on! run-id))
+      (set-ble-status! "probe scanning")
+      (let [scan-sub (.listen (fbp/FlutterBluePlus.onScanResults)
+                       (fn [results]
+                         (doseq [r results]
+                           (let [^fbp/ScanResult r r
+                                 ^fbp/BluetoothDevice dev (.-device r)
+                                 name (.-platformName dev)
+                                 adv  (.-advName (.-advertisementData r))]
+                             (when (and (not (.-isCompleted done))
+                                     (or (name-matches? name)
+                                       (name-matches? adv)))
+                               (dp :ble-probe :target :platform-name name :adv-name adv)
+                               (future
+                                 (await (probe-device! dev rx done))))))))]
+        (swap! ble-state assoc :scan-sub scan-sub)
+        (await (fbp/FlutterBluePlus.startScan
+                 .timeout (Duration .seconds scan-timeout-seconds)))
+        (await (Future.any [(.-future done)
+                            (Future.delayed (Duration .seconds scan-timeout-seconds)
+                              (fn [] false))]))
+        (when-not (.-isCompleted done)
+          (dp :ble-probe :error "timeout")
+          (.complete done false)))
+      (catch Object e
+        (dp :ble-probe :exception e)))
+    (await (disconnect-witmotion!))
+    (dp :ble-probe :done)))
 
 (defn- make-iphone-listener [formx last-stamp-atom accel-atom gyro-atom]
   (fn [^sp/UserAccelerometerEvent ev]
