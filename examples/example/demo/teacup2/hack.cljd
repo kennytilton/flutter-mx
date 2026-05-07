@@ -4,7 +4,7 @@
     [clojure.string :as str]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.fmx.api :refer [dart-cb within-ctx] :as fx]
     [tilton.mx.api :refer [cF cFonce cI fmu mget mset!]]
     [example.demo.teacup2.util.audio :as audio]))
 
@@ -42,6 +42,10 @@
                                                     (mset! (fmu :sounds-tab) :search ""))))))
        :onChanged  (dart-cb [text]
                      (mset! (fmu :sounds-tab) :search text))
+       :onSubmitted (within-ctx [me ctx]
+                      (fn [_]
+                        (-> ctx m/FocusScope.of .unfocus)))
+       :textInputAction m/TextInputAction.done
        :style      (p/TextStyle .fontSize 16.0)}
       {:name :sound-search})))
 

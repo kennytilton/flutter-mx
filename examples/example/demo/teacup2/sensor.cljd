@@ -53,7 +53,6 @@
 (def stop-steady-ms 3000)
 (def lean-tolerance-options-deg [5 10 15 20])
 (def default-lean-tolerance-deg 15)
-(def ^:private +lean-tolerance-deg+ (atom default-lean-tolerance-deg))
 (def lean-hysteresis-deg 3.0)
 (def steady-gyro-tolerance-rad-s 0.18)
 (def steady-linear-accel-tolerance-g 0.15)
@@ -89,18 +88,13 @@
     :iphone        "iPhone IMU"
     "Unknown"))
 
-(defn lean-tolerance-deg []
-  @+lean-tolerance-deg+)
-
-(defn set-lean-tolerance! [tolerance-deg]
-  (let [tolerance-deg (cond
-                        (= tolerance-deg 5) 5
-                        (= tolerance-deg 10) 10
-                        (= tolerance-deg 15) 15
-                        (= tolerance-deg 20) 20
-                        :else default-lean-tolerance-deg)]
-    (reset! +lean-tolerance-deg+ tolerance-deg)
-    tolerance-deg))
+(defn normalize-lean-tolerance-deg [tolerance-deg]
+  (cond
+    (= tolerance-deg 5) 5
+    (= tolerance-deg 10) 10
+    (= tolerance-deg 15) 15
+    (= tolerance-deg 20) 20
+    :else default-lean-tolerance-deg))
 
 (defn- root-source [me]
   (mget (fmu :teacup2 me) :sensor-source))
@@ -138,7 +132,7 @@
     (<= (motion/norm (linear-accel raw)) steady-linear-accel-tolerance-g)))
 
 (defn- raw-vertical? [raw up]
-  (<= (lean-deg-for (get raw :gravity) up) (lean-tolerance-deg)))
+  (<= (lean-deg-for (get raw :gravity) up) default-lean-tolerance-deg))
 
 (defn- raw-moving? [raw]
   (or (> (motion/norm (get raw :gyro)) moving-gyro-rad-s)
@@ -311,7 +305,7 @@
             up        (or (mget formx :neutral-up)
                         (expected-up formx raw))
             lean-deg  (lean-deg-for (get raw :gravity) up)
-            tolerance-deg (lean-tolerance-deg)
+            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)
             gyro-norm (motion/norm (get raw :gyro))
             lin-norm  (motion/norm (linear-accel raw))
             vertical? (<= lean-deg tolerance-deg)

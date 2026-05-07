@@ -4,9 +4,8 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.fmx.api :refer [dart-cb] :as fx]
-    [tilton.mx.api :refer [mget mset! fmu]]
-    [example.demo.teacup2.sensor :as sensor]
-    [example.demo.teacup2.persist :as stg]))
+    [tilton.mx.api :refer [mget mset! fmu with-cc]]
+    [example.demo.teacup2.sensor :as sensor]))
 
 (defn- source-button [root selected? source label]
   (fx/text-button
@@ -26,9 +25,8 @@
 (defn- tolerance-button [root selected? tolerance-deg]
   (fx/text-button
     {:onPressed (dart-cb []
-                  (let [tolerance-deg (sensor/set-lean-tolerance! tolerance-deg)]
-                    (when-let [db (mget root :db)]
-                      (stg/lean-tolerance-write! db tolerance-deg))))}
+                  (with-cc :lean-tolerance-select
+                    (mset! root :lean-tolerance-deg tolerance-deg)))}
     (fx/text
       {:style (p/TextStyle
                 .fontSize 18.0
@@ -42,7 +40,7 @@
   (fx/safe-area
     (let [root   (fmu :teacup2)
           source (mget root :sensor-source)
-          lean-tolerance-deg (sensor/lean-tolerance-deg)]
+          lean-tolerance-deg (mget root :lean-tolerance-deg)]
       (fx/column
         {:mainAxisAlignment  m/MainAxisAlignment.center
          :crossAxisAlignment m/CrossAxisAlignment.stretch}

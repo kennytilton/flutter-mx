@@ -14,9 +14,9 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
-    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.fmx.api :refer [dart-cb within-ctx] :as fx]
     [tilton.mx.api :as mx
-     :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound]]
+     :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound with-cc]]
     [example.demo.teacup2.sensor :as sensor]
     [example.demo.teacup2.persist :as stg]
     [example.demo.teacup2.monitor :refer [monitor-page]]
@@ -76,12 +76,13 @@
     {:name            :teacup2
      :event           (cI :start :ephemeral? true)
      :db              (cF+ [:async? true
-                            :watch (fn [_ _ db _ _]
+                            :watch (fn [_ me db _ _]
                                      (stg/DB! db)
                                      (when db
-                                       (sensor/set-lean-tolerance!
-                                         (or (stg/lean-tolerance-read db)
-                                           sensor/default-lean-tolerance-deg))))]
+                                       (with-cc :lean-tolerance-load
+                                         (mset! me :lean-tolerance-deg
+                                           (sensor/normalize-lean-tolerance-deg
+                                             (stg/lean-tolerance-read db))))))]
                         (stg/open-settings-box))
      :sensor-source   (cF+ [:input? true
                             :watch (fn [_ me new prior _]
@@ -91,6 +92,12 @@
                         (or (when-let [db (mget me :db)]
                               (stg/sensor-source-read db))
                           :iphone))
+     :lean-tolerance-deg (cI sensor/default-lean-tolerance-deg
+                           :watch (fn [_ me new prior _]
+                                    (when (mx/mx-bound? prior)
+                                      (when-let [db (mget me :db)]
+                                        (stg/lean-tolerance-write! db
+                                          (sensor/normalize-lean-tolerance-deg new))))))
      :formx           (cF (case (mget me :event)
                              :start (make-formx)
                              :stop  nil
@@ -123,9 +130,13 @@
                                     {:icon  (m/Icon m/Icons.hardware)
                                      :label "Hack"}
                                     {}))))}
-      (case (mget (fmu :teacup2) :current-page-id)
-        :chart (monitor-page)
-        :summary (summary-page)
-        :settings (settings-page)
-        :hack (hack-page)
-        (monitor-page)))))
+      (fx/gesture-detector
+        {:onTap (within-ctx [me ctx]
+                  (fn []
+                    (-> ctx m/FocusScope.of .unfocus)))}
+        (case (mget (fmu :teacup2) :current-page-id)
+          :chart (monitor-page)
+          :summary (summary-page)
+          :settings (settings-page)
+          :hack (hack-page)
+          (monitor-page))))))
