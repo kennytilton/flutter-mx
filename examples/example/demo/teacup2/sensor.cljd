@@ -23,6 +23,7 @@
 
 (def device-name-prefix "WT901BLE")
 (def scan-timeout-seconds 10)
+(def scan-settle-ms 1500)
 
 (def frame-header-byte-0 0x55)
 (def frame-header-byte-1 0x61)
@@ -50,7 +51,8 @@
 (def ready-steady-ms 3000)
 (def begin-steady-ms 3000)
 (def stop-steady-ms 3000)
-(def vertical-lean-tolerance-deg 10.0)
+(def vertical-lean-tolerance-deg 20.0)
+(def lean-hysteresis-deg 3.0)
 (def steady-gyro-tolerance-rad-s 0.18)
 (def steady-linear-accel-tolerance-g 0.15)
 (def moving-gyro-rad-s 0.50)
@@ -60,13 +62,16 @@
 (def game-over-gyro-rad-s 1.50)
 (def game-over-linear-accel-g 0.80)
 (def gate-debug-interval-ms 1000)
+(def lean-display-interval-ms 500)
 
 (def ^:private ble-state
   (atom {:status "idle"
          :run-id 0
          :scan-sub nil
          :found-device nil
-         :notify-sub nil}))
+         :notify-sub nil
+         :alert nil
+         :alert-showing? false}))
 
 (def ^:private rx-buf (atom []))
 
@@ -232,20 +237,30 @@
   (mset! formx :nod-acked-ms nil)
   (mset! formx :stop-steady-since-ms nil)
   (mset! formx :last-gate-dp-ms nil)
+  (mset! formx :last-lean-display-ms nil)
   (mset! formx :saw-recording-motion? false)
   (mset! formx :lean-warning? false)
-  (mset! formx :ble-alert nil)
-  (mset! formx :ble-alert-showing? false))
+  (mset! formx :lean-deg nil))
 
-(defn- maybe-lean-sound! [formx vertical?]
-  (let [warning? (mget formx :lean-warning?)]
+(defn- maybe-display-lean! [formx now lean-deg]
+  (let [last-ms (mget formx :last-lean-display-ms)]
+    (when (or (nil? last-ms)
+            (>= (- now last-ms) lean-display-interval-ms))
+      (mset! formx :last-lean-display-ms now)
+      (mset! formx :lean-deg lean-deg))))
+
+(defn- maybe-lean-sound! [formx lean-deg]
+  (let [warning? (mget formx :lean-warning?)
+        recovery-deg (- vertical-lean-tolerance-deg lean-hysteresis-deg)]
     (cond
-      (and (not vertical?) (not warning?))
+      (and (not warning?)
+        (> lean-deg vertical-lean-tolerance-deg))
       (do
         (mset! formx :lean-warning? true)
         (audio/play-sys-sound! audio/USSD))
 
-      (and vertical? warning?)
+      (and warning?
+        (< lean-deg recovery-deg))
       (do
         (mset! formx :lean-warning? false)
         (audio/play-sys-sound! audio/SMS-Received-2)))))
@@ -294,8 +309,9 @@
             nod-acked-ms (mget formx :nod-acked-ms)
             settling-after-nod? (and nod-acked-ms
                                   (< (- now nod-acked-ms) nod-settle-ms))]
+        (maybe-display-lean! formx now lean-deg)
         (maybe-dp-gate! formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?)
-        (maybe-lean-sound! formx vertical?)
+        (maybe-lean-sound! formx lean-deg)
         (case state
           :await-ready
           (do
@@ -439,10 +455,34 @@
            :rrate-code (read-u16-le bs offset)})))))
 
 (defn- log-rrate! [code]
-  (dp :ble-rrate
-    :register rrate-register
-    :code code
-    :rate (or (get rrate-label code) "unknown")))
+  (let [rate (or (get rrate-label code) "unknown")]
+    (dp :ble-rrate
+      :register rrate-register
+      :code code
+      :rate rate)
+    (set-ble-status! (str "RRate " rate))
+    rate))
+
+(defn- probe-complete-if-ready! [state ^async/Completer done]
+  (let [{:keys [rrate-rate lean-deg]} @state]
+    (when (and rrate-rate lean-deg (not (.-isCompleted done)))
+      (dp :ble-probe-result
+        :rrate rrate-rate
+        :lean-deg (fmt1 lean-deg))
+      (set-ble-status! (str "RRate " rrate-rate ", lean " (fmt1 lean-deg) " deg"))
+      (.complete done true))))
+
+(defn- probe-log-lean! [state decoded]
+  (when-not (get @state :lean-deg)
+    (let [accel-raw (motion/v3 (get decoded :ax-g)
+                      (get decoded :ay-g)
+                      (get decoded :az-g))
+          gravity   (motion/normalize accel-raw)
+          lean-deg  (lean-deg-for gravity (motion/up-for-mount :y-up))]
+      (dp :ble-probe-lean
+        :lean-deg (fmt1 lean-deg)
+        :g (fmt-v3 gravity))
+      (swap! state assoc :lean-deg lean-deg))))
 
 (defn- witmotion-sample [formx decoded]
   (let [now   (now-ms)
@@ -564,10 +604,16 @@
   (swap! ble-state assoc :found-device nil)
   (set-ble-status! "disconnected"))
 
+(defn- clear-ble-alert-state! []
+  (swap! ble-state assoc
+    :alert nil
+    :alert-showing? false))
+
 (defn- ble-alert! [formx title message]
   (set-ble-status! message)
-  (with-cc :ble-alert
-    (mset! formx :ble-alert {:title title :message message})))
+  (swap! ble-state assoc
+    :alert {:title title :message message}
+    :alert-showing? false))
 
 (defn ^:async connect-and-listen! [formx run-id ^fbp/BluetoothDevice dev]
   (when (capture-running? formx run-id)
@@ -609,6 +655,7 @@
             (nil? (get @ble-state :found-device))
             target?)
       (dp :scan-target :platform-name name :adv-name adv :rssi (.-rssi r))
+      (clear-ble-alert-state!)
       (swap! ble-state assoc :found-device (.-device r))
       (await (fbp/FlutterBluePlus.stopScan))
       (await (connect-and-listen! formx run-id (.-device r))))))
@@ -625,6 +672,7 @@
 
 (defn ^:async start-witmotion! [formx]
   (await (stop-witmotion!))
+  (clear-ble-alert-state!)
   (let [run-id (get @ble-state :run-id)]
     (try
       (await (wait-for-adapter-on! run-id))
@@ -640,6 +688,8 @@
               (swap! ble-state assoc :scan-sub sub)
               (await (fbp/FlutterBluePlus.startScan
                        .timeout (Duration .seconds scan-timeout-seconds)))
+              (await (Future.delayed (Duration .milliseconds scan-settle-ms)
+                       (fn [] true)))
               (when (and (capture-running? formx run-id)
                       (nil? (get @ble-state :found-device)))
                 (ble-alert! formx
@@ -650,23 +700,22 @@
         (set-ble-status! (str "ERROR: " e))))))
 
 (defn- close-ble-alert! [ctx formx]
-  (with-cc :ble-alert-close
-    (mset! formx :ble-alert nil)
-    (mset! formx :ble-alert-showing? false))
+  (swap! ble-state assoc
+    :alert nil
+    :alert-showing? false)
   (-> ctx m/Navigator.of .pop))
 
 (defn- show-ble-alert! [ctx formx]
-  (let [alert (mget formx :ble-alert)]
-    (when (and alert (not (mget formx :ble-alert-showing?)))
+  (let [alert (get @ble-state :alert)]
+    (when (and alert (not (get @ble-state :alert-showing?)))
       (doto (.-instance m/WidgetsBinding)
         (.addPostFrameCallback
           (fn [_]
-            (let [alert (mget formx :ble-alert)]
-              (when (and alert (not (mget formx :ble-alert-showing?)))
+            (let [alert (get @ble-state :alert)]
+              (when (and alert (not (get @ble-state :alert-showing?)))
                 (let [title   (or (get alert :title) "WT901BLE unavailable")
                       message (or (get alert :message) "The WitMotion sensor is not available.")]
-                  (with-cc :ble-alert-showing
-                    (mset! formx :ble-alert-showing? true))
+                  (swap! ble-state assoc :alert-showing? true)
                   (let [_ (m/showDialog
                             .context ctx
                             .barrierDismissible false
@@ -676,23 +725,11 @@
                                          .content (m/Text message)
                                          .actions [(m/TextButton
                                                      .onPressed (fn []
-                                                                  (with-cc :ble-alert-cancel
-                                                                    (mset! formx :running? false))
                                                                   (stop-witmotion!)
+                                                                  (with-cc :ble-alert-ok
+                                                                    (reset-gate! formx))
                                                                   (close-ble-alert! ctx formx))
-                                                     .child (m/Text "Cancel"))
-                                                   (m/TextButton
-                                                     .onPressed (fn []
-                                                                  (close-ble-alert! ctx formx)
-                                                                  (start-witmotion! formx))
-                                                     .child (m/Text "Retry"))
-                                                   (m/TextButton
-                                                     .onPressed (fn []
-                                                                  (with-cc :ble-alert-phone
-                                                                    (mset! (fmu :teacup2 formx) :sensor-source :iphone))
-                                                                  (stop-witmotion!)
-                                                                  (close-ble-alert! ctx formx))
-                                                     .child (m/Text "Use Phone"))])))]
+                                                     .child (m/Text "OK"))])))]
                     nil))))))))))
 
 (defn- command-bytes [& xs]
@@ -764,7 +801,7 @@
     (await (disconnect-witmotion!))
     (dp :ble-set! :done register value)))
 
-(defn- probe-consume-frames! [rx ^async/Completer done]
+(defn- probe-consume-frames! [rx state ^async/Completer done]
   (loop [buf @rx]
     (cond
       (< (count buf) frame-length)
@@ -777,16 +814,19 @@
       (let [frame (subvec buf 0 frame-length)
             rest- (subvec buf frame-length)]
         (when-let [{:keys [rrate-code]} (decode-register-frame frame)]
-          (log-rrate! rrate-code)
-          (when-not (.-isCompleted done)
-            (.complete done true)))
+          (swap! state assoc
+            :rrate-code rrate-code
+            :rrate-rate (log-rrate! rrate-code)))
+        (when-let [decoded (decode-0x61-frame frame)]
+          (probe-log-lean! state decoded))
+        (probe-complete-if-ready! state done)
         (recur rest-)))))
 
-(defn- probe-handle-bytes! [rx ^async/Completer done bytes]
+(defn- probe-handle-bytes! [rx state ^async/Completer done bytes]
   (swap! rx into (vec bytes))
-  (probe-consume-frames! rx done))
+  (probe-consume-frames! rx state done))
 
-(defn ^:async probe-device! [^fbp/BluetoothDevice dev rx ^async/Completer done]
+(defn ^:async probe-device! [^fbp/BluetoothDevice dev rx state ^async/Completer done]
   (await (fbp/FlutterBluePlus.stopScan))
   (await (.connect dev .timeout (Duration .seconds 15)))
   (let [services (await (.discoverServices dev))]
@@ -798,7 +838,7 @@
           (await (.setNotifyValue notify-c true))
           (let [notify-sub (.listen (.-onValueReceived notify-c)
                              (fn [bytes]
-                               (probe-handle-bytes! rx done bytes)))]
+                               (probe-handle-bytes! rx state done bytes)))]
             (.cancelWhenDisconnected dev notify-sub)
             (await (.write write-c
                      (command-bytes 0xff 0xaa read-register-command rrate-register 0x00)
@@ -818,6 +858,7 @@
   (let [run-id (get @ble-state :run-id)
         ^async/Completer done (async/Completer)
         rx     (atom [])
+        probe-state (atom {})
         target-claimed? (atom false)]
     (try
       (await (wait-for-adapter-on! run-id))
@@ -836,7 +877,7 @@
                                (reset! target-claimed? true)
                                (dp :ble-probe :target :platform-name name :adv-name adv)
                                (future
-                                 (await (probe-device! dev rx done))))))))]
+                                 (await (probe-device! dev rx probe-state done))))))))]
         (swap! ble-state assoc :scan-sub scan-sub)
         (await (fbp/FlutterBluePlus.startScan
                  .timeout (Duration .seconds scan-timeout-seconds)))
@@ -981,12 +1022,8 @@
              true)))}
 
       (let [formx  (uformx)
-            source (root-source me)
-            alert  (when formx (mget formx :ble-alert))]
-        (do
-          alert
-          (cond
-            (not (and formx (mget formx :running?))) ""
-            (= source :witmotion-ble) (str "WitMotion BLE: " (ble-status)
-                                        " | " (name (mget formx :gate-state)))
-            :else (str "iPhone IMU | " (name (mget formx :gate-state)))))))))
+            source (root-source me)]
+        (cond
+          (not (and formx (mget formx :running?))) ""
+          (= source :witmotion-ble) (str "Lean " (fmt1 (mget formx :lean-deg)))
+          :else (str "Lean " (fmt1 (mget formx :lean-deg))))))))

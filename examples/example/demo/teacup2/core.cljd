@@ -19,7 +19,6 @@
      :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound]]
     [example.demo.teacup2.sensor :as sensor]
     [example.demo.teacup2.persist :as stg]
-    [example.demo.teacup2.util.audio :as audio]
     [example.demo.teacup2.monitor :refer [monitor-page]]
     [example.demo.teacup2.summary :refer [summary-page]]
     [example.demo.teacup2.settings :refer [settings-page]]
@@ -36,7 +35,7 @@
     :samples   (cI [])
     :start-ms  (cI (now-ms))
     :secs-left (cI sensor/run-duration-s)
-    :mount-code (cI :up-back-right)
+    :mount-code (cI :y-up)
     :neutral-up (cI nil)
     :gate-state (cI :await-ready)
     :ready-since-ms (cI nil)
@@ -46,10 +45,10 @@
     :nod-acked-ms (cI nil)
     :stop-steady-since-ms (cI nil)
     :last-gate-dp-ms (cI nil)
+    :last-lean-display-ms (cI nil)
     :saw-recording-motion? (cI false)
     :lean-warning? (cI false)
-    :ble-alert (cI nil)
-    :ble-alert-showing? (cI false)
+    :lean-deg (cI nil)
     :running?  (cI true)))
 
 (defn- page-index [page-id]
@@ -70,13 +69,12 @@
 
 (defn make-app []
   #_(sensor/ble-set! :rrate 4)
-  #_ (sensor/probe)
-  (audio/play-sys-sound! audio/Sent-Message)
+  #_(sensor/probe)
   (fx/material-app
     {:title (title-text)
      :theme (m/ThemeData .primarySwatch m/Colors.teal)}
     {:name            :teacup2
-     :event           (cI nil :ephemeral? true)
+     :event           (cI :start :ephemeral? true)
      :db              (cF+ [:async? true
                             :watch (fn [_ _ db _ _]
                                      (stg/DB! db))]
