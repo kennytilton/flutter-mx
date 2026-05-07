@@ -77,7 +77,11 @@
      :event           (cI :start :ephemeral? true)
      :db              (cF+ [:async? true
                             :watch (fn [_ _ db _ _]
-                                     (stg/DB! db))]
+                                     (stg/DB! db)
+                                     (when db
+                                       (sensor/set-lean-tolerance!
+                                         (or (stg/lean-tolerance-read db)
+                                           sensor/default-lean-tolerance-deg))))]
                         (stg/open-settings-box))
      :sensor-source   (cF+ [:input? true
                             :watch (fn [_ me new prior _]

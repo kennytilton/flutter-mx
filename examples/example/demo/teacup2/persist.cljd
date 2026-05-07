@@ -5,6 +5,7 @@
 
 (def settings-box-name "teacup2-settings")
 (def sensor-source-key "sensor-source")
+(def lean-tolerance-key "lean-tolerance-deg")
 
 (def +DB+ (atom nil))
 
@@ -28,3 +29,10 @@
       :iphone "iphone"
       (name source)))
   source)
+
+(defn lean-tolerance-read [^hv/Box db]
+  (.get db lean-tolerance-key))
+
+(defn lean-tolerance-write! [^hv/Box db tolerance-deg]
+  (.put db lean-tolerance-key tolerance-deg)
+  tolerance-deg)

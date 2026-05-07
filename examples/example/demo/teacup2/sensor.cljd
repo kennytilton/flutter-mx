@@ -51,8 +51,8 @@
 (def ready-steady-ms 3000)
 (def begin-steady-ms 3000)
 (def stop-steady-ms 3000)
-(def lean-tolerance-options-deg [5.0 10.0 15.0 20.0])
-(def default-lean-tolerance-deg 15.0)
+(def lean-tolerance-options-deg [5 10 15 20])
+(def default-lean-tolerance-deg 15)
 (def ^:private +lean-tolerance-deg+ (atom default-lean-tolerance-deg))
 (def lean-hysteresis-deg 3.0)
 (def steady-gyro-tolerance-rad-s 0.18)
@@ -93,16 +93,12 @@
   @+lean-tolerance-deg+)
 
 (defn set-lean-tolerance! [tolerance-deg]
-  (let [tolerance-deg (case tolerance-deg
-                        5 5.0
-                        5.0 5.0
-                        10 10.0
-                        10.0 10.0
-                        15 15.0
-                        15.0 15.0
-                        20 20.0
-                        20.0 20.0
-                        default-lean-tolerance-deg)]
+  (let [tolerance-deg (cond
+                        (= tolerance-deg 5) 5
+                        (= tolerance-deg 10) 10
+                        (= tolerance-deg 15) 15
+                        (= tolerance-deg 20) 20
+                        :else default-lean-tolerance-deg)]
     (reset! +lean-tolerance-deg+ tolerance-deg)
     tolerance-deg))
 
@@ -190,7 +186,7 @@
       (mset! formx since-slot nil)
       false)))
 
-(defn- recording-stop-elapsed? [formx now calm-up? lean-deg gyro-norm lin-norm]
+(defn- recording-stop-elapsed? [formx now calm-up? lean-deg tolerance-deg gyro-norm lin-norm]
   (let [since (mget formx :stop-steady-since-ms)]
     (cond
       calm-up?
@@ -200,7 +196,7 @@
           (dp :recording-stop-timer-start
             :steady-ms stop-steady-ms
             :lean-deg lean-deg
-            :lean-max vertical-lean-tolerance-deg
+            :lean-max tolerance-deg
             :gyro gyro-norm
             :gyro-steady-max steady-gyro-tolerance-rad-s
             :lin lin-norm
@@ -213,7 +209,7 @@
           :elapsed-ms (- now since)
           :steady-ms stop-steady-ms
           :lean-deg lean-deg
-          :lean-max vertical-lean-tolerance-deg
+          :lean-max tolerance-deg
           :gyro gyro-norm
           :gyro-steady-max steady-gyro-tolerance-rad-s
           :lin lin-norm
@@ -268,12 +264,12 @@
       (mset! formx :last-lean-display-ms now)
       (mset! formx :lean-deg lean-deg))))
 
-(defn- maybe-lean-sound! [formx lean-deg]
+(defn- maybe-lean-sound! [formx lean-deg tolerance-deg]
   (let [warning? (mget formx :lean-warning?)
-        recovery-deg (- vertical-lean-tolerance-deg lean-hysteresis-deg)]
+        recovery-deg (- tolerance-deg lean-hysteresis-deg)]
     (cond
       (and (not warning?)
-        (> lean-deg vertical-lean-tolerance-deg))
+        (> lean-deg tolerance-deg))
       (do
         (mset! formx :lean-warning? true)
         (audio/play-sys-sound! audio/USSD))
@@ -295,7 +291,7 @@
                  prior)]
     (mupdate! formx :samples conj sample)))
 
-(defn- maybe-dp-gate! [formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?]
+(defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
   (let [now     (get raw :timestamp)
         last-dp (mget formx :last-gate-dp-ms)]
     (when (or (nil? last-dp)
@@ -304,7 +300,7 @@
       (dp :gate
         :st state
         :ok [vertical? steady? moving?]
-        :lean (str (fmt1 lean-deg) "/" (fmt1 vertical-lean-tolerance-deg))
+        :lean (str (fmt1 lean-deg) "/" (fmt1 tolerance-deg))
         :g (fmt-v3 (motion/normalize (get raw :gravity)))))))
 
 (defn- append-raw-sample! [formx raw]
@@ -315,9 +311,10 @@
             up        (or (mget formx :neutral-up)
                         (expected-up formx raw))
             lean-deg  (lean-deg-for (get raw :gravity) up)
+            tolerance-deg (lean-tolerance-deg)
             gyro-norm (motion/norm (get raw :gyro))
             lin-norm  (motion/norm (linear-accel raw))
-            vertical? (<= lean-deg vertical-lean-tolerance-deg)
+            vertical? (<= lean-deg tolerance-deg)
             steady?   (and (<= gyro-norm steady-gyro-tolerance-rad-s)
                         (<= lin-norm steady-linear-accel-tolerance-g))
             ready?    vertical?
@@ -329,8 +326,8 @@
             settling-after-nod? (and nod-acked-ms
                                   (< (- now nod-acked-ms) nod-settle-ms))]
         (maybe-display-lean! formx now lean-deg)
-        (maybe-dp-gate! formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?)
-        (maybe-lean-sound! formx lean-deg)
+        (maybe-dp-gate! formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?)
+        (maybe-lean-sound! formx lean-deg tolerance-deg)
         (case state
           :await-ready
           (do
@@ -412,11 +409,11 @@
               (do
                 (mset! formx :saw-recording-motion? true)
                 (mset! formx :stop-steady-since-ms nil))
-              (when (recording-stop-elapsed? formx now calm-up? lean-deg gyro-norm lin-norm)
+              (when (recording-stop-elapsed? formx now calm-up? lean-deg tolerance-deg gyro-norm lin-norm)
                 (dp :recording-stopped-by-stillness
                   :steady-ms stop-steady-ms
                   :lean-deg lean-deg
-                  :lean-max vertical-lean-tolerance-deg
+                  :lean-max tolerance-deg
                   :gyro gyro-norm
                   :gyro-steady-max steady-gyro-tolerance-rad-s
                   :lin lin-norm
