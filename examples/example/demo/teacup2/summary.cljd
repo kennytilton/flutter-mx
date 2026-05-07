@@ -30,11 +30,20 @@
 (defn- stat-line-int [label value unit]
   (str label ": " (.round ^num value) " " unit))
 
-(defn- compute-stats [samples]
+(defn- pct [part total]
+  (if (zero? total)
+    0.0
+    (* 100.0 (/ part total))))
+
+(defn- compute-stats [samples lean-tolerance-deg]
   (if (empty? samples)
     nil
-    {:lean (mean (map #(get % :lean-deg) samples))
-     :sudden-change (mean (map #(get % :combined-sudden-change) samples))}))
+    (let [leans (map #(get % :lean-deg) samples)]
+      {:lean (mean leans)
+       :lean-std-dev (std-dev leans)
+       :lean-pct (pct (count (filter #(> % lean-tolerance-deg) leans))
+                   (count leans))
+       :sudden-change (mean (map #(get % :combined-sudden-change) samples))})))
 
 (defn summary-page []
   (fx/safe-area
@@ -44,9 +53,13 @@
       (fx/text
         {:style (p/TextStyle .fontSize 22.0 .color m/Colors.black)}
         (if-let [fx (uformx)]
-          (let [samples (mget fx :samples)]
-            (if-let [s (compute-stats samples)]
+          (let [root (fmu :teacup2)
+                samples (mget fx :samples)
+                lean-tolerance-deg (mget root :lean-tolerance-deg)]
+            (if-let [s (compute-stats samples lean-tolerance-deg)]
               (str (stat-line "LEAN" (get s :lean) "°") "\n"
+                   (stat-line "LEAN STD DEV" (get s :lean-std-dev) "°") "\n"
+                   (stat-line "LEAN SAMPLES" (get s :lean-pct) "%") "\n"
                    (stat-line "SUDDEN CHANGE" (get s :sudden-change) ""))
               "No samples yet"))
           "No data yet")))))

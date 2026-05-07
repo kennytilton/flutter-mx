@@ -324,18 +324,8 @@
             up        (or (mget formx :neutral-up)
                         (expected-up formx raw))
             lean-deg  (lean-deg-for (get raw :gravity) up)
-            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)
-            gyro-norm (motion/norm (get raw :gyro))
-            lin-norm  (motion/norm (linear-accel raw))
-            vertical? (<= lean-deg tolerance-deg)
-            steady?   (and (<= gyro-norm steady-gyro-tolerance-rad-s)
-                        (<= lin-norm steady-linear-accel-tolerance-g))
-            ready?    vertical?
-            calm-up?  (and steady? ready?)
-            moving?   (or (> gyro-norm moving-gyro-rad-s)
-                        (> lin-norm moving-linear-accel-g))]
+            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)]
         (maybe-display-lean! formx now lean-deg)
-        (maybe-dp-gate! formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?)
         (maybe-lean-sound! formx lean-deg tolerance-deg)
         (case state
           :await-ready
@@ -348,23 +338,7 @@
           (begin-recording! formx raw up)
 
           :recording
-          (do
-            (append-scored-sample! formx raw)
-            (if moving?
-              (do
-                (mset! formx :saw-recording-motion? true)
-                (mset! formx :stop-steady-since-ms nil))
-              (when (recording-stop-elapsed? formx now calm-up? lean-deg tolerance-deg gyro-norm lin-norm)
-                (dp :recording-stopped-by-stillness
-                  :steady-ms stop-steady-ms
-                  :lean-deg lean-deg
-                  :lean-max tolerance-deg
-                  :gyro gyro-norm
-                  :gyro-steady-max steady-gyro-tolerance-rad-s
-                  :lin lin-norm
-                  :lin-steady-max steady-linear-accel-tolerance-g)
-                (audio/play-sys-sound! audio/Descent)
-                (mset! formx :running? false))))
+          (append-scored-sample! formx raw)
 
           (reset-gate! formx))))))
 
@@ -949,21 +923,7 @@
                       (when (and (nil? new) (mx-bound? prior) (some? prior))
                         (dp :clock-cancelling!)
                         (.cancel ^async/Timer prior)))]
-         (let [formx    (uformx)
-               running? (when formx (mget formx :running?))]
-           (dp :clock-form
-             :formx? (boolean formx)
-             :running? running?
-             :source (root-source me)
-             :gate (when formx (mget formx :gate-state)))
-           (when running?
-             (dp :clock-starting!)
-             (async/Timer.periodic (Duration .seconds 1)
-               (fn [^async/Timer tmr]
-                 (wmx-iso
-                   (when (mget formx :running?)
-                     (let [remaining (dec (mget formx :secs-left))]
-                       (mset! formx :secs-left remaining)))))))))
+         nil)
 
        :iphone-sub
        (cF+ [:watch (fn [_ _ new prior _]
