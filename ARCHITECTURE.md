@@ -53,3 +53,7 @@ The `examples` path must be present in `deps.edn :paths`.
 - Widget properties become reactive model slots.
 - Child widgets are expressed as `:kids` or via `cFkids`.
 - Flutter/MX factory macros wrap child/children arguments in formulas automatically.
+- Factory macros parse leading maps as `(fx/widget [flutter-props [mx-props]] child*)`.
+- The first map supplies Flutter/widget props; the second map supplies MX/model props.
+- Remaining forms are child factories collected into `:kids`.
+- Child constructors should not receive parent models as arguments; use navigation helpers such as `(fmu :name)` to find named context.
