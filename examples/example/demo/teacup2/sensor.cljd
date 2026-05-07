@@ -51,7 +51,9 @@
 (def ready-steady-ms 3000)
 (def begin-steady-ms 3000)
 (def stop-steady-ms 3000)
-(def vertical-lean-tolerance-deg 20.0)
+(def lean-tolerance-options-deg [5.0 10.0 15.0 20.0])
+(def default-lean-tolerance-deg 15.0)
+(def ^:private +lean-tolerance-deg+ (atom default-lean-tolerance-deg))
 (def lean-hysteresis-deg 3.0)
 (def steady-gyro-tolerance-rad-s 0.18)
 (def steady-linear-accel-tolerance-g 0.15)
@@ -86,6 +88,23 @@
     :witmotion-ble "WitMotion BLE"
     :iphone        "iPhone IMU"
     "Unknown"))
+
+(defn lean-tolerance-deg []
+  @+lean-tolerance-deg+)
+
+(defn set-lean-tolerance! [tolerance-deg]
+  (let [tolerance-deg (case tolerance-deg
+                        5 5.0
+                        5.0 5.0
+                        10 10.0
+                        10.0 10.0
+                        15 15.0
+                        15.0 15.0
+                        20 20.0
+                        20.0 20.0
+                        default-lean-tolerance-deg)]
+    (reset! +lean-tolerance-deg+ tolerance-deg)
+    tolerance-deg))
 
 (defn- root-source [me]
   (mget (fmu :teacup2 me) :sensor-source))
@@ -123,7 +142,7 @@
     (<= (motion/norm (linear-accel raw)) steady-linear-accel-tolerance-g)))
 
 (defn- raw-vertical? [raw up]
-  (<= (lean-deg-for (get raw :gravity) up) vertical-lean-tolerance-deg))
+  (<= (lean-deg-for (get raw :gravity) up) (lean-tolerance-deg)))
 
 (defn- raw-moving? [raw]
   (or (> (motion/norm (get raw :gyro)) moving-gyro-rad-s)
