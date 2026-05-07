@@ -70,6 +70,7 @@
          :run-id 0
          :scan-sub nil
          :found-device nil
+         :found-device-info nil
          :notify-sub nil
          :alert nil
          :alert-showing? false}))
@@ -105,6 +106,12 @@
 
 (defn ble-status []
   (get @ble-state :status))
+
+(defn- device-summary [{:keys [name adv remoteId rssi]}]
+  (str "name " (or name "-")
+    ", adv " (or adv "-")
+    ", remoteId " (or remoteId "-")
+    ", rssi " (if rssi rssi "-")))
 
 (defn- capture-running? [formx run-id]
   (and formx
@@ -297,6 +304,18 @@
         :lean (str (fmt1 lean-deg) "/" (fmt1 tolerance-deg))
         :g (fmt-v3 (motion/normalize (get raw :gravity)))))))
 
+(defn- begin-recording! [formx raw up]
+  (let [now (get raw :timestamp)]
+    (dp :begin-recording)
+    (mset! formx :neutral-up up)
+    (mset! formx :samples [])
+    (mset! formx :start-ms now)
+    (mset! formx :secs-left run-duration-s)
+    (mset! formx :stop-steady-since-ms nil)
+    (mset! formx :saw-recording-motion? false)
+    (mset! formx :gate-state :recording)
+    (audio/play-sys-sound! audio/Sent-Message)))
+
 (defn- append-raw-sample! [formx raw]
   (wmx-iso
     (when (mget formx :running?)
@@ -314,87 +333,19 @@
             ready?    vertical?
             calm-up?  (and steady? ready?)
             moving?   (or (> gyro-norm moving-gyro-rad-s)
-                        (> lin-norm moving-linear-accel-g))
-            wild?     (wild-moving? gyro-norm lin-norm)
-            nod-acked-ms (mget formx :nod-acked-ms)
-            settling-after-nod? (and nod-acked-ms
-                                  (< (- now nod-acked-ms) nod-settle-ms))]
+                        (> lin-norm moving-linear-accel-g))]
         (maybe-display-lean! formx now lean-deg)
         (maybe-dp-gate! formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?)
         (maybe-lean-sound! formx lean-deg tolerance-deg)
         (case state
           :await-ready
-          (do
-            (track-ready-gravity! formx raw calm-up?)
-            (when (elapsed? formx :ready-since-ms now calm-up? ready-steady-ms)
-              (let [neutral (ready-neutral-up formx raw)]
-                (dp :ready :neutral-up neutral)
-                (mset! formx :neutral-up neutral)
-                (mset! formx :gate-state :await-nod)
-                (clear-ready-gravity! formx)
-                (mset! formx :begin-steady-since-ms nil)
-                (mset! formx :nod-acked-ms nil)
-                (audio/play-sys-sound! audio/Sent-Message))))
+          (begin-recording! formx raw up)
 
           :await-nod
-          (cond
-            (clear-forward-nod? raw)
-            (do
-              (dp :nod-ack
-                :gyro (gyro-abs raw)
-                :gyro-threshold nod-gyro-rad-s
-                :lean-deg lean-deg
-                :lin lin-norm)
-              (mset! formx :gate-state :await-begin-steady)
-              (mset! formx :begin-steady-since-ms nil)
-              (mset! formx :nod-acked-ms now)
-              (audio/play-sys-sound! audio/Sent-Message))
-
-            wild?
-            (do
-              (dp :protocol-reset
-                :await-nod
-                :reason :wild-moving
-                :gyro (gyro-abs raw)
-                :gyro-norm gyro-norm
-                :lin lin-norm
-                :lean-deg lean-deg)
-              (game-over! formx))
-
-            moving?
-            (dp :nod-move-not-ack
-              :gyro (gyro-abs raw)
-              :gyro-threshold nod-gyro-rad-s
-              :gyro-norm gyro-norm
-              :lin lin-norm
-              :lean-deg lean-deg))
+          (begin-recording! formx raw up)
 
           :await-begin-steady
-          (cond
-            settling-after-nod?
-            (do
-              (mset! formx :begin-steady-since-ms nil)
-              (when moving?
-                (dp :nod-settling
-                  :gyro gyro-norm
-                  :lin lin-norm
-                  :lean-deg lean-deg)))
-
-            (elapsed? formx :begin-steady-since-ms now calm-up? begin-steady-ms)
-            (do
-              (dp :begin-recording)
-              (mset! formx :samples [])
-              (mset! formx :start-ms now)
-              (mset! formx :secs-left run-duration-s)
-              (mset! formx :stop-steady-since-ms nil)
-              (mset! formx :saw-recording-motion? false)
-              (mset! formx :gate-state :recording)
-              (audio/play-sys-sound! audio/Sent-Message))
-
-            moving?
-            (do
-              (dp :protocol-reset :await-begin-steady)
-              (game-over! formx)))
+          (begin-recording! formx raw up)
 
           :recording
           (do
@@ -611,7 +562,9 @@
       (await (.disconnect dev))
       (catch Object e
         (dp :ble-disconnect-ignored e))))
-  (swap! ble-state assoc :found-device nil)
+  (swap! ble-state assoc
+    :found-device nil
+    :found-device-info nil)
   (set-ble-status! "disconnected"))
 
 (defn- clear-ble-alert-state! []
@@ -627,18 +580,23 @@
 
 (defn ^:async connect-and-listen! [formx run-id ^fbp/BluetoothDevice dev]
   (when (capture-running? formx run-id)
-    (set-ble-status! (str "connecting to " (.-platformName dev)))
+    (let [info (or (get @ble-state :found-device-info)
+                 {:name (.-platformName dev)
+                  :remoteId (.toString (.-remoteId dev))})]
+      (swap! ble-state assoc :found-device-info info)
+      (dp :ble-connect-device info)
+      (set-ble-status! (str "connecting: " (device-summary info))))
     (try
       (await (.connect dev .timeout (Duration .seconds 15)))
       (when (capture-running? formx run-id)
-        (set-ble-status! "connected, discovering services")
+        (set-ble-status! (str "connected: " (device-summary (get @ble-state :found-device-info))))
         (let [services (await (.discoverServices dev))]
           (if-let [^fbp/BluetoothCharacteristic notify-c
                    (pick-notify-characteristic services)]
             (do
               (dp :using-notify-char :uuid (.toString (.-uuid notify-c)))
               (await (.setNotifyValue notify-c true))
-              (set-ble-status! "subscribed")
+              (set-ble-status! (str "subscribed: " (device-summary (get @ble-state :found-device-info))))
               (let [sub (.listen (.-onValueReceived notify-c)
                           (fn [bytes]
                             (try
@@ -659,14 +617,23 @@
 (defn ^:async on-scan-result [formx run-id ^fbp/ScanResult r]
   (let [name (.-platformName (.-device r))
         adv  (.-advName (.-advertisementData r))
+        remoteId (.toString (.-remoteId (.-device r)))
+        rssi (.-rssi r)
+        info {:name name
+              :adv adv
+              :remoteId remoteId
+              :rssi rssi}
         target? (or (name-matches? name)
                  (name-matches? adv))]
     (when (and (capture-running? formx run-id)
             (nil? (get @ble-state :found-device))
             target?)
-      (dp :scan-target :platform-name name :adv-name adv :rssi (.-rssi r))
+      (dp :scan-target info)
       (clear-ble-alert-state!)
-      (swap! ble-state assoc :found-device (.-device r))
+      (swap! ble-state assoc
+        :found-device (.-device r)
+        :found-device-info info)
+      (set-ble-status! (str "found: " (device-summary info)))
       (await (fbp/FlutterBluePlus.stopScan))
       (await (connect-and-listen! formx run-id (.-device r))))))
 

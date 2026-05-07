@@ -16,7 +16,7 @@
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     [tilton.fmx.api :refer [dart-cb within-ctx] :as fx]
     [tilton.mx.api :as mx
-     :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound with-cc]]
+     :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound with-cc with-mx-edge]]
     [example.demo.teacup2.sensor :as sensor]
     [example.demo.teacup2.persist :as stg]
     [example.demo.teacup2.monitor :refer [monitor-page]]
@@ -74,7 +74,7 @@
     {:title (title-text)
      :theme (m/ThemeData .primarySwatch m/Colors.teal)}
     {:name            :teacup2
-     :event           (cI :start :ephemeral? true)
+     :event           (cI nil :ephemeral? true)
      :db              (cF+ [:async? true
                             :watch (fn [_ me db _ _]
                                      (stg/DB! db)
@@ -99,7 +99,8 @@
                                         (stg/lean-tolerance-write! db
                                           (sensor/normalize-lean-tolerance-deg new))))))
      :formx           (cF (case (mget me :event)
-                             :start (make-formx)
+                             :start (with-mx-edge [me :formx]
+                                      (make-formx))
                              :stop  nil
                              (_cache-bound)))
      :current-page-id (cI :chart)}
