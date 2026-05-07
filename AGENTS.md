@@ -73,6 +73,7 @@ clj -M:cljd flutter -d all
 - `dart:async`, `dart:core`, `dart:math`, etc. are not implicitly available as type-hint prefixes.
 - Add new Dart/package require entries in the same edit as new interop.
 - Scan the `ns` `:require` block before reviewing or producing any `.cljd` file.
+- After editing CLJD code, inspect the full enclosing form with line numbers before responding; do not guess close-paren counts from a hunk.
 - Do not use `^:const`; use plain `def`.
 - Fix CLJD dynamic warnings with type hints where the type is known.
 - Fix the first dynamic warning first because warnings cascade.

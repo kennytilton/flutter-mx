@@ -47,6 +47,9 @@
     :stop-steady-since-ms (cI nil)
     :last-gate-dp-ms (cI nil)
     :saw-recording-motion? (cI false)
+    :lean-warning? (cI false)
+    :ble-alert (cI nil)
+    :ble-alert-showing? (cI false)
     :running?  (cI true)))
 
 (defn- page-index [page-id]
@@ -66,8 +69,8 @@
     :chart))
 
 (defn make-app []
-  (sensor/ble-set! :rrate 4)
-  (sensor/probe)
+  #_(sensor/ble-set! :rrate 4)
+  #_ (sensor/probe)
   (audio/play-sys-sound! audio/Sent-Message)
   (fx/material-app
     {:title (title-text)

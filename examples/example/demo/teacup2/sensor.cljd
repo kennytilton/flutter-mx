@@ -11,17 +11,15 @@
     ["package:flutter_blue_plus/flutter_blue_plus.dart" :as fbp]
     ["package:sensors_plus/sensors_plus.dart" :as sp]
     [tilton.mx.api :as mx
-     :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound?]]
+     :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound? with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.teacup2.motion :as motion]
     [example.demo.teacup2.util.audio :as audio]
     [example.demo.teacup2.util :refer [uformx]]))
 
 (def sample-period-ms 200)
-(def run-indefinitely? true)
 (def run-duration-ms 10000)
 (def run-duration-s  (quot run-duration-ms 1000))
-(def target-count    (quot run-duration-ms sample-period-ms))
 
 (def device-name-prefix "WT901BLE")
 (def scan-timeout-seconds 10)
@@ -234,7 +232,23 @@
   (mset! formx :nod-acked-ms nil)
   (mset! formx :stop-steady-since-ms nil)
   (mset! formx :last-gate-dp-ms nil)
-  (mset! formx :saw-recording-motion? false))
+  (mset! formx :saw-recording-motion? false)
+  (mset! formx :lean-warning? false)
+  (mset! formx :ble-alert nil)
+  (mset! formx :ble-alert-showing? false))
+
+(defn- maybe-lean-sound! [formx vertical?]
+  (let [warning? (mget formx :lean-warning?)]
+    (cond
+      (and (not vertical?) (not warning?))
+      (do
+        (mset! formx :lean-warning? true)
+        (audio/play-sys-sound! audio/USSD))
+
+      (and vertical? warning?)
+      (do
+        (mset! formx :lean-warning? false)
+        (audio/play-sys-sound! audio/SMS-Received-2)))))
 
 (defn- game-over! [formx]
   (audio/play-sys-sound! audio/Descent)
@@ -245,11 +259,7 @@
         sample (motion/score-sample
                  (assoc raw :up (mget formx :neutral-up))
                  prior)]
-    (mupdate! formx :samples conj sample)
-    (when (and (not run-indefinitely?)
-            (>= (count (mget formx :samples)) target-count))
-      (dp :sample-count-stop! :n (count (mget formx :samples)))
-      (mset! formx :running? false))))
+    (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?]
   (let [now     (get raw :timestamp)
@@ -285,6 +295,7 @@
             settling-after-nod? (and nod-acked-ms
                                   (< (- now nod-acked-ms) nod-settle-ms))]
         (maybe-dp-gate! formx raw up state lean-deg gyro-norm lin-norm vertical? steady? moving?)
+        (maybe-lean-sound! formx vertical?)
         (case state
           :await-ready
           (do
@@ -553,31 +564,41 @@
   (swap! ble-state assoc :found-device nil)
   (set-ble-status! "disconnected"))
 
+(defn- ble-alert! [formx title message]
+  (set-ble-status! message)
+  (with-cc :ble-alert
+    (mset! formx :ble-alert {:title title :message message})))
+
 (defn ^:async connect-and-listen! [formx run-id ^fbp/BluetoothDevice dev]
   (when (capture-running? formx run-id)
     (set-ble-status! (str "connecting to " (.-platformName dev)))
     (try
       (await (.connect dev .timeout (Duration .seconds 15)))
+      (when (capture-running? formx run-id)
+        (set-ble-status! "connected, discovering services")
+        (let [services (await (.discoverServices dev))]
+          (if-let [^fbp/BluetoothCharacteristic notify-c
+                   (pick-notify-characteristic services)]
+            (do
+              (dp :using-notify-char :uuid (.toString (.-uuid notify-c)))
+              (await (.setNotifyValue notify-c true))
+              (set-ble-status! "subscribed")
+              (let [sub (.listen (.-onValueReceived notify-c)
+                          (fn [bytes]
+                            (try
+                              (handle-witmotion-bytes! formx run-id bytes)
+                              (catch Object e
+                                (dp :witmotion-decode-exception e)))))]
+                (.cancelWhenDisconnected dev sub)
+                (swap! ble-state assoc :notify-sub sub)))
+            (ble-alert! formx
+              "WT901BLE unavailable"
+              "WT901BLE has no notify characteristic."))))
       (catch Object e
-        (dp :ble-connect-ignored-or-failed e)))
-    (when (capture-running? formx run-id)
-      (set-ble-status! "connected, discovering services")
-      (let [services (await (.discoverServices dev))]
-        (if-let [^fbp/BluetoothCharacteristic notify-c
-                 (pick-notify-characteristic services)]
-          (do
-            (dp :using-notify-char :uuid (.toString (.-uuid notify-c)))
-            (await (.setNotifyValue notify-c true))
-            (set-ble-status! "subscribed")
-            (let [sub (.listen (.-onValueReceived notify-c)
-                        (fn [bytes]
-                          (try
-                            (handle-witmotion-bytes! formx run-id bytes)
-                            (catch Object e
-                              (dp :witmotion-decode-exception e)))))]
-              (.cancelWhenDisconnected dev sub)
-              (swap! ble-state assoc :notify-sub sub)))
-          (set-ble-status! "ERROR: no notify characteristic"))))))
+        (dp :ble-connect-or-discover-failed e)
+        (ble-alert! formx
+          "WT901BLE connection failed"
+          (str "Could not connect to WT901BLE: " e))))))
 
 (defn ^:async on-scan-result [formx run-id ^fbp/ScanResult r]
   (let [name (.-platformName (.-device r))
@@ -618,10 +639,61 @@
                             (on-scan-result formx run-id r))))]
               (swap! ble-state assoc :scan-sub sub)
               (await (fbp/FlutterBluePlus.startScan
-                       .timeout (Duration .seconds scan-timeout-seconds)))))))
+                       .timeout (Duration .seconds scan-timeout-seconds)))
+              (when (and (capture-running? formx run-id)
+                      (nil? (get @ble-state :found-device)))
+                (ble-alert! formx
+                  "Turn on WT901BLE"
+                  "The WitMotion sensor was not found."))))))
       (catch Object e
         (dp :witmotion-flow-exception e)
         (set-ble-status! (str "ERROR: " e))))))
+
+(defn- close-ble-alert! [ctx formx]
+  (with-cc :ble-alert-close
+    (mset! formx :ble-alert nil)
+    (mset! formx :ble-alert-showing? false))
+  (-> ctx m/Navigator.of .pop))
+
+(defn- show-ble-alert! [ctx formx]
+  (let [alert (mget formx :ble-alert)]
+    (when (and alert (not (mget formx :ble-alert-showing?)))
+      (doto (.-instance m/WidgetsBinding)
+        (.addPostFrameCallback
+          (fn [_]
+            (let [alert (mget formx :ble-alert)]
+              (when (and alert (not (mget formx :ble-alert-showing?)))
+                (let [title   (or (get alert :title) "WT901BLE unavailable")
+                      message (or (get alert :message) "The WitMotion sensor is not available.")]
+                  (with-cc :ble-alert-showing
+                    (mset! formx :ble-alert-showing? true))
+                  (let [_ (m/showDialog
+                            .context ctx
+                            .barrierDismissible false
+                            .builder (fn [ctx]
+                                       (m/AlertDialog
+                                         .title (m/Text title)
+                                         .content (m/Text message)
+                                         .actions [(m/TextButton
+                                                     .onPressed (fn []
+                                                                  (with-cc :ble-alert-cancel
+                                                                    (mset! formx :running? false))
+                                                                  (stop-witmotion!)
+                                                                  (close-ble-alert! ctx formx))
+                                                     .child (m/Text "Cancel"))
+                                                   (m/TextButton
+                                                     .onPressed (fn []
+                                                                  (close-ble-alert! ctx formx)
+                                                                  (start-witmotion! formx))
+                                                     .child (m/Text "Retry"))
+                                                   (m/TextButton
+                                                     .onPressed (fn []
+                                                                  (with-cc :ble-alert-phone
+                                                                    (mset! (fmu :teacup2 formx) :sensor-source :iphone))
+                                                                  (stop-witmotion!)
+                                                                  (close-ble-alert! ctx formx))
+                                                     .child (m/Text "Use Phone"))])))]
+                    nil))))))))))
 
 (defn- command-bytes [& xs]
   (mapv #(bit-and % 0xff) xs))
@@ -659,7 +731,8 @@
   (dp :ble-set! :starting register value)
   (await (stop-witmotion!))
   (let [run-id (get @ble-state :run-id)
-        ^async/Completer done (async/Completer)]
+        ^async/Completer done (async/Completer)
+        target-claimed? (atom false)]
     (try
       (await (wait-for-adapter-on! run-id))
       (set-ble-status! "set scanning")
@@ -672,7 +745,9 @@
                                  adv  (.-advName (.-advertisementData r))]
                              (when (and (not (.-isCompleted done))
                                      (or (name-matches? name)
-                                       (name-matches? adv)))
+                                       (name-matches? adv))
+                                     (not @target-claimed?))
+                               (reset! target-claimed? true)
                                (future
                                  (await (ble-set-device! dev register value done))))))))]
         (swap! ble-state assoc :scan-sub scan-sub)
@@ -742,7 +817,8 @@
   (await (stop-witmotion!))
   (let [run-id (get @ble-state :run-id)
         ^async/Completer done (async/Completer)
-        rx     (atom [])]
+        rx     (atom [])
+        target-claimed? (atom false)]
     (try
       (await (wait-for-adapter-on! run-id))
       (set-ble-status! "probe scanning")
@@ -755,7 +831,9 @@
                                  adv  (.-advName (.-advertisementData r))]
                              (when (and (not (.-isCompleted done))
                                      (or (name-matches? name)
-                                       (name-matches? adv)))
+                                       (name-matches? adv))
+                                     (not @target-claimed?))
+                               (reset! target-claimed? true)
                                (dp :ble-probe :target :platform-name name :adv-name adv)
                                (future
                                  (await (probe-device! dev rx done))))))))]
@@ -813,6 +891,8 @@
         gyro-atom  (atom nil)]
     (fx/text
       {:style (fx/within-ctx [me ctx]
+                (when-let [formx (uformx)]
+                  (show-ble-alert! ctx formx))
                 (.-bodySmall (.-textTheme (m/Theme.of ctx))))}
       {:name :capture
 
@@ -853,6 +933,11 @@
                         (.cancel ^async/Timer prior)))]
          (let [formx    (uformx)
                running? (when formx (mget formx :running?))]
+           (dp :clock-form
+             :formx? (boolean formx)
+             :running? running?
+             :source (root-source me)
+             :gate (when formx (mget formx :gate-state)))
            (when running?
              (dp :clock-starting!)
              (async/Timer.periodic (Duration .seconds 1)
@@ -860,11 +945,7 @@
                  (wmx-iso
                    (when (mget formx :running?)
                      (let [remaining (dec (mget formx :secs-left))]
-                       (mset! formx :secs-left remaining)
-                       (when (and (not run-indefinitely?)
-                               (<= remaining 0))
-                         (.cancel tmr)
-                         (mset! formx :running? false))))))))))
+                       (mset! formx :secs-left remaining)))))))))
 
        :iphone-sub
        (cF+ [:watch (fn [_ _ new prior _]
@@ -889,15 +970,23 @@
                         (stop-witmotion!)))]
          (let [formx    (uformx)
                running? (when formx (mget formx :running?))]
+           (dp :witmotion-form
+             :formx? (boolean formx)
+             :running? running?
+             :source (root-source me)
+             :gate (when formx (mget formx :gate-state)))
            (when (and running? (= :witmotion-ble (root-source me)))
              (dp :witmotion-starting!)
              (start-witmotion! formx)
              true)))}
 
       (let [formx  (uformx)
-            source (root-source me)]
-        (cond
-          (not (and formx (mget formx :running?))) ""
-          (= source :witmotion-ble) (str "WitMotion BLE: " (ble-status)
-                                      " | " (name (mget formx :gate-state)))
-          :else (str "iPhone IMU | " (name (mget formx :gate-state))))))))
+            source (root-source me)
+            alert  (when formx (mget formx :ble-alert))]
+        (do
+          alert
+          (cond
+            (not (and formx (mget formx :running?))) ""
+            (= source :witmotion-ble) (str "WitMotion BLE: " (ble-status)
+                                        " | " (name (mget formx :gate-state)))
+            :else (str "iPhone IMU | " (name (mget formx :gate-state)))))))))

@@ -1,0 +1,77 @@
+(ns example.demo.teacup2.hack
+  "Developer utilities for Teacup2."
+  (:require
+    [clojure.string :as str]
+    ["package:flutter/material.dart" :as m]
+    ["package:flutter/painting.dart" :as p]
+    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.mx.api :refer [cF cFonce cI fmu mget mset!]]
+    [example.demo.teacup2.util.audio :as audio]))
+
+(defn- matches-search? [search {:keys [name]}]
+  (let [terms (remove str/blank?
+                (str/split (str/lower-case (or search "")) #"\s+"))
+        name  (str/lower-case (or name ""))]
+    (or (empty? terms)
+      (some #(str/includes? name %) terms))))
+
+(defn- sound-row [{:keys [name id]}]
+  (fx/list-tile
+    {:title    (m/Text (or name ""))
+     :subtitle (m/Text (str id))
+     :onTap    (dart-cb []
+                 (audio/play-sys-sound! id))}))
+
+(defn- search-field []
+  (fx/padding
+    {:padding (m/EdgeInsets.fromLTRB 12.0 8.0 12.0 4.0)}
+    (fx/text-field
+      {:autofocus  true
+       :focusNode  (m/FocusNode)
+       :controller (cFonce (m/TextEditingController .text (mget (fmu :sounds-tab) :search)))
+       :decoration (cF
+                     (let [controller (mget me :controller)]
+                       (m/InputDecoration
+                         .labelText "Search"
+                         .border (m/OutlineInputBorder
+                                   .borderRadius (m/BorderRadius.circular 0.0))
+                         .suffixIcon (m/IconButton
+                                       .icon (m/Icon m/Icons.clear)
+                                       .onPressed (fn []
+                                                    (.clear ^m/TextEditingController controller)
+                                                    (mset! (fmu :sounds-tab) :search ""))))))
+       :onChanged  (dart-cb [text]
+                     (mset! (fmu :sounds-tab) :search text))
+       :style      (p/TextStyle .fontSize 16.0)}
+      {:name :sound-search})))
+
+(defn- sounds-list []
+  (fx/expanded
+    (fx/list-view
+      (let [search (mget (fmu :sounds-tab) :search)]
+        (doall
+          (for [sound (filter #(matches-search? search %) audio/sound-catalog)]
+            (sound-row sound)))))))
+
+(defn- sounds-tab []
+  (fx/column
+    {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+    {:name   :sounds-tab
+     :search (cI "")}
+    (search-field)
+    (sounds-list)))
+
+(defn hack-page []
+  (fx/safe-area
+    (fx/default-tab-controller
+      {:length 1}
+      (fx/column
+        {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+        (m/TabBar
+          .labelColor m/Colors.teal
+          .unselectedLabelColor m/Colors.black54
+          .indicatorColor m/Colors.teal
+          .tabs [(m/Tab .text "Sounds")])
+        (fx/expanded
+          (fx/tab-bar-view
+            (sounds-tab)))))))
