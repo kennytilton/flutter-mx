@@ -50,6 +50,7 @@ clj -M:cljd flutter -d all
 4. Check the simulator/device after clean hot reloads.
 5. If changes do not appear, press `Return` in the launch terminal to hot restart.
 6. `dp` output appears in the Flutter console.
+7. When finished editing files, announce loudly and explicitly that changes are done.
 
 ## Debugging
 
@@ -73,7 +74,7 @@ clj -M:cljd flutter -d all
 - `dart:async`, `dart:core`, `dart:math`, etc. are not implicitly available as type-hint prefixes.
 - Add new Dart/package require entries in the same edit as new interop.
 - Scan the `ns` `:require` block before reviewing or producing any `.cljd` file.
-- After editing CLJD code, inspect the full enclosing form with line numbers before responding; do not guess close-paren counts from a hunk.
+- After editing CLJD code, inspect the full enclosing form with line numbers and check delimiter balance before responding; do not guess close-paren counts from a hunk.
 - Do not use `^:const`; use plain `def`.
 - Fix CLJD dynamic warnings with type hints where the type is known.
 - Fix the first dynamic warning first because warnings cascade.

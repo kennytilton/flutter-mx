@@ -1,7 +1,8 @@
 (ns example.demo.teacup2.plot
-  "Two-series LineChart for Teacup2 using fl_chart.
-     orange -- lean in degrees
-     red    -- combined sudden-change score"
+  "Temporary horizontal-motion LineChart for Teacup2.
+     solid black  -- horizontal motion aggregate
+     black dashes -- horizontal acceleration
+     black dots   -- yaw"
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -15,7 +16,9 @@
 (deftag tilton.fmx.factory/konly-param1 line-chart flc/LineChart)
 
 (def live-window-ms 10000.0)
-(def stopped-window-width 360.0)
+(def stopped-window-width 900.0)
+(def bottom-title-interval-ms 5000.0)
+(def y-margin 1.2)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -23,8 +26,51 @@
                       (double (or (get s y-key) 0.0))))
         samples))
 
+(defn- baseline-for [samples y-key]
+  (if-let [sample (first samples)]
+    (double (or (get sample y-key) 0.0))
+    0.0))
+
+(defn- relative-value [sample y-key baseline]
+  (- (or (get sample y-key) 0.0) baseline))
+
+(defn- relative-spots-for [samples y-key]
+  (let [baseline (baseline-for samples y-key)]
+    (mapv (fn [s]
+            (flc/FlSpot (double (get s :t))
+                        (double (relative-value s y-key baseline))))
+      samples)))
+
+(defn- y-values [samples]
+  (let [hz-motion-base (baseline-for samples :hz-motion)
+        hz-accel-base  (baseline-for samples :hz-accel)
+        yaw-base       (baseline-for samples :yaw-score)]
+    (concat
+      (map #(relative-value % :hz-motion hz-motion-base) samples)
+      (map #(relative-value % :hz-accel hz-accel-base) samples)
+      (map #(relative-value % :yaw-score yaw-base) samples))))
+
+(defn- y-bounds [samples]
+  (let [ys     (seq (y-values samples))
+        y-min  (if ys (reduce min ys) 0.0)
+        y-max  (if ys (reduce max ys) 1.0)
+        center (/ (+ y-min y-max) 2.0)
+        dev    (max (- y-max center) (- center y-min))
+        half   (max 1.0 (* dev y-margin))]
+    [(- center half) (+ center half)]))
+
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
+
+(defn ^flc/FlDotPainter dot-painter
+  [^flc/FlSpot _spot
+   ^double _x-pct
+   ^flc/LineChartBarData _bar
+   ^int _idx]
+  (flc/FlDotCirclePainter
+    .radius 2.0
+    .color m/Colors.black
+    .strokeWidth 0.0))
 
 (defn latest-t-ms [samples]
   (if-let [sample (last samples)]
@@ -44,24 +90,35 @@
       live-window-ms)))
 
 (defn chart-data [samples running?]
-  (let [[min-x max-x] (chart-window samples running?)]
+  (let [[min-x max-x] (chart-window samples running?)
+        [min-y max-y] (y-bounds samples)]
     (flc/LineChartData
       .minX min-x
       .maxX max-x
+      .minY min-y
+      .maxY max-y
     .clipData (flc/FlClipData.none)
     .lineBarsData
-     [(flc/LineChartBarData
-       .spots (spots-for samples :lean-deg)
-       .color m/Colors.orange
-       .barWidth 4.0
-       .isCurved false
-       .dotData (flc/FlDotData .show false))
-     (flc/LineChartBarData
-       .spots (spots-for samples :combined-sudden-change)
-       .color m/Colors.red
-       .barWidth 4.0
-       .isCurved false
-       .dotData (flc/FlDotData .show false))]
+		     [(flc/LineChartBarData
+		       .spots (relative-spots-for samples :hz-motion)
+		       .color m/Colors.black
+		       .barWidth 1.5
+		       .isCurved false
+		       .dotData (flc/FlDotData .show false))
+		     (flc/LineChartBarData
+		       .spots (relative-spots-for samples :hz-accel)
+		       .color m/Colors.black
+		       .barWidth 1.25
+		       .isCurved false
+		       .dashArray [5 4]
+		       .dotData (flc/FlDotData .show false))
+		     (flc/LineChartBarData
+		       .spots (relative-spots-for samples :yaw-score)
+		       .color m/Colors.black
+		       .barWidth 0.0
+				       .isCurved false
+				       .dotData (flc/FlDotData .show true
+				                                  .getDotPainter dot-painter))]
     .titlesData
     (flc/FlTitlesData
       .leftTitles
@@ -73,10 +130,10 @@
       .bottomTitles
       (flc/AxisTitles
         .sideTitles
-        (flc/SideTitles .showTitles true
-                        .reservedSize 24.0
-                        .interval 2000.0
-                        .getTitlesWidget bottom-title-widget))
+	        (flc/SideTitles .showTitles true
+	                        .reservedSize 24.0
+	                        .interval bottom-title-interval-ms
+	                        .getTitlesWidget bottom-title-widget))
       .topTitles
       (flc/AxisTitles
         .sideTitles (flc/SideTitles .showTitles false))))))

@@ -262,6 +262,10 @@
   (let [last-ms (mget formx :last-lean-display-ms)]
     (when (or (nil? last-ms)
             (>= (- now last-ms) lean-display-interval-ms))
+      (dp :lean-display
+        :lean-deg (fmt1 lean-deg)
+        :prior (fmt1 (mget formx :lean-deg))
+        :samples (count (mget formx :samples)))
       (mset! formx :last-lean-display-ms now)
       (mset! formx :lean-deg lean-deg))))
 
@@ -290,6 +294,22 @@
         sample (motion/score-sample
                  (assoc raw :up (mget formx :neutral-up))
                  prior)]
+    (dp :lean-scored
+      :n (inc (count (mget formx :samples)))
+      :lean-deg (fmt1 (get sample :lean-deg))
+      :raw-gravity (fmt-v3 (get raw :gravity))
+      :sample-gravity (fmt-v3 (get sample :gravity))
+      :up (fmt-v3 (get sample :up))
+      :roll (fmt1 (get sample :roll))
+      :pitch (fmt1 (get sample :pitch))
+      :yaw (fmt1 (get sample :yaw)))
+    (dp :motion-components
+      :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
+      :hz (fmt2 (get sample :hz-accel))
+      :yaw-rate (fmt2 (get sample :yaw-rate))
+      :yaw-accel (fmt2 (get sample :yaw-accel))
+      :yaw-score (fmt2 (get sample :yaw-score))
+      :hz-motion (fmt2 (get sample :hz-motion)))
     (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
@@ -306,7 +326,13 @@
 
 (defn- begin-recording! [formx raw up]
   (let [now (get raw :timestamp)]
-    (dp :begin-recording)
+    (dp :begin-recording
+      :up (fmt-v3 up)
+      :raw-gravity (fmt-v3 (get raw :gravity))
+      :raw-lean (fmt1 (lean-deg-for (get raw :gravity) up))
+      :roll (fmt1 (get raw :roll))
+      :pitch (fmt1 (get raw :pitch))
+      :yaw (fmt1 (get raw :yaw)))
     (mset! formx :neutral-up up)
     (mset! formx :samples [])
     (mset! formx :start-ms now)
@@ -325,6 +351,16 @@
                         (expected-up formx raw))
             lean-deg  (lean-deg-for (get raw :gravity) up)
             tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)]
+        (dp :lean-raw
+          :state state
+          :lean-deg (fmt1 lean-deg)
+          :tolerance (fmt1 tolerance-deg)
+          :raw-gravity (fmt-v3 (get raw :gravity))
+          :up (fmt-v3 up)
+          :neutral? (boolean (mget formx :neutral-up))
+          :roll (fmt1 (get raw :roll))
+          :pitch (fmt1 (get raw :pitch))
+          :yaw (fmt1 (get raw :yaw)))
         (maybe-display-lean! formx now lean-deg)
         (maybe-lean-sound! formx lean-deg tolerance-deg)
         (case state
@@ -429,14 +465,24 @@
         wy    (get decoded :wy-rad-s)
         wz    (get decoded :wz-rad-s)
         accel-raw (motion/v3 ax ay az)
-        gravity   (motion/normalize accel-raw)]
+        gravity   (motion/normalize accel-raw)
+        euler-gravity (motion/euler-gravity (get decoded :roll-deg) (get decoded :pitch-deg))]
+    (dp :lean-witmotion-sample
+      :ax (fmt2 ax)
+      :ay (fmt2 ay)
+      :az (fmt2 az)
+      :gravity (fmt-v3 gravity)
+      :euler-gravity (fmt-v3 euler-gravity)
+      :roll (fmt1 (get decoded :roll-deg))
+      :pitch (fmt1 (get decoded :pitch-deg))
+      :yaw (fmt1 (get decoded :yaw-deg)))
     {:timestamp now
      :t t-rel
      :source :witmotion-ble
      :up motion/default-up
      :accel-raw accel-raw
      :gravity gravity
-     :euler-gravity (motion/euler-gravity (get decoded :roll-deg) (get decoded :pitch-deg))
+     :euler-gravity euler-gravity
      :gyro (motion/v3 wx wy wz)
      :pitch (get decoded :pitch-deg)
      :roll (get decoded :roll-deg)
@@ -636,11 +682,13 @@
                         (fn [results]
                           (doseq [r results]
                             (on-scan-result formx run-id r))))]
-              (swap! ble-state assoc :scan-sub sub)
-              (await (fbp/FlutterBluePlus.startScan
-                       .timeout (Duration .seconds scan-timeout-seconds)))
-              (await (Future.delayed (Duration .milliseconds scan-settle-ms)
-                       (fn [] true)))
+	              (swap! ble-state assoc :scan-sub sub)
+	              (await (fbp/FlutterBluePlus.startScan
+	                       .timeout (Duration .seconds scan-timeout-seconds)))
+	              (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+	                       (fn [] true)))
+	              (await (Future.delayed (Duration .milliseconds scan-settle-ms)
+	                       (fn [] true)))
               (when (and (capture-running? formx run-id)
                       (nil? (get @ble-state :found-device)))
                 (ble-alert! formx

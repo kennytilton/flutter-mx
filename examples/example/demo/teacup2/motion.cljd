@@ -1,7 +1,8 @@
 (ns example.demo.teacup2.motion
   "Motion scoring for Teacup2."
   (:require
-    ["dart:math" :as math]))
+    ["dart:math" :as math]
+    [tilton.mx.api :refer [dp]]))
 
 (def default-up {:x 0.0 :y 0.0 :z 1.0})
 
@@ -20,6 +21,10 @@
   {:lean-deg 10.0
    :combined-sudden-change 8.0})
 
+(def g-in-s2 386.0886)
+(def m-s2->in-s2 39.3701)
+(def yaw-rate-scale 20.0)
+
 (defn v3 [x y z]
   {:x (double x) :y (double y) :z (double z)})
 
@@ -32,6 +37,11 @@
   (v3 (- (get a :x) (get b :x))
     (- (get a :y) (get b :y))
     (- (get a :z) (get b :z))))
+
+(defn v* [a scalar]
+  (v3 (* (get a :x) scalar)
+    (* (get a :y) scalar)
+    (* (get a :z) scalar)))
 
 (defn dot [a b]
   (+ (* (get a :x) (get b :x))
@@ -74,32 +84,64 @@
   ([raw prior weights]
    (let [timestamp (get raw :timestamp)
          accel-raw (get raw :accel-raw)
-         gravity   (normalize (get raw :gravity))
+         lean-gravity (normalize (get raw :gravity))
+         gravity   (normalize (or (get raw :euler-gravity)
+                                (get raw :gravity)))
          gyro      (get raw :gyro)
          up        (or (get raw :up) default-up)
-         linear    (v- accel-raw gravity)
-         dt        (if (and prior timestamp (get prior :timestamp))
-                     (max 0.001 (/ (- timestamp (get prior :timestamp)) 1000.0))
-                     (/ 200.0 1000.0))
-         ;; Accelerometer gravity sign differs by source/platform. Lean is
-         ;; deviation from the vertical axis, so +up and -up are both upright.
-         lean      (math/acos (.abs ^num (clamp (dot gravity (normalize up)) -1.0 1.0)))
-         vertical  (dot linear gravity)
+	         source    (get raw :source)
+	         supplied-linear? (boolean (get raw :linear-accel))
+	         linear    (or (get raw :linear-accel)
+	                     (v- accel-raw gravity))
+         vertical-scale (case source
+                          :iphone m-s2->in-s2
+                          g-in-s2)
+	         dt        (if (and prior timestamp (get prior :timestamp))
+	                     (max 0.001 (/ (- timestamp (get prior :timestamp)) 1000.0))
+	                     (/ 200.0 1000.0))
+	         ;; Accelerometer gravity sign differs by source/platform. Lean is
+	         ;; deviation from the vertical axis, so +up and -up are both upright.
+	         lean-dot  (dot lean-gravity (normalize up))
+	         lean      (math/acos (.abs ^num (clamp lean-dot -1.0 1.0)))
+	         vertical  (if supplied-linear?
+	                     (dot linear gravity)
+	                     (- (.abs ^num (dot accel-raw lean-gravity)) 1.0))
+         horizontal (v- linear (v* gravity vertical))
+         hz-accel-in-s2 (* (norm horizontal) vertical-scale)
+         yaw-rate  (.abs ^num (dot gyro (normalize up)))
+         yaw-accel (if (and prior (get prior :yaw-rate) (get prior :timestamp))
+                     (/ (.abs ^num (- yaw-rate (get prior :yaw-rate))) dt)
+                     0.0)
+         yaw-score (* yaw-accel yaw-rate-scale)
+         hz-motion (+ hz-accel-in-s2 yaw-score)
          jerk      (if (and prior (get prior :linear-accel))
                      (/ (norm (v- linear (get prior :linear-accel))) dt)
                      0.0)
          angular   (if (and prior (get prior :gyro))
                      (/ (norm (v- gyro (get prior :gyro))) dt)
                      0.0)
-         combined  (+ (* (get weights :jerk) jerk)
-                     (* (get weights :vertical-accel) (.abs ^num vertical))
-                     (* (get weights :angular-accel) angular))]
-     (merge raw
+	         combined  (+ (* (get weights :jerk) jerk)
+	                     (* (get weights :vertical-accel) (.abs ^num vertical))
+	                     (* (get weights :angular-accel) angular))]
+	     (dp :lean-score-math
+	       :dot lean-dot
+	       :lean-deg (rad->deg lean)
+	       :lean-gravity lean-gravity
+	       :up (normalize up)
+	       :gravity-ref gravity)
+	     (merge raw
        {:lean lean
         :lean-deg (rad->deg lean)
-        :gravity gravity
+        :gravity lean-gravity
+        :gravity-ref gravity
         :linear-accel linear
         :vertical-accel vertical
+        :vertical-accel-in-s2 (* vertical vertical-scale)
+        :hz-accel hz-accel-in-s2
+        :yaw-rate yaw-rate
+        :yaw-accel yaw-accel
+        :yaw-score yaw-score
+        :hz-motion hz-motion
         :jerk jerk
         :angular-accel angular
         :combined-sudden-change combined

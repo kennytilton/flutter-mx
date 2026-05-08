@@ -135,9 +135,14 @@
         {:onTap (within-ctx [me ctx]
                   (fn []
                     (-> ctx m/FocusScope.of .unfocus)))}
-        (case (mget (fmu :teacup2) :current-page-id)
-          :chart (monitor-page)
-          :summary (summary-page)
-          :settings (settings-page)
-          :hack (hack-page)
-          (monitor-page))))))
+	        (fx/stack
+	          {}
+	          (case (mget (fmu :teacup2) :current-page-id)
+	            :chart (monitor-page)
+	            :summary (summary-page)
+	            :settings (settings-page)
+	            :hack (hack-page)
+	            (monitor-page))
+	          (fx/offstage
+	            {:offstage true}
+	            (sensor/capture)))))))

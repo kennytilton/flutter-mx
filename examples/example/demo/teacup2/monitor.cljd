@@ -6,11 +6,12 @@
     ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
     [tilton.fmx.api :refer [dart-cb] :as fx]
-    [tilton.mx.api :as mx
-     :refer [dp mget mset! fmu]]
-    [example.demo.teacup2.util :refer [uformx]]
-    [example.demo.teacup2.sensor :as sensor :refer [capture]]
-    [example.demo.teacup2.plot   :as plot   :refer [line-chart chart-data]]))
+	    [tilton.mx.api :as mx
+	     :refer [dp mget mset! fmu]]
+	    [example.demo.teacup2.util :refer [uformx]]
+	    [example.demo.teacup2.util.audio :as audio]
+	    [example.demo.teacup2.sensor :as sensor :refer [capture]]
+	    [example.demo.teacup2.plot   :as plot   :refer [line-chart chart-data]]))
 
 (defn monitor-page []
   (fx/safe-area
@@ -19,18 +20,18 @@
        :crossAxisAlignment m/CrossAxisAlignment.stretch}
 
       (fx/elevated-button
-        {:onPressed (dart-cb []
-                      (let [root (fmu :teacup2)
-                            fx   (mget root :formx)]
-                        (if (and fx (mget fx :running?))
-                          (mset! fx :running? false)
-                          (mset! root :event :start))))}
+	        {:onPressed (dart-cb []
+	                      (let [root (fmu :teacup2)
+	                            fx   (mget root :formx)]
+	                        (dp :start-stop-pressed)
+	                        (audio/play-sys-sound! audio/Choo-Choo)
+	                        (if (and fx (mget fx :running?))
+	                          (mset! fx :running? false)
+	                          (mset! root :event :start))))}
         (fx/text
           (if-let [fx (uformx)]
             (if (mget fx :running?) "Stop" "Start")
             "Start")))
-
-      (capture)
 
       (fx/expanded
         (if-let [fx (uformx)]
