@@ -2,11 +2,11 @@
   "Summary stats page."
   (:require
     ["dart:math" :as math]
-    ["package:flutter/material.dart" :as m]
-    ["package:flutter/widgets.dart" :as w]
-    ["package:flutter/painting.dart" :as p]
-    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
-	    [tilton.fmx.api :as fx]
+	    ["package:flutter/material.dart" :as m]
+	    ["package:flutter/widgets.dart" :as w]
+	    ["package:flutter/painting.dart" :as p]
+	    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+		    [tilton.fmx.api :as fx]
 	    [tilton.mx.api :as mx
 	     :refer [dp mget fmu]]
     [example.demo.teacup2.util :refer [uformx]]))
@@ -51,27 +51,27 @@
         :tol (.toStringAsFixed ^num lean-tolerance-deg 1))
       {:lean (mean leans)
        :lean-std-dev (std-dev leans)
-       :lean-pct (pct (count (filter #(> % lean-tolerance-deg) leans))
-                   (count leans))
-       :bob (mean bobs)})))
+	       :lean-pct (pct (count (filter #(> % lean-tolerance-deg) leans))
+	                   (count leans))
+	       :bob (mean bobs)})))
 
 (defn summary-page []
   (fx/safe-area
     (fx/column
       {:mainAxisAlignment  m/MainAxisAlignment.center
        :crossAxisAlignment m/CrossAxisAlignment.center}
-      (fx/padding
-        {:padding (m/EdgeInsets.all 24.0)}
-        (fx/text
-          {:style (p/TextStyle .fontSize 22.0 .color m/Colors.black)}
-          (if-let [fx (uformx)]
-            (let [root (fmu :teacup2)
-                  samples (mget fx :samples)
-                  lean-tolerance-deg (mget root :lean-tolerance-deg)]
-              (if-let [s (compute-stats samples lean-tolerance-deg)]
-                (str (stat-line "Avg lean" (get s :lean) "°") "\n"
-                     (stat-line "Avg bob" (get s :bob) "in/s²") "\n"
-                     (stat-line "Lean std dev" (get s :lean-std-dev) "°") "\n"
-                     (stat-line "Lean samples" (get s :lean-pct) "%"))
-                "No samples yet"))
-            "No data yet"))))))
+	      (fx/padding
+	        {:padding (m/EdgeInsets.all 24.0)}
+	        (fx/text
+	          {:style (p/TextStyle .fontSize 22.0 .color m/Colors.black)}
+	          (if-let [fx (uformx)]
+	            (let [root (fmu :teacup2)
+	                  samples (mget fx :samples)
+	                  lean-tolerance-deg (mget root :lean-tolerance-deg)]
+	              (if-let [s (compute-stats samples lean-tolerance-deg)]
+	                (str (stat-line "Avg lean" (get s :lean) "°") "\n"
+	                     (stat-line "Avg bob" (get s :bob) "in/s²") "\n"
+	                     (stat-line "Lean std dev" (get s :lean-std-dev) "°") "\n"
+	                     (stat-line "Lean samples" (get s :lean-pct) "%"))
+	                "No samples yet"))
+	            "No data yet"))))))
