@@ -77,20 +77,29 @@
     (double (get sample :t))
     0.0))
 
-(defn chart-window [samples running?]
+(defn chart-window [samples running? stopped-full?]
   (let [latest (latest-t-ms samples)]
-    (if running?
+    (cond
+      running?
       [(max 0.0 (- latest live-window-ms))
        (max live-window-ms latest)]
-      [0.0 (max live-window-ms latest)])))
+
+      stopped-full?
+      [0.0 (max 1.0 latest)]
+
+      :else
+      [(max 0.0 (- latest live-window-ms))
+       (max live-window-ms latest)])))
 
 (defn stopped-chart-width [samples]
   (* stopped-window-width
-    (/ (second (chart-window samples false))
+    (/ (latest-t-ms samples)
       live-window-ms)))
 
-(defn chart-data [samples running?]
-  (let [[min-x max-x] (chart-window samples running?)
+(defn chart-data
+  ([samples running?] (chart-data samples running? true))
+  ([samples running? stopped-full?]
+   (let [[min-x max-x] (chart-window samples running? stopped-full?)
         [min-y max-y] (y-bounds samples)]
     (flc/LineChartData
       .minX min-x
@@ -142,4 +151,4 @@
 	                        .getTitlesWidget bottom-title-widget))
       .topTitles
       (flc/AxisTitles
-        .sideTitles (flc/SideTitles .showTitles false))))))
+        .sideTitles (flc/SideTitles .showTitles false)))))))

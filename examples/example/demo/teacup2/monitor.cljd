@@ -11,7 +11,7 @@
 	    [example.demo.teacup2.util :refer [uformx]]
 	    [example.demo.teacup2.util.audio :as audio]
 	    [example.demo.teacup2.sensor :as sensor :refer [capture]]
-	    [example.demo.teacup2.plot   :as plot   :refer [line-chart chart-data]]))
+	    [example.demo.teacup2.plot   :as plot :refer [line-chart chart-data]]))
 
 (defn monitor-page []
   (fx/safe-area
@@ -33,18 +33,25 @@
             (if (mget fx :running?) "Stop" "Start")
             "Start")))
 
-      (fx/expanded
-        (if-let [fx (uformx)]
-          (let [samples  (mget fx :samples)
-                running? (mget fx :running?)
-                chart    (line-chart {}
-                           (chart-data samples running?))]
-            (if running?
-              chart
-              (fx/single-child-scroll-view
-                {:scrollDirection m/Axis.horizontal}
-                (fx/sized-box
-                  {:width (plot/stopped-chart-width samples)}
-                  chart))))
-          (line-chart {}
-            (chart-data [] false)))))))
+	      (fx/expanded
+	        (if-let [fx (uformx)]
+	          (let [samples  (mget fx :samples)
+	                running? (mget fx :running?)
+	                stopped-full? (mget fx :stopped-full-chart?)
+	                chart (line-chart {}
+	                        (chart-data samples running? stopped-full?))]
+	            (if running?
+		              chart
+		              (fx/gesture-detector
+		                {:onDoubleTap (dart-cb []
+		                                (mset! fx :stopped-full-chart?
+		                                  (not (mget fx :stopped-full-chart?))))}
+		                (if stopped-full?
+		                  chart
+		                  (fx/single-child-scroll-view
+		                    {:scrollDirection m/Axis.horizontal}
+		                    (fx/sized-box
+		                      {:width (plot/stopped-chart-width samples)}
+		                      chart))))))
+	          (line-chart {}
+	            (chart-data [] false)))))))
