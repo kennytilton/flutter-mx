@@ -46,18 +46,16 @@
         hz-accel-base  (baseline-for samples :hz-accel)
         yaw-base       (baseline-for samples :yaw-score)]
     (concat
-      (map #(relative-value % :hz-motion hz-motion-base) samples)
-      (map #(relative-value % :hz-accel hz-accel-base) samples)
-      (map #(relative-value % :yaw-score yaw-base) samples))))
+	      (map #(relative-value % :hz-motion hz-motion-base) samples)
+	      (map #(relative-value % :hz-accel hz-accel-base) samples)
+	      (map #(relative-value % :yaw-score yaw-base) samples)
+	      (map #(or (get % :vertical-accel-in-s2) 0.0) samples))))
 
 (defn- y-bounds [samples]
   (let [ys     (seq (y-values samples))
-        y-min  (if ys (reduce min ys) 0.0)
-        y-max  (if ys (reduce max ys) 1.0)
-        center (/ (+ y-min y-max) 2.0)
-        dev    (max (- y-max center) (- center y-min))
-        half   (max 1.0 (* dev y-margin))]
-    [(- center half) (+ center half)]))
+        max-y  (if ys (reduce max (map #(.abs ^num %) ys)) 1.0)
+        half   (max 1.0 (* max-y y-margin))]
+    [(- half) half]))
 
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
@@ -102,11 +100,18 @@
    (let [[min-x max-x] (chart-window samples running? stopped-full?)
         [min-y max-y] (y-bounds samples)]
     (flc/LineChartData
-      .minX min-x
-      .maxX max-x
-      .minY min-y
-      .maxY max-y
-    .clipData (flc/FlClipData.none)
+	      .minX min-x
+	      .maxX max-x
+	      .minY min-y
+	      .maxY max-y
+	    .extraLinesData
+	    (flc/ExtraLinesData
+	      .horizontalLines [(flc/HorizontalLine
+	                          .y 0.0
+	                          .color m/Colors.black
+	                          .strokeWidth 1.0)]
+	      .extraLinesOnTop false)
+	    .clipData (flc/FlClipData.none)
     .lineBarsData
 		     [(flc/LineChartBarData
 		       .spots (relative-spots-for samples :hz-motion)
@@ -116,12 +121,18 @@
 		       .dotData (flc/FlDotData .show false))
 		     (flc/LineChartBarData
 		       .spots (spots-for samples :lean-deg)
-		       .color m/Colors.orange
-		       .barWidth 2.0
-		       .isCurved false
-		       .dotData (flc/FlDotData .show false))
-		     (flc/LineChartBarData
-		       .spots (relative-spots-for samples :hz-accel)
+			       .color m/Colors.orange
+			       .barWidth 2.0
+			       .isCurved false
+			       .dotData (flc/FlDotData .show false))
+			     (flc/LineChartBarData
+			       .spots (spots-for samples :vertical-accel-in-s2)
+			       .color m/Colors.red
+			       .barWidth 2.0
+			       .isCurved false
+			       .dotData (flc/FlDotData .show false))
+			     (flc/LineChartBarData
+			       .spots (relative-spots-for samples :hz-accel)
 		       .color m/Colors.black
 		       .barWidth 1.25
 		       .isCurved false

@@ -21,13 +21,16 @@
 
       (fx/elevated-button
 	        {:onPressed (dart-cb []
-	                      (let [root (fmu :teacup2)
-	                            fx   (mget root :formx)]
-	                        (dp :start-stop-pressed)
-	                        (audio/play-sys-sound! audio/Choo-Choo)
-	                        (if (and fx (mget fx :running?))
-	                          (mset! fx :running? false)
-	                          (mset! root :event :start))))}
+		                      (let [root (fmu :teacup2)
+		                            fx   (mget root :formx)]
+		                        (dp :start-stop-pressed)
+		                        (if (and fx (mget fx :running?))
+		                          (do
+		                            (audio/play-sys-sound! audio/SIMToolkit-Negative-ACK)
+		                            (mset! fx :running? false))
+		                          (do
+		                            (audio/play-sys-sound! audio/SIMToolkit-General-Beep)
+		                            (mset! root :event :start)))))}
         (fx/text
           (if-let [fx (uformx)]
             (if (mget fx :running?) "Stop" "Start")
@@ -41,11 +44,20 @@
 	                chart (line-chart {}
 	                        (chart-data samples running? stopped-full?))]
 	            (if running?
-		              chart
-		              (fx/gesture-detector
-		                {:onDoubleTap (dart-cb []
-		                                (mset! fx :stopped-full-chart?
-		                                  (not (mget fx :stopped-full-chart?))))}
+	              chart
+			              (fx/gesture-detector
+			                {:behavior w/HitTestBehavior.opaque
+			                 :onTapDown (dart-cb [_]
+			                          (dp :chart-zoom-tap
+			                            :full? (mget fx :stopped-full-chart?))
+			                          (mset! fx :stopped-full-chart?
+			                            (not (mget fx :stopped-full-chart?))))
+		                 :onDoubleTap (dart-cb []
+		                                (dp :chart-zoom-double-tap
+		                                  :full? (mget fx :stopped-full-chart?)))
+		                 :onHorizontalDragStart (dart-cb [_]
+		                                          (dp :chart-zoom-horizontal-drag-start
+		                                            :full? (mget fx :stopped-full-chart?)))}
 		                (if stopped-full?
 		                  chart
 		                  (fx/single-child-scroll-view

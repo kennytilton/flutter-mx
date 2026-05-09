@@ -31,6 +31,10 @@ Teacup2 app functionality ideas and planning.
 6. Allow undo after sample deletion.
    - Restore the most recent swipe-deleted sample range.
 
-7. Show full data on one screen after stop.
-   - After stopping, fit the full recording on the Monitor page.
-   - Tapping the chart expands back to the live recording scale.
+## To Done
+
+____
+
+Fri, May 8, 2026
+
+   Show full data on one screen after stop.

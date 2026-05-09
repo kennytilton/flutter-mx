@@ -20,6 +20,7 @@
 (def sample-period-ms 200)
 (def run-duration-ms 10000)
 (def run-duration-s  (quot run-duration-ms 1000))
+(def start-record-delay-ms 5000)
 
 (def device-name-prefix "WT901BLE")
 (def scan-timeout-seconds 10)
@@ -337,20 +338,21 @@
     (mset! formx :samples [])
     (mset! formx :start-ms now)
     (mset! formx :secs-left run-duration-s)
-    (mset! formx :stop-steady-since-ms nil)
-    (mset! formx :saw-recording-motion? false)
-    (mset! formx :gate-state :recording)
-    (audio/play-sys-sound! audio/Sent-Message)))
+	    (mset! formx :stop-steady-since-ms nil)
+	    (mset! formx :saw-recording-motion? false)
+	    (mset! formx :gate-state :recording)
+	    (audio/play-sys-sound! audio/SIMToolkit-Positive-ACK)))
 
 (defn- append-raw-sample! [formx raw]
   (wmx-iso
-    (when (mget formx :running?)
-      (let [now       (get raw :timestamp)
-            state     (mget formx :gate-state)
-            up        (or (mget formx :neutral-up)
-                        (expected-up formx raw))
-            lean-deg  (lean-deg-for (get raw :gravity) up)
-            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)]
+	    (when (mget formx :running?)
+	      (let [now       (get raw :timestamp)
+	            state     (mget formx :gate-state)
+	            up        (or (mget formx :neutral-up)
+	                        (expected-up formx raw))
+	            lean-deg  (lean-deg-for (get raw :gravity) up)
+	            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)
+	            record-ready? (>= now (mget formx :record-after-ms))]
         (dp :lean-raw
           :state state
           :lean-deg (fmt1 lean-deg)
@@ -361,22 +363,24 @@
           :roll (fmt1 (get raw :roll))
           :pitch (fmt1 (get raw :pitch))
           :yaw (fmt1 (get raw :yaw)))
-        (maybe-display-lean! formx now lean-deg)
-        (maybe-lean-sound! formx lean-deg tolerance-deg)
-        (case state
-          :await-ready
-          (begin-recording! formx raw up)
+		        (maybe-display-lean! formx now lean-deg)
+		        (when record-ready?
+		          (maybe-lean-sound! formx lean-deg tolerance-deg))
+	        (when record-ready?
+	          (case state
+	            :await-ready
+	            (begin-recording! formx raw up)
 
-          :await-nod
-          (begin-recording! formx raw up)
+	            :await-nod
+	            (begin-recording! formx raw up)
 
-          :await-begin-steady
-          (begin-recording! formx raw up)
+	            :await-begin-steady
+	            (begin-recording! formx raw up)
 
-          :recording
-          (append-scored-sample! formx raw)
+	            :recording
+	            (append-scored-sample! formx raw)
 
-          (reset-gate! formx))))))
+	            (reset-gate! formx)))))))
 
 (defn- read-i16-le [bs ^int offset]
   (let [lo (nth bs offset)
