@@ -49,15 +49,14 @@
 
 (defn- y-values [samples show]
   (let [hz-motion-base (baseline-for samples :hz-motion)
-        hz-accel-base  (baseline-for samples :hz-accel)
-        yaw-base       (baseline-for samples :yaw-score)]
+        hz-accel-base  (baseline-for samples :hz-accel)]
     (concat
       (when (get show :hz?)
         (concat
           (map #(relative-value % :hz-motion hz-motion-base) samples)
           (map #(relative-value % :hz-accel hz-accel-base) samples)))
       (when (get show :yaw?)
-        (map #(relative-value % :yaw-score yaw-base) samples))
+        (map #(or (get % :yaw-rate) 0.0) samples))
       (when (get show :lean?)
         (map #(/ (or (get % :lean-deg) 0.0) 90.0) samples))
       (when (get show :bob?)
@@ -104,8 +103,8 @@
       live-window-ms)))
 
 (defn chart-data
-  ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? false}))
-  ([samples running? stopped-full?] (chart-data samples running? stopped-full? {:lean? true :bob? false :hz? false :yaw? false}))
+  ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? true}))
+  ([samples running? stopped-full?] (chart-data samples running? stopped-full? {:lean? true :bob? false :hz? false :yaw? true}))
   ([samples running? stopped-full? show]
    (let [[min-x max-x] (chart-window samples running? stopped-full?)
         [min-y max-y] (y-bounds samples show)]
@@ -155,12 +154,11 @@
                  .dotData (flc/FlDotData .show false))])
             (when (get show :yaw?)
               [(flc/LineChartBarData
-                 .spots (relative-spots-for samples :yaw-score)
-                 .color m/Colors.black
-                 .barWidth 0.0
+                 .spots (spots-for samples :yaw-rate)
+                 .color m/Colors.purple
+                 .barWidth 1.5
                  .isCurved false
-                 .dotData (flc/FlDotData .show true
-                                            .getDotPainter dot-painter))])))
+                 .dotData (flc/FlDotData .show false))])))
     .titlesData
     (flc/FlTitlesData
       .leftTitles

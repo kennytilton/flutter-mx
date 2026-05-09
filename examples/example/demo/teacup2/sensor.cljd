@@ -8,10 +8,10 @@
     ["dart:async" :as async]
     ["dart:math" :as math]
     ["package:flutter/material.dart" :as m]
-    ["package:flutter_blue_plus/flutter_blue_plus.dart" :as fbp]
-    ["package:sensors_plus/sensors_plus.dart" :as sp]
-    [tilton.mx.api :as mx
-     :refer [dp cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound? with-cc]]
+	    ["package:flutter_blue_plus/flutter_blue_plus.dart" :as fbp]
+	    ["package:sensors_plus/sensors_plus.dart" :as sp]
+	    [tilton.mx.api :as mx
+	     :refer [dp dpx cF+ mget mset! mupdate! fmu wmx-iso now-ms mx-bound? with-cc]]
     [tilton.fmx.api :as fx]
     [example.demo.teacup2.motion :as motion]
     [example.demo.teacup2.util.audio :as audio]
@@ -263,7 +263,7 @@
   (let [last-ms (mget formx :last-lean-display-ms)]
     (when (or (nil? last-ms)
             (>= (- now last-ms) lean-display-interval-ms))
-      (dp :lean-display
+      (dpx :lean-display
         :lean-deg (fmt1 lean-deg)
         :prior (fmt1 (mget formx :lean-deg))
         :samples (count (mget formx :samples)))
@@ -298,7 +298,7 @@
         sample (motion/score-sample
                  (assoc raw :up (mget formx :neutral-up))
                  prior)]
-    (dp :lean-scored
+    (dpx :lean-scored
       :n (inc (count (mget formx :samples)))
       :lean-deg (fmt1 (get sample :lean-deg))
       :raw-gravity (fmt-v3 (get raw :gravity))
@@ -307,14 +307,16 @@
       :roll (fmt1 (get sample :roll))
       :pitch (fmt1 (get sample :pitch))
       :yaw (fmt1 (get sample :yaw)))
-    (dp :motion-components
-      :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
-      :hz (fmt2 (get sample :hz-accel))
-      :yaw-rate (fmt2 (get sample :yaw-rate))
-      :yaw-accel (fmt2 (get sample :yaw-accel))
-      :yaw-score (fmt2 (get sample :yaw-score))
-      :hz-motion (fmt2 (get sample :hz-motion)))
-    (mupdate! formx :samples conj sample)))
+	    (dpx :motion-components
+	      :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
+	      :hz (fmt2 (get sample :hz-accel))
+	      :yaw-rate (fmt2 (get sample :yaw-rate))
+	      :yaw-accel (fmt2 (get sample :yaw-accel))
+	      :yaw-score (fmt2 (get sample :yaw-score))
+	      :hz-motion (fmt2 (get sample :hz-motion)))
+	    (dp :ang-velosty
+	      :rad-s (fmt2 (get sample :yaw-rate)))
+	    (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
   (let [now     (get raw :timestamp)
@@ -358,7 +360,7 @@
 	            lean-deg  (lean-deg-for (get raw :gravity) up)
 	            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)
 	            record-ready? (>= now (mget formx :record-after-ms))]
-        (dp :lean-raw
+        (dpx :lean-raw
           :state state
           :lean-deg (fmt1 lean-deg)
           :tolerance (fmt1 tolerance-deg)
@@ -476,7 +478,7 @@
         accel-raw (motion/v3 ax ay az)
         gravity   (motion/normalize accel-raw)
         euler-gravity (motion/euler-gravity (get decoded :roll-deg) (get decoded :pitch-deg))]
-    (dp :lean-witmotion-sample
+    (dpx :lean-witmotion-sample
       :ax (fmt2 ax)
       :ay (fmt2 ay)
       :az (fmt2 az)

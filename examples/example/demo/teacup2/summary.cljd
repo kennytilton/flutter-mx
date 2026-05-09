@@ -8,7 +8,7 @@
 	    ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
 		    [tilton.fmx.api :as fx]
 	    [tilton.mx.api :as mx
-	     :refer [dp mget fmu]]
+	     :refer [dp dpx mget fmu]]
     [example.demo.teacup2.util :refer [uformx]]))
 
 (defn- mean [xs]
@@ -40,7 +40,7 @@
     nil
     (let [leans (map #(get % :lean-deg) samples)
           bobs  (map #(.abs ^num (or (get % :vertical-accel-in-s2) 0.0)) samples)]
-      (dp :lean-summary
+      (dpx :lean-summary
         :n (count samples)
         :first (.toStringAsFixed ^num (first leans) 1)
         :last (.toStringAsFixed ^num (last leans) 1)

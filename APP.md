@@ -19,6 +19,11 @@ Teacup2 app functionality ideas and planning.
 3. Offer a Save button.
    - Placement TBD.
 
+4. Retry BLE detection when no BLE is found.
+   - Retry every 2 seconds.
+   - Log each retry to the console.
+   - Stop retrying if the user switches to iPhone.
+
 ## To Done
 
 ____
