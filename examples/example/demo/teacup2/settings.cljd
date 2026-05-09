@@ -22,19 +22,49 @@
       {}
       label)))
 
-(defn- tolerance-button [root selected? tolerance-deg]
-  (fx/text-button
-    {:onPressed (dart-cb []
-                  (with-cc :lean-tolerance-select
-                    (mset! root :lean-tolerance-deg tolerance-deg)))}
-    (fx/text
-      {:style (p/TextStyle
-                .fontSize 18.0
-                .fontWeight (if selected?
-                              p/FontWeight.bold
-                              p/FontWeight.normal))}
-      {}
-      (str tolerance-deg " deg"))))
+(defn- tolerance-choice [root selected? tolerance-deg]
+  (fx/sized-box
+    {:width 44.0
+     :height 40.0}
+    (fx/gesture-detector
+      {:onTap (dart-cb []
+                (with-cc :lean-tolerance-select
+                  (mset! root :lean-tolerance-deg tolerance-deg)))}
+      (fx/center
+        (fx/text
+          {:style (p/TextStyle
+                    .fontSize 18.0
+                    .color (if selected?
+                             m/Colors.orange
+                             m/Colors.black)
+                    .fontWeight (if selected?
+                                  p/FontWeight.bold
+                                  p/FontWeight.normal))}
+          {}
+          (str tolerance-deg "°"))))))
+
+(defn- lean-sensitivity-row [root lean-tolerance-deg]
+  (let [selected-deg (sensor/normalize-lean-tolerance-deg lean-tolerance-deg)]
+    (fx/padding
+      {:padding (m/EdgeInsets.symmetric .horizontal 20.0)}
+      (fx/row
+        {:mainAxisAlignment  m/MainAxisAlignment.center
+         :crossAxisAlignment m/CrossAxisAlignment.center}
+        (fx/text
+          {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
+          {}
+          "Lean limit")
+        (fx/sized-box {:width 12.0})
+        (fx/row
+          {:mainAxisAlignment m/MainAxisAlignment.center}
+          (vec
+            (mapcat
+              (fn [tolerance-deg]
+                (let [choice (tolerance-choice root (= selected-deg tolerance-deg) tolerance-deg)]
+                  (if (= tolerance-deg (first sensor/lean-tolerance-options-deg))
+                    [choice]
+                    [(fx/sized-box {:width 36.0}) choice])))
+              sensor/lean-tolerance-options-deg)))))))
 
 (defn settings-page []
   (fx/safe-area
@@ -52,12 +82,4 @@
         (source-button root (= source :iphone) :iphone "iPhone IMU")
         (source-button root (= source :witmotion-ble) :witmotion-ble "WitMotion BLE")
         (m/SizedBox .height 36)
-        (fx/text
-          {:style     (p/TextStyle .fontSize 20.0 .color m/Colors.black)
-           :textAlign m/TextAlign.center}
-          {}
-          "Lean tolerance")
-        (tolerance-button root (= lean-tolerance-deg 5) 5)
-        (tolerance-button root (= lean-tolerance-deg 10) 10)
-        (tolerance-button root (= lean-tolerance-deg 15) 15)
-        (tolerance-button root (= lean-tolerance-deg 20) 20)))))
+        (lean-sensitivity-row root lean-tolerance-deg)))))
