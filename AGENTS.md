@@ -78,6 +78,7 @@ clj -M:cljd flutter -d all
 - Do not use `^:const`; use plain `def`.
 - Fix CLJD dynamic warnings with type hints where the type is known.
 - Fix the first dynamic warning first because warnings cascade.
+- Do not substitute heuristics for available first-class platform APIs. If the app needs a factual platform/device answer, use the appropriate maintained API/package; do not infer it from dimensions or layout unless explicitly approved.
 
 ## MX Reactivity Invariants
 

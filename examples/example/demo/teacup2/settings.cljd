@@ -7,20 +7,39 @@
     [tilton.mx.api :refer [mget mset! fmu with-cc]]
     [example.demo.teacup2.sensor :as sensor]))
 
-(defn- source-button [root selected? source label]
-  (fx/text-button
-    {:onPressed (dart-cb []
-                  (when (= source :iphone)
-                    (sensor/disconnect-witmotion!))
-                  (mset! root :sensor-source source))}
+(defn- source-choice [root selected? source label]
+  (fx/gesture-detector
+    {:onTap (dart-cb []
+              (when (= source :iphone)
+                (sensor/disconnect-witmotion!))
+              (with-cc :sensor-source-select
+                (mset! root :sensor-source source)))}
     (fx/text
       {:style (p/TextStyle
                 .fontSize 18.0
+                .color (if selected?
+                         m/Colors.orange
+                         m/Colors.black)
                 .fontWeight (if selected?
                               p/FontWeight.bold
                               p/FontWeight.normal))}
       {}
       label)))
+
+(defn- sensor-source-row [root source host-device]
+  (fx/padding
+    {:padding (m/EdgeInsets.symmetric .horizontal 20.0)}
+    (fx/row
+      {:mainAxisAlignment  m/MainAxisAlignment.center
+       :crossAxisAlignment m/CrossAxisAlignment.center}
+      (fx/text
+        {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
+        {}
+        "Sensor:")
+      (fx/sized-box {:width 12.0})
+      (source-choice root (= source :iphone) :iphone (or host-device "..."))
+      (fx/sized-box {:width 36.0})
+      (source-choice root (= source :witmotion-ble) :witmotion-ble "WitMotion"))))
 
 (defn- tolerance-choice [root selected? tolerance-deg]
   (fx/sized-box
@@ -70,16 +89,11 @@
   (fx/safe-area
     (let [root   (fmu :teacup2)
           source (mget root :sensor-source)
+          host-device (mget root :host-device)
           lean-tolerance-deg (mget root :lean-tolerance-deg)]
       (fx/column
         {:mainAxisAlignment  m/MainAxisAlignment.center
          :crossAxisAlignment m/CrossAxisAlignment.stretch}
-        (fx/text
-          {:style     (p/TextStyle .fontSize 20.0 .color m/Colors.black)
-           :textAlign m/TextAlign.center}
-          {}
-          "Sensor")
-        (source-button root (= source :iphone) :iphone "iPhone IMU")
-        (source-button root (= source :witmotion-ble) :witmotion-ble "WitMotion BLE")
+        (sensor-source-row root source host-device)
         (m/SizedBox .height 36)
         (lean-sensitivity-row root lean-tolerance-deg)))))

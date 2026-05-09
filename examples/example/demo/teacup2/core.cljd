@@ -14,6 +14,7 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
+    ["package:device_info_plus/device_info_plus.dart" :as dip]
     [tilton.fmx.api :refer [dart-cb within-ctx] :as fx]
     [tilton.mx.api :as mx
      :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound with-cc with-mx-edge]]
@@ -28,6 +29,10 @@
 
 (defn title-text []
   (str "Tai Chi Teacup v" build-tag))
+
+(defn ^:async host-device []
+  (let [info (await (.-iosInfo (dip/DeviceInfoPlugin)))]
+    (.-model info)))
 
 (defn make-formx []
   (make
@@ -102,9 +107,11 @@
                                      (when (mx/mx-bound? prior)
                                        (when-let [db (mget me :db)]
                                          (stg/sensor-source-write! db new))))]
-                        (or (when-let [db (mget me :db)]
-                              (stg/sensor-source-read db))
-                          :iphone))
+	                        (or (when-let [db (mget me :db)]
+	                              (stg/sensor-source-read db))
+	                          :iphone))
+     :host-device     (cF+ [:async? true]
+                        (host-device))
      :lean-tolerance-deg (cI sensor/default-lean-tolerance-deg
                            :watch (fn [_ me new prior _]
                                     (when (mx/mx-bound? prior)
