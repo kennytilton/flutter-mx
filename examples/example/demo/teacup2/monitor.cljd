@@ -5,13 +5,80 @@
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/painting.dart" :as p]
     ["package:fl_chart/fl_chart.dart" :as flc :refer [LineChart]]
-    [tilton.fmx.api :refer [dart-cb] :as fx]
+	    [tilton.fmx.api :refer [dart-cb] :as fx]
 	    [tilton.mx.api :as mx
-	     :refer [dp mget mset! fmu]]
+	     :refer [dp mget mset! fmu now-ms]]
 	    [example.demo.teacup2.util :refer [uformx]]
 	    [example.demo.teacup2.util.audio :as audio]
-	    [example.demo.teacup2.sensor :as sensor :refer [capture]]
 	    [example.demo.teacup2.plot   :as plot :refer [line-chart chart-data]]))
+
+(def control-icon-size 48.0)
+
+(defn- control-button [tooltip icon color on-pressed]
+  (fx/icon-button
+    {:tooltip tooltip
+     :icon (fx/icon {:color color
+                     :size control-icon-size}
+             icon)
+     :onPressed on-pressed}))
+
+(defn- run! [root]
+  (dp :run-pressed)
+  (audio/play-sys-sound! audio/SIMToolkit-General-Beep)
+  (mset! root :event :start))
+
+(defn- pause! [fx]
+  (let [now (now-ms)]
+    (dp :pause-pressed :now now)
+    (mset! fx :pause-start-ms now))
+  (mset! fx :paused? true)
+  (mset! fx :stopped? false)
+  (mset! fx :running? false))
+
+(defn- resume! [fx]
+  (let [now (now-ms)
+        pause-start (mget fx :pause-start-ms)
+        pause-ms (if pause-start (- now pause-start) 0)]
+    (dp :resume-pressed :pause-ms pause-ms)
+    (audio/play-sys-sound! audio/SIMToolkit-General-Beep)
+    (mset! fx :paused-total-ms (+ (mget fx :paused-total-ms) pause-ms))
+    (mset! fx :record-after-ms (+ (mget fx :record-after-ms) pause-ms))
+    (mset! fx :pause-start-ms nil))
+  (mset! fx :paused? false)
+  (mset! fx :stopped? false)
+  (mset! fx :running? true))
+
+(defn- stop! [fx]
+  (dp :stop-pressed)
+  (audio/play-sys-sound! audio/SIMToolkit-Negative-ACK)
+  (mset! fx :paused? false)
+  (mset! fx :stopped? true)
+  (mset! fx :running? false))
+
+(defn- controls [root]
+  (let [fx (mget root :formx)]
+    (fx/row
+      {:mainAxisAlignment m/MainAxisAlignment.center}
+      (cond
+	        (or (nil? fx) (mget fx :stopped?))
+		        (control-button "Run" m/Icons.directions_run m/Colors.green
+		          (dart-cb [] (run! root)))
+
+        (mget fx :running?)
+	        [(control-button "Pause" m/Icons.pause m/Colors.black
+	           (dart-cb [] (pause! fx)))
+		         (control-button "Stop" m/Icons.stop_circle m/Colors.red
+		           (dart-cb [] (stop! fx)))]
+
+	        (mget fx :paused?)
+		        [(control-button "Resume" m/Icons.directions_run m/Colors.green
+		           (dart-cb [] (resume! fx)))
+		         (control-button "Stop" m/Icons.stop_circle m/Colors.red
+		           (dart-cb [] (stop! fx)))]
+
+	        :else
+		        (control-button "Run" m/Icons.directions_run m/Colors.green
+		          (dart-cb [] (run! root)))))))
 
 (defn monitor-page []
   (fx/safe-area
@@ -19,22 +86,7 @@
       {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
        :crossAxisAlignment m/CrossAxisAlignment.stretch}
 
-      (fx/elevated-button
-	        {:onPressed (dart-cb []
-		                      (let [root (fmu :teacup2)
-		                            fx   (mget root :formx)]
-		                        (dp :start-stop-pressed)
-		                        (if (and fx (mget fx :running?))
-		                          (do
-		                            (audio/play-sys-sound! audio/SIMToolkit-Negative-ACK)
-		                            (mset! fx :running? false))
-		                          (do
-		                            (audio/play-sys-sound! audio/SIMToolkit-General-Beep)
-		                            (mset! root :event :start)))))}
-        (fx/text
-          (if-let [fx (uformx)]
-            (if (mget fx :running?) "Stop" "Start")
-            "Start")))
+      (controls (fmu :teacup2))
 
 	      (fx/expanded
 	        (if-let [fx (uformx)]

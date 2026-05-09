@@ -32,9 +32,11 @@
 (defn make-formx []
   (make
     :name      :formx
-    :samples   (cI [])
+	    :samples   (cI [])
 	    :start-ms  (cI (now-ms))
 	    :record-after-ms (cI (+ (now-ms) sensor/start-record-delay-ms))
+	    :paused-total-ms (cI 0)
+	    :pause-start-ms (cI nil)
 	    :secs-left (cI sensor/run-duration-s)
     :mount-code (cI :y-up)
     :neutral-up (cI nil)
@@ -51,6 +53,8 @@
 	    :lean-warning? (cI false)
 	    :lean-deg (cI nil)
 	    :stopped-full-chart? (cI true)
+	    :paused? (cI false)
+	    :stopped? (cI false)
 	    :running?  (cI true)))
 
 (defn- page-index [page-id]

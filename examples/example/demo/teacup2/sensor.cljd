@@ -290,6 +290,9 @@
   (audio/play-sys-sound! audio/Descent)
   (reset-gate! formx))
 
+(defn- active-elapsed-ms [formx now]
+  (- now (mget formx :start-ms) (mget formx :paused-total-ms)))
+
 (defn- append-scored-sample! [formx raw]
   (let [prior  (last (mget formx :samples))
         sample (motion/score-sample
@@ -335,9 +338,11 @@
       :pitch (fmt1 (get raw :pitch))
       :yaw (fmt1 (get raw :yaw)))
     (mset! formx :neutral-up up)
-    (mset! formx :samples [])
-    (mset! formx :start-ms now)
-    (mset! formx :secs-left run-duration-s)
+	    (mset! formx :samples [])
+	    (mset! formx :start-ms now)
+	    (mset! formx :paused-total-ms 0)
+	    (mset! formx :pause-start-ms nil)
+	    (mset! formx :secs-left run-duration-s)
 	    (mset! formx :stop-steady-since-ms nil)
 	    (mset! formx :saw-recording-motion? false)
 	    (mset! formx :gate-state :recording)
@@ -461,7 +466,7 @@
 
 (defn- witmotion-sample [formx decoded]
   (let [now   (now-ms)
-        t-rel (- now (mget formx :start-ms))
+        t-rel (active-elapsed-ms formx now)
         ax    (get decoded :ax-g)
         ay    (get decoded :ay-g)
         az    (get decoded :az-g)
@@ -901,8 +906,7 @@
           prior-stamp @last-stamp-atom]
       (when (>= (- now prior-stamp) sample-period-ms)
         (reset! last-stamp-atom now)
-        (let [start  (mget formx :start-ms)
-              t-rel  (- now start)
+	        (let [t-rel  (active-elapsed-ms formx now)
               uax    (.-x ev)
               uay    (.-y ev)
               uaz    (.-z ev)
