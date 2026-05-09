@@ -41,21 +41,30 @@
                         (double (relative-value s y-key baseline))))
       samples)))
 
-(defn- y-values [samples]
+(defn- scaled-spots-for [samples y-key scale]
+  (mapv (fn [s]
+          (flc/FlSpot (double (get s :t))
+                      (double (/ (or (get s y-key) 0.0) scale))))
+    samples))
+
+(defn- y-values [samples show]
   (let [hz-motion-base (baseline-for samples :hz-motion)
         hz-accel-base  (baseline-for samples :hz-accel)
         yaw-base       (baseline-for samples :yaw-score)]
     (concat
-	      (map #(relative-value % :hz-motion hz-motion-base) samples)
-	      (map #(relative-value % :hz-accel hz-accel-base) samples)
-	      (map #(relative-value % :yaw-score yaw-base) samples)
-	      (map #(or (get % :vertical-accel-in-s2) 0.0) samples))))
+      (when (get show :hz?)
+        (concat
+          (map #(relative-value % :hz-motion hz-motion-base) samples)
+          (map #(relative-value % :hz-accel hz-accel-base) samples)))
+      (when (get show :yaw?)
+        (map #(relative-value % :yaw-score yaw-base) samples))
+      (when (get show :lean?)
+        (map #(/ (or (get % :lean-deg) 0.0) 90.0) samples))
+      (when (get show :bob?)
+        (map #(or (get % :vertical-accel-in-s2) 0.0) samples)))))
 
-(defn- y-bounds [samples]
-  (let [ys     (seq (y-values samples))
-        max-y  (if ys (reduce max (map #(.abs ^num %) ys)) 1.0)
-        half   (max 1.0 (* max-y y-margin))]
-    [(- half) half]))
+(defn- y-bounds [samples show]
+  [-1.0 1.0])
 
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
@@ -95,10 +104,11 @@
       live-window-ms)))
 
 (defn chart-data
-  ([samples running?] (chart-data samples running? true))
-  ([samples running? stopped-full?]
+  ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? false}))
+  ([samples running? stopped-full?] (chart-data samples running? stopped-full? {:lean? true :bob? false :hz? false :yaw? false}))
+  ([samples running? stopped-full? show]
    (let [[min-x max-x] (chart-window samples running? stopped-full?)
-        [min-y max-y] (y-bounds samples)]
+        [min-y max-y] (y-bounds samples show)]
     (flc/LineChartData
 	      .minX min-x
 	      .maxX max-x
@@ -112,39 +122,45 @@
 	                          .strokeWidth 1.0)]
 	      .extraLinesOnTop false)
 	    .clipData (flc/FlClipData.none)
-    .lineBarsData
-		     [(flc/LineChartBarData
-		       .spots (relative-spots-for samples :hz-motion)
-		       .color m/Colors.black
-		       .barWidth 1.5
-		       .isCurved false
-		       .dotData (flc/FlDotData .show false))
-		     (flc/LineChartBarData
-		       .spots (spots-for samples :lean-deg)
-			       .color m/Colors.orange
-			       .barWidth 2.0
-			       .isCurved false
-			       .dotData (flc/FlDotData .show false))
-			     (flc/LineChartBarData
-			       .spots (spots-for samples :vertical-accel-in-s2)
-			       .color m/Colors.red
-			       .barWidth 2.0
-			       .isCurved false
-			       .dotData (flc/FlDotData .show false))
-			     (flc/LineChartBarData
-			       .spots (relative-spots-for samples :hz-accel)
-		       .color m/Colors.black
-		       .barWidth 1.25
-		       .isCurved false
-		       .dashArray [5 4]
-		       .dotData (flc/FlDotData .show false))
-		     (flc/LineChartBarData
-		       .spots (relative-spots-for samples :yaw-score)
-		       .color m/Colors.black
-		       .barWidth 0.0
-				       .isCurved false
-				       .dotData (flc/FlDotData .show true
-				                                  .getDotPainter dot-painter))]
+	    .lineBarsData
+        (vec
+          (concat
+            (when (get show :hz?)
+              [(flc/LineChartBarData
+                 .spots (relative-spots-for samples :hz-motion)
+                 .color m/Colors.black
+                 .barWidth 1.5
+                 .isCurved false
+                 .dotData (flc/FlDotData .show false))
+               (flc/LineChartBarData
+                 .spots (relative-spots-for samples :hz-accel)
+                 .color m/Colors.black
+                 .barWidth 1.25
+                 .isCurved false
+                 .dashArray [5 4]
+                 .dotData (flc/FlDotData .show false))])
+            (when (get show :lean?)
+              [(flc/LineChartBarData
+                 .spots (scaled-spots-for samples :lean-deg 90.0)
+                 .color m/Colors.orange
+                 .barWidth 2.0
+                 .isCurved false
+                 .dotData (flc/FlDotData .show false))])
+            (when (get show :bob?)
+              [(flc/LineChartBarData
+                 .spots (spots-for samples :vertical-accel-in-s2)
+                 .color m/Colors.red
+                 .barWidth 2.0
+                 .isCurved false
+                 .dotData (flc/FlDotData .show false))])
+            (when (get show :yaw?)
+              [(flc/LineChartBarData
+                 .spots (relative-spots-for samples :yaw-score)
+                 .color m/Colors.black
+                 .barWidth 0.0
+                 .isCurved false
+                 .dotData (flc/FlDotData .show true
+                                            .getDotPainter dot-painter))])))
     .titlesData
     (flc/FlTitlesData
       .leftTitles

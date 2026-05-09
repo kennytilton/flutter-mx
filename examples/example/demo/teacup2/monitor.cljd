@@ -14,6 +14,7 @@
 
 (def control-icon-size 48.0)
 (def chart-tap-slop-squared (* 12.0 12.0))
+(def plot-dot-size 24.0)
 
 (defn- control-button [tooltip icon color on-pressed]
   (fx/icon-button
@@ -56,6 +57,34 @@
   (mset! fx :stopped? true)
   (mset! fx :running? false))
 
+(defn- chart-show [fx]
+  {:lean? (mget fx :show-lean?)
+   :bob?  (mget fx :show-bob?)
+   :hz?   (mget fx :show-hz?)
+   :yaw?  (mget fx :show-yaw?)})
+
+(defn- toggle-dot [fx k color]
+  (let [on? (mget fx k)]
+    (fx/gesture-detector
+      {:onTap (dart-cb []
+                (mset! fx k (not (mget fx k))))}
+      (fx/padding
+        {:padding (m/EdgeInsets.symmetric .horizontal 8.0 .vertical 12.0)}
+        (fx/container
+          {:width plot-dot-size
+           :height plot-dot-size
+           :decoration (m/BoxDecoration
+                         .color (if on? color (.withOpacity color 0.25))
+                         .shape p/BoxShape.circle)})))))
+
+(defn- plot-toggles [fx]
+  (when fx
+    [(fx/sized-box {:width 48.0})
+     (toggle-dot fx :show-bob? m/Colors.red)
+     (toggle-dot fx :show-lean? m/Colors.orange)
+     (toggle-dot fx :show-hz? m/Colors.black)
+     (toggle-dot fx :show-yaw? m/Colors.black)]))
+
 (defn- event-xy [ev]
   (let [p (.-localPosition ev)]
     [(.-dx p) (.-dy p)]))
@@ -96,28 +125,30 @@
 
 (defn- controls [root]
   (let [fx (mget root :formx)]
-    (fx/row
+      (fx/row
       {:mainAxisAlignment m/MainAxisAlignment.center}
-      (cond
-	        (or (nil? fx) (mget fx :stopped?))
-		        (control-button "Run" m/Icons.directions_run m/Colors.green
-		          (dart-cb [] (run! root)))
+      (vec (concat
+        (cond
+	         (or (nil? fx) (mget fx :stopped?))
+		         [(control-button "Run" m/Icons.directions_run m/Colors.green
+		            (dart-cb [] (run! root)))]
 
-        (mget fx :running?)
-	        [(control-button "Pause" m/Icons.pause m/Colors.black
-	           (dart-cb [] (pause! fx)))
-		         (control-button "Stop" m/Icons.stop_circle m/Colors.red
-		           (dart-cb [] (stop! fx)))]
+          (mget fx :running?)
+	         [(control-button "Pause" m/Icons.pause m/Colors.black
+	            (dart-cb [] (pause! fx)))
+		          (control-button "Stop" m/Icons.stop_circle m/Colors.red
+		            (dart-cb [] (stop! fx)))]
 
-	        (mget fx :paused?)
-		        [(control-button "Resume" m/Icons.directions_run m/Colors.green
-		           (dart-cb [] (resume! fx)))
-		         (control-button "Stop" m/Icons.stop_circle m/Colors.red
-		           (dart-cb [] (stop! fx)))]
+	         (mget fx :paused?)
+		         [(control-button "Resume" m/Icons.directions_run m/Colors.green
+		            (dart-cb [] (resume! fx)))
+		          (control-button "Stop" m/Icons.stop_circle m/Colors.red
+		            (dart-cb [] (stop! fx)))]
 
-	        :else
-		        (control-button "Run" m/Icons.directions_run m/Colors.green
-		          (dart-cb [] (run! root)))))))
+	         :else
+		         [(control-button "Run" m/Icons.directions_run m/Colors.green
+		            (dart-cb [] (run! root)))])
+        (or (plot-toggles fx) []))))))
 
 (defn monitor-page []
   (fx/safe-area
@@ -132,8 +163,9 @@
 	          (let [samples  (mget fx :samples)
 	                running? (mget fx :running?)
 	                stopped-full? (mget fx :stopped-full-chart?)
-	                chart (line-chart {}
-	                        (chart-data samples running? stopped-full?))]
+		                chart (line-chart {}
+		                        (chart-data samples running? stopped-full?
+		                          (chart-show fx)))]
 		            (if running?
 		              chart
 				              (fx/listener
