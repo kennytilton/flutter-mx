@@ -23,6 +23,7 @@
 (def lean-display-ma-window-ms 1000.0)
 (def bob-display-ma-window-ms 1000.0)
 (def display-ma-warmup-ms 1000.0)
+(def bob-display-scale-in-s2 40.0)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -80,7 +81,10 @@
             window (filter #(>= (double (get % :t)) t-min) samples)
             n (count window)]
         (if (pos? n)
-          (/ (reduce + (map #(.abs ^num (or (get % :vertical-accel-in-s2) 0.0)) window)) n)
+          (/ (/ (reduce + (map #(or (get % :bob-in-s2)
+                                  (.abs ^num (or (get % :vertical-accel-in-s2) 0.0)))
+                             window)) n)
+            bob-display-scale-in-s2)
           0.0)))
     samples))
 

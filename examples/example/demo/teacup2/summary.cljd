@@ -39,7 +39,8 @@
   (if (empty? samples)
     nil
     (let [leans (map #(get % :lean-deg) samples)
-          bobs  (map #(.abs ^num (or (get % :vertical-accel-in-s2) 0.0)) samples)]
+          bobs  (map #(or (get % :bob-in-s2)
+                       (.abs ^num (or (get % :vertical-accel-in-s2) 0.0))) samples)]
       (dpx :lean-summary
         :n (count samples)
         :first (.toStringAsFixed ^num (first leans) 1)

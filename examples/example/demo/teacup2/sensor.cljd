@@ -336,11 +336,19 @@
 (defn- active-elapsed-ms [formx now]
   (- now (mget formx :start-ms) (mget formx :paused-total-ms)))
 
+(defn- bob-in-s2 [sample]
+  (if (= :witmotion-ble (get sample :source))
+    (let [ay (get (get sample :accel-raw) :y)]
+      (* (.abs ^num (- (.abs ^num (or ay 0.0)) 1.0))
+        motion/g-in-s2))
+    (.abs ^num (or (get sample :vertical-accel-in-s2) 0.0))))
+
 (defn- append-scored-sample! [formx raw]
   (let [prior  (last (mget formx :samples))
-        sample (motion/score-sample
+        scored (motion/score-sample
                  (assoc raw :up (mget formx :neutral-up))
-                 prior)]
+                 prior)
+        sample (assoc scored :bob-in-s2 (bob-in-s2 scored))]
     (dpx :lean-scored
       :n (inc (count (mget formx :samples)))
       :lean-deg (fmt1 (get sample :lean-deg))
@@ -352,6 +360,7 @@
       :yaw (fmt1 (get sample :yaw)))
     (dpx :motion-components
       :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
+      :bob-in-s2 (fmt2 (get sample :bob-in-s2))
       :hz (fmt2 (get sample :hz-accel))
       :yaw-rate (fmt2 (get sample :yaw-rate))
       :yaw-accel (fmt2 (get sample :yaw-accel))
@@ -359,7 +368,7 @@
       :hz-motion (fmt2 (get sample :hz-motion)))
     (dp :ang-velosty
       :rad-s (fmt2 (get sample :yaw-rate))
-      :bob-in-s2 (fmt2 (.abs ^num (or (get sample :vertical-accel-in-s2) 0.0))))
+      :bob-in-s2 (fmt2 (get sample :bob-in-s2)))
     (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
@@ -755,7 +764,7 @@
                   preferred-found? (and preferred-remote-id
                                      (contains? found-remote-ids preferred-remote-id))
                   first-remote-id (first-device-remote-id devices-found)]
-              (dpx :settings-scan-devices devices-found)
+              (dp :settings-scan-devices devices-found)
               (mset! root :ble-devices devices-found)
               (cond
                 (= current-source :iphone)
