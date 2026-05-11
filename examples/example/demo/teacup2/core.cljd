@@ -60,7 +60,7 @@
 	    :stopped-full-chart? (cI true)
 	    :show-lean? (cI true)
 		    :show-bob? (cI true)
-	    :show-hz? (cI false)
+	    :show-hz? (cI true)
 	    :show-yaw? (cI true)
 	    :chart-pointer-down-x (cI nil)
 	    :chart-pointer-down-y (cI nil)
@@ -100,7 +100,8 @@
                                        (with-cc :lean-tolerance-load
                                          (mset! me :lean-tolerance-deg
                                            (sensor/normalize-lean-tolerance-deg
-                                             (stg/lean-tolerance-read db))))))]
+                                             (stg/lean-tolerance-read db))))
+                                       (mset! me :ble-scan-desired? true)))]
                         (stg/open-settings-box))
      :sensor-source   (cF+ [:input? true
                             :watch (fn [_ me new prior _]

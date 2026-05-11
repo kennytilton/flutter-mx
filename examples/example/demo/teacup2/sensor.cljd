@@ -369,6 +369,8 @@
     (dp :ang-velosty
       :rad-s (fmt2 (get sample :yaw-rate))
       :bob-in-s2 (fmt2 (get sample :bob-in-s2)))
+    (dp :hz-raw
+      :in-s2 (fmt2 (get sample :hz-accel)))
     (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
@@ -740,12 +742,25 @@
                           (let [info (scan-result-info r)]
                             (when (witmotion-info? info)
                               (dpx :settings-scan-target info)
-                              (note-scanned-device devices info))))))]
-            (reset! sub-atom sub)
-            (await (fbp/FlutterBluePlus.startScan
-                     .timeout (Duration .seconds scan-timeout-seconds)))
-            (await (Future.delayed (Duration .seconds scan-timeout-seconds)
-                     (fn [] true))))
+	                              (note-scanned-device devices info))))))]
+	            (reset! sub-atom sub)
+	            (await (fbp/FlutterBluePlus.startScan
+	                     .timeout (Duration .seconds scan-timeout-seconds)))
+	            (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+	                     (fn [] true)))
+	            (when (empty? @devices)
+	              (dp :settings-scan-empty-retry)
+	              (set-ble-status! "settings scanning retry")
+	              (try
+	                (await (fbp/FlutterBluePlus.stopScan))
+	                (catch Object e
+	                  (dp :settings-ble-retry-stop-ignored e)))
+	              (await (Future.delayed (Duration .milliseconds 750)
+	                       (fn [] true)))
+	              (await (fbp/FlutterBluePlus.startScan
+	                       .timeout (Duration .seconds scan-timeout-seconds)))
+	              (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+	                       (fn [] true)))))
           (catch Object e
             (dp :settings-witmotion-scan-exception e)
             (set-ble-status! (str "scan error: " e))))
@@ -758,33 +773,20 @@
         (wmx-iso
           (with-cc :witmotion-settings-scan-stop
             (let [devices-found @devices
-                  current-source (mget root :sensor-source)
-                  preferred-remote-id (mget root :selected-ble-remote-id)
-                  found-remote-ids (scanned-device-remote-ids devices-found)
-                  preferred-found? (and preferred-remote-id
-                                     (contains? found-remote-ids preferred-remote-id))
-                  first-remote-id (first-device-remote-id devices-found)]
-              (dp :settings-scan-devices devices-found)
-              (mset! root :ble-devices devices-found)
-              (cond
-                (= current-source :iphone)
-                nil
+	                  first-remote-id (first-device-remote-id devices-found)]
+	              (dp :settings-scan-devices devices-found)
+	              (mset! root :ble-devices devices-found)
+	              (cond
+	                first-remote-id
+	                (do
+	                  (mset! root :sensor-source :witmotion-ble)
+	                  (mset! root :selected-ble-remote-id first-remote-id))
 
-                preferred-found?
-                (do
-                  (mset! root :sensor-source :witmotion-ble)
-                  (mset! root :selected-ble-remote-id preferred-remote-id))
-
-                first-remote-id
-                (do
-                  (mset! root :sensor-source :witmotion-ble)
-                  (mset! root :selected-ble-remote-id first-remote-id))
-
-                :else
-                (do
-                  (mset! root :sensor-source :iphone)
-                  (mset! root :selected-ble-remote-id nil)))
-              (mset! root :ble-scanning? false))))
+	                :else
+	                (do
+	                  (mset! root :sensor-source :iphone)
+	                  (mset! root :selected-ble-remote-id nil)))
+	              (mset! root :ble-scanning? false))))
         (reset! scanning? false)
         (set-ble-status! "settings scan done")))))
 

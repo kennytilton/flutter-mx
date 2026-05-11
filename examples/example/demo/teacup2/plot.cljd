@@ -24,6 +24,7 @@
 (def bob-display-ma-window-ms 1000.0)
 (def display-ma-warmup-ms 1000.0)
 (def bob-display-scale-in-s2 40.0)
+(def hz-motion-display-scale 0.002)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -50,6 +51,12 @@
   (mapv (fn [s]
           (flc/FlSpot (double (get s :t))
                       (double (/ (or (get s y-key) 0.0) scale))))
+    samples))
+
+(defn- multiplied-spots-for [samples y-key scale]
+  (mapv (fn [s]
+          (flc/FlSpot (double (get s :t))
+                      (double (* (or (get s y-key) 0.0) scale))))
     samples))
 
 (defn- yaw-display-values [samples]
@@ -197,17 +204,10 @@
           (concat
             (when (get show :hz?)
               [(flc/LineChartBarData
-                 .spots (relative-spots-for plot-samples :hz-motion)
-                 .color m/Colors.black
+                 .spots (multiplied-spots-for plot-samples :hz-motion hz-motion-display-scale)
+                 .color m/Colors.blue
                  .barWidth 1.5
                  .isCurved false
-                 .dotData (flc/FlDotData .show false))
-               (flc/LineChartBarData
-                 .spots (relative-spots-for plot-samples :hz-accel)
-                 .color m/Colors.black
-                 .barWidth 1.25
-                 .isCurved false
-                 .dashArray [5 4]
                  .dotData (flc/FlDotData .show false))])
             (when (get show :lean?)
               [(flc/LineChartBarData
