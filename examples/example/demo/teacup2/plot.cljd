@@ -22,6 +22,7 @@
 (def yaw-display-ma-window-ms 1000.0)
 (def lean-display-ma-window-ms 1000.0)
 (def bob-display-ma-window-ms 1000.0)
+(def display-ma-warmup-ms 1000.0)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -154,6 +155,13 @@
       [(max 0.0 (- latest live-window-ms))
        (max live-window-ms latest)])))
 
+(defn- display-samples [samples running?]
+  (if running?
+    (let [latest (latest-t-ms samples)
+          min-t  (max 0.0 (- latest live-window-ms display-ma-warmup-ms))]
+      (vec (filter #(>= (double (get % :t)) min-t) samples)))
+    samples))
+
 (defn stopped-chart-width [samples]
   (* stopped-window-width
     (/ (latest-t-ms samples)
@@ -164,7 +172,8 @@
   ([samples running? stopped-full?] (chart-data samples running? stopped-full? {:lean? true :bob? false :hz? false :yaw? true}))
   ([samples running? stopped-full? show]
    (let [[min-x max-x] (chart-window samples running? stopped-full?)
-        [min-y max-y] (y-bounds samples show)]
+         plot-samples (display-samples samples running?)
+         [min-y max-y] (y-bounds plot-samples show)]
     (flc/LineChartData
 	      .minX min-x
 	      .maxX max-x
@@ -184,13 +193,13 @@
           (concat
             (when (get show :hz?)
               [(flc/LineChartBarData
-                 .spots (relative-spots-for samples :hz-motion)
+                 .spots (relative-spots-for plot-samples :hz-motion)
                  .color m/Colors.black
                  .barWidth 1.5
                  .isCurved false
                  .dotData (flc/FlDotData .show false))
                (flc/LineChartBarData
-                 .spots (relative-spots-for samples :hz-accel)
+                 .spots (relative-spots-for plot-samples :hz-accel)
                  .color m/Colors.black
                  .barWidth 1.25
                  .isCurved false
@@ -198,21 +207,21 @@
                  .dotData (flc/FlDotData .show false))])
             (when (get show :lean?)
               [(flc/LineChartBarData
-                 .spots (lean-display-spots-for samples)
+                 .spots (lean-display-spots-for plot-samples)
                  .color m/Colors.orange
                  .barWidth 2.0
                  .isCurved true
                  .dotData (flc/FlDotData .show false))])
             (when (get show :bob?)
               [(flc/LineChartBarData
-                 .spots (bob-display-spots-for samples)
+                 .spots (bob-display-spots-for plot-samples)
                  .color m/Colors.red
                  .barWidth 2.0
                  .isCurved true
                  .dotData (flc/FlDotData .show false))])
             (when (get show :yaw?)
               [(flc/LineChartBarData
-                 .spots (yaw-display-spots-for samples)
+                 .spots (yaw-display-spots-for plot-samples)
                  .color m/Colors.purple
                  .barWidth 1.5
                  .isCurved true

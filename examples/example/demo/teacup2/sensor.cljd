@@ -350,16 +350,17 @@
       :roll (fmt1 (get sample :roll))
       :pitch (fmt1 (get sample :pitch))
       :yaw (fmt1 (get sample :yaw)))
-	    (dpx :motion-components
-	      :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
-	      :hz (fmt2 (get sample :hz-accel))
-	      :yaw-rate (fmt2 (get sample :yaw-rate))
-	      :yaw-accel (fmt2 (get sample :yaw-accel))
-	      :yaw-score (fmt2 (get sample :yaw-score))
-	      :hz-motion (fmt2 (get sample :hz-motion)))
-	    (dp :ang-velosty
-	      :rad-s (fmt2 (get sample :yaw-rate)))
-	    (mupdate! formx :samples conj sample)))
+    (dpx :motion-components
+      :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
+      :hz (fmt2 (get sample :hz-accel))
+      :yaw-rate (fmt2 (get sample :yaw-rate))
+      :yaw-accel (fmt2 (get sample :yaw-accel))
+      :yaw-score (fmt2 (get sample :yaw-score))
+      :hz-motion (fmt2 (get sample :hz-motion)))
+    (dp :ang-velosty
+      :rad-s (fmt2 (get sample :yaw-rate))
+      :bob-in-s2 (fmt2 (.abs ^num (or (get sample :vertical-accel-in-s2) 0.0))))
+    (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
   (let [now     (get raw :timestamp)
