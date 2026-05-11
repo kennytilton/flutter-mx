@@ -19,6 +19,7 @@
 (def stopped-window-width 900.0)
 (def bottom-title-interval-ms 5000.0)
 (def y-margin 1.2)
+(def yaw-display-ma-window-ms 1000.0)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -47,6 +48,24 @@
                       (double (/ (or (get s y-key) 0.0) scale))))
     samples))
 
+(defn- yaw-display-values [samples]
+  (mapv
+    (fn [sample]
+      (let [t-min (- (double (get sample :t)) yaw-display-ma-window-ms)
+            window (filter #(>= (double (get % :t)) t-min) samples)
+            n (count window)]
+        (if (pos? n)
+          (/ (reduce + (map #(or (get % :yaw-rate) 0.0) window)) n)
+          0.0)))
+    samples))
+
+(defn- yaw-display-spots-for [samples]
+  (mapv (fn [s yaw]
+          (flc/FlSpot (double (get s :t))
+                      (double yaw)))
+    samples
+    (yaw-display-values samples)))
+
 (defn- y-values [samples show]
   (let [hz-motion-base (baseline-for samples :hz-motion)
         hz-accel-base  (baseline-for samples :hz-accel)]
@@ -56,7 +75,7 @@
           (map #(relative-value % :hz-motion hz-motion-base) samples)
           (map #(relative-value % :hz-accel hz-accel-base) samples)))
       (when (get show :yaw?)
-        (map #(or (get % :yaw-rate) 0.0) samples))
+        (yaw-display-values samples))
       (when (get show :lean?)
         (map #(/ (or (get % :lean-deg) 0.0) 90.0) samples))
       (when (get show :bob?)
@@ -121,6 +140,7 @@
 	                          .strokeWidth 1.0)]
 	      .extraLinesOnTop false)
 	    .clipData (flc/FlClipData.none)
+	    .lineTouchData (flc/LineTouchData .enabled false)
 	    .lineBarsData
         (vec
           (concat
@@ -154,10 +174,10 @@
                  .dotData (flc/FlDotData .show false))])
             (when (get show :yaw?)
               [(flc/LineChartBarData
-                 .spots (spots-for samples :yaw-rate)
+                 .spots (yaw-display-spots-for samples)
                  .color m/Colors.purple
                  .barWidth 1.5
-                 .isCurved false
+                 .isCurved true
                  .dotData (flc/FlDotData .show false))])))
     .titlesData
     (flc/FlTitlesData

@@ -77,7 +77,7 @@
           {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
           {}
           "Sensor:")
-        (fx/text-button
+        (fx/outlined-button
           {:onPressed (dart-cb []
                         (mset! root :ble-scan-desired? true))}
           (fx/text
@@ -93,24 +93,28 @@
               ble-devices)))))))
 
 (defn- tolerance-choice [root selected? tolerance-deg]
-    (fx/sized-box
-      {:width 44.0
-       :height 40.0}
-    (fx/gesture-detector
-      {:onTap (dart-cb []
-                (mset! root :lean-tolerance-deg tolerance-deg))}
-      (fx/center
-        (fx/text
-          {:style (p/TextStyle
-                    .fontSize 18.0
-                    .color (if selected?
-                             m/Colors.orange
-                             m/Colors.black)
-                    .fontWeight (if selected?
-                                  p/FontWeight.bold
-                                  p/FontWeight.normal))}
-          {}
-          (str tolerance-deg "°"))))))
+  (fx/sized-box
+    {:width 56.0
+     :height 40.0}
+    (fx/outlined-button
+      {:onPressed (dart-cb []
+                    (mset! root :lean-tolerance-deg tolerance-deg))
+       :style     (m/ButtonStyle
+                    .padding (m/MaterialStateProperty.all
+                               (m/EdgeInsets.zero))
+                    .minimumSize (m/MaterialStateProperty.all
+                                   (m/Size 0.0 0.0)))}
+      (fx/text
+        {:style (p/TextStyle
+                  .fontSize 18.0
+                  .color (if selected?
+                           m/Colors.orange
+                           m/Colors.black)
+                  .fontWeight (if selected?
+                                p/FontWeight.bold
+                                p/FontWeight.normal))}
+        {}
+        (str tolerance-deg "°")))))
 
 (defn- lean-sensitivity-row [root lean-tolerance-deg]
   (let [selected-deg (sensor/normalize-lean-tolerance-deg lean-tolerance-deg)]
