@@ -741,9 +741,18 @@
             (dp :settings-ble-stop-scan-ignored e)))
         (wmx-iso
           (with-cc :witmotion-settings-scan-stop
-            (dpx :settings-scan-devices @devices)
-            (mset! root :ble-devices @devices)
-            (mset! root :ble-scanning? false)))
+            (let [devices-found @devices
+                  first-remote-id (get (first devices-found) :remoteId)]
+              (dpx :settings-scan-devices devices-found)
+              (mset! root :ble-devices devices-found)
+              (if first-remote-id
+                (do
+                  (mset! root :sensor-source :witmotion-ble)
+                  (mset! root :selected-ble-remote-id first-remote-id))
+                (do
+                  (mset! root :sensor-source :iphone)
+                  (mset! root :selected-ble-remote-id nil)))
+              (mset! root :ble-scanning? false))))
         (reset! scanning? false)
         (set-ble-status! "settings scan done")))))
 

@@ -21,6 +21,7 @@
 (def y-margin 1.2)
 (def yaw-display-ma-window-ms 1000.0)
 (def lean-display-ma-window-ms 1000.0)
+(def bob-display-ma-window-ms 1000.0)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -71,6 +72,17 @@
           0.0)))
     samples))
 
+(defn- bob-display-values [samples]
+  (mapv
+    (fn [sample]
+      (let [t-min (- (double (get sample :t)) bob-display-ma-window-ms)
+            window (filter #(>= (double (get % :t)) t-min) samples)
+            n (count window)]
+        (if (pos? n)
+          (/ (reduce + (map #(.abs ^num (or (get % :vertical-accel-in-s2) 0.0)) window)) n)
+          0.0)))
+    samples))
+
 (defn- yaw-display-spots-for [samples]
   (mapv (fn [s yaw]
           (flc/FlSpot (double (get s :t))
@@ -85,6 +97,13 @@
     samples
     (lean-display-values samples)))
 
+(defn- bob-display-spots-for [samples]
+  (mapv (fn [s bob]
+          (flc/FlSpot (double (get s :t))
+                      (double bob)))
+    samples
+    (bob-display-values samples)))
+
 (defn- y-values [samples show]
   (let [hz-motion-base (baseline-for samples :hz-motion)
         hz-accel-base  (baseline-for samples :hz-accel)]
@@ -98,7 +117,7 @@
       (when (get show :lean?)
         (lean-display-values samples))
       (when (get show :bob?)
-        (map #(or (get % :vertical-accel-in-s2) 0.0) samples)))))
+        (bob-display-values samples)))))
 
 (defn- y-bounds [samples show]
   [-1.0 1.0])
@@ -186,10 +205,10 @@
                  .dotData (flc/FlDotData .show false))])
             (when (get show :bob?)
               [(flc/LineChartBarData
-                 .spots (spots-for samples :vertical-accel-in-s2)
+                 .spots (bob-display-spots-for samples)
                  .color m/Colors.red
                  .barWidth 2.0
-                 .isCurved false
+                 .isCurved true
                  .dotData (flc/FlDotData .show false))])
             (when (get show :yaw?)
               [(flc/LineChartBarData
