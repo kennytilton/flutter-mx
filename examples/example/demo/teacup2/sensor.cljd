@@ -151,6 +151,12 @@
 (defn- note-scanned-device [devices info]
   (swap! devices upsert-ble-device info))
 
+(defn- scanned-device-remote-ids [devices]
+  (set (map #(get % :remoteId) devices)))
+
+(defn- first-device-remote-id [devices]
+  (get (first devices) :remoteId))
+
 (defn- capture-running? [formx run-id]
   (and formx
        (= run-id (get @ble-state :run-id))
@@ -742,13 +748,29 @@
         (wmx-iso
           (with-cc :witmotion-settings-scan-stop
             (let [devices-found @devices
-                  first-remote-id (get (first devices-found) :remoteId)]
+                  current-source (mget root :sensor-source)
+                  preferred-remote-id (mget root :selected-ble-remote-id)
+                  found-remote-ids (scanned-device-remote-ids devices-found)
+                  preferred-found? (and preferred-remote-id
+                                     (contains? found-remote-ids preferred-remote-id))
+                  first-remote-id (first-device-remote-id devices-found)]
               (dpx :settings-scan-devices devices-found)
               (mset! root :ble-devices devices-found)
-              (if first-remote-id
+              (cond
+                (= current-source :iphone)
+                nil
+
+                preferred-found?
+                (do
+                  (mset! root :sensor-source :witmotion-ble)
+                  (mset! root :selected-ble-remote-id preferred-remote-id))
+
+                first-remote-id
                 (do
                   (mset! root :sensor-source :witmotion-ble)
                   (mset! root :selected-ble-remote-id first-remote-id))
+
+                :else
                 (do
                   (mset! root :sensor-source :iphone)
                   (mset! root :selected-ble-remote-id nil)))

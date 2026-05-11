@@ -5,6 +5,7 @@
 
 (def settings-box-name "teacup2-settings")
 (def sensor-source-key "sensor-source")
+(def selected-ble-remote-id-key "selected-ble-remote-id")
 (def lean-tolerance-key "lean-tolerance-deg")
 
 (def +DB+ (atom nil))
@@ -27,8 +28,17 @@
     (case source
       :witmotion-ble "witmotion-ble"
       :iphone "iphone"
-      (name source)))
+	  (name source)))
   source)
+
+(defn selected-ble-remote-id-read [^hv/Box db]
+  (.get db selected-ble-remote-id-key))
+
+(defn selected-ble-remote-id-write! [^hv/Box db remote-id]
+  (if remote-id
+    (.put db selected-ble-remote-id-key remote-id)
+    (.delete db selected-ble-remote-id-key))
+  remote-id)
 
 (defn lean-tolerance-read [^hv/Box db]
   (.get db lean-tolerance-key))

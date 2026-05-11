@@ -114,7 +114,13 @@
 	                        (host-device))
 	     :ble-devices     (cI [])
 	     :ble-scanning?   (cI false)
-	     :selected-ble-remote-id (cI nil)
+	     :selected-ble-remote-id (cF+ [:input? true
+	                                   :watch (fn [_ me new prior _]
+	                                            (when (mx/mx-bound? prior)
+	                                              (when-let [db (mget me :db)]
+	                                                (stg/selected-ble-remote-id-write! db new))))]
+	                               (when-let [db (mget me :db)]
+	                                 (stg/selected-ble-remote-id-read db)))
 	     :ble-scan-desired? (cI true :ephemeral? true
 	                          :watch (fn [_ me new _ _]
 	                                   (when new

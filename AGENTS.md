@@ -76,6 +76,7 @@ clj -M:cljd flutter -d all
 - Scan the `ns` `:require` block before reviewing or producing any `.cljd` file.
 - After editing CLJD code, inspect the full enclosing form with line numbers and check delimiter balance before responding; do not guess close-paren counts from a hunk.
 - Do not use `^:const`; use plain `def`.
+- Type hint Dart interop proactively when the target type is known, especially before member/property access.
 - Fix CLJD dynamic warnings with type hints where the type is known.
 - Fix the first dynamic warning first because warnings cascade.
 - Do not substitute heuristics for available first-class platform APIs. If the app needs a factual platform/device answer, use the appropriate maintained API/package; do not infer it from dimensions or layout unless explicitly approved.

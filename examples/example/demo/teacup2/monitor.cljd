@@ -63,7 +63,7 @@
    :hz?   (mget fx :show-hz?)
    :yaw?  (mget fx :show-yaw?)})
 
-(defn- toggle-dot [fx k color]
+(defn- toggle-dot [fx k ^m/Color color]
   (let [on? (mget fx k)]
     (fx/gesture-detector
       {:onTap (dart-cb []
@@ -85,8 +85,27 @@
      (toggle-dot fx :show-hz? m/Colors.black)
      (toggle-dot fx :show-yaw? m/Colors.purple)]))
 
-(defn- event-xy [ev]
-  (let [p (.-localPosition ev)]
+(defn- uuid-first-chunk [remote-id]
+  (when remote-id
+    (first (.split ^String remote-id "-"))))
+
+(defn- source-label [root]
+  (case (mget root :sensor-source)
+    :witmotion-ble (str "BLE " (or (uuid-first-chunk (mget root :selected-ble-remote-id)) "..."))
+    :iphone        (or (mget root :host-device) "...")
+    "..."))
+
+(defn- source-label-view [root]
+  (fx/text
+    {:textAlign m/TextAlign.center
+     :style (p/TextStyle
+              .fontSize 14.0
+              .color m/Colors.grey)}
+    {}
+    (source-label root)))
+
+(defn- event-xy [^w/PointerEvent ev]
+  (let [^m/Offset p (.-localPosition ev)]
     [(.-dx p) (.-dy p)]))
 
 (defn- chart-pointer-down! [fx ev]
@@ -156,9 +175,13 @@
       {:mainAxisAlignment  m/MainAxisAlignment.spaceEvenly
        :crossAxisAlignment m/CrossAxisAlignment.stretch}
 
-      (controls (fmu :teacup2))
+      (let [root (fmu :teacup2)]
+        (fx/column
+          {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+          (controls root)
+          (source-label-view root)))
 
-	      (fx/expanded
+      (fx/expanded
 	        (if-let [fx (uformx)]
 	          (let [samples  (mget fx :samples)
 	                running? (mget fx :running?)
