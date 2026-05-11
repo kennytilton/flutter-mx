@@ -26,6 +26,11 @@
 (def scan-timeout-seconds 10)
 (def scan-settle-ms 1500)
 
+(defn- name-matches? [^String s]
+  (and (string? s)
+       (not (.-isEmpty s))
+       (.startsWith s device-name-prefix)))
+
 (def frame-header-byte-0 0x55)
 (def frame-header-byte-1 0x61)
 (def register-frame-byte-1 0x71)
@@ -78,6 +83,10 @@
 
 (def ^:private rx-buf (atom []))
 
+;; BLE scans are adapter-global; FlutterBluePlus does not give us independent
+;; scan sessions. Serialize scans so they do not clash.
+(def ^:private scanning? (atom false))
+
 ;; TODO Teacup2 BLE resilience:
 ;; - If the user presses Start while Bluetooth is off, show a clear in-app status
 ;;   and recover when they enable it.
@@ -113,6 +122,34 @@
     ", adv " (or adv "-")
     ", remoteId " (or remoteId "-")
     ", rssi " (if rssi rssi "-")))
+
+(defn- scan-result-info [^fbp/ScanResult r]
+  {:name (.-platformName (.-device r))
+   :adv  (.-advName (.-advertisementData r))
+   :remoteId (.toString (.-remoteId (.-device r)))
+   :rssi (.-rssi r)})
+
+(defn- witmotion-info? [{:keys [name adv]}]
+  (or (name-matches? name)
+    (name-matches? adv)))
+
+(defn- selected-witmotion-remote-id [formx]
+  (mget (fmu :teacup2 formx) :selected-ble-remote-id))
+
+(defn- selected-witmotion? [formx remote-id]
+  (if-let [selected-id (selected-witmotion-remote-id formx)]
+    (= selected-id remote-id)
+    true))
+
+(defn- upsert-ble-device [devices info]
+  (let [devices (or devices [])
+        remote-id (get info :remoteId)]
+    (if (some #(= remote-id (get % :remoteId)) devices)
+      (mapv #(if (= remote-id (get % :remoteId)) info %) devices)
+      (conj devices info))))
+
+(defn- note-scanned-device [devices info]
+  (swap! devices upsert-ble-device info))
 
 (defn- capture-running? [formx run-id]
   (and formx
@@ -565,11 +602,6 @@
                             hit)))))]
         (recur (next svcs) hit)))))
 
-(defn- name-matches? [^String s]
-  (and (string? s)
-       (not (.-isEmpty s))
-       (.startsWith s device-name-prefix)))
-
 (defn ^:async stop-witmotion! []
   (swap! ble-state update :run-id inc)
   (set-ble-status! "idle")
@@ -646,16 +678,10 @@
           (str "Could not connect to WT901BLE: " e))))))
 
 (defn ^:async on-scan-result [formx run-id ^fbp/ScanResult r]
-  (let [name (.-platformName (.-device r))
-        adv  (.-advName (.-advertisementData r))
-        remoteId (.toString (.-remoteId (.-device r)))
-        rssi (.-rssi r)
-        info {:name name
-              :adv adv
-              :remoteId remoteId
-              :rssi rssi}
-        target? (or (name-matches? name)
-                 (name-matches? adv))]
+  (let [info (scan-result-info r)
+        remoteId (get info :remoteId)
+        target? (and (witmotion-info? info)
+                  (selected-witmotion? formx remoteId))]
     (when (and (capture-running? formx run-id)
             (nil? (get @ble-state :found-device))
             target?)
@@ -678,6 +704,49 @@
     (await on-state)
     (set-ble-status! "adapter on")))
 
+(defn ^:async scan-witmotion-devices! [root]
+  (if @scanning?
+    (dpx :settings-scan-skipped :already-scanning)
+    (do
+      (reset! scanning? true)
+      (wmx-iso
+        (with-cc :witmotion-settings-scan-start
+          (mset! root :ble-scanning? true)
+          (mset! root :ble-devices [])))
+      (let [sub-atom (atom nil)
+            devices (atom [])]
+        (try
+          (await (wait-for-adapter-on! (get @ble-state :run-id)))
+          (set-ble-status! "settings scanning")
+          (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
+                      (fn [results]
+                        (doseq [r results]
+                          (let [info (scan-result-info r)]
+                            (when (witmotion-info? info)
+                              (dpx :settings-scan-target info)
+                              (note-scanned-device devices info))))))]
+            (reset! sub-atom sub)
+            (await (fbp/FlutterBluePlus.startScan
+                     .timeout (Duration .seconds scan-timeout-seconds)))
+            (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+                     (fn [] true))))
+          (catch Object e
+            (dp :settings-witmotion-scan-exception e)
+            (set-ble-status! (str "scan error: " e))))
+        (when-let [^async/StreamSubscription sub @sub-atom]
+          (await (.cancel sub)))
+        (try
+          (await (fbp/FlutterBluePlus.stopScan))
+          (catch Object e
+            (dp :settings-ble-stop-scan-ignored e)))
+        (wmx-iso
+          (with-cc :witmotion-settings-scan-stop
+            (dpx :settings-scan-devices @devices)
+            (mset! root :ble-devices @devices)
+            (mset! root :ble-scanning? false)))
+        (reset! scanning? false)
+        (set-ble-status! "settings scan done")))))
+
 (defn ^:async start-witmotion! [formx]
   (await (stop-witmotion!))
   (clear-ble-alert-state!)
@@ -685,6 +754,11 @@
     (try
       (await (wait-for-adapter-on! run-id))
       (when (capture-running? formx run-id)
+        (when-let [selected-id (selected-witmotion-remote-id formx)]
+          (when-not (= selected-id (get (get @ble-state :found-device-info) :remoteId))
+            (swap! ble-state assoc
+              :found-device nil
+              :found-device-info nil)))
         (if-let [^fbp/BluetoothDevice dev (get @ble-state :found-device)]
           (await (connect-and-listen! formx run-id dev))
           (do

@@ -4,51 +4,101 @@
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
     [tilton.fmx.api :refer [dart-cb] :as fx]
-    [tilton.mx.api :refer [mget mset! fmu with-cc]]
+    [tilton.mx.api :refer [mget mset! fmu]]
     [example.demo.teacup2.sensor :as sensor]))
 
-(defn- source-choice [root selected? source label]
-  (fx/gesture-detector
-    {:onTap (dart-cb []
-              (when (= source :iphone)
-                (sensor/disconnect-witmotion!))
-              (with-cc :sensor-source-select
-                (mset! root :sensor-source source)))}
-    (fx/text
-      {:style (p/TextStyle
-                .fontSize 18.0
-                .color (if selected?
-                         m/Colors.orange
-                         m/Colors.black)
-                .fontWeight (if selected?
-                              p/FontWeight.bold
-                              p/FontWeight.normal))}
-      {}
-      label)))
+(defn- ble-device-label [{:keys [name adv remoteId]}]
+  (or adv name remoteId "WitMotion"))
 
-(defn- sensor-source-row [root source host-device]
+(defn- source-option [selected? label detail on-tap]
+  (fx/gesture-detector
+    {:onTap on-tap}
+    (fx/container
+      {:padding (m/EdgeInsets.symmetric .horizontal 12.0 .vertical 8.0)}
+      (fx/row
+        {:mainAxisAlignment  m/MainAxisAlignment.spaceBetween
+         :crossAxisAlignment m/CrossAxisAlignment.center}
+        (fx/column
+          {:crossAxisAlignment m/CrossAxisAlignment.start}
+          (fx/text
+            {:style (p/TextStyle
+                      .fontSize 18.0
+                      .color (if selected?
+                               m/Colors.orange
+                               m/Colors.black)
+                      .fontWeight (if selected?
+                                    p/FontWeight.bold
+                                    p/FontWeight.normal))}
+            {}
+            label)
+          (when detail
+            (fx/text
+              {:style (p/TextStyle .fontSize 12.0 .color m/Colors.grey)}
+              {}
+              detail)))
+        (fx/text
+          {:style (p/TextStyle
+                    .fontSize 18.0
+                    .color (if selected?
+                             m/Colors.orange
+                             m/Colors.transparent))}
+          {}
+          "✓")))))
+
+(defn- host-source-option [root selected? host-device]
+  (source-option selected?
+    (or host-device "...")
+    "Host IMU"
+    (dart-cb []
+      (sensor/disconnect-witmotion!)
+      (mset! root :sensor-source :iphone)
+      (mset! root :selected-ble-remote-id nil))))
+
+(defn- ble-source-option [root source selected-ble-remote-id info]
+  (let [remote-id (get info :remoteId)
+        selected? (and (= source :witmotion-ble)
+                    (= selected-ble-remote-id remote-id))]
+    (source-option selected?
+      (ble-device-label info)
+      (str "WitMotion BLE " remote-id)
+      (dart-cb []
+        (mset! root :sensor-source :witmotion-ble)
+        (mset! root :selected-ble-remote-id remote-id)))))
+
+(defn- sensor-source-picker [root source host-device ble-devices ble-scanning? selected-ble-remote-id]
   (fx/padding
     {:padding (m/EdgeInsets.symmetric .horizontal 20.0)}
-    (fx/row
-      {:mainAxisAlignment  m/MainAxisAlignment.center
-       :crossAxisAlignment m/CrossAxisAlignment.center}
-      (fx/text
-        {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
-        {}
-        "Sensor:")
-      (fx/sized-box {:width 12.0})
-      (source-choice root (= source :iphone) :iphone (or host-device "..."))
-      (fx/sized-box {:width 36.0})
-      (source-choice root (= source :witmotion-ble) :witmotion-ble "WitMotion"))))
+    (fx/column
+      {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+      (fx/row
+        {:mainAxisAlignment  m/MainAxisAlignment.spaceBetween
+         :crossAxisAlignment m/CrossAxisAlignment.center}
+        (fx/text
+          {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
+          {}
+          "Sensor:")
+        (fx/text-button
+          {:onPressed (dart-cb []
+                        (mset! root :ble-scan-desired? true))}
+          (fx/text
+            {:style (p/TextStyle .fontSize 16.0)}
+            {}
+            (if ble-scanning? "Scanning..." "Scan"))))
+      (fx/sized-box
+        {:height 216.0}
+        (fx/list-view
+          (host-source-option root (= source :iphone) host-device)
+          (doall
+            (map #(ble-source-option root source selected-ble-remote-id %)
+              ble-devices)))))))
 
 (defn- tolerance-choice [root selected? tolerance-deg]
-  (fx/sized-box
-    {:width 44.0
-     :height 40.0}
+    (fx/sized-box
+      {:width 44.0
+       :height 40.0}
     (fx/gesture-detector
       {:onTap (dart-cb []
-                (with-cc :lean-tolerance-select
-                  (mset! root :lean-tolerance-deg tolerance-deg)))}
+                (mset! root :lean-tolerance-deg tolerance-deg))}
       (fx/center
         (fx/text
           {:style (p/TextStyle
@@ -72,7 +122,7 @@
         (fx/text
           {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
           {}
-          "Lean limit")
+          "Lean limit:")
         (fx/sized-box {:width 12.0})
         (fx/row
           {:mainAxisAlignment m/MainAxisAlignment.center}
@@ -90,10 +140,13 @@
     (let [root   (fmu :teacup2)
           source (mget root :sensor-source)
           host-device (mget root :host-device)
+          ble-devices (mget root :ble-devices)
+          ble-scanning? (mget root :ble-scanning?)
+          selected-ble-remote-id (mget root :selected-ble-remote-id)
           lean-tolerance-deg (mget root :lean-tolerance-deg)]
       (fx/column
         {:mainAxisAlignment  m/MainAxisAlignment.center
          :crossAxisAlignment m/CrossAxisAlignment.stretch}
-        (sensor-source-row root source host-device)
+        (sensor-source-picker root source host-device ble-devices ble-scanning? selected-ble-remote-id)
         (m/SizedBox .height 36)
         (lean-sensitivity-row root lean-tolerance-deg)))))

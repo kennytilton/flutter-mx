@@ -110,9 +110,16 @@
 	                        (or (when-let [db (mget me :db)]
 	                              (stg/sensor-source-read db))
 	                          :iphone))
-     :host-device     (cF+ [:async? true]
-                        (host-device))
-     :lean-tolerance-deg (cI sensor/default-lean-tolerance-deg
+	     :host-device     (cF+ [:async? true]
+	                        (host-device))
+	     :ble-devices     (cI [])
+	     :ble-scanning?   (cI false)
+	     :selected-ble-remote-id (cI nil)
+	     :ble-scan-desired? (cI true :ephemeral? true
+	                          :watch (fn [_ me new _ _]
+	                                   (when new
+	                                     (sensor/scan-witmotion-devices! me))))
+	     :lean-tolerance-deg (cI sensor/default-lean-tolerance-deg
                            :watch (fn [_ me new prior _]
                                     (when (mx/mx-bound? prior)
                                       (when-let [db (mget me :db)]
@@ -123,7 +130,7 @@
                                       (make-formx))
                              :stop  nil
                              (_cache-bound)))
-     :current-page-id (cI :chart)}
+	     :current-page-id (cI :settings)}
     (fx/scaffold
       {:appBar              (fx/app-bar
                               {:title (m/Text (title-text))})
