@@ -182,31 +182,31 @@
           (source-label-view root)))
 
       (fx/expanded
-	        (if-let [fx (uformx)]
-	          (let [samples  (mget fx :samples)
-	                running? (mget fx :running?)
-	                stopped-full? (mget fx :stopped-full-chart?)
-		                chart (line-chart {}
-		                        (chart-data samples running? stopped-full?
-		                          (chart-show fx)))]
-		            (if running?
-		              chart
-				              (fx/listener
-				                {:behavior w/HitTestBehavior.opaque
-				                 :onPointerDown (dart-cb [ev]
-				                                  (chart-pointer-down! fx ev))
-				                 :onPointerMove (dart-cb [ev]
-				                                  (chart-pointer-move! fx ev))
-				                 :onPointerUp (dart-cb [_]
-				                                (chart-pointer-up! fx))
-				                 :onPointerCancel (dart-cb [_]
-				                                    (chart-pointer-cancel! fx))}
-			                (if stopped-full?
-			                  chart
-		                  (fx/single-child-scroll-view
-		                    {:scrollDirection m/Axis.horizontal}
-		                    (fx/sized-box
-		                      {:width (plot/stopped-chart-width samples)}
-		                      chart))))))
-	          (line-chart {}
-	            (chart-data [] false)))))))
+        (if-let [fx (uformx)]
+          (let [samples  (mget fx :samples)
+                running? (mget fx :running?)
+                stopped-full? (mget fx :stopped-full-chart?)
+                chart (line-chart {}
+                        (chart-data samples running? stopped-full?
+                          (chart-show fx)))]
+            (if running?
+              chart
+              (fx/listener
+                {:behavior w/HitTestBehavior.opaque
+                 :onPointerDown (dart-cb [ev]
+                                  (chart-pointer-down! fx ev))
+                 :onPointerMove (dart-cb [ev]
+                                  (chart-pointer-move! fx ev))
+                 :onPointerUp (dart-cb [_]
+                                (chart-pointer-up! fx))
+                 :onPointerCancel (dart-cb [_]
+                                    (chart-pointer-cancel! fx))}
+                (if stopped-full?
+                  chart
+                  (fx/single-child-scroll-view
+                    {:scrollDirection m/Axis.horizontal}
+                    (fx/sized-box
+                      {:width (plot/stopped-chart-width samples)}
+                      chart))))))
+          (line-chart {}
+            (chart-data [] false)))))))
