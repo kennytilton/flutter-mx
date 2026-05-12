@@ -2,7 +2,7 @@
   "Temporary horizontal-motion LineChart for Teacup2.
      solid black  -- horizontal motion aggregate
      black dashes -- horizontal acceleration
-     black dots   -- yaw"
+     purple       -- yaw-rate change"
   (:require
     ["package:flutter/widgets.dart" :as w]
     ["package:flutter/material.dart" :as m]
@@ -20,10 +20,11 @@
 (def y-margin 1.2)
 (def yaw-display-ma-window-ms 1000.0)
 (def lean-display-ma-window-ms 1000.0)
-(def bob-display-ma-window-ms 1000.0)
+(def bob-display-ma-window-ms 750.0)
 (def display-ma-warmup-ms 1000.0)
 (def bob-display-scale-in-s2 40.0)
 (def hz-motion-display-scale 0.002)
+(def yaw-rate-change-display-scale 0.25)
 
 (defn- spots-for [samples y-key]
   (mapv (fn [s]
@@ -58,33 +59,42 @@
                       (double (* (or (get s y-key) 0.0) scale))))
     samples))
 
-(defn- rolling-average-values [samples window-ms value-fn]
-  (loop [remaining samples
-         window []
-         sum 0.0
-         values []]
-    (if-let [sample (first remaining)]
-      (let [t-min (- (double (get sample :t)) window-ms)
-            v (double (value-fn sample))
-            window+ (conj window [sample v])
-            sum+ (+ sum v)
-            [window* sum*]
-            (loop [w window+
-                   s sum+]
-              (if (and (seq w)
-                    (< (double (get (first (first w)) :t)) t-min))
-                (recur (subvec w 1) (- s (second (first w))))
-                [w s]))
-            n (count window*)]
-        (recur (rest remaining)
-          window*
-          sum*
-          (conj values (if (pos? n) (/ sum* n) 0.0))))
-      values)))
+(defn- rolling-average-values
+  ([samples window-ms value-fn]
+   (rolling-average-values samples window-ms value-fn false))
+  ([samples window-ms value-fn full-window-only?]
+   (loop [remaining samples
+          window []
+          sum 0.0
+          values []]
+     (if-let [sample (first remaining)]
+       (let [t (double (get sample :t))
+             t-min (- t window-ms)
+             v (double (value-fn sample))
+             window+ (conj window [sample v])
+             sum+ (+ sum v)
+             [window* sum*]
+             (loop [w window+
+                    s sum+]
+               (if (and (seq w)
+                     (< (double (get (first (first w)) :t)) t-min))
+                 (recur (subvec w 1) (- s (second (first w))))
+                 [w s]))
+             n (count window*)]
+         (recur (rest remaining)
+           window*
+           sum*
+           (if (and full-window-only?
+                 (< t window-ms))
+             values
+             (conj values (if (pos? n) (/ sum* n) 0.0)))))
+       values))))
 
 (defn- yaw-display-values [samples]
   (rolling-average-values samples yaw-display-ma-window-ms
-    #(or (get % :yaw-rate) 0.0)))
+    #(* (or (get % :yaw-accel) 0.0)
+       yaw-rate-change-display-scale)
+    true))
 
 (defn- lean-display-values [samples]
   (rolling-average-values samples lean-display-ma-window-ms
@@ -100,7 +110,7 @@
   (mapv (fn [s yaw]
           (flc/FlSpot (double (get s :t))
                       (double yaw)))
-    samples
+    (filter #(>= (double (get % :t)) yaw-display-ma-window-ms) samples)
     (yaw-display-values samples)))
 
 (defn- lean-display-spots-for [samples]
@@ -228,18 +238,18 @@
                  .barWidth 2.0
                  .isCurved true
                  .dotData (flc/FlDotData .show false))])
-            (when (get show :bob?)
-              [(flc/LineChartBarData
-                 .spots (bob-display-spots-for plot-samples)
-                 .color m/Colors.red
-                 .barWidth 2.0
-                 .isCurved true
-                 .dotData (flc/FlDotData .show false))])
             (when (get show :yaw?)
               [(flc/LineChartBarData
                  .spots (yaw-display-spots-for plot-samples)
                  .color m/Colors.purple
                  .barWidth 1.5
+                 .isCurved true
+                 .dotData (flc/FlDotData .show false))])
+            (when (get show :bob?)
+              [(flc/LineChartBarData
+                 .spots (bob-display-spots-for plot-samples)
+                 .color m/Colors.red
+                 .barWidth 3.0
                  .isCurved true
                  .dotData (flc/FlDotData .show false))])))
     .titlesData

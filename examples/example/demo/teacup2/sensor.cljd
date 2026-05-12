@@ -348,7 +348,11 @@
         scored (motion/score-sample
                  (assoc raw :up (mget formx :neutral-up))
                  prior)
-        sample (assoc scored :bob-in-s2 (bob-in-s2 scored))]
+        sample (assoc scored :bob-in-s2 (bob-in-s2 scored))
+        dt-ms  (when (and prior
+                       (get sample :timestamp)
+                       (get prior :timestamp))
+                 (- (get sample :timestamp) (get prior :timestamp)))]
     (dpx :lean-scored
       :n (inc (count (mget formx :samples)))
       :lean-deg (fmt1 (get sample :lean-deg))
@@ -360,16 +364,18 @@
       :yaw (fmt1 (get sample :yaw)))
     (dpx :motion-components
       :in-s2 (fmt2 (get sample :vertical-accel-in-s2))
-      :bob-in-s2 (fmt2 (get sample :bob-in-s2))
+      :bob-in/s2 (fmt2 (get sample :bob-in-s2))
       :hz (fmt2 (get sample :hz-accel))
       :yaw-rate (fmt2 (get sample :yaw-rate))
       :yaw-accel (fmt2 (get sample :yaw-accel))
       :yaw-score (fmt2 (get sample :yaw-score))
       :hz-motion (fmt2 (get sample :hz-motion)))
-    (dp :ang-velosty
+    (dpx :yaw
+      :deg (fmt1 (get sample :yaw))
       :rad-s (fmt2 (get sample :yaw-rate))
-      :bob-in-s2 (fmt2 (get sample :bob-in-s2)))
-    (dp :hz-raw
+      :rad-s2 (fmt2 (get sample :yaw-accel))
+      :dt-ms (fmt1 dt-ms))
+    (dpx :hz-raw
       :in-s2 (fmt2 (get sample :hz-accel)))
     (mupdate! formx :samples conj sample)))
 
@@ -569,6 +575,8 @@
         (when-let [decoded (decode-0x61-frame frame)]
           (when (capture-running? formx run-id)
             (append-raw-sample! formx (witmotion-sample formx decoded))))
+        (when-let [{:keys [rrate-code]} (decode-register-frame frame)]
+          (log-rrate! rrate-code))
         (recur rest-)))))
 
 (defn- handle-witmotion-bytes! [formx run-id bytes]
@@ -685,7 +693,12 @@
                               (catch Object e
                                 (dp :witmotion-decode-exception e)))))]
                 (.cancelWhenDisconnected dev sub)
-                (swap! ble-state assoc :notify-sub sub)))
+                (swap! ble-state assoc :notify-sub sub)
+                (when-let [^fbp/BluetoothCharacteristic write-c
+                           (pick-write-characteristic services)]
+                  (await (.write write-c
+                           (command-bytes 0xff 0xaa read-register-command rrate-register 0x00)
+                           .withoutResponse (.-writeWithoutResponse (.-properties write-c)))))))
             (ble-alert! formx
               "WT901BLE unavailable"
               "WT901BLE has no notify characteristic."))))

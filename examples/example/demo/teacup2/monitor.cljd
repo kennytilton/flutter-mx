@@ -14,7 +14,7 @@
 
 (def control-icon-size 48.0)
 (def chart-tap-slop-squared (* 12.0 12.0))
-(def plot-dot-size 24.0)
+(def plot-dot-size 48.0)
 
 (defn- control-button [tooltip icon color on-pressed]
   (fx/icon-button
@@ -69,7 +69,7 @@
       {:onTap (dart-cb []
                 (mset! fx k (not (mget fx k))))}
       (fx/padding
-        {:padding (m/EdgeInsets.symmetric .horizontal 8.0 .vertical 12.0)}
+        {:padding (m/EdgeInsets.symmetric .horizontal 16.0 .vertical 12.0)}
         (fx/container
           {:width plot-dot-size
            :height plot-dot-size
@@ -185,9 +185,10 @@
         (if-let [fx (uformx)]
           (let [samples  (mget fx :samples)
                 running? (mget fx :running?)
+                stopped? (mget fx :stopped?)
                 stopped-full? (mget fx :stopped-full-chart?)
                 chart (line-chart {}
-                        (chart-data samples running? stopped-full?
+                        (chart-data samples running? stopped?
                           (chart-show fx)))]
             (if running?
               chart
