@@ -10,6 +10,7 @@
 	     :refer [dp mget mset! fmu now-ms]]
 	    [example.demo.teacup2.util :refer [uformx]]
 	    [example.demo.teacup2.util.audio :as audio]
+	    [example.demo.teacup2.session :as session]
 	    [example.demo.teacup2.plot   :as plot :refer [line-chart chart-data]]))
 
 (def control-icon-size 48.0)
@@ -34,7 +35,8 @@
 (defn- pause! [fx]
   (let [now (now-ms)]
     (dp :pause-pressed :now now)
-    (mset! fx :pause-start-ms now))
+    (mset! fx :pause-start-ms now)
+    (mset! fx :stop-ms now))
   (mset! fx :paused? true)
   (mset! fx :stopped? false)
   (mset! fx :running? false))
@@ -47,17 +49,52 @@
     (audio/play-sys-sound! audio/SIMToolkit-General-Beep)
     (mset! fx :paused-total-ms (+ (mget fx :paused-total-ms) pause-ms))
     (mset! fx :record-after-ms (+ (mget fx :record-after-ms) pause-ms))
-    (mset! fx :pause-start-ms nil))
+    (mset! fx :pause-start-ms nil)
+    (mset! fx :stop-ms nil))
   (mset! fx :paused? false)
   (mset! fx :stopped? false)
   (mset! fx :running? true))
 
 (defn- stop! [fx]
-  (dp :stop-pressed)
+  (let [now (now-ms)]
+    (dp :stop-pressed :now now)
+    (mset! fx :stop-ms now))
   (audio/play-sys-sound! audio/SIMToolkit-Negative-ACK)
   (mset! fx :paused? false)
   (mset! fx :stopped? true)
   (mset! fx :running? false))
+
+(defn- show-save-dialog! [root fx ctx]
+  (let [^m/TextEditingController comment-controller
+        (m/TextEditingController)]
+    (m/showDialog
+      .context ctx
+      .builder (fn [ctx]
+                 (fx/fx-render ctx
+                   (fx/alert-dialog
+                     {:title (m/Text "Save session")}
+                     (fx/column
+                       {:mainAxisSize m/MainAxisSize.min}
+                       (fx/text-field
+                         {:controller comment-controller
+                          :autofocus true
+                          :minLines 2
+                          :maxLines 4
+                          :decoration (m/InputDecoration
+                                        .labelText "Comment")})
+                       (fx/row
+                         {:mainAxisAlignment m/MainAxisAlignment.end}
+	                         (fx/text-button
+	                           {:onPressed (dart-cb []
+	                                         (-> ctx m/Navigator.of .pop))}
+	                           (m/Text "Cancel"))
+                         (fx/text-button
+                           {:onPressed (dart-cb []
+	                                         (let [comment (.-text comment-controller)]
+	                                           (dp "SAVING!!!!!")
+	                                           (session/save-session! root fx comment)
+	                                           (-> ctx m/Navigator.of .pop)))}
+	                           (m/Text "Save"))))))))))
 
 (defn- chart-show [root]
   (mget root :display-series))
@@ -111,6 +148,16 @@
 	     (toggle-dot root :hz? m/Colors.blue)
 	     (toggle-dot root :yaw? m/Colors.purple)
 	     (toggle-symbol root :summary? "Σ" m/Colors.black)]))
+
+(defn- save-button [fx]
+  (let [enabled? (and fx
+                   (seq (mget fx :samples))
+                   (or (mget fx :paused?)
+                     (mget fx :stopped?)))]
+    (control-button "Save" m/Icons.save
+      (if enabled? m/Colors.blue m/Colors.grey)
+      (when enabled?
+        (dart-cb [] (show-save-dialog! (fmu :teacup2) fx ctx))))))
 
 (defn- uuid-first-chunk [remote-id]
   (when remote-id
@@ -194,7 +241,9 @@
 	         :else
 		         [(control-button "Run" m/Icons.directions_run m/Colors.green
 		            (dart-cb [] (run! root)))])
-        (or (plot-toggles root) []))))))
+        (or (plot-toggles root) [])
+        [(fx/sized-box {:width 24.0})
+         (save-button fx)])))))
 
 (defn monitor-page []
   (fx/safe-area

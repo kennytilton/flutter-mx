@@ -20,6 +20,7 @@
      :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound with-cc with-mx-edge]]
     [example.demo.teacup2.sensor :as sensor]
     [example.demo.teacup2.persist :as stg]
+    [example.demo.teacup2.progress :refer [progress-page]]
     [example.demo.teacup2.monitor :refer [monitor-page]]
     [example.demo.teacup2.summary :refer [summary-page]]
     [example.demo.teacup2.settings :refer [settings-page]]
@@ -42,6 +43,7 @@
 	    :record-after-ms (cI (+ (now-ms) sensor/start-record-delay-ms))
 	    :paused-total-ms (cI 0)
 	    :pause-start-ms (cI nil)
+	    :stop-ms (cI nil)
 	    :secs-left (cI sensor/run-duration-s)
     :mount-code (cI :y-up)
     :neutral-up (cI nil)
@@ -67,19 +69,21 @@
 
 (defn- page-index [page-id]
   (case page-id
-    :chart 0
-    :summary 1
-    :settings 2
-    :hack 3
+    :progress 0
+    :chart 1
+    :summary 2
+    :settings 3
+    :hack 4
     0))
 
 (defn- index-page [i]
   (case i
-    0 :chart
-    1 :summary
-    2 :settings
-    3 :hack
-    :chart))
+    0 :progress
+    1 :chart
+    2 :summary
+    3 :settings
+    4 :hack
+    :progress))
 
 (defn make-app []
   ; (sensor/ble-set! :rrate 5)
@@ -140,7 +144,7 @@
                                       (make-formx))
                              :stop  nil
                              (_cache-bound)))
-	     :current-page-id (cI :chart)}
+	     :current-page-id (cI :progress)}
     (fx/scaffold
       {:appBar              (fx/app-bar
                               {:title (m/Text (title-text))})
@@ -152,9 +156,13 @@
                                    :onTap        (dart-cb [i]
                                                    (mset! root :current-page-id
                                                      (index-page i)))}
-                                  (fx/bottom-navigation-bar-item
-                                    {:icon  (m/Icon m/Icons.show_chart)
-                                     :label "Chart"}
+	                                  (fx/bottom-navigation-bar-item
+	                                    {:icon  (m/Icon m/Icons.insights)
+	                                     :label "Progress"}
+	                                    {})
+	                                  (fx/bottom-navigation-bar-item
+	                                    {:icon  (m/Icon m/Icons.show_chart)
+	                                     :label "Chart"}
                                     {})
                                   (fx/bottom-navigation-bar-item
                                     {:icon  (m/Icon m/Icons.grid_on)
@@ -174,12 +182,13 @@
                     (-> ctx m/FocusScope.of .unfocus)))}
 	        (fx/stack
 	          {}
-	          (case (mget (fmu :teacup2) :current-page-id)
-	            :chart (monitor-page)
+		          (case (mget (fmu :teacup2) :current-page-id)
+		            :progress (progress-page)
+		            :chart (monitor-page)
 	            :summary (summary-page)
 	            :settings (settings-page)
 	            :hack (hack-page)
-	            (monitor-page))
+		            (progress-page))
 	          (fx/offstage
 	            {:offstage true}
 	            (sensor/capture)))))))
