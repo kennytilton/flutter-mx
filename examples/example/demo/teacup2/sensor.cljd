@@ -37,6 +37,7 @@
 (def frame-length 20)
 (def read-register-command 0x27)
 (def rrate-register 0x03)
+(def default-rrate-code 0x05)
 
 (def accel-scale (/ 16.0 32768.0))
 (def gyro-scale  (/ 2000.0 32768.0))
@@ -77,6 +78,7 @@
          :scan-sub nil
          :found-device nil
          :found-device-info nil
+         :devices-by-remote-id {}
          :notify-sub nil
          :alert nil
          :alert-showing? false}))
@@ -86,6 +88,8 @@
 ;; BLE scans are adapter-global; FlutterBluePlus does not give us independent
 ;; scan sessions. Serialize scans so they do not clash.
 (def ^:private scanning? (atom false))
+
+(declare ble-defaults-set! ble-defaults-set-for-remote-id!)
 
 ;; TODO Teacup2 BLE resilience:
 ;; - If the user presses Start while Bluetooth is off, show a clear in-app status
@@ -129,6 +133,12 @@
    :remoteId (.toString (.-remoteId (.-device r)))
    :rssi (.-rssi r)})
 
+(defn- remember-scanned-device! [^fbp/ScanResult r info]
+  (when-let [remote-id (get info :remoteId)]
+    (swap! ble-state assoc-in
+      [:devices-by-remote-id remote-id]
+      (.-device r))))
+
 (defn- witmotion-info? [{:keys [name adv]}]
   (or (name-matches? name)
     (name-matches? adv)))
@@ -156,6 +166,9 @@
 
 (defn- first-device-remote-id [devices]
   (get (first devices) :remoteId))
+
+(defn- ble-device-by-remote-id [remote-id]
+  (get-in @ble-state [:devices-by-remote-id remote-id]))
 
 (defn- capture-running? [formx run-id]
   (and formx
@@ -713,17 +726,19 @@
         remoteId (get info :remoteId)
         target? (and (witmotion-info? info)
                   (selected-witmotion? formx remoteId))]
-    (when (and (capture-running? formx run-id)
-            (nil? (get @ble-state :found-device))
-            target?)
-      (dp :scan-target info)
-      (clear-ble-alert-state!)
-      (swap! ble-state assoc
-        :found-device (.-device r)
-        :found-device-info info)
-      (set-ble-status! (str "found: " (device-summary info)))
-      (await (fbp/FlutterBluePlus.stopScan))
-      (await (connect-and-listen! formx run-id (.-device r))))))
+	    (when (and (capture-running? formx run-id)
+	            (nil? (get @ble-state :found-device))
+	            target?)
+	      (dp :scan-target info)
+	      (remember-scanned-device! r info)
+	      (clear-ble-alert-state!)
+	      (swap! ble-state assoc
+	        :found-device (.-device r)
+	        :found-device-info info)
+	      (set-ble-status! (str "found: " (device-summary info)))
+	      (await (fbp/FlutterBluePlus.stopScan))
+	      (await (ble-defaults-set! (.-device r)))
+	      (await (connect-and-listen! formx run-id (.-device r))))))
 
 (defn ^:async wait-for-adapter-on! [run-id]
   (set-ble-status! "waiting for BT adapter")
@@ -751,11 +766,12 @@
           (set-ble-status! "settings scanning")
           (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
                       (fn [results]
-                        (doseq [r results]
-                          (let [info (scan-result-info r)]
-                            (when (witmotion-info? info)
-                              (dpx :settings-scan-target info)
-	                              (note-scanned-device devices info))))))]
+	                        (doseq [r results]
+	                          (let [info (scan-result-info r)]
+	                            (when (witmotion-info? info)
+	                              (remember-scanned-device! r info)
+	                              (dpx :settings-scan-target info)
+		                              (note-scanned-device devices info))))))]
 	            (reset! sub-atom sub)
 	            (await (fbp/FlutterBluePlus.startScan
 	                     .timeout (Duration .seconds scan-timeout-seconds)))
@@ -790,17 +806,19 @@
 	              (dp :settings-scan-devices devices-found)
 	              (mset! root :ble-devices devices-found)
 	              (cond
-	                first-remote-id
-	                (do
-	                  (mset! root :sensor-source :witmotion-ble)
-	                  (mset! root :selected-ble-remote-id first-remote-id))
+		                first-remote-id
+		                (do
+		                  (mset! root :sensor-source :witmotion-ble)
+		                  (mset! root :selected-ble-remote-id first-remote-id))
 
 	                :else
 	                (do
 	                  (mset! root :sensor-source :iphone)
 	                  (mset! root :selected-ble-remote-id nil)))
-	              (mset! root :ble-scanning? false))))
-        (reset! scanning? false)
+		              (mset! root :ble-scanning? false))))
+	        (when-let [first-remote-id (first-device-remote-id @devices)]
+	          (await (ble-defaults-set-for-remote-id! first-remote-id)))
+	        (reset! scanning? false)
         (set-ble-status! "settings scan done")))))
 
 (defn ^:async start-witmotion! [formx]
@@ -886,6 +904,30 @@
   (.write write-c
     (command-bytes 0xff 0xaa (register-code register) value 0x00)
     .withoutResponse (.-writeWithoutResponse (.-properties write-c))))
+
+(defn ^:async ble-defaults-set! [^fbp/BluetoothDevice dev]
+  (try
+    (dp :ble-defaults-set! :starting :rrate default-rrate-code)
+    (await (fbp/FlutterBluePlus.stopScan))
+    (await (.connect dev .timeout (Duration .seconds 15)))
+    (let [services (await (.discoverServices dev))]
+      (if-let [^fbp/BluetoothCharacteristic write-c
+               (pick-write-characteristic services)]
+        (do
+          (await (ble-write-register! write-c :rrate default-rrate-code))
+          (dp :ble-defaults-set! :ok :rrate default-rrate-code))
+        (dp :ble-defaults-set! :error "no write characteristic")))
+    (catch Object e
+      (dp :ble-defaults-set! :exception e)))
+  (try
+    (await (.disconnect dev))
+    (catch Object e
+      (dp :ble-defaults-disconnect-ignored e))))
+
+(defn ^:async ble-defaults-set-for-remote-id! [remote-id]
+  (if-let [^fbp/BluetoothDevice dev (ble-device-by-remote-id remote-id)]
+    (await (ble-defaults-set! dev))
+    (dp :ble-defaults-set! :error "unknown remoteId" remote-id)))
 
 (defn ^:async ble-set-device!
   [^fbp/BluetoothDevice dev register value ^async/Completer done]

@@ -63,7 +63,8 @@
       (str "WitMotion BLE " remote-id)
       (dart-cb []
         (mset! root :sensor-source :witmotion-ble)
-        (mset! root :selected-ble-remote-id remote-id)))))
+        (mset! root :selected-ble-remote-id remote-id)
+        (sensor/ble-defaults-set-for-remote-id! remote-id)))))
 
 (defn- sensor-source-picker [root source host-device ble-devices ble-scanning? selected-ble-remote-id]
   (fx/padding
