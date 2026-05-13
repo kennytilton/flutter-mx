@@ -4,3 +4,4 @@
 - Teacup2: capture UMI location with each formx session.
 - Teacup2: use TTS to call out movements for the user to follow.
 - Teacup2: include KWT charts annotated with movements captured via STT.
+- Teacup2: when tapping the compressed chart to switch to expanded, center the expanded view on the tapped time instead of focusing on the start.
