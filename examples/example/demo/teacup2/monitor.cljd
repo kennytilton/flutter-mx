@@ -14,7 +14,9 @@
 
 (def control-icon-size 48.0)
 (def chart-tap-slop-squared (* 12.0 12.0))
-(def plot-dot-size 48.0)
+(def plot-dot-size 24.0)
+(def plot-toggle-pad-h 8.0)
+(def plot-toggle-pad-v 6.0)
 
 (defn- control-button [tooltip icon color on-pressed]
   (fx/icon-button
@@ -70,7 +72,7 @@
                     (assoc display-series k
                       (not (get display-series k))))))}
       (fx/padding
-        {:padding (m/EdgeInsets.symmetric .horizontal 16.0 .vertical 12.0)}
+        {:padding (m/EdgeInsets.symmetric .horizontal plot-toggle-pad-h .vertical plot-toggle-pad-v)}
         (fx/container
           {:width plot-dot-size
            :height plot-dot-size
@@ -88,14 +90,14 @@
                     (assoc display-series k
                       (not (get display-series k))))))}
       (fx/padding
-        {:padding (m/EdgeInsets.symmetric .horizontal 16.0 .vertical 12.0)}
+        {:padding (m/EdgeInsets.symmetric .horizontal plot-toggle-pad-h .vertical plot-toggle-pad-v)}
         (fx/sized-box
           {:width plot-dot-size
            :height plot-dot-size}
           (fx/center
             (fx/text
               {:style (p/TextStyle
-                        .fontSize 36.0
+                        .fontSize 20.0
                         .fontWeight p/FontWeight.bold
                         .color (if on? color (.withOpacity color 0.25)))}
               {}
