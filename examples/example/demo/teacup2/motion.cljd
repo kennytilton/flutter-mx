@@ -85,8 +85,7 @@
    (let [timestamp (get raw :timestamp)
          accel-raw (get raw :accel-raw)
          lean-gravity (normalize (get raw :gravity))
-         gravity   (normalize (or (get raw :euler-gravity)
-                                (get raw :gravity)))
+         gravity   (normalize (get raw :gravity))
          gyro      (get raw :gyro)
          up        (or (get raw :up) default-up)
 	         source    (get raw :source)
@@ -132,6 +131,18 @@
 	       :lean-gravity lean-gravity
 	       :up (normalize up)
 	       :gravity-ref gravity)
+     (dp :hz-motion-raw
+       :ax (get accel-raw :x)
+       :ay (get accel-raw :y)
+       :az (get accel-raw :z)
+       :gx (get gravity :x)
+       :gy (get gravity :y)
+       :gz (get gravity :z)
+       :lin-x (get linear :x)
+       :lin-z (get linear :z)
+       :hz-x (get horizontal :x)
+       :hz-z (get horizontal :z)
+       :hz-in-s2 hz-accel-in-s2)
 	     (merge raw
        {:lean lean
         :lean-deg (rad->deg lean)
