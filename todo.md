@@ -1,0 +1,6 @@
+- Teacup2: store explicit user sensor selection as the persisted preference. Startup scan may choose a runtime source, but scan fallback/results should not overwrite the user's explicit host/BLE preference.
+- Teacup2: detect the WitMotion BLE device reliably.
+- Teacup2: save named formx sessions and offer them as ghost overlays for comparison, including personal best and first-day references.
+- Teacup2: capture UMI location with each formx session.
+- Teacup2: use TTS to call out movements for the user to follow.
+- Teacup2: include KWT charts annotated with movements captured via STT.
