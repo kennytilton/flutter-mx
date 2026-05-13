@@ -58,10 +58,6 @@
 	    :lean-warning? (cI false)
 	    :lean-deg (cI nil)
 	    :stopped-full-chart? (cI true)
-		    :show-lean? (cI false)
-			    :show-bob? (cI true)
-		    :show-hz? (cI false)
-	    :show-yaw? (cI true)
 	    :chart-pointer-down-x (cI nil)
 	    :chart-pointer-down-y (cI nil)
 	    :chart-pointer-moved? (cI false)
@@ -96,12 +92,14 @@
      :db              (cF+ [:async? true
                             :watch (fn [_ me db _ _]
                                      (stg/DB! db)
-                                     (when db
-                                       (with-cc :lean-tolerance-load
-                                         (mset! me :lean-tolerance-deg
-                                           (sensor/normalize-lean-tolerance-deg
-                                             (stg/lean-tolerance-read db))))
-                                       (mset! me :ble-scan-desired? true)))]
+	                                     (when db
+	                                       (with-cc :lean-tolerance-load
+	                                         (mset! me :lean-tolerance-deg
+	                                           (sensor/normalize-lean-tolerance-deg
+	                                             (stg/lean-tolerance-read db)))
+	                                         (mset! me :display-series
+	                                           (stg/display-series-read db)))
+	                                       (mset! me :ble-scan-desired? true)))]
                         (stg/open-settings-box))
      :sensor-source   (cF+ [:input? true
                             :watch (fn [_ me new prior _]
@@ -129,10 +127,15 @@
 	     :lean-tolerance-deg (cI sensor/default-lean-tolerance-deg
                            :watch (fn [_ me new prior _]
                                     (when (mx/mx-bound? prior)
-                                      (when-let [db (mget me :db)]
-                                        (stg/lean-tolerance-write! db
-                                          (sensor/normalize-lean-tolerance-deg new))))))
-     :formx           (cF (case (mget me :event)
+	                                      (when-let [db (mget me :db)]
+	                                        (stg/lean-tolerance-write! db
+	                                          (sensor/normalize-lean-tolerance-deg new))))))
+	     :display-series (cI stg/default-display-series
+	                       :watch (fn [_ me new prior _]
+	                                (when (mx/mx-bound? prior)
+	                                  (when-let [db (mget me :db)]
+	                                    (stg/display-series-write! db new)))))
+	     :formx           (cF (case (mget me :event)
                              :start (with-mx-edge [me :formx]
                                       (make-formx))
                              :stop  nil

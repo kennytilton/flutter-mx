@@ -51,6 +51,8 @@ clj -M:cljd flutter -d all
 5. If changes do not appear, press `Return` in the launch terminal to hot restart.
 6. `dp` output appears in the Flutter console.
 7. When finished editing files, announce loudly and explicitly that changes are done.
+8. When asked about current code, inspect the source before answering. Do not answer from memory, recent context, or assumptions; code is brittle and stale values can waste hours of debugging.
+9. When proposing a file change before applying it, show the proposed patch. Do not show a rewritten file or section as if it were already changed.
 
 ## Debugging
 

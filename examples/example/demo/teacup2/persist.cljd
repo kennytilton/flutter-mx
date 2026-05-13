@@ -7,6 +7,13 @@
 (def sensor-source-key "sensor-source")
 (def selected-ble-remote-id-key "selected-ble-remote-id")
 (def lean-tolerance-key "lean-tolerance-deg")
+(def display-series-key "display-series")
+
+(def default-display-series
+  {:lean? false
+   :bob?  true
+   :hz?   false
+   :yaw?  true})
 
 (def +DB+ (atom nil))
 
@@ -46,3 +53,20 @@
 (defn lean-tolerance-write! [^hv/Box db tolerance-deg]
   (.put db lean-tolerance-key tolerance-deg)
   tolerance-deg)
+
+(defn display-series-read [^hv/Box db]
+  (if-let [s (.get db display-series-key)]
+    {:lean? (.contains ^String s "lean")
+     :bob?  (.contains ^String s "bob")
+     :hz?   (.contains ^String s "hz")
+     :yaw?  (.contains ^String s "yaw")}
+    default-display-series))
+
+(defn display-series-write! [^hv/Box db display-series]
+  (.put db display-series-key
+    (str
+      (when (get display-series :lean?) "lean,")
+      (when (get display-series :bob?) "bob,")
+      (when (get display-series :hz?) "hz,")
+      (when (get display-series :yaw?) "yaw,")))
+  display-series)

@@ -137,8 +137,48 @@
                 (let [choice (tolerance-choice root (= selected-deg tolerance-deg) tolerance-deg)]
                   (if (= tolerance-deg (first sensor/lean-tolerance-options-deg))
                     [choice]
-                    [(fx/sized-box {:width 36.0}) choice])))
-              sensor/lean-tolerance-options-deg)))))))
+	                    [(fx/sized-box {:width 36.0}) choice])))
+	              sensor/lean-tolerance-options-deg)))))))
+
+(defn- display-toggle [root display-series k label ^m/Color color]
+  (let [selected? (get display-series k)]
+    (fx/gesture-detector
+      {:onTap (dart-cb []
+                (let [display-series (mget root :display-series)]
+                  (mset! root :display-series
+                    (assoc display-series k
+                      (not (get display-series k))))))}
+      (fx/container
+        {:padding (m/EdgeInsets.symmetric .horizontal 10.0 .vertical 8.0)}
+        (fx/row
+          {:crossAxisAlignment m/CrossAxisAlignment.center}
+          (fx/container
+            {:width 24.0
+             :height 24.0
+             :decoration (m/BoxDecoration
+                           .color (if selected? color (.withOpacity color 0.25))
+                           .shape p/BoxShape.circle)})
+          (fx/sized-box {:width 8.0})
+          (fx/text
+            {:style (p/TextStyle .fontSize 16.0 .color m/Colors.black)}
+            {}
+            label))))))
+
+(defn- display-series-row [root display-series]
+  (fx/padding
+    {:padding (m/EdgeInsets.symmetric .horizontal 20.0)}
+    (fx/column
+      {:crossAxisAlignment m/CrossAxisAlignment.stretch}
+      (fx/text
+        {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
+        {}
+        "Display:")
+      (fx/row
+        {:mainAxisAlignment m/MainAxisAlignment.center}
+        [(display-toggle root display-series :bob? "Bob" m/Colors.red)
+         (display-toggle root display-series :lean? "Lean" m/Colors.orange)
+         (display-toggle root display-series :hz? "Hz" m/Colors.blue)
+         (display-toggle root display-series :yaw? "Yaw" m/Colors.purple)]))))
 
 (defn settings-page []
   (fx/safe-area
@@ -146,12 +186,15 @@
           source (mget root :sensor-source)
           host-device (mget root :host-device)
           ble-devices (mget root :ble-devices)
-          ble-scanning? (mget root :ble-scanning?)
-          selected-ble-remote-id (mget root :selected-ble-remote-id)
-          lean-tolerance-deg (mget root :lean-tolerance-deg)]
+	          ble-scanning? (mget root :ble-scanning?)
+	          selected-ble-remote-id (mget root :selected-ble-remote-id)
+	          lean-tolerance-deg (mget root :lean-tolerance-deg)
+	          display-series (mget root :display-series)]
       (fx/column
         {:mainAxisAlignment  m/MainAxisAlignment.center
          :crossAxisAlignment m/CrossAxisAlignment.stretch}
         (sensor-source-picker root source host-device ble-devices ble-scanning? selected-ble-remote-id)
         (m/SizedBox .height 36)
-        (lean-sensitivity-row root lean-tolerance-deg)))))
+        (lean-sensitivity-row root lean-tolerance-deg)
+        (m/SizedBox .height 36)
+        (display-series-row root display-series)))))

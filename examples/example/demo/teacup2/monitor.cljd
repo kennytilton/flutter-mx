@@ -57,17 +57,18 @@
   (mset! fx :stopped? true)
   (mset! fx :running? false))
 
-(defn- chart-show [fx]
-  {:lean? (mget fx :show-lean?)
-   :bob?  (mget fx :show-bob?)
-   :hz?   (mget fx :show-hz?)
-   :yaw?  (mget fx :show-yaw?)})
+(defn- chart-show [root]
+  (mget root :display-series))
 
-(defn- toggle-dot [fx k ^m/Color color]
-  (let [on? (mget fx k)]
+(defn- toggle-dot [root k ^m/Color color]
+  (let [display-series (mget root :display-series)
+        on? (get display-series k)]
     (fx/gesture-detector
       {:onTap (dart-cb []
-                (mset! fx k (not (mget fx k))))}
+                (let [display-series (mget root :display-series)]
+                  (mset! root :display-series
+                    (assoc display-series k
+                      (not (get display-series k))))))}
       (fx/padding
         {:padding (m/EdgeInsets.symmetric .horizontal 16.0 .vertical 12.0)}
         (fx/container
@@ -77,13 +78,13 @@
                          .color (if on? color (.withOpacity color 0.25))
                          .shape p/BoxShape.circle)})))))
 
-(defn- plot-toggles [fx]
-  (when fx
+(defn- plot-toggles [root]
+  (when root
     [(fx/sized-box {:width 48.0})
-     (toggle-dot fx :show-bob? m/Colors.red)
-     (toggle-dot fx :show-lean? m/Colors.orange)
-     (toggle-dot fx :show-hz? m/Colors.blue)
-     (toggle-dot fx :show-yaw? m/Colors.purple)]))
+     (toggle-dot root :bob? m/Colors.red)
+     (toggle-dot root :lean? m/Colors.orange)
+     (toggle-dot root :hz? m/Colors.blue)
+     (toggle-dot root :yaw? m/Colors.purple)]))
 
 (defn- uuid-first-chunk [remote-id]
   (when remote-id
@@ -167,7 +168,7 @@
 	         :else
 		         [(control-button "Run" m/Icons.directions_run m/Colors.green
 		            (dart-cb [] (run! root)))])
-        (or (plot-toggles fx) []))))))
+        (or (plot-toggles root) []))))))
 
 (defn monitor-page []
   (fx/safe-area
@@ -183,13 +184,14 @@
 
       (fx/expanded
         (if-let [fx (uformx)]
-          (let [samples  (mget fx :samples)
-                running? (mget fx :running?)
-                stopped? (mget fx :stopped?)
-                stopped-full? (mget fx :stopped-full-chart?)
-                chart (line-chart {}
-                        (chart-data samples running? stopped?
-                          (chart-show fx)))]
+	          (let [root (fmu :teacup2)
+	                samples  (mget fx :samples)
+	                running? (mget fx :running?)
+	                stopped? (mget fx :stopped?)
+	                stopped-full? (mget fx :stopped-full-chart?)
+	                chart (line-chart {}
+	                        (chart-data samples running? stopped?
+	                          (chart-show root)))]
             (if running?
               chart
               (fx/listener
