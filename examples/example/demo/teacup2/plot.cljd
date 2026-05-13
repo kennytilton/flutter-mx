@@ -127,6 +127,35 @@
     samples
     (bob-display-values samples)))
 
+(defn- yaw-display-map [samples]
+  (into {}
+    (map (fn [s yaw]
+           [(get s :t) yaw])
+      (filter #(>= (double (get % :t)) yaw-display-ma-window-ms) samples)
+      (yaw-display-values samples))))
+
+(defn- summary-display-spots-for [samples]
+  (let [lean-values (lean-display-values samples)
+        bob-values  (bob-display-values samples)
+        yaw-values  (yaw-display-map samples)]
+    (vec
+      (keep-indexed
+        (fn [i s]
+          (let [values (vec
+                         (concat
+                           [(* (or (get s :hz-motion) 0.0)
+                              hz-motion-display-scale)]
+                           [(nth lean-values i)]
+                           (when-let [yaw (get yaw-values (get s :t))]
+                             [yaw])
+                           [(nth bob-values i)]))]
+            (when (seq values)
+              (let [avg (/ (reduce + values) (count values))]
+                (flc/FlSpot
+                  (double (get s :t))
+                  (double avg))))))
+        samples))))
+
 (defn- y-values [samples show]
   (let [hz-motion-base (baseline-for samples :hz-motion)
         hz-accel-base  (baseline-for samples :hz-accel)]
@@ -194,8 +223,8 @@
   (* one-sec-pix-width 10.0))
 
 (defn chart-data
-  ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? true}))
-  ([samples compressed? chart-width] (chart-data samples compressed? chart-width {:lean? true :bob? false :hz? false :yaw? true}))
+  ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? true :summary? true}))
+  ([samples compressed? chart-width] (chart-data samples compressed? chart-width {:lean? true :bob? false :hz? false :yaw? true :summary? true}))
   ([samples mode width-or-stopped-full? show]
    (let [new-api? (number? width-or-stopped-full?)
          compressed? (if new-api?
@@ -249,6 +278,13 @@
               [(flc/LineChartBarData
                  .spots (bob-display-spots-for plot-samples)
                  .color m/Colors.red
+                 .barWidth 2.0
+                 .isCurved true
+                 .dotData (flc/FlDotData .show false))])
+	            (when (get show :summary?)
+	              [(flc/LineChartBarData
+	                 .spots (summary-display-spots-for plot-samples)
+	                 .color m/Colors.black
                  .barWidth 2.0
                  .isCurved true
                  .dotData (flc/FlDotData .show false))])))

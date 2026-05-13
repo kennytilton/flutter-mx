@@ -13,7 +13,8 @@
   {:lean? false
    :bob?  true
    :hz?   false
-   :yaw?  true})
+   :yaw?  true
+   :summary? true})
 
 (def +DB+ (atom nil))
 
@@ -56,17 +57,19 @@
 
 (defn display-series-read [^hv/Box db]
   (if-let [s (.get db display-series-key)]
-    {:lean? (.contains ^String s "lean")
-     :bob?  (.contains ^String s "bob")
-     :hz?   (.contains ^String s "hz")
-     :yaw?  (.contains ^String s "yaw")}
-    default-display-series))
+	    {:lean? (.contains ^String s "lean")
+	     :bob?  (.contains ^String s "bob")
+	     :hz?   (.contains ^String s "hz")
+	     :yaw?  (.contains ^String s "yaw")
+	     :summary? (not (.contains ^String s "summary-off"))}
+	    default-display-series))
 
 (defn display-series-write! [^hv/Box db display-series]
   (.put db display-series-key
     (str
-      (when (get display-series :lean?) "lean,")
-      (when (get display-series :bob?) "bob,")
-      (when (get display-series :hz?) "hz,")
-      (when (get display-series :yaw?) "yaw,")))
-  display-series)
+	      (when (get display-series :lean?) "lean,")
+	      (when (get display-series :bob?) "bob,")
+	      (when (get display-series :hz?) "hz,")
+	      (when (get display-series :yaw?) "yaw,")
+	      (when-not (get display-series :summary?) "summary-off,")))
+	  display-series)

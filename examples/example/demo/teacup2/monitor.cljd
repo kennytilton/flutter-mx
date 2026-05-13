@@ -75,16 +75,40 @@
           {:width plot-dot-size
            :height plot-dot-size
            :decoration (m/BoxDecoration
-                         .color (if on? color (.withOpacity color 0.25))
-                         .shape p/BoxShape.circle)})))))
+                          .color (if on? color (.withOpacity color 0.25))
+                          .shape p/BoxShape.circle)})))))
+
+(defn- toggle-symbol [root k label ^m/Color color]
+  (let [display-series (mget root :display-series)
+        on? (get display-series k)]
+    (fx/gesture-detector
+      {:onTap (dart-cb []
+                (let [display-series (mget root :display-series)]
+                  (mset! root :display-series
+                    (assoc display-series k
+                      (not (get display-series k))))))}
+      (fx/padding
+        {:padding (m/EdgeInsets.symmetric .horizontal 16.0 .vertical 12.0)}
+        (fx/sized-box
+          {:width plot-dot-size
+           :height plot-dot-size}
+          (fx/center
+            (fx/text
+              {:style (p/TextStyle
+                        .fontSize 36.0
+                        .fontWeight p/FontWeight.bold
+                        .color (if on? color (.withOpacity color 0.25)))}
+              {}
+              label)))))))
 
 (defn- plot-toggles [root]
   (when root
     [(fx/sized-box {:width 48.0})
-     (toggle-dot root :bob? m/Colors.red)
-     (toggle-dot root :lean? m/Colors.orange)
-     (toggle-dot root :hz? m/Colors.blue)
-     (toggle-dot root :yaw? m/Colors.purple)]))
+	     (toggle-dot root :bob? m/Colors.red)
+	     (toggle-dot root :lean? m/Colors.orange)
+	     (toggle-dot root :hz? m/Colors.blue)
+	     (toggle-dot root :yaw? m/Colors.purple)
+	     (toggle-symbol root :summary? "Σ" m/Colors.black)]))
 
 (defn- uuid-first-chunk [remote-id]
   (when remote-id
