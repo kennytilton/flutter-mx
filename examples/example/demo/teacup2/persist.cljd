@@ -1,13 +1,15 @@
 (ns example.demo.teacup2.persist
   "Hive-backed settings persistence for Teacup2."
   (:require
-    ["package:hive_flutter/hive_flutter.dart" :as hv]))
+    ["package:hive_flutter/hive_flutter.dart" :as hv]
+    [cljd.string :as str]))
 
 (def settings-box-name "teacup2-settings")
 (def sensor-source-key "sensor-source")
 (def selected-ble-remote-id-key "selected-ble-remote-id")
 (def lean-tolerance-key "lean-tolerance-deg")
 (def display-series-key "display-series")
+(def ghost-session-paths-key "ghost-session-paths")
 
 (def default-display-series
   {:lean? false
@@ -73,3 +75,17 @@
 	      (when (get display-series :yaw?) "yaw,")
 	      (when-not (get display-series :summary?) "summary-off,")))
 	  display-series)
+
+(defn ghost-session-paths-read [^hv/Box db]
+  (if-let [s (.get db ghost-session-paths-key)]
+    (vec (filter #(not (.-isEmpty ^String %))
+           (.split ^String s "\n")))
+    []))
+
+(defn ghost-session-paths-write! [^hv/Box db paths]
+  (let [paths (vec paths)]
+    (if (seq paths)
+      (.put db ghost-session-paths-key
+        (str/join "\n" paths))
+      (.delete db ghost-session-paths-key))
+    paths))

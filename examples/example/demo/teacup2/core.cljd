@@ -20,6 +20,7 @@
      :refer [cF cF+ cI mget mset! fmu make now-ms _cache-bound with-cc with-mx-edge]]
     [example.demo.teacup2.sensor :as sensor]
     [example.demo.teacup2.persist :as stg]
+    [example.demo.teacup2.session :as session]
     [example.demo.teacup2.progress :refer [progress-page]]
     [example.demo.teacup2.monitor :refer [monitor-page]]
     [example.demo.teacup2.summary :refer [summary-page]]
@@ -98,11 +99,12 @@
                                      (stg/DB! db)
 	                                     (when db
 	                                       (with-cc :lean-tolerance-load
-	                                         (mset! me :lean-tolerance-deg
-	                                           (sensor/normalize-lean-tolerance-deg
-	                                             (stg/lean-tolerance-read db)))
-	                                         (mset! me :display-series
-	                                           (stg/display-series-read db)))
+		                                         (mset! me :lean-tolerance-deg
+		                                           (sensor/normalize-lean-tolerance-deg
+		                                             (stg/lean-tolerance-read db)))
+		                                         (mset! me :display-series
+		                                           (stg/display-series-read db)))
+	                                       (session/restore-ghost-sessions! me db)
 	                                       (mset! me :ble-scan-desired? true)))]
                         (stg/open-settings-box))
      :sensor-source   (cF+ [:input? true
@@ -139,7 +141,12 @@
 	                                (when (mx/mx-bound? prior)
 	                                  (when-let [db (mget me :db)]
 	                                    (stg/display-series-write! db new)))))
-	     :ghost-sessions (cI [])
+	     :ghost-sessions (cI []
+	                       :watch (fn [_ me new prior _]
+	                                (when (mx/mx-bound? prior)
+	                                  (when-let [db (mget me :db)]
+	                                    (stg/ghost-session-paths-write! db
+	                                      (map #(get % :path) new))))))
 	     :formx           (cF (case (mget me :event)
                              :start (with-mx-edge [me :formx]
                                       (make-formx))

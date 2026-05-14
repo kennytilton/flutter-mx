@@ -4,7 +4,8 @@
     ["dart:convert" :as convert]
     ["dart:io" :as io]
     ["package:path_provider/path_provider.dart" :as path]
-    [tilton.mx.api :refer [dp mget now-ms]]))
+    [tilton.mx.api :refer [dp mget mset! now-ms]]
+    [example.demo.teacup2.persist :as stg]))
 
 (def player-id "ken")
 (def schema-version 1)
@@ -169,6 +170,30 @@
         raw (await (.readAsString file))
         data (dart-json->cljd (convert/jsonDecode raw))]
     (assoc data :path path)))
+
+(defn ^:async existing-session-path? [path]
+  (let [^io/File file (io/File path)]
+    (await (.exists file))))
+
+(defn ^:async load-existing-sessions! [paths]
+  (loop [remaining paths
+         sessions []]
+    (if-let [path (first remaining)]
+      (if (await (existing-session-path? path))
+        (recur (rest remaining)
+          (conj sessions
+            (await (load-session! path))))
+        (recur (rest remaining) sessions))
+      sessions)))
+
+(defn ^:async restore-ghost-sessions! [root db]
+  (let [paths (stg/ghost-session-paths-read db)
+        ghosts (await (load-existing-sessions! paths))
+        live-paths (vec (map #(get % :path) ghosts))]
+    (when (not= (vec paths) (vec live-paths))
+      (stg/ghost-session-paths-write! db live-paths))
+    (mset! root :ghost-sessions ghosts)
+    ghosts))
 
 (defn ^:async list-sessions []
   (let [^io/Directory dir (await (session-dir))]

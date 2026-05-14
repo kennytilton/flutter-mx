@@ -37,49 +37,62 @@
   (some #(= path (get % :path))
     (mget root :ghost-sessions)))
 
-(defn ^:async toggle-ghost-session! [root path]
-  (let [ghosts (mget root :ghost-sessions)]
+(defn toggle-ghost-session! [root s]
+  (let [path (get s :path)
+        ghosts (mget root :ghost-sessions)]
     (if (some #(= path (get % :path)) ghosts)
       (do
         (dp :progress-ghost-off path)
         (mset! root :ghost-sessions
           (vec (remove #(= path (get % :path)) ghosts))))
-      (let [ghost (await (session/load-session! path))]
+      (do
         (dp :progress-ghost-on path)
         (mset! root :ghost-sessions
-          (conj ghosts ghost))))))
+          (conj ghosts s))))))
+
+(defn- clear-missing-ghosts! [progress-page sessions]
+  (let [root (fmu :teacup2 progress-page)
+        paths (set (map #(get % :path) sessions))
+        ghosts (mget root :ghost-sessions)
+        live-ghosts (vec (filter #(contains? paths (get % :path)) ghosts))]
+    (when (not= (count ghosts) (count live-ghosts))
+      (dp :progress-clear-missing-ghosts
+        :before (count ghosts)
+        :after (count live-ghosts))
+      (mset! root :ghost-sessions live-ghosts))))
 
 (defn- session-actions [root progress-page s]
   (let [path (get s :path)
         ghost? (ghost-selected? root path)]
-    (fx/row
-      {:mainAxisSize m/MainAxisSize.min}
-      (fx/icon-button
-        {:tooltip "Ghost"
-         :icon (m/Icon m/Icons.show_chart
-                 .color (if ghost? m/Colors.blue m/Colors.grey))
-         :onPressed (dart-cb []
-                      (toggle-ghost-session! root path))})
-      (fx/icon-button
-        {:tooltip "Delete"
-         :icon (m/Icon m/Icons.delete)
-         :onPressed (dart-cb []
-                      (delete-session-and-refresh!
-                        root
-                        progress-page
-                        path))}))))
+    (m/Row
+      .mainAxisSize m/MainAxisSize.min
+      .children [(m/IconButton
+                   .tooltip "Ghost"
+                   .icon (m/Icon m/Icons.show_chart
+                           .color (if ghost? m/Colors.blue m/Colors.grey))
+                   .onPressed (fn []
+                                (toggle-ghost-session! root s)))
+                 (m/IconButton
+                   .tooltip "Delete"
+                   .icon (m/Icon m/Icons.delete)
+                   .onPressed (fn []
+                                (delete-session-and-refresh!
+                                  root
+                                  progress-page
+                                  path)))])))
 
 (defn- session-tile [root progress-page s]
-  (let [ghost? (ghost-selected? root (get s :path))]
-    (fx/container
-      {:color (if ghost?
-                (.withOpacity m/Colors.blueGrey 0.18)
-                m/Colors.transparent)}
-      (fx/list-tile
-        {:title (m/Text (session-title s))
-         :subtitle (m/Text (session-subtitle s))
-         :trailing (session-actions root progress-page s)}
-        {}))))
+  (let [path (get s :path)
+        ghost? (ghost-selected? root path)]
+    (m/Container
+      .key (m/ValueKey. path)
+      .color (if ghost?
+               (.withOpacity m/Colors.blueGrey 0.18)
+               m/Colors.transparent)
+      .child (m/ListTile
+               .title (m/Text (session-title s))
+               .subtitle (m/Text (session-subtitle s))
+               .trailing (session-actions root progress-page s)))))
 
 (defn progress-page []
   (fx/safe-area
@@ -87,7 +100,10 @@
       {:crossAxisAlignment m/CrossAxisAlignment.stretch}
       {:name :progress-page
        :sessions-refresh (cI 0)
-       :sessions (cF+ [:async? true]
+       :sessions (cF+ [:async? true
+                       :watch (fn [_ me sessions _ _]
+                                (when sessions
+                                  (clear-missing-ghosts! me sessions)))]
                    (mget me :sessions-refresh)
                    (session/list-sessions))}
       (fx/padding
