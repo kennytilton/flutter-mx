@@ -1,10 +1,12 @@
 (ns example.demo.teacup2.progress
   "Progress page for saved Teacup2 sessions."
   (:require
+    ["package:fl_chart/fl_chart.dart" :as flc]
     ["package:flutter/material.dart" :as m]
     ["package:flutter/painting.dart" :as p]
-    [tilton.fmx.api :refer [dart-cb] :as fx]
+    [tilton.fmx.api :as fx]
     [tilton.mx.api :refer [cF+ cI dp fmu mget mset!]]
+    [example.demo.teacup2.plot :as plot]
     [example.demo.teacup2.session :as session]))
 
 (defn- fmt1 [x]
@@ -89,10 +91,21 @@
       .color (if ghost?
                (.withOpacity m/Colors.blueGrey 0.18)
                m/Colors.transparent)
-      .child (m/ListTile
-               .title (m/Text (session-title s))
-               .subtitle (m/Text (session-subtitle s))
-               .trailing (session-actions root progress-page s)))))
+      .child (m/Column
+               .mainAxisSize m/MainAxisSize.min
+               .children [(m/ListTile
+                            .title (m/Text (session-title s))
+                            .subtitle (m/Text (session-subtitle s))
+                            .trailing (session-actions root progress-page s))
+                          (m/Padding
+                            .padding (m/EdgeInsets.only
+                                       .left 16.0
+                                       .right 16.0
+                                       .bottom 8.0)
+                            .child (m/SizedBox
+                                     .height 48.0
+                                     .child (flc/LineChart
+                                             (plot/mini-chart-data s))))]))))
 
 (defn progress-page []
   (fx/safe-area

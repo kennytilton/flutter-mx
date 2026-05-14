@@ -283,6 +283,50 @@
 (defn- default-chart-width []
   (* one-sec-pix-width 10.0))
 
+(defn- spots-y-bounds [spots]
+  (if (seq spots)
+    (let [ys (mapv #(.y ^flc/FlSpot %) spots)
+          min-y (reduce min ys)
+          max-y (reduce max ys)
+          span (- max-y min-y)]
+      (if (< span 0.001)
+        [(- min-y 0.02) (+ max-y 0.02)]
+        [min-y max-y]))
+    [-1.0 1.0]))
+
+(defn mini-chart-data [session]
+  (let [samples (get session :samples)
+        latest (latest-t-ms samples)
+        spots (or (seq (summary-display-spots-for samples))
+                [(flc/FlSpot 0.0 0.0)])
+        [min-y max-y] (spots-y-bounds spots)]
+    (flc/LineChartData
+      .minX 0.0
+      .maxX (max 1.0 latest)
+      .minY min-y
+      .maxY max-y
+      .clipData (flc/FlClipData.none)
+      .lineTouchData (flc/LineTouchData .enabled false)
+      .gridData (flc/FlGridData .show false)
+      .borderData (flc/FlBorderData .show false)
+      .titlesData
+      (flc/FlTitlesData
+        .leftTitles (flc/AxisTitles
+                      .sideTitles (flc/SideTitles .showTitles false))
+        .rightTitles (flc/AxisTitles
+                       .sideTitles (flc/SideTitles .showTitles false))
+        .bottomTitles (flc/AxisTitles
+                        .sideTitles (flc/SideTitles .showTitles false))
+        .topTitles (flc/AxisTitles
+                     .sideTitles (flc/SideTitles .showTitles false)))
+      .lineBarsData
+      [(flc/LineChartBarData
+         .spots spots
+         .color (.withOpacity m/Colors.blueGrey 0.75)
+         .barWidth 2.0
+         .isCurved true
+         .dotData (flc/FlDotData .show false))])))
+
 (defn chart-data
   ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? true :summary? true}))
   ([samples compressed? chart-width] (chart-data samples compressed? chart-width {:lean? true :bob? false :hz? false :yaw? true :summary? true}))

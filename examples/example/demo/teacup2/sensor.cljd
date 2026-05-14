@@ -363,7 +363,7 @@
         gravity (get sample :gravity-ref)
         linear (get sample :linear-accel)
         ay (get accel-raw :y)]
-    (dp :bounce-raw
+    (dpx :bounce-raw
       :src (get sample :source)
       :ax (fmt2 (get accel-raw :x))
       :ay (fmt2 ay)
@@ -767,9 +767,10 @@
   (set-ble-status! "waiting for BT adapter")
   (let [^async/Stream stream (fbp/FlutterBluePlus.adapterState)
         on-state (.-first (.where stream
-                            (fn [s]
-                              (and (= run-id (get @ble-state :run-id))
-                                (= s fbp/BluetoothAdapterState.on)))))]
+	                            (fn [s]
+	                              (and (or (nil? run-id)
+	                                     (= run-id (get @ble-state :run-id)))
+	                                (= s fbp/BluetoothAdapterState.on)))))]
     (await on-state)
     (set-ble-status! "adapter on")))
 
@@ -782,37 +783,40 @@
         (with-cc :witmotion-settings-scan-start
           (mset! root :ble-scanning? true)
           (mset! root :ble-devices [])))
-      (let [sub-atom (atom nil)
+      (let [scan-run-id (get @ble-state :run-id)
+            sub-atom (atom nil)
             devices (atom [])]
         (try
-          (await (wait-for-adapter-on! (get @ble-state :run-id)))
-          (set-ble-status! "settings scanning")
-          (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
-                      (fn [results]
-	                        (doseq [r results]
-	                          (let [info (scan-result-info r)]
-	                            (when (witmotion-info? info)
-	                              (remember-scanned-device! r info)
-	                              (dpx :settings-scan-target info)
-		                              (note-scanned-device devices info))))))]
-	            (reset! sub-atom sub)
-	            (await (fbp/FlutterBluePlus.startScan
-	                     .timeout (Duration .seconds scan-timeout-seconds)))
-	            (await (Future.delayed (Duration .seconds scan-timeout-seconds)
-	                     (fn [] true)))
-	            (when (empty? @devices)
-	              (dp :settings-scan-empty-retry)
-	              (set-ble-status! "settings scanning retry")
-	              (try
-	                (await (fbp/FlutterBluePlus.stopScan))
-	                (catch Object e
-	                  (dp :settings-ble-retry-stop-ignored e)))
-	              (await (Future.delayed (Duration .milliseconds 750)
-	                       (fn [] true)))
-	              (await (fbp/FlutterBluePlus.startScan
-	                       .timeout (Duration .seconds scan-timeout-seconds)))
-	              (await (Future.delayed (Duration .seconds scan-timeout-seconds)
-	                       (fn [] true)))))
+          (await (wait-for-adapter-on! nil))
+          (when (= scan-run-id (get @ble-state :run-id))
+            (set-ble-status! "settings scanning")
+            (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
+	                        (fn [results]
+		                          (doseq [r results]
+		                            (let [info (scan-result-info r)]
+		                              (when (witmotion-info? info)
+		                                (remember-scanned-device! r info)
+		                                (dpx :settings-scan-target info)
+			                                (note-scanned-device devices info))))))]
+		              (reset! sub-atom sub)
+		              (await (fbp/FlutterBluePlus.startScan
+		                       .timeout (Duration .seconds scan-timeout-seconds)))
+		              (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+		                       (fn [] true)))
+		              (when (and (empty? @devices)
+		                      (= scan-run-id (get @ble-state :run-id)))
+		                (dp :settings-scan-empty-retry)
+		                (set-ble-status! "settings scanning retry")
+		                (try
+		                  (await (fbp/FlutterBluePlus.stopScan))
+		                  (catch Object e
+		                    (dp :settings-ble-retry-stop-ignored e)))
+		                (await (Future.delayed (Duration .milliseconds 750)
+		                         (fn [] true)))
+		                (await (fbp/FlutterBluePlus.startScan
+		                         .timeout (Duration .seconds scan-timeout-seconds)))
+		                (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+		                         (fn [] true))))))
           (catch Object e
             (dp :settings-witmotion-scan-exception e)
             (set-ble-status! (str "scan error: " e))))
@@ -828,21 +832,16 @@
 	                  first-remote-id (first-device-remote-id devices-found)]
 	              (dp :settings-scan-devices devices-found)
 	              (mset! root :ble-devices devices-found)
-	              (cond
-		                first-remote-id
-		                (do
-		                  (mset! root :sensor-source :witmotion-ble)
-		                  (mset! root :selected-ble-remote-id first-remote-id))
-
-	                :else
-	                (do
-	                  (mset! root :sensor-source :iphone)
-	                  (mset! root :selected-ble-remote-id nil)))
-		              (mset! root :ble-scanning? false))))
-	        (when-let [first-remote-id (first-device-remote-id @devices)]
-	          (await (ble-defaults-set-for-remote-id! first-remote-id)))
-	        (reset! scanning? false)
-        (set-ble-status! "settings scan done")))))
+		              (when first-remote-id
+		                (mset! root :sensor-source :witmotion-ble)
+		                (mset! root :selected-ble-remote-id first-remote-id))
+			              (mset! root :ble-scanning? false))))
+		        (when-let [first-remote-id (and (= scan-run-id (get @ble-state :run-id))
+		                                    (first-device-remote-id @devices))]
+			          (await (ble-defaults-set-for-remote-id! first-remote-id)))
+		        (reset! scanning? false)
+	        (when (= scan-run-id (get @ble-state :run-id))
+	          (set-ble-status! "settings scan done"))))))
 
 (defn ^:async start-witmotion! [formx]
   (await (stop-witmotion!))
@@ -860,19 +859,35 @@
           (await (connect-and-listen! formx run-id dev))
           (do
             (set-ble-status! "scanning")
-            (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
-                        (fn [results]
-                          (doseq [r results]
-                            (on-scan-result formx run-id r))))]
-	              (swap! ble-state assoc :scan-sub sub)
-	              (await (fbp/FlutterBluePlus.startScan
-	                       .timeout (Duration .seconds scan-timeout-seconds)))
-	              (await (Future.delayed (Duration .seconds scan-timeout-seconds)
-	                       (fn [] true)))
-	              (await (Future.delayed (Duration .milliseconds scan-settle-ms)
-	                       (fn [] true)))
-              (when (and (capture-running? formx run-id)
-                      (nil? (get @ble-state :found-device)))
+	            (let [sub (.listen (fbp/FlutterBluePlus.onScanResults)
+	                        (fn [results]
+	                          (doseq [r results]
+	                            (on-scan-result formx run-id r))))]
+		              (swap! ble-state assoc :scan-sub sub)
+		              (await (fbp/FlutterBluePlus.startScan
+		                       .timeout (Duration .seconds scan-timeout-seconds)))
+		              (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+		                       (fn [] true)))
+		              (await (Future.delayed (Duration .milliseconds scan-settle-ms)
+		                       (fn [] true)))
+	              (when (and (capture-running? formx run-id)
+	                      (nil? (get @ble-state :found-device)))
+	                (dp :witmotion-scan-empty-retry)
+	                (set-ble-status! "scanning retry")
+	                (try
+	                  (await (fbp/FlutterBluePlus.stopScan))
+	                  (catch Object e
+	                    (dp :witmotion-retry-stop-ignored e)))
+	                (await (Future.delayed (Duration .milliseconds 750)
+	                         (fn [] true)))
+	                (await (fbp/FlutterBluePlus.startScan
+	                         .timeout (Duration .seconds scan-timeout-seconds)))
+	                (await (Future.delayed (Duration .seconds scan-timeout-seconds)
+	                         (fn [] true)))
+	                (await (Future.delayed (Duration .milliseconds scan-settle-ms)
+	                         (fn [] true))))
+	              (when (and (capture-running? formx run-id)
+	                      (nil? (get @ble-state :found-device)))
                 (ble-alert! formx
                   "Turn on WT901BLE"
                   "The WitMotion sensor was not found."))))))
