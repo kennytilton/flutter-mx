@@ -263,10 +263,12 @@
 	                samples  (mget fx :samples)
 	                running? (mget fx :running?)
 	                stopped? (mget fx :stopped?)
-	                stopped-full? (mget fx :stopped-full-chart?)
-	                chart (line-chart {}
+		                stopped-full? (mget fx :stopped-full-chart?)
+		                ghosts (mget root :ghost-sessions)
+		                chart (line-chart {}
 	                        (chart-data samples running? stopped?
-	                          (chart-show root)))]
+	                          (chart-show root)
+	                          ghosts))]
             (if running?
               chart
               (fx/listener
@@ -283,8 +285,19 @@
                   chart
                   (fx/single-child-scroll-view
                     {:scrollDirection m/Axis.horizontal}
-                    (fx/sized-box
-                      {:width (plot/stopped-chart-width samples)}
-                      chart))))))
-          (line-chart {}
-            (chart-data [] false)))))))
+	                    (fx/sized-box
+	                      {:width (plot/stopped-chart-width samples ghosts)}
+	                      chart))))))
+	          (let [root (fmu :teacup2)
+	                ghosts (mget root :ghost-sessions)
+	                chart (line-chart {}
+	                        (chart-data [] false false
+	                          (chart-show root)
+	                          ghosts))]
+	            (if (seq ghosts)
+	              (fx/single-child-scroll-view
+	                {:scrollDirection m/Axis.horizontal}
+	                (fx/sized-box
+	                  {:width (plot/stopped-chart-width [] ghosts)}
+	                  chart))
+	              chart)))))))

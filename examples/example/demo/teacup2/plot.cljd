@@ -192,32 +192,78 @@
     (double (get sample :t))
     0.0))
 
+(defn- latest-ghost-t-ms [ghosts]
+  (if (seq ghosts)
+    (reduce max
+      (map #(latest-t-ms (get % :samples)) ghosts))
+    0.0))
+
+(defn- latest-series-t-ms [samples ghosts]
+  (max (latest-t-ms samples)
+    (latest-ghost-t-ms ghosts)))
+
 (defn- display-window-ms [chart-width]
   (* 1000.0 (/ chart-width one-sec-pix-width)))
 
-(defn chart-window [samples compressed? chart-width]
-  (let [latest (latest-t-ms samples)
-        window-ms (display-window-ms chart-width)]
+(defn- chart-window-for-latest [latest compressed? chart-width]
+  (let [window-ms (display-window-ms chart-width)]
     (if compressed?
       [0.0 (max 1.0 latest)]
       [(max 0.0 (- latest window-ms))
        (max window-ms latest)])))
 
-(defn- display-samples [samples compressed? chart-width]
+(defn chart-window
+  ([samples compressed? chart-width]
+   (chart-window samples compressed? chart-width []))
+  ([samples compressed? chart-width ghosts]
+   (chart-window-for-latest
+     (latest-series-t-ms samples ghosts)
+     compressed?
+     chart-width)))
+
+(defn- display-samples-for-latest [samples compressed? chart-width latest]
   (if compressed?
     samples
-    (let [latest (latest-t-ms samples)
-          min-t  (max 0.0 (- latest (display-window-ms chart-width) display-ma-warmup-ms))]
+    (let [min-t  (max 0.0 (- latest (display-window-ms chart-width) display-ma-warmup-ms))]
       (vec (filter #(>= (double (get % :t)) min-t) samples)))))
 
-(defn expanded-chart-width [samples chart-width]
-  (max chart-width
-    (* one-sec-pix-width
-      (/ (latest-t-ms samples) 1000.0))))
+(defn- display-samples
+  ([samples compressed? chart-width]
+   (display-samples samples compressed? chart-width []))
+  ([samples compressed? chart-width ghosts]
+   (display-samples-for-latest
+     samples
+     compressed?
+     chart-width
+     (latest-series-t-ms samples ghosts))))
 
-(defn stopped-chart-width [samples]
-  (* one-sec-pix-width
-    (/ (latest-t-ms samples) 1000.0)))
+(defn expanded-chart-width
+  ([samples chart-width]
+   (expanded-chart-width samples chart-width []))
+  ([samples chart-width ghosts]
+   (max chart-width
+     (* one-sec-pix-width
+       (/ (latest-series-t-ms samples ghosts) 1000.0)))))
+
+(defn stopped-chart-width
+  ([samples]
+   (stopped-chart-width samples []))
+  ([samples ghosts]
+   (* one-sec-pix-width
+     (/ (latest-series-t-ms samples ghosts) 1000.0))))
+
+(defn- ghost-summary-bars [ghosts compressed? chart-width latest]
+  (vec
+    (map (fn [ghost]
+           (let [samples (get ghost :samples)
+                 plot-samples (display-samples-for-latest samples compressed? chart-width latest)]
+             (flc/LineChartBarData
+               .spots (summary-display-spots-for plot-samples)
+               .color m/Colors.grey
+               .barWidth 2.0
+               .isCurved true
+               .dotData (flc/FlDotData .show false))))
+      ghosts)))
 
 (defn- default-chart-width []
   (* one-sec-pix-width 10.0))
@@ -226,15 +272,21 @@
   ([samples running?] (chart-data samples running? true {:lean? true :bob? false :hz? false :yaw? true :summary? true}))
   ([samples compressed? chart-width] (chart-data samples compressed? chart-width {:lean? true :bob? false :hz? false :yaw? true :summary? true}))
   ([samples mode width-or-stopped-full? show]
+   (chart-data samples mode width-or-stopped-full? show []))
+  ([samples mode width-or-stopped-full? show ghosts]
    (let [new-api? (number? width-or-stopped-full?)
+         running-old-api? (and (not new-api?) mode)
          compressed? (if new-api?
                        mode
                        (and (not mode) width-or-stopped-full?))
          chart-width (if new-api?
                        width-or-stopped-full?
                        (default-chart-width))
-         [min-x max-x] (chart-window samples compressed? chart-width)
-         plot-samples (display-samples samples compressed? chart-width)
+         latest (if running-old-api?
+                  (latest-t-ms samples)
+                  (latest-series-t-ms samples ghosts))
+         [min-x max-x] (chart-window-for-latest latest compressed? chart-width)
+         plot-samples (display-samples-for-latest samples compressed? chart-width latest)
          [min-y max-y] (y-bounds plot-samples show)]
     (flc/LineChartData
 	      .minX min-x
@@ -253,6 +305,7 @@
 	    .lineBarsData
         (vec
           (concat
+            (ghost-summary-bars ghosts compressed? chart-width latest)
             (when (get show :hz?)
               [(flc/LineChartBarData
                  .spots (multiplied-spots-for plot-samples :hz-motion hz-motion-display-scale)
