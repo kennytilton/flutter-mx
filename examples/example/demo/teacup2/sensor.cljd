@@ -351,10 +351,31 @@
 
 (defn- bob-in-s2 [sample]
   (if (= :witmotion-ble (get sample :source))
-    (let [ay (get (get sample :accel-raw) :y)]
-      (* (.abs ^num (- (.abs ^num (or ay 0.0)) 1.0))
+    (let [ay (get (get sample :accel-raw) :y)
+          ay-rounded (when (number? ay)
+                       (/ (.round ^num (* ay 100.0)) 100.0))]
+      (* (.abs ^num (- (.abs ^num (or ay-rounded 0.0)) 1.0))
         motion/g-in-s2))
     (.abs ^num (or (get sample :vertical-accel-in-s2) 0.0))))
+
+(defn- log-bounce-raw! [sample]
+  (let [accel-raw (get sample :accel-raw)
+        gravity (get sample :gravity-ref)
+        linear (get sample :linear-accel)
+        ay (get accel-raw :y)]
+    (dp :bounce-raw
+      :src (get sample :source)
+      :ax (fmt2 (get accel-raw :x))
+      :ay (fmt2 ay)
+      :az (fmt2 (get accel-raw :z))
+      :g (fmt-v3 gravity)
+      :lin (fmt-v3 linear)
+      :vertical-g (fmt2 (get sample :vertical-accel))
+      :vertical-in/s2 (fmt2 (get sample :vertical-accel-in-s2))
+      :ble-abs-ay-minus-1 (fmt2
+                            (when (number? ay)
+                              (- (.abs ^num ay) 1.0)))
+      :bounce-in/s2 (fmt2 (get sample :bob-in-s2)))))
 
 (defn- append-scored-sample! [formx raw]
   (let [prior  (last (mget formx :samples))
@@ -390,6 +411,7 @@
       :dt-ms (fmt1 dt-ms))
     (dpx :hz-raw
       :in-s2 (fmt2 (get sample :hz-accel)))
+    (log-bounce-raw! sample)
     (mupdate! formx :samples conj sample)))
 
 (defn- maybe-dp-gate! [formx raw up state lean-deg tolerance-deg gyro-norm lin-norm vertical? steady? moving?]
