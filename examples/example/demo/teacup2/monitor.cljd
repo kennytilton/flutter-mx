@@ -18,6 +18,9 @@
 (def plot-dot-size 24.0)
 (def plot-toggle-pad-h 8.0)
 (def plot-toggle-pad-v 6.0)
+(def chart-y-scale-min 0.1)
+(def chart-y-scale-max 1.0)
+(def chart-y-scale-step 0.1)
 
 (defn- control-button [tooltip icon color on-pressed]
   (fx/icon-button
@@ -146,8 +149,27 @@
 	     (toggle-dot root :bob? m/Colors.red)
 	     (toggle-dot root :lean? m/Colors.orange)
 	     (toggle-dot root :hz? m/Colors.blue)
-	     (toggle-dot root :yaw? m/Colors.purple)
-	     (toggle-symbol root :summary? "Σ" m/Colors.black)]))
+		     (toggle-dot root :yaw? m/Colors.purple)
+		     (toggle-symbol root :summary? "Σ" m/Colors.black)]))
+
+(defn- bounded-chart-y-scale [scale]
+  (let [scale (/ (.round ^num (* scale 10.0)) 10.0)]
+    (max chart-y-scale-min
+      (min chart-y-scale-max scale))))
+
+(defn- zoom-chart-y! [root delta]
+  (let [scale (bounded-chart-y-scale
+                (+ (mget root :chart-y-scale) delta))]
+    (dp :chart-y-scale scale)
+    (mset! root :chart-y-scale scale)))
+
+(defn- chart-y-zoom-controls [root]
+  [(control-button "Zoom in" m/Icons.add m/Colors.black
+     (dart-cb []
+       (zoom-chart-y! root (- chart-y-scale-step))))
+   (control-button "Zoom out" m/Icons.remove m/Colors.black
+     (dart-cb []
+       (zoom-chart-y! root chart-y-scale-step)))])
 
 (defn- save-button [fx]
   (let [enabled? (and fx
@@ -241,9 +263,11 @@
 	         :else
 		         [(control-button "Run" m/Icons.directions_run m/Colors.green
 		            (dart-cb [] (run! root)))])
-        (or (plot-toggles root) [])
-        [(fx/sized-box {:width 24.0})
-         (save-button fx)])))))
+	        (or (plot-toggles root) [])
+	        [(fx/sized-box {:width 12.0})]
+	        (chart-y-zoom-controls root)
+	        [(fx/sized-box {:width 12.0})
+	         (save-button fx)])))))
 
 (defn monitor-page []
   (fx/safe-area
@@ -265,10 +289,11 @@
 	                stopped? (mget fx :stopped?)
 		                stopped-full? (mget fx :stopped-full-chart?)
 		                ghosts (mget root :ghost-sessions)
-		                chart (line-chart {}
-	                        (chart-data samples running? stopped?
-	                          (chart-show root)
-	                          ghosts))]
+			                chart (line-chart {}
+		                        (chart-data samples running? stopped?
+		                          (chart-show root)
+		                          ghosts
+		                          (mget root :chart-y-scale)))]
             (if running?
               chart
               (fx/listener
@@ -290,10 +315,11 @@
 	                      chart))))))
 	          (let [root (fmu :teacup2)
 	                ghosts (mget root :ghost-sessions)
-	                chart (line-chart {}
-	                        (chart-data [] false false
-	                          (chart-show root)
-	                          ghosts))]
+		                chart (line-chart {}
+		                        (chart-data [] false false
+		                          (chart-show root)
+		                          ghosts
+		                          (mget root :chart-y-scale)))]
 	            (if (seq ghosts)
 	              (fx/single-child-scroll-view
 	                {:scrollDirection m/Axis.horizontal}

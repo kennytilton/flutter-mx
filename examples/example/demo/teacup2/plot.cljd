@@ -171,11 +171,26 @@
       (when (get show :bob?)
         (bob-display-values samples)))))
 
-(defn- y-bounds [samples show]
-  [-1.0 1.0])
+(defn- y-bounds [scale]
+  [(- scale) scale])
+
+(defn- axis-label [value]
+  (let [s0 (.toStringAsFixed ^num value 1)
+        s1 (if (.endsWith ^String s0 ".0")
+             (.substring ^String s0 0 (- (.-length ^String s0) 2))
+             s0)]
+    (cond
+      (.startsWith ^String s1 "0.") (.substring ^String s1 1)
+      (.startsWith ^String s1 "-0.") (str "-" (.substring ^String s1 2))
+      :else s1)))
 
 (defn ^m/Widget bottom-title-widget [^double value ^flc/TitleMeta _meta]
   (w/Text (.toStringAsFixed (/ value 1000.0) 0)))
+
+(defn ^m/Widget y-title-widget [^double value ^flc/TitleMeta _meta]
+  (if (< (.abs ^num value) 0.001)
+    (w/SizedBox .width 0.0 .height 0.0)
+    (w/Text (axis-label value))))
 
 (defn ^flc/FlDotPainter dot-painter
   [^flc/FlSpot _spot
@@ -274,6 +289,8 @@
   ([samples mode width-or-stopped-full? show]
    (chart-data samples mode width-or-stopped-full? show []))
   ([samples mode width-or-stopped-full? show ghosts]
+   (chart-data samples mode width-or-stopped-full? show ghosts 1.0))
+  ([samples mode width-or-stopped-full? show ghosts y-scale]
    (let [new-api? (number? width-or-stopped-full?)
          running-old-api? (and (not new-api?) mode)
          compressed? (if new-api?
@@ -287,7 +304,7 @@
                   (latest-series-t-ms samples ghosts))
          [min-x max-x] (chart-window-for-latest latest compressed? chart-width)
          plot-samples (display-samples-for-latest samples compressed? chart-width latest)
-         [min-y max-y] (y-bounds plot-samples show)]
+         [min-y max-y] (y-bounds y-scale)]
     (flc/LineChartData
 	      .minX min-x
 	      .maxX max-x
@@ -343,9 +360,13 @@
                  .dotData (flc/FlDotData .show false))])))
     .titlesData
     (flc/FlTitlesData
-      .leftTitles
-      (flc/AxisTitles
-        .sideTitles (flc/SideTitles .showTitles false))
+	      .leftTitles
+	      (flc/AxisTitles
+	        .sideTitles
+	        (flc/SideTitles .showTitles true
+	                        .reservedSize 32.0
+	                        .interval y-scale
+	                        .getTitlesWidget y-title-widget))
       .rightTitles
       (flc/AxisTitles
         .sideTitles (flc/SideTitles .showTitles false))

@@ -10,6 +10,7 @@
 (def lean-tolerance-key "lean-tolerance-deg")
 (def display-series-key "display-series")
 (def ghost-session-paths-key "ghost-session-paths")
+(def chart-y-scale-key "chart-y-scale")
 
 (def default-display-series
   {:lean? false
@@ -75,6 +76,17 @@
 	      (when (get display-series :yaw?) "yaw,")
 	      (when-not (get display-series :summary?) "summary-off,")))
 	  display-series)
+
+(defn chart-y-scale-read [^hv/Box db]
+  (if-let [scale (.get db chart-y-scale-key)]
+    (if (number? scale)
+      (double scale)
+      1.0)
+    1.0))
+
+(defn chart-y-scale-write! [^hv/Box db scale]
+  (.put db chart-y-scale-key scale)
+  scale)
 
 (defn ghost-session-paths-read [^hv/Box db]
   (if-let [s (.get db ghost-session-paths-key)]
