@@ -56,18 +56,9 @@ clj -M:cljd flutter -d all
 
 ## Debugging
 
-- `dp` prints without registering dependencies and is safe inside formulas.
-- `dpx` is a no-op.
-- `*fx$dpk*` accepts trace keywords such as `[:propagate :pulse :cset]`.
+- For MX/f/mx API, debugging, and UI idioms, read `FMX.md`.
 - Flutter DevTools URL is printed at startup.
 - When behavior is not working yet, use diagnostic `dp` prints with state, measured values, thresholds, and boolean decisions.
-
-## Public APIs
-
-- Require common Matrix symbols from `tilton.mx.api`: `dp`, `dpx`, cell variants, navigation helpers, mutation functions.
-- Require Flutter/MX macros and helpers from `tilton.fmx.api`.
-- Do not require internal namespaces such as `tilton.mx.base` or `tilton.mx.cell.base` unless the needed symbol is genuinely not re-exported.
-- `tilton.mx.api` and `tilton.fmx.api` document the public library surfaces.
 
 ## CLJD Interop Rules
 
@@ -82,39 +73,3 @@ clj -M:cljd flutter -d all
 - Fix CLJD dynamic warnings with type hints where the type is known.
 - Fix the first dynamic warning first because warnings cascade.
 - Do not substitute heuristics for available first-class platform APIs. If the app needs a factual platform/device answer, use the appropriate maintained API/package; do not infer it from dimensions or layout unless explicitly approved.
-
-## MX Reactivity Invariants
-
-```clojure
-(cI initial-value)          ; input cell — set manually with mset!
-(cF formula-body)           ; formula cell — recomputes when dependencies change
-(cF+ [:watch (fn [...])] …) ; formula cell with observer/watcher for side effects
-```
-
-Cells inside a `cF` body automatically register dependencies. `dp` prints without registering dependencies (safe for debugging inside formulas). `dpx` is a no-op.
-
-### Never wrap widget children in cF
-
-f/mx widget factory macros (`konly-param1`, `k1-child`, `k1-content`, `k1-body`,
-`children-stateless`, etc.) already wrap their child/children arguments in formulas
-automatically. Adding an explicit `cF` around a child expression is redundant and
-wrong — it breaks `me` binding and the build cycle.
-
-**Pass child expressions directly, never wrapped in `cF`:**
-
-```clojure
-; CORRECT
-(fx/expanded
-  (line-chart {}
-    (chart-data (mget (fmu :teacup) :samples))))
-
-; WRONG — do not do this
-(fx/expanded
-  (line-chart {}
-    (cF (chart-data (mget (fmu :teacup) :samples)))))
-```
-
-More broadly: we cannot think of a case where UI structure needed an explicit `cF`.
-`cF` belongs in model slot definitions (`:value`, `:style`, `:color`, etc.), not
-wrapping child widget expressions. If you find yourself writing `cF` around a child,
-stop and reconsider.
