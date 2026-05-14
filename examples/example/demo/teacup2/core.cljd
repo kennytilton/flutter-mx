@@ -69,18 +69,18 @@
 
 (defn- page-index [page-id]
   (case page-id
-    :progress 0
-    :chart 1
-    :summary 2
+    :chart 0
+    :summary 1
+    :progress 2
     :settings 3
     :hack 4
-    0))
+    2))
 
 (defn- index-page [i]
   (case i
-    0 :progress
-    1 :chart
-    2 :summary
+    0 :chart
+    1 :summary
+    2 :progress
     3 :settings
     4 :hack
     :progress))
@@ -156,19 +156,19 @@
                                    :onTap        (dart-cb [i]
                                                    (mset! root :current-page-id
                                                      (index-page i)))}
+		                                  (fx/bottom-navigation-bar-item
+		                                    {:icon  (m/Icon m/Icons.show_chart)
+		                                     :label "Chart"}
+	                                    {})
+	                                  (fx/bottom-navigation-bar-item
+	                                    {:icon  (m/Icon m/Icons.grid_on)
+	                                     :label "Summary"}
+	                                    {})
 	                                  (fx/bottom-navigation-bar-item
 	                                    {:icon  (m/Icon m/Icons.insights)
 	                                     :label "Progress"}
 	                                    {})
 	                                  (fx/bottom-navigation-bar-item
-	                                    {:icon  (m/Icon m/Icons.show_chart)
-	                                     :label "Chart"}
-                                    {})
-                                  (fx/bottom-navigation-bar-item
-                                    {:icon  (m/Icon m/Icons.grid_on)
-                                     :label "Summary"}
-                                    {})
-                                  (fx/bottom-navigation-bar-item
                                     {:icon  (m/Icon m/Icons.settings)
                                      :label "Settings"}
                                     {})
