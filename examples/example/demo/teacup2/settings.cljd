@@ -5,6 +5,7 @@
     ["package:flutter/painting.dart" :as p]
     [tilton.fmx.api :refer [dart-cb] :as fx]
     [tilton.mx.api :refer [mget mset! fmu]]
+    [example.demo.teacup2.persist :as stg]
     [example.demo.teacup2.sensor :as sensor]))
 
 (defn- ble-device-label [{:keys [name adv remoteId]}]
@@ -140,6 +141,58 @@
 	                    [(fx/sized-box {:width 36.0}) choice])))
 	              sensor/lean-tolerance-options-deg)))))))
 
+(defn- location-choice [root selected? location]
+  (fx/sized-box
+    {:width 72.0
+     :height 40.0}
+    (fx/outlined-button
+      {:onPressed (dart-cb []
+                    (mset! root :sensor-location location))
+       :style     (m/ButtonStyle
+                    .padding (m/MaterialStateProperty.all
+                               (m/EdgeInsets.zero))
+                    .minimumSize (m/MaterialStateProperty.all
+                                   (m/Size 0.0 0.0)))}
+      (fx/text
+        {:style (p/TextStyle
+                  .fontSize 16.0
+                  .color (if selected?
+                           m/Colors.orange
+                           m/Colors.black)
+                  .fontWeight (if selected?
+                                p/FontWeight.bold
+                                p/FontWeight.normal))}
+        {}
+        (case location
+          :head "Head"
+          :chest "Chest"
+          :waist "Waist"
+          :hip "Hip"
+          (name location))))))
+
+(defn- sensor-location-row [root sensor-location]
+  (let [selected-location (stg/normalize-sensor-location sensor-location)]
+    (fx/padding
+      {:padding (m/EdgeInsets.symmetric .horizontal 20.0)}
+      (fx/row
+        {:mainAxisAlignment  m/MainAxisAlignment.center
+         :crossAxisAlignment m/CrossAxisAlignment.center}
+        (fx/text
+          {:style (p/TextStyle .fontSize 18.0 .color m/Colors.black)}
+          {}
+          "Location:")
+        (fx/sized-box {:width 12.0})
+        (fx/row
+          {:mainAxisAlignment m/MainAxisAlignment.center}
+          (vec
+            (mapcat
+              (fn [location]
+                (let [choice (location-choice root (= selected-location location) location)]
+                  (if (= location (first stg/sensor-location-options))
+                    [choice]
+                    [(fx/sized-box {:width 12.0}) choice])))
+              stg/sensor-location-options)))))))
+
 (defn- display-toggle [root display-series k label ^m/Color color]
   (let [selected? (get display-series k)]
     (fx/gesture-detector
@@ -190,6 +243,7 @@
 	          ble-scanning? (mget root :ble-scanning?)
 	          selected-ble-remote-id (mget root :selected-ble-remote-id)
 	          lean-tolerance-deg (mget root :lean-tolerance-deg)
+            sensor-location (mget root :sensor-location)
 	          display-series (mget root :display-series)]
       (fx/column
         {:mainAxisAlignment  m/MainAxisAlignment.center
@@ -197,5 +251,7 @@
         (sensor-source-picker root source host-device ble-devices ble-scanning? selected-ble-remote-id)
         (m/SizedBox .height 36)
         (lean-sensitivity-row root lean-tolerance-deg)
+        (m/SizedBox .height 36)
+        (sensor-location-row root sensor-location)
         (m/SizedBox .height 36)
         (display-series-row root display-series)))))

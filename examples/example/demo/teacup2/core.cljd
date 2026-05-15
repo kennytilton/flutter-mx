@@ -36,7 +36,7 @@
   (let [info (await (.-iosInfo (dip/DeviceInfoPlugin)))]
     (.-model info)))
 
-(defn make-formx []
+(defn make-formx [root]
   (make
     :name      :formx
 	    :samples   (cI [])
@@ -47,6 +47,7 @@
 	    :stop-ms (cI nil)
 	    :secs-left (cI sensor/run-duration-s)
     :mount-code (cI :y-up)
+    :sensor-location (cI (mget root :sensor-location))
     :neutral-up (cI nil)
     :gate-state (cI :await-ready)
     :ready-since-ms (cI nil)
@@ -102,8 +103,10 @@
 		                                         (mset! me :lean-tolerance-deg
 		                                           (sensor/normalize-lean-tolerance-deg
 		                                             (stg/lean-tolerance-read db)))
-			                                         (mset! me :display-series
-			                                           (stg/display-series-read db))
+				                                         (mset! me :display-series
+				                                           (stg/display-series-read db))
+                                                 (mset! me :sensor-location
+                                                   (stg/sensor-location-read db))
 			                                         (mset! me :chart-y-scale
 			                                           (stg/chart-y-scale-read db)))
 	                                       (session/restore-ghost-sessions! me db)
@@ -136,8 +139,13 @@
                            :watch (fn [_ me new prior _]
                                     (when (mx/mx-bound? prior)
 	                                      (when-let [db (mget me :db)]
-	                                        (stg/lean-tolerance-write! db
+		                                        (stg/lean-tolerance-write! db
 	                                          (sensor/normalize-lean-tolerance-deg new))))))
+       :sensor-location (cI stg/default-sensor-location
+                          :watch (fn [_ me new prior _]
+                                   (when (mx/mx-bound? prior)
+                                     (when-let [db (mget me :db)]
+                                       (stg/sensor-location-write! db new)))))
 	     :display-series (cI stg/default-display-series
 	                       :watch (fn [_ me new prior _]
 	                                (when (mx/mx-bound? prior)
@@ -156,7 +164,7 @@
 	                                      (map #(get % :path) new))))))
 	     :formx           (cF (case (mget me :event)
                              :start (with-mx-edge [me :formx]
-                                      (make-formx))
+                                      (make-formx me))
                              :stop  nil
                              (_cache-bound)))
 	     :current-page-id (cI :chart)}

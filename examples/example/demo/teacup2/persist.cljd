@@ -6,11 +6,23 @@
 
 (def settings-box-name "teacup2-settings")
 (def sensor-source-key "sensor-source")
+(def sensor-location-key "sensor-location")
 (def selected-ble-remote-id-key "selected-ble-remote-id")
 (def lean-tolerance-key "lean-tolerance-deg")
 (def display-series-key "display-series")
 (def ghost-session-paths-key "ghost-session-paths")
 (def chart-y-scale-key "chart-y-scale")
+
+(def sensor-location-options [:head :chest :waist :hip])
+(def default-sensor-location :waist)
+
+(defn normalize-sensor-location [location]
+  (let [location (if (string? location)
+                   (keyword location)
+                   location)]
+    (if (some #{location} sensor-location-options)
+      location
+      default-sensor-location)))
 
 (def default-display-series
   {:lean? false
@@ -41,6 +53,14 @@
       :iphone "iphone"
 	  (name source)))
   source)
+
+(defn sensor-location-read [^hv/Box db]
+  (normalize-sensor-location (.get db sensor-location-key)))
+
+(defn sensor-location-write! [^hv/Box db location]
+  (let [location (normalize-sensor-location location)]
+    (.put db sensor-location-key (name location))
+    location))
 
 (defn selected-ble-remote-id-read [^hv/Box db]
   (.get db selected-ble-remote-id-key))

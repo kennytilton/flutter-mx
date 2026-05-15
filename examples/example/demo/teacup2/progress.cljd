@@ -17,13 +17,24 @@
 (defn- session-title [s]
   (or (get s :session-id) "Saved session"))
 
+(defn- location-label [location]
+  (case location
+    (:head "head") "Head"
+    (:chest "chest") "Chest"
+    (:waist "waist") "Waist"
+    (:hip "hip") "Hip"
+    nil "-"))
+
 (defn- session-subtitle [s]
   (let [metrics (get s :metrics)
         score (get metrics :quality-score)
         n (get metrics :sample-count)
+        location (or (get-in s [:sensor :location])
+                   (get-in s [:umi :location]))
         comment (get s :comment)]
     (str "Score " (fmt1 score)
       "  Samples " (or n 0)
+      "  UMI " (location-label location)
       (when (and comment (not (.-isEmpty ^String comment)))
         (str "  " comment)))))
 
