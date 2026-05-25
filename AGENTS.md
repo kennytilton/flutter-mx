@@ -1,5 +1,7 @@
 # AGENTS.md
 
+Start by reading `/Users/tilton/.codex/AGENTS.md` once for global working rules. Do not recursively follow AGENTS/markdown references beyond directly relevant project files.
+
 ## Scope
 
 - Flutter/MX is a ClojureDart framework using Matrix for fine-grained reactive state.
