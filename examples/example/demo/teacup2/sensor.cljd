@@ -21,6 +21,7 @@
 (def run-duration-ms 10000)
 (def run-duration-s  (quot run-duration-ms 1000))
 (def start-record-delay-ms 0)
+(def iphone-min-gravity-norm 1.0)
 
 (def device-name-prefix "WT901BLE")
 (def scan-timeout-seconds 10)
@@ -177,6 +178,11 @@
 
 (defn- expected-up [formx raw]
   (motion/up-for-mount (mget formx :mount-code)))
+
+(defn- start-neutral-up [formx raw]
+  (if (= :iphone (get raw :source))
+    (motion/normalize (get raw :gravity))
+    (expected-up formx raw)))
 
 (defn- lean-deg-for [gravity up]
   (motion/rad->deg
@@ -450,11 +456,11 @@
 (defn- append-raw-sample! [formx raw]
   (wmx-iso
 	    (when (mget formx :running?)
-	      (let [now       (get raw :timestamp)
-	            state     (mget formx :gate-state)
-	            up        (or (mget formx :neutral-up)
-	                        (expected-up formx raw))
-	            lean-deg  (lean-deg-for (get raw :gravity) up)
+		      (let [now       (get raw :timestamp)
+		            state     (mget formx :gate-state)
+		            up        (or (mget formx :neutral-up)
+		                        (start-neutral-up formx raw))
+		            lean-deg  (lean-deg-for (get raw :gravity) up)
 	            tolerance-deg (mget (fmu :teacup2 formx) :lean-tolerance-deg)
 	            record-ready? (>= now (mget formx :record-after-ms))]
         (dpx :lean-raw
@@ -1117,34 +1123,38 @@
     (let [now  (now-ms)
           prior-stamp @last-stamp-atom]
       (when (>= (- now prior-stamp) sample-period-ms)
-        (reset! last-stamp-atom now)
-	        (let [t-rel  (active-elapsed-ms formx now)
-              uax    (.-x ev)
-              uay    (.-y ev)
-              uaz    (.-z ev)
-              a      @accel-atom
-              ax     (if a (.-x ^sp/AccelerometerEvent a) uax)
-              ay     (if a (.-y ^sp/AccelerometerEvent a) uay)
-              az     (if a (.-z ^sp/AccelerometerEvent a) uaz)
-              g      @gyro-atom
-              gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
-              gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
-              gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
-              accel-raw (motion/v3 ax ay az)
-              linear    (motion/v3 uax uay uaz)
-              gravity   (motion/v- accel-raw linear)
-              raw       {:timestamp now
-                         :t t-rel
-                         :source :iphone
-                         :up motion/default-up
-                         :accel-raw accel-raw
-                         :gravity gravity
-                         :linear-accel linear
-                         :gyro (motion/v3 gx gy gz)
-                         :pitch nil
-                         :roll nil
-                         :yaw nil}]
-          (append-raw-sample! formx raw))))))
+        (when-let [a @accel-atom]
+          (reset! last-stamp-atom now)
+		        (let [t-rel  (active-elapsed-ms formx now)
+                uax    (.-x ev)
+                uay    (.-y ev)
+                uaz    (.-z ev)
+                ax     (.-x ^sp/AccelerometerEvent a)
+                ay     (.-y ^sp/AccelerometerEvent a)
+                az     (.-z ^sp/AccelerometerEvent a)
+                g      @gyro-atom
+                gx     (if g (.-x ^sp/GyroscopeEvent g) 0.0)
+                gy     (if g (.-y ^sp/GyroscopeEvent g) 0.0)
+                gz     (if g (.-z ^sp/GyroscopeEvent g) 0.0)
+                accel-raw (motion/v3 ax ay az)
+                linear    (motion/v3 uax uay uaz)
+                gravity   (motion/v- accel-raw linear)
+                raw       {:timestamp now
+                           :t t-rel
+                           :source :iphone
+                           :up motion/default-up
+                           :accel-raw accel-raw
+                           :gravity gravity
+                           :linear-accel linear
+                           :gyro (motion/v3 gx gy gz)
+                           :pitch nil
+                           :roll nil
+                           :yaw nil}]
+            (if (> (motion/norm gravity) iphone-min-gravity-norm)
+              (append-raw-sample! formx raw)
+              (dpx :iphone-gravity-wait
+                :gravity (fmt-v3 gravity)
+                :norm (fmt2 (motion/norm gravity))))))))))
 
 (defn capture []
   (let [accel-atom (atom nil)
