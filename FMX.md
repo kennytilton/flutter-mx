@@ -22,9 +22,20 @@
 ```
 
 - Cells inside a `cF` body automatically register dependencies.
-- `with-cc` is for MX/cell side-effect state changes; Flutter event handlers are pure entry points and generally use plain `mset!`.
+- `with-cc` is for **observer/watch code**: code dispatched *during* some other
+  change's processing, where a bare `mset!` would mutate mid-propagation.
+  `with-cc` defers that write to the next pulse.
+- Flutter event handlers do **not** need `with-cc`. MX already provides it to
+  them in effect: a handler fires as a fresh entry point, not inside another
+  change's propagation, so a plain `mset!` is already correct. Wrapping a
+  handler in `with-cc` is a no-op — it changes no behavior and only obscures
+  where the real deferral rule applies. In particular it is not a remedy for an
+  `md-awaken ... :md-quiesced` crash; look to widget structure and keys instead.
 - Use `mget?` when a property might not exist.
 - Do not pass parent models into child constructors. Use traversal helpers such as `(fmu :teacup2)`.
+- A model held as a cell **value** (not a kid) is owned through its `:mx [owner :slot]`
+  linkage: when the owning formula computes a new value (or nil), the prior model is
+  quiesced automatically. No manual quiesce watch is needed on the owning cell.
 
 ## Widget Children
 
@@ -45,6 +56,16 @@ Pass child expressions directly:
 ```
 
 `cF` belongs in model slot definitions (`:value`, `:style`, `:color`, etc.), not around UI structure.
+
+Native Flutter widgets are fine as children of f/mx widgets; f/mx parents know
+how to resolve their children. The reverse is not true: never put an f/mx widget
+under a native Flutter widget. A native `m/*` parent expects an actual Flutter
+widget, not an f/mx model waiting to be resolved.
+
+Never use a native Flutter widget when an f/mx wrapper exists.
+
+If an f/mx wrapper for a needed Flutter widget does not exist, prompt the human
+for guidance before using the native widget directly.
 
 ## Callbacks
 
