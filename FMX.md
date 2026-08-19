@@ -79,6 +79,7 @@ for guidance before using the native widget directly.
 - Be careful mapping fresh f/mx row widgets into lists when row state changes from row gestures.
 - If selection or highlight state causes a tapped row to rebuild, prefer stable keyed row models or native Flutter row widgets for simple rows.
 - For stable keyed f/mx rows, use a real Flutter key and reuse existing row models from `_cache` when possible.
+- On a formula's first evaluation, `_cache` is the `unbound` sentinel rather than a usable prior value. Guard it with the namespace alias in scope, for example `(if (= _cache mx/unbound) initial-value _cache)` (or `cty/unbound` when Cells types are aliased as `cty`).
 - Native Flutter rows inside an f/mx page are acceptable for simple display-plus-button rows.
 
 ## Persistence Boundaries
@@ -86,3 +87,7 @@ for guidance before using the native widget directly.
 - Persist stable IDs or paths, not whole session maps.
 - Restore full maps from the backing store on startup.
 - Clear persisted IDs or paths when backing files no longer exist.
+
+## Imports
+
+- Do not clean up unused symbol requires from an `ns`. They are harmless and cleaning forces compiles.
