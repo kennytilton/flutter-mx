@@ -1,5 +1,9 @@
 # FMX.md
 
+- **Compile Check Discipline:** Always confirm compilation succeeds immediately BEFORE announcing `CHANGES ARE COMPLETE. FIRE AWAY.` to the user. Do not announce completion if the compile is still running or has failed.
+
+- **The user ALWAYS cold-restarts.** When something does not work, the user kills any watcher and does a full COLD restart (rebuild) before reporting. So NEVER attribute a bug to a stale hot reload / hot restart, and never tell the user to hot-reload or hot-restart. A reported problem is running the freshly compiled code — debug the code, not the build state.
+
 ## Public APIs
 
 - Require common Matrix symbols from `tilton.mx.api`: `dp`, `dpx`, cell variants, navigation helpers, mutation functions.
@@ -36,6 +40,23 @@
 - A model held as a cell **value** (not a kid) is owned through its `:mx [owner :slot]`
   linkage: when the owning formula computes a new value (or nil), the prior model is
   quiesced automatically. No manual quiesce watch is needed on the owning cell.
+
+### Async formula cells (:async? true)
+
+- An `:async? true` formula's job is to RETURN a Future; MX resolves it
+  through the integrity cycle and the resolved value becomes the cell's
+  value (dependents read nil until it lands, then recompute).
+- `await` on the formula's returned value is superfluous: a body containing
+  `await` compiles to an async fn, which itself returns a Future — the same
+  shape the machinery already handles, wrapped one redundant layer deeper.
+  Write `(cF+ [:async? true] (load-thing!))`, not `(await (load-thing!))`.
+- `await` belongs MID-formula, for sequencing: a step that must finish
+  before the next produces the value (Hive `.initFlutter` before
+  `.openBox`), or a plain value computed from an awaited result (see
+  x070's `:system-locale-id`).
+- Dependency capture works throughout: CLJD `binding` is zone-based and
+  Dart zones follow the async body across `await`, so `*depender*` stays
+  bound and `mget` registers dependencies wherever it appears in the body.
 
 ## Widget Children
 
@@ -91,3 +112,12 @@ for guidance before using the native widget directly.
 ## Imports
 
 - Do not clean up unused symbol requires from an `ns`. They are harmless and cleaning forces compiles.
+
+## Assets and pubspec.yaml
+
+- New local assets (like images, videos, or fonts) must be explicitly declared in the `pubspec.yaml` `assets:` block before they can be used.
+- The Flutter watcher does not automatically pick up new assets added to `pubspec.yaml` during a hot reload (`r`). A full hot restart (`R`), or a cold restart, is required for the new assets to be bundled.
+
+## iOS Devices & Xcode
+
+- **Slow start / Hanging deploy:** When connecting a physical iOS device for the first time (or after an iOS update), deployment via Flutter may hang or be extremely slow. This is often because Xcode is silently "Copying shared cache symbols" from the device to your Mac in the background. Opening the project in Xcode (`open ios/Runner.xcworkspace`) will reveal this extraction progress in the top status bar. Wait for this to finish before deploying.
