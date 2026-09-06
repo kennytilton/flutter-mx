@@ -88,6 +88,12 @@ Never use a native Flutter widget when an f/mx wrapper exists.
 If an f/mx wrapper for a needed Flutter widget does not exist, prompt the human
 for guidance before using the native widget directly.
 
+### Controlling structure regeneration
+
+- Generate child structure fresh by default. Use `kid-values-kids` when existing child models need to be preserved.
+- When one reactive child changes independently, place it in its own container. This confines regeneration to that container’s child instead of regenerating the surrounding structure.
+- **Never specify a Flutter `:key` without an explicit go-ahead from the human.** Matrix keys used by `kid-values-kids` are separate from Flutter `:key` values.
+
 ## Callbacks
 
 - Use `dart-cb` for callbacks passed through f/mx wrapper props.
