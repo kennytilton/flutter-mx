@@ -92,6 +92,10 @@ for guidance before using the native widget directly.
 
 - Generate child structure fresh by default. Use `kid-values-kids` when existing child models need to be preserved.
 - When one reactive child changes independently, place it in its own container. This confines regeneration to that container’s child instead of regenerating the surrounding structure.
+- When a condition only controls whether a widget appears, build the widget unconditionally inside `fx/visibility` and put the condition in `:visible (cF ...)`.
+- To collapse hidden content without losing its Flutter state, use `:maintainSize false`, `:maintainState true`, and `:maintainAnimation true`.
+- Keep changing values, such as countdown seconds, inside the formulas for visibility and displayed content. Reading them before constructing the widget makes the enclosing child list reactive and can regenerate unrelated siblings.
+- Hidden children still evaluate their formulas. Handle absent data in those formulas; visibility does not prevent reads from missing or quiesced models.
 - **Never specify a Flutter `:key` without an explicit go-ahead from the human.** Matrix keys used by `kid-values-kids` are separate from Flutter `:key` values.
 
 ## Callbacks
